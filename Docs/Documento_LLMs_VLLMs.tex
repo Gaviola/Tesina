@@ -1,0 +1,69 @@
+\documentclass[11pt, a4paper]{article}
+\usepackage{graphicx} % Required for inserting images
+
+% Configuración de idioma y codificación
+\usepackage[utf8]{inputenc}
+
+\usepackage[spanish, es-tabla]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{csquotes}
+
+% Configuración de bibliografía
+\usepackage[backend=biber, style=apa]{biblatex}
+\addbibresource{referencias.bib}
+
+% Paquetes para matemáticas e imágenes
+\usepackage{amsmath}
+
+\title{Documento LLMs, VLLMs}   
+\author{Facundo Gaviola}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+
+Este documento explora la evolución técnica en el campo del Procesamiento de Lenguaje Natural (NLP), analizando la transición desde las arquitecturas secuenciales basadas en Redes Neuronales Recurrentes (RNN) y Long Short-Term Memory (LSTM) hasta el cambio de paradigma introducido por los Transformers y posteriores LLMs y VLLMs.
+
+
+\section{Redes Neuronales Recurrentes y LSTMs}
+\subsection{El Procesamiento Secuencial}
+Las Redes Neuronales Recurrentes (RNN) se establecieron como el estado del arte para el modelado de secuencias. A diferencia de las redes tradicionales, las RNN procesan la información de manera secuencial; es decir, procesan una palabra a la vez. Esto les permite mantener una "memoria" de los eventos pasados al establecer dependencias entre los puntos de datos \parencite{atkinson2025}.
+
+Sin embargo, las RNN enfrentan una limitación crítica conocida como el problema del \textit{desvanecimiento del gradiente} (vanishing gradient). A medida que la secuencia de entrada se alarga, los gradientes utilizados para actualizar los pesos durante el entrenamiento se vuelven extremadamente pequeños, impidiendo que la red aprenda patrones de dependencias a largo plazo. En términos prácticos, las RNN tienden a "olvidar" la información de secuencias de datos largas \parencite{atkinson2025}.
+
+\subsection{Redes de Memoria a Corto y Largo Plazo (LSTM)}
+Para mitigar las limitaciones de las RNN simples, se introdujeron las redes LSTM. Estas arquitecturas poseen bloques de celdas más complejos que les permiten retener más entradas pasadas. Una LSTM gestiona el flujo de información a través de tres compuertas principales:
+\begin{itemize}
+    \item \textbf{Compuerta de olvido (Forget gate):} Decide qué parte de la memoria a largo plazo debe preservarse.
+    \item \textbf{Compuerta de entrada (Input gate):} Decide qué nueva información se añadirá al estado de la celda.
+    \item \textbf{Compuerta de salida (Output gate):} Determina qué partes del estado de la celda contribuirán a la salida final \parencite{atkinson2025}.
+\end{itemize}
+
+A pesar de sus mejoras en la gestión del contexto, las LSTM y las RNN comparten una debilidad estructural inherente: su naturaleza secuencial impide la paralelización dentro de los ejemplos de entrenamiento. El cálculo del estado oculto $h_t$ depende del estado anterior $h_{t-1}$, lo que hace que el tiempo de entrenamiento sea prohibitivo para secuencias muy largas y limite el uso eficiente del hardware moderno como las GPUs \parencite{vaswani2017}.
+
+\section{La Revolución de los Transformers}
+
+En 2017, Vaswani et al. propusieron una nueva arquitectura de red simple, el \textbf{Transformer}, basada únicamente en mecanismos de atención, prescindiendo por completo de la recurrencia y las convoluciones \parencite{vaswani2017}.
+
+\subsection{Superando la Secuencialidad}
+A diferencia de las RNN y LSTM, los Transformers procesan los datos en paralelo. Esto significa que leen todos los tokens de entrada a la vez en lugar de uno por uno. Esta capacidad de procesamiento no secuencial permite a los modelos realizar tareas de NLP mucho más rápido que sus predecesores \parencite{nvidia2023}.
+
+Sin embargo, al eliminar la recurrencia, el modelo pierde la noción del orden de las palabras (por ejemplo, distinguir entre "El perro mordió al hombre" y "El hombre mordió al perro"). Para solucionar esto, el Transformer inyecta información sobre la posición relativa o absoluta de los tokens en la secuencia mediante \textit{Positional Encodings} (codificaciones posicionales) \parencite{vaswani2017}.
+
+\subsection{Mecanismo de Atención (Self-Attention)}
+El núcleo de esta arquitectura es el mecanismo de "Auto-atención" (\textit{Self-Attention}). Este mecanismo permite al modelo relacionar diferentes posiciones de una sola secuencia para calcular una representación de la misma. Matemáticamente, la función de atención se describe como el mapeo de una consulta ($Q$) y un conjunto de pares clave-valor ($K, V$) a una salida:
+
+\begin{equation}
+    Attention(Q, K, V) = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V
+\end{equation}
+
+Donde $d_k$ es la dimensión de las claves. Este cálculo permite al modelo ponderar la importancia de cada palabra en relación con todas las demás palabras de la oración, independientemente de su distancia física en la secuencia, resolviendo así el problema de las dependencias a largo plazo que afectaba a las RNN \parencite{vaswani2017}.
+
+Esta arquitectura permitió el desarrollo de Modelos de Lenguaje Grandes (LLMs) pre-entrenados como BERT y GPT, los cuales utilizan cantidades masivas de datos para capturar patrones complejos del lenguaje \parencite{atkinson2025}.
+
+
+\printbibliography
+
+\end{document}
