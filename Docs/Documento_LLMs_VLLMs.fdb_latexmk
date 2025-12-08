@@ -1,22 +1,24 @@
 # Fdb version 4
-["biber Documento_LLMs_VLLMs"] 1764887154.85758 "Documento_LLMs_VLLMs.bcf" "Documento_LLMs_VLLMs.bbl" "Documento_LLMs_VLLMs" 1764887156.59965 2
-  "Documento_LLMs_VLLMs.bcf" 0 -1 0 "pdflatex"
+["biber Documento_LLMs_VLLMs"] 1765204770.27819 "Documento_LLMs_VLLMs.bcf" "Documento_LLMs_VLLMs.bbl" "Documento_LLMs_VLLMs" 1765205746.29215 0
+  "Documento_LLMs_VLLMs.bcf" 1765205746 134674 f94b347b59b98c2e8282beb9aa6415da "pdflatex"
+  "referencias.bib" 1765142266 1317 0dc57c325f997260a6ff57762f58e342 ""
   (generated)
   "Documento_LLMs_VLLMs.bbl"
   "Documento_LLMs_VLLMs.blg"
   (rewritten before read)
-["pdflatex"] 1764887153.49616 "c:/Users/Facu/Desktop/Facultad/Tesina/Docs/Documento_LLMs_VLLMs.tex" "Documento_LLMs_VLLMs.pdf" "Documento_LLMs_VLLMs" 1764887154.46294 2
-  "C:/Users/Facu/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map" 1764886930 80909 eab91d9745dd2edfd62a31d53cd5fe15 ""
+["pdflatex"] 1765205745.33858 "c:/1/Facultad/Tesina/Docs/Documento_LLMs_VLLMs.tex" "Documento_LLMs_VLLMs.pdf" "Documento_LLMs_VLLMs" 1765205746.29282 0
+  "C:/Users/Facu/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map" 1765059998 80909 eab91d9745dd2edfd62a31d53cd5fe15 ""
+  "C:/Users/Facu/AppData/Local/MiKTeX/fonts/pk/ljfour/jknappen/ec/dpi600/ecbi1095.pk" 1765141415 38336 7472a7cc1786889aa9cabfca6d80c28e ""
   "C:/Users/Facu/AppData/Local/MiKTeX/fonts/pk/ljfour/jknappen/ec/dpi600/ecbx1095.pk" 1764886827 28976 0d01bb30d904c7cff9bb93d3176cca5d ""
   "C:/Users/Facu/AppData/Local/MiKTeX/fonts/pk/ljfour/jknappen/ec/dpi600/ecbx1200.pk" 1764886828 31952 437250d529ee42fd8d4af8eb70da2fc6 ""
   "C:/Users/Facu/AppData/Local/MiKTeX/fonts/pk/ljfour/jknappen/ec/dpi600/ecbx1440.pk" 1764886829 40136 52be1413f09e20a3c8d663e0b9468651 ""
   "C:/Users/Facu/AppData/Local/MiKTeX/fonts/pk/ljfour/jknappen/ec/dpi600/ecrm0600.pk" 1764886824 14880 462bc1eb6b512445f5d1f84af19c8a87 ""
-  "C:/Users/Facu/AppData/Local/MiKTeX/fonts/pk/ljfour/jknappen/ec/dpi600/ecrm0800.pk" 1764886826 19080 9bdbeb616ce896159a093a2f40478913 ""
   "C:/Users/Facu/AppData/Local/MiKTeX/fonts/pk/ljfour/jknappen/ec/dpi600/ecrm1095.pk" 1764886830 26228 9e660fbb229cac3be18fc7bcb4f02513 ""
   "C:/Users/Facu/AppData/Local/MiKTeX/fonts/pk/ljfour/jknappen/ec/dpi600/ecrm1200.pk" 1764886831 28440 45a34b798beef0e0f1a8e663409c4145 ""
   "C:/Users/Facu/AppData/Local/MiKTeX/fonts/pk/ljfour/jknappen/ec/dpi600/ecrm1728.pk" 1764886832 42516 872f1ed15754471f786f108f4ccde009 ""
   "C:/Users/Facu/AppData/Local/MiKTeX/fonts/pk/ljfour/jknappen/ec/dpi600/ecti1095.pk" 1764886826 35204 1f2d25ba6bf32ea16e8e0a3c15946a4e ""
   "C:/Users/Facu/AppData/Local/MiKTeX/miktex/data/le/pdftex/pdflatex.fmt" 1764886654 13333027 f45a54f98c759c2c5029b1858cdc682a ""
+  "C:/Users/Facu/AppData/Local/Programs/MiKTeX/fonts/tfm/jknappen/ec/ecbi1095.tfm" 993061908 2900 21d5bbfc5b6ea2bdb2c1d1efa4e47b72 ""
   "C:/Users/Facu/AppData/Local/Programs/MiKTeX/fonts/tfm/jknappen/ec/ecbx1095.tfm" 993061956 3228 aacd2ac2d814480e4422ad7e830fd2d4 ""
   "C:/Users/Facu/AppData/Local/Programs/MiKTeX/fonts/tfm/jknappen/ec/ecbx1200.tfm" 993061958 3200 b8d69bc738e5ef3e08cefeef3109ff56 ""
   "C:/Users/Facu/AppData/Local/Programs/MiKTeX/fonts/tfm/jknappen/ec/ecbx1440.tfm" 993061960 3196 0b37fa3083e15c57cfa8c4ff52f2807a ""
@@ -83,6 +85,8 @@
   "C:/Users/Facu/AppData/Local/Programs/MiKTeX/tex/latex/biblatex/blx-compat.def" 1752408733 13919 5426dbe90e723f089052b4e908b56ef9 ""
   "C:/Users/Facu/AppData/Local/Programs/MiKTeX/tex/latex/biblatex/blx-dm.def" 1752408733 32761 18d14e3b502c120f79b2184de4e21d14 ""
   "C:/Users/Facu/AppData/Local/Programs/MiKTeX/tex/latex/biblatex/lbx/spanish.lbx" 1752408733 47926 a9a2e5a53d52e80cf54a5601aa76edd2 ""
+  "C:/Users/Facu/AppData/Local/Programs/MiKTeX/tex/latex/caption/caption.sty" 1696169587 56128 c2ccf1a29d78c33bc553880402e4fb9a ""
+  "C:/Users/Facu/AppData/Local/Programs/MiKTeX/tex/latex/caption/caption3.sty" 1696169587 72619 ee90b6612147680fd73c3b1406a74245 ""
   "C:/Users/Facu/AppData/Local/Programs/MiKTeX/tex/latex/csquotes/csquotes.cfg" 1712234901 7068 06f8d141725d114847527a66439066b6 ""
   "C:/Users/Facu/AppData/Local/Programs/MiKTeX/tex/latex/csquotes/csquotes.def" 1712234901 22135 0975a49eeaed232aa861e9425ffb2e7c ""
   "C:/Users/Facu/AppData/Local/Programs/MiKTeX/tex/latex/csquotes/csquotes.sty" 1712234901 62767 e79d6d7a989e7da62dcf3d0a65c1faee ""
@@ -103,10 +107,11 @@
   "C:/Users/Facu/AppData/Local/Programs/MiKTeX/tex/latex/logreq/logreq.def" 1280941015 1620 fb1c32b818f2058eca187e5c41dfae77 ""
   "C:/Users/Facu/AppData/Local/Programs/MiKTeX/tex/latex/logreq/logreq.sty" 1280941015 6187 b27afc771af565d3a9ff1ca7d16d0d46 ""
   "C:/Users/Facu/AppData/Local/Programs/MiKTeX/tex/latex/url/url.sty" 1388490452 12796 8edb7d69a20b857904dd0ea757c14ec9 ""
-  "Documento_LLMs_VLLMs.aux" 0 -1 0 "pdflatex"
-  "Documento_LLMs_VLLMs.bbl" 1764887156 0 d41d8cd98f00b204e9800998ecf8427e "biber Documento_LLMs_VLLMs"
-  "Documento_LLMs_VLLMs.tex" 1764887153 5360 0f1e543f6a8dde6ada24827dca0ca308 ""
-  "c:/Users/Facu/Desktop/Facultad/Tesina/Docs/Documento_LLMs_VLLMs.tex" 1764887153 5360 0f1e543f6a8dde6ada24827dca0ca308 ""
+  "Documento_LLMs_VLLMs.aux" 1765205746 5292 a316766218582935f877e805b9ebc328 "pdflatex"
+  "Documento_LLMs_VLLMs.bbl" 1765204771 18103 c693e9db6f22ee14d755bc91d4974eed "biber Documento_LLMs_VLLMs"
+  "Documento_LLMs_VLLMs.run.xml" 1765205746 2472 8431a237c2f0699128625a349cbdba0a "pdflatex"
+  "Documento_LLMs_VLLMs.tex" 1765205743 14395 d944a962a8073dd07387b0453b332a39 ""
+  "c:/1/Facultad/Tesina/Docs/Documento_LLMs_VLLMs.tex" 1765205743 14395 d944a962a8073dd07387b0453b332a39 ""
   (generated)
   "Documento_LLMs_VLLMs.aux"
   "Documento_LLMs_VLLMs.bcf"

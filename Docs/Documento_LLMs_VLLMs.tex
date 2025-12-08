@@ -86,20 +86,55 @@ Es fundamental distinguir entre estas dos categorías:
     nuevas instancias de datos (texto, imágenes) que se asemejan a los datos reales. Los LLMs modernos son fundamentalmente generativos.
 \end{itemize}
 
+\section{Representación del Lenguaje: Embeddings}
+\subsection{One-Hot Encoding}
+\subsection{Word Embeddings}
+\textbf{[Usar ''Efficient Estimation of Word Representations in
+Vector Space'' como referencia]}
+
 \section{Redes Neuronales Recurrentes y LSTMs}
+
+\textbf{[EXPLICAR RED NEURONAL Y BUSCAR PAPER DE REFERENCIA]}
+
 \subsection{El Procesamiento Secuencial}
 Antes de los Transformers, el estándar para procesar secuencias eran las RNNs.
 Las Redes Neuronales Recurrentes (RNN) se establecieron como el estado del arte para el modelado de secuencias. A diferencia de las redes tradicionales, las RNN procesan la información
 de manera secuencial; es decir, procesan una palabra a la vez. Esto les permite mantener una "memoria" de los eventos pasados al establecer dependencias entre los puntos de datos 
 \parencite{atkinson2025}. 
-
+\subsection{Backpropagation}
 El desarrollo de las RNNs se fundamenta en el trabajo pionero de \textcite{rumelhart1986}, quienes popularizaron el algoritmo de \textbf{back-propagation}, esencial para el entrenamiento 
-de redes profundas.\textbf{[EXPANDIR BACKPROPAGATION CUANDO TENGAS EL PAPER]} Posteriormente, \textcite{elman1990} introdujo las ``Redes de Elman'', que formalizaron el uso de capas de contexto para procesar secuencias temporales, permitiendo
-a la red encontrar estructura en el tiempo. 
+de redes profundas.\textbf{[EXPANDIR BACKPROPAGATION UN PAPER] papers alternativos: https://ieeexplore.ieee.org/abstract/document/58337, https://www.sciencedirect.com/science/chapter/edited-volume/abs/pii/B9780127412528500108} 
 
-Sin embargo, las RNN enfrentan una limitación crítica conocida como el problema del \textit{\textbf{desvanecimiento del gradiente}} (vanishing gradient). A medida que la secuencia de entrada 
-se alarga, los gradientes utilizados para actualizar los pesos durante el entrenamiento se vuelven extremadamente pequeños, impidiendo que la red aprenda patrones de dependencias a 
-largo plazo. En términos prácticos, las RNN tienden a olvidar la información de secuencias de datos largas \parencite{atkinson2025}.
+\subsection{Unidades de Contexto y SRNs}
+Posteriormente, \textcite{elman1990} revolucionó este enfoque con su trabajo \textit{"Finding Structure in Time"}. Elman argumentó que el tiempo no debía representarse espacialmente
+(como una secuencia de entradas simultáneas), sino de manera \textbf{implícita} a través de su efecto en el procesamiento. Para ello, introdujo la arquitectura conocida como 
+\textbf{Red Recurrente Simple (SRN)}. 
+
+La innovación clave de la SRN fue la introducción de \textbf{unidades de contexto}, las cuales almacenan una copia exacta de las activaciones de la capa oculta en el paso de tiempo
+anterior ($t-1$). Matemáticamente, el estado de las unidades de contexto $C_t$ se define por la activación oculta previa $H_{t-1}$. Así, la red procesa la entrada actual combinándola
+con su propia ''historia'' interna:
+
+\begin{equation}
+    H_t = f(W_{in} \cdot I_t + W_{ctx} \cdot C_t)
+\end{equation}
+
+Donde $f$ es la función de activación, $I_t$ la entrada y $W$ los pesos entrenables. En su estudio, Elman demostró que estas redes podían:
+\begin{itemize}
+    \item Aprender lógica temporal compleja (como la función XOR secuencial).
+    \item Descubrir la noción de ''palabra'' en un flujo continuo de letras, utilizando el error de predicción como detector de límites.
+    \item Desarrollar representaciones internas jerárquicas que agrupaban palabras en categorías gramaticales y semánticas (e.g., verbos vs. sustantivos, animados vs. inanimados) 
+    basándose únicamente en la estadística de su aparición secuencial.
+\end{itemize}
+
+Sin embargo, a pesar de estos avances en la representación estructural y temporal, las RNN enfrentan una limitación crítica conocida como el problema del 
+\textit{\textbf{desvanecimiento del gradiente}} (vanishing gradient). A medida que la secuencia de entrada se alarga, los gradientes utilizados para actualizar los pesos durante 
+el entrenamiento se vuelven extremadamente pequeños, impidiendo que la red aprenda patrones de dependencias a muy largo plazo.
+
+En términos prácticos, aunque las redes de Elman podían encontrar estructura en el tiempo, tendían a olvidar la información de secuencias de datos excesivamente largas 
+\parencite{atkinson2025}. Para mitigar estas limitaciones, se introdujeron las redes LSTM.
+
+\subsection{Long Short-Term Memory (LSTM)}
+
 Para mitigar las limitaciones de las RNN simples, se introdujeron las redes LSTM. Estas arquitecturas poseen bloques de celdas más complejos que les permiten retener más entradas pasadas.
  Una LSTM gestiona el flujo de información a través de tres compuertas principales:
 \begin{enumerate}
@@ -112,7 +147,7 @@ Para mitigar las limitaciones de las RNN simples, se introdujeron las redes LSTM
 
 A pesar de sus mejoras en la gestión del contexto, las LSTM y las RNN comparten una debilidad estructural inherente: su naturaleza secuencial impide la paralelización dentro de los ejemplos
 de entrenamiento. El cálculo del estado oculto $h_t$ depende del estado anterior $h_{t-1}$, lo que hace que el tiempo de entrenamiento sea prohibitivo para secuencias muy largas y limite el 
-uso eficiente del hardware moderno como las GPUs \parencite{vaswani2017}.
+uso eficiente del hardware moderno como las GPUs
 
 \section{La Revolución de los Transformers}
 
@@ -123,9 +158,11 @@ y las convoluciones \parencite{vaswani2017}.
 A diferencia de las RNN y LSTM, los Transformers procesan los datos en paralelo. Esto significa que leen todos los tokens de entrada a la vez en lugar de uno por uno. Esta capacidad de 
 procesamiento no secuencial permite a los modelos realizar tareas de NLP mucho más rápido que sus predecesores \parencite{nvidia2023}.
 
-Sin embargo, al eliminar la recurrencia, el modelo pierde la noción del orden de las palabras (por ejemplo, distinguir entre "El perro mordió al hombre" y "El hombre mordió al perro"). Para
+Sin embargo, al eliminar la recurrencia, el modelo pierde la noción del orden de las palabras (por ejemplo, distinguir entre ''El perro mordió al hombre'' y ''El hombre mordió al perro''). Para
 solucionar esto, el Transformer inyecta información sobre la posición relativa o absoluta de los tokens en la secuencia mediante \textit{Positional Encodings} (codificaciones posicionales) 
 \parencite{vaswani2017}.
+
+\subsection{Modelo Encoder-Decoder}
 
 \subsection{Mecanismo de Atención (Self-Attention)}
 El núcleo de esta arquitectura es el mecanismo de "Auto-atención" (\textit{Self-Attention}). Este mecanismo permite al modelo relacionar diferentes posiciones de una sola secuencia para
@@ -135,12 +172,34 @@ calcular una representación de la misma. Matemáticamente, la función de atenc
     Attention(Q, K, V) = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V
 \end{equation}
 
+
 Donde $d_k$ es la dimensión de las claves. Este cálculo permite al modelo ponderar la importancia de cada palabra en relación con todas las demás palabras de la oración, independientemente de
 su distancia física en la secuencia, resolviendo así el problema de las dependencias a largo plazo que afectaba a las RNN \parencite{vaswani2017}.
+
+\subsection{Mecanismo de Atención Multi-Cabeza (Multi-Head Attention)}
 
 Esta arquitectura permitió el desarrollo de Modelos de Lenguaje Grandes (LLMs) pre-entrenados como BERT y GPT, los cuales utilizan cantidades masivas de datos para capturar patrones complejos
 del lenguaje \parencite{atkinson2025}.
 
+\section{LLMs (Large Language Models)}
+\subsection{Pre-Entrenamiento y Fine-Tuning}
+
+\subsection{BERT (Encoder-only)}
+\textbf{[USAR ''BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding'']}
+
+\subsection{GPT (Decoder-only)}
+\textbf{[USAR ''Language Models are Few-Shot Learners'']}
+
+
+\section{VLLMs (Vision Large Language Models)}
+\subsection{Introducción a VLLMs}
+\textbf{[USAR ''An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale'']}
+
+\subsection{Alineación Multimodal (CLIP)}
+\textbf{[USAR ''Learning Transferable Visual Models From Natural Language Supervision'']}
+
+\subsection{Grandes Modelos Multimodales}
+\textbf{[USAR ''Visual Instruction Tuning'']}
 
 \printbibliography
 
