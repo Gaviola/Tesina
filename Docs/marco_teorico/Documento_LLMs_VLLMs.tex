@@ -15,6 +15,7 @@
 
 % Paquetes para matemáticas e imágenes
 \usepackage{amsmath}
+\usepackage{amssymb}
 
 \title{Documento LLMs, VLLMs}   
 \author{Facundo Gaviola}
@@ -87,10 +88,38 @@ Es fundamental distinguir entre estas dos categorías:
 \end{itemize}
 
 \section{Representación del Lenguaje: Embeddings}
+
+Para que los algoritmos de aprendizaje profundo puedan procesar el lenguaje natural, es necesario transformar las unidades léxicas (palabras o subpalabras) en representaciones 
+numéricas operables. La evolución de estas representaciones ha sido clave para el éxito de los modelos modernos.
+
 \subsection{One-Hot Encoding}
+Históricamente, la aproximación más inmediata para representar texto fue la codificación \textit{One-Hot}. En este esquema, cada palabra del vocabulario $V$ se representa como
+un vector binario disperso $v \in \mathbb{R}^{|V|}$, donde todos los elementos son cero excepto el índice correspondiente a la palabra en cuestión, que toma el valor de 1.
+
+Aunque intuitivo, este método presenta dos limitaciones fundamentales para el modelado del lenguaje:
+\begin{itemize}
+    \item \textbf{Alta dimensionalidad y dispersión:} El tamaño del vector crece linealmente con el tamaño del vocabulario, lo que resulta computacionalmente ineficiente para
+    corpus grandes.
+    \item \textbf{Ortogonalidad semántica:} Al ser vectores ortogonales entre sí, el producto punto entre dos palabras cualesquiera es siempre cero. Esto impide capturar 
+    relaciones semánticas; por ejemplo, el modelo no puede inferir matemáticamente que ''perro'' y ''gato'' son más similares entre sí que ''perro'' y ''automóvil''.
+\end{itemize}
+
 \subsection{Word Embeddings}
-\textbf{[Usar ''Efficient Estimation of Word Representations in
-Vector Space'' como referencia]}
+Para superar las limitaciones de las representaciones dispersas, surgió el concepto de \textit{Word Embeddings} o incrustaciones de palabras. Esta técnica consiste en mapear
+palabras a vectores densos de valores reales en un espacio vectorial de menor dimensión ($d \ll |V|$), donde la similitud semántica entre palabras se traduce en proximidad
+geométrica \parencite{atkinson2025}.
+
+Un hito fundacional en esta área fue la propuesta de \textcite{mikolov2013} con la arquitectura conocida popularmente como \textbf{Word2Vec}. Los autores introdujeron técnicas
+eficientes para estimar estas representaciones a partir de grandes corpus de texto no estructurado, basándose en la hipótesis distribucional: palabras que aparecen en contextos
+similares tienden a tener significados similares.
+
+\textcite{mikolov2013} propusieron dos arquitecturas principales de redes neuronales superficiales para aprender estos pesos:
+\begin{enumerate}
+    \item \textbf{Continuous Bag-of-Words (CBOW):} El modelo predice la palabra actual basándose en el promedio de los vectores de las palabras de su contexto (pasado y futuro).
+    \item \textbf{Continuous Skip-gram:} El modelo utiliza la palabra actual para predecir las palabras que aparecen en su contexto circundante dentro de una ventana definida.
+\end{enumerate}
+
+La innovación clave de estos modelos fue su capacidad para capturar relaciones sintácticas y semánticas complejas mediante operaciones algebraicas simples sobre los vectores. Como demostraron \textcite{mikolov2013}, el resultado de la operación vectorial $vec(\text{Rey}) - vec(\text{Hombre}) + vec(\text{Mujer})$ resulta en un vector muy cercano a $vec(\text{Reina})$. Este avance demostró que las redes neuronales podían aprender representaciones distribuidas del lenguaje de alta calidad con un costo computacional significativamente menor que los enfoques anteriores.
 
 \section{Redes Neuronales Recurrentes y LSTMs}
 
