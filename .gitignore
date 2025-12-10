@@ -1,0 +1,8 @@
+/Papers
+/Libros
+Plan_TFG_GAVIOLA_FACUNDO.pdf
+.vscode/
+Docs/
+!Docs/marco_teorico/Documento_LLMs_VLLMs.pdf
+!Docs/marco_teorico/Documento_LLMs_VLLMs.tex
+!Docs/marco_teorico/referencias.bib
