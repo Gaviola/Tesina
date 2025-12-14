@@ -175,55 +175,71 @@ enfoques anteriores.
 
 \section{Arquitecturas Secuenciales}
 
-\textbf{[EXPLICAR RED NEURONAL Y BUSCAR PAPER DE REFERENCIA]}
+\subsection{Fundamentos: El Perceptrón Multicapa y la Aproximación Universal}
+
+Antes de abordar el procesamiento de secuencias, es vital comprender la capacidad teórica de las redes neuronales precursoras. Las Redes Neuronales (NNs) tradicionales, o Perceptrones
+Multicapa (MLP), operan bajo una arquitectura \textit{feed-forward}, donde la información fluye unidireccionalmente desde la entrada hasta la salida.
+
+El éxito de estas arquitecturas no es accidental. En un trabajo seminal, \textcite{hornik_multilayer_1989} demostraron rigurosamente que las redes \textit{feed-forward} multicapa son una clase de
+\textbf{aproximadores universales}. Su teorema establece que una red con al menos una capa oculta y suficiente cantidad de neuronas puede aproximar cualquier función Borel medible (es decir, 
+prácticamente cualquier función continua de interés práctico) con un grado de error arbitrariamente pequeño, siempre que la función de activación sea una ''squashing function'' (función acotada y
+no decreciente, como la sigmoide o tangente hiperbólica) \parencite{hornik_multilayer_1989}.
+
+Este resultado garantiza teóricamente que una red neuronal tiene la capacidad estructural para modelar relaciones complejas. Sin embargo, estas redes poseen una limitación fundamental para el 
+lenguaje: asumen que cada entrada es independiente de la anterior, careciendo de memoria para capturar el contexto secuencial.
 
 \subsection{Redes Neuronales Recurrentes (RNNs)}
-Antes de los Transformers, el estándar para procesar secuencias eran las RNNs.
-Las Redes Neuronales Recurrentes (RNN) se establecieron como el estado del arte para el modelado de secuencias. A diferencia de las redes tradicionales, las RNN procesan la información
-de manera secuencial; es decir, procesan una palabra a la vez. Esto les permite mantener una "memoria" de los eventos pasados al establecer dependencias entre los puntos de datos 
-\parencite{atkinson2025}. 
-\subsection{Backpropagation}
-El desarrollo de las RNNs se fundamenta en el trabajo pionero de \textbf{[agregar cita]}, quienes popularizaron el algoritmo de \textbf{back-propagation}, esencial para el entrenamiento 
-de redes profundas.\textbf{[EXPANDIR BACKPROPAGATION UN PAPER] papers alternativos: https://ieeexplore.ieee.org/abstract/document/58337, https://www.sciencedirect.com/science/chapter/edited-volume/abs/pii/B9780127412528500108} 
 
-\subsection{Unidades de Contexto y SRNs}
-Posteriormente, \textcite{elman_finding_1990} revolucionó este enfoque con su trabajo \textit{"Finding Structure in Time"}. Elman argumentó que el tiempo no debía representarse espacialmente
-(como una secuencia de entradas simultáneas), sino de manera \textbf{implícita} a través de su efecto en el procesamiento. Para ello, introdujo la arquitectura conocida como 
-\textbf{Red Recurrente Simple (SRN)}. 
+Para superar la falta de memoria de los MLPs, surgieron las Redes Neuronales Recurrentes (RNNs). A diferencia de las redes tradicionales, las RNNs introducen ciclos de retroalimentación y el concepto
+de \textbf{pesos compartidos} a través del tiempo. Esto permite que la red procese una secuencia no como entradas aisladas, sino manteniendo un estado interno que evoluciona paso a paso.
 
-La innovación clave de la SRN fue la introducción de \textbf{unidades de contexto}, las cuales almacenan una copia exacta de las activaciones de la capa oculta en el paso de tiempo
-anterior ($t-1$). Matemáticamente, el estado de las unidades de contexto $C_t$ se define por la activación oculta previa $H_{t-1}$. Así, la red procesa la entrada actual combinándola
-con su propia ''historia'' interna:
+Un hito fundamental en esta evolución fue el trabajo de \textcite{elman_finding_1990}, titulado \textit{''Finding Structure in Time''}. Elman revolucionó el enfoque argumentando que el tiempo no debía
+representarse espacialmente (como una secuencia de entradas simultáneas en una ventana fija), sino de manera \textbf{implícita} a través de su efecto en el procesamiento interno. Para ello, introdujo 
+la arquitectura conocida como \textbf{Red Recurrente Simple (SRN)}.
+
+La innovación clave de la SRN fue la introducción de \textbf{unidades de contexto}, las cuales almacenan una copia exacta de las activaciones de la capa oculta en el paso de tiempo anterior ($h_{t-1}$). 
+Así, la red procesa la entrada actual combinándola con su propia ''historia'' interna. Matemáticamente, el estado oculto $h_t$ se define por:
 
 \begin{equation}
-    H_t = f(W_{in} \cdot I_t + W_{ctx} \cdot C_t)
+    h_t = f(W_{in} \cdot x_t + W_{ctx} \cdot h_{t-1} + b)
 \end{equation}
 
-Donde $f$ es la función de activación, $I_t$ la entrada y $W$ los pesos entrenables. En su estudio, Elman demostró que estas redes podían:
+Donde:
+\begin{itemize}
+    \item $h_t$: Vector de estado oculto en el tiempo $t$.
+    \item $f$: Función de activación no lineal (usualmente sigmoide o tanh).
+    \item $W_{in}$: Matriz de pesos que conecta la entrada con la capa oculta.
+    \item $x_t$: Vector de entrada en el tiempo $t$.
+    \item $W_{ctx}$: Matriz de pesos recurrentes (o de contexto) que conecta el estado pasado con el actual.
+    \item $h_{t-1}$: Estado oculto del paso anterior (copiado en las unidades de contexto).
+    \item $b$: Vector de sesgo (bias).
+\end{itemize}
+
+En su estudio, Elman demostró que estas redes podían:
 \begin{itemize}
     \item Aprender lógica temporal compleja (como la función XOR secuencial).
     \item Descubrir la noción de ''palabra'' en un flujo continuo de letras, utilizando el error de predicción como detector de límites.
-    \item Desarrollar representaciones internas jerárquicas que agrupaban palabras en categorías gramaticales y semánticas (e.g., verbos vs. sustantivos, animados vs. inanimados) 
-    basándose únicamente en la estadística de su aparición secuencial.
+    \item Desarrollar representaciones internas jerárquicas que agrupaban palabras en categorías gramaticales (e.g., verbos vs. sustantivos) basándose únicamente en la estadística de su aparición 
+    secuencial \parencite{elman_finding_1990}.
 \end{itemize}
 
-Sin embargo, a pesar de estos avances en la representación estructural y temporal, las RNN enfrentan una limitación crítica conocida como el problema del 
-\textit{\textbf{desvanecimiento del gradiente}} (vanishing gradient). A medida que la secuencia de entrada se alarga, los gradientes utilizados para actualizar los pesos durante 
-el entrenamiento se vuelven extremadamente pequeños, impidiendo que la red aprenda patrones de dependencias a muy largo plazo.
-
-En términos prácticos, aunque las redes de Elman podían encontrar estructura en el tiempo, tendían a olvidar la información de secuencias de datos excesivamente largas 
-\parencite{atkinson2025}. Para mitigar estas limitaciones, se introdujeron las redes LSTM.
+Sin embargo, a pesar de estos avances en la representación estructural, las RNNs simples como la de Elman enfrentan una limitación crítica conocida como el problema del 
+\textit{\textbf{desvanecimiento del gradiente}} (vanishing gradient). A medida que la secuencia se alarga, los gradientes utilizados para actualizar los pesos se vuelven infinitesimales, impidiendo
+que la red aprenda dependencias a muy largo plazo \parencite{atkinson2025}. Esta limitación motivó el desarrollo posterior de las redes LSTM.
 
 \subsection{Redes Long Short-Term Memory (LSTM)}
 
 Para mitigar las limitaciones de las RNN simples, se introdujeron las redes LSTM. Estas arquitecturas poseen bloques de celdas más complejos que les permiten retener más entradas pasadas.
  Una LSTM gestiona el flujo de información a través de tres compuertas principales:
 \begin{enumerate}
-    \item \textbf{Compuerta de Olvido (Forget Gate):} Decide qué información del estado de la celda anterior ($C_{t-1}$) se debe descartar. Matemáticamente, evalúa la entrada actual y el estado oculto previo para generar un valor entre 0 (olvidar completamente) y 1 (mantener completamente).
+    \item \textbf{Compuerta de Olvido (Forget Gate):} Decide qué información del estado de celda anterior ($C_{t-1}$) se conserva. Utiliza una función sigmoide que genera valores entre 0 (olvidar)
+    y 1 (retener) basándose en la entrada actual $x_t$ y el estado oculto previo $h_{t-1}$.
     
-    \item \textbf{Compuerta de Entrada (Input Gate):} Determina qué nueva información se almacenará en el estado de la celda. Utiliza una capa sigmoide para decidir qué valores actualizar y una capa `tanh` para crear un vector de nuevos candidatos.
+    \item \textbf{Compuerta de Entrada (Input Gate):} Determina qué nueva información proveniente de $x_t$ se almacenará en el estado de la celda $C_t$. Combina una capa sigmoide (que decide
+    qué actualizar) y una capa `tanh` (que genera los candidatos a añadir).
     
-    \item \textbf{Compuerta de Salida (Output Gate):} Controla qué partes del estado de la celda ($C_t$) se enviarán como salida ($h_t$). Esta salida es una versión filtrada del estado interno.
+    \item \textbf{Compuerta de Salida (Output Gate):} Controla qué partes del estado interno de la celda ($C_t$) se expondrán como salida final ($h_t$). Primero se filtra $C_t$ con una tangente
+    hiperbólica (para poner los valores entre -1 y 1) y luego se multiplica por la salida de la compuerta sigmoide, generando el estado oculto $h_t$ que pasará al siguiente paso de tiempo.
 \end{enumerate}
 
 A pesar de sus mejoras en la gestión del contexto, las LSTM y las RNN comparten una debilidad estructural inherente: su naturaleza secuencial impide la paralelización dentro de los ejemplos
@@ -232,76 +248,314 @@ uso eficiente del hardware moderno como las GPUs
 
 \section{Arquitectura Transformer}
 
-En 2017, Vaswani et al. propusieron una nueva arquitectura de red simple, el \textbf{Transformer}, basada únicamente en mecanismos de atención, prescindiendo por completo de la recurrencia 
+En 2017, \textcite{vaswani_attention_2023} propusieron un cambio de paradigma radical con la arquitectura \textbf{Transformer}. A diferencia de las RNN y LSTM, que procesan la información de
+manera recurrente, el Transformer se basa únicamente en mecanismos de atención para establecer dependencias globales entre la entrada y la salida, prescindiendo por completo de la recurrencia
 y las convoluciones \parencite{vaswani_attention_2023}.
 
-\subsection{Superando la Secuencialidad}
-A diferencia de las RNN y LSTM, los Transformers procesan los datos en paralelo. Esto significa que leen todos los tokens de entrada a la vez en lugar de uno por uno. Esta capacidad de 
-procesamiento no secuencial permite a los modelos realizar tareas de NLP mucho más rápido que sus predecesores \parencite{nvidia2023}.
+\subsection{Superando la Secuencialidad: Paralelismo y Posición}
 
-Sin embargo, al eliminar la recurrencia, el modelo pierde la noción del orden de las palabras (por ejemplo, distinguir entre ''El perro mordió al hombre'' y ''El hombre mordió al perro''). Para
-solucionar esto, el Transformer inyecta información sobre la posición relativa o absoluta de los tokens en la secuencia mediante \textit{Positional Encodings} (codificaciones posicionales) 
-\parencite{vaswani_attention_2023}.
+La limitación fundamental de las arquitecturas previas era su naturaleza secuencial: para calcular el estado oculto en el tiempo $t$, se requieria el estado en $t-1$. Esto impedía la 
+paralelización durante el entrenamiento. El Transformer rompe esta restricción procesando todos los tokens de la secuencia simultáneamente. Esto reduce el número de operaciones secuenciales de
+$O(n)$ (en RNNs) a un tiempo constante $O(1)$, permitiendo un entrenamiento significativamente más rápido y eficiente en hardware moderno (GPUs/TPUs) \parencite{vaswani_attention_2023}.
 
+Sin embargo, al eliminar la recurrencia, el modelo pierde inherentemente la noción del orden de las palabras (es decir, procesa ''Gato come ratón'' igual que ''Ratón come gato''). Para solucionar
+esto, el Transformer inyecta información sobre la posición relativa o absoluta de los tokens mediante \textbf{Codificaciones Posicionales} (\textit{Positional Encodings}).
 
-\subsection{Mecanismo de Atención (Self-Attention)}
-El núcleo de esta arquitectura es el mecanismo de "Auto-atención" (\textit{Self-Attention}). Este mecanismo permite al modelo relacionar diferentes posiciones de una sola secuencia para
-calcular una representación de la misma. Matemáticamente, la función de atención se describe como el mapeo de una consulta ($Q$) y un conjunto de pares clave-valor ($K, V$) a una salida:
+Estas codificaciones se suman a los embeddings de entrada y, en la propuesta original, utilizan funciones sinusoidales de diferentes frecuencias:
+
+\begin{equation}
+    PE_{(pos, 2i)} = \sin(pos / 10000^{2i/d_{model}})
+\end{equation}
+\begin{equation}
+    PE_{(pos, 2i+1)} = \cos(pos / 10000^{2i/d_{model}})
+\end{equation}
+
+Donde $pos$ es la posición y $i$ la dimensión. Esta elección permite al modelo aprender a atender a posiciones relativas fácilmente, ya que cualquier desplazamiento fijo puede representarse como
+una función lineal \parencite{vaswani_attention_2023}.
+
+\subsection{Mecanismo de Atención (Scaled Dot-Product Attention)}
+
+El núcleo de la arquitectura es el mecanismo de atención, específicamente la \textit{Scaled Dot-Product Attention}. Este mecanismo permite al modelo relacionar diferentes posiciones de una 
+secuencia para calcular una representación de la misma. 
+
+La función de atención se describe como un mapeo de una consulta ($Q$, \textit{Query}) y un conjunto de pares clave-valor ($K$, \textit{Key}; $V$, \textit{Value}) a una salida. Matemáticamente:
 
 \begin{equation}
     Attention(Q, K, V) = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V
 \end{equation}
 
+Donde:
+\begin{itemize}
+    \item $QK^T$: Representa el producto punto entre la consulta y las claves, midiendo la similitud entre ellas.
+    \item $\sqrt{d_k}$: Es un factor de escalado (donde $d_k$ es la dimensión de las claves). Este término es crucial porque, para valores grandes de $d_k$, los productos punto pueden crecer en
+    magnitud, empujando a la función softmax a regiones con gradientes extremadamente pequeños. El escalado contrarresta este efecto \parencite{vaswani_attention_2023}.
+    \item \text{softmax}: Normaliza los pesos para que sumen 1.
+\end{itemize}
 
-Donde $d_k$ es la dimensión de las claves. Este cálculo permite al modelo ponderar la importancia de cada palabra en relación con todas las demás palabras de la oración, independientemente de
-su distancia física en la secuencia, resolviendo así el problema de las dependencias a largo plazo que afectaba a las RNN \parencite{vaswani_attention_2023}.
+Este cálculo permite al modelo ponderar la importancia de cada palabra en relación con todas las demás, independientemente de su distancia física en la secuencia, resolviendo efectivamente el 
+problema de las dependencias a largo plazo.
 
-\subsection{Mecanismo de Atención Multi-Cabeza (Multi-Head Attention)}
+\subsection{Atención Multi-Cabeza (Multi-Head Attention)}
 
-Esta arquitectura permitió el desarrollo de Modelos de Lenguaje Grandes (LLMs) pre-entrenados como BERT y GPT, los cuales utilizan cantidades masivas de datos para capturar patrones complejos
-del lenguaje \parencite{atkinson2025}.
+En lugar de aplicar una única función de atención con claves, valores y consultas de dimensión completa ($d_{model}$), \textcite{vaswani_attention_2023} demostraron que es beneficioso proyectar
+linealmente estas entradas $h$ veces con diferentes proyecciones aprendidas. Este mecanismo se denomina \textbf{Multi-Head Attention}.
 
-\subsection{Encoder-Decoder vs. Decoder-only}
+La intuición detrás de este enfoque es permitir al modelo ''atender'' conjuntamente a información proveniente de diferentes subespacios de representación en diferentes posiciones. Con una sola
+cabeza de atención, el promedio ponderado podría diluir esta información. Al tener múltiples cabezas, cada una puede especializarse en capturar distintos tipos de relaciones (e.g., una cabeza 
+puede enfocarse en la concordancia gramatical sujeto-verbo, mientras que otra captura dependencias semánticas o anafóricas).
+
+Matemáticamente, dado un número de cabezas $h$, el proceso se descompone en tres etapas:
+
+\begin{enumerate}
+    \item \textbf{Proyecciones Lineales:} Las consultas ($Q$), claves ($K$) y valores ($V$) se proyectan a dimensiones menores ($d_k, d_v$) utilizando matrices de pesos entrenables específicas
+    para cada cabeza $i$:
+    \begin{equation}
+        Q_i = QW_i^Q, \quad K_i = KW_i^K, \quad V_i = VW_i^V
+    \end{equation}
+    Donde las matrices de proyección son $W_i^Q \in \mathbb{R}^{d_{model} \times d_k}$, $W_i^K \in \mathbb{R}^{d_{model} \times d_k}$ y $W_i^V \in \mathbb{R}^{d_{model} \times d_v}$.
+
+    \item \textbf{Atención Escalada en Paralelo:} Se aplica la función de atención independientemente a cada conjunto proyectado para obtener la salida de cada cabeza ($head_i$):
+    \begin{equation}
+        head_i = \text{Attention}(Q_i, K_i, V_i)
+    \end{equation}
+
+    \item \textbf{Concatenación y Proyección Final:} Finalmente, las salidas de todas las cabezas se concatenan y se proyectan una vez más para recuperar la dimensión original del modelo. Esta
+    proyección final mezcla la información capturada por los distintos subespacios:
+    \begin{equation}
+        MultiHead(Q, K, V) = \text{Concat}(head_1, \dots, head_h)W^O
+    \end{equation}
+    Donde $W^O \in \mathbb{R}^{hd_v \times d_{model}}$ es la matriz de pesos de salida.
+\end{enumerate}
+
+En la implementación original, se utilizaron $h=8$ cabezas y una dimensión reducida para cada una de $d_k = d_v = d_{model}/h = 64$. Debido a esta reducción de dimensión, el costo computacional
+total es similar al de una atención de cabeza única con dimensión completa \parencite{vaswani_attention_2023}.
+\subsection{Arquitectura Encoder-Decoder}
+
+El Transformer original adopta una estructura de codificador-decodificador:
+
+\begin{itemize}
+    \item \textbf{Encoder:} Compuesto por una pila de $N=6$ capas idénticas. Cada capa tiene dos subcapas: un mecanismo de atención multi-cabeza y una red \textit{feed-forward} conectada por posición.
+    Se emplean conexiones residuales y normalización de capa (\textit{LayerNorm}) alrededor de cada subcapa.
+    
+    \item \textbf{Decoder:} También compuesto por $N=6$ capas. Además de las dos subcapas del encoder, inserta una tercera subcapa que realiza atención multi-cabeza sobre la salida del encoder.
+    Crucialmente, la subcapa de auto-atención en el decoder está \textbf{enmascarada} (\textit{Masked Multi-Head Attention}). Esto asegura que, para predecir la posición $i$, el modelo solo pueda 
+    atender a las posiciones anteriores a $i$, preservando la propiedad auto-regresiva necesaria para la generación de texto \parencite{vaswani_attention_2023}.
+\end{itemize}
+
+Aunque el paper original presentó esta estructura dual, la evolución posterior de los LLMs (como la serie GPT) ha tendido a utilizar arquitecturas \textit{Decoder-only}, optimizadas para tareas de 
+generación, mientras que modelos como BERT utilizan arquitecturas \textit{Encoder-only} para tareas de comprensión.
 
 \section{Grandes Modelos de Lenguaje: LLMs}
-%¿Qué son? 
-%Concepto de scaling laws.
-%Parametrización: que son los parametros, que representa la temperatura
+Los Grandes Modelos de Lenguaje (LLMs) representan la culminación actual de la arquitectura Transformer aplicada a escala masiva. Se definen como modelos probabilísticos entrenados en vastos corpus
+de texto que aprenden la distribución de probabilidad sobre secuencias de palabras \parencite{atkinson2025}. A diferencia de sus predecesores, los LLMs exhiben capacidades emergentes—habilidades que
+no fueron explícitamente programadas, como el razonamiento aritmético o la traducción que surgen únicamente como función de la escala del modelo y de los datos.
+
+Aunque todos se basan en el Transformer, la elección de componentes define su naturaleza funcional:
+
+\begin{itemize}
+    \item \textbf{Arquitecturas Encoder-only (e.g., BERT):} Diseñadas para tareas de comprensión y clasificación. \textcite{devlin_bert_nodate} introdujeron el objetivo de 
+    \textit{Masked Language Modeling} (MLM), donde el modelo tiene acceso bidireccional a todo el contexto para predecir tokens ocultos aleatoriamente (e.g., $P(w_i | w_1, ..., w_{i-1}, w_{i+1}, ... w_n)$).
+    Esto permite representaciones semánticas profundas pero dificulta la generación de texto fluido.
+    
+    \item \textbf{Arquitecturas Decoder-only (e.g., GPT):} Optimizadas para generación. Utilizan una máscara causal (causal masking) que impide que la atención observe tokens futuros, forzando al modelo
+    a aprender una tarea puramente autorregresiva ($P(w_t | w_{<t})$). Aunque teóricamente ven menos contexto por paso que BERT, su capacidad generativa los ha convertido en el estándar dominante para 
+    LLMs modernos.
+\end{itemize}
+
+
+\subsection{Leyes de Escalado (Scaling Laws)}
+
+El diseño eficiente de estos modelos se rige por leyes empíricas de potencia. Inicialmente, \textcite{kaplan_scaling_2020} observaron que la pérdida ($L$) del modelo disminuye predeciblemente como una ley de
+potencia respecto al número de parámetros ($N$), el tamaño del dataset ($D$) y el cómputo ($C$), sugiriendo que aumentar el tamaño del modelo ($N$) era el factor más crítico para mejorar el rendimiento.
+
+Sin embargo, \textcite{hoffmann_training_2022} refutaron parcialmente esta visión con el modelo \textbf{Chinchilla}. Demostraron que la mayoría de los LLMs de la época (como GPT-3) estaban ''sub-entrenados''.
+Su hallazgo fundamental establece que, para un presupuesto computacional fijo $C$, el número de parámetros $N$ y la cantidad de datos $D$ deben escalarse en proporciones iguales (linealmente). Esto redefinió 
+la frontera de eficiencia, indicando que los modelos más pequeños entrenados con muchos más datos son computacionalmente más óptimos que modelos gigantes con pocos datos.
+
 
 \subsection{Ciclo de Vida de un LLM}
-\subsubsection{Pre-Entrenamiento}
 
+El desarrollo de un LLM moderno sigue un proceso estándar de tres etapas:
+
+\subsubsection{Pre-Entrenamiento}
+Esta es la fase fundamental y de mayor consumo computacional. El modelo se inicializa con pesos aleatorios y se entrena sobre corpus masivos (terabytes de texto provenientes de Common Crawl, Wikipedia, libros, código, etc.) para aprender la estructura estadística del lenguaje.
+
+Dependiendo de la arquitectura, se optimizan funciones de pérdida distintas:
+\begin{itemize}
+    \item \textbf{Masked Language Modeling (MLM):} Utilizado por modelos \textit{Encoder-only} como BERT. El objetivo es reconstruir tokens ocultos en la entrada (e.g., $w_i$) basándose en el contexto bidireccional ($w_{1}, ..., w_{i-1}, w_{i+1}, ..., w_n$). Esto permite aprender representaciones 
+    profundas de la sintaxis y semántica, pero no es ideal para generar texto \parencite{devlin_bert_nodate}.
+    \item \textbf{Causal Language Modeling (CLM):} Utilizado por modelos \textit{Decoder-only} como GPT. El modelo intenta predecir el siguiente token $w_t$ dado únicamente el historial previo ($w_{<t}$), maximizando la probabilidad logarítmica negativa (\textit{negative log-likelihood}) sobre todo el
+    dataset. Este enfoque fuerza al modelo a aprender razonamiento y coherencia narrativa.
+\end{itemize}
+
+El resultado es un ''modelo base'' que posee vastos conocimientos latentes pero que no es capaz de seguir instrucciones (e.g., ante la entrada ''¿Cómo hacer una torta?'', un modelo base podría completar con ''¿Cómo hacer una pizza?'', siguiendo la distribución probable de una lista de preguntas).
 \subsubsection{Ajuste Fino (Fine-Tuning)}
+Para transformar un modelo base en un asistente útil, se aplica el paradigma de \textit{Instruction Tuning}. A diferencia del aprendizaje por transferencia clásico (donde se entrenaba una nueva capa para una tarea única como clasificación), aquí se busca que el modelo generalice la capacidad de
+seguir instrucciones arbitrarias. El método estándar es el \textit{Supervised Fine-Tuning} (SFT). Se utiliza un dataset curado de demostraciones humanas de alta calidad en formato (Prompt, Respuesta Ideal). El modelo ajusta sus pesos mediante descenso de gradiente para minimizar la diferencia entre 
+su generación y la demostración humana. Según \textcite{ouyang_training_nodate}, esta etapa es crucial para definir el ''comportamiento'' y el estilo del modelo, aunque se utilizan muchos menos datos que en el pre-entrenamiento debido al requerimiento de intervención humana.
 
 \subsubsection{Alineación y RLHF}
+El SFT tiene limitaciones: escribir demostraciones perfectas es costoso y difícil. Para solucionar esto y alinear el modelo con la intención humana (seguridad, honestidad, utilidad), se emplea 
+\textit{Reinforcement Learning from Human Feedback} (RLHF), proceso detallado por \textcite{ouyang_training_nodate} en tres pasos:
+\begin{enumerate}
+    \item \textbf{Recolección de Preferencias:} Los humanos comparan múltiples respuestas del modelo para una misma pregunta y las clasifican de mejor a peor.
+    \item \textbf{Modelo de Recompensa (Reward Model - RM):} Se entrena una red neuronal separada para predecir la preferencia humana (es decir, asignar un escalar de recompensa $r$ a una 
+    generación dada).
+    \item \textbf{Optimización con PPO:} Se utiliza el algoritmo \textit{Proximal Policy Optimization} (PPO) para ajustar el LLM. El objetivo es maximizar la recompensa del RM sin desviarse 
+    excesivamente de la distribución del modelo original (penalización KL), evitando así el ''reward hacking'' o la degradación del lenguaje.
+\end{enumerate}
+
 
 \subsection{Paradigmas de Inferencia (In-Context Learning)}
-% Explicación de cómo aprenden sin actualizar pesos. Fuente: Paper GPT-3[cite: 10837].
+
+Una propiedad distintiva de los LLMs es su capacidad de \textit{In-Context Learning}: pueden adaptarse a nuevas tareas en tiempo de inferencia sin actualizar sus pesos, simplemente condicionándose a los
+ejemplos provistos en el prompt \parencite{brown_language_nodate}.
+
 \begin{itemize}
-    \item \textbf{Zero-shot:} Sin ejemplos previos[cite: 10864].
-    \item \textbf{One-shot:} Un solo ejemplo en el prompt[cite: 10863].
-    \item \textbf{Few-shot:} Varios ejemplos en el prompt[cite: 10856].
+    \item \textbf{Zero-shot:} El modelo realiza la tarea solo con una descripción en lenguaje natural, sin ejemplos previos.
+    \item \textbf{One-shot:} Se proporciona un único ejemplo de entrada-salida en el contexto.
+    \item \textbf{Few-shot:} Se proporcionan varios ejemplos (generalmente entre 10 y 100) para guiar la generación del modelo.
 \end{itemize}
 
 \subsection{Técnicas Avanzadas y Variantes}
+
 \subsubsection{RAG (Retrieval-Augmented Generation)}
-% Conectar el modelo generativo con bases de datos externas para reducir alucinaciones.
+Los LLMs estándar poseen únicamente \textit{memoria paramétrica}: todo su conocimiento está codificado estáticamente en sus pesos durante el entrenamiento. Esto los hace propensos a ''alucinaciones''
+y obsolescencia.
+
+\textcite{lewis_retrieval-augmented_nodate} formalizaron la arquitectura RAG para combinar modelos generativos con una \textit{memoria no paramétrica} externa (generalmente un índice vectorial denso de documentos,
+como bases de datos clínicas). El proceso de inferencia cambia radicalmente:
+\begin{enumerate}
+    \item \textbf{Recuperación:} Dada una consulta $x$, un modelo \textit{Retriever} (e.g., DPR) busca en el índice los $k$ documentos más relevantes $z$.
+    \item \textbf{Aumentación:} Estos documentos se concatenan con la consulta original.
+    \item \textbf{Generación:} El LLM generador produce la respuesta $y$ condicionada tanto en la consulta como en la evidencia recuperada, aproximando $P(y|x) \approx \sum_{z} P(y|x,z)P(z|x)$.
+\end{enumerate}
+Esto permite actualizar el conocimiento del modelo simplemente actualizando la base de datos externa, sin necesidad de re-entrenar la red neuronal \parencite{lewis_retrieval-augmented_nodate}.
 
 \subsubsection{Small Language Models (SLMs)}
-% Modelos compactos y eficientes (útiles para entornos médicos locales o con pocos recursos).
+Recientemente, ha surgido interés en modelos compactos (e.g., < 3B parámetros) que puedan ejecutarse en dispositivos locales. Trabajos como el de \textcite{gunasekar_textbooks_2023} con la serie
+\textbf{Phi} han demostrado que la calidad de los datos ("textbook quality") es más determinante que la cantidad. Un modelo pequeño entrenado con datos sintéticos altamente curados puede superar a modelos
+mucho más grandes entrenados con datos web ruidosos.
 
 \subsection{Métricas de Evaluación}
-% Perplexity, BLEU, ROUGE, y benchmarks humanos.
+
+La evaluación de modelos generativos presenta desafíos únicos respecto a tareas deterministas (como la clasificación), dado que no existe una única respuesta correcta. Para cuantificar el desempeño,
+se emplean métricas automáticas que miden la probabilidad, la precisión y la cobertura (recall).
+
+\subsubsection{Perplejidad (Perplexity - PPL)}
+Es la métrica estándar intrínseca para evaluar Modelos de Lenguaje (LMs). Cuantifica la incertidumbre del modelo al predecir el siguiente token en una secuencia real. Matemáticamente, se define como
+la exponenciación de la entropía cruzada promedio por token.
+
+Dada una secuencia de prueba $X = (x_1, x_2, \dots, x_N)$, la perplejidad se calcula como:
+
+\begin{equation}
+    PPL(X) = \exp\left( -\frac{1}{N} \sum_{i=1}^{N} \ln P(x_i | x_{<i}) \right)
+\end{equation}
+
+Donde $P(x_i | x_{<i})$ es la probabilidad asignada por el modelo al token correcto $x_i$ dado el contexto previo.
+\begin{itemize}
+    \item Un valor bajo indica que el modelo asigna alta probabilidad a la secuencia de texto real (está ''menos perplejo'').
+    \item Si el modelo fuera completamente aleatorio (asignando probabilidad uniforme $1/|V|$ a cada palabra del vocabulario), la perplejidad sería igual al tamaño del vocabulario $|V|$.
+\end{itemize}
+
+\subsubsection{BLEU (Bilingual Evaluation Understudy)}
+Originalmente propuesta para traducción automática por \textcite{papineni_bleu_2001}, BLEU mide la \textbf{precisión} de n-gramas del texto generado comparándolo con una o más referencias humanas.
+
+El cálculo penaliza la repetición y la longitud corta. La fórmula general es:
+
+\begin{equation}
+    BLEU = BP \cdot \exp\left( \sum_{n=1}^{N} w_n \log p_n \right)
+\end{equation}
+
+Donde:
+\begin{itemize}
+    \item $p_n$: Precisión de n-gramas (proporción de n-gramas generados que aparecen en la referencia).
+    \item $w_n$: Peso asignado a cada tamaño de n-grama (usualmente uniforme $1/N$).
+    \item $BP$ (Brevity Penalty): Factor de penalización si el texto generado ($c$) es más corto que la referencia ($r$):
+    \begin{equation}
+        BP = \begin{cases} 
+        1 & \text{si } c > r \\
+        e^{(1 - r/c)} & \text{si } c \le r 
+        \end{cases}
+    \end{equation}
+\end{itemize}
+BLEU es estándar de facto pero ha sido criticada por no capturar significado semántico, enfocándose solo en coincidencias léxicas exactas.
+
+\subsubsection{ROUGE (Recall-Oriented Understudy for Gisting Evaluation)}
+A diferencia de BLEU, ROUGE se enfoca en la \textbf{cobertura (recall)}, siendo la métrica predominante en tareas de resumen automático \parencite{lin_rouge_nodate}. Mide cuánto del contenido de
+la referencia humana fue capaz de recuperar el modelo.
+
+La variante más común, ROUGE-N, se calcula como:
+
+\begin{equation}
+    \text{ROUGE-N} = \frac{\sum_{S \in \{Referencias\}} \sum_{gram_n \in S} Count_{match}(gram_n)}{\sum_{S \in \{Referencias\}} \sum_{gram_n \in S} Count(gram_n)}
+\end{equation}
+
+Donde:
+\begin{itemize}
+    \item El numerador cuenta los n-gramas coincidentes entre la generación y la referencia.
+    \item El denominador cuenta el total de n-gramas en la \textbf{referencia} (a diferencia de BLEU, que divide por los generados).
+\end{itemize}
+Existen variantes como \textbf{ROUGE-L}, que utiliza la Subsecuencia Común Más Larga (LCS) para capturar la estructura de la oración sin depender de n-gramas fijos.
+
 
 \section{Modelos de Visión-Lenguaje (VLLMs)}
-\subsection{Union de Visión y Lenguaje}
-\textbf{[USAR ''An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale'']}
+La convergencia entre la visión por computadora y el procesamiento del lenguaje natural ha dado lugar a los Modelos de Visión-Lenguaje (VLLMs). Estos sistemas buscan trascender las tareas visuales
+aisladas (como clasificar una imagen en una de 1000 categorías fijas) para lograr una comprensión semántica abierta, donde las imágenes se entienden en el contexto del lenguaje humano.
 
-\subsection{Alineación Multimodal (CLIP)}
-\textbf{[USAR ''Learning Transferable Visual Models From Natural Language Supervision'']}
+\subsection{El Transformer Visual (ViT)}
 
-\subsection{Grandes Modelos Multimodales}
-\textbf{[USAR ''Visual Instruction Tuning'']}
+Históricamente, la visión por computadora estuvo dominada por las Redes Neuronales Convolucionales (CNNs), las cuales procesan imágenes mediante filtros locales que asumen una invariancia espacial.
+Sin embargo, tras el éxito rotundo del Transformer en NLP, \textcite{dosovitskiy_image_2021} cuestionaron si esta dependencia de las CNNs era necesaria.
+
+En su trabajo ''\textit{An Image is Worth 16x16 Words}'', propusieron el \textbf{Vision Transformer (ViT)}. La idea central consiste en tratar una imagen no como una cuadrícula de píxeles, sino
+como una secuencia de ''palabras'' visuales. Para ello:
+\begin{enumerate}
+    \item La imagen se divide en parches fijos (e.g., $16 \times 16$ píxeles).
+    \item Cada parche se aplana y se proyecta linealmente a un embedding (similar a los embeddings de palabras).
+    \item Se añade información posicional (ya que el Transformer no tiene noción inherente de espacio 2D).
+    \item La secuencia resultante se procesa con un Encoder de Transformer estándar.
+\end{enumerate}
+
+Los autores demostraron que, cuando se entrena a escala masiva (e.g., en JFT-300M), ViT supera a las arquitecturas convolucionales de estado del arte (como ResNet), con un costo computacional menor
+\parencite{dosovitskiy_image_2021}. Este avance fue fundamental porque unificó la arquitectura base para visión y texto, facilitando su integración posterior.
+
+\subsection{Alineación Multimodal: CLIP}
+
+Aunque ViT permitió usar Transformers en visión, los modelos seguían entrenándose para predecir un conjunto cerrado de etiquetas (clasificación supervisada). \textcite{radford_learning_nodate}
+revolucionaron este paradigma con \textbf{CLIP (Contrastive Language-Image Pre-training)}.
+
+La hipótesis de CLIP es que la supervisión del lenguaje natural es mucho más rica y escalable que las etiquetas manuales. El modelo se entrena con un objetivo \textit{contrastivo} sobre un 
+dataset masivo de 400 millones de pares (imagen, texto) recolectados de internet.
+El funcionamiento es el siguiente:
+\begin{itemize}
+    \item Un \textbf{Encoder de Imagen} (que puede ser un ViT o ResNet) convierte la imagen en un vector.
+    \item Un \textbf{Encoder de Texto} (Transformer) convierte la descripción en otro vector.
+    \item El objetivo es maximizar la similitud coseno entre los vectores de pares correctos (imagen, su texto real) y minimizarla para los pares incorrectos en un lote de $N$ ejemplos.
+\end{itemize}
+
+Esto dota al modelo de capacidades \textit{Zero-shot} asombrosas: CLIP puede clasificar imágenes en categorías que nunca vio durante el entrenamiento simplemente proporcionándole los nombres de
+las clases como texto (e.g., ''una foto de un [melanoma]''), alineando efectivamente el espacio visual con el semántico \parencite{radford_learning_nodate}.
+
+\subsection{Grandes Modelos Multimodales (LMMs) y Visual Instruction Tuning}
+
+El último salto evolutivo consiste en dotar a los LLMs de ''ojos''. Si bien CLIP puede alinear imágenes y texto, no puede mantener una conversación compleja sobre una imagen. Aquí surgen modelos
+como \textbf{LLaVA (Large Language and Vision Assistant)}, propuesto por \textcite{liu_visual_2023}.
+
+LLaVA introduce el concepto de \textit{Visual Instruction Tuning}. La arquitectura conecta un encoder visual pre-entrenado (como CLIP ViT-L/14) con un LLM (como Vicuna/LLaMA) mediante una capa
+de proyección lineal simple. Esta proyección transforma las características visuales al mismo espacio de embeddings que las palabras, permitiendo que la imagen actúe como un ''prompt visual'' 
+para el LLM.
+
+El entrenamiento se realiza en dos etapas:
+\begin{enumerate}
+    \item \textbf{Pre-entrenamiento de alineación:} Se congelan el encoder visual y el LLM, y se entrena solo la matriz de proyección para alinear las características visuales con el espacio 
+    de palabras.
+    \item \textbf{Ajuste Fino de Instrucciones (End-to-End):} Se entrena el modelo completo (o partes de él) con datos de instrucciones multimodales generados sintéticamente por GPT-4 
+    (pares de preguntas y respuestas complejas sobre imágenes).
+\end{enumerate}
+
+Este enfoque permite que el modelo no solo reconozca objetos, sino que razone sobre ellos, responda preguntas abiertas y siga instrucciones complejas sobre el contenido visual, comportándose
+como un verdadero chatbot multimodal \parencite{liu_visual_2023}.
 
 \printbibliography
 
