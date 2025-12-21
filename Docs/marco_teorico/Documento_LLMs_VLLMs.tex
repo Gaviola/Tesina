@@ -71,13 +71,14 @@ de distribución de probabilidad que intentan aprender y el objetivo final de su
     \item \textbf{Modelos Discriminativos:} Su objetivo principal es aprender la frontera de decisión entre clases. Modelan la
     probabilidad condicional $P(Y|X)$, donde $X$ es la entrada (e.g., una imagen o texto) e $Y$ es la etiqueta. Históricamente,
     estos modelos han dominado tareas como la clasificación de imágenes, donde arquitecturas como ResNet se entrenan de manera
-    supervisada para predecir categorías fijas \parencite{radford_learning_nodate}. En NLP, modelos como BERT, aunque pre-entrenados, se
-    utilizan frecuentemente en configuraciones discriminativas mediante el ajuste fino para clasificación \parencite{devlin_bert_nodate}.
+    supervisada para predecir categorías fijas \parencite{radford_learning_nodate}. En NLP, modelos como BERT 
+    \parencite{devlin_bert_nodate}, aunque pre-entrenados, se utilizan frecuentemente en configuraciones discriminativas mediante
+     el ajuste fino para clasificación.
     
     \item \textbf{Modelos Generativos:} A diferencia de los discriminativos, estos modelos aprenden la distribución conjunta
     $P(X,Y)$ o simplemente la distribución de los datos $P(X)$ si no hay etiquetas. Su objetivo es entender cómo se generan los
-    datos para poder crear nuevas muestras que se asemejen a la distribución original. Los LLMs modernos, como GPT-3, pertenecen
-    a esta categoría, ya que se entrenan para modelar la probabilidad de secuencias de texto \parencite{brown_language_nodate}.
+    datos para poder crear nuevas muestras que se asemejen a la distribución original. Los LLMs modernos, como GPT-3 
+    \parencite{brown_language_nodate}, pertenecen a esta categoría, ya que se entrenan para modelar la probabilidad de secuencias de texto.
 \end{itemize}
 
 \subsection{Modelos Generativos Profundos}
@@ -107,9 +108,9 @@ complejos como imágenes y texto. Podemos categorizarlos en cuatro familias prin
         P(x) = \prod_{i=1}^{n} P(x_i | x_1, ..., x_{i-1})
     \end{equation}
     En este enfoque, el modelo predice el siguiente elemento (\hyperlink{glo:token}{token}) de la secuencia basándose únicamente en los anteriores.
-    Arquitecturas como el Transformer original en su fase de decodificación \parencite{vaswani_attention_2023} y modelos masivos como 
+    Arquitecturas como el Transformer original en su fase de decodificación \parencite{vaswani_attention_nodate} y modelos masivos como 
     GPT-3 operan bajo este principio, consumiendo los símbolos generados previamente como entrada adicional para generar el 
-    siguiente \parencite{vaswani_attention_2023, brown_language_nodate}. Incluso en visión computacional, modelos como ImageGPT han aplicado este
+    siguiente \parencite{vaswani_attention_nodate, brown_language_nodate}. Incluso en visión computacional, modelos como ImageGPT han aplicado este
     principio a secuencias de píxeles \parencite{dosovitskiy_image_2021}.
 \end{enumerate}
 
@@ -254,15 +255,15 @@ uso eficiente del hardware moderno como las GPUs
 
 \section{Arquitectura Transformer}
 
-En 2017, \textcite{vaswani_attention_2023} propusieron un cambio de paradigma radical con la arquitectura \textbf{Transformer}. A diferencia de las RNN y LSTM, que procesan la información de
+En 2017, \textcite{vaswani_attention_nodate} propusieron un cambio de paradigma radical con la arquitectura \textbf{Transformer}. A diferencia de las RNN y LSTM, que procesan la información de
 manera recurrente, el Transformer se basa únicamente en mecanismos de atención para establecer dependencias globales entre la entrada y la salida, prescindiendo por completo de la recurrencia
-y las convoluciones \parencite{vaswani_attention_2023}.
+y las convoluciones \parencite{vaswani_attention_nodate}.
 
 \subsection{Superando la Secuencialidad: Paralelismo y Posición}
 
 La limitación fundamental de las arquitecturas previas era su naturaleza secuencial: para calcular el estado oculto en el tiempo $t$, se requieria el estado en $t-1$. Esto impedía la 
 paralelización durante el entrenamiento. El Transformer rompe esta restricción procesando todos los tokens de la secuencia simultáneamente. Esto reduce el número de operaciones secuenciales de
-$O(n)$ (en RNNs) a un tiempo constante $O(1)$, permitiendo un entrenamiento significativamente más rápido y eficiente en hardware moderno (GPUs/TPUs) \parencite{vaswani_attention_2023}.
+$O(n)$ (en RNNs) a un tiempo constante $O(1)$, permitiendo un entrenamiento significativamente más rápido y eficiente en hardware moderno (GPUs/TPUs) \parencite{vaswani_attention_nodate}.
 
 Sin embargo, al eliminar la recurrencia, el modelo pierde inherentemente la noción del orden de las palabras (es decir, procesa ''Gato come ratón'' igual que ''Ratón come gato''). Para solucionar
 esto, el Transformer inyecta información sobre la posición relativa o absoluta de los tokens mediante \textbf{Codificaciones Posicionales} (\textit{Positional Encodings}).
@@ -277,7 +278,7 @@ Estas codificaciones se suman a los embeddings de entrada y, en la propuesta ori
 \end{equation}
 
 Donde $pos$ es la posición y $i$ la dimensión. Esta elección permite al modelo aprender a atender a posiciones relativas fácilmente, ya que cualquier desplazamiento fijo puede representarse como
-una función lineal \parencite{vaswani_attention_2023}.
+una función lineal \parencite{vaswani_attention_nodate}.
 
 \subsection{Mecanismo de Atención (Scaled Dot-Product Attention)}
 
@@ -294,7 +295,7 @@ Donde:
 \begin{itemize}
     \item $QK^T$: Representa el producto punto entre la consulta y las claves, midiendo la similitud entre ellas.
     \item $\sqrt{d_k}$: Es un factor de escalado (donde $d_k$ es la dimensión de las claves). Este término es crucial porque, para valores grandes de $d_k$, los productos punto pueden crecer en
-    magnitud, empujando a la función softmax a regiones con gradientes extremadamente pequeños. El escalado contrarresta este efecto \parencite{vaswani_attention_2023}.
+    magnitud, empujando a la función softmax a regiones con gradientes extremadamente pequeños. El escalado contrarresta este efecto \parencite{vaswani_attention_nodate}.
     \item \text{softmax}: Normaliza los pesos para que sumen 1.
 \end{itemize}
 
@@ -303,7 +304,7 @@ problema de las dependencias a largo plazo.
 
 \subsection{Atención Multi-Cabeza (Multi-Head Attention)}
 
-En lugar de aplicar una única función de atención con claves, valores y consultas de dimensión completa ($d_{model}$), \textcite{vaswani_attention_2023} demostraron que es beneficioso proyectar
+En lugar de aplicar una única función de atención con claves, valores y consultas de dimensión completa ($d_{model}$), \textcite{vaswani_attention_nodate} demostraron que es beneficioso proyectar
 linealmente estas entradas $h$ veces con diferentes proyecciones aprendidas. Este mecanismo se denomina \textbf{Multi-Head Attention}.
 
 La intuición detrás de este enfoque es permitir al modelo ''atender'' conjuntamente a información proveniente de diferentes subespacios de representación en diferentes posiciones. Con una sola
@@ -334,7 +335,7 @@ Matemáticamente, dado un número de cabezas $h$, el proceso se descompone en tr
 \end{enumerate}
 
 En la implementación original, se utilizaron $h=8$ cabezas y una dimensión reducida para cada una de $d_k = d_v = d_{model}/h = 64$. Debido a esta reducción de dimensión, el costo computacional
-total es similar al de una atención de cabeza única con dimensión completa \parencite{vaswani_attention_2023}.
+total es similar al de una atención de cabeza única con dimensión completa \parencite{vaswani_attention_nodate}.
 \subsection{Arquitectura Encoder-Decoder}
 
 El Transformer original adopta una estructura de codificador-decodificador:
@@ -345,7 +346,7 @@ El Transformer original adopta una estructura de codificador-decodificador:
     
     \item \textbf{Decodificador (Decoder):} También compuesto por $N=6$ capas. Además de las dos subcapas del encoder, inserta una tercera subcapa que realiza atención multi-cabeza sobre la salida del encoder.
     Crucialmente, la subcapa de auto-atención en el decoder está \textbf{enmascarada} (\textit{Masked Multi-Head Attention}). Esto asegura que, para predecir la posición $i$, el modelo solo pueda 
-    atender a las posiciones anteriores a $i$, preservando la propiedad auto-regresiva necesaria para la generación de texto \parencite{vaswani_attention_2023}.
+    atender a las posiciones anteriores a $i$, preservando la propiedad auto-regresiva necesaria para la generación de texto \parencite{vaswani_attention_nodate}.
 \end{itemize}
 
 Aunque el paper original presentó esta estructura dual, la evolución posterior de los LLMs (como la serie GPT) ha tendido a utilizar arquitecturas \textit{Decoder-only}, optimizadas para tareas de 
@@ -378,6 +379,46 @@ Sin embargo, \textcite{hoffmann_training_2022} refutaron parcialmente esta visi�
 Su hallazgo fundamental establece que, para un presupuesto computacional fijo $C$, el número de parámetros $N$ y la cantidad de datos $D$ deben escalarse en proporciones iguales (linealmente). Esto redefinió 
 la frontera de eficiencia, indicando que los modelos más pequeños entrenados con muchos más datos son computacionalmente más óptimos que modelos gigantes con pocos datos.
 
+\subsection{Componentes y Configuración}
+
+Para comprender el funcionamiento y el ciclo de vida de los LLMs, es esencial distinguir entre los elementos internos que constituyen el ''conocimiento'' del modelo y las configuraciones externas que controlan
+su comportamiento y aprendizaje. Según \textcite{atkinson2025}, estos conceptos se definen de la siguiente manera:
+
+\begin{description}
+    \item{\textbf{Parámetros:}}
+    Son los valores numéricos internos (principalmente \textit{pesos} y \textit{sesgos} en las matrices de la red neuronal) que el modelo aprende y ajusta automáticamente durante el proceso de entrenamiento.
+    Representan el conocimiento adquirido a partir de los datos. En modelos masivos como GPT-3, la cantidad de parámetros se cuenta en miles de millones (e.g., 175B), y es esta inmensa cantidad de variables
+    ajustables la que permite capturar patrones complejos del lenguaje \parencite{atkinson2025}.
+
+    \item{\textbf{Hiperparámetros:}}
+    A diferencia de los parámetros, estos son valores de configuración establecidos por los investigadores \textit{antes} de iniciar el entrenamiento y no se modifican por el modelo durante el proceso. 
+    Existen dos tipos principales:
+    \begin{itemize}
+        \item \textit{De Arquitectura:} Definen la estructura del modelo, como el número de capas ($L$), la dimensión del modelo ($d_{model}$) o el número de cabezas de atención ($h$).
+        \item \textit{De Entrenamiento:} Controlan cómo aprende el modelo, siendo la \textbf{tasa de aprendizaje (learning rate)} y el tamaño del lote (batch size) los más críticos 
+        \parencite{atkinson2025, kaplan_scaling_2020}.
+    \end{itemize}
+
+    \item{\textbf{Ventana de Contexto (Context Window):}}
+    Es un límite arquitectónico crítico que define la cantidad máxima de tokens (entrada + salida generada) que el modelo puede procesar en una sola interacción. Funciona como la "memoria de corto plazo" del
+    modelo; si la conversación excede este límite, la información más antigua se trunca y el modelo ''olvida'' el contexto previo. Modelos recientes han ampliado esta ventana de 2k tokens (GPT-3 original) a más
+    de 100k, permitiendo el análisis de documentos extensos \parencite{nvidia2023, brown_language_nodate}.
+
+    \item{\textbf{Temperatura (Temperature):}}
+    Es un hiperparámetro utilizado exclusivamente durante la fase de \textit{inferencia} (generación de texto) que regula la aleatoriedad de las predicciones. Matemáticamente, actúa como un factor de escalado
+    en la función \textit{softmax} antes de calcular las probabilidades de salida:
+    \begin{itemize}
+        \item \textbf{Temperatura baja ($< 1$):} Agudiza la distribución de probabilidad, haciendo que el modelo sea más determinista y repetitivo, eligiendo casi siempre los tokens más probables (ideal para
+        tareas de codificación o respuestas factuales).
+        \item \textbf{Temperatura alta ($> 1$):} Aplana la distribución, permitiendo que tokens menos probables sean seleccionados ocasionalmente, lo que resulta en generaciones más diversas y "creativas",
+        aunque con mayor riesgo de alucinaciones \parencite{atkinson2025, nvidia2023}.
+    \end{itemize}
+
+    \item{\textbf{Muestreo Top-p (Nucleus Sampling):}}
+    Es una alternativa o complemento a la temperatura para controlar la generación. En lugar de considerar todo el vocabulario, el modelo solo considera el subconjunto más pequeño de tokens cuya probabilidad
+    acumulada suma al menos $p$ (e.g., $p=0.9$). Esto elimina dinámicamente las palabras con muy baja probabilidad (la ''cola larga'' de la distribución), evitando generaciones sintácticamente correctas pero
+    semánticamente absurdas, manteniendo al mismo tiempo la diversidad léxica \parencite{atkinson2025}.
+\end{description}
 
 \subsection{Ciclo de Vida de un LLM}
 
@@ -447,7 +488,7 @@ Esto permite actualizar el conocimiento del modelo simplemente actualizando la b
 
 \subsubsection{Pequeños Modelos de Lenguaje (Small Language Models, SLMs)}
 Recientemente, ha surgido interés en modelos compactos (e.g., < 3B parámetros) que puedan ejecutarse en dispositivos locales. Trabajos como el de \textcite{gunasekar_textbooks_2023} con la serie
-\textbf{Phi} han demostrado que la calidad de los datos ("textbook quality") es más determinante que la cantidad. Un modelo pequeño entrenado con datos sintéticos altamente curados puede superar a modelos
+\hyperlink{phi}{Phi} han demostrado que la calidad de los datos ("textbook quality") es más determinante que la cantidad. Un modelo pequeño entrenado con datos sintéticos altamente curados puede superar a modelos
 mucho más grandes entrenados con datos web ruidosos.
 
 \subsection{Métricas de Evaluación}
@@ -584,7 +625,13 @@ como un verdadero chatbot multimodal \parencite{liu_visual_2023}.
 
     \item[\hypertarget{glo:feedforward}{Red Prealimentada (Feed-forward Neural Network)}] \hfill \\
     Tipo de red neuronal artificial donde las conexiones entre los nodos no forman ciclos. La información fluye únicamente en una dirección, desde la capa de entrada, a través de las capas
-    ocultas (si las hay), hasta la capa de salida. 
+    ocultas (si las hay), hasta la capa de salida.
+
+    \item[\hypertarget{glo:phi}{Serie Phi (Phi Series)}] \hfill \\
+    Familia de Pequeños Modelos de Lenguaje introducida por Microsoft Research como por ejemplo el modelo Phi-1 (1.3B parámetros). Su hipótesis central es que la calidad de los datos de
+    entrenamiento es más determinante que la cantidad bruta.
+    \parencite{gunasekar_textbooks_2023}.
+
 \end{description}
 
 \printbibliography
