@@ -2,6 +2,9 @@
 /Libros
 Plan_TFG_GAVIOLA_FACUNDO.pdf
 .vscode/
+/out
+/Docs/marco_teorico/${workspaceFolder}
+/Docs/estado_del_arte/${workspaceFolder}
 Documento_LLMs_VLLMs.bbl
 Documento_LLMs_VLLMs.aux
 Documento_LLMs_VLLMs.log

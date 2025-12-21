@@ -1,0 +1,43 @@
+
+% !TeX root = resumen_papers.tex
+% !TeX root = main_resumen.tex
+\documentclass[11pt, a4paper]{article}
+
+% Configuración de idioma y codificación
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+% Mejorar compatibilidad con captions y hooks
+\usepackage{caption}
+\usepackage[spanish]{babel}
+\usepackage{csquotes}
+% Control float placement
+\usepackage{placeins}
+
+% Configuración de bibliografía
+\usepackage[backend=biber, style=apa]{biblatex}
+\addbibresource{referencias.bib}
+
+\begin{document}
+
+\textbf{A Multimodal Vision Foundation Model for Clinical Dermatology (PanDerm)} \parencite{yan_multimodal_2025}
+Este estudio introduce PanDerm, un modelo fundacional multimodal diseñado para dermatología, pre-entrenado mediante aprendizaje auto-supervisado en más de 2 millones de imágenes de diversas modalidades
+(dermatoscopia, clínica, patología). El modelo fue evaluado exhaustivamente en 28 tareas distintas, logrando un rendimiento de estado del arte y demostrando una gran capacidad de generalización incluso
+con escasos datos etiquetados. En estudios comparativos con lectores humanos, PanDerm superó a los clínicos en la detección temprana de melanoma en un 10.2\% y ayudó a mejorar la precisión diagnóstica 
+general de los especialistas en un 11\%. Los autores concluyen que los modelos fundacionales multimodales pueden optimizar significativamente el flujo de trabajo clínico, desde el diagnóstico diferencial
+hasta el pronóstico de metástasis.
+
+\textbf{Derm1M: A Million-scale Vision-Language Dataset Aligned with Clinical Ontology} \parencite{yan_derm1m_2025}
+Este trabajo presenta Derm1M, un conjunto de datos de visión-lenguaje a gran escala que contiene un millón de pares de imagen-texto, curados y alineados con una ontología clínica estandarizada de 390
+condiciones de la piel. Para garantizar la calidad de los datos provenientes de diversas fuentes de internet, se implementó un proceso de refinamiento utilizando un "Curator-LLM" que filtra el ruido y
+estructura las descripciones médicas. Las pruebas realizadas demuestran que los modelos entrenados con Derm1M superan significativamente a los modelos de referencia anteriores (como PubMedCLIP) en tareas
+de clasificación \textit{zero-shot} y recuperación multimodal cruzada. La conclusión principal es que la alineación rigurosa de los datos con el conocimiento clínico estructurado es más crítica para el
+rendimiento del modelo que simplemente aumentar el volumen de datos sin procesar.
+
+\textbf{Resource-efficient Medical Vision Language Model for Dermatology (SCALEMED)} \parencite{yilmaz_resource-efficient_nodate}
+Este paper propone SCALEMED, un marco de trabajo para desarrollar modelos de visión-lenguaje eficientes en recursos y preservadores de la privacidad, utilizando datos de entrenamiento totalmente 
+sintéticos. Los autores generaron "Dermasynth", un dataset multimodal creado mediante la orquestación de LLMs para generar descripciones clínicas y modelos de difusión para sintetizar las imágenes
+correspondientes. Al entrenar modelos ligeros (como Dermatollama y DermaVLM) exclusivamente con estos datos, lograron un rendimiento competitivo en tareas de VQA (Visual Question Answering), superando
+incluso a modelos generales masivos como GPT-4V en métricas específicas. El estudio concluye que los datos sintéticos de alta calidad son una alternativa viable a los datos reales restringidos, permitiendo
+el desarrollo de herramientas de IA médica accesibles y privadas.
+
+\end{document}
