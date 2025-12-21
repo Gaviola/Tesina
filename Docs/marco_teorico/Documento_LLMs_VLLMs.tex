@@ -8,6 +8,8 @@
 \usepackage{caption}
 \usepackage[spanish]{babel}
 \usepackage{csquotes}
+% Control float placement
+\usepackage{placeins}
 
 % Configuración de bibliografía
 \usepackage[backend=biber, style=apa]{biblatex}
@@ -19,6 +21,8 @@
 
 % Paquete para enlaces
 \usepackage[colorlinks=true, linkcolor=blue, urlcolor=blue, citecolor=blue]{hyperref}
+
+
 
 \title{Documento LLMs, VLLMs}   
 \author{Facundo Gaviola}
@@ -230,6 +234,16 @@ En su estudio, Elman demostró que estas redes podían:
     secuencial \parencite{elman_finding_1990}.
 \end{itemize}
 
+En la siguiente figura \ref{arch_rnn}, Se puede observar un esquema de la arquitectura de una Red Neuronal Recurrente Simple (SRN):
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.8\textwidth]{imagenes//RNN_architecture.png}
+    \caption{Arquitectura de una Red Neuronal Recurrente Simple (SRN)}
+    \footnotesize{Fuente: Imagen extraida de \parencite{elman_finding_1990}}
+    \label{arch_rnn}
+\end{figure}
+
 Sin embargo, a pesar de estos avances en la representación estructural, las RNNs simples como la de Elman enfrentan una limitación crítica conocida como el problema del 
 \textit{\textbf{desvanecimiento del gradiente}} (vanishing gradient). A medida que la secuencia se alarga, los gradientes utilizados para actualizar los pesos se vuelven infinitesimales, impidiendo
 que la red aprenda dependencias a muy largo plazo \parencite{atkinson2025}. Esta limitación motivó el desarrollo posterior de las redes LSTM.
@@ -302,10 +316,22 @@ Donde:
 Este cálculo permite al modelo ponderar la importancia de cada palabra en relación con todas las demás, independientemente de su distancia física en la secuencia, resolviendo efectivamente el 
 problema de las dependencias a largo plazo.
 
+Este proceso se desglosa visualmente en la Figura \ref{multihead_attention}.
+A la izquierda de la figura se muestra la \textit{Scaled Dot-Product Attention}, que calcula la compatibilidad entre una consulta y una clave mediante el producto punto.
+
+\pagebreak
 \subsection{Atención Multi-Cabeza (Multi-Head Attention)}
 
-En lugar de aplicar una única función de atención con claves, valores y consultas de dimensión completa ($d_{model}$), \textcite{vaswani_attention_nodate} demostraron que es beneficioso proyectar
-linealmente estas entradas $h$ veces con diferentes proyecciones aprendidas. Este mecanismo se denomina \textbf{Multi-Head Attention}.
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.8\textwidth]{imagenes//attention.png}
+    \caption{(Izquierda) Atención de Producto Punto Escalado. (Derecha) La Atención Multi-Cabeza consiste en varias capas de atención ejecutándose en paralelo. Fuente: \textcite{vaswani_attention_nodate}.}
+    \label{multihead_attention}
+\end{figure}
+
+Como se ilustra en la parte derecha de la Figura \ref{multihead_attention}, en lugar de aplicar una única función de atención con claves, valores y consultas de dimensión completa ($d_{model}$), 
+\textcite{vaswani_attention_nodate} demostraron que es beneficioso proyectarlinealmente estas entradas $h$ veces con diferentes proyecciones aprendidas. Este mecanismo se denomina 
+\textbf{Multi-Head Attention}.
 
 La intuición detrás de este enfoque es permitir al modelo ''atender'' conjuntamente a información proveniente de diferentes subespacios de representación en diferentes posiciones. Con una sola
 cabeza de atención, el promedio ponderado podría diluir esta información. Al tener múltiples cabezas, cada una puede especializarse en capturar distintos tipos de relaciones (e.g., una cabeza 
@@ -336,9 +362,21 @@ Matemáticamente, dado un número de cabezas $h$, el proceso se descompone en tr
 
 En la implementación original, se utilizaron $h=8$ cabezas y una dimensión reducida para cada una de $d_k = d_v = d_{model}/h = 64$. Debido a esta reducción de dimensión, el costo computacional
 total es similar al de una atención de cabeza única con dimensión completa \parencite{vaswani_attention_nodate}.
+
+\pagebreak
 \subsection{Arquitectura Encoder-Decoder}
 
-El Transformer original adopta una estructura de codificador-decodificador:
+La estructura general del modelo se presenta en la Figura \ref{arch_transformer}. 
+Como se puede apreciar en el diagrama, el modelo sigue una arquitectura clásica de codificador-decodificador (encoder-decoder), pero reemplaza las capas recurrentes por pilas de capas de atención 
+y redes \textit{feed-forward}, conectadas mediante normalización de capa y conexiones residuales.
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=0.8\textwidth]{imagenes//transformer_architecture.png}
+    \caption{La arquitectura del modelo Transformer. A la izquierda se observa la pila del Codificador y a la derecha la del Decodificador. Fuente: \textcite{vaswani_attention_nodate}.}
+    \label{arch_transformer}
+\end{figure}
+\FloatBarrier
 
 \begin{itemize}
     \item \textbf{Codificador (Encoder):} Compuesto por una pila de $N=6$ capas idénticas. Cada capa tiene dos subcapas: un mecanismo de atención multi-cabeza y una red \textit{feed-forward} conectada por posición.
@@ -571,6 +609,18 @@ como una secuencia de ''palabras'' visuales. Para ello:
     \item La secuencia resultante se procesa con un Encoder de Transformer estándar.
 \end{enumerate}
 
+La Figura \ref{arch_vit} resume el funcionamiento de este modelo, mostrando cómo se adapta una imagen 2D para ser procesada por una arquitectura diseñada para secuencias (texto).
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1\textwidth]{imagenes//ViT.png}
+    \caption{Visión general del modelo ViT. Dividimos una imagen en parches de tamaño fijo, incrustamos linealmente cada uno de ellos, añadimos positional embeddings y alimentamos la secuencia
+    de vectores resultante a un codificador de Transformers estándar. Para realizar la clasificación, utilizamos el enfoque estándar de añadir un ''token de clasificación'' extra aprendible 
+    a la secuencia. Fuente: \textcite{dosovitskiy_image_2021}.}
+    \label{arch_vit}
+\end{figure}
+
+\pagebreak
 Los autores demostraron que, cuando se entrena a escala masiva (e.g., en JFT-300M), ViT supera a las arquitecturas convolucionales de estado del arte (como ResNet), con un costo computacional menor
 \parencite{dosovitskiy_image_2021}. Este avance fue fundamental porque unificó la arquitectura base para visión y texto, facilitando su integración posterior.
 
@@ -587,6 +637,20 @@ El funcionamiento es el siguiente:
     \item Un \textbf{Encoder de Texto} (Transformer) convierte la descripción en otro vector.
     \item El objetivo es maximizar la similitud coseno entre los vectores de pares correctos (imagen, su texto real) y minimizarla para los pares incorrectos en un lote de $N$ ejemplos.
 \end{itemize}
+
+La Figura \ref{arch_clip} ilustra el enfoque de entrenamiento contrastivo utilizado para alinear ambos mundos.
+
+\begin{figure}[hbt]
+    \centering
+    \includegraphics[width=0.8\textwidth]{imagenes//CLIP.png}
+    \caption{Resumen del enfoque CLIP. Mientras que los modelos de imagen estándar entrenan conjuntamente un extractor de características de imagen y un clasificador lineal para predecir 
+    alguna etiqueta, CLIP entrena conjuntamente un codificador de imagen y un codificador de texto para predecir los emparejamientos correctos de un lote de ejemplos de entrenamiento 
+    (imagen, texto). Fuente: \textcite{radford_learning_nodate}.}
+    \label{arch_clip}
+\end{figure}
+
+En este modelo se recibe un lote de $N$ pares (imagen, texto). El objetivo es maximizar los valores de la diagonal (pares correctos, en azul) y minimizar los valores fuera de la diagonal.
+En tiempo de prueba, el codificador de texto aprendido sintetiza un clasificador lineal \textit{zero-shot} incrustando los nombres o descripciones de las clases del conjunto de datos objetivo.
 
 Esto dota al modelo de capacidades \textit{Zero-shot} asombrosas: CLIP puede clasificar imágenes en categorías que nunca vio durante el entrenamiento simplemente proporcionándole los nombres de
 las clases como texto (e.g., ''una foto de un [melanoma]''), alineando efectivamente el espacio visual con el semántico \parencite{radford_learning_nodate}.
@@ -610,7 +674,22 @@ El entrenamiento se realiza en dos etapas:
 
 Este enfoque permite que el modelo no solo reconozca objetos, sino que razone sobre ellos, responda preguntas abiertas y siga instrucciones complejas sobre el contenido visual, comportándose
 como un verdadero chatbot multimodal \parencite{liu_visual_2023}.
+La arquitectura de LLaVA es presentada en la siguiente figura:
+\begin{figure}[!hbt]
+    \centering
+    \includegraphics[width=1.1\textwidth]{imagenes//LLaVA.png}
+    \caption{Arquitectura de red LLaVA. Muestra la conexión entre el encoder de visión ($H_v$) y el modelo de lenguaje ($H_q$) a través de una matriz de proyección. Fuente: 
+    \textcite{liu_visual_2023}.}
+    \label{arch_llava}
+\end{figure}
 
+En este esquema:
+\begin{itemize}
+    \item Se utiliza un \textbf{Vision Encoder} (como CLIP ViT-L/14) para extraer características visuales de la imagen de entrada ($X_v$), resultando en $Z_v$.
+    \item Una \textbf{Capa de Proyección} simple (MLP) transforma estas características visuales ($Z_v$) en el espacio de embeddings de palabras ($H_v$), de modo que el modelo de lenguaje las entienda como si fueran tokens de texto.
+    \item Finalmente, el \textbf{Language Model} (LLaMA/Vicuna) procesa tanto los embeddings visuales ($H_v$) como las instrucciones textuales del usuario ($H_q$) para generar una respuesta coherente ($X_a$).
+\end{itemize}
+\pagebreak
 \section{Glosario}
 
 \begin{description}
