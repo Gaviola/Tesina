@@ -42,3 +42,63 @@
 	langid = {english},
 	file = {PDF:C\:\\Users\\Facu\\Zotero\\storage\\LNZZEJEY\\Yan et al. - 2025 - A multimodal vision foundation model for clinical dermatology.pdf:application/pdf},
 }
+
+@article{li_llava-med_nodate,
+	title = {{LLaVA}-Med: Training a Large Language-and-Vision Assistant for Biomedicine in One Day},
+	abstract = {Conversational generative {AI} has demonstrated remarkable promise for empowering biomedical practitioners, but current investigations focus on unimodal text. Multimodal conversational {AI} has seen rapid progress by leveraging billions of image-text pairs from the public web, but such general-domain vision-language models still lack sophistication in understanding and conversing about biomedical images. In this paper, we propose a cost-efficient approach for training a visionlanguage conversational assistant that can answer open-ended research questions of biomedical images. The key idea is to leverage a large-scale, broad-coverage biomedical figure-caption dataset extracted from {PubMed} Central, use {GPT}-4 to self-instruct open-ended instruction-following data from the captions, and then fine-tune a large general-domain vision-language model using a novel curriculum learning method. Specifically, the model first learns to align biomedical vocabulary using the figure-caption pairs as is, then learns to master open-ended conversational semantics using {GPT}-4 generated instruction-following data, broadly mimicking how a layperson gradually acquires biomedical knowledge. This enables us to train a Large Language and Vision Assistant for {BioMedicine} ({LLaVA}-Med) in less than 15 hours (with eight A100s). {LLaVA}-Med exhibits excellent multimodal conversational capability and can follow open-ended instruction to assist with inquiries about a biomedical image. On three standard biomedical visual question answering datasets, fine-tuning {LLaVA}-Med outperforms previous supervised state-of-the-art on certain metrics. To facilitate biomedical multimodal research, we will release our instruction-following data and the {LLaVA}-Med model.},
+	author = {Li, Chunyuan and Wong, Cliff and Zhang, Sheng and Usuyama, Naoto and Liu, Haotian and Yang, Jianwei and Naumann, Tristan and Poon, Hoifung and Gao, Jianfeng},
+	langid = {english},
+	file = {PDF:C\:\\Users\\Facu\\Zotero\\storage\\UJ232E98\\Li et al. - LLaVA-Med Training a Large Language-and-Vision Assistant for Biomedicine in One Day.pdf:application/pdf},
+}
+
+@article{moor_med-flamingo_nodate,
+	title = {Med-Flamingo: a Multimodal Medical Few-shot Learner},
+	abstract = {Medicine, by its nature, is a multifaceted domain that requires the synthesis of information across various modalities. Medical generative visionlanguage models ({VLMs}) make a first step in this direction and promise many exciting clinical applications. However, existing models typically have to be fine-tuned on sizeable down-stream datasets, which poses a significant limitation as in many medical applications data is scarce, necessitating models that are capable of learning from few examples in real-time. Here we propose Med-Flamingo, a multimodal few-shot learner adapted to the medical domain. Based on {OpenFlamingo}-9B, we continue pre-training on paired and interleaved medical image-text data from publications and textbooks. Med-Flamingo unlocks few-shot generative medical visual question answering ({VQA}) abilities, which we evaluate on several datasets including a novel challenging open-ended {VQA} dataset of visual {USMLE}-style problems. Furthermore, we conduct the first human evaluation for generative medical {VQA} where physicians review the problems and blinded generations in an interactive app. Med-Flamingo improves performance in generative medical {VQA} by up to 20\% in clinician’s rating and firstly enables multimodal medical few-shot adaptations, such as rationale generation. We release our model, code, and evaluation app.},
+	author = {Moor, Michael and Huang, Qian and Wu, Shirley and Yasunaga, Michihiro and Dalmia, Yash and Leskovec, Jure and Zakka, Cyril and Reis, Eduardo Pontes and Rajpurkar, Pranav},
+	langid = {english},
+	file = {PDF:C\:\\Users\\Facu\\Zotero\\storage\\34MWR6QM\\Moor et al. - Med-Flamingo a Multimodal Medical Few-shot Learner.pdf:application/pdf},
+}
+
+@article{daneshjou_skincon_nodate,
+	title = {{SkinCon}: A skin disease dataset densely annotated by domain experts for fine-grained model debugging and analysis},
+	abstract = {For the deployment of artificial intelligence ({AI}) in high risk settings, such as healthcare, methods that provide interpretability/explainability or allow fine-grained error analysis are critical. Many recent methods for interpretability/explainability and fine-grained error analysis use concepts, which are meta-labels that are semantically meaningful to humans. However, there are only a few datasets that include concept-level meta-labels and most of these meta-labels are relevant for natural images that do not require domain expertise. Previous densely annotated datasets in medicine focused on meta-labels that are relevant to a single disease such as osteoarthritis or melanoma. In dermatology, skin disease is described using an established clinical lexicon that allows clinicians to describe physical exam findings to one another. To provide a medical dataset densely annotated by domain experts with annotations useful across multiple disease processes, we developed {SkinCon}: a skin disease dataset densely annotated by dermatologists. {SkinCon} includes 3230 images from the Fitzpatrick 17k skin disease dataset densely annotated with 48 clinical concepts, 22 of which have at least 50 images representing the concept. The concepts used were chosen by two dermatologists considering the clinical descriptor terms used to describe skin lesions. Examples include "plaque", "scale", and "erosion". These same concepts were also used to label 656 skin disease images from the Diverse Dermatology Images dataset, providing an additional external dataset with diverse skin tone representations. We review the potential applications for the {SkinCon} dataset, such as probing models, concept-based explanations, concept bottlenecks, error analysis, and slice discovery. Furthermore, we use {SkinCon} to demonstrate two of these use cases: debugging mistakes of an existing dermatology {AI} model with concepts and developing interpretable models with post-hoc concept bottleneck models.},
+	author = {Daneshjou, Roxana and Yuksekgonul, Mert and Cai, Zhuo Ran and Novoa, Roberto and Zou, James},
+	langid = {english},
+	file = {PDF:C\:\\Users\\Facu\\Zotero\\storage\\HWEJLQXV\\Daneshjou et al. - SkinCon A skin disease dataset densely annotated by domain experts for fine-grained model debugging.pdf:application/pdf},
+}
+
+@misc{zhou_skingpt-4_2023,
+	title = {{SkinGPT}-4: An Interactive Dermatology Diagnostic System with Visual Large Language Model},
+	url = {http://arxiv.org/abs/2304.10691},
+	doi = {10.48550/arXiv.2304.10691},
+	shorttitle = {{SkinGPT}-4},
+	abstract = {Skin and subcutaneous diseases rank high among the leading contributors to the global burden of nonfatal diseases, impacting a considerable portion of the population. Nonetheless, the field of dermatology diagnosis faces three significant hurdles. Firstly, there is a shortage of dermatologists accessible to diagnose patients, particularly in rural regions. Secondly, accurately interpreting skin disease images poses a considerable challenge. Lastly, generating patient-friendly diagnostic reports is usually a time-consuming and labor-intensive task for dermatologists. To tackle these challenges, we present {SkinGPT}-4, which is the world’s first interactive dermatology diagnostic system powered by an advanced visual large language model. {SkinGPT}-4 leverages a fine-tuned version of {MiniGPT}-4, trained on an extensive collection of skin disease images (comprising 52,929 publicly available and proprietary images) along with clinical concepts and doctors’ notes. We designed a two-step training process to allow {SkinGPT}-4 to express medical features in skin disease images with natural language and make accurate diagnoses of the types of skin diseases. With {SkinGPT}-4, users could upload their own skin photos for diagnosis, and the system could autonomously evaluate the images, identifies the characteristics and categories of the skin conditions, performs in-depth analysis, and provides interactive treatment recommendations. Meanwhile, {SkinGPT}-4’s local deployment capability and commitment to user privacy also render it an appealing choice for patients in search of a dependable and precise diagnosis of their skin ailments. To demonstrate the robustness of {SkinGPT}-4, we conducted quantitative evaluations on 150 real-life cases, which were independently reviewed by certified dermatologists, and showed that {SkinGPT}-4 could provide accurate diagnoses of skin diseases. Though {SkinGPT}-4 is not a substitute for doctors, it could enhance users’ comprehension of their medical conditions, facilitate improve communication between patients and doctors, expedite the diagnostic process for dermatologists, and potentially promote human-centred care and healthcare equity in underdeveloped areas.},
+	number = {{arXiv}:2304.10691},
+	publisher = {{arXiv}},
+	author = {Zhou, Juexiao and He, Xiaonan and Sun, Liyuan and Xu, Jiannan and Chen, Xiuying and Chu, Yuetan and Zhou, Longxi and Liao, Xingyu and Zhang, Bin and Gao, Xin},
+	urldate = {2025-12-29},
+	date = {2023-06-08},
+	langid = {english},
+	eprinttype = {arxiv},
+	eprint = {2304.10691 [eess]},
+	keywords = {Computer Science - Computer Vision and Pattern Recognition, Computer Science - Machine Learning, Electrical Engineering and Systems Science - Image and Video Processing},
+	file = {PDF:C\:\\Users\\Facu\\Zotero\\storage\\F8WLE9V9\\Zhou et al. - 2023 - SkinGPT-4 An Interactive Dermatology Diagnostic System with Visual Large Language Model.pdf:application/pdf},
+}
+
+@article{chakrabarti_automated_2025,
+	title = {Automated Skin Cancer Report Generation via a Knowledge-Distilled Vision-Language Model},
+	volume = {13},
+	rights = {https://creativecommons.org/licenses/by/4.0/legalcode},
+	issn = {2169-3536},
+	url = {https://ieeexplore.ieee.org/document/11091320/},
+	doi = {10.1109/ACCESS.2025.3591750},
+	abstract = {Artificial Intelligence ({AI})’s capacity to analyze dermoscopic images promises a groundbreaking leap in skin cancer diagnostics, offering exceptional accuracy and an effortlessly non-invasive image acquisition process. However, this immense potential, which has ignited widespread research enthusiasm, is critically undermined due to the lack of transparency and interpretability. The automated generation of articulate and comprehensive diagnostic reports will bridge this critical gap by not only illuminate the {AI}’s diagnostic rational but also substantially reduce the demanding workload of the medical professionals. This study presents a multimodal vision-language model ({VLM}) trained using a two-stage knowledge distillation ({KD}) framework to generate structured medical reports from dermoscopic images, with descriptive features based on the 7-point melanoma checklist. The reports are organized into clinically relevant sections—Findings, Impression, and Differential Diagnosis—aligned with dermatological standards. Experimental evaluation demonstrates the system’s ability to produce accurate and interpretable reports. Human feedback from a medical professional, assessing clinical relevance, completeness, and interpretability, supports the utility of the generated reports, while computational metrics validate their accuracy and alignment with reference pseudo-reports, achieving a {SacreBLEU} score of 55.59, a {ROUGE}-1 score of 0.5438, a {ROUGE}-L score of 0.3828, and a {BERTScore} F1 of 0.9025. These findings underscore the model’s ability to generalize effectively to unseen data, enabled by its multimodal design, clinical alignment, and explainability.},
+	pages = {136320--136335},
+	journaltitle = {{IEEE} Access},
+	shortjournal = {{IEEE} Access},
+	author = {Chakrabarti, Lawhori and Zhang, Boyu and Tian, Hengyi and Vakanski, Aleksandar and Xian, Min},
+	urldate = {2025-12-29},
+	date = {2025},
+	langid = {english},
+	file = {PDF:C\:\\Users\\Facu\\Zotero\\storage\\U7PQTS2R\\Chakrabarti et al. - 2025 - Automated Skin Cancer Report Generation via a Knowledge-Distilled Vision-Language Model.pdf:application/pdf},
+}

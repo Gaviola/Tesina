@@ -1,6 +1,5 @@
 
 % !TeX root = resumen_papers.tex
-% !TeX root = main_resumen.tex
 \documentclass[11pt, a4paper]{article}
 
 % Configuración de idioma y codificación
@@ -19,25 +18,58 @@
 
 \begin{document}
 
-\textbf{A Multimodal Vision Foundation Model for Clinical Dermatology (PanDerm)} \parencite{yan_multimodal_2025}
+\textbf{A Multimodal Vision Foundation Model for Clinical Dermatology (PanDerm)} \cite{yan_multimodal_2025}
 Este estudio introduce PanDerm, un modelo fundacional multimodal diseñado para dermatología, pre-entrenado mediante aprendizaje auto-supervisado en más de 2 millones de imágenes de diversas modalidades
 (dermatoscopia, clínica, patología). El modelo fue evaluado exhaustivamente en 28 tareas distintas, logrando un rendimiento de estado del arte y demostrando una gran capacidad de generalización incluso
 con escasos datos etiquetados. En estudios comparativos con lectores humanos, PanDerm superó a los clínicos en la detección temprana de melanoma en un 10.2\% y ayudó a mejorar la precisión diagnóstica 
 general de los especialistas en un 11\%. Los autores concluyen que los modelos fundacionales multimodales pueden optimizar significativamente el flujo de trabajo clínico, desde el diagnóstico diferencial
 hasta el pronóstico de metástasis.
 
-\textbf{Derm1M: A Million-scale Vision-Language Dataset Aligned with Clinical Ontology} \parencite{yan_derm1m_2025}
+\textbf{Derm1M: A Million-scale Vision-Language Dataset Aligned with Clinical Ontology} \cite{yan_derm1m_2025}
 Este trabajo presenta Derm1M, un conjunto de datos de visión-lenguaje a gran escala que contiene un millón de pares de imagen-texto, curados y alineados con una ontología clínica estandarizada de 390
 condiciones de la piel. Para garantizar la calidad de los datos provenientes de diversas fuentes de internet, se implementó un proceso de refinamiento utilizando un "Curator-LLM" que filtra el ruido y
 estructura las descripciones médicas. Las pruebas realizadas demuestran que los modelos entrenados con Derm1M superan significativamente a los modelos de referencia anteriores (como PubMedCLIP) en tareas
 de clasificación \textit{zero-shot} y recuperación multimodal cruzada. La conclusión principal es que la alineación rigurosa de los datos con el conocimiento clínico estructurado es más crítica para el
 rendimiento del modelo que simplemente aumentar el volumen de datos sin procesar.
 
-\textbf{Resource-efficient Medical Vision Language Model for Dermatology (SCALEMED)} \parencite{yilmaz_resource-efficient_nodate}
+\textbf{Resource-efficient Medical Vision Language Model for Dermatology (SCALEMED)} \cite{yilmaz_resource-efficient_nodate}
 Este paper propone SCALEMED, un marco de trabajo para desarrollar modelos de visión-lenguaje eficientes en recursos y preservadores de la privacidad, utilizando datos de entrenamiento totalmente 
 sintéticos. Los autores generaron "Dermasynth", un dataset multimodal creado mediante la orquestación de LLMs para generar descripciones clínicas y modelos de difusión para sintetizar las imágenes
 correspondientes. Al entrenar modelos ligeros (como Dermatollama y DermaVLM) exclusivamente con estos datos, lograron un rendimiento competitivo en tareas de VQA (Visual Question Answering), superando
 incluso a modelos generales masivos como GPT-4V en métricas específicas. El estudio concluye que los datos sintéticos de alta calidad son una alternativa viable a los datos reales restringidos, permitiendo
 el desarrollo de herramientas de IA médica accesibles y privadas.
+
+\textbf{Automated Skin Cancer Report Generation via a Knowledge-Distilled Vision-Language Model} \cite{chakrabarti_automated_2025}
+Este trabajo propone un marco de trabajo de destilación de conocimientos en dos etapas para generar reportes de diagnóstico de cáncer de piel estructurados y coherentes.
+El método utiliza GPT-4V como modelo "maestro" para generar pseudo-reportes basados en la lista de verificación de 7 puntos del melanoma, y luego afina un modelo "estudiante" (LLaVA-v1.5-13B) utilizando la técnica de Adaptación de Bajo Rango (LoRA, Low-Rank Adaptation).
+Las pruebas realizadas demuestran que el modelo destilado supera a los enfoques de Generación Aumentada por Recuperación (RAG, Retrieval-Augmented Generation) y a modelos generales como Claude 3.7, alcanzando un puntaje SacreBLEU de 55.59 y un BERTScore F1 de 0.9025.
+Los autores concluyen que la supervisión directa mediante pseudo-reportes estructurados es más efectiva que el RAG para capturar la lógica clínica en dermatología.
+
+\textbf{SkinGPT-4: An Interactive Dermatology Diagnostic System with Visual Large Language Model} \cite{zhou_skingpt-4_2023}
+Este estudio presenta SkinGPT-4, el primer sistema interactivo de diagnóstico dermatológico basado en un Gran Modelo de Lenguaje (LLM) visual, diseñado para mejorar la comunicación médico-paciente.
+La metodología consiste en afinar el modelo MiniGPT-4 (basado en Vicuna y ViT) mediante un proceso de dos pasos: primero alineando conceptos clínicos visuales y textuales, y luego entrenando específicamente para el diagnóstico con un dataset de 52,929 imágenes.
+Para la evaluación se utilizaron 150 casos de la vida real revisados por dermatólogos certificados, obteniendo una precisión diagnóstica del 78.76\% y una alta calificación en utilidad informativa.
+La conclusión destaca que, aunque no reemplaza a los médicos, el sistema democratiza el acceso al diagnóstico en áreas rurales y mejora la equidad en la atención sanitaria.
+
+\textbf{LLaVA-Med: Training a Large Language-and-Vision Assistant for Biomedicine in One Day} \cite{li_llava-med_nodate}
+Este \textit{paper} introduce LLaVA-Med, un asistente conversacional multimodal enfocado en biomedicina, entrenado de manera eficiente en costos y tiempo.
+El método emplea un aprendizaje curricular novedoso donde primero se alinean vocabularios biomédicos utilizando pares imagen-texto de PubMed Central y luego se realiza un ajuste de instrucciones (\textit{instruction-tuning}) con datos generados por GPT-4.
+El entrenamiento completo se realizó en menos de 15 horas utilizando 8 GPUs A100, logrando superar el estado del arte en datasets estándar de VQA (Visual Question Answering) como VQA-RAD y SLAKE.
+Los autores concluyen que es posible adaptar modelos generales al dominio biomédico de forma eficiente, ofreciendo excelentes capacidades conversacionales y de razonamiento sobre imágenes médicas.
+
+\textbf{Med-Flamingo: a Multimodal Medical Few-shot Learner} \cite{moor_med-flamingo_nodate}
+Este trabajo presenta Med-Flamingo, el primer modelo fundacional multimodal adaptado al dominio médico con capacidades de aprendizaje \textit{few-shot} para generar respuestas visuales y justificaciones.
+La metodología se basa en continuar el pre-entrenamiento de OpenFlamingo-9B utilizando datos pares e intercalados de imágenes y texto extraídos de publicaciones y libros de texto médicos (dataset MTB y PMC-OA).
+El entrenamiento se realizó en un nodo con 8 GPUs NVIDIA A100 de 80GB durante aproximadamente 6.75 días (2700 pasos).
+Se evaluó el modelo en tareas de VQA generativo usando datasets existentes (VQA-RAD, PathVQA) y uno nuevo desarrollado por los autores (Visual USMLE), empleando una aplicación de evaluación humana con médicos expertos.
+Los resultados indican que Med-Flamingo mejora la utilidad clínica hasta en un 20\% respecto a los modelos base y logra el mejor rango promedio (1.67 frente a 2.33 de OpenFlamingo) en la evaluación humana.
+Los autores concluyen que el modelo permite nuevas aplicaciones clínicas como la generación de racionalidad médica, aunque advierten sobre el riesgo de alucinaciones y la necesidad de supervisión.
+
+\textbf{SkinCon: A skin disease dataset densely annotated by domain experts} \cite{daneshjou_skincon_nodate}
+Este \textit{paper} introduce SkinCon, un dataset de enfermedades de la piel densamente anotado con 48 conceptos clínicos (como placa, escama, erosión) para facilitar la interpretabilidad y el análisis de errores en modelos de IA.
+Los métodos incluyeron el etiquetado experto de 3230 imágenes del dataset Fitzpatrick17k y 656 de DDI, validando las anotaciones con un acuerdo del 94\%, y utilizando estos datos para entrenar Modelos de Cuello de Botella de Conceptos (PCBM) basados en la arquitectura InceptionV3 (DeepDerm).
+Las pruebas se centraron en dos tareas: explicar los errores del modelo mediante explicaciones contrafactuales conceptuales (CCE) y desarrollar modelos inherentemente interpretables.
+Los resultados demostraron que los PCBM entrenados con SkinCon igualan o superan el rendimiento del modelo original (AUC de 0.727 vs 0.632 en pieles tipo III-IV) y permiten identificar qué características clínicas (ej. ausencia de telangiectasia) causan diagnósticos erróneos.
+La conclusión destaca que las anotaciones densas de conceptos son fundamentales para crear sistemas de diagnóstico dermatológico más transparentes y para la depuración detallada de modelos de "caja negra".
 
 \end{document}
