@@ -41,79 +41,92 @@ el desarrollo de herramientas de IA médica accesibles y privadas.
 
 \textbf{Automated Skin Cancer Report Generation via a Knowledge-Distilled Vision-Language Model} \cite{chakrabarti_automated_2025}
 Este trabajo propone un marco de trabajo de destilación de conocimientos en dos etapas para generar reportes de diagnóstico de cáncer de piel estructurados y coherentes.
-El método utiliza GPT-4V como modelo "maestro" para generar pseudo-reportes basados en la lista de verificación de 7 puntos del melanoma, y luego afina un modelo "estudiante" (LLaVA-v1.5-13B) utilizando la técnica de Adaptación de Bajo Rango (LoRA, Low-Rank Adaptation).
-Las pruebas realizadas demuestran que el modelo destilado supera a los enfoques de Generación Aumentada por Recuperación (RAG, Retrieval-Augmented Generation) y a modelos generales como Claude 3.7, alcanzando un puntaje SacreBLEU de 55.59 y un BERTScore F1 de 0.9025.
-Los autores concluyen que la supervisión directa mediante pseudo-reportes estructurados es más efectiva que el RAG para capturar la lógica clínica en dermatología.
+El método utiliza GPT-4V como modelo "maestro" para generar pseudo-reportes basados en la lista de verificación de 7 puntos del melanoma, y luego afina un modelo "estudiante" (LLaVA-v1.5-13B) utilizando la
+técnica de Adaptación de Bajo Rango (LoRA, Low-Rank Adaptation).Las pruebas realizadas demuestran que el modelo destilado supera a los enfoques de Generación Aumentada por Recuperación 
+(RAG, Retrieval-Augmented Generation) y a modelos generales como Claude 3.7, alcanzando un puntaje SacreBLEU de 55.59 y un BERTScore F1 de 0.9025. Los autores concluyen que la supervisión directa mediante 
+pseudo-reportes estructurados es más efectiva que el RAG para capturar la lógica clínica en dermatología.
 
 \textbf{SkinGPT-4: An Interactive Dermatology Diagnostic System with Visual Large Language Model} \cite{zhou_skingpt-4_2023}
 Este estudio presenta SkinGPT-4, el primer sistema interactivo de diagnóstico dermatológico basado en un Gran Modelo de Lenguaje (LLM) visual, diseñado para mejorar la comunicación médico-paciente.
-La metodología consiste en afinar el modelo MiniGPT-4 (basado en Vicuna y ViT) mediante un proceso de dos pasos: primero alineando conceptos clínicos visuales y textuales, y luego entrenando específicamente para el diagnóstico con un dataset de 52,929 imágenes.
-Para la evaluación se utilizaron 150 casos de la vida real revisados por dermatólogos certificados, obteniendo una precisión diagnóstica del 78.76\% y una alta calificación en utilidad informativa.
-La conclusión destaca que, aunque no reemplaza a los médicos, el sistema democratiza el acceso al diagnóstico en áreas rurales y mejora la equidad en la atención sanitaria.
+La metodología consiste en afinar el modelo MiniGPT-4 (basado en Vicuna y ViT) mediante un proceso de dos pasos: primero alineando conceptos clínicos visuales y textuales, y luego entrenando específicamente
+para el diagnóstico con un dataset de 52,929 imágenes. Para la evaluación se utilizaron 150 casos de la vida real revisados por dermatólogos certificados, obteniendo una precisión diagnóstica del 78.76\% y
+una alta calificación en utilidad informativa. La conclusión destaca que, aunque no reemplaza a los médicos, el sistema democratiza el acceso al diagnóstico en áreas rurales y mejora la equidad en la atención 
+sanitaria.
 
 \textbf{LLaVA-Med: Training a Large Language-and-Vision Assistant for Biomedicine in One Day} \cite{li_llava-med_nodate}
-Este \textit{paper} introduce LLaVA-Med, un asistente conversacional multimodal enfocado en biomedicina, entrenado de manera eficiente en costos y tiempo.
-El método emplea un aprendizaje curricular novedoso donde primero se alinean vocabularios biomédicos utilizando pares imagen-texto de PubMed Central y luego se realiza un ajuste de instrucciones (\textit{instruction-tuning}) con datos generados por GPT-4.
-El entrenamiento completo se realizó en menos de 15 horas utilizando 8 GPUs A100, logrando superar el estado del arte en datasets estándar de VQA (Visual Question Answering) como VQA-RAD y SLAKE.
-Los autores concluyen que es posible adaptar modelos generales al dominio biomédico de forma eficiente, ofreciendo excelentes capacidades conversacionales y de razonamiento sobre imágenes médicas.
+Este \textit{paper} introduce LLaVA-Med, un asistente conversacional multimodal enfocado en biomedicina, entrenado de manera eficiente en costos y tiempo. El método emplea un aprendizaje curricular novedoso
+donde primero se alinean vocabularios biomédicos utilizando pares imagen-texto de PubMed Central y luego se realiza un ajuste de instrucciones (\textit{instruction-tuning}) con datos generados por GPT-4. El
+entrenamiento completo se realizó en menos de 15 horas utilizando 8 GPUs A100, logrando superar el estado del arte en datasets estándar de VQA (Visual Question Answering) como VQA-RAD y SLAKE. Los autores
+concluyen que es posible adaptar modelos generales al dominio biomédico de forma eficiente, ofreciendo excelentes capacidades conversacionales y de razonamiento sobre imágenes médicas.
 
 \textbf{Med-Flamingo: a Multimodal Medical Few-shot Learner} \cite{moor_med-flamingo_nodate}
 Este trabajo presenta Med-Flamingo, el primer modelo fundacional multimodal adaptado al dominio médico con capacidades de aprendizaje \textit{few-shot} para generar respuestas visuales y justificaciones.
 La metodología se basa en continuar el pre-entrenamiento de OpenFlamingo-9B utilizando datos pares e intercalados de imágenes y texto extraídos de publicaciones y libros de texto médicos (dataset MTB y PMC-OA).
-El entrenamiento se realizó en un nodo con 8 GPUs NVIDIA A100 de 80GB durante aproximadamente 6.75 días (2700 pasos).
-Se evaluó el modelo en tareas de VQA generativo usando datasets existentes (VQA-RAD, PathVQA) y uno nuevo desarrollado por los autores (Visual USMLE), empleando una aplicación de evaluación humana con médicos expertos.
-Los resultados indican que Med-Flamingo mejora la utilidad clínica hasta en un 20\% respecto a los modelos base y logra el mejor rango promedio (1.67 frente a 2.33 de OpenFlamingo) en la evaluación humana.
-Los autores concluyen que el modelo permite nuevas aplicaciones clínicas como la generación de racionalidad médica, aunque advierten sobre el riesgo de alucinaciones y la necesidad de supervisión.
+El entrenamiento se realizó en un nodo con 8 GPUs NVIDIA A100 de 80GB durante aproximadamente 6.75 días (2700 pasos). Se evaluó el modelo en tareas de VQA generativo usando datasets existentes (VQA-RAD, PathVQA)
+y uno nuevo desarrollado por los autores (Visual USMLE), empleando una aplicación de evaluación humana con médicos expertos. Los resultados indican que Med-Flamingo mejora la utilidad clínica hasta en un 20\% 
+respecto a los modelos base y logra el mejor rango promedio (1.67 frente a 2.33 de OpenFlamingo) en la evaluación humana. Los autores concluyen que el modelo permite nuevas aplicaciones clínicas como la generación
+de racionalidad médica, aunque advierten sobre el riesgo de alucinaciones y la necesidad de supervisión.
 
 \textbf{SkinCon: A skin disease dataset densely annotated by domain experts} \cite{daneshjou_skincon_nodate}
-Este \textit{paper} introduce SkinCon, un dataset de enfermedades de la piel densamente anotado con 48 conceptos clínicos (como placa, escama, erosión) para facilitar la interpretabilidad y el análisis de errores en modelos de IA.
-Los métodos incluyeron el etiquetado experto de 3230 imágenes del dataset Fitzpatrick17k y 656 de DDI, validando las anotaciones con un acuerdo del 94\%, y utilizando estos datos para entrenar Modelos de Cuello de Botella de Conceptos (PCBM) basados en la arquitectura InceptionV3 (DeepDerm).
-Las pruebas se centraron en dos tareas: explicar los errores del modelo mediante explicaciones contrafactuales conceptuales (CCE) y desarrollar modelos inherentemente interpretables.
-Los resultados demostraron que los PCBM entrenados con SkinCon igualan o superan el rendimiento del modelo original (AUC de 0.727 vs 0.632 en pieles tipo III-IV) y permiten identificar qué características clínicas (ej. ausencia de telangiectasia) causan diagnósticos erróneos.
-La conclusión destaca que las anotaciones densas de conceptos son fundamentales para crear sistemas de diagnóstico dermatológico más transparentes y para la depuración detallada de modelos de "caja negra".
+Este \textit{paper} introduce SkinCon, un dataset de enfermedades de la piel densamente anotado con 48 conceptos clínicos (como placa, escama, erosión) para facilitar la interpretabilidad y el análisis de errores
+en modelos de IA. Los métodos incluyeron el etiquetado experto de 3230 imágenes del dataset Fitzpatrick17k y 656 de DDI, validando las anotaciones con un acuerdo del 94\%, y utilizando estos datos para entrenar 
+Modelos de Cuello de Botella de Conceptos (PCBM) basados en la arquitectura InceptionV3 (DeepDerm). Las pruebas se centraron en dos tareas: explicar los errores del modelo mediante explicaciones contrafactuales
+conceptuales (CCE) y desarrollar modelos inherentemente interpretables. Los resultados demostraron que los PCBM entrenados con SkinCon igualan o superan el rendimiento del modelo original (AUC de 0.727 vs 0.632
+en pieles tipo III-IV) y permiten identificar qué características clínicas (ej. ausencia de telangiectasia) causan diagnósticos erróneos. La conclusión destaca que las anotaciones densas de conceptos son fundamentales
+para crear sistemas de diagnóstico dermatológico más transparentes y para la depuración detallada de modelos de "caja negra".
 
 \textbf{Ensemble Deep Learning and LLM-Assisted Reporting for Automated Skin Lesion Diagnosis} \cite{khan_ensemble_2025}
-Este estudio presenta un marco híbrido que integra un conjunto heterogéneo de Redes Neuronales Convolucionales (CNN, Convolutional Neural Networks) para el diagnóstico visual y un Gran Modelo de Lenguaje (LLM, Large Language Model) para la generación automática de reportes.
-La metodología emplea un ensamble de las arquitecturas EfficientNetB3, ResNet50 y DenseNet121 entrenadas independientemente con 6000 imágenes dermatoscópicas, utilizando un mecanismo de votación mayoritaria para la clasificación y el modelo LLaMA-3 70B (vía API) para transformar las predicciones en evaluaciones clínicas estructuradas.
-Las pruebas realizadas demuestran que el modelo de ensamble alcanza una exactitud del 97.67\% y una sensibilidad (recall) crítica del 99\% para la detección de malignidad, superando a los modelos individuales y reduciendo significativamente la métrica de Log Loss a 0.1293.
-Los autores concluyen que la integración directa del análisis visual con la generación de lenguaje natural no solo mejora la precisión diagnóstica, sino que cierra la brecha de comunicación clínica al proveer explicaciones interpretables y guías de monitoreo personalizadas para los pacientes.
+Este estudio presenta un marco híbrido que integra un conjunto heterogéneo de Redes Neuronales Convolucionales (CNN, Convolutional Neural Networks) para el diagnóstico visual y un Gran Modelo de Lenguaje (LLM, Large
+Language Model) para la generación automática de reportes.La metodología emplea un ensamble de las arquitecturas EfficientNetB3, ResNet50 y DenseNet121 entrenadas independientemente con 6000 imágenes dermatoscópicas,
+utilizando un mecanismo de votación mayoritaria para la clasificación y el modelo LLaMA-3 70B (vía API) para transformar las predicciones en evaluaciones clínicas estructuradas. Las pruebas realizadas demuestran que
+el modelo de ensamble alcanza una exactitud del 97.67\% y una sensibilidad (recall) crítica del 99\% para la detección de malignidad, superando a los modelos individuales y reduciendo significativamente la métrica
+de Log Loss a 0.1293. Los autores concluyen que la integración directa del análisis visual con la generación de lenguaje natural no solo mejora la precisión diagnóstica, sino que cierra la brecha de comunicación
+clínica al proveer explicaciones interpretables y guías de monitoreo personalizadas para los pacientes.
 
 \textbf{Evaluating Deep Neural Networks Trained on Clinical Images in Dermatology With the Fitzpatrick 17k Dataset} \cite{groh_evaluating_2021}
-Este estudio presenta Fitzpatrick 17k, un conjunto de datos de 16,577 imágenes clínicas anotadas con etiquetas de tipo de piel Fitzpatrick, diseñado para evaluar cómo los sesgos en los datos de entrenamiento afectan la precisión de los modelos de IA en distintos tonos de piel.
-La metodología utilizó una arquitectura VGG-16 pre-entrenada en ImageNet con una capa final personalizada para clasificar 114 condiciones dermatológicas, empleando técnicas de muestreo ponderado para mitigar el desbalance de clases.
-Aunque no se especifica el hardware o tiempo de cómputo exacto, las pruebas mostraron que el modelo alcanza una exactitud general del 20.2\% en la clasificación de 114 condiciones y del 62.4\% en la categorización de tres niveles (benigno, maligno, no neoplásico).
-Los resultados indican que la precisión disminuye significativamente en tipos de piel que no están representados en el entrenamiento; por ejemplo, los modelos entrenados en pieles claras (tipos 1-2) tuvieron un peor desempeño en pieles oscuras (tipos 5-6).
-Adicionalmente, se encontró que el método algorítmico de Ángulo de Tipología Individual (ITA) difiere de las etiquetas humanas en más de un punto en un tercio de los casos, limitando su uso como herramienta automática.
-Los autores concluyen que la subrepresentación de pieles oscuras en los atlas dermatológicos genera disparidades algorítmicas reales, subrayando la necesidad crítica de transparencia y diversidad en los datos médicos.
+Este estudio presenta Fitzpatrick 17k, un conjunto de datos de 16,577 imágenes clínicas anotadas con etiquetas de tipo de piel Fitzpatrick, diseñado para evaluar cómo los sesgos en los datos de entrenamiento afectan
+la precisión de los modelos de IA en distintos tonos de piel. La metodología utilizó una arquitectura VGG-16 pre-entrenada en ImageNet con una capa final personalizada para clasificar 114 condiciones dermatológicas,
+empleando técnicas de muestreo ponderado para mitigar el desbalance de clases. Las pruebas mostraron que el modelo alcanza una exactitud general del 20.2\% en la clasificación de 114 condiciones y del 62.4\% en la
+categorización de tres niveles (benigno, maligno, no neoplásico). Los resultados indican que la precisión disminuye significativamente en tipos de piel que no están representados en el entrenamiento; por ejemplo, los
+modelos entrenados en pieles claras (tipos 1-2) tuvieron un peor desempeño en pieles oscuras (tipos 5-6). Adicionalmente, se encontró que el método algorítmico de Ángulo de Tipología Individual (ITA) difiere de las
+etiquetas humanas en más de un punto en un tercio de los casos, limitando su uso como herramienta automática. Los autores concluyen que la subrepresentación de pieles oscuras en los atlas dermatológicos genera 
+disparidades algorítmicas reales, subrayando la necesidad crítica de transparencia y diversidad en los datos médicos.
 
 \textbf{MM-Skin: Enhancing Dermatology Vision-Language Model with an Image-Text Dataset Derived from Textbooks} \cite{zeng_mm-skin_2025}
-Este estudio presenta MM-Skin, el primer dataset dermatológico multimodal a gran escala que integra imágenes clínicas, dermatoscópicas y patológicas con descripciones especializadas extraídas de 15 libros de texto (aprox. 10k pares imagen-texto y 27k pares de preguntas y respuestas), y propone SkinVL, un modelo de visión-lenguaje ajustado para este dominio.
-La metodología incluyó la generación de datos de instrucción mediante Llama-3.1 y el ajuste fino eficiente (utilizando LoRA) del modelo base LLaVA-Med-v1.5-7B, ejecutando el entrenamiento en un servidor con 8 GPUs NVIDIA 3090.
-Se evaluó el modelo en tareas de Visual Question Answering (VQA), clasificación supervisada y clasificación \textit{zero-shot}, donde la variante SkinVL-PubMM alcanzó una exactitud del 82.34\% en diagnósticos de patología (dataset Patch16) bajo la configuración \textit{zero-shot}, superando al modelo base LLaVA-Med por más de un 13\%.
-Los resultados demuestran que el modelo entrenado con este dataset supera tanto a modelos generalistas (como GPT-4V o Gemini) como a modelos médicos existentes en métricas de precisión lingüística (Bleu-4, BertScore) y diagnóstica.
-Los autores concluyen que la calidad y la especialización de las descripciones textuales en el entrenamiento son determinantes para mejorar el razonamiento clínico y la generalización en tareas dermatológicas complejas.
+Este estudio presenta MM-Skin, el primer dataset dermatológico multimodal a gran escala que integra imágenes clínicas, dermatoscópicas y patológicas con descripciones especializadas extraídas de 15 libros de texto
+(aprox. 10k pares imagen-texto y 27k pares de preguntas y respuestas), y propone SkinVL, un modelo de visión-lenguaje ajustado para este dominio. La metodología incluyó la generación de datos de instrucción mediante
+Llama-3.1 y el ajuste fino eficiente (utilizando LoRA) del modelo base LLaVA-Med-v1.5-7B, ejecutando el entrenamiento en un servidor con 8 GPUs NVIDIA 3090. Se evaluó el modelo en tareas de Visual Question Answering
+(VQA), clasificación supervisada y clasificación \textit{zero-shot}, donde la variante SkinVL-PubMM alcanzó una exactitud del 82.34\% en diagnósticos de patología (dataset Patch16) bajo la configuración 
+\textit{zero-shot}, superando al modelo base LLaVA-Med por más de un 13\%. Los resultados demuestran que el modelo entrenado con este dataset supera tanto a modelos generalistas (como GPT-4V o Gemini) como a modelos
+médicos existentes en métricas de precisión lingüística (Bleu-4, BertScore) y diagnóstica. Los autores concluyen que la calidad y la especialización de las descripciones textuales en el entrenamiento son determinantes
+para mejorar el razonamiento clínico y la generalización en tareas dermatológicas complejas.
 
 \textbf{MpoxVLM: A Vision-Language Model for Diagnosing Skin Lesions from Mpox Virus Infection} \cite{cao_mpoxvlm_2024}
-Este trabajo presenta MpoxVLM, el primer modelo de visión-lenguaje (VLM, Vision-Language Model) diseñado específicamente para la detección de Mpox, integrando el análisis de imágenes de lesiones cutáneas con información clínica del paciente para abordar la falta de herramientas diagnósticas robustas en este dominio.
-La metodología propone una arquitectura de doble codificador que combina un codificador visual CLIP congelado para características generales y un clasificador Vision Transformer (ViT) entrenado específicamente en un nuevo dataset multimodal de 2,914 muestras curado por los autores, ambos conectados a un decodificador LLaMA-2-7B mediante capas de proyección entrenables.
-El ajuste fino del modelo se realizó utilizando la técnica de Adaptación de Bajo Rango (LoRA, Low-Rank Adaptation) durante 10,000 pasos en un servidor con 2 GPUs NVIDIA RTX 4090.
-Las pruebas realizadas mostraron que MpoxVLM supera significativamente a los modelos CNN tradicionales y a modelos multimodales generalistas como GPT-4o y Claude 3, alcanzando una exactitud del 90.38\% y un AUROC del 95.16\%.
-Los autores concluyen que la integración de datos visuales con registros clínicos demográficos y síntomas específicos es fundamental para mejorar la sensibilidad del diagnóstico en poblaciones diversas, ofreciendo una herramienta prometedora para la detección temprana de enfermedades infecciosas emergentes.
+Este trabajo presenta MpoxVLM, el primer modelo de visión-lenguaje (VLM, Vision-Language Model) diseñado específicamente para la detección de Mpox, integrando el análisis de imágenes de lesiones cutáneas con información
+clínica del paciente para abordar la falta de herramientas diagnósticas robustas en este dominio. La metodología propone una arquitectura de doble codificador que combina un codificador visual CLIP congelado para 
+características generales y un clasificador Vision Transformer (ViT) entrenado específicamente en un nuevo dataset multimodal de 2,914 muestras curado por los autores, ambos conectados a un decodificador LLaMA-2-7B mediante
+capas de proyección entrenables. El ajuste fino del modelo se realizó utilizando la técnica de Adaptación de Bajo Rango (LoRA, Low-Rank Adaptation) durante 10,000 pasos en un servidor con 2 GPUs NVIDIA RTX 4090. Las pruebas
+realizadas mostraron que MpoxVLM supera significativamente a los modelos CNN tradicionales y a modelos multimodales generalistas como GPT-4o y Claude 3, alcanzando una exactitud del 90.38\% y un AUROC del 95.16\%. Los 
+autores concluyen que la integración de datos visuales con registros clínicos demográficos y síntomas específicos es fundamental para mejorar la sensibilidad del diagnóstico en poblaciones diversas, ofreciendo una herramienta
+prometedora para la detección temprana de enfermedades infecciosas emergentes.
 
 \textbf{PeFoMed: Parameter Efficient Fine-tuning of Multimodal Large Language Models for Medical Imaging} \cite{he_pefomed_2025}
-Este trabajo propone PeFoMed, un marco de trabajo para el ajuste fino eficiente en parámetros (PEFT) de Grandes Modelos de Lenguaje Multimodales (MLLMs), diseñado para abordar tareas de Visual Question Answering médico (Med-VQA) y generación de reportes médicos (MRG) con bajos recursos computacionales.
-La metodología implementa una estrategia de entrenamiento en dos etapas (primero en *image captioning* y luego en tareas *downstream*) utilizando la técnica LoRA (Low-Rank Adaptation) sobre la arquitectura MiniGPT-v2, actualizando únicamente las capas de proyección lineal y los adaptadores LoRA mientras se mantienen congelados el codificador visual (EVA-ViT) y el LLM base (LLaMA-2-chat).
-Los experimentos se ejecutaron en un servidor con 4 GPUs NVIDIA Tesla A40 de 48GB.
-Las pruebas en los datasets VQA-RAD, SLAKE, PathVQA e IU-Xray demostraron que el modelo alcanza un rendimiento competitivo, logrando una exactitud general del 87.5\% en VQA-RAD (según evaluación con GPT-4) y superando a modelos como BiomedGPT en métricas de generación de reportes (CIDEr 0.462), utilizando solo 56.63 millones de parámetros entrenables.
-Adicionalmente, el estudio introduce y valida el uso de GPT-4 como una métrica de evaluación semántica, demostrando que tiene una mayor correlación con el juicio humano que las métricas léxicas tradicionales (como BLEU o Exact Match), las cuales tienden a subestimar el desempeño en preguntas abiertas.
-Los autores concluyen que el ajuste fino eficiente es una solución viable para adaptar modelos fundacionales al dominio médico y que la evaluación semántica automatizada es crucial para medir correctamente la calidad en tareas generativas.
+Este trabajo propone PeFoMed, un marco de trabajo para el ajuste fino eficiente en parámetros (PEFT) de Grandes Modelos de Lenguaje Multimodales (MLLMs), diseñado para abordar tareas de Visual Question Answering médico 
+(Med-VQA) y generación de reportes médicos (MRG) con bajos recursos computacionales. La metodología implementa una estrategia de entrenamiento en dos etapas (primero en *image captioning* y luego en tareas *downstream*)
+utilizando la técnica LoRA (Low-Rank Adaptation) sobre la arquitectura MiniGPT-v2, actualizando únicamente las capas de proyección lineal y los adaptadores LoRA mientras se mantienen congelados el codificador visual (EVA-ViT)
+y el LLM base (LLaMA-2-chat). Los experimentos se ejecutaron en un servidor con 4 GPUs NVIDIA Tesla A40 de 48GB. Las pruebas en los datasets VQA-RAD, SLAKE, PathVQA e IU-Xray demostraron que el modelo alcanza un rendimiento
+competitivo, logrando una exactitud general del 87.5\% en VQA-RAD (según evaluación con GPT-4) y superando a modelos como BiomedGPT en métricas de generación de reportes (CIDEr 0.462), utilizando solo 56.63 millones de
+parámetros entrenables. Adicionalmente, el estudio introduce y valida el uso de GPT-4 como una métrica de evaluación semántica, demostrando que tiene una mayor correlación con el juicio humano que las métricas léxicas
+tradicionales (como BLEU o Exact Match), las cuales tienden a subestimar el desempeño en preguntas abiertas. Los autores concluyen que el ajuste fino eficiente es una solución viable para adaptar modelos fundacionales al
+dominio médico y que la evaluación semántica automatizada es crucial para medir correctamente la calidad en tareas generativas.
 
 \textbf{SkinSavvy2: Augmented Skin Lesion Diagnosis and Personalized Medical Consultation System} \cite{kim_skinsavvy2_2025}
-Este artículo propone un sistema híbrido para el autodiagnóstico dermatológico que integra modelos de clasificación de imágenes de última generación con un módulo de consulta médica personalizada basado en GPT-4.
-La metodología utiliza las arquitecturas EfficientNetV2 y Swin Transformer para clasificar lesiones cutáneas, entrenadas sobre una versión aumentada y balanceada del dataset HAM10000, y emplea ingeniería de \textit{prompts} estructurada para generar recomendaciones que consideran factores como el tipo de piel, la genética y la exposición UV.
-El entrenamiento de los modelos de visión se llevó a cabo en un servidor equipado con 4 GPUs NVIDIA RTX A6000 y 256 GB de RAM, ejecutándose durante 30 épocas para el ajuste fino.
-Las pruebas experimentales demostraron que el modelo Swin Transformer alcanza un F1-score promedio de 0.793 y una exactitud balanceada del 78.0\%, superando tanto a la versión anterior del sistema (SkinSavvy) como a otros modelos del estado del arte.
-Adicionalmente, un estudio con usuarios (incluyendo expertos y legos) reveló que las recomendaciones generadas por el sistema propuesto obtuvieron puntuaciones superiores en confianza y personalización comparadas con las generadas por LLaMA-2.
-Los autores concluyen que la combinación de clasificadores visuales robustos con LLMs que incorporan metadatos clínicos del paciente mejora significativamente la utilidad y precisión de los sistemas de asistencia médica automatizada.
+Este artículo propone un sistema híbrido para el autodiagnóstico dermatológico que integra modelos de clasificación de imágenes de última generación con un módulo de consulta médica personalizada basado en GPT-4. La 
+metodología utiliza las arquitecturas EfficientNetV2 y Swin Transformer para clasificar lesiones cutáneas, entrenadas sobre una versión aumentada y balanceada del dataset HAM10000, y emplea ingeniería de \textit{prompts}
+estructurada para generar recomendaciones que consideran factores como el tipo de piel, la genética y la exposición UV. El entrenamiento de los modelos de visión se llevó a cabo en un servidor equipado con 4 GPUs NVIDIA
+RTX A6000 y 256 GB de RAM, ejecutándose durante 30 épocas para el ajuste fino. Las pruebas experimentales demostraron que el modelo Swin Transformer alcanza un F1-score promedio de 0.793 y una exactitud balanceada del 78.0\%,
+superando tanto a la versión anterior del sistema (SkinSavvy) como a otros modelos del estado del arte. Adicionalmente, un estudio con usuarios (incluyendo expertos y legos) reveló que las recomendaciones generadas por el 
+sistema propuesto obtuvieron puntuaciones superiores en confianza y personalización comparadas con las generadas por LLaMA-2. Los autores concluyen que la combinación de clasificadores visuales robustos con LLMs que incorporan
+metadatos clínicos del paciente mejora significativamente la utilidad y precisión de los sistemas de asistencia médica automatizada.
 
 \end{document}
