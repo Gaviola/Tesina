@@ -19,11 +19,13 @@
 \begin{document}
 
 \textbf{A Multimodal Vision Foundation Model for Clinical Dermatology (PanDerm)} \cite{yan_multimodal_2025}
-Este estudio introduce PanDerm, un modelo fundacional multimodal diseñado para dermatología, pre-entrenado mediante aprendizaje auto-supervisado en más de 2 millones de imágenes de diversas modalidades
-(dermatoscopia, clínica, patología). El modelo fue evaluado exhaustivamente en 28 tareas distintas, logrando un rendimiento de estado del arte y demostrando una gran capacidad de generalización incluso
-con escasos datos etiquetados. En estudios comparativos con lectores humanos, PanDerm superó a los clínicos en la detección temprana de melanoma en un 10.2\% y ayudó a mejorar la precisión diagnóstica 
-general de los especialistas en un 11\%. Los autores concluyen que los modelos fundacionales multimodales pueden optimizar significativamente el flujo de trabajo clínico, desde el diagnóstico diferencial
-hasta el pronóstico de metástasis.
+Este estudio introduce PanDerm, un modelo fundacional multimodal pre-entrenado mediante una combinación novedosa de modelado latente enmascarado y alineación de características CLIP sobre 2 millones de imágenes reales de 11 instituciones
+clínicas abarcando 4 modalidades (fotografía corporal total, clínica, dermatoscópica y dermatopatología). La arquitectura basada en Vision Transformer demuestra escalabilidad superior, alcanzando resultados competitivos con solo 0.8M
+imágenes versus 1.2M de SwAVDerm, y eficiencia de entrenamiento excepcional (200 épocas vs 500-800 de métodos previos). PanDerm fue evaluado exhaustivamente en 28 datasets diversos cubriendo screening de cáncer de piel, estratificación de
+riesgo, diagnóstico de condiciones neoplásicas e inflamatorias, segmentación de lesiones, monitoreo longitudinal y predicción de metástasis, logrando estado del arte en todas las tareas incluso usando solo 5-10\% de datos etiquetados. Tres
+estudios clínicos reales demostraron utilidad práctica: detección de melanoma temprano con 10.2\% mayor precisión que clínicos, mejora del 11\% en precisión diagnóstica de cáncer de piel mediante colaboración humano-IA con 41 revisores, y
+rendimiento robusto a través de demografías diversas (ubicaciones anatómicas, grupos etarios, géneros, tonos de piel). Los autores concluyen que PanDerm representa un paradigma transformador hacia modelos fundacionales generalistas que abordan
+múltiples tareas clínicas en dermatología, con potencial de replicación en otras especialidades médicas para acelerar la integración de soporte de IA en la atención sanitaria.
 
 \textbf{Derm1M: A Million-scale Vision-Language Dataset Aligned with Clinical Ontology} \cite{yan_derm1m_2025}
 Este trabajo presenta Derm1M, un conjunto de datos de visión-lenguaje a gran escala que contiene un millón de pares de imagen-texto, curados y alineados con una ontología clínica estandarizada de 390
@@ -128,5 +130,148 @@ RTX A6000 y 256 GB de RAM, ejecutándose durante 30 épocas para el ajuste fino.
 superando tanto a la versión anterior del sistema (SkinSavvy) como a otros modelos del estado del arte. Adicionalmente, un estudio con usuarios (incluyendo expertos y legos) reveló que las recomendaciones generadas por el 
 sistema propuesto obtuvieron puntuaciones superiores en confianza y personalización comparadas con las generadas por LLaMA-2. Los autores concluyen que la combinación de clasificadores visuales robustos con LLMs que incorporan
 metadatos clínicos del paciente mejora significativamente la utilidad y precisión de los sistemas de asistencia médica automatizada.
+
+\textbf{Resource-efficient medical vision language model for dermatology via a synthetic data generation framework} \cite{yilmaz_resource-efficient_nodate}
+Este trabajo propone SCALEMED, un marco de trabajo centrado en datos que introduce DermaSynth, un conjunto de datos sintéticos de 1.2 millones de muestras, y DermatoLlama, un Modelo de Lenguaje y Visión (VLM, Vision-Language Model) 
+eficiente basado en Llama 3.2 11B. El modelo fue entrenado utilizando la técnica de adaptación de bajo rango (LoRA, Low-Rank Adaptation) en una estación de trabajo de bajo costo equipada con cuatro GPUs Nvidia RTX 4090, empleando
+un enfoque maestro-alumno donde Gemini 2.0 Flash guía la generación de datos sintéticos e instrucciones clínicas. En las evaluaciones realizadas sobre el benchmark DermaBench, DermatoLlama alcanzó una precisión de 0.91 en análisis
+de imágenes clínicas y 0.87 en dermatoscopia, superando a modelos del estado del arte como GPT-4o y Gemini 2.0 Flash en métricas de calidad de texto (BLEU-4 de 0.77 y ROUGE-L de 0.79). Los autores concluyen que el uso de datos
+sintéticos enriquecidos permite desarrollar asistentes clínicos escalables y preservadores de la privacidad que, a pesar de usar menos recursos computacionales, logran un rendimiento superior en la generación de reportes detallados
+y precisos.
+
+\textbf{Explainable AI for skin disease classification using gradient-weighted class activation mapping and transfer learning in digital health to identify contours} \cite{badhon_explainable_2025} 
+Este estudio evalúa la viabilidad de diagnosticar enfermedades de la piel (incluyendo acné, vitiligo, y SJS-TEN) en escenarios de recursos limitados mediante el uso de modelos de aprendizaje por transferencia y técnicas de IA 
+explicable (XAI). La metodología consistió en la creación de un dataset propio de 5184 imágenes recopiladas de fuentes online, aplicando preprocesamiento para la eliminación de ruido y aumento de datos para mitigar el desbalance de
+clases. Se entrenaron y compararon cinco arquitecturas de redes neuronales convolucionales (VGG16, VGG19, GoogleNet, XceptionNet e Inception) utilizando el entorno de Google Colab, e implementando Grad-CAM para visualizar las 
+regiones determinantes en la clasificación. Las pruebas demostraron que el modelo VGG-16 entrenado con datos aumentados obtuvo el mejor rendimiento, alcanzando una exactitud del 97.07\%, mientras que arquitecturas como Inception
+mostraron un desempeño inferior en este contexto. Los autores concluyen que la combinación de técnicas de aumento de datos con modelos robustos como VGG-16 permite superar la escasez de datos médicos, y que herramientas como Grad-CAM
+son esenciales para validar la coherencia clínica de las predicciones del modelo.
+
+\textbf{MONET: Transparent Medical Image AI via an Image-Text Foundation Model Grounded in Medical Literature} \cite{kim_transparent_2024}
+Este estudio presenta MONET (Medical concept retriever), un modelo fundacional que conecta imágenes médicas con texto mediante aprendizaje contrastivo sobre 105,550 pares imagen-texto extraídos de artículos de PubMed y libros de texto
+médicos. La arquitectura emplea codificadores separados para imagen y texto que mapean ambas modalidades a un espacio de representación conjunto, permitiendo anotar automáticamente conceptos clínicos definidos por el usuario (ej. "eritema",
+"úlcera") midiendo distancias en dicho espacio. MONET fue evaluado en datasets de imágenes clínicas (Fitzpatrick 17k, DDI) y dermatoscópicas (ISIC, Derm7pt), demostrando rendimiento competitivo con modelos supervisados y superior al modelo
+base CLIP en 21 de 28 conceptos evaluados (AUROC promedio 0.805 vs 0.736 para FST). Dos dermatólogos certificados validaron que las imágenes recuperadas por MONET efectivamente exhiben los conceptos solicitados. Los autores demuestran tres
+casos de uso críticos: auditoría de datasets identificando correlaciones espurias (ej. marcas de tinta asociadas con malignidad), auditoría de modelos revelando características causantes de errores, y desarrollo de modelos inherentemente
+interpretables basados en conceptos. La conclusión enfatiza que MONET habilita transparencia en todo el pipeline de desarrollo de IA médica sin requerir anotaciones manuales masivas, aprovechando el conocimiento colectivo encapsulado en la
+literatura médica.
+
+\textbf{Deep learning-aided decision support for diagnosis of skin disease across skin tones} \cite{groh_deep_2024}
+Este estudio presenta un experimento digital a gran escala con 389 dermatólogos y 459 médicos de atención primaria para evaluar el impacto de la asistencia por IA en el diagnóstico de enfermedades de la piel a través de distintos tonos
+de piel. La metodología empleó una simulación de teledermatología con 364 imágenes de 46 patologías, utilizando como soporte de decisión un modelo de aprendizaje profundo (arquitectura VGG-16) entrenado con el dataset Fitzpatrick 17k,
+aunque no se especifica el hardware ni el tiempo de cómputo utilizado. Las pruebas realizadas demostraron que el soporte de IA mejoró significativamente la precisión diagnóstica global (aumentando un 33\% en especialistas y un 69\% en
+generalistas), pero ambos grupos mantuvieron un rendimiento base inferior en imágenes de pieles oscuras. Los resultados revelaron un hallazgo crítico: la asistencia de la IA exacerbó la brecha de precisión entre tonos de piel claros y
+oscuros en los médicos generalistas, a pesar de que el modelo utilizado tenía un rendimiento equilibrado. Los autores concluyen que la mejora en la precisión general no garantiza la reducción del sesgo y que una asociación humano-IA mal
+diseñada puede amplificar las disparidades existentes en el diagnóstico de poblaciones subrepresentadas.
+
+\textbf{Optimizing skin disease diagnosis: harnessing online community data with contrastive learning and clustering techniques} \cite{shen_optimizing_202}
+Este estudio propone un modelo de aprendizaje profundo que utiliza grandes cantidades de imágenes dermatológicas no anotadas provenientes de fuentes en línea para el diagnóstico de 22 enfermedades de la piel. La metodología emplea un
+enfoque de aprendizaje contrastivo para aprender representaciones generales de 1.18 millones de imágenes sin etiquetas, seguido de un ajuste fino sobre datos con etiquetas ruidosas que son filtrados mediante técnicas de agrupamiento
+(\textit{clustering}) y un pequeño conjunto de validación estandarizado. El pre-entrenamiento del modelo se ejecutó en un clúster de 64 Unidades de NVIDIA RTX 3090, requiriendo aproximadamente 5 horas y 45 minutos por cada 100 épocas
+para el conjunto de datos dermatológicos. Las pruebas realizadas demostraron que el modelo alcanza una exactitud \textit{top-1} del 49.64\% cuando se utilizan 50 imágenes de validación por categoría para el filtrado, superando en un
+3\% a los modelos base pre-entrenados en ImageNet. Además, el modelo mostró una notable capacidad de transferencia a nuevas tareas, logrando una exactitud del 61.76\% en la detección de viruela del mono utilizando solo 50 imágenes
+adicionales durante el entrenamiento. Los autores concluyen que el aprovechamiento de datos masivos de internet, combinados con estrategias de filtrado robustas, permite desarrollar herramientas de diagnóstico efectivas y de bajo costo
+para una amplia gama de enfermedades cutáneas.
+
+\textbf{Creating an Empirical Dermatology Dataset Through Crowdsourcing With Web Search Advertisements} \cite{ward_creating_2024}
+Este estudio presenta el desarrollo del Skin Condition Image Network (SCIN), un conjunto de datos de acceso abierto generado mediante técnicas de \textit{crowdsourcing} utilizando anuncios en el buscador de Google para reclutar
+participantes de forma proactiva. La metodología se basó en mostrar anuncios a usuarios estadounidenses que realizaban búsquedas relacionadas con afecciones cutáneas, invitándoles a enviar fotografías de sus lesiones junto con información
+demográfica y de síntomas, las cuales fueron posteriormente validadas y etiquetadas por dermatólogos certificados. Se recopilaron un total de 5,749 envíos que resultaron en más de 10,000 imágenes, donde el 97.9\% fueron clasificadas como
+genuinas y el 89\% correspondieron a condiciones alérgicas, infecciosas o inflamatorias, cubriendo un vacío importante en los datasets actuales dominados por neoplasias. Los resultados demuestran que este método logra capturar 
+enfermedades en etapas muy tempranas (el 54\% con menos de 7 días de evolución) y ofrece una mayor diversidad demográfica en comparación con las fuentes clínicas tradicionales. Los autores concluyen que el uso de publicidad en buscadores
+web es una herramienta eficaz y escalable para construir datasets médicos representativos que reflejen mejor la realidad de las afecciones dermatológicas en la población general.
+
+\textbf{MedTrinity-25M: A Large-scale Multimodal Dataset with Multigranular Annotations for Medicine} \cite{xie_medtrinity-25m_2025}
+Este trabajo introduce MedTrinity-25M, el conjunto de datos multimodal más grande hasta la fecha en medicina, compuesto por más de 25 millones de imágenes que abarcan 10 modalidades y anotaciones multigranulares para más de 65 enfermedades.
+La metodología empleada utiliza un flujo de trabajo automatizado que orquesta Grandes Modelos de Lenguaje Multimodales (MLLM, Multimodal Large Language Models) junto con técnicas de Generación Aumentada por Recuperación 
+(RAG, Retrieval-Augmented Generation) y modelos expertos de detección para generar tripletes de imagen-Región de Interés (ROI, Region of Interest)-descripción sin necesidad de pares de texto manuales previos. Para validar el dataset, los
+autores desarrollaron LLaVA-Tri, un modelo pre-entrenado con estos datos, cuyas pruebas demostraron un rendimiento de estado del arte en tareas de Visual Question Answering (VQA), alcanzando una exactitud del 75.0\% en VQA-RAD, 87.8\% en
+SLAKE y 65.3\% en PathVQA. Los resultados indican que LLaVA-Tri supera consistentemente a modelos avanzados como GPT-4V y LLaVA-Med en métricas de evaluación estándar, validando la calidad de las anotaciones generadas automáticamente.
+Los autores concluyen que la riqueza de las anotaciones multigranulares, que capturan tanto información global como relaciones locales entre regiones, es crucial para el desarrollo de futuros modelos fundacionales médicos robustos y 
+escalables.
+
+\textbf{SkinCaRe: A Multimodal Dermatology Dataset Annotated with Medical Caption and Chain-of-Thought Reasoning} \cite{}
+Este trabajo introduce SkinCaRe, un dataset multimodal que unifica SkinCAP (4,000 imágenes con descripciones médicas densas anotadas por dermatólogos certificados) y SkinCoT (3,041 imágenes con narrativas diagnósticas jerárquicas
+de cadena de razonamiento verificadas clínicamente). La metodología empleó anotación multi-céntrica y validación cruzada bilingüe para SkinCAP, mientras que SkinCoT implementó un proceso iterativo de evaluación basado en seis 
+criterios de calidad clínica hasta alcanzar un estándar predefinido de precisión y profundidad explicativa. Las imágenes provienen de los datasets Fitzpatrick 17k y DDI, asegurando diversidad en tonos de piel y condiciones 
+dermatológicas. Este dataset representa el primer recurso público que combina descripciones observacionales ricas (captioning) con razonamiento diagnóstico estructurado (CoT) para entrenamiento de modelos multimodales en
+dermatología. Los autores concluyen que SkinCaRe llena un vacío crítico al proveer supervisión tanto descriptiva como de razonamiento clínico, habilitando el desarrollo de sistemas de IA que pueden tanto describir fielmente hallazgos
+visuales como explicar lógicas diagnósticas de forma transparente y verificable.
+
+\textbf{A dataset of skin lesion images collected in Argentina for the evaluation of AI tools in this population} \cite{ricci_lara_dataset_2023}
+Este trabajo presenta el primer conjunto de datos público de imágenes dermatoscópicas y clínicas de lesiones cutáneas recolectado en Argentina, diseñado para abordar la falta de representatividad latinoamericana y evaluar herramientas
+de IA en esta población específica. La metodología consistió en la recopilación y curación de 1,616 imágenes correspondientes a 1,246 lesiones de 623 pacientes del Hospital Italiano de Buenos Aires, utilizando diversos dermatoscopios
+y cámaras digitales para la adquisición, sin especificar hardware de cómputo o tiempos de entrenamiento al tratarse de un descriptor de datos. Las validaciones técnicas confirman que el 58.18\% de las lesiones cuentan con diagnóstico
+por biopsia (comparable a HAM10000) y que más del 93\% de los registros incluyen metadatos demográficos detallados como el tono de piel. Los autores concluyen que la creación de este dataset es un paso crítico para mitigar el sesgo 
+algorítmico y la "pobreza de datos de salud", permitiendo validar la eficacia de modelos globales en contextos demográficos locales distintivos.
+
+\textbf{Toward expert-level medical question answering with large language models} \cite{singhal_toward_2025}
+Este trabajo presenta Med-PaLM 2, un modelo de lenguaje diseñado para alcanzar un desempeño a nivel de expertos mediante la optimización del modelo base PaLM 2, un ajuste fino específico en el dominio médico y estrategias de 
+razonamiento novedosas como el Refinamiento por Ensamble y la Cadena de Recuperación. La metodología incluyó el entrenamiento unificado sobre conjuntos de datos de MultiMedQA (como MedQA y PubMedQA), aunque el documento no especifica
+el hardware exacto ni el tiempo de cómputo utilizados para este entrenamiento. Las pruebas realizadas abarcaron benchmarks de opción múltiple y evaluaciones humanas detalladas en 1,066 preguntas de consumidores y consultas hospitalarias
+reales, donde el modelo alcanzó una exactitud del 86.5\% en MedQA (estilo USMLE) y los especialistas prefirieron sus respuestas sobre las de médicos generalistas en un 65\% de los casos. Los autores concluyen que el modelo se aproxima al
+rendimiento de nivel médico manteniendo estándares de seguridad comparables a los humanos, aunque enfatizan la necesidad de evaluaciones rigurosas con expertos y datos adversarios antes de su implementación clínica.
+
+\textbf{Pre-trained multimodal large language model enhances dermatological diagnosis using SkinGPT-4} \cite{zhou_pre-trained_2024}
+Este artículo presenta SkinGPT-4, un sistema interactivo de diagnóstico dermatológico que alinea un codificador visual (basado en ViT y Q-Former) con el LLM Llama-2-13b-chat mediante una estrategia de entrenamiento en dos etapas para
+aprender conceptos clínicos y refinar el diagnóstico de enfermedades. El modelo fue entrenado utilizando 52,929 pares de imagen-texto (incluyendo descripciones médicas y notas de doctores) en un servidor equipado con 8 GPUs NVIDIA A100
+de 80GB, requiriendo aproximadamente 24 horas para completar el ajuste fino. La evaluación clínica realizada por dermatólogos certificados sobre 150 casos de la vida real demostró que el 80.63\% de los diagnósticos generados por el modelo
+fueron calificados como correctos o relevantes, logrando además una consistencia del 93.73\% en pruebas de repetibilidad. Además, el sistema mostró tiempos de respuesta inferiores a los de las consultas online humanas y capacidad para
+manejar imágenes con variaciones en iluminación y compatibilidad. Los autores concluyen que, gracias a su capacidad de despliegue local para preservar la privacidad y a su alta precisión, SkinGPT-4 actúa como una herramienta complementaria
+efectiva para mejorar la comunicación médico-paciente y el triaje, aunque enfatizan que no debe sustituir el juicio clínico profesional.
+
+\textbf{Disparities in Dermatology AI Performance on a Diverse, Curated Clinical Image Set} \cite{daneshjou_disparities_2022}
+Este trabajo introduce el dataset Diverse Dermatology Images (DDI), el primer conjunto de datos públicamente disponible de imágenes dermatológicas con confirmación histopatológica y diversidad de tonos de piel (208 imágenes FST I-II, 241 FST
+III-IV, 207 FST V-VI). Los autores evaluaron tres algoritmos de estado del arte (ModelDerm, DeepDerm, HAM10000) que habían reportado ROC-AUC de 0.88-0.94 en sus datasets originales, encontrando caídas dramáticas en rendimiento sobre DDI 
+(ROC-AUC de 0.56-0.67). Todos los modelos exhibieron disparidades significativas entre tonos claros y oscuros (diferencias de 0.09-0.15 en AUROC), con sensibilidades particularmente bajas en pieles oscuras (ModelDerm: 0.41 vs 0.12, p=0.0025).
+Los experimentos de ajuste fino demostraron que entrenar con datos diversos de DDI cerró completamente la brecha de rendimiento entre FST I-II y V-VI (DeepDerm: 0.73 vs 0.76; HAM10000: 0.77 vs 0.78), superando incluso el consenso de
+dermatólogos en pieles oscuras (p<0.001). Adicionalmente, el estudio reveló que el etiquetado por consenso visual de dermatólogos presenta mayor ruido en tonos oscuros (sensibilidad 0.72 vs 0.59, p<0.001). Los autores concluyen que la
+subrepresentación de pieles oscuras en datasets de entrenamiento genera disparidades algorítmicas medibles y que el ajuste fino con datos diversos es esencial para sistemas de IA dermatológica equitativos.
+
+\textbf{SkinHealthMate app: An AI-powered digital platform for skin disease diagnosis} \cite{aboulmira_skinhealthmate_2024}
+Este trabajo presenta SkinHealthMate, una plataforma integral web y móvil diseñada para optimizar el diagnóstico dermatológico mediante un modelo de aprendizaje profundo por ensamble y herramientas de gestión clínica de pacientes.
+La metodología combina las fortalezas de las arquitecturas EfficientNetB1 y EfficientNetB5 entrenadas sobre el dataset HAM10000, empleando técnicas de aumento de datos y filtrado de mediana para la reducción de ruido, aunque el documento
+no especifica el hardware ni el tiempo de cómputo utilizados. Las pruebas experimentales demostraron que el modelo de ensamble alcanza una exactitud del 93\% y un F1-score ponderado de 0.93, validando la coherencia clínica de las 
+predicciones mediante la visualización de mapas de calor con Grad-CAM. Adicionalmente, las evaluaciones de calidad de software (QA) confirmaron la eficiencia del sistema, reportando tiempos de respuesta inferiores a un segundo para
+el procesamiento de imágenes tanto en la aplicación web como en la móvil. Los autores concluyen que esta solución cierra la brecha entre los métodos tradicionales y la IA al ofrecer diagnósticos precisos y una administración centralizada,
+aunque reconocen limitaciones de rendimiento en tonos de piel oscuros debido a los sesgos del dataset de entrenamiento.
+
+\textbf{Artificial intelligence in dermatology: Bridging the gap in patient care and education} \cite{sohail_artificial_2024}
+Este artículo presenta una revisión integral sobre la aplicación de la inteligencia artificial (IA) en dermatología, enfocándose en cómo estas herramientas pueden optimizar el cuidado del paciente y transformar la educación médica.
+La metodología se basa en el análisis cualitativo de tecnologías existentes, como las Redes Neuronales Convolucionales (CNN) para la clasificación de lesiones y *chatbots* para la educación del paciente, sin realizar experimentos técnicos
+nuevos ni especificar hardware o tiempos de cómputo. El estudio no reporta métricas de rendimiento propias, pero discute hallazgos clave de la literatura, destacando la capacidad de la IA para mejorar la eficiencia administrativa y 
+proporcionar retroalimentación educativa inmediata, a la vez que señala limitaciones críticas como la falta de empatía y riesgos de privacidad. Los autores concluyen que la integración exitosa de la IA requiere superar la falta de
+estandarización en los datos y fomentar una mayor colaboración entre ingenieros y clínicos para desarrollar directrices éticas y prácticas robustas.
+
+\textbf{Deep Learning Approaches for Prognosis of Automated Skin Disease} \cite{kshirsagar_deep_2022}
+Este trabajo propone un sistema automatizado para la clasificación y pronóstico de enfermedades de la piel (como dermatitis y tiña) mediante una arquitectura híbrida que integra MobileNetV2 para la extracción eficiente de características
+y LSTM para retener información de estado. La metodología implementa un flujo de preprocesamiento, segmentación y clasificación, reportando un tiempo de entrenamiento de aproximadamente 1134 segundos durante 20 épocas y un tiempo de 
+ejecución de inferencia de 99.67 segundos. Las pruebas comparativas realizadas frente a modelos tradicionales (CNN, FTNN y MobileNetV1) demostraron que el enfoque propuesto alcanza un rendimiento superior, logrando una exactitud del
+86.57\%, una precisión del 93.34\% y una medida F del 92.68\%. Los autores concluyen que la combinación de MobileNetV2 con LSTM ofrece una solución computacionalmente eficiente y precisa para el diagnóstico asistido, aunque advierten
+que la exactitud del modelo desciende por debajo del 80\% cuando las condiciones de iluminación de las imágenes difieren significativamente de las del entrenamiento.
+
+\textbf{Artificial intelligence and machine learning algorithms for early detection of skin cancer in community and primary care settings: a systematic review} \cite{jones_artificial_2022}
+Este estudio presenta una revisión sistemática integral destinada a evaluar la precisión diagnóstica y la preparación para la implementación de algoritmos de IA/ML en la detección de cáncer de piel dentro de entornos de atención primaria.
+La metodología consistió en el análisis de 272 estudios seleccionados de bases de datos como MEDLINE y Embase (2000-2021), utilizando la herramienta QUADAS-2 para evaluar el riesgo de sesgo y realizando una síntesis narrativa debido a la
+heterogeneidad de los enfoques. Al tratarse de una revisión, no se reporta hardware de entrenamiento propio, pero se destaca que gran parte de la literatura existente falla en documentar adecuadamente la procedencia de los datos y los 
+detalles técnicos de los modelos. Las pruebas revelaron que, aunque la sensibilidad media para melanoma es del 84.2\% y la especificidad del 89.1\%, solo dos de los estudios revisados utilizaron datos provenientes de poblaciones de baja
+prevalencia, lo que sugiere un alto riesgo de sesgo de espectro. Los autores concluyen que los algoritmos actuales no están listos para su adopción en atención primaria debido a la falta de validación en escenarios del mundo real,
+proponiendo una lista de verificación metodológica para estandarizar futuros desarrollos.
+
+\textbf{A deep-learning algorithm to classify skin lesions from mpox virus infection} \cite{thieme_deep-learning_2023}
+Este estudio presenta MPXV-CNN, un modelo de aprendizaje profundo basado en la arquitectura ResNet34 diseñado para identificar lesiones cutáneas características del virus Mpox (MPXV) y facilitar su detección temprana. La metodología implicó
+la curación de un conjunto de datos de 139,198 imágenes (676 de MPXV y 138,522 de no-MPXV) provenientes de fuentes públicas, literatura y una cohorte clínica prospectiva, utilizando técnicas de aumento de datos y funciones de pérdida 
+ponderada para manejar el desbalance de clases. Aunque el documento no especifica el hardware de cómputo utilizado, detalla el uso del framework FastAI y la implementación de valores SHAP para garantizar la interpretabilidad del modelo 
+mediante mapas de calor. Las pruebas en una cohorte de validación externa demostraron que el modelo alcanza una sensibilidad de 0.91, una especificidad de 0.898 y un área bajo la curva (AUC) de 0.966, manteniendo un rendimiento robusto a
+través de distintos tonos de piel y regiones corporales. Los autores concluyen que la integración de este algoritmo en una aplicación web accesible ("PoxApp") permite evaluar el riesgo de infección de manera escalable y anónima, ayudando a
+mitigar la propagación del brote mediante la orientación oportuna del paciente.
+
+\textbf{Skin disease classification using two path deep transfer learning models} \cite{chandna_skin_2024}
+Este estudio propone un modelo de aprendizaje profundo de "dos caminos" para la clasificación de 8 tipos de enfermedades cutáneas, utilizando un ensamble de las arquitecturas EfficientNetB2V2 y MobileNetV2 como extractores de características.
+La metodología procesa cada imagen mediante dos flujos distintos: uno con preprocesamiento estándar de filtrado y otro utilizando máscaras de segmentación de la Región de Interés (ROI), entrenando el sistema sobre el dataset ISIC-2019 con 
+técnicas de aumento de datos para mitigar el desbalance de clases. El entrenamiento se ejecutó utilizando la librería TensorFlow durante 10 épocas, destacando el diseño para entornos de bajos recursos, aunque no se especifican los detalles 
+del hardware de cómputo utilizado. Las pruebas demostraron que el modelo alcanza una exactitud de entrenamiento del 95.23\%, obteniendo en la fase de prueba una exactitud del 70\%, una sensibilidad (recall) de 0.75 y un F1-score de 0.667.
+Los autores concluyen que el uso de arquitecturas ligeras combinadas con estrategias de doble procesamiento permite realizar diagnósticos con menor costo computacional, aunque reconocen limitaciones en la precisión debido a la variabilidad
+intra-clase del dataset.
 
 \end{document}
