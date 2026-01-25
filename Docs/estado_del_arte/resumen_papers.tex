@@ -274,4 +274,62 @@ del hardware de cómputo utilizado. Las pruebas demostraron que el modelo alcanz
 Los autores concluyen que el uso de arquitecturas ligeras combinadas con estrategias de doble procesamiento permite realizar diagnósticos con menor costo computacional, aunque reconocen limitaciones en la precisión debido a la variabilidad
 intra-clase del dataset.
 
+\textbf{MAKE: Multi-Aspect Knowledge-Enhanced Vision-Language Pretraining for Zero-shot Dermatological Assessment} \cite{yan_make_2025}
+Este trabajo introduce MAKE, un marco de pre-entrenamiento visión-lenguaje diseñado para superar las limitaciones de longitud de texto en modelos estándar mediante una estrategia de aprendizaje contrastivo de múltiples aspectos. La metodología
+descompone narrativas clínicas complejas en sub-textos enriquecidos (aspectos de enfermedad y conceptos) utilizando Grandes Modelos de Lenguaje (LLMs, Large Language Models), alineándolos con parches de imagen específicos y ponderándolos según
+su relevancia diagnóstica mediante un esquema de "diagnosis-guided weighting".El modelo fue entrenado con 403,563 pares imagen-texto del dataset Derm1M durante 15 épocas con un tamaño de lote de 2048, aunque el documento no especifica el
+hardware de cómputo exacto utilizado. Las pruebas realizadas en ocho datasets demostraron que MAKE supera al estado del arte en tareas \textit{zero-shot}, logrando una mejora del 5.09\% en exactitud promedio de clasificación y alcanzando un
+R@50 de 44.4\% en recuperación imagen-texto, superando significativamente a modelos como SigLIP.Los autores concluyen que la descomposición del conocimiento clínico y su alineación granular con características visuales son fundamentales para
+capturar la complejidad dermatológica que los modelos tradicionales pierden al truncar textos.
+
+\textbf{Skin-R1: Toward Trustworthy Clinical Reasoning for Dermatological Diagnosis} \cite{liu_skin-r1_2025}
+Este trabajo presenta Skin-R1, un marco de trabajo de extremo a extremo que unifica el razonamiento clínico fundamentado en libros de texto con la capacidad de generalización del Aprendizaje por Refuerzo (RL, Reinforcement Learning) para el
+diagnóstico dermatológico. La metodología consta de dos etapas principales: primero, un Ajuste Fino Supervisado (SFT, Supervised Fine-Tuning) del modelo base Qwen2.5-VL-7B sobre "SkinRationale", un conjunto de datos sintético de trayectorias
+de razonamiento diferencial y jerárquico; seguido de una etapa de RL utilizando Optimización de Política Relativa al Grupo (GRPO, Group-Relative Policy Optimization) ejecutada en dos GPUs NVIDIA A100 de 40GB. Las pruebas realizadas en seis
+conjuntos de datos (incluyendo HAM10000 y DermNet) demostraron que Skin-R1 supera significativamente a los modelos del estado del arte, alcanzando una exactitud promedio del 63.85\% en datos de distribución interna y del 71.71\% en datos fuera
+de distribución. Los resultados destacan que el modelo no solo mejora la precisión diagnóstica, sino también la capacidad de distinguir condiciones benignas de malignas (F1-score de 0.4287), gracias a recompensas diseñadas específicamente para
+la consistencia jerárquica y de formato. Los autores concluyen que establecer una base sólida de razonamiento mediante SFT con datos de alta calidad es un prerrequisito indispensable para que el RL pueda transferir eficazmente patrones de
+diagnóstico a conjuntos de datos dispersos a gran escala.
+
+\textbf{SkinGEN: an Explainable Dermatology Diagnosis-to-Generation Framework with Interactive Vision-Language Models} \cite{lin_skingen_2025}
+Este estudio presenta SkinGEN, un marco de trabajo diseñado para mejorar la explicabilidad visual en el diagnóstico dermatológico mediante la integración de Modelos de Lenguaje y Visión (VLM, Vision-Language Models) interactivos con modelos
+generativos. La metodología emplea SkinGPT-4 para el diagnóstico inicial y utiliza el modelo de Difusión Estable (SD, Stable Diffusion) ajustado mediante la técnica de Adaptación de Bajo Rango (LoRA, Low-Rank Adaptation) y adaptadores de 
+imagen (IP-Adapter) para generar demostraciones visuales sintéticas de la condición diagnosticada y sus diagnósticos diferenciales. El entrenamiento de los módulos generativos se realizó sobre los datasets Fitzpatrick17k y SCIN durante 20
+épocas utilizando técnicas de re-descripción con BLIP2, aunque el documento no especifica el hardware de cómputo exacto utilizado. Las pruebas, que incluyeron métricas de similitud semántica (CLIP score) y un estudio con 32 usuarios,
+demostraron que el sistema supera a los enfoques basados solo en texto o recuperación de casos, logrando una calificación de confianza percibida de 4.09 y una facilidad de comprensión de 4.38 en escala Likert. Los autores concluyen que
+proporcionar visualizaciones generativas personalizadas junto con el diagnóstico textual aumenta significativamente la confianza del usuario y facilita la comprensión de condiciones dermatológicas complejas.
+
+\textbf{MedImageInsight: An Open-Source Embedding Model for General Domain Medical Imaging} \cite{codella_medimageinsight_2024}
+Este trabajo introduce MedImageInsight, un modelo generalista de código abierto entrenado sobre pares de imagen-texto e imagen-etiqueta a través de 14 dominios médicos (incluyendo dermatología, rayos X y patología) para abordar la falta de
+transparencia y escalabilidad en modelos anteriores. La metodología emplea una arquitectura de dos torres basada en Transformadores de Visión (ViT, Vision Transformer) tipo DaViT y un codificador de texto optimizados con el objetivo UniCL,
+utilizando para su entrenamiento 64 GPUs V100 con un costo computacional acumulado de 7680 horas de GPU. El modelo habilita tres modos de operación: clasificación mediante texto, clasificación transparente basada en evidencia mediante búsqueda
+de imagen-imagen con Vecinos más Cercanos (KNN, K-Nearest Neighbors), y generación de reportes al acoplarse con un decodificador de texto ligero. Las pruebas realizadas demuestran un rendimiento al nivel del Estado del Arte 
+(SOTA, State of the Art) o de expertos humanos, alcanzando específicamente en el dominio dermatológico un AUC de 0.966 en el dataset ISIC2019 y un AUC de 0.989 en SD-198. Los autores concluyen que MedImageInsight ofrece una herramienta eficiente
+y equitativa que cumple con requisitos regulatorios al permitir la generación de curvas de Característica Operativa del Receptor (ROC, Receiver Operating Characteristic) y explicabilidad visual, superando a otros modelos fundacionales en métricas
+clínicas y de equidad.
+
+\textbf{Deep Learning for Melanoma Detection: A Deep Learning Approach to Differentiating Malignant Melanoma from Benign Melanocytic Nevi} \cite{kreouzi_deep_2024}
+Este estudio evalúa y compara el desempeño de cuatro arquitecturas de Redes Neuronales Convolucionales (CNN, Convolutional Neural Networks) —DenseNet121, ResNet50V2, NASNetMobile y MobileNetV2— para la clasificación binaria de melanoma maligno
+frente a nevus benignos. La metodología utilizó el dataset DermNet con 8825 imágenes estandarizadas y técnicas de aumento de datos, ejecutando el entrenamiento en un entorno de Google Colab con aceleración por GPU. Las pruebas realizadas indican
+que DenseNet121 alcanzó la mayor exactitud (92.30\%), mientras que ResNet50V2 obtuvo el mejor Área Bajo la Curva (AUC, Area Under the Curve) con 0.957. Por otro lado, MobileNetV2 destacó por su eficiencia, logrando un tiempo de inferencia de
+23.46 ms y un tamaño de modelo de 9.89 MB con una exactitud competitiva del 92.19\%. Los autores concluyen que, si bien DenseNet121 ofrece el rendimiento diagnóstico superior, MobileNetV2 es la solución óptima para despliegues en dispositivos
+móviles o entornos con recursos limitados.
+
+\textbf{Deep Learning Algorithms in the Diagnosis of Basal Cell Carcinoma Using Dermatoscopy: Systematic Review and Meta-Analysis} \cite{liu_deep_2025}
+Este trabajo consiste en una revisión sistemática y meta-análisis diseñado para evaluar el rendimiento diagnóstico de algoritmos de aprendizaje profundo en la detección del carcinoma de células basales (BCC, Basal Cell Carcinoma) mediante
+imágenes de dermatoscopía. La metodología implicó la selección rigurosa de 15 estudios (que abarcan 32,069 imágenes de validación interna) provenientes de bases de datos como PubMed y Web of Science, utilizando la herramienta QUADAS-2
+modificada para evaluar la calidad y modelos de efectos aleatorios bivariados para la síntesis estadística, sin requerir hardware de cómputo para entrenamiento de modelos. Las pruebas comparativas demostraron que los algoritmos de aprendizaje
+profundo alcanzaron una sensibilidad agrupada de 0.96 y una especificidad de 0.98 en conjuntos de validación interna, logrando un Área Bajo la Curva (AUC, Area Under the Curve) de 0.99. Estos resultados indicaron una superioridad estadística
+significativa ($P=.008$) frente al desempeño de los dermatólogos, quienes obtuvieron un AUC de 0.96, con una sensibilidad notablemente menor de 0.75. Sin embargo, se reportó una caída en el rendimiento en la validación externa (sensibilidad
+de 0.88), evidenciando desafíos en la generalización de los modelos. Los autores concluyen que, aunque los modelos superan a los expertos humanos en entornos controlados (validación interna), la predominancia de diseños retrospectivos y la falta
+de validaciones externas robustas limitan su aplicabilidad clínica generalizada actual.
+
+\textbf{Systematic Review of Deep Learning Techniques in Skin Cancer Detection} \cite{magalhaes_systematic_2024}
+Este artículo presenta una revisión sistemática siguiendo las directrices PRISMA 2020 para evaluar el estado del arte en la aplicación de técnicas de Aprendizaje Profundo (DL, Deep Learning) en el diagnóstico de cáncer de piel mediante imágenes.
+La metodología incluyó el análisis cualitativo de 163 estudios seleccionados de bases de datos como PubMed y IEEE Xplore hasta junio de 2024, identificando las arquitecturas AlexNet, ResNet-50, VGG-16 y GoogLeNet como las opciones predominantes
+para obtener los mejores resultados de clasificación. El estudio no reporta hardware propio al ser una revisión, pero destaca una clara tendencia evolutiva desde la clasificación binaria hacia la multiclasificación, donde los enfoques jerárquicos
+y el uso de conjuntos de datos públicos (como ISIC y HAM10000) son factores determinantes para el éxito. Los resultados sintetizados indican que los modelos de DL logran superar frecuentemente a los expertos humanos, aunque se reportan limitaciones
+significativas debido a la falta de estandarización en las métricas de rendimiento y en las condiciones de entrenamiento reportadas por los autores revisados. Los autores concluyen que, para facilitar la integración clínica, es crucial mejorar
+el enriquecimiento de los datasets con metadatos clínicos y establecer protocolos de validación más robustos que incluyan conjuntos de validación externos.
+
 \end{document}
