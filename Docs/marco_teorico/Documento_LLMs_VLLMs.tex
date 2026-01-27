@@ -1,4 +1,3 @@
-% !TeX root = Documento_LLMs_VLLMs.tex
 \documentclass[11pt, a4paper]{article}
 \usepackage{graphicx} % Required for inserting images
 
@@ -13,8 +12,10 @@
 \usepackage{placeins}
 
 % Configuración de bibliografía
+%\usepackage[backend=biber, style=apa]{biblatex}
+% Use explicit path so latexmk/biber find the correct .bib when using -outdir
 \usepackage[backend=biber, style=apa]{biblatex}
-\addbibresource{referencias.bib}
+\addbibresource{Docs/marco_teorico/referencias.bib}
 
 % Paquetes para matemáticas e imágenes
 \usepackage{amsmath}
@@ -268,9 +269,50 @@ A pesar de sus mejoras en la gestión del contexto, las LSTM y las RNN comparten
 de entrenamiento. El cálculo del estado oculto $h_t$ depende del estado anterior $h_{t-1}$, lo que hace que el tiempo de entrenamiento sea prohibitivo para secuencias muy largas y limite el 
 uso eficiente del hardware moderno como las GPUs
 
+\subsection{Inicio de la Visión por Computadora: Redes Neuronales Convolucionales (CNNs)}
+
+Mientras que las arquitecturas secuenciales dominaban el procesamiento del lenguaje, la visión por computadora se fundamentó en las Redes Neuronales Convolucionales (CNN). Estas arquitecturas permiten procesar datos con una topología
+tipo rejilla (como imágenes), preservando las relaciones espaciales entre los píxeles.
+
+\subsubsection{La Operación de Convolución y los Kernels}
+
+El núcleo de una CNN es la operación de \textbf{convolución}. A diferencia de las redes neuronales densas (MLP), donde cada neurona de entrada se conecta con cada neurona de salida, las CNN utilizan \textbf{filtros} o \textbf{kernels}. Un kernel es
+una matriz pequeña de pesos aprendibles (por ejemplo, de tamaño $3 \times 3$ o $5 \times 5$) que se ''desliza'' espacialmente sobre la imagen de entrada.
+
+En cada posición del deslizamiento, se calcula el producto punto entre los pesos del kernel y la pequeña región de la imagen que cubre (campo receptivo), sumando los resultados para obtener un único valor en el mapa de características
+(\textit{feature map}) de salida. Matemáticamente, para una imagen de entrada $I$ y un kernel $K$ de dimensiones $m \times n$, la convolución en la posición $(i, j)$ se expresa como:
+
+\begin{equation}
+    (I * K)(i, j) = \sum_{a=0}^{m-1} \sum_{b=0}^{n-1} I(i+a, j+b) \cdot K(a, b)
+\end{equation}
+
+Este mecanismo otorga a las CNN dos propiedades fundamentales para el análisis de imágenes médicas:
+\begin{itemize}
+    \item \textbf{Invarianza a la traslación:} Un kernel aprendido para detectar un borde o una textura específica (como el borde de una lesión) puede reconocer esa misma característica en cualquier parte de la imagen.
+    \item \textbf{Jerarquía de características:} Las primeras capas detectan patrones simples (bordes, colores), mientras que las capas profundas combinan estos patrones para reconocer estructuras complejas y semánticas.
+
+\end{itemize}
+\subsection{Arquitecturas Emblemáticas}
+
+\subsubsection{VGG (Visual Geometry Group)}
+Propuesta por \cite{simonyan_very_2015}, la arquitectura VGG-16 estandarizó el uso de filtros pequeños de $3 \times 3$ en profundidad creciente. Su simplicidad y capacidad de extracción de características la convierten
+en una opción robusta.
+
+\subsubsection{ResNet (Residual Networks)}
+El entrenamiento de redes muy profundas sufría de desvanecimiento de gradiente. \cite{he_deep_2015} introdujeron las \textbf{conexiones residuales} (\textit{skip connections}), que permiten que la señal salte capas 
+($y = F(x) + x$). Esto habilitó el entrenamiento de redes de cientos de capas (e.g., ResNet-50, ResNet-101), convirtiéndose en la arquitectura \textit{backbone} predominante en la literatura de dermatología reciente.
+
+\subsubsection{DenseNet (Densely Connected Networks)}
+\cite{huang_densely_2018} llevaron la conectividad al extremo conectando cada capa con todas las posteriores. Esto maximiza el flujo de información y la reutilización de características, logrando a menudo mayor precisión
+que ResNet con menos parámetros, lo cual es ideal para datasets médicos de tamaño moderado.
+
+\subsubsection{EfficientNet}
+Para optimizar el rendimiento y la eficiencia, \cite{tan_efficientnet_2020} propusieron un método de escalado compuesto (\textit{compound scaling}) que ajusta balanceadamente la profundidad, el ancho y la resolución de la red.
+Modelos como EfficientNet-B3 y B5 suelen ofrecer el mejor compromiso entre precisión y costo computacional en dispositivos limitados.
+
 \section{Arquitectura Transformer}
 
-En 2017, \textcite{vaswani_attention_nodate} propusieron un cambio de paradigma radical con la arquitectura \textbf{Transformer}. A diferencia de las RNN y LSTM, que procesan la información de
+En 2017, \cite{vaswani_attention_nodate} propusieron un cambio de paradigma radical con la arquitectura \textbf{Transformer}. A diferencia de las RNN y LSTM, que procesan la información de
 manera recurrente, el Transformer se basa únicamente en mecanismos de atención para establecer dependencias globales entre la entrada y la salida, prescindiendo por completo de la recurrencia
 y las convoluciones \parencite{vaswani_attention_nodate}.
 
@@ -439,7 +481,7 @@ su comportamiento y aprendizaje. Según \textcite{atkinson2025}, estos conceptos
     \end{itemize}
 
     \item{\textbf{Ventana de Contexto (Context Window):}}
-    Es un límite arquitectónico crítico que define la cantidad máxima de tokens (entrada + salida generada) que el modelo puede procesar en una sola interacción. Funciona como la "memoria de corto plazo" del
+    Es un límite arquitectónico crítico que define la cantidad máxima de tokens (entrada + salida generada) que el modelo puede procesar en una sola interacción. Funciona como la ''memoria de corto plazo'' del
     modelo; si la conversación excede este límite, la información más antigua se trunca y el modelo ''olvida'' el contexto previo. Modelos recientes han ampliado esta ventana de 2k tokens (GPT-3 original) a más
     de 100k, permitiendo el análisis de documentos extensos \parencite{nvidia2023, brown_language_nodate}.
 
@@ -449,7 +491,7 @@ su comportamiento y aprendizaje. Según \textcite{atkinson2025}, estos conceptos
     \begin{itemize}
         \item \textbf{Temperatura baja ($< 1$):} Agudiza la distribución de probabilidad, haciendo que el modelo sea más determinista y repetitivo, eligiendo casi siempre los tokens más probables (ideal para
         tareas de codificación o respuestas factuales).
-        \item \textbf{Temperatura alta ($> 1$):} Aplana la distribución, permitiendo que tokens menos probables sean seleccionados ocasionalmente, lo que resulta en generaciones más diversas y "creativas",
+        \item \textbf{Temperatura alta ($> 1$):} Aplana la distribución, permitiendo que tokens menos probables sean seleccionados ocasionalmente, lo que resulta en generaciones más diversas y ''creativas'',
         aunque con mayor riesgo de alucinaciones \parencite{atkinson2025, nvidia2023}.
     \end{itemize}
 
@@ -498,6 +540,35 @@ El SFT tiene limitaciones: escribir demostraciones perfectas es costoso y difíc
     del RM sin desviarse excesivamente de la distribución del modelo original (penalización KL), evitando así el ''reward hacking'' o la degradación del lenguaje.
 \end{enumerate}
 
+\subsection{Estrategias de Entrenamiento y Optimización Eficiente}
+
+La adaptación de LLMs y modelos de visión al dominio médico presenta desafíos únicos de escasez de datos y costos computacionales. Para abordarlos, la literatura actual emplea estrategias que maximizan el rendimiento con recursos limitados.
+
+\subsubsection{Transfer Learning y Aumento de Datos}
+El \textbf{Aprendizaje por Transferencia} es la norma en dermatología: se utilizan modelos pre-entrenados en ImageNet (visión) o Common Crawl (texto) y se ajustan al dominio médico. \cite{pan_survey_2010} demuestran
+que esto acelera la convergencia. Complementariamente, el \textbf{Aumento de Datos} (rotaciones, cambios de color, recorte) es crucial para evitar el sobreajuste en datasets desbalanceados de lesiones de piel, enseñando al
+modelo invariancias robustas \parencite{shorten_survey_2019}.
+
+\subsubsection{Adaptación Eficiente de Parámetros (PEFT) y LoRA}
+
+El ajuste fino completo (\textit{Full Fine-Tuning}) de LLMs con miles de millones de parámetros es computacionalmente prohibitivo para la mayoría de las aplicaciones médicas locales. Para abordar esto, surgieron
+técnicas de \textbf{Parameter-Efficient Fine-Tuning (PEFT)}, que congelan la mayoría de los pesos del modelo pre-entrenado y solo actualizan un pequeño subconjunto de parámetros adicionales.
+
+La técnica más prominente en este dominio es \textbf{LoRA (Low-Rank Adaptation)}. \cite{hu_lora_2021} proponen que los cambios en los pesos durante la adaptación de un modelo tienen un ''rango intrínseco bajo''. En
+lugar de actualizar la matriz de pesos completa $W$, LoRA inyecta matrices de descomposición de rango bajo entrenables ($A$ y $B$) en cada capa del Transformer:
+
+\begin{equation}
+    h = W_0x + \Delta Wx = W_0x + BAx
+\end{equation}
+
+Donde $W_0$ son los pesos congelados, $B \in \mathbb{R}^{d \times r}$ y $A \in \mathbb{R}^{r \times d}$, siendo el rango $r \ll d$. Esto reduce la cantidad de parámetros entrenables hasta en 10,000 veces y los
+requerimientos de memoria VRAM en tres veces, permitiendo entrenar modelos grandes (como LLaMA-7B o 13B) en hardware de consumo moderado sin sacrificar rendimiento \cite{hu_lora_2021}.
+
+\subsubsection{Destilación de Conocimiento}
+Esta técnica utiliza un modelo ''Maestro'' de gran capacidad (como GPT-4) para enseñar a un modelo ''Estudiante'' más pequeño. Estas estrategias son fundamentales en el aprendizaje profundo aplicado a dominios especializados,
+ permitiendo la adaptación de modelos generalistas a tareas específicas con alta eficiencia \cite{hinton_distilling_2015}.
+
+
 
 \subsection{Paradigmas de Inferencia (In-Context Learning)}
 
@@ -527,7 +598,7 @@ Esto permite actualizar el conocimiento del modelo simplemente actualizando la b
 
 \subsubsection{Pequeños Modelos de Lenguaje (Small Language Models, SLMs)}
 Recientemente, ha surgido interés en modelos compactos (e.g., < 3B parámetros) que puedan ejecutarse en dispositivos locales. Trabajos como el de \textcite{gunasekar_textbooks_2023} con la serie
-\hyperlink{phi}{Phi} han demostrado que la calidad de los datos ("textbook quality") es más determinante que la cantidad. Un modelo pequeño entrenado con datos sintéticos altamente curados puede superar a modelos
+\hyperlink{phi}{Phi} han demostrado que la calidad de los datos (''textbook quality'') es más determinante que la cantidad. Un modelo pequeño entrenado con datos sintéticos altamente curados puede superar a modelos
 mucho más grandes entrenados con datos web ruidosos.
 
 \subsection{Métricas de Evaluación}
@@ -591,6 +662,50 @@ Donde:
 \end{itemize}
 Existen variantes como \textbf{ROUGE-L}, que utiliza la Subsecuencia Común Más Larga (Longest Common Subsequence, LCS) para capturar la estructura de la oración sin depender de n-gramas fijos.
 
+\subsubsection{Métricas de Evaluación para Clasificación Diagnóstica}
+
+En tareas de diagnóstico médico, donde el objetivo es distinguir entre condiciones patológicas y sanas, las métricas de generación de texto resultan insuficientes. Se requiere evaluar la capacidad discriminativa del modelo mediante
+métricas derivadas de la \textbf{Matriz de Confusión}.
+
+La Matriz de Confusión es una herramienta tabular que permite visualizar el desempeño de un algoritmo de clasificación supervisado. En un problema binario, las filas representan las clases reales y las columnas las clases predichas por
+el modelo, desglosando los resultados en cuatro categorías:
+\begin{itemize}
+    \item \textbf{Verdaderos Positivos (TP):} Casos positivos (enfermedad) correctamente identificados.
+    \item \textbf{Verdaderos Negativos (TN):} Casos negativos (sanos) correctamente identificados.
+    \item \textbf{Falsos Positivos (FP):} Casos sanos incorrectamente clasificados como enfermos (Error Tipo I).
+    \item \textbf{Falsos Negativos (FN):} Casos enfermos incorrectamente clasificados como sanos (Error Tipo II).
+\end{itemize}
+
+A partir de estos valores, se definen métricas críticas para la toma de decisiones clínicas:
+
+\begin{itemize}
+    \item \textbf{Exactitud (Accuracy):} Mide la proporción total de predicciones correctas sobre el total de casos.
+    \begin{equation}
+        Accuracy = \frac{TP + TN}{TP + TN + FP + FN}
+    \end{equation}
+    \textit{Contexto Médico:} Es útil para tener una visión general, pero puede ser engañosa en datasets desbalanceados (e.g., enfermedades raras) donde un modelo que prediga siempre ''sano'' tendría una alta exactitud pero nula utilidad clínica.
+
+    \item \textbf{Sensibilidad (Recall):} Mide la capacidad del modelo para detectar correctamente la presencia de la enfermedad.
+    \begin{equation}
+        Recall = \frac{TP}{TP + FN}
+    \end{equation}
+    \textit{Contexto Médico:} Es la métrica prioritaria en sistemas de \textit{screening} o triaje. Un alto recall asegura que se minimicen los Falsos Negativos, evitando que pacientes con patologías graves sean enviados a casa sin tratamiento.
+
+    \item \textbf{Especificidad:} Mide la capacidad de identificar correctamente a los pacientes sanos.
+    \begin{equation}
+        Specificity = \frac{TN}{TN + FP}
+    \end{equation}
+    \textit{Contexto Médico:} Una alta especificidad es crucial para evitar Falsos Positivos, reduciendo la ansiedad del paciente y procedimientos invasivos (como biopsias) innecesarios.
+
+    \item \textbf{F1-Score:} Es la media armónica entre la Precisión (proporción de positivos reales entre los predichos) y el Recall.
+    \begin{equation}
+        F1 = 2 \cdot \frac{Precision \cdot Recall}{Precision + Recall}
+    \end{equation}
+    \textit{Contexto Médico:} Proporciona un balance robusto cuando se busca un compromiso entre no perder casos positivos y no saturar el sistema con falsas alarmas.
+
+    \item \textbf{Área Bajo la Curva ROC (AUROC):} Evalúa el rendimiento del clasificador en todos los umbrales de decisión posibles, graficando la Tasa de Verdaderos Positivos frente a la Tasa de Falsos Positivos. Es el estándar para comparar
+    la robustez discriminativa de distintos modelos independientemente del punto de corte elegido \parencite{fawcett_introduction_2006}.
+\end{itemize}
 
 \section{Modelos de Visión-Lenguaje (Visual Large Language Models, VLLMs)}
 La convergencia entre la visión por computadora y el procesamiento del lenguaje natural ha dado lugar a los Modelos de Visión-Lenguaje (VLLMs). Estos sistemas buscan trascender las tareas visuales
@@ -691,6 +806,7 @@ En este esquema:
     \item Finalmente, el \textbf{Language Model} (LLaMA/Vicuna) procesa tanto los embeddings visuales ($H_v$) como las instrucciones textuales del usuario ($H_q$) para generar una respuesta coherente ($X_a$).
 \end{itemize}
 \pagebreak
+
 \section{Glosario}
 
 \begin{description}
