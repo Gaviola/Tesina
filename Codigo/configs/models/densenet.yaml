@@ -1,0 +1,9 @@
+name: densenet
+architecture: DenseNet121
+pretrained: imagenet
+num_classes: 7
+batch_size: 32
+
+training:
+  freeze_backbone: true  # inicialmente congelado, unfreezing gradual si bajo rendimiento
+  unfreeze_layers: null   # e.g., ["denseblock4", "transition3"] para unfreezing

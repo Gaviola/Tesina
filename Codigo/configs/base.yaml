@@ -1,0 +1,18 @@
+seed: 42
+
+device: auto  # auto | cuda | cpu
+
+wandb:
+  enabled: false
+  project: dermvlm
+  entity: null
+
+paths:
+  data_dir: data
+  output_dir: outputs
+  checkpoint_dir: outputs/checkpoints
+  results_dir: outputs/results
+  reports_dir: outputs/generated_reports
+
+defaults:
+  - _self_

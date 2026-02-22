@@ -1,0 +1,52 @@
+defaults:
+  - base
+
+preprocessing:
+  image_size: 224
+  normalization: imagenet  # mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+
+augmentation:
+  rotation_degrees: 30
+  horizontal_flip: true
+  vertical_flip: false
+  color_jitter:
+    brightness: 0.2
+    contrast: 0.2
+    saturation: 0.2
+    hue: 0.1
+
+splits:
+  train: 0.70
+  val: 0.15
+  test: 0.15
+  stratify: true
+
+datasets:
+  ham10000:
+    raw_dir: ${paths.data_dir}/raw/HAM10000
+    processed_dir: ${paths.data_dir}/processed/HAM10000
+    splits_file: ${paths.data_dir}/splits/ham10000_splits.json
+    num_classes: 7
+    classes:
+      - MEL
+      - NV
+      - BCC
+      - AKIEC
+      - BKL
+      - DF
+      - VASC
+
+  skincare:
+    raw_dir: ${paths.data_dir}/raw/skincare
+    processed_dir: ${paths.data_dir}/processed/skincare
+    splits_file: ${paths.data_dir}/splits/skincare_splits.json
+
+  mmskin:
+    raw_dir: ${paths.data_dir}/raw/MM-SkinQA
+    processed_dir: ${paths.data_dir}/processed/MM-SkinQA
+    splits_file: ${paths.data_dir}/splits/mmskin_splits.json
+
+  hiba:
+    raw_dir: ${paths.data_dir}/raw/HIBA
+    processed_dir: ${paths.data_dir}/processed/HIBA
+    splits_file: ${paths.data_dir}/splits/hiba_splits.json

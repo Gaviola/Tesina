@@ -1,0 +1,46 @@
+defaults:
+  - base
+
+stage1:
+  description: Alineamiento visual-textual (solo MLP)
+  data: skincare_cap  # ~4000 pares SkinCAP
+  epochs: 1
+  lr: 2e-3
+  batch_size: 16
+  freeze_encoder: true
+  freeze_llm: true
+  train_mlp: true
+
+stage2:
+  description: Ajuste de instrucciones con LoRA
+  data: skincare  # ~7041 pares completo
+  epochs: 3
+  lr: 2e-5
+  batch_size: 4
+  gradient_accumulation_steps: 8
+  freeze_encoder: true
+  freeze_llm: false  # se aplica LoRA
+  train_mlp: true
+  early_stopping:
+    patience: 3
+    monitor: val_loss
+    mode: min
+
+lora:
+  r: 64
+  alpha: 128
+  dropout: 0.05
+  target_modules:
+    - q_proj
+    - v_proj
+
+evaluation:
+  level1_metrics:
+    - bleu_4
+    - rouge_l
+    - bertscore_f1
+    - meteor
+    - cider
+  level2_metrics:
+    - clinical_entity_recall
+    - diagnostic_consistency

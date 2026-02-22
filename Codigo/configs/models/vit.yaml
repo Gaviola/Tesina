@@ -1,0 +1,9 @@
+name: vit
+architecture: ViT-B/16
+pretrained: imagenet
+num_classes: 7
+batch_size: 16
+
+training:
+  freeze_backbone: true
+  unfreeze_layers: null

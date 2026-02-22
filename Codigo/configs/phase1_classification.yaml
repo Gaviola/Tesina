@@ -1,0 +1,32 @@
+defaults:
+  - base
+
+training:
+  epochs: 30
+  early_stopping:
+    patience: 5
+    monitor: val_f1
+    mode: max
+  optimizer:
+    name: AdamW
+    lr: 1e-4
+    weight_decay: 0.01
+  scheduler:
+    name: CosineAnnealingLR
+    T_max: ${training.epochs}
+  loss:
+    name: CrossEntropyLoss
+    class_weights: auto  # calculados del dataset
+
+data:
+  dataset: ham10000
+  image_size: 224
+  normalization: imagenet
+
+evaluation:
+  metrics:
+    - accuracy
+    - auc_roc_macro
+    - f1_weighted
+    - sensitivity
+    - specificity

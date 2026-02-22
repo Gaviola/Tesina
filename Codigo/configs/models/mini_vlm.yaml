@@ -1,0 +1,14 @@
+name: mini_vlm
+architecture: Mini-VLM (CLIP + Phi-3-mini)
+vision_encoder: openai/clip-vit-base-patch16
+llm: microsoft/Phi-3-mini-4k-instruct
+projection_dim: 768  # CLIP ViT-B/16 output dim -> Phi-3 embedding dim
+
+generation:
+  max_new_tokens: 512
+  temperature: 0.7
+  top_p: 0.9
+  do_sample: true
+
+vram_estimate:
+  lora: 8  # GB

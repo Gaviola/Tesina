@@ -1,0 +1,15 @@
+name: llava_med
+architecture: LLaVA-Med-7B
+vision_encoder: openai/clip-vit-large-patch14
+llm: meta-llama/Llama-2-7b-chat-hf
+pretrained_weights: microsoft/llava-med-v1.5-mistral-7b  # ajustar al checkpoint disponible
+
+generation:
+  max_new_tokens: 512
+  temperature: 0.7
+  top_p: 0.9
+  do_sample: true
+
+vram_estimate:
+  lora: 14  # GB
+  qlora: 10  # GB (fallback para TOKO)

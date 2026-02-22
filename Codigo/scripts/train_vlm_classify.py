@@ -1,0 +1,224 @@
+"""Fase 1: Clasificación zero-shot vía prompt con VLMs.
+
+Uso:
+    python scripts/train_vlm_classify.py --model llava_med
+    python scripts/train_vlm_classify.py --model mini_vlm
+"""
+
+import argparse
+import logging
+import re
+import sys
+from pathlib import Path
+
+import torch
+from torch.utils.data import DataLoader
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from src.data.collators import VLMCollator
+from src.data.ham10000 import HAM10000_CLASSES, HAM10000_LABEL_MAP, HAM10000Dataset
+from src.data.transforms import get_val_transforms
+from src.models.factory import build_model
+from src.utils.device import get_device, get_training_dtype
+from src.utils.io import save_results
+from src.utils.logging import setup_logger
+from src.utils.seed import set_seed
+
+logger = logging.getLogger(__name__)
+
+CLASSIFICATION_PROMPT = (
+    "Classify this dermoscopic image into one of the following categories: "
+    "MEL, NV, BCC, AKIEC, BKL, DF, VASC. "
+    "Respond with only the category label."
+)
+
+# Set de labels válidos en mayúsculas para parsing robusto
+_VALID_LABELS = {name.upper() for name in HAM10000_CLASSES}
+
+
+def parse_vlm_response(response: str) -> str:
+    """Extrae la etiqueta de clasificación de la respuesta del VLM.
+
+    Busca una de las 7 categorías válidas en la respuesta. Si no encuentra
+    ninguna, retorna "UNKNOWN".
+    """
+    text = response.strip().upper()
+
+    # Intento 1: respuesta exacta
+    if text in _VALID_LABELS:
+        return text
+
+    # Intento 2: buscar la primera aparición de un label válido
+    for label in HAM10000_CLASSES:
+        if re.search(rf'\b{label}\b', text):
+            return label
+
+    return "UNKNOWN"
+
+
+def main():
+    parser = argparse.ArgumentParser(description="F1: Clasificación zero-shot con VLMs")
+    parser.add_argument("--model", type=str, required=True, choices=["llava_med", "mini_vlm"])
+    parser.add_argument("--data_dir", type=str, default="data")
+    parser.add_argument("--output_dir", type=str, default="outputs")
+    parser.add_argument("--splits_file", type=str, default=None)
+    parser.add_argument("--batch_size", type=int, default=4)
+    parser.add_argument("--max_new_tokens", type=int, default=32)
+    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--wandb", action="store_true")
+    parser.add_argument("--num_workers", type=int, default=0)
+    args = parser.parse_args()
+
+    # 1. Reproducibilidad
+    set_seed(args.seed)
+
+    # 2. Logger
+    log_dir = str(Path(args.output_dir) / "logs")
+    run_name = f"vlm_classify_{args.model}"
+    setup_logger(
+        name=run_name,
+        log_dir=log_dir,
+        use_wandb=args.wandb,
+        wandb_project="dermvlm",
+        wandb_config=vars(args),
+    )
+    logger.info("Iniciando clasificación zero-shot con %s", args.model)
+
+    # 3. Device
+    device = get_device()
+    dtype = get_training_dtype()
+    logger.info("Dispositivo: %s | dtype: %s", device, dtype)
+
+    # 4. Cargar modelo VLM
+    logger.info("Cargando modelo %s (esto puede tomar varios minutos)...", args.model)
+    model = build_model({"name": args.model})
+    model.load_components()
+    model = model.to(device)
+    model.eval()
+    logger.info("Modelo %s cargado correctamente", args.model)
+
+    # 5. Cargar HAM10000 test split
+    splits_file = args.splits_file
+    if splits_file is None:
+        splits_file = str(Path(args.data_dir) / "splits" / "ham10000_splits.json")
+    if not Path(splits_file).exists():
+        logger.error("Archivo de splits no encontrado: %s", splits_file)
+        logger.error("Ejecutar primero: python scripts/prepare_data.py")
+        sys.exit(1)
+
+    data_root = str(Path(args.data_dir) / "raw" / "ham10000")
+    test_dataset = HAM10000Dataset(
+        root_dir=data_root,
+        split="test",
+        transform=get_val_transforms(224),
+        splits_file=splits_file,
+    )
+    logger.info("Test set cargado: %d imágenes", len(test_dataset))
+
+    collator = VLMCollator()
+    test_loader = DataLoader(
+        test_dataset, batch_size=args.batch_size, shuffle=False,
+        collate_fn=collator, num_workers=args.num_workers,
+    )
+
+    # 6. Inferencia zero-shot
+    all_image_ids = []
+    all_y_true = []
+    all_y_pred = []
+    all_responses = []
+    unknown_count = 0
+
+    logger.info("Ejecutando inferencia zero-shot en %d batches...", len(test_loader))
+    with torch.no_grad():
+        for batch_idx, batch in enumerate(test_loader):
+            images = batch["image"].to(device)
+            labels = batch["label"].tolist()
+            metadata = batch.get("metadata", [{}] * len(labels))
+            batch_size = images.shape[0]
+
+            # Generar respuestas
+            prompts = [CLASSIFICATION_PROMPT] * batch_size
+            with torch.amp.autocast("cuda", dtype=dtype, enabled=(device.type == "cuda")):
+                responses = model.generate(
+                    images, prompts, max_new_tokens=args.max_new_tokens,
+                )
+
+            # Parsear respuestas
+            for i, response in enumerate(responses):
+                parsed_label = parse_vlm_response(response)
+                pred_idx = HAM10000_LABEL_MAP.get(parsed_label, -1)
+
+                if parsed_label == "UNKNOWN":
+                    unknown_count += 1
+
+                image_id = metadata[i].get("dx", "") if isinstance(metadata[i], dict) else ""
+                all_image_ids.append(image_id)
+                all_y_true.append(labels[i])
+                all_y_pred.append(pred_idx)
+                all_responses.append(response.strip())
+
+            if (batch_idx + 1) % 10 == 0:
+                logger.info(
+                    "Progreso: %d/%d batches (unknown: %d)",
+                    batch_idx + 1, len(test_loader), unknown_count,
+                )
+
+    # 7. Resultados
+    total = len(all_y_true)
+    logger.info("Inferencia completada: %d imágenes, %d respuestas no parseables (%.1f%%)",
+                total, unknown_count, 100 * unknown_count / max(total, 1))
+
+    # 8. Guardar predicciones
+    results_dir = Path(args.output_dir) / "results"
+    results_dir.mkdir(parents=True, exist_ok=True)
+
+    predictions = {
+        "model": args.model,
+        "y_true": all_y_true,
+        "y_pred": all_y_pred,
+        "y_prob": None,  # VLMs no generan probabilidades por clase
+        "class_names": HAM10000_CLASSES,
+        "responses": all_responses,
+        "unknown_count": unknown_count,
+    }
+    save_results(predictions, str(results_dir / f"{args.model}_predictions.json"))
+    logger.info("Predicciones guardadas en %s", results_dir / f"{args.model}_predictions.json")
+
+    # 9. Evaluación rápida
+    from src.evaluation.classification import evaluate_classification
+
+    # Filtrar predicciones UNKNOWN para métricas válidas
+    valid_indices = [i for i, p in enumerate(all_y_pred) if p >= 0]
+    if valid_indices:
+        y_true_valid = [all_y_true[i] for i in valid_indices]
+        y_pred_valid = [all_y_pred[i] for i in valid_indices]
+        results = evaluate_classification(y_true_valid, y_pred_valid, class_names=HAM10000_CLASSES)
+
+        logger.info("=== Resultados %s (excluyendo %d UNKNOWN) ===", args.model, unknown_count)
+        logger.info("Accuracy: %.4f", results["accuracy"])
+        logger.info("F1 (weighted): %.4f", results["f1_weighted"])
+        logger.info("Sensibilidad (macro): %.4f", results["sensitivity_macro"])
+        logger.info("Especificidad (macro): %.4f", results["specificity_macro"])
+
+        # Guardar métricas
+        save_results(
+            {
+                "model": args.model,
+                "accuracy": results["accuracy"],
+                "f1_weighted": results["f1_weighted"],
+                "auc_roc_macro": results["auc_roc_macro"],
+                "sensitivity_macro": results["sensitivity_macro"],
+                "specificity_macro": results["specificity_macro"],
+                "unknown_count": unknown_count,
+                "total_samples": total,
+                "valid_samples": len(valid_indices),
+            },
+            str(results_dir / f"{args.model}_test_results.json"),
+        )
+    else:
+        logger.warning("Todas las respuestas fueron UNKNOWN. No se pueden calcular métricas.")
+
+
+if __name__ == "__main__":
+    main()
