@@ -1,6 +1,6 @@
 
-% !TeX root = resumen_papers.tex
 \documentclass[11pt, a4paper]{article}
+\usepackage{graphicx} % Required for inserting images
 
 % Configuración de idioma y codificación
 \usepackage[T1]{fontenc}
@@ -11,6 +11,10 @@
 \usepackage{csquotes}
 % Control float placement
 \usepackage{placeins}
+
+% Paquetes para matemáticas e imágenes
+\usepackage{amsmath}
+\usepackage{amssymb}
 
 % Configuración de bibliografía
 \usepackage[backend=biber, style=apa]{biblatex}
@@ -43,7 +47,7 @@ el desarrollo de herramientas de IA médica accesibles y privadas.
 
 \textbf{Automated Skin Cancer Report Generation via a Knowledge-Distilled Vision-Language Model} \cite{chakrabarti_automated_2025}
 Este trabajo propone un marco de trabajo de destilación de conocimientos en dos etapas para generar reportes de diagnóstico de cáncer de piel estructurados y coherentes.
-El método utiliza GPT-4V como modelo "maestro" para generar pseudo-reportes basados en la lista de verificación de 7 puntos del melanoma, y luego afina un modelo "estudiante" (LLaVA-v1.5-13B) utilizando la
+El método utiliza GPT-4V como modelo "maestro" para generar pseudo-reportes basados en la lista de verificación de 7 puntos del melanoma, y luego afina un modelo ''estudiante'' (LLaVA-v1.5-13B) utilizando la
 técnica de Adaptación de Bajo Rango (LoRA, Low-Rank Adaptation).Las pruebas realizadas demuestran que el modelo destilado supera a los enfoques de Generación Aumentada por Recuperación 
 (RAG, Retrieval-Augmented Generation) y a modelos generales como Claude 3.7, alcanzando un puntaje SacreBLEU de 55.59 y un BERTScore F1 de 0.9025. Los autores concluyen que la supervisión directa mediante 
 pseudo-reportes estructurados es más efectiva que el RAG para capturar la lógica clínica en dermatología.
@@ -114,7 +118,7 @@ prometedora para la detección temprana de enfermedades infecciosas emergentes.
 
 \textbf{PeFoMed: Parameter Efficient Fine-tuning of Multimodal Large Language Models for Medical Imaging} \cite{he_pefomed_2025}
 Este trabajo propone PeFoMed, un marco de trabajo para el ajuste fino eficiente en parámetros (PEFT) de Grandes Modelos de Lenguaje Multimodales (MLLMs), diseñado para abordar tareas de Visual Question Answering médico 
-(Med-VQA) y generación de reportes médicos (MRG) con bajos recursos computacionales. La metodología implementa una estrategia de entrenamiento en dos etapas (primero en *image captioning* y luego en tareas *downstream*)
+(Med-VQA) y generación de reportes médicos (MRG) con bajos recursos computacionales. La metodología implementa una estrategia de entrenamiento en dos etapas (primero en \textbf{image captioning} y luego en tareas \textbf{downstream})
 utilizando la técnica LoRA (Low-Rank Adaptation) sobre la arquitectura MiniGPT-v2, actualizando únicamente las capas de proyección lineal y los adaptadores LoRA mientras se mantienen congelados el codificador visual (EVA-ViT)
 y el LLM base (LLaMA-2-chat). Los experimentos se ejecutaron en un servidor con 4 GPUs NVIDIA Tesla A40 de 48GB. Las pruebas en los datasets VQA-RAD, SLAKE, PathVQA e IU-Xray demostraron que el modelo alcanza un rendimiento
 competitivo, logrando una exactitud general del 87.5\% en VQA-RAD (según evaluación con GPT-4) y superando a modelos como BiomedGPT en métricas de generación de reportes (CIDEr 0.462), utilizando solo 56.63 millones de
@@ -149,8 +153,8 @@ son esenciales para validar la coherencia clínica de las predicciones del model
 
 \textbf{MONET: Transparent Medical Image AI via an Image-Text Foundation Model Grounded in Medical Literature} \cite{kim_transparent_2024}
 Este estudio presenta MONET (Medical concept retriever), un modelo fundacional que conecta imágenes médicas con texto mediante aprendizaje contrastivo sobre 105,550 pares imagen-texto extraídos de artículos de PubMed y libros de texto
-médicos. La arquitectura emplea codificadores separados para imagen y texto que mapean ambas modalidades a un espacio de representación conjunto, permitiendo anotar automáticamente conceptos clínicos definidos por el usuario (ej. "eritema",
-"úlcera") midiendo distancias en dicho espacio. MONET fue evaluado en datasets de imágenes clínicas (Fitzpatrick 17k, DDI) y dermatoscópicas (ISIC, Derm7pt), demostrando rendimiento competitivo con modelos supervisados y superior al modelo
+médicos. La arquitectura emplea codificadores separados para imagen y texto que mapean ambas modalidades a un espacio de representación conjunto, permitiendo anotar automáticamente conceptos clínicos definidos por el usuario (ej. ''eritema'',
+''úlcera'') midiendo distancias en dicho espacio. MONET fue evaluado en datasets de imágenes clínicas (Fitzpatrick 17k, DDI) y dermatoscópicas (ISIC, Derm7pt), demostrando rendimiento competitivo con modelos supervisados y superior al modelo
 base CLIP en 21 de 28 conceptos evaluados (AUROC promedio 0.805 vs 0.736 para FST). Dos dermatólogos certificados validaron que las imágenes recuperadas por MONET efectivamente exhiben los conceptos solicitados. Los autores demuestran tres
 casos de uso críticos: auditoría de datasets identificando correlaciones espurias (ej. marcas de tinta asociadas con malignidad), auditoría de modelos revelando características causantes de errores, y desarrollo de modelos inherentemente
 interpretables basados en conceptos. La conclusión enfatiza que MONET habilita transparencia en todo el pipeline de desarrollo de IA médica sin requerir anotaciones manuales masivas, aprovechando el conocimiento colectivo encapsulado en la
@@ -164,7 +168,7 @@ generalistas), pero ambos grupos mantuvieron un rendimiento base inferior en im�
 oscuros en los médicos generalistas, a pesar de que el modelo utilizado tenía un rendimiento equilibrado. Los autores concluyen que la mejora en la precisión general no garantiza la reducción del sesgo y que una asociación humano-IA mal
 diseñada puede amplificar las disparidades existentes en el diagnóstico de poblaciones subrepresentadas.
 
-\textbf{Optimizing skin disease diagnosis: harnessing online community data with contrastive learning and clustering techniques} \cite{shen_optimizing_202}
+\textbf{Optimizing skin disease diagnosis: harnessing online community data with contrastive learning and clustering techniques} \cite{shen_optimizing_2024}
 Este estudio propone un modelo de aprendizaje profundo que utiliza grandes cantidades de imágenes dermatológicas no anotadas provenientes de fuentes en línea para el diagnóstico de 22 enfermedades de la piel. La metodología emplea un
 enfoque de aprendizaje contrastivo para aprender representaciones generales de 1.18 millones de imágenes sin etiquetas, seguido de un ajuste fino sobre datos con etiquetas ruidosas que son filtrados mediante técnicas de agrupamiento
 (\textit{clustering}) y un pequeño conjunto de validación estandarizado. El pre-entrenamiento del modelo se ejecutó en un clúster de 64 Unidades de NVIDIA RTX 3090, requiriendo aproximadamente 5 horas y 45 minutos por cada 100 épocas
@@ -190,7 +194,7 @@ SLAKE y 65.3\% en PathVQA. Los resultados indican que LLaVA-Tri supera consisten
 Los autores concluyen que la riqueza de las anotaciones multigranulares, que capturan tanto información global como relaciones locales entre regiones, es crucial para el desarrollo de futuros modelos fundacionales médicos robustos y 
 escalables.
 
-\textbf{SkinCaRe: A Multimodal Dermatology Dataset Annotated with Medical Caption and Chain-of-Thought Reasoning} \cite{}
+\textbf{SkinCaRe: A Multimodal Dermatology Dataset Annotated with Medical Caption and Chain-of-Thought Reasoning}
 Este trabajo introduce SkinCaRe, un dataset multimodal que unifica SkinCAP (4,000 imágenes con descripciones médicas densas anotadas por dermatólogos certificados) y SkinCoT (3,041 imágenes con narrativas diagnósticas jerárquicas
 de cadena de razonamiento verificadas clínicamente). La metodología empleó anotación multi-céntrica y validación cruzada bilingüe para SkinCAP, mientras que SkinCoT implementó un proceso iterativo de evaluación basado en seis 
 criterios de calidad clínica hasta alcanzar un estándar predefinido de precisión y profundidad explicativa. Las imágenes provienen de los datasets Fitzpatrick 17k y DDI, asegurando diversidad en tonos de piel y condiciones 
