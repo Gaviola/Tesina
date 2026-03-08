@@ -19,12 +19,14 @@ class LLaVAMed(VLMBase):
         llm_name: str = "meta-llama/Llama-2-7b-chat-hf",
         projection_dim: int = 1024,
         max_new_tokens: int = 512,
+        quantize: bool = False,
     ):
         super().__init__()
         self.vision_encoder_name = vision_encoder_name
         self.llm_name = llm_name
         self.projection_dim = projection_dim
         self.max_new_tokens = max_new_tokens
+        self.quantize = quantize
 
         # Los componentes se inicializan como None y se cargan con load_components()
         self.vision_encoder = None
@@ -35,7 +37,8 @@ class LLaVAMed(VLMBase):
     def load_components(self):
         """Carga los componentes del modelo desde HuggingFace.
 
-        Requiere: transformers, CUDA con VRAM suficiente (~14GB LoRA, ~10GB QLoRA).
+        Requiere: transformers, CUDA con VRAM suficiente (~14GB fp16, ~10GB 4-bit).
+        Si self.quantize=True, carga el LLM en 4-bit con bitsandbytes (NF4).
         """
         from transformers import AutoModelForCausalLM, AutoTokenizer, CLIPVisionModel
 
@@ -50,9 +53,24 @@ class LLaVAMed(VLMBase):
         if self.tokenizer.pad_token is None:
             self.tokenizer.pad_token = self.tokenizer.eos_token
 
+        llm_kwargs = {"dtype": torch.float16}
+        if self.quantize:
+            from transformers import BitsAndBytesConfig
+
+            from src.utils.device import get_training_dtype
+
+            llm_kwargs = {
+                "quantization_config": BitsAndBytesConfig(
+                    load_in_4bit=True,
+                    bnb_4bit_compute_dtype=get_training_dtype(),
+                    bnb_4bit_quant_type="nf4",
+                ),
+                "device_map": "auto",
+            }
+
         self.llm = AutoModelForCausalLM.from_pretrained(
             self.llm_name,
-            torch_dtype=torch.float16,
+            **llm_kwargs,
         )
 
         # MLP: CLIP dim → LLM embedding dim
@@ -101,7 +119,8 @@ class LLaVAMed(VLMBase):
         text_embeds = self.llm.get_input_embeddings()(text_inputs.input_ids)
 
         # 4. Concatenar: [image_embeds, text_embeds] a lo largo de seq_len
-        combined_embeds = torch.cat([image_embeds, text_embeds], dim=1)
+        llm_dtype = next(self.llm.parameters()).dtype
+        combined_embeds = torch.cat([image_embeds, text_embeds], dim=1).to(llm_dtype)
 
         # 5. Construir attention_mask extendida
         image_attn = torch.ones(

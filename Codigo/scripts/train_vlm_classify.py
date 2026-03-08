@@ -9,6 +9,7 @@ import argparse
 import logging
 import re
 import sys
+import time
 from pathlib import Path
 
 import torch
@@ -20,9 +21,9 @@ from src.data.collators import VLMCollator
 from src.data.ham10000 import HAM10000_CLASSES, HAM10000_LABEL_MAP, HAM10000Dataset
 from src.data.transforms import get_val_transforms
 from src.models.factory import build_model
-from src.utils.device import get_device, get_training_dtype
+from src.utils.device import check_vram, get_device, get_training_dtype, get_vram_gb
 from src.utils.io import save_results
-from src.utils.logging import setup_logger
+from src.utils.logging import format_duration, log_time, setup_logger
 from src.utils.seed import set_seed
 
 logger = logging.getLogger(__name__)
@@ -68,7 +69,10 @@ def main():
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--wandb", action="store_true")
     parser.add_argument("--num_workers", type=int, default=0)
+    parser.add_argument("--quantize", action="store_true", help="Forzar cuantización 4-bit del LLM")
     args = parser.parse_args()
+
+    script_start = time.perf_counter()
 
     # 1. Reproducibilidad
     set_seed(args.seed)
@@ -90,15 +94,42 @@ def main():
     dtype = get_training_dtype()
     logger.info("Dispositivo: %s | dtype: %s", device, dtype)
 
-    # 4. Cargar modelo VLM
-    logger.info("Cargando modelo %s (esto puede tomar varios minutos)...", args.model)
-    model = build_model({"name": args.model})
-    model.load_components()
-    model = model.to(device)
-    model.eval()
-    logger.info("Modelo %s cargado correctamente", args.model)
+    # 4. Verificar VRAM y decidir cuantización
+    vram_requirements = {"llava_med": 14.0, "mini_vlm": 8.0}
+    required_gb = vram_requirements[args.model]
+    use_quantize = args.quantize
 
-    # 5. Cargar HAM10000 test split
+    if not use_quantize and not check_vram(required_gb, args.model):
+        vram = get_vram_gb()
+        if vram > 0:
+            logger.info("Activando cuantización 4-bit automáticamente para %s", args.model)
+            use_quantize = True
+        else:
+            logger.error("No se detectó GPU. No se puede ejecutar inferencia VLM")
+            sys.exit(1)
+
+    if use_quantize:
+        logger.info("Cuantización 4-bit habilitada para el LLM")
+
+    # 5. Cargar modelo VLM
+    with log_time("Cargando modelo %s%s" % (args.model, " (4-bit)" if use_quantize else ""), logger):
+        model = build_model({"name": args.model, "quantize": use_quantize})
+        model.load_components()
+        if not use_quantize:
+            model = model.to(device)
+        else:
+            # Con device_map="auto" el LLM ya está en GPU, mover solo vision encoder y projection
+            model.vision_encoder = model.vision_encoder.to(device)
+            model.projection = model.projection.to(device)
+        model.eval()
+
+    # Loguear VRAM usada post-carga
+    if torch.cuda.is_available():
+        vram_used = torch.cuda.memory_allocated() / (1024**3)
+        vram_total = get_vram_gb()
+        logger.info("VRAM post-carga: %.1fGB / %.1fGB (%.0f%%)", vram_used, vram_total, 100 * vram_used / vram_total)
+
+    # 6. Cargar HAM10000 test split
     splits_file = args.splits_file
     if splits_file is None:
         splits_file = str(Path(args.data_dir) / "splits" / "ham10000_splits.json")
@@ -116,9 +147,15 @@ def main():
     )
     logger.info("Test set cargado: %d imágenes", len(test_dataset))
 
+    # Ajustar batch_size si la VRAM es ajustada
+    batch_size = args.batch_size
+    if use_quantize and batch_size > 1:
+        batch_size = 1
+        logger.info("Batch size reducido a 1 por cuantización activa (VRAM limitada)")
+
     collator = VLMCollator()
     test_loader = DataLoader(
-        test_dataset, batch_size=args.batch_size, shuffle=False,
+        test_dataset, batch_size=batch_size, shuffle=False,
         collate_fn=collator, num_workers=args.num_workers,
     )
 
@@ -130,6 +167,7 @@ def main():
     unknown_count = 0
 
     logger.info("Ejecutando inferencia zero-shot en %d batches...", len(test_loader))
+    inference_start = time.perf_counter()
     with torch.no_grad():
         for batch_idx, batch in enumerate(test_loader):
             images = batch["image"].to(device)
@@ -158,11 +196,21 @@ def main():
                 all_y_pred.append(pred_idx)
                 all_responses.append(response.strip())
 
+            # Loguear progreso cada 10 batches
             if (batch_idx + 1) % 10 == 0:
+                elapsed = time.perf_counter() - inference_start
+                images_done = (batch_idx + 1) * args.batch_size
+                images_per_sec = images_done / elapsed
+                remaining = len(test_loader) - (batch_idx + 1)
+                eta = elapsed / (batch_idx + 1) * remaining
                 logger.info(
-                    "Progreso: %d/%d batches (unknown: %d)",
+                    "Progreso: %d/%d batches (unknown: %d) [%.1f img/s, ETA: %s]",
                     batch_idx + 1, len(test_loader), unknown_count,
+                    images_per_sec, format_duration(eta),
                 )
+
+    inference_time = time.perf_counter() - inference_start
+    logger.info("Inferencia completada en %s", format_duration(inference_time))
 
     # 7. Resultados
     total = len(all_y_true)
@@ -186,7 +234,7 @@ def main():
     logger.info("Predicciones guardadas en %s", results_dir / f"{args.model}_predictions.json")
 
     # 9. Evaluación rápida
-    from src.evaluation.classification import evaluate_classification
+    from src.evaluation.classification import evaluate_classification  # noqa: E402
 
     # Filtrar predicciones UNKNOWN para métricas válidas
     valid_indices = [i for i, p in enumerate(all_y_pred) if p >= 0]
@@ -218,6 +266,8 @@ def main():
         )
     else:
         logger.warning("Todas las respuestas fueron UNKNOWN. No se pueden calcular métricas.")
+
+    logger.info("Ejecución total: %s", format_duration(time.perf_counter() - script_start))
 
 
 if __name__ == "__main__":

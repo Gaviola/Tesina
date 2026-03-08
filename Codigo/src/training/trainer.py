@@ -1,4 +1,5 @@
 import logging
+import time
 from typing import Any, Optional
 
 import torch
@@ -7,7 +8,7 @@ from sklearn.metrics import f1_score
 from torch.utils.data import DataLoader
 
 from src.utils.io import save_checkpoint
-from src.utils.logging import log_metrics
+from src.utils.logging import format_duration, log_metrics
 
 logger = logging.getLogger(__name__)
 
@@ -59,6 +60,9 @@ class Trainer:
         self.model.train()
         total_loss = torch.zeros(1, device=self.device)
         num_batches = 0
+        total_batches = len(self.train_loader)
+        log_interval = max(10, total_batches // 5)
+        epoch_start = time.perf_counter()
 
         self.optimizer.zero_grad()
 
@@ -87,8 +91,16 @@ class Trainer:
             total_loss += loss.detach() * self.gradient_accumulation_steps
             num_batches += 1
 
+            if (batch_idx + 1) % log_interval == 0:
+                avg_so_far = total_loss.item() / num_batches
+                logger.info(
+                    "  Batch %d/%d - loss: %.4f",
+                    batch_idx + 1, total_batches, avg_so_far,
+                )
+
         avg_loss = total_loss.item() / max(num_batches, 1)
-        return {"train_loss": avg_loss}
+        train_time = time.perf_counter() - epoch_start
+        return {"train_loss": avg_loss, "train_time": train_time}
 
     @torch.no_grad()
     def validate(self, epoch: int) -> dict:
@@ -98,6 +110,7 @@ class Trainer:
         total = 0
         all_preds_gpu = []
         all_labels_gpu = []
+        val_start = time.perf_counter()
 
         for batch in self.val_loader:
             images = batch["image"].to(self.device, non_blocking=True)
@@ -120,16 +133,19 @@ class Trainer:
 
         num_batches = len(self.val_loader)
         val_f1 = f1_score(all_labels, all_preds, average="weighted", zero_division=0)
+        val_time = time.perf_counter() - val_start
         return {
             "val_loss": total_loss.item() / max(num_batches, 1),
             "val_accuracy": correct / max(total, 1),
             "val_f1": val_f1,
+            "val_time": val_time,
         }
 
     def fit(self) -> dict:
         """Ejecuta el loop de entrenamiento completo."""
         self.model.to(self.device)
         best_metrics = {}
+        fit_start = time.perf_counter()
 
         for epoch in range(1, self.max_epochs + 1):
             train_metrics = self.train_epoch(epoch)
@@ -140,9 +156,12 @@ class Trainer:
 
             metrics = {**train_metrics, **val_metrics, "epoch": epoch}
             logger.info(
-                "Epoch %d/%d - train_loss: %.4f - val_loss: %.4f - val_acc: %.4f",
+                "Epoch %d/%d - train_loss: %.4f - val_loss: %.4f - val_acc: %.4f - val_f1: %.4f [train: %s, val: %s]",
                 epoch, self.max_epochs,
                 metrics["train_loss"], metrics["val_loss"], metrics["val_accuracy"],
+                metrics["val_f1"],
+                format_duration(metrics["train_time"]),
+                format_duration(metrics["val_time"]),
             )
             log_metrics(metrics, step=epoch)
 
@@ -160,4 +179,6 @@ class Trainer:
 
             best_metrics = metrics
 
+        total_time = time.perf_counter() - fit_start
+        logger.info("Entrenamiento finalizado en %s (%d épocas)", format_duration(total_time), epoch)
         return best_metrics

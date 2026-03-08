@@ -22,12 +22,14 @@ class MiniVLM(VLMBase):
         llm_name: str = "microsoft/Phi-3-mini-4k-instruct",
         projection_dim: int = 768,
         max_new_tokens: int = 512,
+        quantize: bool = False,
     ):
         super().__init__()
         self.vision_encoder_name = vision_encoder_name
         self.llm_name = llm_name
         self.projection_dim = projection_dim
         self.max_new_tokens = max_new_tokens
+        self.quantize = quantize
 
         self.vision_encoder = None
         self.projection = None
@@ -35,7 +37,10 @@ class MiniVLM(VLMBase):
         self.tokenizer = None
 
     def load_components(self):
-        """Carga los componentes del modelo desde HuggingFace."""
+        """Carga los componentes del modelo desde HuggingFace.
+
+        Si self.quantize=True, carga el LLM en 4-bit con bitsandbytes (NF4).
+        """
         from transformers import AutoModelForCausalLM, AutoTokenizer, CLIPVisionModel
 
         self.vision_encoder = CLIPVisionModel.from_pretrained(self.vision_encoder_name)
@@ -49,10 +54,30 @@ class MiniVLM(VLMBase):
         if self.tokenizer.pad_token is None:
             self.tokenizer.pad_token = self.tokenizer.eos_token
 
+        llm_kwargs = {
+            "dtype": torch.float16,
+            "trust_remote_code": False,
+            "attn_implementation": "eager",
+        }
+        if self.quantize:
+            from transformers import BitsAndBytesConfig
+
+            from src.utils.device import get_training_dtype
+
+            llm_kwargs = {
+                "quantization_config": BitsAndBytesConfig(
+                    load_in_4bit=True,
+                    bnb_4bit_compute_dtype=get_training_dtype(),
+                    bnb_4bit_quant_type="nf4",
+                ),
+                "device_map": "auto",
+                "trust_remote_code": False,
+                "attn_implementation": "eager",
+            }
+
         self.llm = AutoModelForCausalLM.from_pretrained(
             self.llm_name,
-            torch_dtype=torch.float16,
-            trust_remote_code=True,
+            **llm_kwargs,
         )
 
         # MLP: CLIP dim → Phi-3 embedding dim

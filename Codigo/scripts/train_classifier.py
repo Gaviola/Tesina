@@ -6,9 +6,9 @@ Uso:
 """
 
 import argparse
-import json
 import logging
 import sys
+import time
 from collections import Counter
 from pathlib import Path
 
@@ -30,7 +30,7 @@ from src.training.callbacks import CheckpointCallback, EarlyStopping
 from src.training.trainer import Trainer
 from src.utils.device import get_device, get_num_workers, get_training_dtype
 from src.utils.io import save_results
-from src.utils.logging import setup_logger
+from src.utils.logging import format_duration, log_time, setup_logger
 from src.utils.seed import set_seed
 
 logger = logging.getLogger(__name__)
@@ -63,7 +63,7 @@ def evaluate_on_split(model, dataloader, device, dtype, num_classes):
             with torch.amp.autocast("cuda", dtype=dtype, enabled=use_amp):
                 outputs = model(images)
 
-            probs = torch.softmax(outputs, dim=1).cpu().numpy()
+            probs = torch.softmax(outputs, dim=1).float().cpu().numpy()
             preds = outputs.argmax(dim=1).cpu().tolist()
 
             all_preds.extend(preds)
@@ -89,6 +89,8 @@ def main():
     parser.add_argument("--wandb", action="store_true")
     parser.add_argument("--num_workers", type=int, default=None)
     args = parser.parse_args()
+
+    script_start = time.perf_counter()
 
     # 1. Reproducibilidad
     set_seed(args.seed)
@@ -125,24 +127,25 @@ def main():
 
     # 5. Datasets
     data_root = str(Path(args.data_dir) / "raw" / "ham10000")
-    train_dataset = HAM10000Dataset(
-        root_dir=data_root,
-        split="train",
-        transform=get_train_transforms(224),
-        splits_file=splits_file,
-    )
-    val_dataset = HAM10000Dataset(
-        root_dir=data_root,
-        split="val",
-        transform=get_val_transforms(224),
-        splits_file=splits_file,
-    )
-    test_dataset = HAM10000Dataset(
-        root_dir=data_root,
-        split="test",
-        transform=get_val_transforms(224),
-        splits_file=splits_file,
-    )
+    with log_time("Cargando datasets HAM10000", logger):
+        train_dataset = HAM10000Dataset(
+            root_dir=data_root,
+            split="train",
+            transform=get_train_transforms(224),
+            splits_file=splits_file,
+        )
+        val_dataset = HAM10000Dataset(
+            root_dir=data_root,
+            split="val",
+            transform=get_val_transforms(224),
+            splits_file=splits_file,
+        )
+        test_dataset = HAM10000Dataset(
+            root_dir=data_root,
+            split="test",
+            transform=get_val_transforms(224),
+            splits_file=splits_file,
+        )
     logger.info(
         "Datasets cargados - train: %d, val: %d, test: %d",
         len(train_dataset), len(val_dataset), len(test_dataset),
@@ -175,12 +178,13 @@ def main():
 
     # 7. Modelo
     num_classes = 7
-    model = build_model({
-        "name": args.model,
-        "num_classes": num_classes,
-        "pretrained": True,
-        "freeze_backbone": True,
-    })
+    with log_time("Construyendo modelo %s" % args.model, logger):
+        model = build_model({
+            "name": args.model,
+            "num_classes": num_classes,
+            "pretrained": True,
+            "freeze_backbone": True,
+        })
     trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
     total_params = sum(p.numel() for p in model.parameters())
     logger.info("Modelo: %s | Parámetros: %d total, %d entrenables", args.model, total_params, trainable)
@@ -224,8 +228,10 @@ def main():
     logger.info("Entrenamiento finalizado. Mejores métricas: %s", best_metrics)
 
     # 11. Evaluación en test set
+    eval_start = time.perf_counter()
     logger.info("Evaluando en test set...")
     y_pred, y_true, y_prob = evaluate_on_split(model, test_loader, device, dtype, num_classes)
+    logger.info("Evaluación en test set completada en %s", format_duration(time.perf_counter() - eval_start))
 
     class_names = train_dataset.get_class_names()
     test_results = evaluate_classification(y_true, y_pred, y_prob, class_names)
@@ -267,6 +273,7 @@ def main():
     save_results(predictions, str(results_dir / f"{args.model}_predictions.json"))
 
     logger.info("Resultados guardados en %s", results_dir)
+    logger.info("Ejecución total: %s", format_duration(time.perf_counter() - script_start))
 
 
 if __name__ == "__main__":

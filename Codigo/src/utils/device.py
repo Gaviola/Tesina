@@ -39,6 +39,44 @@ def get_num_workers() -> int:
     return min(8, max(4, cpu_count // 2))
 
 
+def get_vram_gb() -> float:
+    """Retorna la VRAM total de la GPU en GB. Retorna 0 si no hay GPU."""
+    if not torch.cuda.is_available():
+        return 0.0
+    return torch.cuda.get_device_properties(0).total_memory / (1024**3)
+
+
+def check_vram(required_gb: float, model_name: str = "") -> bool:
+    """Verifica si la VRAM disponible es suficiente para el modelo.
+
+    Args:
+        required_gb: VRAM requerida en GB.
+        model_name: Nombre del modelo (para mensajes de log).
+
+    Returns:
+        True si hay suficiente VRAM, False si no.
+    """
+    import logging
+
+    logger = logging.getLogger(__name__)
+    vram = get_vram_gb()
+
+    if vram == 0:
+        logger.warning("No se detectó GPU. El modelo %s requiere %.1fGB de VRAM", model_name, required_gb)
+        return False
+
+    if vram < required_gb:
+        logger.warning(
+            "VRAM insuficiente para %s: %.1fGB disponible, %.1fGB requerida. "
+            "Se recomienda cuantización 4-bit (--quantize)",
+            model_name, vram, required_gb,
+        )
+        return False
+
+    logger.info("VRAM verificada: %.1fGB disponible, %.1fGB requerida para %s", vram, required_gb, model_name)
+    return True
+
+
 def get_gpu_info() -> dict:
     """Retorna información de la GPU disponible."""
     if not torch.cuda.is_available():
@@ -47,6 +85,6 @@ def get_gpu_info() -> dict:
         "available": True,
         "name": torch.cuda.get_device_name(0),
         "capability": torch.cuda.get_device_capability(0),
-        "memory_total_gb": torch.cuda.get_device_properties(0).total_mem / (1024**3),
+        "memory_total_gb": torch.cuda.get_device_properties(0).total_memory / (1024**3),
         "dtype": str(get_training_dtype()),
     }
