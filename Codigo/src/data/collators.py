@@ -22,12 +22,15 @@ class ClassificationCollator:
 class VLMCollator:
     """Collator para batches multimodales (imagen + texto).
 
-    Las imágenes se apilan como tensores. Los textos se devuelven como lista
-    de strings (el tokenizer del VLM se encarga del padding).
+    Soporta tanto tensores como PIL Images. Cuando las imágenes son PIL,
+    se devuelven como lista (el processor del VLM se encarga del preprocesado).
+    Cuando son tensores, se apilan en un batch tensor.
     """
 
     def __call__(self, batch: list[dict]) -> dict[str, Any]:
-        images = torch.stack([sample["image"] for sample in batch])
+        images = [sample["image"] for sample in batch]
+        if isinstance(images[0], torch.Tensor):
+            images = torch.stack(images)
 
         result = {"image": images}
 

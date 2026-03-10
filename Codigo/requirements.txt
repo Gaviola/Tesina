@@ -16,7 +16,7 @@
 
 # HuggingFace ecosystem
 huggingface_hub[cli]>=0.20.0
-transformers>=4.36.0
+transformers>=4.40.0,<4.44.0
 peft>=0.7.0
 bitsandbytes>=0.41.0
 datasets>=2.16.0

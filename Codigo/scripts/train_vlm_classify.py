@@ -19,7 +19,6 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from src.data.collators import VLMCollator
 from src.data.ham10000 import HAM10000_CLASSES, HAM10000_LABEL_MAP, HAM10000Dataset
-from src.data.transforms import get_val_transforms
 from src.models.factory import build_model
 from src.utils.device import check_vram, get_device, get_training_dtype, get_vram_gb
 from src.utils.io import save_results
@@ -95,7 +94,7 @@ def main():
     logger.info("Dispositivo: %s | dtype: %s", device, dtype)
 
     # 4. Verificar VRAM y decidir cuantización
-    vram_requirements = {"llava_med": 14.0, "mini_vlm": 8.0}
+    vram_requirements = {"llava_med": 14.0, "mini_vlm": 10.0}
     required_gb = vram_requirements[args.model]
     use_quantize = args.quantize
 
@@ -112,15 +111,10 @@ def main():
         logger.info("Cuantización 4-bit habilitada para el LLM")
 
     # 5. Cargar modelo VLM
+    # Ambos modelos usan device_map="auto" — no se requiere .to(device) manual
     with log_time("Cargando modelo %s%s" % (args.model, " (4-bit)" if use_quantize else ""), logger):
         model = build_model({"name": args.model, "quantize": use_quantize})
         model.load_components()
-        if not use_quantize:
-            model = model.to(device)
-        else:
-            # Con device_map="auto" el LLM ya está en GPU, mover solo vision encoder y projection
-            model.vision_encoder = model.vision_encoder.to(device)
-            model.projection = model.projection.to(device)
         model.eval()
 
     # Loguear VRAM usada post-carga
@@ -142,14 +136,18 @@ def main():
     test_dataset = HAM10000Dataset(
         root_dir=data_root,
         split="test",
-        transform=get_val_transforms(224),
         splits_file=splits_file,
+        return_pil=True,  # VLMs necesitan PIL Images (el processor aplica sus propias transforms)
     )
     logger.info("Test set cargado: %d imágenes", len(test_dataset))
 
-    # Ajustar batch_size si la VRAM es ajustada
+    # Ajustar batch_size según el modelo
     batch_size = args.batch_size
-    if use_quantize and batch_size > 1:
+    if args.model == "mini_vlm" and batch_size > 1:
+        # Phi-3-vision procesa cada imagen secuencialmente (chat template por imagen)
+        batch_size = 1
+        logger.info("Batch size forzado a 1 para mini_vlm (Phi-3-vision procesa secuencialmente)")
+    elif use_quantize and batch_size > 1:
         batch_size = 1
         logger.info("Batch size reducido a 1 por cuantización activa (VRAM limitada)")
 
@@ -170,17 +168,17 @@ def main():
     inference_start = time.perf_counter()
     with torch.no_grad():
         for batch_idx, batch in enumerate(test_loader):
-            images = batch["image"].to(device)
+            # PIL Images: no mover a device (el processor las convierte internamente)
+            images = batch["image"]
             labels = batch["label"].tolist()
             metadata = batch.get("metadata", [{}] * len(labels))
-            batch_size = images.shape[0]
+            batch_size = len(images)
 
-            # Generar respuestas
+            # Generar respuestas (el modelo maneja dtype internamente con device_map="auto")
             prompts = [CLASSIFICATION_PROMPT] * batch_size
-            with torch.amp.autocast("cuda", dtype=dtype, enabled=(device.type == "cuda")):
-                responses = model.generate(
-                    images, prompts, max_new_tokens=args.max_new_tokens,
-                )
+            responses = model.generate(
+                images, prompts, max_new_tokens=args.max_new_tokens,
+            )
 
             # Parsear respuestas
             for i, response in enumerate(responses):
@@ -199,7 +197,7 @@ def main():
             # Loguear progreso cada 10 batches
             if (batch_idx + 1) % 10 == 0:
                 elapsed = time.perf_counter() - inference_start
-                images_done = (batch_idx + 1) * args.batch_size
+                images_done = (batch_idx + 1) * batch_size
                 images_per_sec = images_done / elapsed
                 remaining = len(test_loader) - (batch_idx + 1)
                 eta = elapsed / (batch_idx + 1) * remaining
@@ -258,6 +256,9 @@ def main():
                 "auc_roc_macro": results["auc_roc_macro"],
                 "sensitivity_macro": results["sensitivity_macro"],
                 "specificity_macro": results["specificity_macro"],
+                "sensitivity_per_class": results.get("sensitivity_per_class", []),
+                "specificity_per_class": results.get("specificity_per_class", []),
+                "confusion_matrix": results["confusion_matrix"],
                 "unknown_count": unknown_count,
                 "total_samples": total,
                 "valid_samples": len(valid_indices),

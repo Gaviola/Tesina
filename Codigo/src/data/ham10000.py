@@ -53,9 +53,11 @@ class HAM10000Dataset(BaseDataset):
         transform=None,
         splits_file: Optional[str] = None,
         include_test_set: bool = False,
+        return_pil: bool = False,
     ):
         self.splits_file = splits_file
         self.include_test_set = include_test_set
+        self.return_pil = return_pil
         super().__init__(root_dir, split, transform)
 
     def _find_metadata(self, root: Path) -> Path:
@@ -151,7 +153,7 @@ class HAM10000Dataset(BaseDataset):
         sample = self.samples[idx]
         image = Image.open(sample["image_path"]).convert("RGB")
 
-        if self.transform:
+        if not self.return_pil and self.transform:
             image = self.transform(image)
 
         return {

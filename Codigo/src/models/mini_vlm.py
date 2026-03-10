@@ -1,161 +1,160 @@
+from typing import Union
 import torch
-import torch.nn as nn
-
 from src.models.vlm_base import VLMBase
 
+import transformers
+from transformers.cache_utils import DynamicCache
+
+# --- Patch para compatibilidad de Phi-3.5-vision ---
+# En transformers >= 4.41.0 se modificó la API de DynamicCache.
+# Inyectamos dinámicamente las propiedades legacy que el código de Microsoft requiere.
+
+if not hasattr(DynamicCache, "seen_tokens"):
+    DynamicCache.seen_tokens = property(lambda self: self.get_seq_length())
+
+if not hasattr(DynamicCache, "get_max_length"):
+    # El modelo tiene una ventana de contexto de 128k
+    DynamicCache.get_max_length = lambda self, *args, **kwargs: 131072
+
+if not hasattr(DynamicCache, "get_usable_length"):
+    def _get_usable_length(self, new_seq_length=None, layer_idx=None, *args, **kwargs):
+        # Intentar obtener la longitud de la capa específica, fallback a la general
+        try:
+            return self.get_seq_length(layer_idx)
+        except Exception:
+            return self.get_seq_length()
+            
+    DynamicCache.get_usable_length = _get_usable_length
 
 class MiniVLM(VLMBase):
-    """Mini-VLM: CLIP ViT-B/16 + MLP proyección + Phi-3-mini.
+    """Phi-3.5-vision-instruct: VLM integrado de Microsoft.
 
-    Modelo más ligero (~4B parámetros) para comparación con LLaVA-Med.
-    VRAM estimada: ~8GB con LoRA.
+    Modelo más ligero que LLaVA-Med. Incluye vision encoder, proyección y LLM
+    en un solo checkpoint preentrenado. No tiene MLP separada — el pipeline
+    multimodal está integrado en el modelo.
 
-    Componentes:
-    - vision_encoder: CLIP ViT-B/16 (congelado)
-    - projection: MLP que mapea dim 768 → dim embedding de Phi-3
-    - llm: Phi-3-mini-4k-instruct (se aplica LoRA en Fase 2)
+    VRAM estimada: ~8-10 GB (bf16) / ~4-5 GB (4-bit NF4).
     """
+
+    MODEL_NAME = "microsoft/Phi-3.5-vision-instruct"
+    VRAM_REQUIRED_GB = 10.0
 
     def __init__(
         self,
-        vision_encoder_name: str = "openai/clip-vit-base-patch16",
-        llm_name: str = "microsoft/Phi-3-mini-4k-instruct",
-        projection_dim: int = 768,
-        max_new_tokens: int = 512,
+        model_name: str = MODEL_NAME,
         quantize: bool = False,
+        max_new_tokens: int = 512,
     ):
         super().__init__()
-        self.vision_encoder_name = vision_encoder_name
-        self.llm_name = llm_name
-        self.projection_dim = projection_dim
-        self.max_new_tokens = max_new_tokens
+        self.model_name = model_name
         self.quantize = quantize
-
-        self.vision_encoder = None
-        self.projection = None
-        self.llm = None
-        self.tokenizer = None
+        self.max_new_tokens = max_new_tokens
+        self.model = None
+        self.processor = None
 
     def load_components(self):
-        """Carga los componentes del modelo desde HuggingFace.
+        """Carga el modelo completo desde HuggingFace.
 
-        Si self.quantize=True, carga el LLM en 4-bit con bitsandbytes (NF4).
+        Phi requiere trust_remote_code=True.
+        Intenta flash_attention_2. fallback a 'eager'.
+        Con quantize=True carga en 4-bit NF4 (bitsandbytes).
         """
-        from transformers import AutoModelForCausalLM, AutoTokenizer, CLIPVisionModel
+        from transformers import AutoModelForCausalLM, AutoProcessor, BitsAndBytesConfig
 
-        self.vision_encoder = CLIPVisionModel.from_pretrained(self.vision_encoder_name)
-        self.vision_encoder.eval()
-        for p in self.vision_encoder.parameters():
-            p.requires_grad = False
-
-        vision_hidden_size = self.vision_encoder.config.hidden_size  # 768 para ViT-B/16
-
-        self.tokenizer = AutoTokenizer.from_pretrained(self.llm_name)
-        if self.tokenizer.pad_token is None:
-            self.tokenizer.pad_token = self.tokenizer.eos_token
-
-        llm_kwargs = {
-            "dtype": torch.float16,
-            "trust_remote_code": False,
-            "attn_implementation": "eager",
+        kwargs = {
+            "device_map": "auto",
+            "trust_remote_code": True,
+            "torch_dtype": torch.bfloat16,
+            "_attn_implementation": "flash_attention_2",
         }
         if self.quantize:
-            from transformers import BitsAndBytesConfig
+            kwargs["quantization_config"] = BitsAndBytesConfig(
+                load_in_4bit=True,
+                bnb_4bit_compute_dtype=torch.bfloat16,
+                bnb_4bit_quant_type="nf4",
+            )
 
-            from src.utils.device import get_training_dtype
+        try:
+            self.model = AutoModelForCausalLM.from_pretrained(self.model_name, **kwargs)
+        except Exception:
+            # Fallback: sin flash_attention_2
+            kwargs["_attn_implementation"] = "eager"
+            self.model = AutoModelForCausalLM.from_pretrained(self.model_name, **kwargs)
 
-            llm_kwargs = {
-                "quantization_config": BitsAndBytesConfig(
-                    load_in_4bit=True,
-                    bnb_4bit_compute_dtype=get_training_dtype(),
-                    bnb_4bit_quant_type="nf4",
-                ),
-                "device_map": "auto",
-                "trust_remote_code": False,
-                "attn_implementation": "eager",
-            }
-
-        self.llm = AutoModelForCausalLM.from_pretrained(
-            self.llm_name,
-            **llm_kwargs,
+        self.model.eval()
+        self.processor = AutoProcessor.from_pretrained(
+            self.model_name, trust_remote_code=True
         )
-
-        # MLP: CLIP dim → Phi-3 embedding dim
-        llm_hidden_size = self.llm.config.hidden_size
-        self.projection = nn.Sequential(
-            nn.Linear(vision_hidden_size, llm_hidden_size),
-            nn.GELU(),
-            nn.Linear(llm_hidden_size, llm_hidden_size),
-        )
-
-    def encode_image(self, images: torch.Tensor) -> torch.Tensor:
-        with torch.no_grad():
-            vision_outputs = self.vision_encoder(images)
-        image_features = vision_outputs.last_hidden_state
-        projected = self.projection(image_features)
-        return projected
 
     @torch.no_grad()
     def generate(
         self,
-        images: torch.Tensor,
+        images: Union[torch.Tensor, list],
         prompts: list[str],
-        max_new_tokens: int = 512,
+        max_new_tokens: int = None,
         **kwargs,
     ) -> list[str]:
         """Genera texto dado imágenes y prompts.
 
-        Concatena embeddings visuales con embeddings de texto y genera
-        con el LLM usando inputs_embeds.
+        Phi requiere chat template con <|image_1|> en el prompt.
+        Procesa cada imagen por separado (batch_size=1 por limitación del chat template).
+
+        Args:
+            images: Lista de PIL Images.
+            prompts: Lista de prompts textuales.
+            max_new_tokens: Máximo de tokens a generar.
+
+        Returns:
+            Lista de textos generados.
         """
-        device = images.device
+        max_tok = max_new_tokens or self.max_new_tokens
+        results = []
 
-        # 1. Codificar imágenes → (B, num_patches, llm_hidden)
-        image_embeds = self.encode_image(images)
+        for img, prompt in zip(images, prompts):
+            messages = [{"role": "user", "content": f"<|image_1|>\n{prompt}"}]
+            text = self.processor.tokenizer.apply_chat_template(
+                messages, tokenize=False, add_generation_prompt=True,
+            )
+            inputs = self.processor(text, [img], return_tensors="pt").to(self.model.device)
 
-        # 2. Tokenizar prompts
-        text_inputs = self.tokenizer(
-            prompts,
-            return_tensors="pt",
-            padding=True,
-            truncation=True,
-            max_length=256,
-        ).to(device)
+            output_ids = self.model.generate(
+                **inputs,
+                max_new_tokens=max_tok,
+                do_sample=False,
+                eos_token_id=self.processor.tokenizer.eos_token_id,
+            )
 
-        # 3. Obtener embeddings de texto
-        text_embeds = self.llm.get_input_embeddings()(text_inputs.input_ids)
+            # Decodificar solo los tokens generados (excluir el input)
+            input_len = inputs["input_ids"].shape[1]
+            generated_ids = output_ids[:, input_len:]
+            results.append(
+                self.processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
+            )
 
-        # 4. Concatenar: [image_embeds, text_embeds] a lo largo de seq_len
-        combined_embeds = torch.cat([image_embeds, text_embeds], dim=1)
+        return results
 
-        # 5. Construir attention_mask extendida
-        image_attn = torch.ones(
-            image_embeds.shape[0], image_embeds.shape[1],
-            dtype=text_inputs.attention_mask.dtype, device=device,
+    def forward(
+        self,
+        images: Union[torch.Tensor, list],
+        input_ids: torch.Tensor,
+        attention_mask: torch.Tensor,
+        labels: torch.Tensor,
+    ) -> dict:
+        """Forward pass para fine-tuning con LoRA en Fase 2 (generación de reportes).
+
+        Args:
+            images: Lista de PIL Images.
+            input_ids: Tokens de entrada (B, seq_len).
+            attention_mask: Máscara de atención (B, seq_len).
+            labels: Tokens target (B, seq_len).
+
+        Returns:
+            Dict con al menos "loss".
+        """
+        outputs = self.model(
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            labels=labels,
+            pixel_values=images if isinstance(images, torch.Tensor) else None,
         )
-        combined_attn = torch.cat([image_attn, text_inputs.attention_mask], dim=1)
-
-        # 6. Generar con el LLM
-        gen_kwargs = {
-            "inputs_embeds": combined_embeds,
-            "attention_mask": combined_attn,
-            "max_new_tokens": max_new_tokens,
-            "do_sample": kwargs.get("do_sample", False),
-            "temperature": kwargs.get("temperature", 1.0),
-            "top_p": kwargs.get("top_p", 1.0),
-            "pad_token_id": self.tokenizer.pad_token_id,
-            "eos_token_id": self.tokenizer.eos_token_id,
-        }
-        output_ids = self.llm.generate(**gen_kwargs)
-
-        # 7. Decodificar tokens generados
-        generated_texts = self.tokenizer.batch_decode(
-            output_ids, skip_special_tokens=True,
-        )
-
-        return generated_texts
-
-    def forward(self, images, input_ids, attention_mask, labels) -> dict:
-        image_embeds = self.encode_image(images)
-        # TODO: Implementar forward completo con loss en Fase 2
-        raise NotImplementedError("forward() se implementa completo en Fase 2")
+        return {"loss": outputs.loss}
