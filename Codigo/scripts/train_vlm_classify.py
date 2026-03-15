@@ -144,9 +144,9 @@ def main():
     # Ajustar batch_size según el modelo
     batch_size = args.batch_size
     if args.model == "mini_vlm" and batch_size > 1:
-        # Phi-3-vision procesa cada imagen secuencialmente (chat template por imagen)
+        # Phi procesa cada imagen secuencialmente (chat template por imagen)
         batch_size = 1
-        logger.info("Batch size forzado a 1 para mini_vlm (Phi-3-vision procesa secuencialmente)")
+        logger.info("Batch size forzado a 1 para mini_vlm (Phi procesa secuencialmente)")
     elif use_quantize and batch_size > 1:
         batch_size = 1
         logger.info("Batch size reducido a 1 por cuantización activa (VRAM limitada)")

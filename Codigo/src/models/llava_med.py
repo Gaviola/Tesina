@@ -1,155 +1,130 @@
+from typing import Union
+
 import torch
-import torch.nn as nn
 
 from src.models.vlm_base import VLMBase
 
 
 class LLaVAMed(VLMBase):
-    """LLaVA-Med 7B: CLIP ViT-L/14 + MLP proyección + LLaMA-2 7B.
+    """LLaVA-Med v1.5 con Mistral-7B (modelo preentrenado completo).
 
-    Componentes:
-    - vision_encoder: CLIP ViT-L/14 (congelado)
-    - projection: MLP que mapea embeddings visuales al espacio del LLM
-    - llm: LLaMA-2 7B (se aplica LoRA en Fase 2)
+    Usa LlavaForConditionalGeneration de HuggingFace, que incluye
+    vision encoder (CLIP ViT-L/14), MLP de proyección entrenada y LLM (Mistral-7B)
+    en un solo checkpoint.
+
+    VRAM estimada: ~14 GB (bf16) / ~5 GB (4-bit NF4).
     """
+
+    MODEL_NAME = "chaoyinshe/llava-med-v1.5-mistral-7b-hf"
+    VRAM_REQUIRED_GB = 14.0
 
     def __init__(
         self,
-        vision_encoder_name: str = "openai/clip-vit-large-patch14",
-        llm_name: str = "meta-llama/Llama-2-7b-chat-hf",
-        projection_dim: int = 1024,
-        max_new_tokens: int = 512,
+        model_name: str = MODEL_NAME,
         quantize: bool = False,
+        max_new_tokens: int = 512,
     ):
         super().__init__()
-        self.vision_encoder_name = vision_encoder_name
-        self.llm_name = llm_name
-        self.projection_dim = projection_dim
-        self.max_new_tokens = max_new_tokens
+        self.model_name = model_name
         self.quantize = quantize
-
-        # Los componentes se inicializan como None y se cargan con load_components()
-        self.vision_encoder = None
-        self.projection = None
-        self.llm = None
-        self.tokenizer = None
+        self.max_new_tokens = max_new_tokens
+        self.model = None   # LlavaForConditionalGeneration
+        self.processor = None
 
     def load_components(self):
-        """Carga los componentes del modelo desde HuggingFace.
+        """Carga el modelo completo desde HuggingFace.
 
-        Requiere: transformers, CUDA con VRAM suficiente (~14GB fp16, ~10GB 4-bit).
-        Si self.quantize=True, carga el LLM en 4-bit con bitsandbytes (NF4).
+        Con quantize=True carga el LLM en 4-bit NF4 (bitsandbytes).
+        Usa device_map='auto' para colocar capas automáticamente en GPU/CPU.
         """
-        from transformers import AutoModelForCausalLM, AutoTokenizer, CLIPVisionModel
+        from transformers import AutoProcessor, BitsAndBytesConfig, LlavaForConditionalGeneration
 
-        self.vision_encoder = CLIPVisionModel.from_pretrained(self.vision_encoder_name)
-        self.vision_encoder.eval()
-        for p in self.vision_encoder.parameters():
-            p.requires_grad = False
-
-        vision_hidden_size = self.vision_encoder.config.hidden_size  # 1024
-
-        self.tokenizer = AutoTokenizer.from_pretrained(self.llm_name)
-        if self.tokenizer.pad_token is None:
-            self.tokenizer.pad_token = self.tokenizer.eos_token
-
-        llm_kwargs = {"dtype": torch.float16}
+        kwargs = {
+            "torch_dtype": torch.bfloat16,
+            "device_map": "auto",
+            "low_cpu_mem_usage": True,
+        }
         if self.quantize:
-            from transformers import BitsAndBytesConfig
+            kwargs["quantization_config"] = BitsAndBytesConfig(
+                load_in_4bit=True,
+                bnb_4bit_compute_dtype=torch.bfloat16,
+                bnb_4bit_quant_type="nf4",
+            )
 
-            from src.utils.device import get_training_dtype
+        self.model = LlavaForConditionalGeneration.from_pretrained(self.model_name, **kwargs)
+        self.model.eval()
 
-            llm_kwargs = {
-                "quantization_config": BitsAndBytesConfig(
-                    load_in_4bit=True,
-                    bnb_4bit_compute_dtype=get_training_dtype(),
-                    bnb_4bit_quant_type="nf4",
-                ),
-                "device_map": "auto",
-            }
-
-        self.llm = AutoModelForCausalLM.from_pretrained(
-            self.llm_name,
-            **llm_kwargs,
-        )
-
-        # MLP: CLIP dim → LLM embedding dim
-        llm_hidden_size = self.llm.config.hidden_size
-        self.projection = nn.Sequential(
-            nn.Linear(vision_hidden_size, llm_hidden_size),
-            nn.GELU(),
-            nn.Linear(llm_hidden_size, llm_hidden_size),
-        )
-
-    def encode_image(self, images: torch.Tensor) -> torch.Tensor:
-        with torch.no_grad():
-            vision_outputs = self.vision_encoder(images)
-        image_features = vision_outputs.last_hidden_state
-        projected = self.projection(image_features)
-        return projected
+        self.processor = AutoProcessor.from_pretrained(self.model_name)
+        self.processor.tokenizer.padding_side = "left"
+        if self.processor.tokenizer.pad_token is None:
+            self.processor.tokenizer.pad_token = self.processor.tokenizer.eos_token
 
     @torch.no_grad()
     def generate(
         self,
-        images: torch.Tensor,
+        images: Union[torch.Tensor, list],
         prompts: list[str],
-        max_new_tokens: int = 512,
+        max_new_tokens: int = None,
         **kwargs,
     ) -> list[str]:
         """Genera texto dado imágenes y prompts.
 
-        Concatena embeddings visuales con embeddings de texto y genera
-        con el LLM usando inputs_embeds.
+        Args:
+            images: Lista de PIL Images o Tensor (B, C, H, W).
+            prompts: Lista de prompts textuales.
+            max_new_tokens: Máximo de tokens a generar.
+
+        Returns:
+            Lista de textos generados (sin el prompt de entrada).
         """
-        device = images.device
+        max_tok = max_new_tokens or self.max_new_tokens
 
-        # 1. Codificar imágenes → (B, num_patches, llm_hidden)
-        image_embeds = self.encode_image(images)
-
-        # 2. Tokenizar prompts
-        text_inputs = self.tokenizer(
-            prompts,
+        inputs = self.processor(
+            images=images,
+            text=prompts,
             return_tensors="pt",
             padding=True,
-            truncation=True,
-            max_length=256,
-        ).to(device)
+        ).to(self.model.device)
 
-        # 3. Obtener embeddings de texto
-        text_embeds = self.llm.get_input_embeddings()(text_inputs.input_ids)
-
-        # 4. Concatenar: [image_embeds, text_embeds] a lo largo de seq_len
-        llm_dtype = next(self.llm.parameters()).dtype
-        combined_embeds = torch.cat([image_embeds, text_embeds], dim=1).to(llm_dtype)
-
-        # 5. Construir attention_mask extendida
-        image_attn = torch.ones(
-            image_embeds.shape[0], image_embeds.shape[1],
-            dtype=text_inputs.attention_mask.dtype, device=device,
-        )
-        combined_attn = torch.cat([image_attn, text_inputs.attention_mask], dim=1)
-
-        # 6. Generar con el LLM
-        gen_kwargs = {
-            "inputs_embeds": combined_embeds,
-            "attention_mask": combined_attn,
-            "max_new_tokens": max_new_tokens,
-            "do_sample": kwargs.get("do_sample", False),
-            "temperature": kwargs.get("temperature", 1.0),
-            "top_p": kwargs.get("top_p", 1.0),
-            "pad_token_id": self.tokenizer.pad_token_id,
-            "eos_token_id": self.tokenizer.eos_token_id,
-        }
-        output_ids = self.llm.generate(**gen_kwargs)
-
-        # 7. Decodificar tokens generados
-        generated_texts = self.tokenizer.batch_decode(
-            output_ids, skip_special_tokens=True,
+        output_ids = self.model.generate(
+            **inputs,
+            max_new_tokens=max_tok,
+            do_sample=False,
+            pad_token_id=self.processor.tokenizer.pad_token_id,
         )
 
-        return generated_texts
+        # Decodificar solo los tokens generados (excluir el input)
+        input_len = inputs["input_ids"].shape[1]
+        generated_ids = output_ids[:, input_len:]
+        return self.processor.batch_decode(generated_ids, skip_special_tokens=True)
 
-    def forward(self, images, input_ids, attention_mask, labels) -> dict:
-        image_embeds = self.encode_image(images)
-        # TODO: Implementar forward completo con loss en Fase 2
-        raise NotImplementedError("forward() se implementa completo en Fase 2")
+    def forward(
+        self,
+        images: Union[torch.Tensor, list],
+        input_ids: torch.Tensor,
+        attention_mask: torch.Tensor,
+        labels: torch.Tensor,
+    ) -> dict:
+        """Forward pass para fine-tuning en Fase 2 (generación de reportes).
+
+        Args:
+            images: Lista de PIL Images o Tensor (B, C, H, W).
+            input_ids: Tokens de entrada (B, seq_len).
+            attention_mask: Máscara de atención (B, seq_len).
+            labels: Tokens target (B, seq_len).
+
+        Returns:
+            Dict con al menos "loss".
+        """
+        pixel_values = self.processor.image_processor(
+            images=images,
+            return_tensors="pt",
+        )["pixel_values"].to(self.model.device)
+
+        outputs = self.model(
+            pixel_values=pixel_values,
+            input_ids=input_ids.to(self.model.device),
+            attention_mask=attention_mask.to(self.model.device),
+            labels=labels.to(self.model.device),
+        )
+        return {"loss": outputs.loss}

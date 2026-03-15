@@ -5,10 +5,41 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Optional
 
+import torch
+
 try:
     import wandb
 except ImportError:
     wandb = None
+
+try:
+    from tqdm import tqdm as _tqdm
+    _TQDM_AVAILABLE = True
+except ImportError:
+    _TQDM_AVAILABLE = False
+
+
+class TqdmLoggingHandler(logging.StreamHandler):
+    """StreamHandler que usa tqdm.write() para no corromper barras de progreso.
+
+    Cuando tqdm dibuja una barra en la consola, cualquier escritura directa a
+    stdout rompe visualmente la barra. tqdm.write() pausa la barra, imprime la
+    línea y la reanuda correctamente. El file handler no se ve afectado.
+    """
+
+    def __init__(self):
+        super().__init__(sys.stdout)
+
+    def emit(self, record: logging.LogRecord) -> None:
+        try:
+            msg = self.format(record)
+            if _TQDM_AVAILABLE:
+                _tqdm.write(msg)
+            else:
+                sys.stdout.write(msg + self.terminator)
+                self.flush()
+        except Exception:
+            self.handleError(record)
 
 
 def setup_logger(
@@ -46,8 +77,8 @@ def setup_logger(
         datefmt="%Y-%m-%d %H:%M:%S",
     )
 
-    # Console handler
-    console_handler = logging.StreamHandler(sys.stdout)
+    # Console handler (usa tqdm.write para no romper barras de progreso)
+    console_handler = TqdmLoggingHandler()
     console_handler.setFormatter(formatter)
     root_logger.addHandler(console_handler)
 
@@ -89,6 +120,31 @@ def format_duration(seconds: float) -> str:
         return f"{int(minutes)}m {secs:.1f}s"
     hours, minutes = divmod(minutes, 60)
     return f"{int(hours)}h {int(minutes)}m {secs:.0f}s"
+
+
+def log_gpu_memory(
+    logger_instance: Optional[logging.Logger] = None,
+    prefix: str = "",
+) -> dict:
+    """Loguea uso de VRAM si CUDA está disponible.
+
+    Args:
+        logger_instance: Logger a usar. Si None, usa el root logger.
+        prefix: Prefijo para el mensaje (e.g., "Época 2/5 | ").
+
+    Returns:
+        Dict con allocated_mb y reserved_mb (0.0 si no hay CUDA).
+    """
+    log = logger_instance or logging.getLogger()
+    if not torch.cuda.is_available():
+        return {"allocated_mb": 0.0, "reserved_mb": 0.0}
+    allocated_mb = torch.cuda.memory_allocated() / 1024 ** 2
+    reserved_mb  = torch.cuda.memory_reserved()  / 1024 ** 2
+    log.info(
+        "%sVRAM: %.0f MB asignada / %.0f MB reservada",
+        prefix, allocated_mb, reserved_mb,
+    )
+    return {"allocated_mb": allocated_mb, "reserved_mb": reserved_mb}
 
 
 @contextmanager

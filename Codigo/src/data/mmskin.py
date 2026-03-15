@@ -55,6 +55,8 @@ class MMSkinDataset(BaseDataset):
                 img_name = _strip_dataset_prefix(str(row.get("image", "")))
                 caption = row.get("caption", "")
                 cleaned = row.get("cleaned_caption", "")
+                caption = str(caption) if pd.notna(caption) else ""
+                cleaned = str(cleaned) if pd.notna(cleaned) else ""
                 modality = row.get("modality", "")
                 if img_name not in captions_by_image:
                     captions_by_image[img_name] = {
@@ -64,7 +66,7 @@ class MMSkinDataset(BaseDataset):
                         "age": row.get("age", ""),
                     }
                 # Preferir cleaned_caption si existe
-                text = cleaned if pd.notna(cleaned) and cleaned else caption
+                text = cleaned if cleaned else caption
                 captions_by_image[img_name]["captions"].append(text)
 
         # Cargar VQA

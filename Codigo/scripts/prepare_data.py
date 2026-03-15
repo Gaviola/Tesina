@@ -9,6 +9,7 @@ Uso:
 import argparse
 import json
 import logging
+import shutil
 import sys
 from pathlib import Path
 
@@ -157,8 +158,9 @@ def generate_splits_ham10000(raw_dir: Path, splits_dir: Path, seed: int = RANDOM
     logger.info("  Distribución: %s", df["dx"].value_counts().to_dict())
 
     # Split estratificado por diagnóstico
-    image_ids = df["image_id"].values
-    labels = df["dx"].values
+    # .to_numpy() garantiza numpy.ndarray independientemente del backend (PyArrow, etc.)
+    image_ids = df["image_id"].to_numpy()
+    labels = df["dx"].to_numpy()
 
     train_ids, temp_ids, train_labels, temp_labels = train_test_split(
         image_ids, labels,
@@ -208,8 +210,8 @@ def generate_splits_hiba(raw_dir: Path, splits_dir: Path, seed: int = RANDOM_SEE
     id_col = "isic_id" if "isic_id" in df.columns else df.columns[0]
     logger.info("HIBA: %d samples, columna ID: %s", len(df), id_col)
 
-    ids = df[id_col].values
-    labels = df["diagnosis"].values
+    ids = df[id_col].to_numpy()
+    labels = df["diagnosis"].to_numpy()
 
     train_ids, temp_ids, train_labels, temp_labels = train_test_split(
         ids, labels,
@@ -426,6 +428,15 @@ def main():
                 preprocess_images_generic(
                     datasets[name], processed_dir / name, args.image_size,
                 )
+
+        # Copiar CSVs de MM-SkinQA al directorio procesado (MMSkinDataset los necesita)
+        if available.get("MM-SkinQA"):
+            for csv_name in ("caption.csv", "VQA.csv"):
+                src = datasets["MM-SkinQA"] / csv_name
+                dst = processed_dir / "MM-SkinQA" / csv_name
+                if src.exists() and not dst.exists():
+                    shutil.copy2(src, dst)
+                    logger.info("Copiado %s → %s", csv_name, dst)
 
     # 4. Generar splits
     logger.info("=" * 60)
