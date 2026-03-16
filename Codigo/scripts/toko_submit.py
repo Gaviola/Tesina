@@ -1,0 +1,78 @@
+"""
+toko_submit.py — Envia jobs de stage1 VLM al cluster TOKO via sbatch.
+
+Uso:
+  python scripts/toko_submit.py mini    # encola mini_vlm stage1  (~8GB  VRAM)
+  python scripts/toko_submit.py llava   # encola llava_med stage1 (~10GB QLoRA)
+  python scripts/toko_submit.py all     # encola ambos (default)
+"""
+import sys
+import argparse
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from scripts.toko_config import TOKO_USER, TOKO_HOST, REMOTE_BASE, check_tools, ssh
+
+JOBS = {
+    "mini":  "slurm/toko_train_vlm_s1_mini.sh",
+    "llava": "slurm/toko_train_vlm_s1_llava.sh",
+}
+
+
+def submit_job(name: str, script: str) -> str | None:
+    """Envia un job con sbatch y retorna el JOBID."""
+    print(f"--- Enviando: {name} ---")
+    cmd = f"cd {REMOTE_BASE} && sbatch {script}"
+    result = ssh(cmd, capture=True)
+    output = result.stdout.strip() + result.stderr.strip()
+    print(f"  {output}")
+
+    # Extraer JOBID del mensaje "Submitted batch job XXXXX"
+    import re
+    match = re.search(r"\d+", output)
+    if match:
+        jobid = match.group()
+        print(f"  JOBID:    {jobid}")
+        print(f"  Log:      {REMOTE_BASE}/logs/{jobid}.out")
+        print(f"  Monitor:  python scripts/toko_monitor.py {jobid}")
+        return jobid
+    else:
+        print("  ADVERTENCIA: no se pudo extraer el JOBID")
+        return None
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Envia jobs a TOKO")
+    parser.add_argument(
+        "target", nargs="?", default="all",
+        choices=["mini", "llava", "all"],
+        help="Job a encolar (default: all)"
+    )
+    args = parser.parse_args()
+
+    check_tools()
+
+    print(f"=== Enviando jobs a TOKO (target: {args.target}) ===")
+    print()
+
+    targets = list(JOBS.items()) if args.target == "all" else [(args.target, JOBS[args.target])]
+
+    jobids = []
+    for name, script in targets:
+        jid = submit_job(name, script)
+        if jid:
+            jobids.append(jid)
+        print()
+
+    if jobids:
+        print("=== Jobs encolados ===")
+        print(f"Ver cola:  python scripts/toko_monitor.py")
+        for jid in jobids:
+            print(f"Ver log:   python scripts/toko_monitor.py {jid}")
+    else:
+        print("ERROR: no se pudo encolar ningun job")
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

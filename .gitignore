@@ -30,5 +30,9 @@ Codigo/outputs/
 # Experiment tracking
 wandb/
 
+# Variables de entorno (credenciales de cluster)
+.env
+Codigo/.env
+
 # Jupyter
 .ipynb_checkpoints/
