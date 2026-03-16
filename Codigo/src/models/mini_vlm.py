@@ -23,8 +23,20 @@ if not hasattr(DynamicCache, "get_usable_length"):
             return self.get_seq_length(layer_idx)
         except Exception:
             return self.get_seq_length()
-            
+
     DynamicCache.get_usable_length = _get_usable_length
+
+if not hasattr(DynamicCache, "from_legacy_cache"):
+    @classmethod
+    def _from_legacy_cache(cls, past_key_values=None):
+        """Convierte el formato legacy (tupla de tuplas) a DynamicCache."""
+        cache = cls()
+        if past_key_values is not None:
+            for layer_idx, (key, value) in enumerate(past_key_values):
+                cache.update(key, value, layer_idx)
+        return cache
+
+    DynamicCache.from_legacy_cache = _from_legacy_cache
 
 class MiniVLM(VLMBase):
     """Phi-3.5-vision-instruct: VLM integrado de Microsoft.
@@ -139,22 +151,27 @@ class MiniVLM(VLMBase):
         input_ids: torch.Tensor,
         attention_mask: torch.Tensor,
         labels: torch.Tensor,
+        image_sizes: torch.Tensor = None,
     ) -> dict:
         """Forward pass para fine-tuning con LoRA en Fase 2 (generación de reportes).
 
         Args:
-            images: Lista de PIL Images.
+            images: Tensor de pixel values (B, num_crops, C, H, W) o lista de PIL Images.
             input_ids: Tokens de entrada (B, seq_len).
             attention_mask: Máscara de atención (B, seq_len).
             labels: Tokens target (B, seq_len).
+            image_sizes: Tamaños originales de las imágenes (B, 2) — requerido por Phi-3.5.
 
         Returns:
             Dict con al menos "loss".
         """
-        outputs = self.model(
+        kwargs = dict(
             input_ids=input_ids,
             attention_mask=attention_mask,
             labels=labels,
             pixel_values=images if isinstance(images, torch.Tensor) else None,
         )
+        if image_sizes is not None:
+            kwargs["image_sizes"] = image_sizes
+        outputs = self.model(**kwargs)
         return {"loss": outputs.loss}

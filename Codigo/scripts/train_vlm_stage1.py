@@ -21,8 +21,8 @@ from torch.utils.data import DataLoader
 
 from src.data.mmskin import MMSkinDataset
 from src.models.factory import build_model
-from src.training.two_stage import VLMTrainCollator, run_stage1
-from src.utils.device import check_vram, get_num_workers, get_vram_gb
+from src.training.two_stage import VLMOOMError, VLMTrainCollator, run_stage1
+from src.utils.device import check_vram, get_free_vram_gb, get_num_workers, get_vram_gb
 from src.utils.io import save_results
 from src.utils.logging import log_time, setup_logger
 from src.utils.seed import set_seed
@@ -77,6 +77,31 @@ def _find_or_create_splits(data_dir: Path, mmskin_dir: Path, all_names: list[str
     return str(splits_path)
 
 
+def _build_dataloaders(train_dataset, val_dataset, collator, batch_size: int, num_workers: int):
+    """Construye DataLoaders para train y val con el batch size dado.
+
+    Separado en función para permitir reconstrucción con batch size reducido
+    en caso de OOM durante el entrenamiento.
+    """
+    train_loader = DataLoader(
+        train_dataset,
+        batch_size=batch_size,
+        shuffle=True,
+        collate_fn=collator,
+        num_workers=num_workers,
+        pin_memory=False,
+    )
+    val_loader = DataLoader(
+        val_dataset,
+        batch_size=batch_size,
+        shuffle=False,
+        collate_fn=collator,
+        num_workers=num_workers,
+        pin_memory=False,
+    )
+    return train_loader, val_loader
+
+
 def main():
     parser = argparse.ArgumentParser(description="F2: Alineamiento visual-textual (Stage 1)")
     parser.add_argument("--model", type=str, required=True, choices=["llava_med", "mini_vlm"])
@@ -118,7 +143,17 @@ def main():
     model = build_model({"name": args.model, "quantize": quantize})
     with log_time(f"Cargando {args.model}", logger):
         model.load_components()
-    logger.info("Modelo %s cargado correctamente.", args.model)
+
+    from src.utils.logging import log_gpu_memory
+    log_gpu_memory(logger, prefix="Post-carga modelo | ")
+    free_vram = get_free_vram_gb()
+    logger.info("Modelo %s cargado | VRAM libre: %.2f GB", args.model, free_vram)
+    if free_vram < 1.0:
+        logger.warning(
+            "VRAM libre muy baja (%.2f GB) tras cargar el modelo. "
+            "Es probable que ocurra OOM durante el entrenamiento.",
+            free_vram,
+        )
 
     # --- Dataset MM-Skin (caption mode) ---
     data_dir = Path(args.data_dir)
@@ -155,23 +190,6 @@ def main():
     )
     num_workers = args.num_workers if args.num_workers is not None else get_num_workers()
 
-    train_loader = DataLoader(
-        train_dataset,
-        batch_size=args.batch_size,
-        shuffle=True,
-        collate_fn=collator,
-        num_workers=num_workers,
-        pin_memory=False,   # PIL Images no se pueden pinear
-    )
-    val_loader = DataLoader(
-        val_dataset,
-        batch_size=args.batch_size,
-        shuffle=False,
-        collate_fn=collator,
-        num_workers=num_workers,
-        pin_memory=False,
-    )
-
     # --- Configuración ---
     checkpoint_dir = str(output_dir / "checkpoints" / f"stage1_{args.model}")
     cfg = {
@@ -182,9 +200,50 @@ def main():
         "checkpoint_dir": checkpoint_dir,
     }
 
-    # --- Entrenamiento ---
-    with log_time(f"Stage 1 {args.model}", logger):
-        metrics = run_stage1(model, train_loader, val_loader, cfg)
+    # --- Entrenamiento con retry por OOM ---
+    import torch
+    current_batch_size = args.batch_size
+    grad_accum = cfg["gradient_accumulation_steps"]
+    train_loader, val_loader = _build_dataloaders(
+        train_dataset, val_dataset, collator, current_batch_size, num_workers
+    )
+
+    metrics = None
+    while True:
+        cfg["batch_size"] = current_batch_size
+        cfg["gradient_accumulation_steps"] = grad_accum
+        logger.info(
+            "Iniciando entrenamiento | batch_size=%d | grad_accum=%d | batch efectivo=%d",
+            current_batch_size, grad_accum, current_batch_size * grad_accum,
+        )
+        try:
+            with log_time(f"Stage 1 {args.model}", logger):
+                metrics = run_stage1(model, train_loader, val_loader, cfg)
+            break
+        except VLMOOMError as e:
+            torch.cuda.empty_cache()
+            logger.warning("VLMOOMError capturado: %s", e)
+            if current_batch_size <= 1:
+                logger.error(
+                    "OOM con batch_size=1 y gradient checkpointing activo. "
+                    "Imposible continuar el entrenamiento en este hardware. "
+                    "VRAM total: %.1f GB. Considera cuantización 4-bit o un nodo con más VRAM.",
+                    get_vram_gb(),
+                )
+                sys.exit(1)
+            prev_bs = current_batch_size
+            current_batch_size = max(1, current_batch_size // 2)
+            grad_accum = grad_accum * 2
+            logger.warning(
+                "Reduciendo batch_size: %d → %d | grad_accum: %d → %d "
+                "(batch efectivo mantenido en ~%d)",
+                prev_bs, current_batch_size,
+                grad_accum // 2, grad_accum,
+                current_batch_size * grad_accum,
+            )
+            train_loader, val_loader = _build_dataloaders(
+                train_dataset, val_dataset, collator, current_batch_size, num_workers
+            )
 
     # --- Guardar resultados ---
     results_path = str(output_dir / "results" / f"stage1_{args.model}_metrics.json")

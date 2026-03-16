@@ -4,6 +4,7 @@ Etapa 1 (Alineamiento): Entrena solo el MLP de proyección con MM-Skin captions.
 Etapa 2 (Instrucciones): Aplica LoRA al LLM y entrena con MM-Skin VQA.
 """
 
+import gc
 import json
 import logging
 import time
@@ -27,6 +28,13 @@ except ImportError:
     _TQDM_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
+
+
+class VLMOOMError(RuntimeError):
+    """OOM que persiste incluso con gradient checkpointing activo.
+
+    Capturada en los scripts de entrenamiento para reintentar con batch size menor.
+    """
 
 
 # ---------------------------------------------------------------------------
@@ -154,6 +162,7 @@ class VLMTrainCollator:
         all_input_ids = []
         all_attention_masks = []
         all_pixel_values = []
+        all_image_sizes = []
         all_n_responses = []
 
         for img, inst, resp in zip(images, instructions, responses):
@@ -173,7 +182,11 @@ class VLMTrainCollator:
             all_input_ids.append(enc["input_ids"][0])
             all_attention_masks.append(enc["attention_mask"][0])
             if "pixel_values" in enc and enc["pixel_values"] is not None:
+                # pixel_values shape: (1, num_crops, C, H, W) → (num_crops, C, H, W)
                 all_pixel_values.append(enc["pixel_values"][0])
+            if "image_sizes" in enc and enc["image_sizes"] is not None:
+                # image_sizes shape: (1, 2) → (2,)
+                all_image_sizes.append(enc["image_sizes"][0])
 
             resp_ids = tokenizer.encode(resp, add_special_tokens=False)
             all_n_responses.append(len(resp_ids))
@@ -201,7 +214,19 @@ class VLMTrainCollator:
             if start < seq_len:
                 labels[i, start:seq_len] = ids[start:seq_len]
 
-        pixel_values = torch.stack(all_pixel_values) if all_pixel_values else None
+        # Phi-3.5-vision: num_crops varía por imagen → padding al máximo del batch
+        pixel_values = None
+        if all_pixel_values:
+            max_crops = max(pv.shape[0] for pv in all_pixel_values)
+            c, h, w = all_pixel_values[0].shape[1:]
+            pixel_values = torch.zeros(
+                len(all_pixel_values), max_crops, c, h, w,
+                dtype=all_pixel_values[0].dtype,
+            )
+            for i, pv in enumerate(all_pixel_values):
+                pixel_values[i, :pv.shape[0]] = pv
+
+        image_sizes = torch.stack(all_image_sizes) if all_image_sizes else None
 
         return {
             # Para MiniVLM.forward(): images recibe tensor si isinstance(images, Tensor)
@@ -209,6 +234,7 @@ class VLMTrainCollator:
             "input_ids": padded_input_ids,
             "attention_mask": padded_attention_mask,
             "labels": labels,
+            "image_sizes": image_sizes,
         }
 
     def __call__(self, batch: list[dict]) -> dict:
@@ -431,6 +457,39 @@ def _freeze_vision_encoder(model, model_type: str):
 
 
 # ---------------------------------------------------------------------------
+# Gestión de memoria
+# ---------------------------------------------------------------------------
+
+def _enable_gradient_checkpointing(model, model_type: str) -> None:
+    """Activa gradient checkpointing en el modelo HF subyacente.
+
+    Reduce el uso de VRAM ~30-40% recomputando activaciones en el backward
+    en lugar de almacenarlas. Compatible con modelos no cuantizados (los
+    cuantizados ya tienen gradient checkpointing vía prepare_model_for_kbit_training).
+
+    Requisitos:
+    - use_cache=False (incompatible con gradient checkpointing).
+    - enable_input_require_grads() para flujo de gradientes en embeddings congelados.
+    """
+    hf_model = model.model
+    try:
+        hf_model.gradient_checkpointing_enable({"use_reentrant": False})
+        hf_model.enable_input_require_grads()
+        hf_model.config.use_cache = False
+        logger.warning(
+            "Gradient checkpointing activado para %s. "
+            "Reduce VRAM ~30-40%% a costa de mayor tiempo de cómputo.",
+            model_type,
+        )
+    except Exception as exc:
+        logger.warning(
+            "No se pudo activar gradient checkpointing en %s: %s. "
+            "Se procederá sin esta optimización.",
+            model_type, exc,
+        )
+
+
+# ---------------------------------------------------------------------------
 # Loop de entrenamiento
 # ---------------------------------------------------------------------------
 
@@ -457,6 +516,8 @@ def _train_vlm_loop(
     best_epoch     = 1
     epoch_times    = []
     training_start = time.perf_counter()
+    _grad_ckpt_applied = False
+    model_type = _get_model_type(model)
 
     for epoch in range(1, epochs + 1):
         epoch_start = time.perf_counter()
@@ -481,12 +542,39 @@ def _train_vlm_loop(
             images         = batch["image"]
             if isinstance(images, torch.Tensor):
                 images = images.to(device)
+            image_sizes = batch.get("image_sizes", None)
+            if image_sizes is not None:
+                image_sizes = image_sizes.to(device)
 
-            with torch.amp.autocast("cuda", dtype=dtype, enabled=use_autocast):
-                output = model(images, input_ids, attention_mask, labels)
-                loss   = output["loss"] / grad_accum
-
-            loss.backward()
+            try:
+                with torch.amp.autocast("cuda", dtype=dtype, enabled=use_autocast):
+                    output = model(images, input_ids, attention_mask, labels, image_sizes=image_sizes)
+                    loss   = output["loss"] / grad_accum
+                loss.backward()
+            except torch.cuda.OutOfMemoryError:
+                torch.cuda.empty_cache()
+                gc.collect()
+                optimizer.zero_grad(set_to_none=True)
+                if not _grad_ckpt_applied:
+                    logger.warning(
+                        "OOM en batch %d/%d (época %d). "
+                        "Activando gradient checkpointing y saltando batch...",
+                        batch_idx, len(train_loader), epoch,
+                    )
+                    log_gpu_memory(logger, prefix="OOM | ")
+                    _enable_gradient_checkpointing(model, model_type)
+                    _grad_ckpt_applied = True
+                    continue
+                else:
+                    logger.error(
+                        "OOM con gradient checkpointing activo (batch %d, época %d). "
+                        "El batch size es demasiado grande para esta GPU.",
+                        batch_idx, epoch,
+                    )
+                    raise VLMOOMError(
+                        f"OOM con gradient_checkpointing activo "
+                        f"(batch_size={batch_size}, época={epoch})"
+                    )
 
             if (batch_idx + 1) % grad_accum == 0:
                 torch.nn.utils.clip_grad_norm_(
@@ -547,10 +635,19 @@ def _train_vlm_loop(
                 images         = batch["image"]
                 if isinstance(images, torch.Tensor):
                     images = images.to(device)
-                with torch.amp.autocast("cuda", dtype=dtype, enabled=use_autocast):
-                    output = model(images, input_ids, attention_mask, labels)
-                val_loss_sum += output["loss"].item()
-                n_val += 1
+                image_sizes = batch.get("image_sizes", None)
+                if image_sizes is not None:
+                    image_sizes = image_sizes.to(device)
+                try:
+                    with torch.amp.autocast("cuda", dtype=dtype, enabled=use_autocast):
+                        output = model(images, input_ids, attention_mask, labels, image_sizes=image_sizes)
+                    val_loss_sum += output["loss"].item()
+                    n_val += 1
+                except torch.cuda.OutOfMemoryError:
+                    torch.cuda.empty_cache()
+                    gc.collect()
+                    logger.warning("OOM durante validación (batch %d). Saltando batch.", n_val)
+                    continue
                 if _TQDM_AVAILABLE:
                     val_iter.set_postfix(
                         loss=f"{val_loss_sum / n_val:.4f}", ordered=True,

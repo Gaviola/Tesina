@@ -46,6 +46,22 @@ def get_vram_gb() -> float:
     return torch.cuda.get_device_properties(0).total_memory / (1024**3)
 
 
+def get_free_vram_gb() -> float:
+    """Retorna la VRAM libre actual de la GPU en GB. Retorna 0 si no hay GPU.
+
+    Usa torch.cuda.mem_get_info() que consulta al driver CUDA la memoria
+    realmente disponible, incluyendo lo no reservado por PyTorch.
+    Más preciso que memory_reserved() para detectar OOM inminentes.
+    """
+    if not torch.cuda.is_available():
+        return 0.0
+    try:
+        free_bytes, _ = torch.cuda.mem_get_info(0)
+        return free_bytes / (1024 ** 3)
+    except Exception:
+        return 0.0
+
+
 def check_vram(required_gb: float, model_name: str = "") -> bool:
     """Verifica si la VRAM disponible es suficiente para el modelo.
 
