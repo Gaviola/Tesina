@@ -1,6 +1,12 @@
+import logging
 from typing import Union
+
 import torch
+
 from src.models.vlm_base import VLMBase
+from src.utils.device import get_training_dtype, get_free_vram_gb
+
+logger = logging.getLogger(__name__)
 
 import transformers
 from transformers.cache_utils import DynamicCache
@@ -41,9 +47,14 @@ if not hasattr(DynamicCache, "from_legacy_cache"):
 class MiniVLM(VLMBase):
     """Phi-3.5-vision-instruct: VLM integrado de Microsoft.
 
-    Modelo más ligero que LLaVA-Med. Incluye vision encoder, proyección y LLM
-    en un solo checkpoint preentrenado. No tiene MLP separada — el pipeline
-    multimodal está integrado en el modelo.
+    Modelo más ligero que LLaVA-Med. Incluye vision encoder (CLIP ViT-L/14),
+    proyección (img_projection) y LLM (Phi-3.5-mini) en un solo checkpoint
+    preentrenado. A diferencia de LLaVA-Med, no tiene un MLP de proyección
+    separado como componente de alto nivel — la proyección está integrada
+    dentro de vision_embed_tokens.
+
+    Componentes entrenables en Stage 1: img_projection, glb_GN, sub_GN (~10-20M params).
+    Componentes entrenables en Stage 2: img_projection + LoRA en LLM.
 
     VRAM estimada: ~8-10 GB (bf16) / ~4-5 GB (4-bit NF4).
     """
@@ -64,21 +75,50 @@ class MiniVLM(VLMBase):
         self.model = None
         self.processor = None
 
-    def load_components(self):
+    def load_components(self, num_crops: int = None):
         """Carga el modelo completo desde HuggingFace.
 
         Phi requiere trust_remote_code=True.
-        Intenta flash_attention_2. fallback a 'eager'.
+        Intenta flash_attention_2, luego sdpa, fallback a 'eager'.
         Con quantize=True carga en 4-bit NF4 (bitsandbytes).
+
+        Args:
+            num_crops: Override para num_crops del procesador de imágenes.
+                Si None, usa el default del modelo (4). Reducir para
+                ahorrar VRAM en Stage 1 (e.g., num_crops=1 → 2 crops totales).
+
+        Nota — Warnings conocidos del código remoto de Phi-3.5-vision:
+        1. TypeError en logging: transformers.modeling_attn_mask_utils llama
+           logger.warning_once(msg, FutureWarning) sin placeholder %s. Es un
+           bug interno de transformers, no afecta funcionalidad.
+        2. DeprecationWarning de AttentionMaskConverter: el código remoto de
+           Microsoft (modeling_phi3_v.py) importa de modeling_attn_mask_utils
+           que está deprecated. No podemos corregirlo (es código upstream).
+           No afecta funcionalidad en las versiones actuales de transformers.
         """
         from transformers import AutoModelForCausalLM, AutoProcessor, BitsAndBytesConfig
 
+        dtype = get_training_dtype()
+        free_gb = get_free_vram_gb()
+
+        # Si hay VRAM suficiente, colocar todo en GPU; sino device_map="auto" con límite
+        if free_gb >= self.VRAM_REQUIRED_GB or not torch.cuda.is_available():
+            device_map = "cuda:0"
+        else:
+            device_map = "auto"
+
         kwargs = {
-            "device_map": "auto",
+            "device_map": device_map,
             "trust_remote_code": True,
-            "torch_dtype": torch.bfloat16,
+            "torch_dtype": dtype,
+            "low_cpu_mem_usage": True,
             "_attn_implementation": "flash_attention_2",
         }
+
+        if device_map == "auto" and torch.cuda.is_available():
+            max_mem_gb = max(1, int(free_gb * 0.9))
+            kwargs["max_memory"] = {0: f"{max_mem_gb}GiB", "cpu": "16GiB"}
+
         if self.quantize:
             kwargs["quantization_config"] = BitsAndBytesConfig(
                 load_in_4bit=True,
@@ -86,17 +126,34 @@ class MiniVLM(VLMBase):
                 bnb_4bit_quant_type="nf4",
             )
 
+        attn_impl = kwargs["_attn_implementation"]
         try:
             self.model = AutoModelForCausalLM.from_pretrained(self.model_name, **kwargs)
         except Exception:
-            # Fallback: sin flash_attention_2
-            kwargs["_attn_implementation"] = "eager"
-            self.model = AutoModelForCausalLM.from_pretrained(self.model_name, **kwargs)
+            # Fallback 1: sdpa (PyTorch nativo, disponible en todas las plataformas)
+            attn_impl = "sdpa"
+            kwargs["_attn_implementation"] = attn_impl
+            try:
+                self.model = AutoModelForCausalLM.from_pretrained(self.model_name, **kwargs)
+            except Exception:
+                # Fallback 2: eager (O(n²) en memoria, siempre funciona)
+                attn_impl = "eager"
+                kwargs["_attn_implementation"] = attn_impl
+                self.model = AutoModelForCausalLM.from_pretrained(self.model_name, **kwargs)
+        logger.info("Mini-VLM: usando atención '%s'", attn_impl)
 
         self.model.eval()
         self.processor = AutoProcessor.from_pretrained(
             self.model_name, trust_remote_code=True
         )
+
+        if num_crops is not None and hasattr(self.processor, "image_processor"):
+            original = getattr(self.processor.image_processor, "num_crops", None)
+            self.processor.image_processor.num_crops = num_crops
+            logger.info(
+                "Mini-VLM: num_crops ajustado de %s a %d para reducir uso de VRAM.",
+                original, num_crops,
+            )
 
     @torch.no_grad()
     def generate(

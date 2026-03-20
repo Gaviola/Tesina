@@ -60,14 +60,18 @@ fi
 echo "Python: $(${PYTHON} --version)"
 echo "Pip:    ${PIP}"
 cd """ + REMOTE_BASE + """
+echo "Limpiando bytecode corrupto de scipy..."
+find ${HOME}/miniconda3/envs/dermvlm -name "__pycache__" -path "*/scipy/*" -exec rm -rf {} + 2>/dev/null
+echo "Reinstalando scipy (fix UnicodeDecodeError en _tanhsinh.pyc)..."
+${PIP} install --force-reinstall scipy --quiet
 echo "Instalando requirements.txt..."
 ${PIP} install -r requirements.txt --quiet
 
 # Reinstalar torch exacto despues de requirements.txt para evitar que
 # dependencias transitorias (accelerate, evaluate, etc.) lo actualicen
-echo "Fijando torch==2.1.2+cu118 (Pascal Titan Xp)..."
-${PIP} install torch==2.1.2 torchvision==0.16.2 \
-    --index-url https://download.pytorch.org/whl/cu118 --quiet
+echo "Fijando PyTorch cu126 (RTX 4080 Ada Lovelace)..."
+${PIP} install torch torchvision \
+    --index-url https://download.pytorch.org/whl/cu126 --quiet
 
 echo "OK: dependencias instaladas"
 ${PYTHON} -c "

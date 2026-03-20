@@ -151,7 +151,7 @@ class HAM10000Dataset(BaseDataset):
 
     def __getitem__(self, idx: int) -> dict:
         sample = self.samples[idx]
-        image = Image.open(sample["image_path"]).convert("RGB")
+        image = self._open_image(sample["image_path"])
 
         if not self.return_pil and self.transform:
             image = self.transform(image)

@@ -13,16 +13,16 @@ def get_device() -> torch.device:
 def get_training_dtype() -> torch.dtype:
     """Selecciona dtype óptimo según la GPU disponible.
 
-    - Ampere+ (SM >= 8.0): bf16 (Tensor Cores 3ra gen)
-    - Pascal y anteriores: fp32 (sin Tensor Cores)
+    - Ampere+/Ada+ (SM >= 8.0): bf16 (Tensor Cores)
+    - Pre-Ampere (SM < 8.0): fp32 (sin Tensor Cores)
     - Sin GPU: fp32
     """
     if not torch.cuda.is_available():
         return torch.float32
     capability = torch.cuda.get_device_capability()
-    if capability[0] >= 8:  # Ampere+ (A30, RTX 4070)
+    if capability[0] >= 8:  # Ampere+/Ada+ (A30, RTX 4070, RTX 4080)
         return torch.bfloat16
-    else:  # Pascal (Titan Xp) y anteriores
+    else:  # Pre-Ampere (SM < 8.0)
         return torch.float32
 
 
@@ -91,6 +91,47 @@ def check_vram(required_gb: float, model_name: str = "") -> bool:
 
     logger.info("VRAM verificada: %.1fGB disponible, %.1fGB requerida para %s", vram, required_gb, model_name)
     return True
+
+
+def estimate_vlm_batch_size(
+    model_type: str,
+    free_vram_gb: float,
+    num_crops: int = 4,
+    grad_checkpointing: bool = True,
+) -> int:
+    """Estima un batch size seguro para entrenamiento de VLMs según VRAM libre.
+
+    Heurística basada en mediciones empíricas:
+    - Mini-VLM (Phi-3.5-vision): cada muestra con num_crops+1 crops de 336x336,
+      seq_len=2048, bf16, con gradient checkpointing: ~0.8-1.2 GB por muestra.
+    - LLaVA-Med: ~1.5 GB por muestra (bf16, con grad ckpt).
+
+    Args:
+        model_type: "mini_vlm" o "llava_med".
+        free_vram_gb: VRAM libre en GB tras cargar el modelo.
+        num_crops: Número de crops del procesador de Phi-3.5 (default 4).
+        grad_checkpointing: Si gradient checkpointing está activo.
+
+    Returns:
+        Batch size estimado (mínimo 1, máximo 16).
+    """
+    if free_vram_gb <= 0:
+        return 1
+
+    if model_type == "mini_vlm":
+        # Phi-3.5-vision: pixel_values son (batch, num_crops+1, 3, 336, 336)
+        per_sample_gb = 0.8 if grad_checkpointing else 1.8
+        # Escalar con num_crops (normalizado a 5 crops totales como referencia)
+        total_crops = num_crops + 1
+        per_sample_gb *= total_crops / 5
+    else:  # llava_med
+        per_sample_gb = 1.5 if grad_checkpointing else 2.5
+
+    # Dejar 0.5 GB de margen para estados del optimizador y fragmentación
+    usable_vram = max(0, free_vram_gb - 0.5)
+    batch_size = int(usable_vram / per_sample_gb)
+
+    return max(1, min(16, batch_size))
 
 
 def get_gpu_info() -> dict:

@@ -22,7 +22,9 @@ from torch.utils.data import DataLoader
 from src.data.mmskin import MMSkinDataset
 from src.models.factory import build_model
 from src.training.two_stage import VLMOOMError, VLMTrainCollator, run_stage1
-from src.utils.device import check_vram, get_free_vram_gb, get_num_workers, get_vram_gb
+from src.utils.device import (
+    check_vram, estimate_vlm_batch_size, get_free_vram_gb, get_num_workers, get_vram_gb,
+)
 from src.utils.io import save_results
 from src.utils.logging import log_time, setup_logger
 from src.utils.seed import set_seed
@@ -113,6 +115,11 @@ def main():
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--wandb", action="store_true")
     parser.add_argument("--num_workers", type=int, default=None)
+    parser.add_argument(
+        "--num_crops", type=int, default=1,
+        help="Override num_crops para Phi-3.5 (default: 1 para Stage 1, reduce VRAM). "
+             "Usar 4 para Stage 2 o evaluación con resolución completa.",
+    )
     args = parser.parse_args()
 
     set_seed(args.seed)
@@ -131,18 +138,21 @@ def main():
     logger.info("=== Stage 1: Alineamiento visual-textual ===")
     logger.info("Modelo: %s | Épocas: %d | LR: %.0e", args.model, args.epochs, args.lr)
 
-    # --- VRAM check ---
+    # --- VRAM check (usar VRAM libre, no total, para detectar GPU compartida) ---
     check_vram(_VRAM_REQUIRED[args.model], args.model)
-    vram = get_vram_gb()
-    quantize = vram < _VRAM_REQUIRED[args.model]
+    free_vram = get_free_vram_gb()
+    quantize = free_vram < _VRAM_REQUIRED[args.model]
     if quantize:
-        logger.info("VRAM insuficiente (%.1f GB < %.1f GB requeridos). Activando cuantización 4-bit.",
-                    vram, _VRAM_REQUIRED[args.model])
+        logger.info("VRAM libre insuficiente (%.1f GB < %.1f GB requeridos). Activando cuantización 4-bit.",
+                    free_vram, _VRAM_REQUIRED[args.model])
 
     # --- Modelo ---
     model = build_model({"name": args.model, "quantize": quantize})
+    load_kwargs = {}
+    if args.model == "mini_vlm" and args.num_crops is not None:
+        load_kwargs["num_crops"] = args.num_crops
     with log_time(f"Cargando {args.model}", logger):
-        model.load_components()
+        model.load_components(**load_kwargs)
 
     from src.utils.logging import log_gpu_memory
     log_gpu_memory(logger, prefix="Post-carga modelo | ")
@@ -154,6 +164,28 @@ def main():
             "Es probable que ocurra OOM durante el entrenamiento.",
             free_vram,
         )
+
+    # --- Auto-estimación de batch size ---
+    num_crops_effective = args.num_crops if args.model == "mini_vlm" else 4
+    per_sample_est = 2.5 if args.model == "llava_med" else 2.0
+    grad_ckpt_expected = free_vram < (args.batch_size * per_sample_est + 1.0)
+    suggested_bs = estimate_vlm_batch_size(
+        model_type=args.model,
+        free_vram_gb=free_vram,
+        num_crops=num_crops_effective,
+        grad_checkpointing=grad_ckpt_expected,
+    )
+    if args.batch_size > suggested_bs:
+        logger.warning(
+            "Batch size solicitado (%d) excede estimación segura (%d) "
+            "para %.2f GB de VRAM libre. Reduciendo a %d y ajustando grad_accum.",
+            args.batch_size, suggested_bs, free_vram, suggested_bs,
+        )
+        effective_batch_size = suggested_bs
+        effective_grad_accum = max(1, args.batch_size // suggested_bs)
+    else:
+        effective_batch_size = args.batch_size
+        effective_grad_accum = 1
 
     # --- Dataset MM-Skin (caption mode) ---
     data_dir = Path(args.data_dir)
@@ -195,15 +227,15 @@ def main():
     cfg = {
         "epochs": args.epochs,
         "lr": args.lr,
-        "batch_size": args.batch_size,
-        "gradient_accumulation_steps": 1,
+        "batch_size": effective_batch_size,
+        "gradient_accumulation_steps": effective_grad_accum,
         "checkpoint_dir": checkpoint_dir,
     }
 
     # --- Entrenamiento con retry por OOM ---
     import torch
-    current_batch_size = args.batch_size
-    grad_accum = cfg["gradient_accumulation_steps"]
+    current_batch_size = effective_batch_size
+    grad_accum = effective_grad_accum
     train_loader, val_loader = _build_dataloaders(
         train_dataset, val_dataset, collator, current_batch_size, num_workers
     )

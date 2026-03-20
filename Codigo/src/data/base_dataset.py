@@ -1,7 +1,12 @@
+import logging
+import time
 from abc import ABC, abstractmethod
 from typing import Any, Optional
 
+from PIL import Image
 from torch.utils.data import Dataset
+
+logger = logging.getLogger(__name__)
 
 
 class BaseDataset(Dataset, ABC):
@@ -51,6 +56,19 @@ class BaseDataset(Dataset, ABC):
     def get_class_names(self) -> list[str]:
         """Retorna la lista de nombres de clases."""
         ...
+
+    @staticmethod
+    def _open_image(path: str, retries: int = 3, delay: float = 1.0) -> Image.Image:
+        """Abre una imagen con reintentos para tolerar errores NFS (Stale file handle)."""
+        for attempt in range(retries):
+            try:
+                return Image.open(path).convert("RGB")
+            except OSError as e:
+                if attempt < retries - 1:
+                    logger.warning("Error leyendo %s (intento %d/%d): %s", path, attempt + 1, retries, e)
+                    time.sleep(delay * (attempt + 1))
+                else:
+                    raise
 
     def get_class_weights(self):
         """Calcula pesos inversos a la frecuencia de cada clase para CrossEntropyLoss."""

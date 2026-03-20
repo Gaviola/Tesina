@@ -6,7 +6,7 @@ Pasos:
   2. Crea directorios necesarios en el cluster
   3. Verifica/instala Miniconda en TOKO
   4. Crea entorno conda 'dermvlm' con Python 3.10
-  5. Instala PyTorch para Pascal (CUDA 11.8)
+  5. Instala PyTorch para Ada Lovelace (CUDA 12.6)
   6. Verifica GPU y CUDA
 
 Uso:
@@ -78,14 +78,14 @@ PIP="${HOME}/miniconda3/envs/dermvlm/bin/pip"
 PYTHON="${HOME}/miniconda3/envs/dermvlm/bin/python"
 
 echo ""
-echo "--- [5/5] Instalando PyTorch (cu118, compatible Pascal Titan Xp) ---"
+echo "--- [5/5] Instalando PyTorch (cu126, RTX 4080 Ada Lovelace) ---"
 # Fijar numpy<2: PyTorch 2.1.x fue compilado con NumPy 1.x y falla con NumPy 2.x
 ${PIP} install "numpy<2" --quiet
 if ${PYTHON} -c "import torch" 2>/dev/null; then
     echo "OK: PyTorch ya instalado ($(${PYTHON} -c 'import torch; print(torch.__version__)'))"
 else
-    ${PIP} install torch==2.1.2 torchvision==0.16.2 \
-        --index-url https://download.pytorch.org/whl/cu118 --quiet
+    ${PIP} install torch torchvision \
+        --index-url https://download.pytorch.org/whl/cu126 --quiet
     echo "OK: PyTorch instalado"
 fi
 

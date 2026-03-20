@@ -119,7 +119,7 @@ class MMSkinDataset(BaseDataset):
 
     def __getitem__(self, idx: int) -> dict:
         sample = self.samples[idx]
-        image = Image.open(sample["image_path"]).convert("RGB")
+        image = self._open_image(sample["image_path"])
 
         if self.transform:
             image = self.transform(image)

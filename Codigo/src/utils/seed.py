@@ -9,8 +9,8 @@ def set_seed(seed: int = 42):
     """Establece semillas para reproducibilidad en todas las fuentes de aleatoriedad.
 
     Configura determinismo según la GPU disponible:
-    - Ampere+ (SM >= 8.0): activa CUBLAS_WORKSPACE_CONFIG y deterministic algorithms
-    - Pascal y anteriores: solo seeds básicas (no soporta determinismo completo)
+    - Ampere+/Ada+ (SM >= 8.0): activa CUBLAS_WORKSPACE_CONFIG y deterministic algorithms
+    - Pre-Ampere (SM < 8.0): solo seeds básicas (no soporta determinismo completo)
     """
     random.seed(seed)
     np.random.seed(seed)

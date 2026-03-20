@@ -18,7 +18,7 @@ from torch.utils.data import Dataset
 from src.models.llava_med import LLaVAMed
 from src.training.callbacks import CheckpointCallback, EarlyStopping
 from src.training.lora_config import apply_lora, get_lora_config
-from src.utils.device import get_device, get_training_dtype
+from src.utils.device import get_device, get_free_vram_gb, get_training_dtype
 from src.utils.logging import format_duration, log_gpu_memory, log_metrics
 
 try:
@@ -352,11 +352,15 @@ def _is_quantized(hf_model) -> bool:
 
 
 def _freeze_for_stage1(model, model_type: str):
-    """Stage 1: Congela vision encoder + LLM, descongela solo MLP de proyección.
+    """Stage 1: Congela vision encoder + LLM, descongela solo capas de proyección.
 
-    Con cuantización 4-bit (QLoRA), los pesos son Params4bit (uint8) y no admiten
-    requires_grad=True. En ese caso se llama a prepare_model_for_kbit_training y
-    solo se descongela los parámetros float del proyector (biases, layer norms).
+    LLaVA-Med: descongela multi_modal_projector (~20M params).
+    Mini-VLM (Phi-3.5-vision): descongela img_projection + glb_GN + sub_GN (~10-20M params).
+        IMPORTANTE: NO descongelar vision_embed_tokens completo (incluye el encoder, ~400M).
+
+    Con cuantización 4-bit, el proyector debe excluirse de la cuantización
+    (llm_int8_skip_modules en BitsAndBytesConfig) para que sus parámetros sean
+    entrenables en float. Si aún así no hay parámetros float, se lanza un error.
     """
     hf_model = model.model
 
@@ -370,16 +374,44 @@ def _freeze_for_stage1(model, model_type: str):
             )
             hf_model = model.model
             projector = _get_llava_projector(hf_model)
-            n_unfrozen = 0
-            for p in projector.parameters():
-                if p.dtype in (torch.float32, torch.float16, torch.bfloat16):
-                    p.requires_grad = True
-                    n_unfrozen += 1
-            if n_unfrozen == 0:
-                logger.warning(
-                    "Stage 1 (cuantizado): el proyector no tiene parámetros float "
-                    "entrenables. Considera aumentar VRAM para entrenar sin cuantización."
+            # Log diagnóstico de dtypes del proyector
+            for name, p in projector.named_parameters():
+                logger.info(
+                    "  Proyector param: %s | dtype=%s | shape=%s",
+                    name, p.dtype, list(p.shape),
                 )
+            # Descongelar TODOS los parámetros del proyector, sin filtrar por dtype.
+            # prepare_model_for_kbit_training() puede envolver weights en tipos
+            # especiales de bnb que no son float32/float16/bfloat16 pero sí son
+            # entrenables si el módulo fue excluido de la cuantización.
+            n_unfrozen = 0
+            n_params_total = 0
+            for p in projector.parameters():
+                n_params_total += p.numel()
+                try:
+                    p.requires_grad = True
+                    if p.requires_grad:
+                        n_unfrozen += p.numel()
+                except Exception:
+                    pass  # parámetros genuinamente cuantizados no se pueden descongelar
+            if n_unfrozen == 0:
+                raise RuntimeError(
+                    "Stage 1 (cuantizado): el proyector no tiene parámetros "
+                    "entrenables. Asegúrate de que el proyector esté excluido de la "
+                    "cuantización (llm_int8_skip_modules=['multi_modal_projector'] en "
+                    "BitsAndBytesConfig). Parámetros del proyector: "
+                    + str([(n, p.dtype) for n, p in projector.named_parameters()])
+                )
+            if n_unfrozen < 1_000_000:
+                logger.warning(
+                    "Proyector con pocos parámetros entrenables: %d / %d. "
+                    "Es posible que el proyector haya sido cuantizado parcialmente.",
+                    n_unfrozen, n_params_total,
+                )
+            logger.info(
+                "LLaVA-Med Stage 1 (cuantizado): %d parámetros de proyección desbloqueados",
+                n_unfrozen,
+            )
         else:
             vision_tower = _get_llava_vision_tower(hf_model)
             for p in vision_tower.parameters():
@@ -390,7 +422,7 @@ def _freeze_for_stage1(model, model_type: str):
             projector = _get_llava_projector(hf_model)
             for p in projector.parameters():
                 p.requires_grad = True
-    else:  # mini_vlm
+    else:  # mini_vlm (Phi-3.5-vision)
         if _is_quantized(hf_model):
             from peft import prepare_model_for_kbit_training
             model.model = prepare_model_for_kbit_training(
@@ -399,34 +431,42 @@ def _freeze_for_stage1(model, model_type: str):
                 gradient_checkpointing_kwargs={"use_reentrant": False},
             )
             hf_model = model.model
+            # Solo descongelar img_projection y separadores (glb_GN, sub_GN).
+            # NO descongelar vision_embed_tokens completo (incluye img_processor ~300M+).
             n_unfrozen = 0
-            for name, module in hf_model.named_modules():
-                if any(k in name for k in ("img_projection", "image_projection", "vision_embed_tokens")):
-                    for p in module.parameters():
-                        if p.dtype in (torch.float32, torch.float16, torch.bfloat16):
-                            p.requires_grad = True
-                            n_unfrozen += 1
+            for name, param in hf_model.named_parameters():
+                if any(k in name for k in ("img_projection", "glb_GN", "sub_GN")):
+                    if param.dtype in (torch.float32, torch.float16, torch.bfloat16):
+                        param.requires_grad = True
+                        n_unfrozen += 1
             if n_unfrozen == 0:
-                logger.warning(
-                    "Stage 1 (cuantizado, mini_vlm): sin parámetros float en proyección. "
-                    "Considera aumentar VRAM."
+                raise RuntimeError(
+                    "Stage 1 (cuantizado, mini_vlm): sin parámetros float en proyección "
+                    "(img_projection/glb_GN/sub_GN). Asegúrate de excluir el proyector "
+                    "de la cuantización. Módulos disponibles: "
+                    + str([n for n, _ in hf_model.named_children()])
                 )
         else:
+            # Congelar todo primero
             for p in hf_model.parameters():
                 p.requires_grad = False
-            projection_found = False
-            for name, module in hf_model.named_modules():
-                if any(k in name for k in ("img_projection", "image_projection", "vision_embed_tokens")):
-                    for p in module.parameters():
-                        p.requires_grad = True
-                    projection_found = True
-            if not projection_found:
-                logger.warning(
-                    "Mini-VLM: no se encontraron capas de proyección de imagen. "
-                    "Entrenando modelo completo como fallback."
+            # Descongelar SOLO img_projection y separadores (glb_GN, sub_GN).
+            # NO descongelar vision_embed_tokens completo — incluye img_processor (~300M+).
+            projection_params = 0
+            for name, param in hf_model.named_parameters():
+                if any(k in name for k in ("img_projection", "glb_GN", "sub_GN")):
+                    param.requires_grad = True
+                    projection_params += param.numel()
+            if projection_params == 0:
+                raise RuntimeError(
+                    "Mini-VLM Stage 1: no se encontraron capas de proyección "
+                    "(img_projection/glb_GN/sub_GN). "
+                    f"Módulos disponibles: {[n for n, _ in hf_model.named_children()]}"
                 )
-                for p in hf_model.parameters():
-                    p.requires_grad = True
+            logger.info(
+                "Mini-VLM Stage 1: %d parámetros de proyección desbloqueados",
+                projection_params,
+            )
 
     trainable, total = _count_trainable_params(model)
     logger.info(
@@ -436,18 +476,23 @@ def _freeze_for_stage1(model, model_type: str):
 
 
 def _freeze_vision_encoder(model, model_type: str):
-    """Stage 2: Congela solo el vision encoder (LLM queda disponible para LoRA)."""
+    """Stage 2: Congela solo el vision encoder (LLM queda disponible para LoRA).
+
+    LLaVA-Med: congela vision_tower.
+    Mini-VLM: congela img_processor dentro de vision_embed_tokens.
+        La proyección (img_projection, glb_GN, sub_GN) NO se congela.
+    """
     hf_model = model.model
 
     if model_type == "llava_med":
         vision_tower = _get_llava_vision_tower(hf_model)
         for p in vision_tower.parameters():
             p.requires_grad = False
-    else:  # mini_vlm
-        for name, module in hf_model.named_modules():
-            if any(k in name for k in ("vision_model", "img_projection", "image_projection")):
-                for p in module.parameters():
-                    p.requires_grad = False
+    else:  # mini_vlm (Phi-3.5-vision)
+        # Congelar solo el vision encoder (img_processor), NO la proyección.
+        for name, param in hf_model.named_parameters():
+            if "img_processor" in name:
+                param.requires_grad = False
 
     trainable, total = _count_trainable_params(model)
     logger.info(
@@ -516,7 +561,7 @@ def _train_vlm_loop(
     best_epoch     = 1
     epoch_times    = []
     training_start = time.perf_counter()
-    _grad_ckpt_applied = False
+    _grad_ckpt_applied = getattr(model.model, "is_gradient_checkpointing", False)
     model_type = _get_model_type(model)
 
     for epoch in range(1, epochs + 1):
@@ -564,6 +609,24 @@ def _train_vlm_loop(
                     log_gpu_memory(logger, prefix="OOM | ")
                     _enable_gradient_checkpointing(model, model_type)
                     _grad_ckpt_applied = True
+                    # Recrear optimizer: enable_input_require_grads() modifica el
+                    # grafo de parámetros, invalidando los param groups originales.
+                    trainable_params = [p for p in model.parameters() if p.requires_grad]
+                    current_lr = optimizer.param_groups[0]["lr"]
+                    current_wd = optimizer.param_groups[0].get("weight_decay", 0.0)
+                    optimizer = torch.optim.AdamW(
+                        trainable_params,
+                        lr=current_lr,
+                        weight_decay=current_wd,
+                        foreach=False,
+                    )
+                    if scheduler is not None:
+                        old_T_max = scheduler.T_max
+                        scheduler = CosineAnnealingLR(optimizer, T_max=old_T_max)
+                    logger.info(
+                        "Optimizer recreado con %d param groups tras gradient checkpointing.",
+                        len(param_groups),
+                    )
                     continue
                 else:
                     logger.error(
@@ -628,7 +691,17 @@ def _train_vlm_loop(
         ) if _TQDM_AVAILABLE else val_loader
 
         with torch.no_grad():
-            for batch in val_iter:
+            val_iterator = iter(val_iter)
+            while True:
+                try:
+                    batch = next(val_iterator)
+                except StopIteration:
+                    break
+                except OSError as exc:
+                    logger.warning(
+                        "OSError durante validación: %s. Saltando batch.", exc,
+                    )
+                    continue
                 input_ids      = batch["input_ids"].to(device)
                 attention_mask = batch["attention_mask"].to(device)
                 labels         = batch["labels"].to(device)
@@ -650,7 +723,7 @@ def _train_vlm_loop(
                     continue
                 if _TQDM_AVAILABLE:
                     val_iter.set_postfix(
-                        loss=f"{val_loss_sum / n_val:.4f}", ordered=True,
+                        loss=f"{val_loss_sum / max(n_val, 1):.4f}", ordered=True,
                     )
 
         if _TQDM_AVAILABLE:
@@ -744,6 +817,21 @@ def run_stage1(model, train_loader, val_loader, cfg: dict[str, Any]) -> dict:
 
     _freeze_for_stage1(model, model_type)
 
+    # Activar gradient checkpointing proactivamente si la VRAM libre no es
+    # suficiente para el batch size configurado. Heurística: necesitamos al menos
+    # batch_size * per_sample_gb + 1.0 GB de margen.
+    free_vram = get_free_vram_gb()
+    batch_size = cfg.get("batch_size", 1)
+    per_sample_gb = 2.5 if model_type == "llava_med" else 2.0
+    estimated_need = batch_size * per_sample_gb + 1.0
+    if free_vram < estimated_need and torch.cuda.is_available():
+        logger.info(
+            "VRAM libre (%.2f GB) < estimación para batch_size=%d (%.2f GB). "
+            "Activando gradient checkpointing proactivamente.",
+            free_vram, batch_size, estimated_need,
+        )
+        _enable_gradient_checkpointing(model, model_type)
+
     trainable_params = [p for p in model.parameters() if p.requires_grad]
     if not trainable_params:
         raise RuntimeError("Stage 1: no hay parámetros entrenables tras el congelamiento.")
@@ -763,7 +851,17 @@ def run_stage1(model, train_loader, val_loader, cfg: dict[str, Any]) -> dict:
         len(val_loader),
     )
 
-    optimizer = torch.optim.AdamW(trainable_params, lr=cfg.get("lr", 2e-3), weight_decay=0.0)
+    # foreach=False desactiva la implementación multi-tensor fusionada de AdamW,
+    # que falla con "Tensors of the same index must be on the same device and dtype"
+    # tras activar gradient checkpointing en modelos con trust_remote_code.
+    lr = cfg.get("lr", 2e-3)
+    trainable_params = [p for p in model.parameters() if p.requires_grad]
+    optimizer = torch.optim.AdamW(
+        trainable_params,
+        lr=lr,
+        weight_decay=0.0,
+        foreach=False,
+    )
 
     epochs = cfg.get("epochs", 1)
     grad_accum = cfg.get("gradient_accumulation_steps", 1)
@@ -846,7 +944,16 @@ def run_stage2(model, train_loader, val_loader, cfg: dict[str, Any]) -> dict:
     )
 
     trainable_params = [p for p in model.parameters() if p.requires_grad]
-    optimizer = torch.optim.AdamW(trainable_params, lr=cfg.get("lr", 2e-5), weight_decay=0.01)
+    # Agrupar por (device, dtype) para compatibilidad con AdamW fusionado.
+    lr = cfg.get("lr", 2e-5)
+    param_groups = {}
+    for p in trainable_params:
+        key = (str(p.device), p.dtype)
+        param_groups.setdefault(key, []).append(p)
+    optimizer = torch.optim.AdamW(
+        [{"params": params, "lr": lr} for params in param_groups.values()],
+        weight_decay=0.01,
+    )
 
     callbacks = [
         EarlyStopping(patience=cfg.get("early_stopping_patience", 3), monitor="val_loss"),

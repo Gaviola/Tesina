@@ -5,7 +5,7 @@
 python scripts/toko_setup.py
 ```
 Configura clave SSH (para no ingresar contraseña), crea directorios,
-instala Miniconda, entorno `dermvlm` y PyTorch cu118 (compatible Pascal Titan Xp).
+instala Miniconda, entorno `dermvlm` y PyTorch cu126 (RTX 4080, Ada Lovelace, CUDA 12.6).
 
 Si la clave SSH ya esta configurada:
 ```
@@ -37,19 +37,7 @@ python scripts/toko_submit.py mini    # solo mini_vlm  (~8GB,  8-16h)
 python scripts/toko_submit.py llava   # solo llava_med (~10GB QLoRA, 24-48h)
 ```
 
----
-
-=== Enviando jobs a TOKO (target: mini) ===
-
---- Enviando: mini ---
-  Submitted batch job 93045
-  JOBID:    93045
-  Log:      /home/fgaviola/scratch/dermvlm/logs/93045.out
-  Monitor:  python scripts/toko_monitor.py 93045
-
-=== Jobs encolados ===
-Ver cola:  python scripts/toko_monitor.py
-Ver log:   python scripts/toko_monitor.py 93045
+encolados: 93238 (mini), 93239 (llava)
 
 ## 3. Monitorear
 

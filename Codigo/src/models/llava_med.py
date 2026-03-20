@@ -1,8 +1,12 @@
+import logging
 from typing import Union
 
 import torch
 
 from src.models.vlm_base import VLMBase
+from src.utils.device import get_training_dtype, get_free_vram_gb
+
+logger = logging.getLogger(__name__)
 
 
 class LLaVAMed(VLMBase):
@@ -35,26 +39,76 @@ class LLaVAMed(VLMBase):
         """Carga el modelo completo desde HuggingFace.
 
         Con quantize=True carga el LLM en 4-bit NF4 (bitsandbytes).
-        Usa device_map='auto' para colocar capas automáticamente en GPU/CPU.
+        Usa device_map='cuda:0' cuando hay VRAM suficiente, o 'auto' con límite explícito si la GPU está parcialmente ocupada.
         """
         from transformers import AutoProcessor, BitsAndBytesConfig, LlavaForConditionalGeneration
 
+        dtype = get_training_dtype()
+        free_gb = get_free_vram_gb()
+
+        # Con cuantización 4-bit, el modelo necesita ~40% de la VRAM original.
+        # Evitar device_map="auto" (CPU offloading) cuando el modelo cuantizado
+        # cabe en GPU — el offloading ralentiza el entrenamiento drásticamente.
+        effective_required = self.VRAM_REQUIRED_GB if not self.quantize else self.VRAM_REQUIRED_GB * 0.4
+        if free_gb >= effective_required or not torch.cuda.is_available():
+            device_map = "cuda:0"
+        else:
+            device_map = "auto"
+
         kwargs = {
-            "torch_dtype": torch.bfloat16,
-            "device_map": "auto",
+            "torch_dtype": dtype,
+            "device_map": device_map,
             "low_cpu_mem_usage": True,
+            "attn_implementation": "flash_attention_2",
         }
+
+        if device_map == "auto" and torch.cuda.is_available():
+            max_mem_gb = max(1, int(free_gb * 0.9))
+            kwargs["max_memory"] = {0: f"{max_mem_gb}GiB", "cpu": "16GiB"}
+
         if self.quantize:
             kwargs["quantization_config"] = BitsAndBytesConfig(
                 load_in_4bit=True,
                 bnb_4bit_compute_dtype=torch.bfloat16,
                 bnb_4bit_quant_type="nf4",
+                # Excluir el proyector multimodal de la cuantización para que
+                # sus parámetros sean entrenables en float durante Stage 1.
+                llm_int8_skip_modules=["multi_modal_projector"],
             )
 
-        self.model = LlavaForConditionalGeneration.from_pretrained(self.model_name, **kwargs)
+        attn_impl = kwargs["attn_implementation"]
+        try:
+            self.model = LlavaForConditionalGeneration.from_pretrained(self.model_name, **kwargs)
+        except Exception:
+            # Fallback 1: sdpa (PyTorch nativo, disponible en todas las plataformas)
+            attn_impl = "sdpa"
+            kwargs["attn_implementation"] = attn_impl
+            try:
+                self.model = LlavaForConditionalGeneration.from_pretrained(self.model_name, **kwargs)
+            except Exception:
+                # Fallback 2: eager (O(n²) en memoria, siempre funciona)
+                attn_impl = "eager"
+                kwargs["attn_implementation"] = attn_impl
+                self.model = LlavaForConditionalGeneration.from_pretrained(self.model_name, **kwargs)
+        logger.info("LLaVA-Med: usando atención '%s'", attn_impl)
         self.model.eval()
 
-        self.processor = AutoProcessor.from_pretrained(self.model_name)
+        try:
+            self.processor = AutoProcessor.from_pretrained(self.model_name)
+        except Exception as exc:
+            logger.warning(
+                "Error cargando AutoProcessor: %s. "
+                "Construyendo LlavaProcessor manualmente con tokenizer lento...",
+                exc,
+            )
+            from transformers import AutoTokenizer, CLIPImageProcessor, LlavaProcessor
+            image_processor = CLIPImageProcessor.from_pretrained(self.model_name)
+            tokenizer = AutoTokenizer.from_pretrained(
+                self.model_name, use_fast=False
+            )
+            self.processor = LlavaProcessor(
+                image_processor=image_processor, tokenizer=tokenizer
+            )
         self.processor.tokenizer.padding_side = "left"
         if self.processor.tokenizer.pad_token is None:
             self.processor.tokenizer.pad_token = self.processor.tokenizer.eos_token
@@ -104,6 +158,7 @@ class LLaVAMed(VLMBase):
         input_ids: torch.Tensor,
         attention_mask: torch.Tensor,
         labels: torch.Tensor,
+        image_sizes: torch.Tensor = None,
     ) -> dict:
         """Forward pass para fine-tuning en Fase 2 (generación de reportes).
 
