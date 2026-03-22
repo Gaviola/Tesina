@@ -21,7 +21,9 @@ from torch.utils.data import DataLoader
 from src.data.mmskin import MMSkinDataset
 from src.models.factory import build_model
 from src.training.two_stage import MMSkinVQADataset, VLMOOMError, VLMTrainCollator, run_stage2
-from src.utils.device import check_vram, get_free_vram_gb, get_num_workers, get_vram_gb
+from src.utils.device import (
+    check_training_dependencies, check_vram, get_free_vram_gb, get_num_workers, get_vram_gb,
+)
 from src.utils.io import load_checkpoint, save_results
 from src.utils.logging import log_time, setup_logger
 from src.utils.seed import set_seed
@@ -72,7 +74,20 @@ def main():
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--wandb", action="store_true")
     parser.add_argument("--num_workers", type=int, default=None)
+    parser.add_argument(
+        "--dry-run", action="store_true", dest="dry_run",
+        help="Verificación local: carga modelo, aplica LoRA, procesa N batches, "
+             "reporta VRAM y tiempos. No entrena el modelo completo.",
+    )
+    parser.add_argument(
+        "--dry-run-batches", type=int, default=3, dest="dry_run_batches",
+        help="Número de batches a procesar en modo dry-run (default: 3).",
+    )
     args = parser.parse_args()
+
+    # Dry-run: desactivar wandb
+    if args.dry_run:
+        args.wandb = False
 
     set_seed(args.seed)
 
@@ -100,6 +115,14 @@ def main():
         logger.info(
             "VRAM insuficiente (%.1f GB). Activando cuantización 4-bit.", vram
         )
+
+    # --- Pre-flight: verificar dependencias antes de cargar modelo ---
+    dep_status = check_training_dependencies(args.model, quantize)
+    if quantize and not dep_status["bitsandbytes"]:
+        logger.warning(
+            "Pre-flight: bitsandbytes no disponible. Desactivando cuantización."
+        )
+        quantize = False
 
     # --- Modelo ---
     model = build_model({"name": args.model, "quantize": quantize})
@@ -201,9 +224,16 @@ def main():
     import torch
     current_batch_size = args.batch_size
     grad_accum = args.grad_accum
+    max_batches = args.dry_run_batches if args.dry_run else None
     train_loader, val_loader = _build_dataloaders(
         train_dataset, val_dataset, collator, current_batch_size, num_workers
     )
+
+    if args.dry_run:
+        logger.info(
+            "=== MODO DRY-RUN: procesando %d batches para validar el pipeline ===",
+            args.dry_run_batches,
+        )
 
     metrics = None
     while True:
@@ -215,7 +245,10 @@ def main():
         )
         try:
             with log_time(f"Stage 2 {args.model}", logger):
-                metrics = run_stage2(model, train_loader, val_loader, cfg)
+                metrics = run_stage2(
+                    model, train_loader, val_loader, cfg,
+                    max_batches=max_batches,
+                )
             break
         except VLMOOMError as e:
             torch.cuda.empty_cache()
@@ -241,6 +274,11 @@ def main():
             train_loader, val_loader = _build_dataloaders(
                 train_dataset, val_dataset, collator, current_batch_size, num_workers
             )
+
+    # --- Dry-run: salir sin guardar resultados ---
+    if args.dry_run:
+        logger.info("=== Dry-run completado exitosamente ===")
+        sys.exit(0)
 
     # --- Guardar resultados ---
     results_path = str(output_dir / "results" / f"stage2_{args.model}_metrics.json")

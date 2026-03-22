@@ -7,6 +7,7 @@ Etapa 2 (Instrucciones): Aplica LoRA al LLM y entrena con MM-Skin VQA.
 import gc
 import json
 import logging
+import math
 import time
 from pathlib import Path
 from typing import Any
@@ -398,8 +399,8 @@ def _freeze_for_stage1(model, model_type: str):
                 raise RuntimeError(
                     "Stage 1 (cuantizado): el proyector no tiene parámetros "
                     "entrenables. Asegúrate de que el proyector esté excluido de la "
-                    "cuantización (llm_int8_skip_modules=['multi_modal_projector'] en "
-                    "BitsAndBytesConfig). Parámetros del proyector: "
+                    "cuantización (llm_int8_skip_modules=['model.multi_modal_projector'] "
+                    "en BitsAndBytesConfig). Parámetros del proyector: "
                     + str([(n, p.dtype) for n, p in projector.named_parameters()])
                 )
             if n_unfrozen < 1_000_000:
@@ -434,11 +435,20 @@ def _freeze_for_stage1(model, model_type: str):
             # Solo descongelar img_projection y separadores (glb_GN, sub_GN).
             # NO descongelar vision_embed_tokens completo (incluye img_processor ~300M+).
             n_unfrozen = 0
+            unfrozen_detail = []
             for name, param in hf_model.named_parameters():
                 if any(k in name for k in ("img_projection", "glb_GN", "sub_GN")):
                     if param.dtype in (torch.float32, torch.float16, torch.bfloat16):
                         param.requires_grad = True
                         n_unfrozen += 1
+                        unfrozen_detail.append(
+                            f"  {name} | dtype={param.dtype} | shape={list(param.shape)} | numel={param.numel()}"
+                        )
+            if unfrozen_detail:
+                logger.info(
+                    "Mini-VLM Stage 1 (cuantizado) — parámetros descongelados:\n%s",
+                    "\n".join(unfrozen_detail),
+                )
             if n_unfrozen == 0:
                 raise RuntimeError(
                     "Stage 1 (cuantizado, mini_vlm): sin parámetros float en proyección "
@@ -453,10 +463,14 @@ def _freeze_for_stage1(model, model_type: str):
             # Descongelar SOLO img_projection y separadores (glb_GN, sub_GN).
             # NO descongelar vision_embed_tokens completo — incluye img_processor (~300M+).
             projection_params = 0
+            unfrozen_names = []
             for name, param in hf_model.named_parameters():
                 if any(k in name for k in ("img_projection", "glb_GN", "sub_GN")):
                     param.requires_grad = True
                     projection_params += param.numel()
+                    unfrozen_names.append(
+                        f"  {name} | shape={list(param.shape)} | numel={param.numel()}"
+                    )
             if projection_params == 0:
                 raise RuntimeError(
                     "Mini-VLM Stage 1: no se encontraron capas de proyección "
@@ -464,8 +478,8 @@ def _freeze_for_stage1(model, model_type: str):
                     f"Módulos disponibles: {[n for n, _ in hf_model.named_children()]}"
                 )
             logger.info(
-                "Mini-VLM Stage 1: %d parámetros de proyección desbloqueados",
-                projection_params,
+                "Mini-VLM Stage 1: %d parámetros de proyección desbloqueados:\n%s",
+                projection_params, "\n".join(unfrozen_names),
             )
 
     trainable, total = _count_trainable_params(model)
@@ -473,6 +487,17 @@ def _freeze_for_stage1(model, model_type: str):
         "Stage 1 — Parámetros entrenables: %d / %d (%.2f%%)",
         trainable, total, 100.0 * trainable / max(total, 1),
     )
+    if trainable < 1_000_000:
+        logger.warning(
+            "ADVERTENCIA: Solo %d parámetros entrenables. Se esperan ~10-20M para la "
+            "capa de proyección en Stage 1. Verificar que img_projection se descongeló "
+            "correctamente. Parámetros con requires_grad=True:\n%s",
+            trainable,
+            "\n".join(
+                f"  {n} | numel={p.numel()}"
+                for n, p in model.named_parameters() if p.requires_grad
+            ),
+        )
 
 
 def _freeze_vision_encoder(model, model_type: str):
@@ -547,13 +572,31 @@ def _train_vlm_loop(
     cfg: dict,
     callbacks: list,
     dtype: torch.dtype,
+    max_batches: int | None = None,
 ) -> dict:
-    """Loop de entrenamiento compartido para Stage 1 y Stage 2."""
+    """Loop de entrenamiento compartido para Stage 1 y Stage 2.
+
+    Args:
+        max_batches: Si no es None, limita el entrenamiento a este número de
+            batches (modo dry-run). Solo ejecuta 1 época, loggea snapshots de
+            VRAM detallados y muestra un resumen con tiempos extrapolados.
+    """
     device = get_device()
     epochs     = cfg.get("epochs", 1)
     grad_accum = cfg.get("gradient_accumulation_steps", 1)
     batch_size = cfg.get("batch_size", 1)
     checkpoint_dir = cfg.get("checkpoint_dir", "outputs/checkpoints")
+
+    # Dry-run: limitar a 1 época y usar directorio temporal para checkpoints
+    if max_batches is not None:
+        import tempfile
+        epochs = 1
+        checkpoint_dir = tempfile.mkdtemp(prefix="dryrun_")
+        logger.info(
+            "Modo dry-run: %d batches, 1 época, checkpoints en %s",
+            max_batches, checkpoint_dir,
+        )
+
     Path(checkpoint_dir).mkdir(parents=True, exist_ok=True)
 
     use_autocast   = (dtype != torch.float32) and torch.cuda.is_available()
@@ -580,7 +623,23 @@ def _train_vlm_loop(
         ) if _TQDM_AVAILABLE else train_loader
 
         batch_start = time.perf_counter()
-        for batch_idx, batch in enumerate(train_iter):
+        nan_count = 0
+        max_nan_batches = 50
+        train_iterator = iter(train_iter)
+        batch_idx = 0
+        while True:
+            try:
+                batch = next(train_iterator)
+            except StopIteration:
+                break
+            except OSError as exc:
+                logger.warning(
+                    "OSError en batch de entrenamiento %d: %s. Saltando batch.",
+                    batch_idx, exc,
+                )
+                batch_idx += 1
+                continue
+
             input_ids      = batch["input_ids"].to(device)
             attention_mask = batch["attention_mask"].to(device)
             labels         = batch["labels"].to(device)
@@ -595,7 +654,33 @@ def _train_vlm_loop(
                 with torch.amp.autocast("cuda", dtype=dtype, enabled=use_autocast):
                     output = model(images, input_ids, attention_mask, labels, image_sizes=image_sizes)
                     loss   = output["loss"] / grad_accum
+
+                # Dry-run: snapshot post-forward
+                if max_batches is not None and batch_idx == 0 and torch.cuda.is_available():
+                    log_gpu_memory(logger, prefix="Dry-run post-forward  | ")
+
+                # Safety net: detectar NaN/Inf y abortar temprano
+                if torch.isnan(loss) or torch.isinf(loss):
+                    nan_count += 1
+                    logger.warning(
+                        "Loss NaN/Inf en batch %d (ocurrencia %d/%d). Saltando.",
+                        batch_idx, nan_count, max_nan_batches,
+                    )
+                    optimizer.zero_grad(set_to_none=True)
+                    if nan_count >= max_nan_batches:
+                        raise RuntimeError(
+                            f"Entrenamiento abortado: {nan_count} batches con loss NaN/Inf. "
+                            "Verificar learning rate, dtype, y estabilidad numérica del modelo."
+                        )
+                    batch_idx += 1
+                    continue
+                nan_count = 0
+
                 loss.backward()
+
+                # Dry-run: snapshot post-backward
+                if max_batches is not None and batch_idx == 0 and torch.cuda.is_available():
+                    log_gpu_memory(logger, prefix="Dry-run post-backward | ")
             except torch.cuda.OutOfMemoryError:
                 torch.cuda.empty_cache()
                 gc.collect()
@@ -609,8 +694,6 @@ def _train_vlm_loop(
                     log_gpu_memory(logger, prefix="OOM | ")
                     _enable_gradient_checkpointing(model, model_type)
                     _grad_ckpt_applied = True
-                    # Recrear optimizer: enable_input_require_grads() modifica el
-                    # grafo de parámetros, invalidando los param groups originales.
                     trainable_params = [p for p in model.parameters() if p.requires_grad]
                     current_lr = optimizer.param_groups[0]["lr"]
                     current_wd = optimizer.param_groups[0].get("weight_decay", 0.0)
@@ -625,8 +708,9 @@ def _train_vlm_loop(
                         scheduler = CosineAnnealingLR(optimizer, T_max=old_T_max)
                     logger.info(
                         "Optimizer recreado con %d param groups tras gradient checkpointing.",
-                        len(param_groups),
+                        len(optimizer.param_groups),
                     )
+                    batch_idx += 1
                     continue
                 else:
                     logger.error(
@@ -640,14 +724,24 @@ def _train_vlm_loop(
                     )
 
             if (batch_idx + 1) % grad_accum == 0:
-                torch.nn.utils.clip_grad_norm_(
+                grad_norm = torch.nn.utils.clip_grad_norm_(
                     [p for p in model.parameters() if p.requires_grad],
                     max_norm=1.0,
                 )
+                # Log gradient norm cada 50 batches para diagnosticar falta de aprendizaje
+                if batch_idx % 50 == 0:
+                    logger.info(
+                        "Época %d | Batch %d | grad_norm: %.6f",
+                        epoch, batch_idx, grad_norm.item() if torch.is_tensor(grad_norm) else grad_norm,
+                    )
                 optimizer.step()
                 if scheduler is not None:
                     scheduler.step()
                 optimizer.zero_grad(set_to_none=True)
+
+                # Dry-run: snapshot post-step
+                if max_batches is not None and batch_idx < grad_accum and torch.cuda.is_available():
+                    log_gpu_memory(logger, prefix="Dry-run post-step     | ")
 
             train_loss_sum += loss.item() * grad_accum
             n_batches += 1
@@ -670,10 +764,19 @@ def _train_vlm_loop(
                     "Época %d/%d | Batch %d/%d | Loss: %.4f | "
                     "Transcurrido: %s | ETA época: %s",
                     epoch, epochs, batch_idx, len(train_loader),
-                    train_loss_sum / n_batches,
+                    train_loss_sum / max(n_batches, 1),
                     format_duration(elapsed),
                     format_duration(eta_epoch),
                 )
+
+            batch_idx += 1
+
+            # Dry-run: salir tras max_batches
+            if max_batches is not None and batch_idx >= max_batches:
+                logger.info(
+                    "Dry-run: %d batches de entrenamiento completados.", max_batches,
+                )
+                break
 
         if _TQDM_AVAILABLE:
             train_iter.close()
@@ -714,7 +817,13 @@ def _train_vlm_loop(
                 try:
                     with torch.amp.autocast("cuda", dtype=dtype, enabled=use_autocast):
                         output = model(images, input_ids, attention_mask, labels, image_sizes=image_sizes)
-                    val_loss_sum += output["loss"].item()
+                    loss_val = output["loss"].item()
+                    if not math.isfinite(loss_val):
+                        logger.warning(
+                            "Val loss NaN/Inf en batch %d. Saltando.", n_val,
+                        )
+                        continue
+                    val_loss_sum += loss_val
                     n_val += 1
                 except torch.cuda.OutOfMemoryError:
                     torch.cuda.empty_cache()
@@ -726,9 +835,23 @@ def _train_vlm_loop(
                         loss=f"{val_loss_sum / max(n_val, 1):.4f}", ordered=True,
                     )
 
+                # Dry-run: limitar validación
+                if max_batches is not None and n_val >= max_batches:
+                    logger.info(
+                        "Dry-run: %d batches de validación completados.", max_batches,
+                    )
+                    break
+
         if _TQDM_AVAILABLE:
             val_iter.close()
-        avg_val_loss = val_loss_sum / max(n_val, 1)
+        if n_val == 0:
+            logger.warning(
+                "Validación: todos los batches produjeron NaN/Inf o fallaron. "
+                "val_loss se reportará como NaN."
+            )
+            avg_val_loss = float("nan")
+        else:
+            avg_val_loss = val_loss_sum / n_val
 
         epoch_elapsed = time.perf_counter() - epoch_start
         epoch_times.append(epoch_elapsed)
@@ -771,18 +894,87 @@ def _train_vlm_loop(
     total_time  = time.perf_counter() - training_start
     avg_epoch_t = sum(epoch_times) / max(len(epoch_times), 1)
     best_val    = min(history["val_loss"]) if history["val_loss"] else float("nan")
-    logger.info(
-        "=== Resumen de entrenamiento ===\n"
-        "  Tiempo total       : %s\n"
-        "  Épocas completadas : %d / %d\n"
-        "  Tiempo por época   : %s (promedio)\n"
-        "  Mejor época        : %d\n"
-        "  Mejor val_loss     : %.4f",
-        format_duration(total_time),
-        len(epoch_times), epochs,
-        format_duration(avg_epoch_t),
-        best_epoch, best_val,
-    )
+
+    # ---- Resumen dry-run ----
+    if max_batches is not None and torch.cuda.is_available():
+        from src.utils.device import get_gpu_info
+
+        gpu_info = get_gpu_info()
+        peak_mb = torch.cuda.max_memory_allocated() / (1024**2)
+        total_vram_mb = torch.cuda.get_device_properties(0).total_memory / (1024**2)
+        headroom_mb = total_vram_mb - peak_mb
+        headroom_warn = "(ADVERTENCIA: headroom bajo)" if headroom_mb < 500 else ""
+
+        # Tiempo promedio por batch (train solamente)
+        train_batches_done = max(n_batches, 1)
+        avg_batch_time = total_time / max(train_batches_done + n_val, 1)
+        total_train_batches = len(train_loader)
+        total_val_batches = len(val_loader)
+        configured_epochs = cfg.get("epochs", 1)
+        est_epoch_secs = avg_batch_time * (total_train_batches + total_val_batches)
+        est_total_secs = est_epoch_secs * configured_epochs
+
+        # Conteo de parámetros
+        total_params = sum(p.numel() for p in model.parameters())
+        trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+        pct_trainable = 100.0 * trainable_params / max(total_params, 1)
+
+        status = "OK" if headroom_mb >= 500 else "ADVERTENCIA — headroom VRAM bajo"
+
+        # Detectar problemas graves en dry-run
+        last_val = history["val_loss"][-1] if history["val_loss"] else float("nan")
+        if not math.isfinite(last_val):
+            status = "FALLO — val_loss NaN/Inf (inestabilidad numérica)"
+        if trainable_params < 1_000_000:
+            status = "FALLO — parámetros entrenables insuficientes (%d < 1M)" % trainable_params
+
+        logger.info(
+            "\n=== RESUMEN DRY-RUN ===\n"
+            "  GPU                : %s (%.1f GB)\n"
+            "  dtype              : %s\n"
+            "  VRAM pico          : %.0f MB / %.0f MB\n"
+            "  VRAM headroom      : %.0f MB %s\n"
+            "  Parámetros         : %s entrenables / %s totales (%.2f%%)\n"
+            "  Batch size         : %d (efectivo: %d)\n"
+            "  Tiempo por batch   : %.2fs (promedio sobre %d batches)\n"
+            "  Est. tiempo/época  : %s (extrapolado a %d batches)\n"
+            "  Est. tiempo total  : %s (%d épocas)\n"
+            "  Train loss (parcial): %.4f\n"
+            "  Val loss (parcial)  : %.4f\n"
+            "  Estado             : %s",
+            gpu_info.get("name", "?"), gpu_info.get("memory_total_gb", 0),
+            dtype,
+            peak_mb, total_vram_mb,
+            headroom_mb, headroom_warn,
+            f"{trainable_params:,}", f"{total_params:,}", pct_trainable,
+            batch_size, batch_size * grad_accum,
+            avg_batch_time, train_batches_done,
+            format_duration(est_epoch_secs), total_train_batches + total_val_batches,
+            format_duration(est_total_secs), configured_epochs,
+            history["train_loss"][-1] if history["train_loss"] else float("nan"),
+            history["val_loss"][-1] if history["val_loss"] else float("nan"),
+            status,
+        )
+
+        # Limpiar directorio temporal de checkpoints
+        import shutil
+        try:
+            shutil.rmtree(checkpoint_dir, ignore_errors=True)
+        except Exception:
+            pass
+    else:
+        logger.info(
+            "=== Resumen de entrenamiento ===\n"
+            "  Tiempo total       : %s\n"
+            "  Épocas completadas : %d / %d\n"
+            "  Tiempo por época   : %s (promedio)\n"
+            "  Mejor época        : %d\n"
+            "  Mejor val_loss     : %.4f",
+            format_duration(total_time),
+            len(epoch_times), epochs,
+            format_duration(avg_epoch_t),
+            best_epoch, best_val,
+        )
 
     return {
         "train_loss":       history["train_loss"],
@@ -797,7 +989,10 @@ def _train_vlm_loop(
 # API pública
 # ---------------------------------------------------------------------------
 
-def run_stage1(model, train_loader, val_loader, cfg: dict[str, Any]) -> dict:
+def run_stage1(
+    model, train_loader, val_loader, cfg: dict[str, Any],
+    max_batches: int | None = None,
+) -> dict:
     """Etapa 1: Alineamiento visual-textual.
 
     Congela vision encoder y LLM, entrena solo MLP de proyección.
@@ -808,6 +1003,7 @@ def run_stage1(model, train_loader, val_loader, cfg: dict[str, Any]) -> dict:
         train_loader: DataLoader con pares imagen-caption (MM-Skin caption mode).
         val_loader: DataLoader de validación.
         cfg: Dict con claves: epochs, lr, gradient_accumulation_steps, checkpoint_dir.
+        max_batches: Si no es None, modo dry-run con N batches (ver _train_vlm_loop).
 
     Returns:
         Dict con train_loss (lista), val_loss (lista), best_epoch, stage=1.
@@ -873,6 +1069,7 @@ def run_stage1(model, train_loader, val_loader, cfg: dict[str, Any]) -> dict:
     dtype = get_training_dtype()
     metrics = _train_vlm_loop(
         model, train_loader, val_loader, optimizer, scheduler, cfg, callbacks, dtype,
+        max_batches=max_batches,
     )
 
     logger.info(
@@ -883,7 +1080,10 @@ def run_stage1(model, train_loader, val_loader, cfg: dict[str, Any]) -> dict:
     return {**metrics, "stage": 1}
 
 
-def run_stage2(model, train_loader, val_loader, cfg: dict[str, Any]) -> dict:
+def run_stage2(
+    model, train_loader, val_loader, cfg: dict[str, Any],
+    max_batches: int | None = None,
+) -> dict:
     """Etapa 2: Ajuste de instrucciones con LoRA.
 
     Aplica LoRA al LLM y entrena con MM-Skin VQA (~27k pares instrucción-respuesta).
@@ -894,6 +1094,7 @@ def run_stage2(model, train_loader, val_loader, cfg: dict[str, Any]) -> dict:
         val_loader: DataLoader de validación.
         cfg: Dict con claves: epochs, lr, gradient_accumulation_steps, checkpoint_dir,
              lora (dict con r, alpha, dropout, target_modules), early_stopping_patience.
+        max_batches: Si no es None, modo dry-run con N batches (ver _train_vlm_loop).
 
     Returns:
         Dict con train_loss, val_loss, best_epoch, lora_config, stage=2.
@@ -963,14 +1164,17 @@ def run_stage2(model, train_loader, val_loader, cfg: dict[str, Any]) -> dict:
     dtype = get_training_dtype()
     metrics = _train_vlm_loop(
         model, train_loader, val_loader, optimizer, None, cfg, callbacks, dtype,
+        max_batches=max_batches,
     )
 
     # Guardar lora_config junto al checkpoint para restaurar en inferencia
-    checkpoint_dir = cfg.get("checkpoint_dir", "outputs/checkpoints")
-    lora_info_path = Path(checkpoint_dir) / "lora_config.json"
-    with open(lora_info_path, "w", encoding="utf-8") as f:
-        json.dump(lora_config_params, f, indent=2)
-    logger.info("LoRA config guardada en %s", lora_info_path)
+    # (saltar en modo dry-run — el directorio temporal ya fue limpiado)
+    if max_batches is None:
+        checkpoint_dir = cfg.get("checkpoint_dir", "outputs/checkpoints")
+        lora_info_path = Path(checkpoint_dir) / "lora_config.json"
+        with open(lora_info_path, "w", encoding="utf-8") as f:
+            json.dump(lora_config_params, f, indent=2)
+        logger.info("LoRA config guardada en %s", lora_info_path)
 
     logger.info(
         "Stage 2 completado | Best epoch: %d | Best val_loss: %.4f",

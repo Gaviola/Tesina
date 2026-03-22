@@ -59,7 +59,10 @@ class LLaVAMed(VLMBase):
             "torch_dtype": dtype,
             "device_map": device_map,
             "low_cpu_mem_usage": True,
-            "attn_implementation": "flash_attention_2",
+            # sdpa (Scaled Dot Product Attention) está integrado en PyTorch 2.0+
+            # y auto-despacha a FlashAttention-2 o memory-efficient kernels cuando
+            # están disponibles, sin requerir instalación de paquetes externos.
+            "attn_implementation": "sdpa",
         }
 
         if device_map == "auto" and torch.cuda.is_available():
@@ -67,30 +70,73 @@ class LLaVAMed(VLMBase):
             kwargs["max_memory"] = {0: f"{max_mem_gb}GiB", "cpu": "16GiB"}
 
         if self.quantize:
+            # Verificar que bitsandbytes está disponible y funcional
+            try:
+                import bitsandbytes as _bnb
+                _bnb_ok = getattr(_bnb, "cextension", None) is not None and _bnb.cextension.lib is not None
+            except ImportError:
+                _bnb_ok = False
+            if not _bnb_ok:
+                logger.warning(
+                    "bitsandbytes no disponible o CUDA backend incompatible. "
+                    "Desactivando cuantización — modelo se cargará en %s.", dtype,
+                )
+                self.quantize = False
+
+        if self.quantize:
             kwargs["quantization_config"] = BitsAndBytesConfig(
                 load_in_4bit=True,
                 bnb_4bit_compute_dtype=torch.bfloat16,
                 bnb_4bit_quant_type="nf4",
-                # Excluir el proyector multimodal de la cuantización para que
-                # sus parámetros sean entrenables en float durante Stage 1.
-                llm_int8_skip_modules=["multi_modal_projector"],
+                # Excluir el proyector y vision encoder de la cuantización:
+                # - Proyector: sus parámetros deben ser entrenables en float (Stage 1).
+                # - Vision tower: CLIP ViT-L/14 cuantizado produce embeddings
+                #   numéricos inestables que causan NaN en el loss.
+                # El prefijo "model." es necesario porque LlavaForConditionalGeneration
+                # envuelve LlavaModel como .model.
+                llm_int8_skip_modules=[
+                    "model.multi_modal_projector",
+                    "model.vision_tower",
+                ],
             )
 
-        attn_impl = kwargs["attn_implementation"]
-        try:
-            self.model = LlavaForConditionalGeneration.from_pretrained(self.model_name, **kwargs)
-        except Exception:
-            # Fallback 1: sdpa (PyTorch nativo, disponible en todas las plataformas)
-            attn_impl = "sdpa"
+        # Cadena de carga con fallbacks para atención y cuantización.
+        # 1) sdpa → eager (si sdpa no disponible)
+        # 2) Si falla por bitsandbytes/cuantización, reintentar sin cuantización.
+        attn_options = ["sdpa", "eager"]
+        last_exc = None
+        for attn_impl in attn_options:
             kwargs["attn_implementation"] = attn_impl
             try:
                 self.model = LlavaForConditionalGeneration.from_pretrained(self.model_name, **kwargs)
-            except Exception:
-                # Fallback 2: eager (O(n²) en memoria, siempre funciona)
-                attn_impl = "eager"
-                kwargs["attn_implementation"] = attn_impl
-                self.model = LlavaForConditionalGeneration.from_pretrained(self.model_name, **kwargs)
-        logger.info("LLaVA-Med: usando atención '%s'", attn_impl)
+                last_exc = None
+                break
+            except Exception as exc:
+                last_exc = exc
+                exc_str = str(exc).lower()
+                # Error de bitsandbytes/cuantización: reintentar sin cuantización
+                if any(kw in exc_str for kw in ("bitsandbytes", "libcusparse", "bnb", "quantiz", "cquantize")):
+                    logger.warning(
+                        "Error de cuantización al cargar %s con atención '%s': %s. "
+                        "Reintentando sin cuantización...",
+                        self.model_name, attn_impl, exc,
+                    )
+                    kwargs.pop("quantization_config", None)
+                    self.quantize = False
+                    try:
+                        self.model = LlavaForConditionalGeneration.from_pretrained(self.model_name, **kwargs)
+                        last_exc = None
+                        break
+                    except Exception as exc2:
+                        last_exc = exc2
+                        continue
+                logger.info("Atención '%s' no disponible: %s. Probando siguiente...", attn_impl, exc)
+        if last_exc is not None:
+            raise RuntimeError(
+                f"No se pudo cargar {self.model_name} con ninguna configuración. "
+                f"Último error: {last_exc}"
+            ) from last_exc
+        logger.info("LLaVA-Med: usando atención '%s', cuantización=%s", kwargs["attn_implementation"], self.quantize)
         self.model.eval()
 
         try:
@@ -174,7 +220,7 @@ class LLaVAMed(VLMBase):
         pixel_values = self.processor.image_processor(
             images=images,
             return_tensors="pt",
-        )["pixel_values"].to(self.model.device)
+        )["pixel_values"].to(device=self.model.device, dtype=self.model.dtype)
 
         outputs = self.model(
             pixel_values=pixel_values,

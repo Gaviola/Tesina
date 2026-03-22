@@ -29,6 +29,26 @@ python scripts/toko_sync_data.py --remote   # descargar directamente en TOKO
 
 ---
 
+## 1.5 Verificar localmente antes de enviar (dry-run)
+
+Antes de encolar jobs, validar que el pipeline funciona correctamente con un dry-run local.
+Esto ejecuta el código real pero limitado a pocos batches, verificando: carga del modelo,
+datos, forward/backward, VRAM y tiempos estimados.
+
+```
+# Stage 1
+python scripts/train_vlm_stage1.py --model mini_vlm --dry-run
+python scripts/train_vlm_stage1.py --model llava_med --batch_size 4 --dry-run
+
+# Stage 2 (si hay checkpoint de Stage 1)
+python scripts/train_vlm_stage2.py --model llava_med --checkpoint outputs/checkpoints/stage1_llava_med/best_model.pt --dry-run
+```
+
+Si el dry-run falla, corregir el error antes de enviar al cluster.
+Si pasa exitosamente, muestra un resumen con VRAM pico, tiempos estimados y estado.
+
+---
+
 ## 2. Enviar jobs
 
 ```
@@ -37,7 +57,7 @@ python scripts/toko_submit.py mini    # solo mini_vlm  (~8GB,  8-16h)
 python scripts/toko_submit.py llava   # solo llava_med (~10GB QLoRA, 24-48h)
 ```
 
-encolados: 93238 (mini), 93239 (llava)
+encolados: 93288 (mini), 93289 (llava)
 
 ## 3. Monitorear
 

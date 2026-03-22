@@ -23,7 +23,8 @@ from src.data.mmskin import MMSkinDataset
 from src.models.factory import build_model
 from src.training.two_stage import VLMOOMError, VLMTrainCollator, run_stage1
 from src.utils.device import (
-    check_vram, estimate_vlm_batch_size, get_free_vram_gb, get_num_workers, get_vram_gb,
+    check_training_dependencies, check_vram, estimate_vlm_batch_size,
+    get_free_vram_gb, get_num_workers, get_vram_gb,
 )
 from src.utils.io import save_results
 from src.utils.logging import log_time, setup_logger
@@ -32,6 +33,7 @@ from src.utils.seed import set_seed
 logger = logging.getLogger(__name__)
 
 _VRAM_REQUIRED = {"llava_med": 14.0, "mini_vlm": 10.0}
+_VRAM_TRAIN_MARGIN = 4.0  # GB adicionales para optimizer, gradientes y activaciones
 
 
 def _find_or_create_splits(data_dir: Path, mmskin_dir: Path, all_names: list[str], seed: int) -> str:
@@ -120,7 +122,20 @@ def main():
         help="Override num_crops para Phi-3.5 (default: 1 para Stage 1, reduce VRAM). "
              "Usar 4 para Stage 2 o evaluación con resolución completa.",
     )
+    parser.add_argument(
+        "--dry-run", action="store_true", dest="dry_run",
+        help="Verificación local: carga modelo, procesa N batches, reporta VRAM y tiempos. "
+             "No entrena el modelo completo.",
+    )
+    parser.add_argument(
+        "--dry-run-batches", type=int, default=3, dest="dry_run_batches",
+        help="Número de batches a procesar en modo dry-run (default: 3).",
+    )
     args = parser.parse_args()
+
+    # Dry-run: desactivar wandb
+    if args.dry_run:
+        args.wandb = False
 
     set_seed(args.seed)
 
@@ -141,10 +156,21 @@ def main():
     # --- VRAM check (usar VRAM libre, no total, para detectar GPU compartida) ---
     check_vram(_VRAM_REQUIRED[args.model], args.model)
     free_vram = get_free_vram_gb()
-    quantize = free_vram < _VRAM_REQUIRED[args.model]
+    quantize = free_vram < (_VRAM_REQUIRED[args.model] + _VRAM_TRAIN_MARGIN)
     if quantize:
-        logger.info("VRAM libre insuficiente (%.1f GB < %.1f GB requeridos). Activando cuantización 4-bit.",
-                    free_vram, _VRAM_REQUIRED[args.model])
+        logger.info(
+            "VRAM libre insuficiente para entrenamiento (%.1f GB < %.1f GB modelo + %.1f GB margen). "
+            "Activando cuantización 4-bit.",
+            free_vram, _VRAM_REQUIRED[args.model], _VRAM_TRAIN_MARGIN,
+        )
+
+    # --- Pre-flight: verificar dependencias antes de cargar modelo ---
+    dep_status = check_training_dependencies(args.model, quantize)
+    if quantize and not dep_status["bitsandbytes"]:
+        logger.warning(
+            "Pre-flight: bitsandbytes no disponible. Desactivando cuantización."
+        )
+        quantize = False
 
     # --- Modelo ---
     model = build_model({"name": args.model, "quantize": quantize})
@@ -236,9 +262,16 @@ def main():
     import torch
     current_batch_size = effective_batch_size
     grad_accum = effective_grad_accum
+    max_batches = args.dry_run_batches if args.dry_run else None
     train_loader, val_loader = _build_dataloaders(
         train_dataset, val_dataset, collator, current_batch_size, num_workers
     )
+
+    if args.dry_run:
+        logger.info(
+            "=== MODO DRY-RUN: procesando %d batches para validar el pipeline ===",
+            args.dry_run_batches,
+        )
 
     metrics = None
     while True:
@@ -250,7 +283,10 @@ def main():
         )
         try:
             with log_time(f"Stage 1 {args.model}", logger):
-                metrics = run_stage1(model, train_loader, val_loader, cfg)
+                metrics = run_stage1(
+                    model, train_loader, val_loader, cfg,
+                    max_batches=max_batches,
+                )
             break
         except VLMOOMError as e:
             torch.cuda.empty_cache()
@@ -276,6 +312,11 @@ def main():
             train_loader, val_loader = _build_dataloaders(
                 train_dataset, val_dataset, collator, current_batch_size, num_workers
             )
+
+    # --- Dry-run: salir sin guardar resultados ---
+    if args.dry_run:
+        logger.info("=== Dry-run completado exitosamente ===")
+        sys.exit(0)
 
     # --- Guardar resultados ---
     results_path = str(output_dir / "results" / f"stage1_{args.model}_metrics.json")

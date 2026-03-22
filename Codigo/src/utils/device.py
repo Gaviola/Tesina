@@ -145,3 +145,74 @@ def get_gpu_info() -> dict:
         "memory_total_gb": torch.cuda.get_device_properties(0).total_memory / (1024**3),
         "dtype": str(get_training_dtype()),
     }
+
+
+def check_training_dependencies(model_type: str, quantize: bool) -> dict:
+    """Verificación pre-flight de dependencias para entrenamiento de VLMs.
+
+    Comprueba que las librerías requeridas están instaladas y funcionales
+    ANTES de intentar cargar el modelo, para detectar errores temprano.
+
+    Args:
+        model_type: "llava_med" o "mini_vlm".
+        quantize: Si se planea usar cuantización 4-bit.
+
+    Returns:
+        Dict con claves:
+        - bitsandbytes (bool): disponible y funcional
+        - sdpa (bool): scaled_dot_product_attention disponible
+        - warnings (list[str]): problemas detectados
+    """
+    import logging
+
+    logger = logging.getLogger(__name__)
+    result = {"bitsandbytes": False, "sdpa": False, "warnings": []}
+
+    # --- sdpa (PyTorch 2.0+) ---
+    result["sdpa"] = hasattr(torch.nn.functional, "scaled_dot_product_attention")
+    if not result["sdpa"]:
+        result["warnings"].append(
+            "torch.nn.functional.scaled_dot_product_attention no disponible. "
+            "Se requiere PyTorch >= 2.0."
+        )
+
+    # --- bitsandbytes (solo si se necesita cuantización) ---
+    if quantize:
+        try:
+            import bitsandbytes as bnb
+            if getattr(bnb, "cextension", None) is not None and bnb.cextension.lib is not None:
+                result["bitsandbytes"] = True
+            else:
+                result["warnings"].append(
+                    "bitsandbytes importado pero CUDA backend no funcional "
+                    "(lib es None). Verificar compatibilidad CUDA."
+                )
+        except ImportError:
+            result["warnings"].append(
+                "bitsandbytes no instalado. Cuantización 4-bit no disponible."
+            )
+        except Exception as exc:
+            result["warnings"].append(
+                f"Error al verificar bitsandbytes: {exc}"
+            )
+    else:
+        result["bitsandbytes"] = True  # No se necesita
+
+    # --- Info de entorno ---
+    if torch.cuda.is_available():
+        gpu_name = torch.cuda.get_device_name(0)
+        capability = torch.cuda.get_device_capability(0)
+        cuda_version = torch.version.cuda or "desconocida"
+        logger.info(
+            "Pre-flight: GPU=%s (SM %d.%d) | CUDA=%s | PyTorch=%s | "
+            "sdpa=%s | bitsandbytes=%s | cuantización=%s",
+            gpu_name, capability[0], capability[1], cuda_version,
+            torch.__version__, result["sdpa"], result["bitsandbytes"], quantize,
+        )
+    else:
+        logger.info("Pre-flight: sin GPU detectada")
+
+    for warn in result["warnings"]:
+        logger.warning("Pre-flight: %s", warn)
+
+    return result
