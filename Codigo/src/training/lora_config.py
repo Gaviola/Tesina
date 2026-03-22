@@ -14,14 +14,18 @@ def get_lora_config(
         r: Rango de LoRA. Valores típicos: 16, 32, 64, 128.
         lora_alpha: Factor de escala. Típicamente 2*r.
         lora_dropout: Dropout en capas LoRA.
-        target_modules: Módulos donde aplicar LoRA. Default: ["q_proj", "v_proj"].
+        target_modules: Módulos donde aplicar LoRA.
+            Default: todas las capas lineales de atención y FFN.
         task_type: Tipo de tarea PEFT.
 
     Returns:
         LoraConfig configurado.
     """
     if target_modules is None:
-        target_modules = ["q_proj", "v_proj"]
+        target_modules = [
+            "q_proj", "k_proj", "v_proj", "o_proj",
+            "gate_proj", "up_proj", "down_proj",
+        ]
 
     return LoraConfig(
         r=r,
