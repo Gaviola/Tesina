@@ -5,7 +5,7 @@ stage1:
   description: Alineamiento visual-textual (solo MLP)
   data: skincare_cap  # ~4000 pares SkinCAP
   epochs: 1
-  lr: 2e-3
+  lr: 2e-4
   batch_size: 16
   freeze_encoder: true
   freeze_llm: true
@@ -32,7 +32,12 @@ lora:
   dropout: 0.05
   target_modules:
     - q_proj
+    - k_proj
     - v_proj
+    - o_proj
+    - gate_proj
+    - up_proj
+    - down_proj
 
 evaluation:
   level1_metrics:

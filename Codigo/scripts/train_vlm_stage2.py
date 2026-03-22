@@ -80,8 +80,8 @@ def main():
              "reporta VRAM y tiempos. No entrena el modelo completo.",
     )
     parser.add_argument(
-        "--dry-run-batches", type=int, default=3, dest="dry_run_batches",
-        help="Número de batches a procesar en modo dry-run (default: 3).",
+        "--dry-run-batches", type=int, default=10, dest="dry_run_batches",
+        help="Número de batches a procesar en modo dry-run (default: 10).",
     )
     args = parser.parse_args()
 

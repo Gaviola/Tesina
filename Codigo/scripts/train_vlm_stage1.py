@@ -112,7 +112,7 @@ def main():
     parser.add_argument("--data_dir", type=str, default="data")
     parser.add_argument("--output_dir", type=str, default="outputs")
     parser.add_argument("--epochs", type=int, default=1)
-    parser.add_argument("--lr", type=float, default=2e-3)
+    parser.add_argument("--lr", type=float, default=2e-4)
     parser.add_argument("--batch_size", type=int, default=16)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--wandb", action="store_true")
@@ -128,8 +128,8 @@ def main():
              "No entrena el modelo completo.",
     )
     parser.add_argument(
-        "--dry-run-batches", type=int, default=3, dest="dry_run_batches",
-        help="Número de batches a procesar en modo dry-run (default: 3).",
+        "--dry-run-batches", type=int, default=10, dest="dry_run_batches",
+        help="Número de batches a procesar en modo dry-run (default: 10).",
     )
     args = parser.parse_args()
 

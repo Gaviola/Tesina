@@ -139,8 +139,9 @@ class MiniVLM(VLMBase):
         if self.quantize:
             kwargs["quantization_config"] = BitsAndBytesConfig(
                 load_in_4bit=True,
-                bnb_4bit_compute_dtype=torch.bfloat16,
+                bnb_4bit_compute_dtype=dtype,
                 bnb_4bit_quant_type="nf4",
+                bnb_4bit_use_double_quant=True,
                 # Excluir capas de proyección de la cuantización para Stage 1.
                 # Usar rutas completas para que bitsandbytes las identifique correctamente.
                 llm_int8_skip_modules=[

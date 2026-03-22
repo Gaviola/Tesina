@@ -248,6 +248,15 @@ class VLMTrainCollator:
             instructions = [str(sample.get("text") or "") for sample in batch]
             responses = [str(sample.get("answer") or "") for sample in batch]
 
+        # Filtrar muestras con respuesta vacía — evita loss NaN
+        valid = [i for i, r in enumerate(responses) if r.strip()]
+        if not valid:
+            return None
+        if len(valid) < len(batch):
+            images = [images[i] for i in valid]
+            instructions = [instructions[i] for i in valid]
+            responses = [responses[i] for i in valid]
+
         if self.model_type == "llava_med":
             return self._process_llava_med(images, instructions, responses)
         else:
@@ -559,6 +568,27 @@ def _enable_gradient_checkpointing(model, model_type: str) -> None:
         )
 
 
+def _ensure_gradient_flow(model, model_type: str) -> None:
+    """Garantiza flujo de gradientes a través del LLM congelado.
+
+    Siempre necesario cuando se entrenan capas intermedias (proyección)
+    con el LLM congelado. Sin esto, el autograd graph se rompe porque:
+    - use_cache=True puede provocar detach de tensores intermedios.
+    - Sin enable_input_require_grads(), los embeddings del LLM congelado
+      no propagan gradientes hacia las capas de proyección.
+
+    Nota: _enable_gradient_checkpointing() también llama a estos métodos,
+    pero solo se activa condicionalmente. Esta función los aplica siempre.
+    """
+    hf_model = model.model if hasattr(model, "model") else model
+    if hasattr(hf_model, "config") and hasattr(hf_model.config, "use_cache"):
+        hf_model.config.use_cache = False
+        logger.info("use_cache=False configurado para %s.", model_type)
+    if hasattr(hf_model, "enable_input_require_grads"):
+        hf_model.enable_input_require_grads()
+        logger.info("enable_input_require_grads() aplicado para %s.", model_type)
+
+
 # ---------------------------------------------------------------------------
 # Loop de entrenamiento
 # ---------------------------------------------------------------------------
@@ -607,6 +637,11 @@ def _train_vlm_loop(
     _grad_ckpt_applied = getattr(model.model, "is_gradient_checkpointing", False)
     model_type = _get_model_type(model)
 
+    # Dry-run diagnostics
+    dry_run_grad_norms: list[float] = []
+    dry_run_train_losses: list[float] = []
+    dry_run_train_nan_count = 0
+
     for epoch in range(1, epochs + 1):
         epoch_start = time.perf_counter()
 
@@ -640,6 +675,10 @@ def _train_vlm_loop(
                 batch_idx += 1
                 continue
 
+            if batch is None:
+                batch_idx += 1
+                continue
+
             input_ids      = batch["input_ids"].to(device)
             attention_mask = batch["attention_mask"].to(device)
             labels         = batch["labels"].to(device)
@@ -653,7 +692,7 @@ def _train_vlm_loop(
             try:
                 with torch.amp.autocast("cuda", dtype=dtype, enabled=use_autocast):
                     output = model(images, input_ids, attention_mask, labels, image_sizes=image_sizes)
-                    loss   = output["loss"] / grad_accum
+                loss = output["loss"].float() / grad_accum
 
                 # Dry-run: snapshot post-forward
                 if max_batches is not None and batch_idx == 0 and torch.cuda.is_available():
@@ -662,6 +701,8 @@ def _train_vlm_loop(
                 # Safety net: detectar NaN/Inf y abortar temprano
                 if torch.isnan(loss) or torch.isinf(loss):
                     nan_count += 1
+                    if max_batches is not None:
+                        dry_run_train_nan_count += 1
                     logger.warning(
                         "Loss NaN/Inf en batch %d (ocurrencia %d/%d). Saltando.",
                         batch_idx, nan_count, max_nan_batches,
@@ -728,23 +769,35 @@ def _train_vlm_loop(
                     [p for p in model.parameters() if p.requires_grad],
                     max_norm=1.0,
                 )
+                gn_val = grad_norm.item() if torch.is_tensor(grad_norm) else grad_norm
+                if max_batches is not None:
+                    dry_run_grad_norms.append(gn_val)
                 # Log gradient norm cada 50 batches para diagnosticar falta de aprendizaje
                 if batch_idx % 50 == 0:
                     logger.info(
                         "Época %d | Batch %d | grad_norm: %.6f",
-                        epoch, batch_idx, grad_norm.item() if torch.is_tensor(grad_norm) else grad_norm,
+                        epoch, batch_idx, gn_val,
                     )
-                optimizer.step()
-                if scheduler is not None:
-                    scheduler.step()
+                if not (torch.isnan(grad_norm) or torch.isinf(grad_norm)):
+                    optimizer.step()
+                    if scheduler is not None:
+                        scheduler.step()
+                else:
+                    logger.warning(
+                        "grad_norm NaN/Inf en batch %d. Saltando optimizer step.",
+                        batch_idx,
+                    )
                 optimizer.zero_grad(set_to_none=True)
 
                 # Dry-run: snapshot post-step
                 if max_batches is not None and batch_idx < grad_accum and torch.cuda.is_available():
                     log_gpu_memory(logger, prefix="Dry-run post-step     | ")
 
-            train_loss_sum += loss.item() * grad_accum
+            batch_loss = loss.item() * grad_accum
+            train_loss_sum += batch_loss
             n_batches += 1
+            if max_batches is not None:
+                dry_run_train_losses.append(batch_loss)
 
             if _TQDM_AVAILABLE:
                 elapsed_b = time.perf_counter() - batch_start
@@ -804,6 +857,8 @@ def _train_vlm_loop(
                     logger.warning(
                         "OSError durante validación: %s. Saltando batch.", exc,
                     )
+                    continue
+                if batch is None:
                     continue
                 input_ids      = batch["input_ids"].to(device)
                 attention_mask = batch["attention_mask"].to(device)
@@ -928,6 +983,40 @@ def _train_vlm_loop(
         if trainable_params < 1_000_000:
             status = "FALLO — parámetros entrenables insuficientes (%d < 1M)" % trainable_params
 
+        # Diagnóstico de gradientes
+        grad_norm_info = "N/A (sin optimizer steps)"
+        if dry_run_grad_norms:
+            avg_gn = sum(dry_run_grad_norms) / len(dry_run_grad_norms)
+            min_gn = min(dry_run_grad_norms)
+            max_gn = max(dry_run_grad_norms)
+            grad_norm_info = "avg=%.6f min=%.6f max=%.6f (%d steps)" % (
+                avg_gn, min_gn, max_gn, len(dry_run_grad_norms),
+            )
+            all_zero = all(gn == 0.0 for gn in dry_run_grad_norms)
+            any_nan_inf = any(not math.isfinite(gn) for gn in dry_run_grad_norms)
+            if all_zero:
+                status = "FALLO — gradientes no fluyen (grad_norm=0 en todos los steps)"
+            elif any_nan_inf:
+                status = "FALLO — grad_norm NaN/Inf detectado"
+
+        # Diagnóstico de NaN/Inf en entrenamiento
+        if dry_run_train_nan_count > 0:
+            status = "FALLO — %d batches de entrenamiento con loss NaN/Inf" % dry_run_train_nan_count
+
+        # Diagnóstico de tendencia de loss
+        loss_trend_info = "N/A"
+        if len(dry_run_train_losses) >= 3:
+            first_loss = dry_run_train_losses[0]
+            last_loss = dry_run_train_losses[-1]
+            if last_loss < first_loss * 0.99:
+                loss_trend_info = "%.4f -> %.4f (descendiendo)" % (first_loss, last_loss)
+            elif last_loss > first_loss * 1.01:
+                loss_trend_info = "%.4f -> %.4f (ADVERTENCIA: aumentando)" % (first_loss, last_loss)
+            else:
+                loss_trend_info = "%.4f -> %.4f (estancado)" % (first_loss, last_loss)
+                if "FALLO" not in status:
+                    status = "ADVERTENCIA — loss no desciende tras %d batches" % len(dry_run_train_losses)
+
         logger.info(
             "\n=== RESUMEN DRY-RUN ===\n"
             "  GPU                : %s (%.1f GB)\n"
@@ -941,6 +1030,9 @@ def _train_vlm_loop(
             "  Est. tiempo total  : %s (%d épocas)\n"
             "  Train loss (parcial): %.4f\n"
             "  Val loss (parcial)  : %.4f\n"
+            "  Grad norms         : %s\n"
+            "  Train NaN/Inf      : %d batches\n"
+            "  Loss trend         : %s\n"
             "  Estado             : %s",
             gpu_info.get("name", "?"), gpu_info.get("memory_total_gb", 0),
             dtype,
@@ -953,6 +1045,9 @@ def _train_vlm_loop(
             format_duration(est_total_secs), configured_epochs,
             history["train_loss"][-1] if history["train_loss"] else float("nan"),
             history["val_loss"][-1] if history["val_loss"] else float("nan"),
+            grad_norm_info,
+            dry_run_train_nan_count,
+            loss_trend_info,
             status,
         )
 
@@ -1012,6 +1107,7 @@ def run_stage1(
     logger.info("Iniciando Stage 1 — modelo: %s", model_type)
 
     _freeze_for_stage1(model, model_type)
+    _ensure_gradient_flow(model, model_type)
 
     # Activar gradient checkpointing proactivamente si la VRAM libre no es
     # suficiente para el batch size configurado. Heurística: necesitamos al menos
@@ -1057,6 +1153,7 @@ def run_stage1(
         lr=lr,
         weight_decay=0.0,
         foreach=False,
+        eps=1e-7,
     )
 
     epochs = cfg.get("epochs", 1)
@@ -1103,6 +1200,7 @@ def run_stage2(
     logger.info("Iniciando Stage 2 — modelo: %s", model_type)
 
     _freeze_vision_encoder(model, model_type)
+    _ensure_gradient_flow(model, model_type)
 
     if _is_quantized(model.model):
         from peft import prepare_model_for_kbit_training
@@ -1154,6 +1252,7 @@ def run_stage2(
     optimizer = torch.optim.AdamW(
         [{"params": params, "lr": lr} for params in param_groups.values()],
         weight_decay=0.01,
+        eps=1e-7,
     )
 
     callbacks = [

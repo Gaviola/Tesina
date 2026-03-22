@@ -8,7 +8,7 @@
 #SBATCH --ntasks=8
 #SBATCH --time=48:00:00
 #SBATCH --mail-type=ALL
-#SBATCH --mail-user=EMAIL
+#SBATCH --mail-user=facundo.gaviola@gmail.com
 
 . /etc/profile
 source activate dermvlm

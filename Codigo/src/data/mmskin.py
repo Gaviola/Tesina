@@ -105,13 +105,19 @@ class MMSkinDataset(BaseDataset):
                 continue
 
             cap_data = captions_by_image.get(img_name, {})
-            captions = cap_data.get("captions", [])
+            captions = [c for c in cap_data.get("captions", []) if c.strip()]
+
+            caption_text = captions[0] if captions else ""
+            # Saltar muestras sin caption en modo caption/both — evita loss NaN
+            # (CrossEntropyLoss con todos los labels=-100 divide por 0)
+            if self.mode in ("caption", "both") and not caption_text.strip():
+                continue
 
             self.samples.append({
                 "image_path": str(img_path),
                 "label": -1,
                 "image_id": img_name,
-                "caption": captions[0] if captions else "",
+                "caption": caption_text,
                 "all_captions": captions,
                 "qa_pairs": vqa_by_image.get(img_name, []),
                 "modality": cap_data.get("modality", ""),

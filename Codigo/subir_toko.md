@@ -37,7 +37,7 @@ datos, forward/backward, VRAM y tiempos estimados.
 
 ```
 # Stage 1
-python scripts/train_vlm_stage1.py --model mini_vlm --dry-run
+python scripts/train_vlm_stage1.py --model mini_vlm --dry-run --dry-run-batches 50
 python scripts/train_vlm_stage1.py --model llava_med --batch_size 4 --dry-run
 
 # Stage 2 (si hay checkpoint de Stage 1)
@@ -57,7 +57,7 @@ python scripts/toko_submit.py mini    # solo mini_vlm  (~8GB,  8-16h)
 python scripts/toko_submit.py llava   # solo llava_med (~10GB QLoRA, 24-48h)
 ```
 
-encolados: 93288 (mini), 93289 (llava)
+encolados: 93312 (mini), 93313 (llava)
 
 ## 3. Monitorear
 

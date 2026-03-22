@@ -86,8 +86,9 @@ class LLaVAMed(VLMBase):
         if self.quantize:
             kwargs["quantization_config"] = BitsAndBytesConfig(
                 load_in_4bit=True,
-                bnb_4bit_compute_dtype=torch.bfloat16,
+                bnb_4bit_compute_dtype=dtype,
                 bnb_4bit_quant_type="nf4",
+                bnb_4bit_use_double_quant=True,
                 # Excluir el proyector y vision encoder de la cuantización:
                 # - Proyector: sus parámetros deben ser entrenables en float (Stage 1).
                 # - Vision tower: CLIP ViT-L/14 cuantizado produce embeddings

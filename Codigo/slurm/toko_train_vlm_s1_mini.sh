@@ -21,6 +21,10 @@
 # Usar ruta absoluta al entorno conda (source activate no funciona en SLURM)
 PYTHON="${HOME}/miniconda3/envs/dermvlm/bin/python"
 
+# bitsandbytes necesita libcusparse de CUDA — apuntar a las libs del entorno conda
+# (PyTorch cu118 incluye estas libs en el prefijo de conda)
+export LD_LIBRARY_PATH="${HOME}/miniconda3/envs/dermvlm/lib:${LD_LIBRARY_PATH}"
+
 cd /home/$USER/scratch/dermvlm
 
 # Usar almacenamiento local para archivos temporales; fallback a scratch si /tmp está lleno
