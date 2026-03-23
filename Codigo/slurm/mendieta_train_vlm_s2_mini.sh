@@ -51,9 +51,11 @@ echo "Python: $(${PYTHON} --version)"
 find ${HOME}/miniconda3/envs/dermvlm -name "__pycache__" -path "*/scipy/*" -exec rm -rf {} + 2>/dev/null
 echo ""
 
+export WANDB_MODE=offline
+
 ${PYTHON} scripts/train_vlm_stage2.py \
     --model mini_vlm \
-    --checkpoint outputs/checkpoints/mini_vlm_stage1/best_model.pt \
+    --checkpoint outputs/checkpoints/stage1_mini_vlm/best_model.pt \
     --epochs 3 \
     --lr 2e-5 \
     --batch_size 4 \

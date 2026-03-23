@@ -8,7 +8,7 @@
 #SBATCH --cpus-per-task=10
 #SBATCH --mem=0
 #SBATCH --gres=gpu:1
-#SBATCH --time=12:00:00
+#SBATCH --time=4:00:00
 #SBATCH --signal=B:SIGTERM@595
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=facundo.gaviola@gmail.com
@@ -61,10 +61,12 @@ echo ""
 
 ${PYTHON} scripts/train_vlm_stage1.py \
     --model mini_vlm \
-    --epochs 1 \
-    --lr 2e-3 \
-    --batch_size 4 \
-    --num_workers 0 \
+    --epochs 5 \
+    --lr 1e-3 \
+    --batch_size 8 \
+    --grad_accum 1 \
+    --early_stopping_patience 2 \
+    --num_workers 4 \
     --seed 42
 
 echo ""

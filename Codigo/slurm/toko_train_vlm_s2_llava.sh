@@ -52,7 +52,7 @@ echo ""
 
 ${PYTHON} scripts/train_vlm_stage2.py \
     --model llava_med \
-    --checkpoint outputs/checkpoints/llava_med_stage1/best_model.pt \
+    --checkpoint outputs/checkpoints/stage1_llava_med/best_model.pt \
     --epochs 3 \
     --lr 2e-5 \
     --batch_size 4 \

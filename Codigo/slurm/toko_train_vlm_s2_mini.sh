@@ -52,7 +52,7 @@ echo ""
 
 ${PYTHON} scripts/train_vlm_stage2.py \
     --model mini_vlm \
-    --checkpoint outputs/checkpoints/mini_vlm_stage1/best_model.pt \
+    --checkpoint outputs/checkpoints/stage1_mini_vlm/best_model.pt \
     --epochs 3 \
     --lr 2e-5 \
     --batch_size 4 \

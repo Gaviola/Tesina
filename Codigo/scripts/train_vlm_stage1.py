@@ -123,6 +123,15 @@ def main():
              "Usar 4 para Stage 2 o evaluación con resolución completa.",
     )
     parser.add_argument(
+        "--grad_accum", type=int, default=1,
+        help="Gradient accumulation steps explícito (default: 1). "
+             "Se multiplica con el auto-ajuste por VRAM si batch_size excede la estimación segura.",
+    )
+    parser.add_argument(
+        "--early_stopping_patience", type=int, default=0,
+        help="Épocas sin mejora en val_loss antes de detener (0 = desactivado).",
+    )
+    parser.add_argument(
         "--dry-run", action="store_true", dest="dry_run",
         help="Verificación local: carga modelo, procesa N batches, reporta VRAM y tiempos. "
              "No entrena el modelo completo.",
@@ -151,7 +160,10 @@ def main():
         wandb_config=vars(args),
     )
     logger.info("=== Stage 1: Alineamiento visual-textual ===")
-    logger.info("Modelo: %s | Épocas: %d | LR: %.0e", args.model, args.epochs, args.lr)
+    logger.info(
+        "Modelo: %s | Épocas: %d | LR: %.0e | Grad accum: %d | ES patience: %d",
+        args.model, args.epochs, args.lr, args.grad_accum, args.early_stopping_patience,
+    )
 
     # --- VRAM check (usar VRAM libre, no total, para detectar GPU compartida) ---
     check_vram(_VRAM_REQUIRED[args.model], args.model)
@@ -208,10 +220,10 @@ def main():
             args.batch_size, suggested_bs, free_vram, suggested_bs,
         )
         effective_batch_size = suggested_bs
-        effective_grad_accum = max(1, args.batch_size // suggested_bs)
+        effective_grad_accum = max(1, args.batch_size // suggested_bs) * args.grad_accum
     else:
         effective_batch_size = args.batch_size
-        effective_grad_accum = 1
+        effective_grad_accum = args.grad_accum
 
     # --- Dataset MM-Skin (caption mode) ---
     data_dir = Path(args.data_dir)
@@ -256,6 +268,7 @@ def main():
         "batch_size": effective_batch_size,
         "gradient_accumulation_steps": effective_grad_accum,
         "checkpoint_dir": checkpoint_dir,
+        "early_stopping_patience": args.early_stopping_patience,
     }
 
     # --- Entrenamiento con retry por OOM ---

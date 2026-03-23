@@ -1162,6 +1162,10 @@ def run_stage1(
     scheduler = CosineAnnealingLR(optimizer, T_max=total_steps)
 
     callbacks = [CheckpointCallback(monitor="val_loss", mode="min")]
+    es_patience = cfg.get("early_stopping_patience", 0)
+    if es_patience > 0:
+        callbacks.insert(0, EarlyStopping(patience=es_patience, monitor="val_loss"))
+        logger.info("EarlyStopping activado con patience=%d", es_patience)
 
     dtype = get_training_dtype()
     metrics = _train_vlm_loop(
