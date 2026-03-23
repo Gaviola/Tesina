@@ -15,6 +15,10 @@ source activate dermvlm
 # Opción B: Singularity (si se necesita CUDA empaquetado)
 # singularity exec --nv /home/$USER/containers/dermvlm.sif \
 
+# Nodos de computo no tienen internet — usar modelos pre-descargados del cache
+export HF_HUB_OFFLINE=1
+export TRANSFORMERS_OFFLINE=1
+
 nvidia-smi
 
 # LLaVA-Med Stage 1: Alineamiento (solo MLP, ~14GB VRAM en A30 24GB)

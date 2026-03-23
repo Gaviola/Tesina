@@ -12,6 +12,10 @@
 . /etc/profile
 source activate dermvlm
 
+# Nodos de computo no tienen internet — usar modelos pre-descargados del cache
+export HF_HUB_OFFLINE=1
+export TRANSFORMERS_OFFLINE=1
+
 nvidia-smi
 
 # Evaluación Nivel 1: Métricas automáticas con referencia

@@ -41,7 +41,23 @@ python scripts/mendieta_sync_data.py --remote   # descargar directamente en Mend
 
 ---
 
-## 1.5 Verificar localmente antes de enviar (dry-run)
+## 1.5 Pre-descargar modelos de HuggingFace
+
+Los nodos de computo de Mendieta **no tienen acceso a internet**. Los modelos deben
+estar en el cache de HuggingFace antes de enviar jobs:
+```
+python scripts/mendieta_download_models.py              # descarga todos
+python scripts/mendieta_download_models.py --model mini  # solo Mini-VLM
+python scripts/mendieta_download_models.py --model llava # solo LLaVA-Med
+```
+
+Esto ejecuta `huggingface_hub.snapshot_download()` en el **nodo de login** (que si tiene
+internet) y guarda los modelos en `~/.cache/huggingface/hub/`. Los scripts SLURM ya
+configuran `HF_HUB_OFFLINE=1` para que los compute nodes los carguen desde cache.
+
+---
+
+## 1.6 Verificar localmente antes de enviar (dry-run)
 
 Antes de encolar jobs, validar que el pipeline funciona correctamente con un dry-run local.
 Esto ejecuta el codigo real pero limitado a pocos batches, verificando: carga del modelo,
@@ -76,7 +92,7 @@ python scripts/mendieta_submit.py classifier # DenseNet + ViT baselines
 
 ## 3. Monitorear
 
-mini_s1: 1145715, llava_s1: 1145716
+mini_s1: 1145717, llava_s1: 1145718
 
 ```
 python scripts/mendieta_monitor.py              # ver cola de jobs

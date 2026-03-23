@@ -23,6 +23,10 @@ module load cuda 2>/dev/null || true
 PYTHON="${HOME}/miniconda3/envs/dermvlm/bin/python"
 export LD_LIBRARY_PATH="${HOME}/miniconda3/envs/dermvlm/lib:${LD_LIBRARY_PATH}"
 
+# Nodos de computo no tienen internet — usar modelos pre-descargados del cache
+export HF_HUB_OFFLINE=1
+export TRANSFORMERS_OFFLINE=1
+
 cd /home/$USER/dermvlm
 
 export TMPDIR="/scratch/${SLURM_JOB_ID}"

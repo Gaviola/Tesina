@@ -27,6 +27,10 @@ PYTHON="${HOME}/miniconda3/envs/dermvlm/bin/python"
 # bitsandbytes necesita libcusparse de CUDA — apuntar a las libs del entorno conda
 export LD_LIBRARY_PATH="${HOME}/miniconda3/envs/dermvlm/lib:${LD_LIBRARY_PATH}"
 
+# Nodos de computo no tienen internet — usar modelos pre-descargados del cache
+export HF_HUB_OFFLINE=1
+export TRANSFORMERS_OFFLINE=1
+
 cd /home/$USER/dermvlm
 
 # Usar almacenamiento local para archivos temporales
