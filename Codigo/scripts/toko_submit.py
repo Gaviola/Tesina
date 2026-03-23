@@ -1,10 +1,15 @@
 """
-toko_submit.py — Envia jobs de stage1 VLM al cluster TOKO via sbatch.
+toko_submit.py — Envia jobs VLM al cluster TOKO via sbatch.
 
 Uso:
-  python scripts/toko_submit.py mini    # encola mini_vlm stage1  (~8GB  VRAM)
-  python scripts/toko_submit.py llava   # encola llava_med stage1 (~10GB QLoRA)
-  python scripts/toko_submit.py all     # encola ambos (default)
+  python scripts/toko_submit.py mini_s1      # Mini-VLM stage1  (~8GB)
+  python scripts/toko_submit.py llava_s1     # LLaVA-Med stage1 (~10GB QLoRA)
+  python scripts/toko_submit.py mini_s2      # Mini-VLM stage2  (~8GB)
+  python scripts/toko_submit.py llava_s2     # LLaVA-Med stage2 (~10GB QLoRA)
+  python scripts/toko_submit.py classifier   # DenseNet + ViT baselines
+  python scripts/toko_submit.py all          # todos los jobs (default)
+  python scripts/toko_submit.py all_s1       # solo stage1 (mini + llava)
+  python scripts/toko_submit.py all_s2       # solo stage2 (mini + llava)
 """
 import sys
 import argparse
@@ -14,8 +19,18 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from scripts.toko_config import TOKO_USER, TOKO_HOST, REMOTE_BASE, check_tools, ssh
 
 JOBS = {
-    "mini":  "slurm/toko_train_vlm_s1_mini.sh",
-    "llava": "slurm/toko_train_vlm_s1_llava.sh",
+    "mini_s1":    "slurm/toko_train_vlm_s1_mini.sh",
+    "llava_s1":   "slurm/toko_train_vlm_s1_llava.sh",
+    "mini_s2":    "slurm/toko_train_vlm_s2_mini.sh",
+    "llava_s2":   "slurm/toko_train_vlm_s2_llava.sh",
+    "classifier": "slurm/toko_train_classifier.sh",
+}
+
+# Grupos de jobs para envios multiples
+GROUPS = {
+    "all":    list(JOBS.keys()),
+    "all_s1": ["mini_s1", "llava_s1"],
+    "all_s2": ["mini_s2", "llava_s2"],
 }
 
 
@@ -42,11 +57,12 @@ def submit_job(name: str, script: str) -> str | None:
 
 
 def main():
+    valid_choices = list(JOBS.keys()) + list(GROUPS.keys())
     parser = argparse.ArgumentParser(description="Envia jobs a TOKO")
     parser.add_argument(
         "target", nargs="?", default="all",
-        choices=["mini", "llava", "all"],
-        help="Job a encolar (default: all)"
+        choices=valid_choices,
+        help="Job o grupo a encolar (default: all)"
     )
     args = parser.parse_args()
 
@@ -55,7 +71,11 @@ def main():
     print(f"=== Enviando jobs a TOKO (target: {args.target}) ===")
     print()
 
-    targets = list(JOBS.items()) if args.target == "all" else [(args.target, JOBS[args.target])]
+    # Resolver grupo o job individual
+    if args.target in GROUPS:
+        targets = [(name, JOBS[name]) for name in GROUPS[args.target]]
+    else:
+        targets = [(args.target, JOBS[args.target])]
 
     jobids = []
     for name, script in targets:

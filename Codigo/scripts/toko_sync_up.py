@@ -27,16 +27,17 @@ from scripts.toko_config import (
 INCLUDE_DIRS  = ["src", "scripts", "configs", "slurm", "notebooks"]
 INCLUDE_FILES = ["requirements.txt", "setup_env.py"]
 
-# Nombres de directorios/extensiones a excluir siempre
-EXCLUDE_DIRS = {"__pycache__", ".git", ".ipynb_checkpoints", "data",
-                "outputs", "wandb", ".egg-info"}
+# Directorios a excluir solo en el nivel raiz (no dentro de src/)
+EXCLUDE_ROOT_DIRS = {"data", "outputs"}
+# Directorios a excluir a cualquier nivel de profundidad
+EXCLUDE_ANY_DIRS = {"__pycache__", ".git", ".ipynb_checkpoints", "wandb"}
 EXCLUDE_EXTS = {".pyc", ".pyo", ".env"}
 
 # Patrones a excluir para rsync
 RSYNC_EXCLUDES = [
-    "--exclude=data/",
-    "--exclude=outputs/",
-    "--exclude=__pycache__/",
+    "--exclude=/data/",        # solo raiz (no src/data/)
+    "--exclude=/outputs/",     # solo raiz
+    "--exclude=__pycache__/",  # a cualquier nivel
     "--exclude=*.pyc",
     "--exclude=.git/",
     "--exclude=*.egg-info/",
@@ -92,7 +93,11 @@ TEXT_EXTS = {".sh", ".py", ".yaml", ".yml", ".txt", ".md", ".cfg", ".ini", ".jso
 def _exclude(tarinfo: tarfile.TarInfo) -> tarfile.TarInfo | None:
     """Filtro para tarfile: excluye __pycache__, .pyc, data/, outputs/, etc."""
     parts = Path(tarinfo.name).parts
-    if any(p in EXCLUDE_DIRS or p.endswith(".egg-info") for p in parts):
+    # Excluir data/ y outputs/ solo en el nivel raiz (no src/data/)
+    if parts[0] in EXCLUDE_ROOT_DIRS:
+        return None
+    # Excluir __pycache__, .git, etc. a cualquier nivel
+    if any(p in EXCLUDE_ANY_DIRS or p.endswith(".egg-info") for p in parts):
         return None
     if Path(tarinfo.name).suffix in EXCLUDE_EXTS:
         return None

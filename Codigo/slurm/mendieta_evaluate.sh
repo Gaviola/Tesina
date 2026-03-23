@@ -2,7 +2,7 @@
 #SBATCH --job-name=dermvlm_eval
 #SBATCH --output=/home/%u/dermvlm/logs/%j.out
 #SBATCH --error=/home/%u/dermvlm/logs/%j.err
-#SBATCH --partition=gpu
+#SBATCH --partition=multi
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
