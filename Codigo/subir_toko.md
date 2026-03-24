@@ -47,6 +47,18 @@ python scripts/train_vlm_stage2.py --model llava_med --checkpoint outputs/checkp
 Si el dry-run falla, corregir el error antes de enviar al cluster.
 Si pasa exitosamente, muestra un resumen con VRAM pico, tiempos estimados y estado.
 
+### Dry-run para clasificacion VLM
+
+Verificar que la clasificacion zero-shot funciona correctamente antes de enviar al cluster.
+Esto detecta problemas como 100% UNKNOWN (respuestas no parseables):
+
+```
+python scripts/train_vlm_classify.py --model mini_vlm --dry-run
+python scripts/train_vlm_classify.py --model llava_med --dry-run --dry-run-batches 20
+```
+
+El resumen muestra las primeras respuestas parseadas, % UNKNOWN, VRAM y velocidad estimada.
+
 ---
 
 ## 2. Enviar jobs
@@ -58,6 +70,20 @@ python scripts/toko_submit.py llava   # solo llava_med (~10GB QLoRA, 24-48h)
 ```
 
 encolados: 93312 (mini), 93313 (llava)
+
+### 2b. Generacion de reportes y clasificacion VLM
+
+```
+python scripts/toko_submit.py gen_llava        # reportes LLaVA-Med
+python scripts/toko_submit.py gen_mini         # reportes Mini-VLM
+python scripts/toko_submit.py all_gen          # ambos modelos
+python scripts/toko_submit.py classify_llava   # clasificacion zero-shot LLaVA-Med
+python scripts/toko_submit.py classify_mini    # clasificacion zero-shot Mini-VLM
+python scripts/toko_submit.py all_classify     # ambos modelos
+```
+
+Los jobs de generacion crean reportes sobre MM-SkinQA (Nivel 1, con referencias) y HAM10000
+(Nivel 2, NER). Los reportes se guardan en `outputs/generated_reports/{modelo}/{dataset}/`.
 
 ## 3. Monitorear
 
@@ -75,7 +101,8 @@ python scripts/toko_monitor.py cancel <ID>  # cancelar un job
 ```
 python scripts/toko_sync_down.py              # metricas JSON (rapido, default)
 python scripts/toko_sync_down.py --checkpoints  # modelos .pt (varios GB)
-python scripts/toko_sync_down.py --all          # todo
+python scripts/toko_sync_down.py --reports      # reportes generados
+python scripts/toko_sync_down.py --all          # todo (metricas + checkpoints + reportes + logs)
 ```
 
 Los resultados se guardan en `Codigo/outputs/`.

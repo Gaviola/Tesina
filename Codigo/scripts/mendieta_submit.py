@@ -4,14 +4,20 @@ mendieta_submit.py — Envia jobs al cluster Mendieta via sbatch.
 Sincroniza el codigo automaticamente antes de enviar (usar --no-sync para saltar).
 
 Uso:
-  python scripts/mendieta_submit.py mini_s1      # Mini-VLM stage1  (~8GB)
-  python scripts/mendieta_submit.py llava_s1     # LLaVA-Med stage1 (~14GB LoRA)
-  python scripts/mendieta_submit.py mini_s2      # Mini-VLM stage2  (~8GB)
-  python scripts/mendieta_submit.py llava_s2     # LLaVA-Med stage2 (~14GB LoRA)
-  python scripts/mendieta_submit.py classifier   # DenseNet + ViT baselines
-  python scripts/mendieta_submit.py all          # todos los jobs (default)
-  python scripts/mendieta_submit.py all_s1       # solo stage1 (mini + llava)
-  python scripts/mendieta_submit.py all_s2       # solo stage2 (mini + llava)
+  python scripts/mendieta_submit.py mini_s1        # Mini-VLM stage1  (~8GB)
+  python scripts/mendieta_submit.py llava_s1       # LLaVA-Med stage1 (~14GB LoRA)
+  python scripts/mendieta_submit.py mini_s2        # Mini-VLM stage2  (~8GB)
+  python scripts/mendieta_submit.py llava_s2       # LLaVA-Med stage2 (~14GB LoRA)
+  python scripts/mendieta_submit.py classifier     # DenseNet + ViT baselines
+  python scripts/mendieta_submit.py gen_llava      # Generacion reportes LLaVA-Med (~12h)
+  python scripts/mendieta_submit.py gen_mini       # Generacion reportes Mini-VLM (~8h)
+  python scripts/mendieta_submit.py classify_llava # Clasificacion zero-shot LLaVA-Med (~4h)
+  python scripts/mendieta_submit.py classify_mini  # Clasificacion zero-shot Mini-VLM (~4h)
+  python scripts/mendieta_submit.py all            # todos los jobs de training (default)
+  python scripts/mendieta_submit.py all_s1         # solo stage1 (mini + llava)
+  python scripts/mendieta_submit.py all_s2         # solo stage2 (mini + llava)
+  python scripts/mendieta_submit.py all_gen        # generacion reportes (ambos modelos)
+  python scripts/mendieta_submit.py all_classify   # clasificacion VLM (ambos modelos)
   python scripts/mendieta_submit.py all --no-sync  # sin sincronizar
 """
 import sys
@@ -23,18 +29,25 @@ from scripts.mendieta_config import MENDIETA_USER, MENDIETA_HOST, REMOTE_BASE, c
 from scripts.mendieta_sync_up import sync_with_rsync, sync_with_tar, has_rsync
 
 JOBS = {
-    "mini_s1":    "slurm/mendieta_train_vlm_s1_mini.sh",
-    "llava_s1":   "slurm/mendieta_train_vlm_s1_llava.sh",
-    "mini_s2":    "slurm/mendieta_train_vlm_s2_mini.sh",
-    "llava_s2":   "slurm/mendieta_train_vlm_s2.sh",
-    "classifier": "slurm/mendieta_train_classifier.sh",
+    "mini_s1":        "slurm/mendieta_train_vlm_s1_mini.sh",
+    "llava_s1":       "slurm/mendieta_train_vlm_s1_llava.sh",
+    "mini_s2":        "slurm/mendieta_train_vlm_s2_mini.sh",
+    "llava_s2":       "slurm/mendieta_train_vlm_s2.sh",
+    "classifier":     "slurm/mendieta_train_classifier.sh",
+    "gen_llava":      "slurm/mendieta_generate_reports_llava.sh",
+    "gen_mini":       "slurm/mendieta_generate_reports_mini.sh",
+    "classify_llava": "slurm/mendieta_vlm_classify_llava.sh",
+    "classify_mini":  "slurm/mendieta_vlm_classify_mini.sh",
 }
 
 # Grupos de jobs para envios multiples
+_TRAINING_JOBS = ["mini_s1", "llava_s1", "mini_s2", "llava_s2", "classifier"]
 GROUPS = {
-    "all":    list(JOBS.keys()),
-    "all_s1": ["mini_s1", "llava_s1"],
-    "all_s2": ["mini_s2", "llava_s2"],
+    "all":          _TRAINING_JOBS,
+    "all_s1":       ["mini_s1", "llava_s1"],
+    "all_s2":       ["mini_s2", "llava_s2"],
+    "all_gen":      ["gen_llava", "gen_mini"],
+    "all_classify": ["classify_llava", "classify_mini"],
 }
 
 

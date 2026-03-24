@@ -69,7 +69,14 @@ def main():
     parser.add_argument("--wandb", action="store_true")
     parser.add_argument("--num_workers", type=int, default=0)
     parser.add_argument("--quantize", action="store_true", help="Forzar cuantización 4-bit del LLM")
+    parser.add_argument("--dry-run", action="store_true", dest="dry_run",
+                        help="Verificación: procesa N batches, reporta VRAM, velocidad y respuestas parseadas.")
+    parser.add_argument("--dry-run-batches", type=int, default=10, dest="dry_run_batches",
+                        help="Número de batches a procesar en modo dry-run (default: 10).")
     args = parser.parse_args()
+
+    if args.dry_run:
+        args.wandb = False
 
     script_start = time.perf_counter()
 
@@ -164,6 +171,8 @@ def main():
     all_responses = []
     unknown_count = 0
 
+    if args.dry_run:
+        logger.info("=== MODO DRY-RUN: procesando %d batches ===", args.dry_run_batches)
     logger.info("Ejecutando inferencia zero-shot en %d batches...", len(test_loader))
     inference_start = time.perf_counter()
     with torch.no_grad():
@@ -207,8 +216,74 @@ def main():
                     images_per_sec, format_duration(eta),
                 )
 
+            # Dry-run: cortar después de N batches
+            if args.dry_run and (batch_idx + 1) >= args.dry_run_batches:
+                logger.info("Dry-run: %d batches procesados, finalizando.", args.dry_run_batches)
+                break
+
     inference_time = time.perf_counter() - inference_start
     logger.info("Inferencia completada en %s", format_duration(inference_time))
+
+    # --- Resumen dry-run ---
+    if args.dry_run:
+        images_done = len(all_y_true)
+        images_per_sec = images_done / max(inference_time, 0.001)
+
+        # VRAM
+        if torch.cuda.is_available():
+            peak_mb = torch.cuda.max_memory_allocated() / (1024**2)
+            total_vram_mb = torch.cuda.get_device_properties(0).total_memory / (1024**2)
+            headroom_mb = total_vram_mb - peak_mb
+        else:
+            peak_mb = total_vram_mb = headroom_mb = 0
+
+        # Primeras respuestas parseadas
+        sample_n = min(5, len(all_responses))
+        sample_lines = []
+        for i in range(sample_n):
+            parsed = parse_vlm_response(all_responses[i])
+            true_label = HAM10000_CLASSES[all_y_true[i]] if all_y_true[i] < len(HAM10000_CLASSES) else "?"
+            sample_lines.append(
+                f"    [{i}] true={true_label} parsed={parsed} raw={all_responses[i][:80]!r}"
+            )
+
+        # Extrapolación
+        total_batches = len(test_loader)
+        est_total_secs = inference_time / max(args.dry_run_batches, 1) * total_batches
+
+        # Estado
+        unknown_pct = 100 * unknown_count / max(images_done, 1)
+        status = "OK"
+        warnings = []
+        if unknown_pct > 50:
+            warnings.append(f">50% respuestas UNKNOWN ({unknown_pct:.0f}%) — revisar prompt/parsing")
+        if 0 < headroom_mb < 500:
+            warnings.append(f"headroom VRAM bajo ({headroom_mb:.0f} MB)")
+        if warnings:
+            status = "ADVERTENCIA — " + "; ".join(warnings)
+
+        logger.info(
+            "\n=== RESUMEN DRY-RUN (clasificación %s) ===\n"
+            "  VRAM pico          : %.0f MB / %.0f MB\n"
+            "  VRAM headroom      : %.0f MB\n"
+            "  Imágenes procesadas: %d / %d\n"
+            "  Velocidad          : %.2f img/s\n"
+            "  UNKNOWN            : %d (%.1f%%)\n"
+            "  Est. tiempo total  : %s (%d batches)\n"
+            "  Primeras respuestas:\n%s\n"
+            "  Estado             : %s",
+            args.model,
+            peak_mb, total_vram_mb,
+            headroom_mb,
+            images_done, len(test_dataset),
+            images_per_sec,
+            unknown_count, unknown_pct,
+            format_duration(est_total_secs), total_batches,
+            "\n".join(sample_lines),
+            status,
+        )
+        logger.info("Ejecución total: %s", format_duration(time.perf_counter() - script_start))
+        sys.exit(0)
 
     # 7. Resultados
     total = len(all_y_true)

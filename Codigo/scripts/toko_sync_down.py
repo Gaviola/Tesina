@@ -5,7 +5,8 @@ Uso:
   python scripts/toko_sync_down.py                   # solo metricas JSON (default)
   python scripts/toko_sync_down.py --results         # metricas + logs SLURM
   python scripts/toko_sync_down.py --checkpoints     # solo modelos .pt (varios GB)
-  python scripts/toko_sync_down.py --all             # todo (outputs + logs)
+  python scripts/toko_sync_down.py --reports         # reportes generados (generated_reports/)
+  python scripts/toko_sync_down.py --all             # todo (outputs + logs + reportes)
 
 ADVERTENCIA: --checkpoints puede descargar varios GB por modelo.
 Usar --results primero para verificar que el entrenamiento termino correctamente.
@@ -62,12 +63,14 @@ def main():
                         help="Descargar metricas JSON y logs SLURM (default)")
     parser.add_argument("--checkpoints", action="store_true",
                         help="Descargar checkpoints .pt (varios GB)")
+    parser.add_argument("--reports", action="store_true",
+                        help="Descargar reportes generados (outputs/generated_reports)")
     parser.add_argument("--all", action="store_true",
-                        help="Descargar todo (outputs + logs)")
+                        help="Descargar todo (outputs + logs + reportes)")
     args = parser.parse_args()
 
     # Default: solo resultados
-    if not any([args.results, args.checkpoints, args.all]):
+    if not any([args.results, args.checkpoints, args.reports, args.all]):
         args.results = True
 
     check_tools()
@@ -93,6 +96,11 @@ def main():
         print("ADVERTENCIA: los checkpoints pueden ser varios GB. Esto puede tardar.")
         rc = download(f"{REMOTE_OUTPUTS}/checkpoints",
                       LOCAL_OUTPUTS / "checkpoints", "checkpoints/")
+        errors += rc
+
+    if args.reports or args.all:
+        rc = download(f"{REMOTE_OUTPUTS}/generated_reports",
+                      LOCAL_OUTPUTS / "generated_reports", "generated_reports/")
         errors += rc
 
     if errors:

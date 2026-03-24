@@ -2,14 +2,20 @@
 toko_submit.py — Envia jobs VLM al cluster TOKO via sbatch.
 
 Uso:
-  python scripts/toko_submit.py mini_s1      # Mini-VLM stage1  (~8GB)
-  python scripts/toko_submit.py llava_s1     # LLaVA-Med stage1 (~10GB QLoRA)
-  python scripts/toko_submit.py mini_s2      # Mini-VLM stage2  (~8GB)
-  python scripts/toko_submit.py llava_s2     # LLaVA-Med stage2 (~10GB QLoRA)
-  python scripts/toko_submit.py classifier   # DenseNet + ViT baselines
-  python scripts/toko_submit.py all          # todos los jobs (default)
-  python scripts/toko_submit.py all_s1       # solo stage1 (mini + llava)
-  python scripts/toko_submit.py all_s2       # solo stage2 (mini + llava)
+  python scripts/toko_submit.py mini_s1        # Mini-VLM stage1  (~8GB)
+  python scripts/toko_submit.py llava_s1       # LLaVA-Med stage1 (~10GB QLoRA)
+  python scripts/toko_submit.py mini_s2        # Mini-VLM stage2  (~8GB)
+  python scripts/toko_submit.py llava_s2       # LLaVA-Med stage2 (~10GB QLoRA)
+  python scripts/toko_submit.py classifier     # DenseNet + ViT baselines
+  python scripts/toko_submit.py gen_llava      # Generacion reportes LLaVA-Med
+  python scripts/toko_submit.py gen_mini       # Generacion reportes Mini-VLM
+  python scripts/toko_submit.py classify_llava # Clasificacion zero-shot LLaVA-Med
+  python scripts/toko_submit.py classify_mini  # Clasificacion zero-shot Mini-VLM
+  python scripts/toko_submit.py all            # todos los jobs de training (default)
+  python scripts/toko_submit.py all_s1         # solo stage1 (mini + llava)
+  python scripts/toko_submit.py all_s2         # solo stage2 (mini + llava)
+  python scripts/toko_submit.py all_gen        # generacion reportes (ambos modelos)
+  python scripts/toko_submit.py all_classify   # clasificacion VLM (ambos modelos)
 """
 import sys
 import argparse
@@ -19,18 +25,25 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from scripts.toko_config import TOKO_USER, TOKO_HOST, REMOTE_BASE, check_tools, ssh
 
 JOBS = {
-    "mini_s1":    "slurm/toko_train_vlm_s1_mini.sh",
-    "llava_s1":   "slurm/toko_train_vlm_s1_llava.sh",
-    "mini_s2":    "slurm/toko_train_vlm_s2_mini.sh",
-    "llava_s2":   "slurm/toko_train_vlm_s2_llava.sh",
-    "classifier": "slurm/toko_train_classifier.sh",
+    "mini_s1":        "slurm/toko_train_vlm_s1_mini.sh",
+    "llava_s1":       "slurm/toko_train_vlm_s1_llava.sh",
+    "mini_s2":        "slurm/toko_train_vlm_s2_mini.sh",
+    "llava_s2":       "slurm/toko_train_vlm_s2_llava.sh",
+    "classifier":     "slurm/toko_train_classifier.sh",
+    "gen_llava":      "slurm/toko_generate_reports_llava.sh",
+    "gen_mini":       "slurm/toko_generate_reports_mini.sh",
+    "classify_llava": "slurm/toko_vlm_classify_llava.sh",
+    "classify_mini":  "slurm/toko_vlm_classify_mini.sh",
 }
 
 # Grupos de jobs para envios multiples
+_TRAINING_JOBS = ["mini_s1", "llava_s1", "mini_s2", "llava_s2", "classifier"]
 GROUPS = {
-    "all":    list(JOBS.keys()),
-    "all_s1": ["mini_s1", "llava_s1"],
-    "all_s2": ["mini_s2", "llava_s2"],
+    "all":          _TRAINING_JOBS,
+    "all_s1":       ["mini_s1", "llava_s1"],
+    "all_s2":       ["mini_s2", "llava_s2"],
+    "all_gen":      ["gen_llava", "gen_mini"],
+    "all_classify": ["classify_llava", "classify_mini"],
 }
 
 

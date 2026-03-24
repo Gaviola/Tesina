@@ -75,6 +75,18 @@ python scripts/train_vlm_stage2.py --model llava_med --checkpoint outputs/checkp
 Si el dry-run falla, corregir el error antes de enviar al cluster.
 Si pasa exitosamente, muestra un resumen con VRAM pico, tiempos estimados y estado.
 
+### Dry-run para clasificacion VLM
+
+Verificar que la clasificacion zero-shot funciona correctamente antes de enviar al cluster.
+Esto detecta problemas como 100% UNKNOWN (respuestas no parseables):
+
+```
+python scripts/train_vlm_classify.py --model mini_vlm --dry-run
+python scripts/train_vlm_classify.py --model llava_med --dry-run --dry-run-batches 20
+```
+
+El resumen muestra las primeras respuestas parseadas, % UNKNOWN, VRAM y velocidad estimada.
+
 ---
 
 ## 2. Enviar jobs
@@ -82,7 +94,7 @@ Si pasa exitosamente, muestra un resumen con VRAM pico, tiempos estimados y esta
 ```
 python scripts/mendieta_submit.py all        # todos los jobs
 python scripts/mendieta_submit.py all_s1     # solo stage1 (mini + llava)
-python scripts/mendieta_submit.py all_s2     # solo stage2 (mini + llava)
+python scripts/mendieta_submit.py all_s2     # solo stage2 (mini + llava)  (Sincronizar parametros depues con `wandb sync <run_dir>`)
 python scripts/mendieta_submit.py mini_s1    # solo mini_vlm stage1  (~8GB)
 python scripts/mendieta_submit.py llava_s1   # solo llava_med stage1 (~14GB LoRA)
 python scripts/mendieta_submit.py mini_s2    # solo mini_vlm stage2  (~8GB)
@@ -90,9 +102,24 @@ python scripts/mendieta_submit.py llava_s2   # solo llava_med stage2 (~14GB LoRA
 python scripts/mendieta_submit.py classifier # DenseNet + ViT baselines
 ```
 
+### 2b. Generacion de reportes y clasificacion VLM
+
+```
+python scripts/mendieta_submit.py gen_llava        # reportes LLaVA-Med (~12h)
+python scripts/mendieta_submit.py gen_mini         # reportes Mini-VLM (~8h)
+python scripts/mendieta_submit.py all_gen          # ambos modelos
+python scripts/mendieta_submit.py classify_llava   # clasificacion zero-shot LLaVA-Med (~4h)
+python scripts/mendieta_submit.py classify_mini    # clasificacion zero-shot Mini-VLM (~4h)
+python scripts/mendieta_submit.py all_classify     # ambos modelos
+```
+
+Los jobs de generacion crean reportes sobre MM-SkinQA (Nivel 1, con referencias) y HAM10000
+(Nivel 2, NER). Los reportes se guardan en `outputs/generated_reports/{modelo}/{dataset}/`.
+
 ## 3. Monitorear
 
-mini_s1: 1145717, llava_s1: 1145718
+mini_s1: 1145719, llava_s1: 1145720
+mini_s2: 1145740, llava_s2: 1145741
 
 ```
 python scripts/mendieta_monitor.py              # ver cola de jobs
@@ -109,7 +136,8 @@ python scripts/mendieta_monitor.py seff <ID>    # eficiencia post-job (CPU/mem)
 ```
 python scripts/mendieta_sync_down.py              # metricas JSON (rapido, default)
 python scripts/mendieta_sync_down.py --checkpoints  # modelos .pt (varios GB)
-python scripts/mendieta_sync_down.py --all          # todo
+python scripts/mendieta_sync_down.py --reports      # reportes generados
+python scripts/mendieta_sync_down.py --all          # todo (metricas + checkpoints + reportes + logs)
 ```
 
 Los resultados se guardan en `Codigo/outputs/`.
