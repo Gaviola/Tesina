@@ -179,25 +179,30 @@ class LLaVAMed(VLMBase):
             Lista de textos generados (sin el prompt de entrada).
         """
         max_tok = max_new_tokens or self.max_new_tokens
+        results = []
 
-        inputs = self.processor(
-            images=images,
-            text=prompts,
-            return_tensors="pt",
-            padding=True,
-        ).to(self.model.device)
+        for img, prompt in zip(images, prompts):
+            text = f"[INST] <image>\n{prompt} [/INST]"
+            inputs = self.processor(
+                images=img,
+                text=text,
+                return_tensors="pt",
+            ).to(self.model.device)
 
-        output_ids = self.model.generate(
-            **inputs,
-            max_new_tokens=max_tok,
-            do_sample=False,
-            pad_token_id=self.processor.tokenizer.pad_token_id,
-        )
+            output_ids = self.model.generate(
+                **inputs,
+                max_new_tokens=max_tok,
+                do_sample=False,
+                pad_token_id=self.processor.tokenizer.pad_token_id,
+            )
 
-        # Decodificar solo los tokens generados (excluir el input)
-        input_len = inputs["input_ids"].shape[1]
-        generated_ids = output_ids[:, input_len:]
-        return self.processor.batch_decode(generated_ids, skip_special_tokens=True)
+            input_len = inputs["input_ids"].shape[1]
+            generated_ids = output_ids[:, input_len:]
+            results.append(
+                self.processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
+            )
+
+        return results
 
     def forward(
         self,

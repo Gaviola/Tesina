@@ -21,10 +21,11 @@ python scripts/toko_sync_up.py --install-deps
 ```
 Sube src/, scripts/, configs/, slurm/ e instala requirements.txt en TOKO.
 
-Subir datos MM-SkinQA (necesario para stage1):
+Subir datos MM-SkinQA + HAM10000 (necesarios para stage1, clasificacion y generacion):
 ```
 python scripts/toko_sync_data.py            # si los datos estan locales
-python scripts/toko_sync_data.py --remote   # descargar directamente en TOKO
+python scripts/toko_sync_data.py --remote   # descargar MM-SkinQA directamente en TOKO
+python scripts/toko_sync_data.py --all      # todos los datasets procesados
 ```
 
 ---
@@ -74,11 +75,11 @@ encolados: 93312 (mini), 93313 (llava)
 ### 2b. Generacion de reportes y clasificacion VLM
 
 ```
-python scripts/toko_submit.py gen_llava        # reportes LLaVA-Med
-python scripts/toko_submit.py gen_mini         # reportes Mini-VLM
+python scripts/toko_submit.py gen_llava        # reportes LLaVA-Med  93325
+python scripts/toko_submit.py gen_mini         # reportes Mini-VLM   93326
 python scripts/toko_submit.py all_gen          # ambos modelos
-python scripts/toko_submit.py classify_llava   # clasificacion zero-shot LLaVA-Med
-python scripts/toko_submit.py classify_mini    # clasificacion zero-shot Mini-VLM
+python scripts/toko_submit.py classify_llava   # clasificacion zero-shot LLaVA-Med  93327
+python scripts/toko_submit.py classify_mini    # clasificacion zero-shot Mini-VLM  93328
 python scripts/toko_submit.py all_classify     # ambos modelos
 ```
 

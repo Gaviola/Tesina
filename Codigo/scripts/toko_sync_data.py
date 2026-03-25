@@ -1,16 +1,19 @@
 """
-toko_sync_data.py — Sube los datos procesados necesarios para stage1 hacia TOKO.
+toko_sync_data.py — Sube los datos necesarios hacia TOKO.
 
-Por defecto sube solo MM-SkinQA (requerido por train_vlm_stage1.py).
+Por defecto sube MM-SkinQA (stage1) + HAM10000 (clasificacion y generacion reportes).
 Con --all sube todos los datasets procesados.
+Con --files sube archivos o directorios individuales (paths relativos a data/).
 
 Si los datos no estan disponibles localmente, el script imprime
 instrucciones para descargarlos directamente en el cluster.
 
 Uso:
-  python scripts/toko_sync_data.py           # solo MM-SkinQA
+  python scripts/toko_sync_data.py           # MM-SkinQA + HAM10000
   python scripts/toko_sync_data.py --all     # todos los datasets
   python scripts/toko_sync_data.py --remote  # descarga en TOKO directamente
+  python scripts/toko_sync_data.py --files processed/HAM10000/HAM10000_metadata
+  python scripts/toko_sync_data.py --files splits/ham10000_splits.json processed/HAM10000/
 """
 import sys
 import subprocess
@@ -56,15 +59,51 @@ def scp_dir(local: Path, remote_dest: str) -> int:
     return subprocess.run(cmd).returncode
 
 
+def scp_file(local: Path, remote_dest: str) -> int:
+    """Sube un archivo individual al cluster."""
+    if has_rsync():
+        cmd = ["rsync", "-av", "--progress", "-e", f"ssh {' '.join(SSH_OPTS)}",
+               str(local), remote_dest]
+    else:
+        cmd = ["scp", *SSH_OPTS, str(local), remote_dest]
+    return subprocess.run(cmd).returncode
+
+
 def main():
     parser = argparse.ArgumentParser(description="Sube datasets a TOKO")
     parser.add_argument("--all", action="store_true",
                         help="Subir todos los datasets procesados")
     parser.add_argument("--remote", action="store_true",
                         help="Descargar MM-Skin directamente en TOKO (sin subir desde local)")
+    parser.add_argument("--files", nargs="+", metavar="PATH",
+                        help="Archivos o directorios individuales a subir (relativos a data/)")
     args = parser.parse_args()
 
     check_tools()
+
+    # Opcion: subir archivos individuales
+    if args.files:
+        host = f"{TOKO_USER}@{TOKO_HOST}"
+        errors = 0
+        for rel_path in args.files:
+            local = LOCAL_DATA / rel_path
+            if not local.exists():
+                print(f"ERROR: No se encontro {local}")
+                errors += 1
+                continue
+            remote_dest = f"{host}:{REMOTE_DATA}/{rel_path}"
+            if local.is_dir():
+                print(f"Subiendo {rel_path}/ ...")
+                remote_parent = f"{REMOTE_DATA}/{rel_path}"
+                subprocess.run(["ssh", *SSH_OPTS, host, "mkdir", "-p", remote_parent])
+                rc = scp_dir(local, f"{host}:{remote_parent}")
+            else:
+                print(f"Subiendo {rel_path} ...")
+                remote_parent = f"{REMOTE_DATA}/{Path(rel_path).parent}"
+                subprocess.run(["ssh", *SSH_OPTS, host, "mkdir", "-p", remote_parent])
+                rc = scp_file(local, remote_dest)
+            errors += rc
+        sys.exit(1 if errors else 0)
 
     # Opcion: descargar directamente en el cluster
     if args.remote:
@@ -108,7 +147,7 @@ def main():
             rc = scp_dir(splits_dir, f"{TOKO_USER}@{TOKO_HOST}:{REMOTE_DATA}/splits")
             errors += rc
     else:
-        # Solo MM-SkinQA
+        # MM-SkinQA + HAM10000 (necesarios para stage1, clasificacion y generacion)
         mmskin_dir = LOCAL_DATA / "processed" / "MM-SkinQA"
         if not mmskin_dir.exists():
             print(f"ERROR: No se encontro {mmskin_dir}")
@@ -120,6 +159,16 @@ def main():
         rc = scp_dir(mmskin_dir,
                      f"{TOKO_USER}@{TOKO_HOST}:{REMOTE_DATA}/processed/MM-SkinQA")
         errors += rc
+
+        # HAM10000 processed (clasificacion + generacion reportes)
+        ham_processed = LOCAL_DATA / "processed" / "HAM10000"
+        if ham_processed.exists():
+            print("Subiendo data/processed/HAM10000/ (clasificacion + generacion reportes)...")
+            rc = scp_dir(ham_processed,
+                         f"{TOKO_USER}@{TOKO_HOST}:{REMOTE_DATA}/processed/HAM10000")
+            errors += rc
+        else:
+            print(f"AVISO: No se encontro {ham_processed} (necesario para clasificacion y generacion)")
 
         # Subir splits si existen
         splits_dir = LOCAL_DATA / "splits"

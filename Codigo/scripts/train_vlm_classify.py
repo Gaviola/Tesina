@@ -139,7 +139,7 @@ def main():
         logger.error("Ejecutar primero: python scripts/prepare_data.py")
         sys.exit(1)
 
-    data_root = str(Path(args.data_dir) / "raw" / "ham10000")
+    data_root = str(Path(args.data_dir) / "processed" / "HAM10000")
     test_dataset = HAM10000Dataset(
         root_dir=data_root,
         split="test",

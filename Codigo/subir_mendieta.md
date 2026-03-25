@@ -33,10 +33,13 @@ python scripts/mendieta_sync_up.py --install-deps
 ```
 Sube src/, scripts/, configs/, slurm/ e instala requirements.txt en Mendieta.
 
-Subir datos MM-SkinQA (necesario para stage1):
+Subir datos MM-SkinQA + HAM10000 (necesarios para stage1, clasificacion y generacion):
 ```
 python scripts/mendieta_sync_data.py            # si los datos estan locales
-python scripts/mendieta_sync_data.py --remote   # descargar directamente en Mendieta
+python scripts/mendieta_sync_data.py --remote   # descargar MM-SkinQA directamente en Mendieta
+python scripts/mendieta_sync_data.py --all      # todos los datasets procesados
+python scripts/mendieta_sync_data.py --files <path> # subir archivos o dirs individuales 
+
 ```
 
 ---
@@ -105,11 +108,11 @@ python scripts/mendieta_submit.py classifier # DenseNet + ViT baselines
 ### 2b. Generacion de reportes y clasificacion VLM
 
 ```
-python scripts/mendieta_submit.py gen_llava        # reportes LLaVA-Med (~12h)
-python scripts/mendieta_submit.py gen_mini         # reportes Mini-VLM (~8h)
+python scripts/mendieta_submit.py gen_llava        # reportes LLaVA-Med (~12h) 1145773
+python scripts/mendieta_submit.py gen_mini         # reportes Mini-VLM (~8h) 1145774
 python scripts/mendieta_submit.py all_gen          # ambos modelos
-python scripts/mendieta_submit.py classify_llava   # clasificacion zero-shot LLaVA-Med (~4h)
-python scripts/mendieta_submit.py classify_mini    # clasificacion zero-shot Mini-VLM (~4h)
+python scripts/mendieta_submit.py classify_llava   # clasificacion zero-shot LLaVA-Med (~4h) 1145779
+python scripts/mendieta_submit.py classify_mini    # clasificacion zero-shot Mini-VLM (~4h) 1145780
 python scripts/mendieta_submit.py all_classify     # ambos modelos
 ```
 

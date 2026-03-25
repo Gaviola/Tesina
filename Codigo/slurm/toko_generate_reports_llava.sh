@@ -62,8 +62,8 @@ echo "=== Generando reportes HAM10000 (Nivel 2) ==="
 ${PYTHON} scripts/generate_report.py \
     --model llava_med \
     --checkpoint outputs/checkpoints/stage2_llava_med/best_model.pt \
-    --images_dir data/processed/ham10000 \
-    --output_dir outputs/generated_reports/llava_med/ham10000 \
+    --images_dir data/processed/HAM10000 \
+    --output_dir outputs/generated_reports/llava_med/HAM10000 \
     --max_tokens 512 \
     --seed 42
 

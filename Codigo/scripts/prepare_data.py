@@ -97,6 +97,15 @@ def preprocess_images_ham10000(raw_dir: Path, processed_dir: Path, size: int = I
             except Exception as e:
                 logger.warning("Error procesando %s: %s", img_path.name, e)
 
+    # Copiar metadata al directorio procesado (necesario para clasificación)
+    metadata_file = _find_ham10000_metadata(raw_dir)
+    if metadata_file is not None:
+        import shutil
+        dest = processed_dir / metadata_file.name
+        if not dest.exists():
+            shutil.copy2(metadata_file, dest)
+            logger.info("HAM10000: metadata copiada → %s", dest)
+
     logger.info("HAM10000: preprocesadas %d imágenes → %s", count, processed_dir)
     return count
 
