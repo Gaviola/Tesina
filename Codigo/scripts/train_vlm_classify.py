@@ -6,6 +6,7 @@ Uso:
 """
 
 import argparse
+import json
 import logging
 import re
 import sys
@@ -20,8 +21,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from src.data.collators import VLMCollator
 from src.data.ham10000 import HAM10000_CLASSES, HAM10000_LABEL_MAP, HAM10000Dataset
 from src.models.factory import build_model
+from src.training.lora_config import apply_lora, get_lora_config
 from src.utils.device import check_vram, get_device, get_training_dtype, get_vram_gb
-from src.utils.io import save_results
+from src.utils.io import load_checkpoint, save_results
 from src.utils.logging import format_duration, log_time, setup_logger
 from src.utils.seed import set_seed
 
@@ -73,6 +75,9 @@ def main():
                         help="Verificación: procesa N batches, reporta VRAM, velocidad y respuestas parseadas.")
     parser.add_argument("--dry-run-batches", type=int, default=10, dest="dry_run_batches",
                         help="Número de batches a procesar en modo dry-run (default: 10).")
+    parser.add_argument("--checkpoint", type=str, default=None,
+                        help="Ruta al checkpoint fine-tuneado (best_model.pt). "
+                             "Carga LoRA config del mismo directorio y restaura pesos.")
     args = parser.parse_args()
 
     if args.dry_run:
@@ -93,7 +98,8 @@ def main():
         wandb_project="dermvlm",
         wandb_config=vars(args),
     )
-    logger.info("Iniciando clasificación zero-shot con %s", args.model)
+    mode_str = "fine-tuned" if args.checkpoint else "zero-shot"
+    logger.info("Iniciando clasificación %s con %s", mode_str, args.model)
 
     # 3. Device
     device = get_device()
@@ -119,9 +125,27 @@ def main():
 
     # 5. Cargar modelo VLM
     # Ambos modelos usan device_map="auto" — no se requiere .to(device) manual
+    is_finetuned = args.checkpoint is not None
     with log_time("Cargando modelo %s%s" % (args.model, " (4-bit)" if use_quantize else ""), logger):
         model = build_model({"name": args.model, "quantize": use_quantize})
         model.load_components()
+
+        if is_finetuned:
+            ckpt_dir = Path(args.checkpoint).parent
+            lora_cfg_path = ckpt_dir / "lora_config.json"
+            if not lora_cfg_path.exists():
+                logger.error("lora_config.json no encontrado en %s", ckpt_dir)
+                sys.exit(1)
+            with open(lora_cfg_path, encoding="utf-8") as f:
+                lora_params = json.load(f)
+            lora_config = get_lora_config(**lora_params)
+            model.model = apply_lora(model.model, lora_config)
+            load_checkpoint(args.checkpoint, model=model, device="cpu")
+            logger.info(
+                "Checkpoint fine-tuneado cargado: %s (LoRA r=%d, alpha=%d)",
+                args.checkpoint, lora_params["r"], lora_params["lora_alpha"],
+            )
+
         model.eval()
 
     # Loguear VRAM usada post-carga
@@ -293,9 +317,11 @@ def main():
     # 8. Guardar predicciones
     results_dir = Path(args.output_dir) / "results"
     results_dir.mkdir(parents=True, exist_ok=True)
+    suffix = "_finetuned" if is_finetuned else ""
 
     predictions = {
         "model": args.model,
+        "finetuned": is_finetuned,
         "y_true": all_y_true,
         "y_pred": all_y_pred,
         "y_prob": None,  # VLMs no generan probabilidades por clase
@@ -303,8 +329,9 @@ def main():
         "responses": all_responses,
         "unknown_count": unknown_count,
     }
-    save_results(predictions, str(results_dir / f"{args.model}_predictions.json"))
-    logger.info("Predicciones guardadas en %s", results_dir / f"{args.model}_predictions.json")
+    pred_filename = f"{args.model}{suffix}_predictions.json"
+    save_results(predictions, str(results_dir / pred_filename))
+    logger.info("Predicciones guardadas en %s", results_dir / pred_filename)
 
     # 9. Evaluación rápida
     from src.evaluation.classification import evaluate_classification  # noqa: E402
@@ -316,16 +343,19 @@ def main():
         y_pred_valid = [all_y_pred[i] for i in valid_indices]
         results = evaluate_classification(y_true_valid, y_pred_valid, class_names=HAM10000_CLASSES)
 
-        logger.info("=== Resultados %s (excluyendo %d UNKNOWN) ===", args.model, unknown_count)
+        mode_label = f"{args.model} (fine-tuned)" if is_finetuned else args.model
+        logger.info("=== Resultados %s (excluyendo %d UNKNOWN) ===", mode_label, unknown_count)
         logger.info("Accuracy: %.4f", results["accuracy"])
         logger.info("F1 (weighted): %.4f", results["f1_weighted"])
         logger.info("Sensibilidad (macro): %.4f", results["sensitivity_macro"])
         logger.info("Especificidad (macro): %.4f", results["specificity_macro"])
 
         # Guardar métricas
+        metrics_filename = f"{args.model}{suffix}_test_results.json"
         save_results(
             {
                 "model": args.model,
+                "finetuned": is_finetuned,
                 "accuracy": results["accuracy"],
                 "f1_weighted": results["f1_weighted"],
                 "auc_roc_macro": results["auc_roc_macro"],
@@ -338,7 +368,7 @@ def main():
                 "total_samples": total,
                 "valid_samples": len(valid_indices),
             },
-            str(results_dir / f"{args.model}_test_results.json"),
+            str(results_dir / metrics_filename),
         )
     else:
         logger.warning("Todas las respuestas fueron UNKNOWN. No se pueden calcular métricas.")

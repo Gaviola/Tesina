@@ -110,10 +110,19 @@ python scripts/mendieta_submit.py classifier # DenseNet + ViT baselines
 ```
 python scripts/mendieta_submit.py gen_llava        # reportes LLaVA-Med (~12h) 1145773
 python scripts/mendieta_submit.py gen_mini         # reportes Mini-VLM (~8h) 1145774
+python scripts/mendieta_submit.py all_gen_mmskin   # reportes MM-SkinQA ambos modelos 1145824, 1145825
+python scripts/mendieta_submit.py all_gen_ham      # reportes HAM10000 ambos modelos 
 python scripts/mendieta_submit.py all_gen          # ambos modelos
+
 python scripts/mendieta_submit.py classify_llava   # clasificacion zero-shot LLaVA-Med (~4h) 1145779
 python scripts/mendieta_submit.py classify_mini    # clasificacion zero-shot Mini-VLM (~4h) 1145780
 python scripts/mendieta_submit.py all_classify     # ambos modelos
+
+python scripts/mendieta_submit.py classify_mini_ft # clasificacion Mini-VLM fine-tuneado en Stage 2 (~4h)  1145781
+python scripts/mendieta_submit.py classify_llava_ft # clasificacion LLaVA-Med fine-tuneado en Stage 2 (~4h) 1145827
+python scripts/mendieta_submit.py all_classify_ft # ambos modelos fine-tuneados
+
+
 ```
 
 Los jobs de generacion crean reportes sobre MM-SkinQA (Nivel 1, con referencias) y HAM10000

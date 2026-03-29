@@ -11,14 +11,23 @@ Uso:
   python scripts/mendieta_submit.py classifier     # DenseNet + ViT baselines
   python scripts/mendieta_submit.py gen_llava      # Generacion reportes LLaVA-Med (~12h)
   python scripts/mendieta_submit.py gen_mini       # Generacion reportes Mini-VLM (~8h)
-  python scripts/mendieta_submit.py classify_llava # Clasificacion zero-shot LLaVA-Med (~4h)
-  python scripts/mendieta_submit.py classify_mini  # Clasificacion zero-shot Mini-VLM (~4h)
-  python scripts/mendieta_submit.py all            # todos los jobs de training (default)
-  python scripts/mendieta_submit.py all_s1         # solo stage1 (mini + llava)
-  python scripts/mendieta_submit.py all_s2         # solo stage2 (mini + llava)
-  python scripts/mendieta_submit.py all_gen        # generacion reportes (ambos modelos)
-  python scripts/mendieta_submit.py all_classify   # clasificacion VLM (ambos modelos)
-  python scripts/mendieta_submit.py all --no-sync  # sin sincronizar
+  python scripts/mendieta_submit.py gen_llava_mmskin  # Solo MM-SkinQA con LLaVA-Med
+  python scripts/mendieta_submit.py gen_mini_mmskin   # Solo MM-SkinQA con Mini-VLM
+  python scripts/mendieta_submit.py gen_llava_ham     # Solo HAM10000 con LLaVA-Med
+  python scripts/mendieta_submit.py gen_mini_ham      # Solo HAM10000 con Mini-VLM
+  python scripts/mendieta_submit.py classify_llava    # Clasificacion zero-shot LLaVA-Med (~4h)
+  python scripts/mendieta_submit.py classify_mini     # Clasificacion zero-shot Mini-VLM (~4h)
+  python scripts/mendieta_submit.py classify_mini_ft  # Clasificacion fine-tuned Mini-VLM (~4h)
+  python scripts/mendieta_submit.py classify_llava_ft # Clasificacion fine-tuned LLaVA-Med (~4h)
+  python scripts/mendieta_submit.py all               # todos los jobs de training (default)
+  python scripts/mendieta_submit.py all_s1            # solo stage1 (mini + llava)
+  python scripts/mendieta_submit.py all_s2            # solo stage2 (mini + llava)
+  python scripts/mendieta_submit.py all_gen           # generacion reportes (ambos modelos)
+  python scripts/mendieta_submit.py all_gen_mmskin   # solo MM-SkinQA (ambos modelos)
+  python scripts/mendieta_submit.py all_gen_ham      # solo HAM10000 (ambos modelos)
+  python scripts/mendieta_submit.py all_classify      # clasificacion VLM zero-shot (ambos)
+  python scripts/mendieta_submit.py all_classify_ft   # clasificacion VLM fine-tuned (ambos)
+  python scripts/mendieta_submit.py all --no-sync     # sin sincronizar
 """
 import sys
 import argparse
@@ -28,6 +37,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from scripts.mendieta_config import MENDIETA_USER, MENDIETA_HOST, REMOTE_BASE, check_tools, ssh
 from scripts.mendieta_sync_up import sync_with_rsync, sync_with_tar, has_rsync
 
+## Cada entrada puede ser:
+##   "script.sh"                          — job sin variables extra
+##   ("script.sh", {"VAR": "valor"})      — job con variables de entorno extra
 JOBS = {
     "mini_s1":        "slurm/mendieta_train_vlm_s1_mini.sh",
     "llava_s1":       "slurm/mendieta_train_vlm_s1_llava.sh",
@@ -36,8 +48,14 @@ JOBS = {
     "classifier":     "slurm/mendieta_train_classifier.sh",
     "gen_llava":      "slurm/mendieta_generate_reports_llava.sh",
     "gen_mini":       "slurm/mendieta_generate_reports_mini.sh",
+    "gen_llava_mmskin": ("slurm/mendieta_generate_reports_llava.sh", {"DATASETS": "mmskin"}),
+    "gen_mini_mmskin":  ("slurm/mendieta_generate_reports_mini.sh",  {"DATASETS": "mmskin"}),
+    "gen_llava_ham":    ("slurm/mendieta_generate_reports_llava.sh", {"DATASETS": "ham10000"}),
+    "gen_mini_ham":     ("slurm/mendieta_generate_reports_mini.sh",  {"DATASETS": "ham10000"}),
     "classify_llava": "slurm/mendieta_vlm_classify_llava.sh",
     "classify_mini":  "slurm/mendieta_vlm_classify_mini.sh",
+    "classify_mini_ft":  "slurm/mendieta_vlm_classify_mini_ft.sh",
+    "classify_llava_ft": "slurm/mendieta_vlm_classify_llava_ft.sh",
 }
 
 # Grupos de jobs para envios multiples
@@ -46,15 +64,23 @@ GROUPS = {
     "all":          _TRAINING_JOBS,
     "all_s1":       ["mini_s1", "llava_s1"],
     "all_s2":       ["mini_s2", "llava_s2"],
-    "all_gen":      ["gen_llava", "gen_mini"],
+    "all_gen":        ["gen_llava", "gen_mini"],
+    "all_gen_mmskin": ["gen_llava_mmskin", "gen_mini_mmskin"],
+    "all_gen_ham":    ["gen_llava_ham", "gen_mini_ham"],
     "all_classify": ["classify_llava", "classify_mini"],
+    "all_classify_ft": ["classify_mini_ft", "classify_llava_ft"],
 }
 
 
-def submit_job(name: str, script: str) -> str | None:
+def submit_job(name: str, script: str, env_vars: dict | None = None) -> str | None:
     """Envia un job con sbatch y retorna el JOBID."""
     print(f"--- Enviando: {name} ---")
-    cmd = f"cd {REMOTE_BASE} && sbatch {script}"
+    export_flag = ""
+    if env_vars:
+        pairs = ",".join(f'{k}="{v}"' for k, v in env_vars.items())
+        export_flag = f" --export=ALL,{pairs}"
+        print(f"  Variables extra: {env_vars}")
+    cmd = f"cd {REMOTE_BASE} && sbatch{export_flag} {script}"
     result = ssh(cmd, capture=True)
     output = result.stdout.strip() + result.stderr.strip()
     print(f"  {output}")
@@ -109,14 +135,21 @@ def main():
     print()
 
     # Resolver grupo o job individual
+    def _unpack(name):
+        """Retorna (script, env_vars) desde JOBS[name]."""
+        entry = JOBS[name]
+        if isinstance(entry, tuple):
+            return entry[0], entry[1]
+        return entry, None
+
     if args.target in GROUPS:
-        targets = [(name, JOBS[name]) for name in GROUPS[args.target]]
+        targets = [(name, *_unpack(name)) for name in GROUPS[args.target]]
     else:
-        targets = [(args.target, JOBS[args.target])]
+        targets = [(args.target, *_unpack(args.target))]
 
     jobids = []
-    for name, script in targets:
-        jid = submit_job(name, script)
+    for name, script, env_vars in targets:
+        jid = submit_job(name, script, env_vars)
         if jid:
             jobids.append(jid)
         print()

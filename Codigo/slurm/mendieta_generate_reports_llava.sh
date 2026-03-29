@@ -49,30 +49,39 @@ fi
 echo "Python: $(${PYTHON} --version)"
 
 find ${HOME}/miniconda3/envs/dermvlm -name "__pycache__" -path "*/scipy/*" -exec rm -rf {} + 2>/dev/null
+
+# Datasets a procesar (space-separated): mmskin ham10000
+# Sobreescribir con: sbatch --export=ALL,DATASETS="mmskin" script.sh
+DATASETS="${DATASETS:-mmskin ham10000}"
+echo "Datasets a procesar: ${DATASETS}"
 echo ""
 
 # --- Paso 1: Reportes sobre MM-SkinQA (evaluacion Nivel 1 con referencias) ---
-echo "=== Generando reportes MM-SkinQA (Nivel 1) ==="
-${PYTHON} scripts/generate_report.py \
-    --model llava_med \
-    --checkpoint outputs/checkpoints/stage2_llava_med/best_model.pt \
-    --images_dir data/raw/MM-SkinQA \
-    --reference_csv data/raw/MM-SkinQA/caption.csv \
-    --output_dir outputs/generated_reports/llava_med/mmskin \
-    --max_tokens 512 \
-    --seed 42
-
-echo ""
+if [[ "$DATASETS" == *"mmskin"* ]]; then
+    echo "=== Generando reportes MM-SkinQA (Nivel 1) ==="
+    ${PYTHON} scripts/generate_report.py \
+        --model llava_med \
+        --checkpoint outputs/checkpoints/stage2_llava_med/best_model.pt \
+        --images_dir data/processed/MM-SkinQA \
+        --reference_csv data/processed/MM-SkinQA/caption.csv \
+        --output_dir outputs/generated_reports/llava_med/mmskin \
+        --max_tokens 512 \
+        --seed 42
+    echo ""
+fi
 
 # --- Paso 2: Reportes sobre HAM10000 (evaluacion Nivel 2 NER) ---
-echo "=== Generando reportes HAM10000 (Nivel 2) ==="
-${PYTHON} scripts/generate_report.py \
-    --model llava_med \
-    --checkpoint outputs/checkpoints/stage2_llava_med/best_model.pt \
-    --images_dir data/processed/HAM10000 \
-    --output_dir outputs/generated_reports/llava_med/HAM10000 \
-    --max_tokens 512 \
-    --seed 42
+if [[ "$DATASETS" == *"ham10000"* ]]; then
+    echo "=== Generando reportes HAM10000 (Nivel 2) ==="
+    ${PYTHON} scripts/generate_report.py \
+        --model llava_med \
+        --checkpoint outputs/checkpoints/stage2_llava_med/best_model.pt \
+        --images_dir data/processed/HAM10000 \
+        --output_dir outputs/generated_reports/llava_med/HAM10000 \
+        --max_tokens 512 \
+        --seed 42
+    echo ""
+fi
 
 echo ""
 echo "=== Job completado ==="

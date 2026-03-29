@@ -179,6 +179,8 @@ def main():
     parser.add_argument("--model", type=str, required=True, choices=["llava_med", "mini_vlm"])
     parser.add_argument("--level", type=int, required=True, choices=[1, 2, 3])
     parser.add_argument("--reports_dir", type=str, default="outputs/generated_reports")
+    parser.add_argument("--dataset", type=str, default="HAM10000",
+                        help="Subdirectorio del dataset dentro de reports_dir/model/")
     parser.add_argument("--output_dir", type=str, default="outputs/results")
     args = parser.parse_args()
 
@@ -188,7 +190,9 @@ def main():
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    reports = _load_reports(args.reports_dir, model_filter=args.model)
+    # Construir ruta: reports_dir/model/dataset/
+    reports_path = Path(args.reports_dir) / args.model / args.dataset
+    reports = _load_reports(str(reports_path), model_filter=args.model)
 
     if args.level == 1:
         _level1(reports, args.model, output_dir)
