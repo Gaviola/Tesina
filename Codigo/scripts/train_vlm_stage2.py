@@ -281,7 +281,7 @@ def main():
         sys.exit(0)
 
     # --- Guardar resultados ---
-    results_path = str(output_dir / "results" / f"stage2_{args.model}_metrics.json")
+    results_path = str(output_dir / "results" / args.model / "stage2_metrics.json")
     save_results(metrics, results_path)
     logger.info("Métricas Stage 2 guardadas en %s", results_path)
     logger.info(

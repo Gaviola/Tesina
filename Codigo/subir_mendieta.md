@@ -7,7 +7,7 @@
 Mendieta requiere claves **ed25519**. Si la clave SSH fue generada en MobaXterm
 y no podes conectar desde Windows nativo (PowerShell/CMD), ejecuta:
 ```
-python scripts/mendieta_setup.py --setup-ssh-key
+python scripts/mendieta/setup.py --setup-ssh-key
 ```
 Esto genera `~/.ssh/id_ed25519` en Windows. Si no puede registrar la clave
 automaticamente, mostrara instrucciones para hacerlo desde MobaXterm.
@@ -19,7 +19,7 @@ ssh -i ~/.ssh/id_ed25519 fgaviola@mendieta.ccad.unc.edu.ar hostname
 
 ### 0b. Setup del entorno
 ```
-python scripts/mendieta_setup.py
+python scripts/mendieta/setup.py
 ```
 Verifica conexion SSH, crea directorios, muestra particiones (sinfo), instala Miniconda,
 entorno `dermvlm` y PyTorch cu121 (A30 24GB, Ampere, CUDA 12.1).
@@ -29,16 +29,16 @@ entorno `dermvlm` y PyTorch cu121 (A30 24GB, Ampere, CUDA 12.1).
 ## 1. Subir codigo y datos
 
 ```
-python scripts/mendieta_sync_up.py --install-deps
+python scripts/mendieta/sync_up.py --install-deps
 ```
 Sube src/, scripts/, configs/, slurm/ e instala requirements.txt en Mendieta.
 
 Subir datos MM-SkinQA + HAM10000 (necesarios para stage1, clasificacion y generacion):
 ```
-python scripts/mendieta_sync_data.py            # si los datos estan locales
-python scripts/mendieta_sync_data.py --remote   # descargar MM-SkinQA directamente en Mendieta
-python scripts/mendieta_sync_data.py --all      # todos los datasets procesados
-python scripts/mendieta_sync_data.py --files <path> # subir archivos o dirs individuales 
+python scripts/mendieta/sync_data.py            # si los datos estan locales
+python scripts/mendieta/sync_data.py --remote   # descargar MM-SkinQA directamente en Mendieta
+python scripts/mendieta/sync_data.py --all      # todos los datasets procesados
+python scripts/mendieta/sync_data.py --files <path> # subir archivos o dirs individuales 
 
 ```
 
@@ -49,9 +49,9 @@ python scripts/mendieta_sync_data.py --files <path> # subir archivos o dirs indi
 Los nodos de computo de Mendieta **no tienen acceso a internet**. Los modelos deben
 estar en el cache de HuggingFace antes de enviar jobs:
 ```
-python scripts/mendieta_download_models.py              # descarga todos
-python scripts/mendieta_download_models.py --model mini  # solo Mini-VLM
-python scripts/mendieta_download_models.py --model llava # solo LLaVA-Med
+python scripts/mendieta/download_models.py              # descarga todos
+python scripts/mendieta/download_models.py --model mini  # solo Mini-VLM
+python scripts/mendieta/download_models.py --model llava # solo LLaVA-Med
 ```
 
 Esto ejecuta `huggingface_hub.snapshot_download()` en el **nodo de login** (que si tiene
@@ -95,32 +95,32 @@ El resumen muestra las primeras respuestas parseadas, % UNKNOWN, VRAM y velocida
 ## 2. Enviar jobs
 
 ```
-python scripts/mendieta_submit.py all        # todos los jobs
-python scripts/mendieta_submit.py all_s1     # solo stage1 (mini + llava)
-python scripts/mendieta_submit.py all_s2     # solo stage2 (mini + llava)  (Sincronizar parametros depues con `wandb sync <run_dir>`)
-python scripts/mendieta_submit.py mini_s1    # solo mini_vlm stage1  (~8GB)
-python scripts/mendieta_submit.py llava_s1   # solo llava_med stage1 (~14GB LoRA)
-python scripts/mendieta_submit.py mini_s2    # solo mini_vlm stage2  (~8GB)
-python scripts/mendieta_submit.py llava_s2   # solo llava_med stage2 (~14GB LoRA)
-python scripts/mendieta_submit.py classifier # DenseNet + ViT baselines
+python scripts/mendieta/submit.py all        # todos los jobs
+python scripts/mendieta/submit.py all_s1     # solo stage1 (mini + llava)
+python scripts/mendieta/submit.py all_s2     # solo stage2 (mini + llava)  (Sincronizar parametros depues con `wandb sync <run_dir>`)
+python scripts/mendieta/submit.py mini_s1    # solo mini_vlm stage1  (~8GB)
+python scripts/mendieta/submit.py llava_s1   # solo llava_med stage1 (~14GB LoRA)
+python scripts/mendieta/submit.py mini_s2    # solo mini_vlm stage2  (~8GB)
+python scripts/mendieta/submit.py llava_s2   # solo llava_med stage2 (~14GB LoRA)
+python scripts/mendieta/submit.py classifier # DenseNet + ViT baselines
 ```
 
 ### 2b. Generacion de reportes y clasificacion VLM
 
 ```
-python scripts/mendieta_submit.py gen_llava        # reportes LLaVA-Med (~12h) 1145773
-python scripts/mendieta_submit.py gen_mini         # reportes Mini-VLM (~8h) 1145774
-python scripts/mendieta_submit.py all_gen_mmskin   # reportes MM-SkinQA ambos modelos 1145824, 1145825
-python scripts/mendieta_submit.py all_gen_ham      # reportes HAM10000 ambos modelos 
-python scripts/mendieta_submit.py all_gen          # ambos modelos
+python scripts/mendieta/submit.py gen_llava        # reportes LLaVA-Med (~12h) 1145773
+python scripts/mendieta/submit.py gen_mini         # reportes Mini-VLM (~8h) 1145774
+python scripts/mendieta/submit.py all_gen_mmskin   # reportes MM-SkinQA ambos modelos 1145824, 1145825
+python scripts/mendieta/submit.py all_gen_ham      # reportes HAM10000 ambos modelos 
+python scripts/mendieta/submit.py all_gen          # ambos modelos
 
-python scripts/mendieta_submit.py classify_llava   # clasificacion zero-shot LLaVA-Med (~4h) 1145779
-python scripts/mendieta_submit.py classify_mini    # clasificacion zero-shot Mini-VLM (~4h) 1145780
-python scripts/mendieta_submit.py all_classify     # ambos modelos
+python scripts/mendieta/submit.py classify_llava   # clasificacion zero-shot LLaVA-Med (~4h) 1145779
+python scripts/mendieta/submit.py classify_mini    # clasificacion zero-shot Mini-VLM (~4h) 1145780
+python scripts/mendieta/submit.py all_classify     # ambos modelos
 
-python scripts/mendieta_submit.py classify_mini_ft # clasificacion Mini-VLM fine-tuneado en Stage 2 (~4h)  1145781
-python scripts/mendieta_submit.py classify_llava_ft # clasificacion LLaVA-Med fine-tuneado en Stage 2 (~4h) 1145827
-python scripts/mendieta_submit.py all_classify_ft # ambos modelos fine-tuneados
+python scripts/mendieta/submit.py classify_mini_ft # clasificacion Mini-VLM fine-tuneado en Stage 2 (~4h)  1145781
+python scripts/mendieta/submit.py classify_llava_ft # clasificacion LLaVA-Med fine-tuneado en Stage 2 (~4h) 1145827
+python scripts/mendieta/submit.py all_classify_ft # ambos modelos fine-tuneados
 
 
 ```
@@ -134,11 +134,11 @@ mini_s1: 1145719, llava_s1: 1145720
 mini_s2: 1145740, llava_s2: 1145741
 
 ```
-python scripts/mendieta_monitor.py              # ver cola de jobs
-python scripts/mendieta_monitor.py <JOBID>      # ver log en tiempo real (tail -f)
-python scripts/mendieta_monitor.py status       # ver estado del cluster (sinfo)
-python scripts/mendieta_monitor.py cancel <ID>  # cancelar un job
-python scripts/mendieta_monitor.py seff <ID>    # eficiencia post-job (CPU/mem)
+python scripts/mendieta/monitor.py              # ver cola de jobs
+python scripts/mendieta/monitor.py <JOBID>      # ver log en tiempo real (tail -f)
+python scripts/mendieta/monitor.py status       # ver estado del cluster (sinfo)
+python scripts/mendieta/monitor.py cancel <ID>  # cancelar un job
+python scripts/mendieta/monitor.py seff <ID>    # eficiencia post-job (CPU/mem)
 ```
 
 ---
@@ -146,14 +146,16 @@ python scripts/mendieta_monitor.py seff <ID>    # eficiencia post-job (CPU/mem)
 ## 4. Bajar resultados
 
 ```
-python scripts/mendieta_sync_down.py              # metricas JSON (rapido, default)
-python scripts/mendieta_sync_down.py --checkpoints  # modelos .pt (varios GB)
-python scripts/mendieta_sync_down.py --reports      # reportes generados
-python scripts/mendieta_sync_down.py --all          # todo (metricas + checkpoints + reportes + logs)
+python scripts/mendieta/sync_down.py                     # metricas JSON (rapido, default)
+python scripts/mendieta/sync_down.py --checkpoints       # modelos .pt (varios GB)
+python scripts/mendieta/sync_down.py --reports           # reportes generados
+python scripts/mendieta/sync_down.py --all               # todo (metricas + checkpoints + reportes + logs)
+python scripts/mendieta/sync_down.py --logs 12345        # bajar solo el log del job 12345
+python scripts/mendieta/sync_down.py --logs 12345 12350  # bajar rango [12345, 12350]
 ```
 
 Los resultados se guardan en `Codigo/outputs/`.
-Metricas en: `outputs/results/stage1_mini_vlm_metrics.json` y `stage1_llava_med_metrics.json`.
+Metricas en: `outputs/results/mini_vlm/stage1_metrics.json` y `outputs/results/llava_med/stage1_metrics.json`.
 
 ---
 

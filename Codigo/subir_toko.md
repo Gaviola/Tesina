@@ -2,14 +2,14 @@
 
 ## 0. Una sola vez — configurar entorno en TOKO
 ```
-python scripts/toko_setup.py
+python scripts/toko/setup.py
 ```
 Configura clave SSH (para no ingresar contraseña), crea directorios,
 instala Miniconda, entorno `dermvlm` y PyTorch cu126 (RTX 4080, Ada Lovelace, CUDA 12.6).
 
 Si la clave SSH ya esta configurada:
 ```
-python scripts/toko_setup.py --skip-ssh-key
+python scripts/toko/setup.py --skip-ssh-key
 ```
 
 ---
@@ -17,15 +17,15 @@ python scripts/toko_setup.py --skip-ssh-key
 ## 1. Subir código y datos
 
 ```
-python scripts/toko_sync_up.py --install-deps
+python scripts/toko/sync_up.py --install-deps
 ```
 Sube src/, scripts/, configs/, slurm/ e instala requirements.txt en TOKO.
 
 Subir datos MM-SkinQA + HAM10000 (necesarios para stage1, clasificacion y generacion):
 ```
-python scripts/toko_sync_data.py            # si los datos estan locales
-python scripts/toko_sync_data.py --remote   # descargar MM-SkinQA directamente en TOKO
-python scripts/toko_sync_data.py --all      # todos los datasets procesados
+python scripts/toko/sync_data.py            # si los datos estan locales
+python scripts/toko/sync_data.py --remote   # descargar MM-SkinQA directamente en TOKO
+python scripts/toko/sync_data.py --all      # todos los datasets procesados
 ```
 
 ---
@@ -65,9 +65,9 @@ El resumen muestra las primeras respuestas parseadas, % UNKNOWN, VRAM y velocida
 ## 2. Enviar jobs
 
 ```
-python scripts/toko_submit.py all     # encola mini_vlm y llava_med stage1
-python scripts/toko_submit.py mini    # solo mini_vlm  (~8GB,  8-16h)
-python scripts/toko_submit.py llava   # solo llava_med (~10GB QLoRA, 24-48h)
+python scripts/toko/submit.py all     # encola mini_vlm y llava_med stage1
+python scripts/toko/submit.py mini    # solo mini_vlm  (~8GB,  8-16h)
+python scripts/toko/submit.py llava   # solo llava_med (~10GB QLoRA, 24-48h)
 ```
 
 encolados: 93312 (mini), 93313 (llava)
@@ -75,12 +75,12 @@ encolados: 93312 (mini), 93313 (llava)
 ### 2b. Generacion de reportes y clasificacion VLM
 
 ```
-python scripts/toko_submit.py gen_llava        # reportes LLaVA-Med  93325
-python scripts/toko_submit.py gen_mini         # reportes Mini-VLM   93326
-python scripts/toko_submit.py all_gen          # ambos modelos
-python scripts/toko_submit.py classify_llava   # clasificacion zero-shot LLaVA-Med  93327
-python scripts/toko_submit.py classify_mini    # clasificacion zero-shot Mini-VLM  93328
-python scripts/toko_submit.py all_classify     # ambos modelos
+python scripts/toko/submit.py gen_llava        # reportes LLaVA-Med  93325
+python scripts/toko/submit.py gen_mini         # reportes Mini-VLM   93326
+python scripts/toko/submit.py all_gen          # ambos modelos
+python scripts/toko/submit.py classify_llava   # clasificacion zero-shot LLaVA-Med  93327
+python scripts/toko/submit.py classify_mini    # clasificacion zero-shot Mini-VLM  93328
+python scripts/toko/submit.py all_classify     # ambos modelos
 ```
 
 Los jobs de generacion crean reportes sobre MM-SkinQA (Nivel 1, con referencias) y HAM10000
@@ -89,10 +89,10 @@ Los jobs de generacion crean reportes sobre MM-SkinQA (Nivel 1, con referencias)
 ## 3. Monitorear
 
 ```
-python scripts/toko_monitor.py              # ver cola de jobs
-python scripts/toko_monitor.py <JOBID>      # ver log en tiempo real (tail -f)
-python scripts/toko_monitor.py status       # ver estado del cluster (sinfo)
-python scripts/toko_monitor.py cancel <ID>  # cancelar un job
+python scripts/toko/monitor.py              # ver cola de jobs
+python scripts/toko/monitor.py <JOBID>      # ver log en tiempo real (tail -f)
+python scripts/toko/monitor.py status       # ver estado del cluster (sinfo)
+python scripts/toko/monitor.py cancel <ID>  # cancelar un job
 ```
 
 ---
@@ -100,11 +100,13 @@ python scripts/toko_monitor.py cancel <ID>  # cancelar un job
 ## 4. Bajar resultados
 
 ```
-python scripts/toko_sync_down.py              # metricas JSON (rapido, default)
-python scripts/toko_sync_down.py --checkpoints  # modelos .pt (varios GB)
-python scripts/toko_sync_down.py --reports      # reportes generados
-python scripts/toko_sync_down.py --all          # todo (metricas + checkpoints + reportes + logs)
+python scripts/toko/sync_down.py                     # metricas JSON (rapido, default)
+python scripts/toko/sync_down.py --checkpoints       # modelos .pt (varios GB)
+python scripts/toko/sync_down.py --reports           # reportes generados
+python scripts/toko/sync_down.py --all               # todo (metricas + checkpoints + reportes + logs)
+python scripts/toko/sync_down.py --logs 12345        # bajar solo el log del job 12345
+python scripts/toko/sync_down.py --logs 12345 12350  # bajar rango [12345, 12350]
 ```
 
 Los resultados se guardan en `Codigo/outputs/`.
-Metricas en: `outputs/results/stage1_mini_vlm_metrics.json` y `stage1_llava_med_metrics.json`.
+Metricas en: `outputs/results/mini_vlm/stage1_metrics.json` y `outputs/results/llava_med/stage1_metrics.json`.

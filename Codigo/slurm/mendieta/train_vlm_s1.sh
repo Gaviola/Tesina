@@ -1,0 +1,25 @@
+#!/bin/bash
+#SBATCH --job-name=dermvlm_llava_s1
+#SBATCH --output=/home/%u/dermvlm/logs/shared/%j.out
+#SBATCH --error=/home/%u/dermvlm/logs/shared/%j.err
+#SBATCH --partition=multi
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --gpus-per-task=1
+#SBATCH --time=8:00:00
+
+. /etc/profile
+# Opción A: entorno conda directo (si CUDA del cluster es compatible)
+source activate dermvlm
+# Opción B: Singularity (si se necesita CUDA empaquetado)
+# singularity exec --nv /home/$USER/containers/dermvlm.sif \
+
+# Nodos de computo no tienen internet — usar modelos pre-descargados del cache
+export HF_HUB_OFFLINE=1
+export TRANSFORMERS_OFFLINE=1
+
+nvidia-smi
+
+# LLaVA-Med Stage 1: Alineamiento (solo MLP, ~14GB VRAM en A30 24GB)
+python scripts/train_vlm_stage1.py --model llava_med --epochs 5 --lr 1e-3 --batch_size 4 --grad_accum 2 --early_stopping_patience 2 --num_workers 4
