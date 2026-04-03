@@ -20,23 +20,79 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from scripts.mendieta_config import (
     MENDIETA_USER, MENDIETA_HOST, REMOTE_BASE, REMOTE_LOGS, SSH_OPTS,
-    LOCAL_OUTPUTS, check_tools, has_rsync
+    LOCAL_OUTPUTS, check_tools, has_rsync, list_remote_subdirs
 )
 
 REMOTE_OUTPUTS = f"{REMOTE_BASE}/outputs"
 
 
-def download(remote: str, local: Path, label: str):
+def download(remote: str, local: Path, label: str, skip_existing: bool = False) -> int:
     local.mkdir(parents=True, exist_ok=True)
     print(f"Descargando {label}...")
     if has_rsync():
-        cmd = ["rsync", "-av", "--progress", "-e", f"ssh {' '.join(SSH_OPTS)}",
-               f"{MENDIETA_USER}@{MENDIETA_HOST}:{remote}/", f"{local}/"]
+        cmd = ["rsync", "-av", "--progress", "-e", f"ssh {' '.join(SSH_OPTS)}"]
+        if skip_existing:
+            cmd.append("--ignore-existing")
+        cmd += [f"{MENDIETA_USER}@{MENDIETA_HOST}:{remote}/", f"{local}/"]
     else:
         cmd = ["scp", *SSH_OPTS, "-r",
                f"{MENDIETA_USER}@{MENDIETA_HOST}:{remote}", str(local.parent)]
     result = subprocess.run(cmd)
     return result.returncode
+
+
+def download_differential(remote_base: str, local_base: Path, label: str) -> int:
+    """Descarga diferencial: solo baja subdirectorios model/dataset/ que faltan localmente.
+
+    Estructura esperada:
+        remote_base/<model>/<dataset>/  (ej: llava_med/HAM10000/, mini_vlm/MM-Skin/)
+
+    Los directorios que ya existen localmente con archivos se saltean.
+    Los vacios o ausentes se descargan completos.
+    """
+    print(f"Analizando estado local vs remoto para {label}...")
+    model_dirs = list_remote_subdirs(remote_base)
+    if not model_dirs:
+        print(f"  ADVERTENCIA: no se encontraron subdirectorios en {remote_base}")
+        print(f"  Verifique la conexion SSH o que el path remoto exista.")
+        return 1
+
+    to_skip: list[tuple[str, str]] = []
+    to_download: list[tuple[str, str]] = []
+
+    for model in model_dirs:
+        dataset_dirs = list_remote_subdirs(f"{remote_base}/{model}")
+        if not dataset_dirs:
+            print(f"  ADVERTENCIA: {model}/ no tiene subdirectorios remotos, saltando.")
+            continue
+        for dataset in dataset_dirs:
+            local_dataset = local_base / model / dataset
+            if local_dataset.exists() and any(local_dataset.iterdir()):
+                to_skip.append((model, dataset))
+            else:
+                to_download.append((model, dataset))
+
+    print(f"\n  Resumen diferencial — {label}:")
+    for model, dataset in to_skip:
+        n = sum(1 for f in (local_base / model / dataset).rglob("*") if f.is_file())
+        print(f"  [SKIP]  {model}/{dataset}/  ({n} archivos locales)")
+    for model, dataset in to_download:
+        print(f"  [BAJAR] {model}/{dataset}/")
+    if not to_download:
+        print("  Todo al dia. Nada que descargar.")
+        return 0
+    print()
+
+    errors = 0
+    for model, dataset in to_download:
+        local_dst = local_base / model
+        local_dst.mkdir(parents=True, exist_ok=True)
+        rc = download(f"{remote_base}/{model}/{dataset}",
+                      local_dst / dataset, f"{model}/{dataset}/")
+        if rc != 0:
+            print(f"  ERROR: fallo la descarga de {model}/{dataset}/")
+        errors += rc
+    return errors
 
 
 def verify_results():
@@ -67,6 +123,8 @@ def main():
                         help="Descargar reportes generados (outputs/generated_reports)")
     parser.add_argument("--all", action="store_true",
                         help="Descargar todo (outputs + logs + reportes)")
+    parser.add_argument("--force", action="store_true",
+                        help="Forzar re-descarga completa ignorando estado local")
     args = parser.parse_args()
 
     # Default: solo resultados
@@ -94,13 +152,22 @@ def main():
 
     if args.checkpoints or args.all:
         print("ADVERTENCIA: los checkpoints pueden ser varios GB. Esto puede tardar.")
-        rc = download(f"{REMOTE_OUTPUTS}/checkpoints",
-                      LOCAL_OUTPUTS / "checkpoints", "checkpoints/")
+        if args.force:
+            rc = download(f"{REMOTE_OUTPUTS}/checkpoints",
+                          LOCAL_OUTPUTS / "checkpoints", "checkpoints/")
+        else:
+            rc = download_differential(f"{REMOTE_OUTPUTS}/checkpoints",
+                                       LOCAL_OUTPUTS / "checkpoints", "checkpoints/")
         errors += rc
 
     if args.reports or args.all:
-        rc = download(f"{REMOTE_OUTPUTS}/generated_reports",
-                      LOCAL_OUTPUTS / "generated_reports", "generated_reports/")
+        if args.force:
+            rc = download(f"{REMOTE_OUTPUTS}/generated_reports",
+                          LOCAL_OUTPUTS / "generated_reports", "generated_reports/")
+        else:
+            rc = download_differential(f"{REMOTE_OUTPUTS}/generated_reports",
+                                       LOCAL_OUTPUTS / "generated_reports",
+                                       "generated_reports/")
         errors += rc
 
     if errors:

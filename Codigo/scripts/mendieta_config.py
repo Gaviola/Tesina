@@ -81,6 +81,26 @@ def ssh(cmd: str, capture: bool = False) -> subprocess.CompletedProcess:
     return subprocess.run(full_cmd)
 
 
+def list_remote_subdirs(remote_path: str) -> list[str]:
+    """Lista subdirectorios inmediatos de remote_path en Mendieta.
+
+    Usa find en lugar de ls para evitar problemas con colores, alias o locale.
+    Retorna lista vacia si el path no existe o si SSH falla.
+    """
+    result = ssh(
+        f"find {remote_path} -maxdepth 1 -mindepth 1 -type d 2>/dev/null",
+        capture=True,
+    )
+    if result.returncode != 0 or not result.stdout.strip():
+        return []
+    subdirs = []
+    for line in result.stdout.strip().splitlines():
+        name = line.strip().rstrip("/").split("/")[-1]
+        if name:
+            subdirs.append(name)
+    return sorted(subdirs)
+
+
 def check_tools():
     """Verifica que ssh y scp esten disponibles."""
     missing = [t for t in ("ssh", "scp") if not shutil.which(t)]
