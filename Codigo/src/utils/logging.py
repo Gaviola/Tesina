@@ -50,6 +50,7 @@ def setup_logger(
     wandb_project: Optional[str] = None,
     wandb_entity: Optional[str] = None,
     wandb_config: Optional[dict] = None,
+    wandb_mode: str = "offline",
 ) -> logging.Logger:
     """Configura el root logger con salida a consola, archivo opcional y wandb opcional.
 
@@ -64,6 +65,10 @@ def setup_logger(
         wandb_project: Nombre del proyecto wandb.
         wandb_entity: Entidad/equipo de wandb.
         wandb_config: Diccionario de configuración para wandb.
+        wandb_mode: Modo de wandb: "offline" (default, para clusters sin internet),
+                    "online" (requiere conexión), "disabled" (sin tracking).
+                    En modo offline los runs se guardan localmente y se sincronizan
+                    después con `wandb sync <run_dir>`.
 
     Returns:
         Root logger configurado.
@@ -97,8 +102,18 @@ def setup_logger(
             entity=wandb_entity,
             config=wandb_config or {},
             name=name,
+            mode=wandb_mode,
         )
-        root_logger.info("wandb inicializado: %s/%s", wandb_project, name)
+        root_logger.info(
+            "wandb inicializado: proyecto=%s | run=%s | modo=%s",
+            wandb_project, name, wandb_mode,
+        )
+        if wandb_mode == "offline":
+            root_logger.info(
+                "wandb offline: runs guardados en %s — sincronizar después con: wandb sync %s",
+                wandb.run.dir,
+                str(Path(wandb.run.dir).parent),
+            )
     elif use_wandb and wandb is None:
         root_logger.warning("wandb no instalado, se omite tracking remoto")
 
@@ -144,6 +159,9 @@ def log_gpu_memory(
         "%sVRAM: %.0f MB asignada / %.0f MB reservada",
         prefix, allocated_mb, reserved_mb,
     )
+    mem = {"vram_allocated_mb": allocated_mb, "vram_reserved_mb": reserved_mb}
+    if wandb is not None and wandb.run is not None:
+        wandb.log(mem)
     return {"allocated_mb": allocated_mb, "reserved_mb": reserved_mb}
 
 

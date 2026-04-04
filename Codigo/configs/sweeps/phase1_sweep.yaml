@@ -1,0 +1,59 @@
+# Sweep de hiperparámetros — Fase 1: Clasificación (DenseNet / ViT en HAM10000)
+#
+# FLUJO OFFLINE (clusters sin internet):
+#   Los clusters no pueden contactar al servidor de wandb para recibir asignaciones
+#   de `wandb agent`. En su lugar, usar scripts/sweep_phase1.py que genera las
+#   combinaciones localmente y lanza un job SLURM por configuración.
+#   Cada job corre con WANDB_MODE=offline y guarda el run en outputs/wandb/.
+#   Después de bajar los resultados con sync_down.py, sincronizar con:
+#       wandb sync outputs/wandb/
+#
+# FLUJO ONLINE (ejecución local con internet):
+#   1. wandb sweep configs/sweeps/phase1_sweep.yaml   → obtener SWEEP_ID
+#   2. wandb agent gaviola/dermvlm/<SWEEP_ID>
+
+program: scripts/train_phase1.py
+method: bayes       # bayes es más eficiente que grid para >3 parámetros
+metric:
+  goal: maximize
+  name: best_val_f1 # wandb.summary["best_val_f1"] seteado por Trainer.fit()
+
+# Número máximo de trials (solo relevante en modo online con wandb agent)
+run_cap: 30
+
+parameters:
+
+  # --- Modelo ---
+  model:
+    values: [densenet, vit]
+
+  # --- Optimizador ---
+  lr:
+    distribution: log_uniform_values
+    min: 1.0e-5
+    max: 1.0e-3
+
+  weight_decay:
+    values: [0.0, 0.001, 0.01, 0.1]
+
+  # --- Scheduler ---
+  scheduler:
+    values: [CosineAnnealingLR, StepLR, none]
+
+  # --- Regularización ---
+  label_smoothing:
+    values: [0.0, 0.05, 0.1]
+
+  # --- Congelamiento del backbone ---
+  # true = solo fine-tune classifier head; false = todo el modelo
+  freeze_backbone:
+    values: [true, false]
+
+  # --- Épocas: fijas — early stopping decide cuándo parar ---
+  epochs:
+    value: 50
+
+  # --- Batch size: fijo por limitación de VRAM (DenseNet 32, ViT 16) ---
+  # Notar: el script de entrenamiento sobreescribe esto según el modelo
+  batch_size:
+    value: 32

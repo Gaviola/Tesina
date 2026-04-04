@@ -86,6 +86,27 @@ python scripts/toko/submit.py all_classify     # ambos modelos
 Los jobs de generacion crean reportes sobre MM-SkinQA (Nivel 1, con referencias) y HAM10000
 (Nivel 2, NER). Los reportes se guardan en `outputs/generated_reports/{modelo}/{dataset}/`.
 
+### 2c. Sweep de hiperparámetros
+
+Lanza un job SLURM por cada combinación de parámetros. Los parámetros se muestrean aleatoriamente
+desde `configs/sweeps/phase1_sweep.yaml` o `phase2_sweep.yaml`. Cada job corre con
+`WANDB_MODE=offline` y guarda su run en `outputs/wandb/`. Para subir los runs a wandb
+ver paso 4.
+
+```
+# Fase 1: clasificadores (DenseNet / ViT) — varía lr, wd, scheduler, freeze, etc.
+python scripts/sweep_phase1.py --cluster toko --n-trials 20 --dry-run   # preview sin enviar
+python scripts/sweep_phase1.py --cluster toko --n-trials 20             # lanza 20 jobs
+
+# Fase 2: VLMs con LoRA — varía lora_r, lora_alpha, lr, epochs, grad_accum, etc.
+python scripts/sweep_phase2.py --cluster toko --n-trials 12
+python scripts/sweep_phase2.py --cluster toko --n-trials 12 --model mini_vlm  # solo un modelo
+python scripts/sweep_phase2.py --cluster toko --n-trials 12 --offset 6        # retomar desde trial 7
+
+# Semilla distinta → combinaciones distintas (para ampliar el sweep)
+python scripts/sweep_phase1.py --cluster toko --n-trials 10 --seed 123
+```
+
 ## 3. Monitorear
 
 ```
@@ -110,3 +131,13 @@ python scripts/toko/sync_down.py --logs 12345 12350  # bajar rango [12345, 12350
 
 Los resultados se guardan en `Codigo/outputs/`.
 Metricas en: `outputs/results/mini_vlm/stage1_metrics.json` y `outputs/results/llava_med/stage1_metrics.json`.
+
+### 4b. Sincronizar runs de wandb
+
+Después de bajar los resultados, subir los runs offline al servidor de wandb.
+`--all` incluye `outputs/wandb/` donde se guardaron los runs del sweep.
+
+```
+python scripts/toko/sync_down.py --all           # baja todo incluyendo outputs/wandb/
+wandb sync Codigo/outputs/wandb/                 # sube todos los runs offline a wandb
+```

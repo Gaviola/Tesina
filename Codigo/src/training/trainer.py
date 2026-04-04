@@ -11,6 +11,11 @@ from src.utils.io import save_checkpoint
 from src.utils.logging import format_duration, log_gpu_memory, log_metrics
 
 try:
+    import wandb as _wandb
+except ImportError:
+    _wandb = None
+
+try:
     from tqdm import tqdm as _tqdm
     _TQDM_AVAILABLE = True
 except ImportError:
@@ -269,4 +274,16 @@ class Trainer:
             "Entrenamiento finalizado en %s (%d épocas)",
             format_duration(total_time), epoch,
         )
+
+        # Publicar resumen en wandb con las mejores métricas del run
+        if _wandb is not None and _wandb.run is not None:
+            _wandb.summary.update({
+                "best_epoch":        best_metrics.get("epoch"),
+                "best_val_loss":     best_metrics.get("val_loss"),
+                "best_val_accuracy": best_metrics.get("val_accuracy"),
+                "best_val_f1":       best_metrics.get("val_f1"),
+                "total_epochs":      len(epoch_times),
+                "total_train_time_s": total_time,
+            })
+
         return best_metrics

@@ -1,0 +1,64 @@
+# Sweep de hiperparámetros — Fase 2: Generación de reportes (LLaVA-Med / Mini-VLM con LoRA)
+#
+# FLUJO OFFLINE (clusters sin internet):
+#   Ver instrucciones en phase1_sweep.yaml.
+#   Usar scripts/sweep_phase2.py para lanzar jobs SLURM por configuración.
+#   Cada job corre con WANDB_MODE=offline.
+#   Sincronizar después con: wandb sync outputs/wandb/
+#
+# FLUJO ONLINE (ejecución local con internet):
+#   1. wandb sweep configs/sweeps/phase2_sweep.yaml   → obtener SWEEP_ID
+#   2. wandb agent gaviola/dermvlm/<SWEEP_ID>
+
+program: scripts/train_phase2.py
+method: bayes
+metric:
+  goal: maximize
+  name: best_val_bertscore_f1  # métrica principal para generación clínica
+
+run_cap: 24
+
+parameters:
+
+  # --- Modelo ---
+  model:
+    values: [mini_vlm, llava_med]
+
+  # --- LoRA: rango (dimensión del adaptador) ---
+  # Valores típicos: 8-128. Mayor rank = más parámetros, más expresividad
+  lora_r:
+    values: [16, 32, 64, 128]
+
+  # --- LoRA: alpha (escala; convención: alpha = 2*r o alpha = r) ---
+  # Se expresa como múltiplo del rank para mantener la relación alpha/r estable
+  lora_alpha_multiplier:
+    values: [1, 2]   # alpha = lora_alpha_multiplier * lora_r
+
+  # --- LoRA: dropout ---
+  lora_dropout:
+    values: [0.0, 0.05, 0.1]
+
+  # --- Stage 2: learning rate del LLM con LoRA ---
+  stage2_lr:
+    distribution: log_uniform_values
+    min: 5.0e-6
+    max: 5.0e-5
+
+  # --- Stage 1: learning rate del MLP de alineamiento ---
+  stage1_lr:
+    distribution: log_uniform_values
+    min: 5.0e-5
+    max: 5.0e-4
+
+  # --- Stage 2: épocas (más épocas que la config base) ---
+  stage2_epochs:
+    values: [5, 10, 15]
+
+  # --- Stage 1: épocas fijas (alineamiento converge rápido) ---
+  stage1_epochs:
+    value: 2
+
+  # --- Gradient accumulation (efectivo batch size = batch_size * grad_accum) ---
+  # batch_size es 4 por limitación de VRAM → batch efectivo: 16-64
+  gradient_accumulation_steps:
+    values: [4, 8, 16]
