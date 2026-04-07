@@ -77,17 +77,25 @@ def evaluate_on_split(model, dataloader, device, dtype, num_classes):
 def main():
     parser = argparse.ArgumentParser(description="F1: Entrenamiento de clasificadores")
     parser.add_argument("--model", type=str, required=True, choices=["densenet", "vit"])
-    parser.add_argument("--data_dir", type=str, default="data")
-    parser.add_argument("--output_dir", type=str, default="outputs")
-    parser.add_argument("--splits_file", type=str, default=None)
-    parser.add_argument("--epochs", type=int, default=30)
-    parser.add_argument("--batch_size", type=int, default=None)
+    parser.add_argument("--data-dir", type=str, default="data", dest="data_dir")
+    parser.add_argument("--output-dir", type=str, default="outputs", dest="output_dir")
+    parser.add_argument("--splits-file", type=str, default=None, dest="splits_file")
+    parser.add_argument("--epochs", type=int, default=10)
+    parser.add_argument("--batch-size", type=int, default=None, dest="batch_size")
     parser.add_argument("--lr", type=float, default=1e-4)
-    parser.add_argument("--weight_decay", type=float, default=0.01)
+    parser.add_argument("--weight-decay", type=float, default=0.01, dest="weight_decay")
     parser.add_argument("--patience", type=int, default=5)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--wandb", action="store_true")
-    parser.add_argument("--num_workers", type=int, default=None)
+    parser.add_argument("--num-workers", type=int, default=None, dest="num_workers")
+    parser.add_argument("--scheduler", type=str, default="CosineAnnealingLR",
+                        choices=["CosineAnnealingLR", "none"])
+    parser.add_argument("--label-smoothing", type=float, default=0.0, dest="label_smoothing")
+    freeze_group = parser.add_mutually_exclusive_group()
+    freeze_group.add_argument("--freeze-backbone", action="store_true", default=True,
+                              dest="freeze_backbone")
+    freeze_group.add_argument("--no-freeze-backbone", action="store_false",
+                              dest="freeze_backbone")
     args = parser.parse_args()
 
     script_start = time.perf_counter()
@@ -183,7 +191,7 @@ def main():
             "name": args.model,
             "num_classes": num_classes,
             "pretrained": True,
-            "freeze_backbone": True,
+            "freeze_backbone": args.freeze_backbone,
         })
     trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
     total_params = sum(p.numel() for p in model.parameters())
@@ -195,11 +203,14 @@ def main():
         lr=args.lr,
         weight_decay=args.weight_decay,
     )
-    scheduler = CosineAnnealingLR(optimizer, T_max=args.epochs)
+    if args.scheduler == "CosineAnnealingLR":
+        scheduler = CosineAnnealingLR(optimizer, T_max=args.epochs)
+    else:
+        scheduler = None
 
     class_weights = compute_class_weights(train_dataset, num_classes).to(device)
     logger.info("Class weights: %s", class_weights.tolist())
-    criterion = nn.CrossEntropyLoss(weight=class_weights)
+    criterion = nn.CrossEntropyLoss(weight=class_weights, label_smoothing=args.label_smoothing)
 
     # 9. Callbacks
     checkpoint_dir = str(Path(args.output_dir) / "checkpoints" / args.model)

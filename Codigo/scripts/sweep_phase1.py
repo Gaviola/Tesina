@@ -41,7 +41,7 @@ CONFIGS = {
         "import": "scripts.toko.config",
         "remote_base_attr": "REMOTE_BASE",
         "log_subdir": "sweeps/phase1",
-        "time_limit": "24:00:00",
+        "time_limit": "10:00:00",
         "header_fn": slurm_header_toko,
         "setup_fn": slurm_setup_toko,
         "python_bin": "${HOME}/miniconda3/envs/dermvlm/bin/python",
@@ -50,7 +50,7 @@ CONFIGS = {
         "import": "scripts.mendieta.config",
         "remote_base_attr": "REMOTE_BASE",
         "log_subdir": "sweeps/phase1",
-        "time_limit": "1-12:00:00",
+        "time_limit": "10:00:00",
         "header_fn": slurm_header_mendieta,
         "setup_fn": slurm_setup_mendieta,
         "python_bin": "${HOME}/miniconda3/envs/dermvlm/bin/python",
@@ -147,6 +147,8 @@ def main():
                         help="Semilla para muestreo aleatorio de parámetros (default: 42)")
     parser.add_argument("--offset", type=int, default=0,
                         help="Índice desde el que empezar (para retomar parcialmente)")
+    parser.add_argument("--model", choices=["densenet", "vit"],
+                        help="Filtrar trials a un único modelo (opcional)")
     parser.add_argument("--dry-run", action="store_true",
                         help="Mostrar scripts sin enviarlos al cluster")
     args = parser.parse_args()
@@ -170,15 +172,24 @@ def main():
     # Cargar sweep config y generar combinaciones
     sweep_cfg = load_sweep_config(SWEEP_CONFIG_PATH)
     params = sweep_cfg["parameters"]
-    all_combos = generate_combinations(params, args.n_trials, seed=args.seed)
+
+    # Si se filtra por modelo, generar un pool mayor para asegurar n_trials resultados
+    pool_size = args.n_trials * 10 if args.model else args.n_trials
+    all_combos = generate_combinations(params, pool_size, seed=args.seed)
+
+    # Filtrar por modelo si se especificó y recortar a n_trials
+    if args.model:
+        all_combos = [c for c in all_combos if c["model"] == args.model]
+    all_combos = all_combos[:args.n_trials]
 
     # Aplicar offset (útil para retomar sweeps parciales)
     combos = all_combos[args.offset:]
-    total = args.n_trials
+    total = len(all_combos)
 
     print(f"=== Sweep Fase 1 → {args.cluster.upper()} ===")
     print(f"Config:   {SWEEP_CONFIG_PATH}")
-    print(f"Trials:   {len(combos)} (offset={args.offset}, seed={args.seed})")
+    model_str = f", model={args.model}" if args.model else ""
+    print(f"Trials:   {len(combos)} (offset={args.offset}, seed={args.seed}{model_str})")
     print(f"Remoto:   {user}@{host}:{remote_base}")
     if args.dry_run:
         print("Modo:     DRY-RUN (no se enviarán jobs)")

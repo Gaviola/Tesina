@@ -139,6 +139,8 @@ ver paso 4.
 # Fase 1: clasificadores (DenseNet / ViT) — varía lr, wd, scheduler, freeze, etc.
 python scripts/sweep_phase1.py --cluster mendieta --n-trials 20 --dry-run   # preview sin enviar
 python scripts/sweep_phase1.py --cluster mendieta --n-trials 20             # lanza 20 jobs
+python scripts/sweep_phase1.py --cluster mendieta --n-trials 3 --model densenet  # solo DenseNet
+python scripts/sweep_phase1.py --cluster mendieta --n-trials 3 --model vit       # solo ViT
 
 # Fase 2: VLMs con LoRA — varía lora_r, lora_alpha, lr, epochs, grad_accum, etc.
 python scripts/sweep_phase2.py --cluster mendieta --n-trials 12
