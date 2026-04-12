@@ -32,6 +32,7 @@ from scripts.sweep_utils import (
     slurm_setup_toko,
     slurm_setup_mendieta,
     submit_script_stdin,
+    append_jobs_log,
 )
 
 # ─── Configuración por cluster ────────────────────────────────────────────────
@@ -258,6 +259,9 @@ def main():
     if failed:
         print(f"  Fallidos: {failed}")
     if submitted and not args.dry_run:
+        model_str = f" model={args.model}" if args.model else ""
+        desc = f"sweep_phase1 n={len(submitted)} seed={args.seed}{model_str}"
+        append_jobs_log([jid for _, _, jid in submitted], args.cluster, desc)
         print()
         print("Comandos útiles:")
         print(f"  python scripts/{args.cluster}/monitor.py          # ver cola")

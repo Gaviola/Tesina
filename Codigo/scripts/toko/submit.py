@@ -23,6 +23,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from scripts.toko.config import TOKO_USER, TOKO_HOST, REMOTE_BASE, REMOTE_LOGS, check_tools, ssh
+from scripts.sweep_utils import append_jobs_log
 
 JOBS = {
     "mini_s1":        "slurm/toko/train_vlm_s1_mini.sh",
@@ -112,6 +113,7 @@ def main():
         print()
 
     if jobids:
+        append_jobs_log(jobids, "toko", f"submit {args.target}")
         print("=== Jobs encolados ===")
         print(f"Ver cola:  python scripts/toko/monitor.py")
         for jid in jobids:

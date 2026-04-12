@@ -147,7 +147,7 @@ python scripts/sweep_phase1.py --cluster mendieta --n-trials 3 --model vit      
 
 # Fase 2: VLMs con LoRA — varía lora_r, lora_alpha, lr, epochs, grad_accum, etc.
 python scripts/sweep_phase2.py --cluster mendieta --n-trials 12
-python scripts/sweep_phase2.py --cluster mendieta --n-trials 12 --model llava_med  # solo un modelo
+python scripts/sweep_phase2.py --cluster mendieta --n-trials 12 --model llava_med  # solo un modelo 1147348-1147353
 python scripts/sweep_phase2.py --cluster mendieta --n-trials 12 --offset 6         # retomar desde trial 7
 
 # Semilla distinta → combinaciones distintas (para ampliar el sweep)
@@ -212,8 +212,8 @@ Después de bajar los resultados, subir los runs offline al servidor de wandb.
 `--all` incluye `outputs/wandb/` donde se guardaron los runs del sweep.
 
 ```
-python scripts/mendieta/sync_down.py --wandb     # baja outputs/wandb/
-wandb sync Codigo/outputs/wandb/                 # sube todos los runs offline a wandb
+python scripts/mendieta/sync_down.py --wandb                                             # baja outputs/wandb/
+Get-ChildItem outputs\wandb -Directory | ForEach-Object { wandb sync $_.FullName }       # sube todos los runs offline a wandb
 ```
 
 ---

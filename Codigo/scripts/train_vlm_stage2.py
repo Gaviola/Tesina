@@ -30,7 +30,7 @@ from src.utils.seed import set_seed
 
 logger = logging.getLogger(__name__)
 
-_VRAM_REQUIRED = {"llava_med": 14.0, "mini_vlm": 10.0}
+_VRAM_REQUIRED = {"llava_med": 14.0, "mini_vlm": 12.0}
 
 
 def _build_dataloaders(train_dataset, val_dataset, collator, batch_size: int, num_workers: int):
@@ -107,13 +107,15 @@ def main():
         args.model, args.epochs, args.lr, args.lora_r,
     )
 
-    # --- VRAM check ---
+    # --- VRAM check (usar VRAM libre, no total, para detectar GPU compartida) ---
     check_vram(_VRAM_REQUIRED[args.model], args.model)
-    vram = get_vram_gb()
-    quantize = vram < _VRAM_REQUIRED[args.model]
+    vram = get_free_vram_gb()
+    quantize = vram < (_VRAM_REQUIRED[args.model] + 4.0)
     if quantize:
         logger.info(
-            "VRAM insuficiente (%.1f GB). Activando cuantización 4-bit.", vram
+            "VRAM libre insuficiente para entrenamiento (%.1f GB < %.1f GB modelo + 4.0 GB margen). "
+            "Activando cuantización 4-bit.",
+            vram, _VRAM_REQUIRED[args.model],
         )
 
     # --- Pre-flight: verificar dependencias antes de cargar modelo ---

@@ -31,7 +31,7 @@ from src.utils.seed import set_seed
 
 logger = logging.getLogger(__name__)
 
-_VRAM_REQUIRED = {"llava_med": 14.0, "mini_vlm": 10.0}
+_VRAM_REQUIRED = {"llava_med": 14.0, "mini_vlm": 12.0}
 _VRAM_TRAIN_MARGIN = 4.0  # GB adicionales para optimizer, gradientes y activaciones
 
 

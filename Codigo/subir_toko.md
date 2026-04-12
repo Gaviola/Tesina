@@ -103,7 +103,7 @@ python scripts/sweep_phase1.py --cluster toko --n-trials 20             # lanza 
 
 # Fase 2: VLMs con LoRA — varía lora_r, lora_alpha, lr, epochs, grad_accum, etc.
 python scripts/sweep_phase2.py --cluster toko --n-trials 12
-python scripts/sweep_phase2.py --cluster toko --n-trials 12 --model mini_vlm  # solo un modelo  93668-93682
+python scripts/sweep_phase2.py --cluster toko --n-trials 12 --model mini_vlm  # solo un modelo  93709-93720
 python scripts/sweep_phase2.py --cluster toko --n-trials 12 --offset 6        # retomar desde trial 7
 
 # Semilla distinta → combinaciones distintas (para ampliar el sweep)

@@ -209,6 +209,46 @@ echo ""
 """
 
 
+# ─── Registro local de jobs enviados ─────────────────────────────────────────
+
+def append_jobs_log(job_ids: list[str], cluster: str, description: str) -> None:
+    """Registra jobs enviados en outputs/jobs_log.txt.
+
+    Formato de cada línea:
+        2026-04-11 14:32  toko        93638-93657      sweep_phase1 n=20 seed=42
+        2026-04-11 15:01  mendieta    1145719          submit mini_s1
+
+    Si los IDs son enteros consecutivos se escribe como rango (N-M).
+    Ignora IDs "DRY_RUN" o vacíos.
+    """
+    from datetime import datetime
+
+    ids = [jid for jid in job_ids if jid and jid != "DRY_RUN"]
+    if not ids:
+        return
+
+    # Formatear IDs: rango si son consecutivos, sino separados por coma
+    try:
+        numeric = sorted(int(j) for j in ids)
+        if len(numeric) == 1:
+            id_str = str(numeric[0])
+        elif numeric[-1] - numeric[0] == len(numeric) - 1:
+            id_str = f"{numeric[0]}-{numeric[-1]}"
+        else:
+            id_str = ",".join(str(j) for j in numeric)
+    except ValueError:
+        id_str = ",".join(ids)
+
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+    line = f"{timestamp}  {cluster:<12} {id_str:<22} {description}\n"
+
+    log_path = Path(__file__).resolve().parent.parent / "outputs" / "jobs_log.txt"
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(log_path, "a", encoding="utf-8") as f:
+        f.write(line)
+    print(f"  -> Registrado en outputs/jobs_log.txt  ({id_str})")
+
+
 # ─── Envío de jobs ────────────────────────────────────────────────────────────
 
 def submit_script_stdin(script_body: str, ssh_opts: list[str],

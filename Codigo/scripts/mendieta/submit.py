@@ -36,6 +36,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from scripts.mendieta.config import MENDIETA_USER, MENDIETA_HOST, REMOTE_BASE, REMOTE_LOGS, check_tools, ssh
 from scripts.mendieta.sync_up import sync_with_rsync, sync_with_tar, has_rsync
+from scripts.sweep_utils import append_jobs_log
 
 ## Cada entrada puede ser:
 ##   "script.sh"                          — job sin variables extra
@@ -169,6 +170,7 @@ def main():
         print()
 
     if jobids:
+        append_jobs_log(jobids, "mendieta", f"submit {args.target}")
         print("=== Jobs encolados ===")
         print(f"Ver cola:  python scripts/mendieta/monitor.py")
         for jid in jobids:

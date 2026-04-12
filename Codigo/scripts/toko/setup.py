@@ -85,12 +85,20 @@ echo ""
 echo "--- [5/5] Instalando PyTorch (cu126, RTX 4080 Ada Lovelace) ---"
 # Fijar numpy<2: PyTorch 2.1.x fue compilado con NumPy 1.x y falla con NumPy 2.x
 ${PIP} install "numpy<2" --quiet
-if ${PYTHON} -c "import torch" 2>/dev/null; then
-    echo "OK: PyTorch ya instalado ($(${PYTHON} -c 'import torch; print(torch.__version__)'))"
+# Verificar que PyTorch esté instalado CON build cu126.
+# Si está instalado con otra versión de CUDA (e.g. cu118), reinstalar.
+TORCH_VER=$(${PYTHON} -c "import torch; print(torch.__version__)" 2>/dev/null || echo "")
+if echo "${TORCH_VER}" | grep -q "cu126"; then
+    echo "OK: PyTorch ya instalado con cu126 (${TORCH_VER})"
 else
+    if [ -n "${TORCH_VER}" ]; then
+        echo "PyTorch instalado pero con build incorrecto (${TORCH_VER}). Reinstalando cu126..."
+    else
+        echo "PyTorch no encontrado. Instalando cu126..."
+    fi
     ${PIP} install torch torchvision \
         --index-url https://download.pytorch.org/whl/cu126 --quiet
-    echo "OK: PyTorch instalado"
+    echo "OK: PyTorch instalado ($(${PYTHON} -c 'import torch; print(torch.__version__)'))"
 fi
 
 echo ""

@@ -33,6 +33,7 @@ from scripts.sweep_utils import (
     slurm_setup_toko,
     slurm_setup_mendieta,
     submit_script_stdin,
+    append_jobs_log,
 )
 
 # ─── Configuración por cluster ────────────────────────────────────────────────
@@ -43,7 +44,7 @@ CONFIGS = {
         "remote_base_attr": "REMOTE_BASE",
         "log_subdir_llava": "llava_med",
         "log_subdir_mini":  "mini_vlm",
-        "time_limit": "48:00:00",    # los VLMs necesitan más tiempo que los clasificadores
+        "time_limit": "12:00:00",    # los VLMs necesitan más tiempo que los clasificadores
         "header_fn": slurm_header_toko,
         "setup_fn": slurm_setup_toko,
         "python_bin": "${HOME}/miniconda3/envs/dermvlm/bin/python",
@@ -115,27 +116,23 @@ def build_slurm_script(combo: dict, trial_idx: int, total: int,
 
     train_cmd = f"""\
 echo "--- Stage 1: alineamiento visual-textual ({model}) ---"
-{python_bin} scripts/train_phase2.py \\
+{python_bin} scripts/train_vlm_stage1.py \\
     --model {model} \\
-    --stage 1 \\
     --lr {shell_val(combo["stage1_lr"])} \\
     --epochs {combo["stage1_epochs"]} \\
-    --lora-r {lora_r} \\
-    --lora-alpha {lora_alpha} \\
-    --lora-dropout {shell_val(combo["lora_dropout"])} \\
     --seed 42
 
 echo ""
 echo "--- Stage 2: fine-tuning con LoRA ({model}) ---"
-{python_bin} scripts/train_phase2.py \\
+{python_bin} scripts/train_vlm_stage2.py \\
     --model {model} \\
-    --stage 2 \\
     --lr {shell_val(combo["stage2_lr"])} \\
     --epochs {combo["stage2_epochs"]} \\
-    --gradient-accumulation-steps {grad_accum} \\
-    --lora-r {lora_r} \\
-    --lora-alpha {lora_alpha} \\
-    --lora-dropout {shell_val(combo["lora_dropout"])} \\
+    --grad_accum {grad_accum} \\
+    --lora_r {lora_r} \\
+    --lora_alpha {lora_alpha} \\
+    --lora_dropout {shell_val(combo["lora_dropout"])} \\
+    --checkpoint outputs/checkpoints/stage1_{model}/best_model.pt \\
     --seed 42
 """
 
@@ -187,15 +184,13 @@ def main():
     # Cargar sweep config y generar combinaciones
     sweep_cfg = load_sweep_config(SWEEP_CONFIG_PATH)
     params = sweep_cfg["parameters"]
-    all_combos = generate_combinations(params, args.n_trials, seed=args.seed)
 
-    # Filtrar por modelo si se especificó
+    # Si se especifica modelo, fijarlo antes de generar para que los n_trials
+    # sean exactamente del modelo pedido (sin depender del azar del muestreo).
     if args.model:
-        all_combos = [c for c in all_combos if c["model"] == args.model]
-        if not all_combos:
-            print(f"ERROR: ningún trial generó model={args.model}. "
-                  f"Aumentar --n-trials o cambiar --seed.")
-            sys.exit(1)
+        params = {**params, "model": {"value": args.model}}
+
+    all_combos = generate_combinations(params, args.n_trials, seed=args.seed)
 
     combos = all_combos[args.offset:]
     total = args.n_trials
@@ -273,6 +268,9 @@ def main():
     if failed:
         print(f"  Fallidos: {failed}")
     if submitted and not args.dry_run:
+        model_str = f" model={args.model}" if args.model else ""
+        desc = f"sweep_phase2 n={len(submitted)} seed={args.seed}{model_str}"
+        append_jobs_log([jid for _, _, jid in submitted], args.cluster, desc)
         print()
         print("Comandos útiles:")
         print(f"  python scripts/{args.cluster}/monitor.py          # ver cola")
