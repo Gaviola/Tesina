@@ -146,18 +146,20 @@ def slurm_setup_toko(remote_base: str, wandb_run_name: str,
     """Genera el bloque de setup inicial del job en TOKO."""
     return f"""
 . /etc/profile
-source activate dermvlm
+source "${{HOME}}/miniconda3/etc/profile.d/conda.sh"
+conda activate dermvlm
 
 cd {remote_base}
-mkdir -p logs/{log_subdir} outputs/wandb
+mkdir -p logs/{log_subdir} outputs
 
 # Sin acceso a internet en nodos de cómputo
 export HF_HUB_OFFLINE=1
 export TRANSFORMERS_OFFLINE=1
 
-# wandb offline: guarda el run localmente, sincronizar después con: wandb sync outputs/wandb/
+# wandb offline: WANDB_DIR=outputs → wandb crea outputs/wandb/offline-run-*/
+# Sincronizar después con: wandb sync outputs/wandb/
 export WANDB_MODE=offline
-export WANDB_DIR={remote_base}/outputs/wandb
+export WANDB_DIR={remote_base}/outputs
 export WANDB_RUN_NAME="{wandb_run_name}"
 
 echo "=== Sweep trial {trial_idx}/{total} (JOBID: $SLURM_JOB_ID) ==="
@@ -182,7 +184,7 @@ PYTHON="${{HOME}}/miniconda3/envs/dermvlm/bin/python"
 export LD_LIBRARY_PATH="${{HOME}}/miniconda3/envs/dermvlm/lib:${{LD_LIBRARY_PATH}}"
 
 cd {remote_base}
-mkdir -p logs/{log_subdir} outputs/wandb
+mkdir -p logs/{log_subdir} outputs
 
 export TMPDIR="/scratch/${{SLURM_JOB_ID}}"
 mkdir -p "$TMPDIR" 2>/dev/null || {{ export TMPDIR="/tmp/${{SLURM_JOB_ID}}"; mkdir -p "$TMPDIR"; }}
@@ -191,9 +193,10 @@ mkdir -p "$TMPDIR" 2>/dev/null || {{ export TMPDIR="/tmp/${{SLURM_JOB_ID}}"; mkd
 export HF_HUB_OFFLINE=1
 export TRANSFORMERS_OFFLINE=1
 
-# wandb offline: sincronizar después con: wandb sync outputs/wandb/
+# wandb offline: WANDB_DIR=outputs → wandb crea outputs/wandb/offline-run-*/
+# Sincronizar después con: wandb sync outputs/wandb/
 export WANDB_MODE=offline
-export WANDB_DIR={remote_base}/outputs/wandb
+export WANDB_DIR={remote_base}/outputs
 export WANDB_RUN_NAME="{wandb_run_name}"
 
 echo "=== Sweep trial {trial_idx}/{total} (JOBID: $SLURM_JOB_ID) ==="

@@ -1,3 +1,6 @@
+
+USAR: python scripts/cluster_manager.py
+
 # Flujo completo: entrenar en TOKO desde Windows
 
 ## 0. Una sola vez — configurar entorno en TOKO
@@ -96,11 +99,11 @@ ver paso 4.
 ```
 # Fase 1: clasificadores (DenseNet / ViT) — varía lr, wd, scheduler, freeze, etc.
 python scripts/sweep_phase1.py --cluster toko --n-trials 20 --dry-run   # preview sin enviar
-python scripts/sweep_phase1.py --cluster toko --n-trials 20             # lanza 20 jobs
+python scripts/sweep_phase1.py --cluster toko --n-trials 20             # lanza 20 jobs 93638-93667
 
 # Fase 2: VLMs con LoRA — varía lora_r, lora_alpha, lr, epochs, grad_accum, etc.
 python scripts/sweep_phase2.py --cluster toko --n-trials 12
-python scripts/sweep_phase2.py --cluster toko --n-trials 12 --model mini_vlm  # solo un modelo
+python scripts/sweep_phase2.py --cluster toko --n-trials 12 --model mini_vlm  # solo un modelo  93668-93682
 python scripts/sweep_phase2.py --cluster toko --n-trials 12 --offset 6        # retomar desde trial 7
 
 # Semilla distinta → combinaciones distintas (para ampliar el sweep)
@@ -125,8 +128,31 @@ python scripts/toko/sync_down.py                     # metricas JSON (rapido, de
 python scripts/toko/sync_down.py --checkpoints       # modelos .pt (varios GB)
 python scripts/toko/sync_down.py --reports           # reportes generados
 python scripts/toko/sync_down.py --all               # todo (metricas + checkpoints + reportes + logs)
+python scripts/toko/sync_down.py --wandb             # runs offline de wandb (para subir a wandb.ai)
 python scripts/toko/sync_down.py --logs 12345        # bajar solo el log del job 12345
 python scripts/toko/sync_down.py --logs 12345 12350  # bajar rango [12345, 12350]
+```
+
+## 5. Limpiar outputs en el cluster
+
+Liberar espacio en TOKO borrando lo que ya fue descargado localmente.
+Siempre bajar primero con `sync_down.py` antes de limpiar.
+
+```
+python scripts/toko/clean_remote.py --dry-run        # ver que se borraria (sin borrar)
+python scripts/toko/clean_remote.py --wandb          # borrar runs offline de wandb
+python scripts/toko/clean_remote.py --checkpoints    # borrar checkpoints .pt (varios GB)
+python scripts/toko/clean_remote.py --reports        # borrar reportes generados
+python scripts/toko/clean_remote.py --results        # borrar metricas JSON
+python scripts/toko/clean_remote.py --logs           # borrar logs SLURM
+python scripts/toko/clean_remote.py --all            # borrar todo (outputs/ + logs/)
+python scripts/toko/clean_remote.py --checkpoints -y # sin confirmacion interactiva
+```
+
+Flujo tipico post-sweep:
+```
+python scripts/toko/sync_down.py --wandb --checkpoints   # 1. bajar
+python scripts/toko/clean_remote.py --wandb --checkpoints # 2. limpiar
 ```
 
 Los resultados se guardan en `Codigo/outputs/`.
@@ -138,6 +164,6 @@ Después de bajar los resultados, subir los runs offline al servidor de wandb.
 `--all` incluye `outputs/wandb/` donde se guardaron los runs del sweep.
 
 ```
-python scripts/toko/sync_down.py --all           # baja todo incluyendo outputs/wandb/
+python scripts/toko/sync_down.py --wandb         # baja outputs/wandb/
 wandb sync Codigo/outputs/wandb/                 # sube todos los runs offline a wandb
 ```

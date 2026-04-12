@@ -55,7 +55,7 @@ def scp_dir(local: Path, remote_dest: str) -> int:
         cmd = ["rsync", "-av", "--progress", "-e", f"ssh {' '.join(SSH_OPTS)}",
                f"{local}/", f"{remote_dest}/"]
     else:
-        cmd = ["scp", *SSH_OPTS, "-r", str(local), remote_dest]
+        cmd = ["scp", *SSH_OPTS, "-O", "-r", str(local), remote_dest]
     return subprocess.run(cmd).returncode
 
 
@@ -94,9 +94,12 @@ def main():
             remote_dest = f"{host}:{REMOTE_DATA}/{rel_path}"
             if local.is_dir():
                 print(f"Subiendo {rel_path}/ ...")
-                remote_parent = f"{REMOTE_DATA}/{rel_path}"
-                subprocess.run(["ssh", *SSH_OPTS, host, "mkdir", "-p", remote_parent])
-                rc = scp_dir(local, f"{host}:{remote_parent}")
+                # Crear directorio PADRE (no el destino): scp -r crea el directorio
+                # destino por sí mismo; si ya existe, anida la carpeta dentro.
+                remote_dest_dir = f"{REMOTE_DATA}/{rel_path}"
+                remote_parent_dir = f"{REMOTE_DATA}/{Path(rel_path).parent}"
+                subprocess.run(["ssh", *SSH_OPTS, host, "mkdir", "-p", remote_parent_dir])
+                rc = scp_dir(local, f"{host}:{remote_dest_dir}")
             else:
                 print(f"Subiendo {rel_path} ...")
                 remote_parent = f"{REMOTE_DATA}/{Path(rel_path).parent}"

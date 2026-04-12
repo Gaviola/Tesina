@@ -6,6 +6,7 @@ Uso:
   python scripts/toko/sync_down.py --results         # metricas + logs SLURM
   python scripts/toko/sync_down.py --checkpoints     # solo modelos .pt (varios GB)
   python scripts/toko/sync_down.py --reports         # reportes generados (generated_reports/)
+  python scripts/toko/sync_down.py --wandb           # solo runs offline de wandb
   python scripts/toko/sync_down.py --all             # todo (outputs + logs + reportes)
   python scripts/toko/sync_down.py --logs 12345      # descarga solo el log del job 12345
   python scripts/toko/sync_down.py --logs 12345 12350  # descarga logs del rango [12345, 12350]
@@ -98,6 +99,8 @@ def main():
                         help="Descargar checkpoints .pt (varios GB)")
     parser.add_argument("--reports", action="store_true",
                         help="Descargar reportes generados (outputs/generated_reports)")
+    parser.add_argument("--wandb", action="store_true",
+                        help="Descargar solo runs offline de wandb (outputs/wandb/)")
     parser.add_argument("--all", action="store_true",
                         help="Descargar todo (outputs + logs + reportes)")
     parser.add_argument("--logs", nargs="+", type=int, metavar="JOBID",
@@ -130,7 +133,7 @@ def main():
         return
 
     # Default: solo resultados
-    if not any([args.results, args.checkpoints, args.reports, args.all]):
+    if not any([args.results, args.checkpoints, args.reports, args.wandb, args.all]):
         args.results = True
 
     check_tools()
@@ -151,6 +154,13 @@ def main():
         rc = download(REMOTE_LOGS,
                       LOCAL_OUTPUTS / "slurm_logs", "logs SLURM")
         errors += rc
+
+    if args.wandb or args.all:
+        rc = download(f"{REMOTE_OUTPUTS}/wandb",
+                      LOCAL_OUTPUTS / "wandb", "wandb/ (runs offline)")
+        errors += rc
+        if rc == 0:
+            print("  -> Para subir a wandb.ai: wandb sync outputs/wandb/")
 
     if args.checkpoints or args.all:
         print("ADVERTENCIA: los checkpoints pueden ser varios GB. Esto puede tardar.")

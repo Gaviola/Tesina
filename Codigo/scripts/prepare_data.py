@@ -297,45 +297,125 @@ def generate_splits_mmskin(raw_dir: Path, splits_dir: Path, seed: int = RANDOM_S
     )
 
 
+def download_skincare(raw_dir: Path, hf_token: str):
+    """Descarga SkinCaRe desde HuggingFace Hub usando snapshot_download.
+
+    Requiere que el token HF tenga acceso al dataset gated yuhos16/SkinCaRe.
+    El resultado se guarda en raw_dir/skincare/ preservando la estructura original.
+    """
+    try:
+        from huggingface_hub import snapshot_download
+    except ImportError:
+        logger.error(
+            "huggingface_hub no instalado. Ejecutá: pip install huggingface_hub"
+        )
+        return False
+
+    skincare_dir = raw_dir / "skincare"
+    if skincare_dir.exists() and any(skincare_dir.iterdir()):
+        logger.info("SkinCaRe ya existe en %s. Omitiendo descarga.", skincare_dir)
+        return True
+
+    skincare_dir.mkdir(parents=True, exist_ok=True)
+    logger.info("Descargando SkinCaRe desde HuggingFace Hub...")
+    try:
+        snapshot_download(
+            repo_id="yuhos16/SkinCaRe",
+            repo_type="dataset",
+            local_dir=str(skincare_dir),
+            token=hf_token,
+            ignore_patterns=["*.gitattributes", "workflow.jpg"],
+        )
+        logger.info("SkinCaRe descargado en %s", skincare_dir)
+        return True
+    except Exception as e:
+        logger.error("Error descargando SkinCaRe: %s", e)
+        return False
+
+
 def generate_splits_skincare(raw_dir: Path, splits_dir: Path, seed: int = RANDOM_SEED):
-    """Genera splits para SkinCaRe (si el dataset fue descargado)."""
-    annotations_file = raw_dir / "annotations.json"
-    if not annotations_file.exists():
-        logger.warning("annotations.json no encontrado en %s", raw_dir)
-        return
+    """Genera splits para SkinCaRe — uno para SkinCAP y otro para SkinCoT (conjuntos disjuntos).
 
-    with open(annotations_file, encoding="utf-8") as f:
-        data = json.load(f)
-    ids = [item.get("image", item.get("image_id", f"sample_{i}")) for i, item in enumerate(data)]
-    unique_ids = sorted(set(ids))
-    logger.info("SkinCaRe: %d samples, %d imágenes únicas", len(data), len(unique_ids))
-
-    ids = np.array(unique_ids)
-    train_ids, temp_ids = train_test_split(
-        ids,
-        test_size=(SPLIT_RATIOS["val"] + SPLIT_RATIOS["test"]),
-        random_state=seed,
-    )
-    val_ratio = SPLIT_RATIOS["val"] / (SPLIT_RATIOS["val"] + SPLIT_RATIOS["test"])
-    val_ids, test_ids = train_test_split(
-        temp_ids, test_size=(1 - val_ratio), random_state=seed,
-    )
-
-    splits = {
-        "train": train_ids.tolist(),
-        "val": val_ids.tolist(),
-        "test": test_ids.tolist(),
-    }
-
+    raw_dir es el directorio raíz del dataset: data/raw/skincare/
+    (ya apunta a la carpeta correcta; no agregar /skincare nuevamente).
+    """
+    skincare_dir = raw_dir
     splits_dir.mkdir(parents=True, exist_ok=True)
-    splits_file = splits_dir / "skincare_splits.json"
-    with open(splits_file, "w", encoding="utf-8") as f:
-        json.dump(splits, f, indent=2)
 
-    logger.info(
-        "SkinCaRe splits: train=%d, val=%d, test=%d → %s",
-        len(splits["train"]), len(splits["val"]), len(splits["test"]), splits_file,
-    )
+    # --- SkinCAP splits (por ID del XLSX) ---
+    xlsx_path = skincare_dir / "SkinCAP" / "skincap_v240715.xlsx"
+    if xlsx_path.exists():
+        # header=1: la fila 0 es un título ("skincap_v240715"), los headers reales están en fila 1
+        df = pd.read_excel(xlsx_path, engine="openpyxl", header=1)
+        # Excluir imágenes marcadas como "Do not consider this image"
+        if "Do not consider this image" in df.columns:
+            df = df[df["Do not consider this image"] != 1]
+        ids = df["skincap_file_path"].dropna().astype(str).str.strip().unique()
+        unique_ids = sorted(ids)
+        logger.info("SkinCAP: %d IDs únicos en xlsx", len(unique_ids))
+
+        arr = np.array(unique_ids)
+        train_ids, temp_ids = train_test_split(
+            arr,
+            test_size=(SPLIT_RATIOS["val"] + SPLIT_RATIOS["test"]),
+            random_state=seed,
+        )
+        val_ratio = SPLIT_RATIOS["val"] / (SPLIT_RATIOS["val"] + SPLIT_RATIOS["test"])
+        val_ids, test_ids = train_test_split(
+            temp_ids, test_size=(1 - val_ratio), random_state=seed,
+        )
+
+        splits = {
+            "train": train_ids.tolist(),
+            "val": val_ids.tolist(),
+            "test": test_ids.tolist(),
+        }
+        splits_file = splits_dir / "skincare_skincap_splits.json"
+        with open(splits_file, "w", encoding="utf-8") as f:
+            json.dump(splits, f, indent=2)
+        logger.info(
+            "SkinCAP splits: train=%d, val=%d, test=%d → %s",
+            len(splits["train"]), len(splits["val"]), len(splits["test"]), splits_file,
+        )
+    else:
+        logger.warning("skincap_v240715.xlsx no encontrado en %s", xlsx_path.parent)
+
+    # --- SkinCoT splits (por stem del archivo .txt en EN/) ---
+    en_dir = skincare_dir / "SkinCoT" / "EN"
+    if en_dir.exists():
+        # Recolectar todos los image_ids: stem del stem del .txt
+        # e.g. "ISIC_0024306.jpg.txt" → stem="ISIC_0024306.jpg" → stem="ISIC_0024306"
+        cot_ids = sorted(
+            Path(p.stem).stem
+            for p in en_dir.rglob("*.txt")
+        )
+        logger.info("SkinCoT: %d archivos CoT EN encontrados", len(cot_ids))
+
+        arr = np.array(cot_ids)
+        train_ids, temp_ids = train_test_split(
+            arr,
+            test_size=(SPLIT_RATIOS["val"] + SPLIT_RATIOS["test"]),
+            random_state=seed,
+        )
+        val_ratio = SPLIT_RATIOS["val"] / (SPLIT_RATIOS["val"] + SPLIT_RATIOS["test"])
+        val_ids, test_ids = train_test_split(
+            temp_ids, test_size=(1 - val_ratio), random_state=seed,
+        )
+
+        splits = {
+            "train": train_ids.tolist(),
+            "val": val_ids.tolist(),
+            "test": test_ids.tolist(),
+        }
+        splits_file = splits_dir / "skincare_skincot_splits.json"
+        with open(splits_file, "w", encoding="utf-8") as f:
+            json.dump(splits, f, indent=2)
+        logger.info(
+            "SkinCoT splits: train=%d, val=%d, test=%d → %s",
+            len(splits["train"]), len(splits["val"]), len(splits["test"]), splits_file,
+        )
+    else:
+        logger.warning("Directorio SkinCoT/EN no encontrado en %s", en_dir.parent)
 
 
 def print_dataset_stats(raw_dir: Path, dataset_name: str):
@@ -384,6 +464,13 @@ def main():
         "--skip_preprocess", action="store_true",
         help="Omitir preprocesamiento de imágenes",
     )
+    parser.add_argument(
+        "--download-skincare", action="store_true", dest="download_skincare",
+        help=(
+            "Descargar SkinCaRe desde HuggingFace Hub (dataset gated). "
+            "Requiere la variable de entorno HF_TOKEN con un token válido y acceso al dataset."
+        ),
+    )
     args = parser.parse_args()
 
     set_seed(args.seed)
@@ -392,6 +479,18 @@ def main():
     raw_dir = data_dir / "raw"
     processed_dir = data_dir / "processed"
     splits_dir = data_dir / "splits"
+
+    # --- Descarga opcional de SkinCaRe ---
+    if args.download_skincare:
+        import os
+        hf_token = os.environ.get("HF_TOKEN", "")
+        if not hf_token:
+            logger.error(
+                "HF_TOKEN no encontrado. Exportá tu token antes de ejecutar:\n"
+                "  export HF_TOKEN=hf_xxxxxxxxxxxx"
+            )
+        else:
+            download_skincare(raw_dir, hf_token)
 
     # Nombres reales de las carpetas en data/raw/
     datasets = {
@@ -432,7 +531,9 @@ def main():
             preprocess_images_ham10000(
                 datasets["HAM10000"], processed_dir / "HAM10000", args.image_size,
             )
-        for name in ["skincare", "MM-SkinQA", "HIBA"]:
+        # SkinCaRe no se preprocesa: los VLMs usan su propio processor interno
+        # que maneja el resize al vuelo. Las imágenes se cargan desde raw/ directamente.
+        for name in ["MM-SkinQA", "HIBA"]:
             if available.get(name):
                 preprocess_images_generic(
                     datasets[name], processed_dir / name, args.image_size,

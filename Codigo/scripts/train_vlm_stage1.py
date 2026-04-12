@@ -1,6 +1,6 @@
-"""Fase 2: Etapa 1 - Alineamiento visual-textual con MM-Skin captions.
+"""Fase 2: Etapa 1 - Alineamiento visual-textual con SkinCaRe SkinCAP.
 
-Entrena solo el MLP de proyección con pares imagen-caption de MM-Skin (~11k).
+Entrena solo el MLP de proyección con pares imagen-caption de SkinCAP (~4k).
 Vision encoder y LLM permanecen congelados.
 
 Uso:
@@ -9,7 +9,6 @@ Uso:
 """
 
 import argparse
-import json
 import logging
 import sys
 from datetime import datetime
@@ -19,7 +18,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from torch.utils.data import DataLoader
 
-from src.data.mmskin import MMSkinDataset
+from src.data.skincare import SkinCaReDataset
 from src.models.factory import build_model
 from src.training.two_stage import VLMOOMError, VLMTrainCollator, run_stage1
 from src.utils.device import (
@@ -34,51 +33,6 @@ logger = logging.getLogger(__name__)
 
 _VRAM_REQUIRED = {"llava_med": 14.0, "mini_vlm": 10.0}
 _VRAM_TRAIN_MARGIN = 4.0  # GB adicionales para optimizer, gradientes y activaciones
-
-
-def _find_or_create_splits(data_dir: Path, mmskin_dir: Path, all_names: list[str], seed: int) -> str:
-    """Busca el archivo de splits de MM-Skin o lo crea si no existe.
-
-    Orden de búsqueda:
-    1. data/splits/mmskin_splits.json  (creado por prepare_data.py, splits 70/15/15)
-    2. data/processed/MM-SkinQA/splits_mmskin.json  (fallback local)
-    Si ninguno existe, crea el splits en data/splits/ con distribución 70/15/15.
-    """
-    import random
-
-    candidates = [
-        data_dir / "splits" / "mmskin_splits.json",
-        mmskin_dir / "splits_mmskin.json",
-    ]
-    for candidate in candidates:
-        if candidate.exists():
-            logger.info("Usando splits existentes: %s", candidate)
-            return str(candidate)
-
-    # Crear splits 70/15/15 en data/splits/
-    splits_path = data_dir / "splits" / "mmskin_splits.json"
-    splits_path.parent.mkdir(parents=True, exist_ok=True)
-
-    set_seed(seed)
-    shuffled = all_names[:]
-    random.shuffle(shuffled)
-
-    n = len(shuffled)
-    n_train = int(0.70 * n)
-    n_val = int(0.15 * n)
-
-    splits = {
-        "train": shuffled[:n_train],
-        "val": shuffled[n_train:n_train + n_val],
-        "test": shuffled[n_train + n_val:],
-    }
-    with open(splits_path, "w", encoding="utf-8") as f:
-        json.dump(splits, f, indent=2)
-    logger.info(
-        "Splits creados: train=%d, val=%d, test=%d → %s",
-        len(splits["train"]), len(splits["val"]), len(splits["test"]), splits_path,
-    )
-    return str(splits_path)
 
 
 def _build_dataloaders(train_dataset, val_dataset, collator, batch_size: int, num_workers: int):
@@ -225,31 +179,38 @@ def main():
         effective_batch_size = args.batch_size
         effective_grad_accum = args.grad_accum
 
-    # --- Dataset MM-Skin (caption mode) ---
+    # --- Dataset SkinCaRe SkinCAP (Stage 1: alineamiento visual-textual) ---
     data_dir = Path(args.data_dir)
-    mmskin_dir = data_dir / "processed" / "MM-SkinQA"
-    if not mmskin_dir.exists():
+    skincare_dir = data_dir / "raw" / "skincare"
+    if not skincare_dir.exists():
         logger.error(
-            "Directorio MM-Skin no encontrado: %s\n"
-            "Ejecuta: python scripts/prepare_data.py --data_dir %s",
-            mmskin_dir, args.data_dir,
+            "Directorio SkinCaRe no encontrado: %s\n"
+            "Descargá el dataset con: python scripts/prepare_data.py --download-skincare --data_dir %s",
+            skincare_dir, args.data_dir,
         )
         sys.exit(1)
 
-    # Resolver splits file (de prepare_data.py o crear uno nuevo)
-    probe_ds = MMSkinDataset(root_dir=str(mmskin_dir), split="train", transform=None, mode="caption")
-    all_image_names = [s["image_id"] for s in probe_ds.samples]
-    splits_file = _find_or_create_splits(data_dir, mmskin_dir, all_image_names, args.seed)
+    splits_candidates = [
+        data_dir / "splits" / "skincare_skincap_splits.json",
+        skincare_dir / "skincare_skincap_splits.json",
+    ]
+    splits_file = next((str(p) for p in splits_candidates if p.exists()), None)
+    if splits_file is None:
+        logger.error(
+            "Splits de SkinCAP no encontrados. Ejecutá: python scripts/prepare_data.py --data_dir %s",
+            args.data_dir,
+        )
+        sys.exit(1)
 
-    train_dataset = MMSkinDataset(
-        root_dir=str(mmskin_dir), split="train",
-        transform=None, splits_file=splits_file, mode="caption",
+    train_dataset = SkinCaReDataset(
+        root_dir=str(skincare_dir), split="train",
+        transform=None, splits_file=splits_file, subset="skincap",
     )
-    val_dataset = MMSkinDataset(
-        root_dir=str(mmskin_dir), split="val",
-        transform=None, splits_file=splits_file, mode="caption",
+    val_dataset = SkinCaReDataset(
+        root_dir=str(skincare_dir), split="val",
+        transform=None, splits_file=splits_file, subset="skincap",
     )
-    logger.info("Dataset MM-Skin caption — Train: %d | Val: %d", len(train_dataset), len(val_dataset))
+    logger.info("Dataset SkinCAP — Train: %d | Val: %d", len(train_dataset), len(val_dataset))
 
     # --- Collator y DataLoaders ---
     collator = VLMTrainCollator(

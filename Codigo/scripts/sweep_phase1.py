@@ -89,7 +89,7 @@ def build_slurm_script(combo: dict, trial_idx: int, total: int,
     # Construir flag --no-freeze si freeze_backbone=false
     freeze_flag = "--freeze-backbone" if combo.get("freeze_backbone", True) else "--no-freeze-backbone"
 
-    # scheduler=none → omitir el argumento
+    # scheduler=none -> omitir el argumento
     scheduler_arg = (f"--scheduler {scheduler}"
                      if scheduler != "none" else "--scheduler none")
 
@@ -118,7 +118,8 @@ echo "--- Entrenando {model} ---"
     {freeze_flag} \\
     --epochs {combo["epochs"]} \\
     --batch-size {batch_size} \\
-    --seed 42
+    --seed 42 \\
+    --wandb
 """
 
     footer = """
@@ -186,7 +187,7 @@ def main():
     combos = all_combos[args.offset:]
     total = len(all_combos)
 
-    print(f"=== Sweep Fase 1 → {args.cluster.upper()} ===")
+    print(f"=== Sweep Fase 1 -> {args.cluster.upper()} ===")
     print(f"Config:   {SWEEP_CONFIG_PATH}")
     model_str = f", model={args.model}" if args.model else ""
     print(f"Trials:   {len(combos)} (offset={args.offset}, seed={args.seed}{model_str})")
@@ -244,10 +245,10 @@ def main():
             dry_run=args.dry_run,
         )
         if jobid:
-            print(f"    → JOBID: {jobid}")
+            print(f"    -> JOBID: {jobid}")
             submitted.append((global_idx, run_name, jobid))
         else:
-            print(f"    → ERROR al enviar")
+            print(f"    -> ERROR al enviar")
             failed.append(global_idx)
 
     # Resumen

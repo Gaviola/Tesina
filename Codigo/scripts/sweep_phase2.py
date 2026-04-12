@@ -200,7 +200,7 @@ def main():
     combos = all_combos[args.offset:]
     total = args.n_trials
 
-    print(f"=== Sweep Fase 2 → {args.cluster.upper()} ===")
+    print(f"=== Sweep Fase 2 -> {args.cluster.upper()} ===")
     print(f"Config:   {SWEEP_CONFIG_PATH}")
     print(f"Trials:   {len(combos)} (offset={args.offset}, seed={args.seed})")
     if args.model:
@@ -260,10 +260,10 @@ def main():
             dry_run=args.dry_run,
         )
         if jobid:
-            print(f"    → JOBID: {jobid}")
+            print(f"    -> JOBID: {jobid}")
             submitted.append((global_idx, run_name, jobid))
         else:
-            print(f"    → ERROR al enviar")
+            print(f"    -> ERROR al enviar")
             failed.append(global_idx)
 
     # Resumen

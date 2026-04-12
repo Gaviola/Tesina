@@ -134,7 +134,7 @@ def main():
     logger.info("Usando splits: %s", splits_file)
 
     # 5. Datasets
-    data_root = str(Path(args.data_dir) / "raw" / "ham10000")
+    data_root = str(Path(args.data_dir) / "processed" / "HAM10000")
     with log_time("Cargando datasets HAM10000", logger):
         train_dataset = HAM10000Dataset(
             root_dir=data_root,

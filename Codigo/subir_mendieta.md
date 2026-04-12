@@ -1,3 +1,6 @@
+
+USAR: python scripts/cluster_manager.py
+
 # Flujo completo: entrenar en Mendieta desde Windows
 
 ## 0. Una sola vez — configurar SSH + entorno en Mendieta
@@ -173,8 +176,31 @@ python scripts/mendieta/sync_down.py                     # metricas JSON (rapido
 python scripts/mendieta/sync_down.py --checkpoints       # modelos .pt (varios GB)
 python scripts/mendieta/sync_down.py --reports           # reportes generados
 python scripts/mendieta/sync_down.py --all               # todo (metricas + checkpoints + reportes + logs)
+python scripts/mendieta/sync_down.py --wandb             # runs offline de wandb (para subir a wandb.ai)
 python scripts/mendieta/sync_down.py --logs 12345        # bajar solo el log del job 12345
 python scripts/mendieta/sync_down.py --logs 12345 12350  # bajar rango [12345, 12350]
+```
+
+## 5. Limpiar outputs en el cluster
+
+Liberar espacio en Mendieta borrando lo que ya fue descargado localmente.
+Siempre bajar primero con `sync_down.py` antes de limpiar.
+
+```
+python scripts/mendieta/clean_remote.py --dry-run        # ver que se borraria (sin borrar)
+python scripts/mendieta/clean_remote.py --wandb          # borrar runs offline de wandb
+python scripts/mendieta/clean_remote.py --checkpoints    # borrar checkpoints .pt (varios GB)
+python scripts/mendieta/clean_remote.py --reports        # borrar reportes generados
+python scripts/mendieta/clean_remote.py --results        # borrar metricas JSON
+python scripts/mendieta/clean_remote.py --logs           # borrar logs SLURM
+python scripts/mendieta/clean_remote.py --all            # borrar todo (outputs/ + logs/)
+python scripts/mendieta/clean_remote.py --checkpoints -y # sin confirmacion interactiva
+```
+
+Flujo tipico post-sweep:
+```
+python scripts/mendieta/sync_down.py --wandb --checkpoints   # 1. bajar
+python scripts/mendieta/clean_remote.py --wandb --checkpoints # 2. limpiar
 ```
 
 Los resultados se guardan en `Codigo/outputs/`.
@@ -186,7 +212,7 @@ Después de bajar los resultados, subir los runs offline al servidor de wandb.
 `--all` incluye `outputs/wandb/` donde se guardaron los runs del sweep.
 
 ```
-python scripts/mendieta/sync_down.py --all       # baja todo incluyendo outputs/wandb/
+python scripts/mendieta/sync_down.py --wandb     # baja outputs/wandb/
 wandb sync Codigo/outputs/wandb/                 # sube todos los runs offline a wandb
 ```
 

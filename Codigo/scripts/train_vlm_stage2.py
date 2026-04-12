@@ -1,7 +1,7 @@
-"""Fase 2: Etapa 2 - Ajuste de instrucciones con LoRA y MM-Skin VQA.
+"""Fase 2: Etapa 2 - Ajuste de instrucciones con LoRA y SkinCaRe SkinCoT.
 
-Aplica LoRA al LLM y entrena con los pares VQA de MM-Skin (~27k pares).
-Usa MMSkinVQADataset para expandir imágenes → pares individuales (pregunta, respuesta).
+Aplica LoRA al LLM y entrena con los pares imagen-CoT de SkinCoT EN (~3k pares).
+Cada muestra es un par imagen + narrativa de razonamiento diagnóstico clínico.
 
 Uso:
     python scripts/train_vlm_stage2.py --model llava_med
@@ -18,9 +18,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from torch.utils.data import DataLoader
 
-from src.data.mmskin import MMSkinDataset
+from src.data.skincare import SkinCaReDataset
 from src.models.factory import build_model
-from src.training.two_stage import MMSkinVQADataset, VLMOOMError, VLMTrainCollator, run_stage2
+from src.training.two_stage import VLMOOMError, VLMTrainCollator, run_stage2
 from src.utils.device import (
     check_training_dependencies, check_vram, get_free_vram_gb, get_num_workers, get_vram_gb,
 )
@@ -154,43 +154,40 @@ def main():
     else:
         logger.info("Sin checkpoint de Stage 1 — entrenando desde pesos preentrenados.")
 
-    # --- Dataset MM-Skin (VQA mode → expandido) ---
+    # --- Dataset SkinCaRe SkinCoT EN (Stage 2: fine-tuning instrucciones) ---
     data_dir = Path(args.data_dir)
-    mmskin_dir = data_dir / "processed" / "MM-SkinQA"
-    if not mmskin_dir.exists():
+    skincare_dir = data_dir / "raw" / "skincare"
+    if not skincare_dir.exists():
         logger.error(
-            "Directorio MM-Skin no encontrado: %s\n"
-            "Ejecuta: python scripts/prepare_data.py --data_dir %s",
-            mmskin_dir, args.data_dir,
+            "Directorio SkinCaRe no encontrado: %s\n"
+            "Descargá el dataset con: python scripts/prepare_data.py --download-skincare --data_dir %s",
+            skincare_dir, args.data_dir,
         )
         sys.exit(1)
 
-    # Buscar splits en data/splits/ o local
     splits_candidates = [
-        data_dir / "splits" / "mmskin_splits.json",
-        mmskin_dir / "splits_mmskin.json",
+        data_dir / "splits" / "skincare_skincot_splits.json",
+        skincare_dir / "skincare_skincot_splits.json",
     ]
     splits_file_path = next((p for p in splits_candidates if p.exists()), None)
     if splits_file_path is None:
         logger.error(
-            "Splits no encontrados. Ejecuta prepare_data.py o train_vlm_stage1.py primero."
+            "Splits de SkinCoT no encontrados. Ejecutá: python scripts/prepare_data.py --data_dir %s",
+            args.data_dir,
         )
         sys.exit(1)
     splits_file = str(splits_file_path)
 
-    train_base = MMSkinDataset(
-        root_dir=str(mmskin_dir), split="train",
-        transform=None, splits_file=splits_file, mode="vqa",
+    train_dataset = SkinCaReDataset(
+        root_dir=str(skincare_dir), split="train",
+        transform=None, splits_file=splits_file, subset="skincot",
     )
-    val_base = MMSkinDataset(
-        root_dir=str(mmskin_dir), split="val",
-        transform=None, splits_file=splits_file, mode="vqa",
+    val_dataset = SkinCaReDataset(
+        root_dir=str(skincare_dir), split="val",
+        transform=None, splits_file=splits_file, subset="skincot",
     )
-
-    train_dataset = MMSkinVQADataset(train_base)
-    val_dataset = MMSkinVQADataset(val_base)
     logger.info(
-        "Dataset MM-Skin VQA expandido — Train: %d pares | Val: %d pares",
+        "Dataset SkinCoT EN — Train: %d pares | Val: %d pares",
         len(train_dataset), len(val_dataset),
     )
 
@@ -199,7 +196,7 @@ def main():
         processor=model.processor,
         model_type=args.model,
         max_length=2048,
-        mode="vqa",
+        mode="caption",
     )
     num_workers = args.num_workers if args.num_workers is not None else get_num_workers()
 

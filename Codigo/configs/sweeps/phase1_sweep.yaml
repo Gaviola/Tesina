@@ -51,7 +51,7 @@ parameters:
 
   # --- Épocas: fijas — early stopping decide cuándo parar ---
   epochs:
-    value: 10
+    value: 30
 
   # --- Batch size: fijo por limitación de VRAM (DenseNet 32, ViT 16) ---
   # Notar: el script de entrenamiento sobreescribe esto según el modelo
