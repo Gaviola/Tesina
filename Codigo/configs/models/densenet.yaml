@@ -5,5 +5,12 @@ num_classes: 7
 batch_size: 32
 
 training:
-  freeze_backbone: true  # inicialmente congelado, unfreezing gradual si bajo rendimiento
+  freeze_backbone: false
   unfreeze_layers: null   # e.g., ["denseblock4", "transition3"] para unfreezing
+  optimizer:
+    lr: 7.91e-5
+    weight_decay: 0.01
+  scheduler:
+    name: CosineAnnealingLR
+  loss:
+    label_smoothing: 0.0

@@ -55,6 +55,22 @@ class SkinCaReDataset(BaseDataset):
     # Helpers
     # ------------------------------------------------------------------
 
+    def _resolve_root(self) -> Path:
+        """Resuelve la raíz real del dataset, tolerando un subdirectorio 'skincare/' extra.
+
+        snapshot_download a veces crea root_dir/skincare/{SkinCAP,SkinCoT} en vez de
+        root_dir/{SkinCAP,SkinCoT}. Se prueba la ruta directa primero; si no existe,
+        se intenta con el subdirectorio extra.
+        """
+        root = Path(self.root_dir)
+        anchor = "SkinCAP" if self.subset == "skincap" else "SkinCoT"
+        if (root / anchor).exists():
+            return root
+        nested = root / "skincare"
+        if (nested / anchor).exists():
+            return nested
+        return root  # dejar que falle con el path original para el mensaje de error correcto
+
     def _load_split_ids(self) -> Optional[set]:
         """Carga los IDs del split indicado. Devuelve None si no hay splits_file."""
         if not self.splits_file:
@@ -72,7 +88,7 @@ class SkinCaReDataset(BaseDataset):
 
     def _load_skincap(self):
         """Carga SkinCAP desde el XLSX y las imágenes planas en SkinCAP/skincap/."""
-        root = Path(self.root_dir)
+        root = self._resolve_root()
         xlsx_path = root / "SkinCAP" / "skincap_v240715.xlsx"
         if not xlsx_path.exists():
             raise FileNotFoundError(
@@ -124,7 +140,7 @@ class SkinCaReDataset(BaseDataset):
 
     def _load_skincot(self):
         """Carga SkinCoT EN desde los .txt organizados por clase y las imágenes correspondientes."""
-        root = Path(self.root_dir)
+        root = self._resolve_root()
         en_dir = root / "SkinCoT" / "EN"
         images_dir = root / "SkinCoT" / "images"
 

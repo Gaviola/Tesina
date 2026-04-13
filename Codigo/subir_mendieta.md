@@ -81,6 +81,27 @@ python scripts/train_vlm_stage2.py --model llava_med --checkpoint outputs/checkp
 Si el dry-run falla, corregir el error antes de enviar al cluster.
 Si pasa exitosamente, muestra un resumen con VRAM pico, tiempos estimados y estado.
 
+### Recalcular train/val loss desde un checkpoint (eval-only)
+
+Si el entrenamiento ya terminó y querés recalcular las métricas (train_loss y val_loss completos)
+sin volver a entrenar, usá `--eval-only`. Lee `lora_config.json` del directorio del checkpoint,
+aplica LoRA con la config exacta y hace un pase completo sin gradientes.
+
+```
+# Stage 2 — recalcular métricas desde el mejor checkpoint
+python scripts/train_vlm_stage2.py \
+    --model llava_med \
+    --eval-only \
+    --checkpoint outputs/checkpoints/stage2_llava_med/best_model.pt
+
+python scripts/train_vlm_stage2.py \
+    --model mini_vlm \
+    --eval-only \
+    --checkpoint outputs/checkpoints/stage2_mini_vlm/best_model.pt
+```
+
+Guarda los resultados en `outputs/results/{model}/stage2_eval_metrics.json`.
+
 ### Dry-run para clasificacion VLM
 
 Verificar que la clasificacion zero-shot funciona correctamente antes de enviar al cluster.

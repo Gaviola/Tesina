@@ -5,5 +5,12 @@ num_classes: 7
 batch_size: 16
 
 training:
-  freeze_backbone: true
+  freeze_backbone: false
   unfreeze_layers: null
+  optimizer:
+    lr: 1.56e-5
+    weight_decay: 0.01
+  scheduler:
+    name: none
+  loss:
+    label_smoothing: 0.0

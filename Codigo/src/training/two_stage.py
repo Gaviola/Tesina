@@ -9,6 +9,7 @@ import json
 import logging
 import math
 import time
+import warnings
 from pathlib import Path
 from typing import Any
 
@@ -21,6 +22,15 @@ from src.training.callbacks import CheckpointCallback, EarlyStopping
 from src.training.lora_config import apply_lora, get_lora_config
 from src.utils.device import get_device, get_free_vram_gb, get_training_dtype
 from src.utils.logging import format_duration, log_gpu_memory, log_metrics
+
+# Filtrar advertencia de deprecación de past_key_values como tupla en transformers < 4.43.
+# Proviene de los internals de LlavaForConditionalGeneration y no es accionable desde
+# nuestro código. Se eliminará cuando transformers >= 4.43 sea el estándar.
+warnings.filterwarnings(
+    "ignore",
+    message=".*past_key_values.*tuple.*deprecated.*",
+    category=FutureWarning,
+)
 
 try:
     from tqdm import tqdm as _tqdm
@@ -552,9 +562,11 @@ def _enable_gradient_checkpointing(model, model_type: str) -> None:
     """
     hf_model = model.model
     try:
+        # use_cache=False debe establecerse ANTES de gradient_checkpointing_enable()
+        # para evitar que transformers emita la advertencia de incompatibilidad.
+        hf_model.config.use_cache = False
         hf_model.gradient_checkpointing_enable({"use_reentrant": False})
         hf_model.enable_input_require_grads()
-        hf_model.config.use_cache = False
         logger.warning(
             "Gradient checkpointing activado para %s. "
             "Reduce VRAM ~30-40%% a costa de mayor tiempo de cómputo.",
@@ -1285,3 +1297,160 @@ def run_stage2(
         min(metrics["val_loss"]) if metrics["val_loss"] else float("nan"),
     )
     return {**metrics, "stage": 2, "lora_config": lora_config_params}
+
+
+# ---------------------------------------------------------------------------
+# Evaluación desde checkpoint (sin reentrenar)
+# ---------------------------------------------------------------------------
+
+def _eval_pass(model, loader, dtype: torch.dtype, split_name: str) -> float:
+    """Pasa completo de evaluación con torch.no_grad(). Retorna loss promedio."""
+    device = get_device()
+    model.eval()
+    use_autocast = (dtype != torch.float32) and torch.cuda.is_available()
+    total_loss = 0.0
+    n = 0
+
+    it = _tqdm(
+        loader,
+        desc=split_name,
+        unit="batch", leave=False, dynamic_ncols=True,
+    ) if _TQDM_AVAILABLE else loader
+
+    with torch.no_grad():
+        for batch in it:
+            if batch is None:
+                continue
+            try:
+                input_ids      = batch["input_ids"].to(device)
+                attention_mask = batch["attention_mask"].to(device)
+                labels         = batch["labels"].to(device)
+                images         = batch["image"]
+                if isinstance(images, torch.Tensor):
+                    images = images.to(device)
+                image_sizes = batch.get("image_sizes")
+                if image_sizes is not None:
+                    image_sizes = image_sizes.to(device)
+                with torch.amp.autocast("cuda", dtype=dtype, enabled=use_autocast):
+                    output = model(images, input_ids, attention_mask, labels, image_sizes=image_sizes)
+                loss_val = output["loss"].item()
+                if math.isfinite(loss_val):
+                    total_loss += loss_val
+                    n += 1
+                else:
+                    logger.warning("Loss NaN/Inf en %s (batch %d). Saltando.", split_name, n)
+            except torch.cuda.OutOfMemoryError:
+                torch.cuda.empty_cache()
+                gc.collect()
+                logger.warning("OOM durante eval en %s. Saltando batch.", split_name)
+            except OSError as exc:
+                logger.warning("OSError en %s: %s. Saltando batch.", split_name, exc)
+
+    if _TQDM_AVAILABLE:
+        it.close()
+    return total_loss / max(n, 1)
+
+
+def eval_stage2(model, train_loader, val_loader, checkpoint_path: str) -> dict:
+    """Evalúa un checkpoint de Stage 2 sin reentrenar.
+
+    Carga lora_config.json del directorio del checkpoint, aplica LoRA con la
+    misma configuración, restaura los pesos y calcula train_loss y val_loss
+    completos en un solo pase sin gradientes.
+
+    Args:
+        model: VLM con componentes cargados (load_components ya llamado, sin LoRA).
+        train_loader: DataLoader de entrenamiento.
+        val_loader: DataLoader de validación.
+        checkpoint_path: Ruta al best_model.pt generado por CheckpointCallback.
+
+    Returns:
+        Dict con train_loss, val_loss, epoch, checkpoint_path, lora_config.
+    """
+    model_type = _get_model_type(model)
+    ckpt_path = Path(checkpoint_path)
+
+    if not ckpt_path.exists():
+        raise FileNotFoundError(f"Checkpoint no encontrado: {ckpt_path}")
+
+    # Leer lora_config.json guardado junto al checkpoint
+    lora_info_path = ckpt_path.parent / "lora_config.json"
+    if not lora_info_path.exists():
+        raise FileNotFoundError(
+            f"lora_config.json no encontrado en {ckpt_path.parent}. "
+            "Asegurate de que el checkpoint proviene de un entrenamiento Stage 2 completo."
+        )
+    with open(lora_info_path, encoding="utf-8") as f:
+        lora_params = json.load(f)
+    logger.info("LoRA config cargada desde %s: %s", lora_info_path, lora_params)
+
+    # Preparar modelo: mismo setup que Stage 2 (congelar vision encoder)
+    _freeze_vision_encoder(model, model_type)
+    _ensure_gradient_flow(model, model_type)
+
+    # Aplicar LoRA con la config exacta del checkpoint
+    lora_config = get_lora_config(
+        r=lora_params["r"],
+        lora_alpha=lora_params["lora_alpha"],
+        lora_dropout=lora_params.get("lora_dropout", 0.05),
+        target_modules=lora_params.get("target_modules", ["q_proj", "v_proj"]),
+    )
+    model.model = apply_lora(model.model, lora_config)
+    logger.info("LoRA aplicada. Restaurando pesos desde %s...", ckpt_path)
+
+    # Cargar state_dict del checkpoint
+    # map_location="cpu" evita OOM al cargar; load_state_dict copia los valores
+    # a los parámetros ya ubicados en GPU (device_map del modelo original).
+    ckpt = torch.load(str(ckpt_path), map_location="cpu", weights_only=False)
+    missing, unexpected = model.load_state_dict(ckpt["model_state_dict"], strict=False)
+    if missing:
+        logger.warning("Claves faltantes al cargar checkpoint (%d): %s...", len(missing), missing[:5])
+    if unexpected:
+        logger.warning("Claves inesperadas al cargar checkpoint (%d): %s...", len(unexpected), unexpected[:5])
+
+    best_epoch = ckpt.get("epoch", "?")
+    saved_val_loss = ckpt.get("metrics", {}).get("val_loss", None)
+    logger.info(
+        "Checkpoint restaurado — época %s | val_loss guardado: %s",
+        best_epoch, f"{saved_val_loss:.4f}" if saved_val_loss else "N/A",
+    )
+
+    dtype = get_training_dtype()
+    logger.info(
+        "=== Evaluación Stage 2 — %s ===\n"
+        "  Checkpoint    : %s (época %s)\n"
+        "  Train batches : %d | Val batches: %d\n"
+        "  dtype         : %s",
+        model_type, ckpt_path, best_epoch,
+        len(train_loader), len(val_loader), dtype,
+    )
+
+    t0 = time.perf_counter()
+    train_loss = _eval_pass(model, train_loader, dtype, f"Eval train ({model_type})")
+    train_time = time.perf_counter() - t0
+    logger.info("Train loss: %.4f | Tiempo: %s", train_loss, format_duration(train_time))
+    log_gpu_memory(logger, prefix="Post-eval-train | ")
+
+    t0 = time.perf_counter()
+    val_loss = _eval_pass(model, val_loader, dtype, f"Eval val   ({model_type})")
+    val_time = time.perf_counter() - t0
+    logger.info("Val loss  : %.4f | Tiempo: %s", val_loss, format_duration(val_time))
+
+    logger.info(
+        "=== Resumen evaluación ===\n"
+        "  Checkpoint : %s\n"
+        "  Época      : %s\n"
+        "  Train loss : %.4f\n"
+        "  Val loss   : %.4f\n"
+        "  (val_loss guardado en ckpt: %s)",
+        ckpt_path, best_epoch, train_loss, val_loss,
+        f"{saved_val_loss:.4f}" if saved_val_loss else "N/A",
+    )
+
+    return {
+        "train_loss": train_loss,
+        "val_loss": val_loss,
+        "epoch": best_epoch,
+        "checkpoint_path": str(ckpt_path),
+        "lora_config": lora_params,
+    }

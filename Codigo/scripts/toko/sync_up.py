@@ -24,19 +24,24 @@ from scripts.toko.config import (
 )
 
 # Directorios y archivos a incluir en la sincronizacion
-INCLUDE_DIRS  = ["src", "scripts", "configs", "slurm", "notebooks"]
+INCLUDE_DIRS  = ["src", "scripts", "configs", "slurm", "notebooks", "data/splits"]
 INCLUDE_FILES = ["requirements.txt", "setup_env.py"]
 
 # Directorios a excluir solo en el nivel raiz (no dentro de src/)
 EXCLUDE_ROOT_DIRS = {"data", "outputs"}
+# Subdirectorios de data/ que se deben sincronizar (lista blanca)
+INCLUDE_DATA_SUBDIRS = {"splits"}
 # Directorios a excluir a cualquier nivel de profundidad
 EXCLUDE_ANY_DIRS = {"__pycache__", ".git", ".ipynb_checkpoints", "wandb"}
 EXCLUDE_EXTS = {".pyc", ".pyo", ".env"}
 
-# Patrones a excluir para rsync
+# Patrones a excluir para rsync (los includes deben ir antes del exclude de /data/)
 RSYNC_EXCLUDES = [
-    "--exclude=/data/",        # solo raiz (no src/data/)
-    "--exclude=/outputs/",     # solo raiz
+    "--include=/data/",           # permitir entrar al dir data/
+    "--include=/data/splits/",    # incluir data/splits/
+    "--include=/data/splits/**",  # incluir todos los archivos en data/splits/
+    "--exclude=/data/**",         # excluir el resto de data/
+    "--exclude=/outputs/",        # solo raiz
     "--exclude=__pycache__/",  # a cualquier nivel
     "--exclude=*.pyc",
     "--exclude=.git/",
@@ -93,8 +98,10 @@ TEXT_EXTS = {".sh", ".py", ".yaml", ".yml", ".txt", ".md", ".cfg", ".ini", ".jso
 def _exclude(tarinfo: tarfile.TarInfo) -> tarfile.TarInfo | None:
     """Filtro para tarfile: excluye __pycache__, .pyc, data/, outputs/, etc."""
     parts = Path(tarinfo.name).parts
-    # Excluir data/ y outputs/ solo en el nivel raiz (no src/data/)
+    # Excluir data/ y outputs/ solo en el nivel raiz, salvo subdirs en lista blanca
     if parts[0] in EXCLUDE_ROOT_DIRS:
+        if parts[0] == "data" and len(parts) > 1 and parts[1] in INCLUDE_DATA_SUBDIRS:
+            return tarinfo  # permitir data/splits/ y su contenido
         return None
     # Excluir __pycache__, .git, etc. a cualquier nivel
     if any(p in EXCLUDE_ANY_DIRS or p.endswith(".egg-info") for p in parts):

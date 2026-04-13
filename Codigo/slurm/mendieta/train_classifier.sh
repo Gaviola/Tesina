@@ -45,15 +45,33 @@ echo "Python: $(${PYTHON} --version)"
 find ${HOME}/miniconda3/envs/dermvlm -name "__pycache__" -path "*/scipy/*" -exec rm -rf {} + 2>/dev/null
 echo ""
 
-# Train DenseNet121
+# Train DenseNet121 — mejores hiperparámetros del sweep fase1
+# val_acc=0.877 | lr=7.91e-5, scheduler=CosineAnnealingLR, weight_decay=0.01, label_smoothing=0, freeze=false
 echo "--- Entrenando DenseNet121 ---"
-${PYTHON} scripts/train_classifier.py --model densenet --epochs 30 --seed 42
+${PYTHON} scripts/train_classifier.py \
+    --model densenet \
+    --epochs 30 \
+    --seed 42 \
+    --lr 7.91e-5 \
+    --weight-decay 0.01 \
+    --scheduler CosineAnnealingLR \
+    --label-smoothing 0.0 \
+    --no-freeze-backbone
 
 echo ""
 
-# Train ViT-B/16
+# Train ViT-B/16 — mejores hiperparámetros del sweep fase1
+# val_acc=0.857 | lr=1.56e-5, scheduler=none, weight_decay=0.01, label_smoothing=0, freeze=false
 echo "--- Entrenando ViT-B/16 ---"
-${PYTHON} scripts/train_classifier.py --model vit --epochs 30 --seed 42
+${PYTHON} scripts/train_classifier.py \
+    --model vit \
+    --epochs 30 \
+    --seed 42 \
+    --lr 1.56e-5 \
+    --weight-decay 0.01 \
+    --scheduler none \
+    --label-smoothing 0.0 \
+    --no-freeze-backbone
 
 echo ""
 echo "=== Job completado ==="

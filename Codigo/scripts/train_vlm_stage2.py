@@ -20,7 +20,7 @@ from torch.utils.data import DataLoader
 
 from src.data.skincare import SkinCaReDataset
 from src.models.factory import build_model
-from src.training.two_stage import VLMOOMError, VLMTrainCollator, run_stage2
+from src.training.two_stage import VLMOOMError, VLMTrainCollator, eval_stage2, run_stage2
 from src.utils.device import (
     check_training_dependencies, check_vram, get_free_vram_gb, get_num_workers, get_vram_gb,
 )
@@ -75,6 +75,12 @@ def main():
     parser.add_argument("--wandb", action="store_true")
     parser.add_argument("--num_workers", type=int, default=None)
     parser.add_argument(
+        "--eval-only", action="store_true", dest="eval_only",
+        help="Evalúa el checkpoint Stage 2 sin reentrenar. "
+             "Requiere --checkpoint con ruta a best_model.pt. "
+             "Calcula train_loss y val_loss completos en un solo pase.",
+    )
+    parser.add_argument(
         "--dry-run", action="store_true", dest="dry_run",
         help="Verificación local: carga modelo, aplica LoRA, procesa N batches, "
              "reporta VRAM y tiempos. No entrena el modelo completo.",
@@ -85,9 +91,13 @@ def main():
     )
     args = parser.parse_args()
 
-    # Dry-run: desactivar wandb
-    if args.dry_run:
+    # Dry-run / eval-only: desactivar wandb
+    if args.dry_run or args.eval_only:
         args.wandb = False
+
+    # --eval-only requiere --checkpoint
+    if args.eval_only and not args.checkpoint:
+        parser.error("--eval-only requiere --checkpoint <ruta/a/best_model.pt>")
 
     set_seed(args.seed)
 
@@ -219,7 +229,7 @@ def main():
         },
     }
 
-    # --- Entrenamiento con retry por OOM ---
+    # --- Evaluación desde checkpoint (--eval-only) ---
     import torch
     current_batch_size = args.batch_size
     grad_accum = args.grad_accum
@@ -227,6 +237,26 @@ def main():
     train_loader, val_loader = _build_dataloaders(
         train_dataset, val_dataset, collator, current_batch_size, num_workers
     )
+
+    if args.eval_only:
+        logger.info(
+            "=== MODO EVAL-ONLY: evaluando checkpoint sin reentrenar ===\n"
+            "  Checkpoint: %s",
+            args.checkpoint,
+        )
+        with log_time(f"Evaluación Stage 2 {args.model}", logger):
+            metrics = eval_stage2(
+                model, train_loader, val_loader,
+                checkpoint_path=args.checkpoint,
+            )
+        results_path = str(output_dir / "results" / args.model / "stage2_eval_metrics.json")
+        save_results(metrics, results_path)
+        logger.info("Métricas de evaluación guardadas en %s", results_path)
+        logger.info(
+            "Evaluación completada | Train loss: %.4f | Val loss: %.4f",
+            metrics["train_loss"], metrics["val_loss"],
+        )
+        sys.exit(0)
 
     if args.dry_run:
         logger.info(
