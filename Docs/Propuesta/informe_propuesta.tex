@@ -176,9 +176,9 @@ El desarrollo de un VLM especializado en dermatología sigue un ciclo de vida en
 \begin{enumerate}
     \item \textbf{Pre-entrenamiento del modelo base:} LLaVA-Med fue pre-entrenado por Li et al. (2023) sobre PMC-15M, un corpus de 15 millones de pares imagen--texto biomédicos extraídos de PubMed Central, seguido de 600k pares para alineamiento visual-textual y 60k pares para ajuste de instrucciones \cite{li_llava-med_2023}. Esta etapa no se replica en este trabajo; se utiliza el modelo pre-entrenado disponible públicamente.
     
-    \item \textbf{Alineamiento al dominio (Etapa 1):} Se congela el codificador visual y el LLM, entrenando únicamente la capa de proyección MLP con datos dermatológicos (SkinCAP). Esto permite al modelo aprender a mapear conceptos visuales dermatológicos al espacio semántico del LLM sin riesgo de olvido catastrófico (Catastrophic Forgetting).
-    
-    \item \textbf{Ajuste de instrucciones (Etapa 2):} Se aplica LoRA sobre las capas de atención del LLM y se entrena conjuntamente con la capa de proyección usando datos de instrucción dermatológica (SkinCaRe completo). Esta es la etapa donde el modelo aprende a generar reportes estructurados.
+    \item \textbf{Alineamiento al dominio (Etapa 1):} Se congela el codificador visual y el LLM, entrenando únicamente la capa de proyección MLP con datos dermatológicos (SkinCAP, split de entrenamiento $\sim$2,800 pares imagen-caption EN revisados clínicamente). Esto permite al modelo aprender a mapear conceptos visuales dermatológicos al espacio semántico del LLM sin riesgo de olvido catastrófico (Catastrophic Forgetting).
+
+    \item \textbf{Ajuste de instrucciones (Etapa 2):} Se aplica LoRA sobre las capas de atención del LLM y se entrena conjuntamente con la capa de proyección usando narrativas de razonamiento diagnóstico (SkinCoT EN, split de entrenamiento $\sim$2,130 pares, formato instrucción). Esta es la etapa donde el modelo aprende a generar reportes estructurados con cadena de pensamiento (CoT) clínico.
     
     \item \textbf{Evaluación y validación:} Evaluación cuantitativa con métricas automáticas y análisis cualitativo de reportes generados.
 \end{enumerate}
@@ -309,24 +309,21 @@ HIBA & 1,616 & No & Sí (58\% biopsia) & Media (Lat.Am.) & \cite{piashiba_hiba_2
 \bottomrule
 \end{tabular}
 \begin{flushleft}
-\small FST = Fitzpatrick Skin Type. CoT = Chain-of-Thought. Los datasets seleccionados son SkinCaRe (ajuste fino), HAM10000 (clasificación), HIBA (evaluación de sesgo) y MM-Skin (evaluación de VQA y reportes).
+\small FST = Fitzpatrick Skin Type. CoT = Chain-of-Thought. Los datasets seleccionados son SkinCaRe (ajuste fino — SkinCAP en Etapa 1, SkinCoT EN en Etapa 2), MM-Skin (evaluación con referencia + VQA), HAM10000 (clasificación + evaluación sin referencia) y HIBA (evaluación de sesgo).
 \end{flushleft}
 \end{table}
 
-% IMAGEN SUGERIDA: Ejemplos de pares imagen-texto del dataset SkinCaRe mostrando el formato de razonamiento CoT.
-% Fuente: Xu et al. (2025), Fig. 2 — "SkinCaRe: A Multimodal Dermatology Dataset Annotated with Medical Caption and Chain-of-Thought Reasoning".
-% arXiv: 2405.18004
+\subsubsection{Dataset con pares imagen--texto para ajuste fino: SkinCaRe}
+\label{sec:skincare_training}
 
-\subsubsection{Dataset con pares imagen--texto: SkinCaRe}
-
-SkinCaRe \cite{xu_skincare_2025} es un dataset multimodal de 7,041 casos que combina dos subconjuntos complementarios:
+SkinCaRe \cite{xu_skincare_2025} es el dataset principal de ajuste fino. Contiene 7,041 casos dermatológicos divididos en dos subsets complementarios, disponibles como dataset gated en HuggingFace (\texttt{yuhos16/SkinCaRe}):
 
 \begin{itemize}
-    \item \textbf{SkinCAP} (4,000 imágenes): Imágenes de Fitzpatrick17k y DDI con descripciones médicas estructuradas, generadas y validadas por dermatólogos certificados de múltiples centros.
-    \item \textbf{SkinCoT} (3,041 imágenes): Imágenes de DermNet con razonamiento Cadena de Pensamiento (CoT, Chain-of-Thought), proporcionando justificación diagnóstica paso a paso.
+    \item \textbf{Etapa 1 — Alineamiento (SkinCAP):} $\sim$4,000 pares imagen--caption revisados por dermatólogos en seis ejes clínicos (precisión, seguridad, fundamentación médica, cobertura clínica, coherencia de razonamiento, precisión descriptiva). El split de entrenamiento ($\sim$2,800 pares) se usa para entrenar la capa de proyección MLP. Se utiliza el campo \texttt{caption\_en} del archivo \texttt{skincap\_v240715.xlsx}.
+    \item \textbf{Etapa 2 — Instrucción (SkinCoT EN):} 3,041 narrativas de razonamiento diagnóstico jerárquico (CoT), validadas clínicamente. El split de entrenamiento ($\sim$2,130 pares) se usa para el ajuste de instrucciones vía LoRA. Los textos están organizados en \texttt{SkinCoT/EN/<disease\_class>/}.
 \end{itemize}
 
-La evaluación clínica alcanzó una puntuación media de 4.94/5.0 en seis dimensiones (precisión, seguridad, fundamentación médica, cobertura clínica, coherencia de razonamiento y precisión de descripción), con un 79\% de los pares obteniendo puntuación perfecta. SkinCaRe es el dataset principal para ajuste fino del VLM debido a su rigurosidad clínica y su inclusión de razonamiento CoT, directamente alineado con el objetivo de generar reportes estructurados. MM-Skin (Sección~\ref{sec:mmskin}) se utiliza como benchmark complementario de evaluación.
+La principal ventaja de SkinCaRe respecto a alternativas como MM-Skin es la presencia de razonamiento CoT explícito en SkinCoT: cada narrativa incluye una cadena de justificación diagnóstica paso a paso, lo cual es precisamente lo que el VLM debe aprender a generar en la Etapa 2. Las anotaciones tienen validación clínica directa, a diferencia de las descripciones de libros de texto de MM-Skin.
 
 \subsubsection{Dataset de clasificación: HAM10000}
 
@@ -342,18 +339,18 @@ HAM10000 cumple un doble propósito:
 
 El dataset del Hospital Italiano de Buenos Aires (HIBA) \cite{piashiba_hiba_2023} contiene 1,616 imágenes (1,270 dermoscópicas y 346 clínicas) recolectadas en Argentina, constituyendo la primera base de datos pública de imágenes dermatológicas de población latinoamericana. El dataset se encuentra disponible públicamente en \url{https://github.com/piashiba/HIBASkinLesionsDataset}. Su incorporación permitirá evaluar el comportamiento del modelo en una población subrepresentada en los benchmarks internacionales, analizando potenciales sesgos asociados a los fototipos de piel predominantes en la región.
 
-\subsubsection{Dataset de VQA dermatológico: MM-Skin}
+\subsubsection{Dataset de evaluación externa: MM-Skin}
 \label{sec:mmskin}
 
-MM-Skin \cite{zhao_mm-skin_2025} es el primer dataset multimodal a gran escala específico para dermatología con descripciones textuales profesionales de largo formato. Contiene aproximadamente 10,000 pares imagen--texto extraídos de 15 libros de texto de dermatología, cubriendo tres modalidades de imagen (clínica, dermoscópica y patológica), complementados con más de 27,000 muestras de VQA generadas a partir de las descripciones. Este dataset cumple tres roles en el proyecto:
+MM-Skin \cite{zhao_mm-skin_2025} es el primer dataset multimodal a gran escala específico para dermatología con descripciones textuales profesionales de largo formato. Contiene aproximadamente 10,000 pares imagen--texto extraídos de 15 libros de texto de dermatología, cubriendo tres modalidades de imagen (clínica, dermoscópica y patológica), complementados con más de 27,000 muestras de VQA. En este proyecto, MM-Skin cumple exclusivamente roles de \textbf{evaluación}:
 
 \begin{enumerate}
+    \item \textbf{Benchmark de reportes con referencia (Nivel 1):} El split de test proporciona pares imagen--texto de referencia para evaluar la calidad de los reportes generados con métricas automáticas (BLEU-4, ROUGE-L, BERTScore, METEOR, CIDEr). Al ser un dataset externo al entrenamiento, constituye una evaluación más honesta de la capacidad de generalización del modelo.
     \item \textbf{Evaluación de VQA:} Permite evaluar la capacidad del VLM para responder preguntas clínicas sobre imágenes dermatológicas, una tarea complementaria a la generación libre de reportes.
-    \item \textbf{Benchmark de reportes:} Al contener descripciones textuales de referencia redactadas por dermatólogos autores de libros de texto, proporciona un segundo conjunto de texto de referencia (complementario a SkinCaRe) para evaluar la calidad de los reportes generados con métricas automáticas.
-    \item \textbf{Diversidad de modalidad:} A diferencia de SkinCaRe y HAM10000 (predominantemente dermoscópicos y clínicos), MM-Skin incluye imágenes patológicas, lo cual permite evaluar la robustez del modelo ante modalidades no vistas durante el ajuste fino.
+    \item \textbf{Diversidad de modalidad:} A diferencia de HAM10000 (predominantemente dermoscópico), MM-Skin incluye imágenes patológicas y clínicas, lo cual permite evaluar la robustez del modelo ante distintas modalidades.
 \end{enumerate}
 
-SkinVL, el modelo entrenado por los autores de MM-Skin sobre LLaVA-Med-v1.5, constituye un punto de referencia directo: nuestro modelo comparte la misma arquitectura base pero difiere en los datos de ajuste fino (SkinCaRe vs. MM-Skin), lo cual permite aislar el efecto del dataset de entrenamiento sobre la calidad de los reportes.
+SkinVL, el modelo entrenado por los autores de MM-Skin sobre LLaVA-Med-v1.5 con los mismos datos de MM-Skin, constituye un punto de referencia relevante para contextualizar los resultados de evaluación.
 
 \subsection{Modelos de Comparación (Baselines)}
 
@@ -402,7 +399,7 @@ Modelo de lenguaje & LLaMA-2 7B & Phi-3-mini 3.8B & 1.8$\times$ \\
 
 La elección de Phi-3-mini (3.8B parámetros) \cite{abdin_phi3_2024} como LLM del Mini-VLM se fundamenta en tres razones: (1) es un modelo sub-4B con un gran rendimiento en benchmarks de razonamiento y generación de texto a la fecha de su publicación; (2) su arquitectura tipo decoder-only es compatible con la integración de tokens visuales mediante proyección MLP, siguiendo el mismo paradigma que LLaVA; y (3) al ser desarrollado por Microsoft (al igual que LLaVA-Med), se espera buena compatibilidad técnica del ecosistema. La combinación con CLIP ViT-B/16 (en lugar de ViT-L/14) reduce la dimensionalidad de las representaciones visuales de 1024 a 768, acorde con la capacidad del LLM más pequeño.
 
-El Mini-VLM se entrena con el mismo pipeline de dos etapas, los mismos datos (SkinCaRe) y los mismos hiperparámetros de LoRA que LLaVA-Med, variando únicamente la escala de los componentes. Esta configuración de variables controladas permite atribuir las diferencias de rendimiento exclusivamente al factor de escala. La comparación es relevante porque un modelo significativamente más pequeño que mantenga rendimiento aceptable sería preferible para despliegue en entornos clínicos con recursos computacionales limitados. 
+El Mini-VLM se entrena con el mismo pipeline de dos etapas, los mismos datos (MM-Skin) y los mismos hiperparámetros de LoRA que LLaVA-Med, variando únicamente la escala de los componentes. Esta configuración de variables controladas permite atribuir las diferencias de rendimiento exclusivamente al factor de escala. La comparación es relevante porque un modelo significativamente más pequeño que mantenga rendimiento aceptable sería preferible para despliegue en entornos clínicos con recursos computacionales limitados. 
 
 \subsection{Técnicas y Algoritmos}
 
@@ -427,14 +424,14 @@ El pipeline de dos etapas se aplica de manera idéntica a LLaVA-Med y al Mini-VL
 \textbf{Etapa 1 — Alineamiento visual-textual:}
 \begin{itemize}
     \item Se congela el codificador visual (CLIP ViT-L/14) y el LLM.
-    \item Se entrena la capa de proyección MLP con SkinCAP ($\sim$4,000 pares).
+    \item Se entrena la capa de proyección MLP con SkinCAP captions EN, split de entrenamiento ($\sim$2,800 pares, validados clínicamente).
     \item Objetivo: aprender el mapeo de características visuales dermatológicas al espacio semántico del LLM.
 \end{itemize}
 
 \textbf{Etapa 2 — Ajuste de instrucciones:}
 \begin{itemize}
     \item Se congela el codificador visual.
-    \item Se entrena el LLM vía LoRA + la capa de proyección con SkinCaRe completo ($\sim$7,041 pares).
+    \item Se entrena el LLM vía LoRA + la capa de proyección con SkinCoT EN, split de entrenamiento ($\sim$2,130 pares, formato instrucción con CoT diagnóstico).
     \item Formato de instrucción: \texttt{``<image>\textbackslash n Describe esta lesión cutánea con un reporte clínico estructurado que incluya: hallazgos, impresión diagnóstica y diagnóstico diferencial.''}
 \end{itemize}
 
@@ -504,7 +501,7 @@ Adicionalmente, se incorporará una evaluación de \textbf{Coincidencia de Entid
 
 Mientras que la Fase 1 compara modelos exclusivamente en clasificación, la Fase 2 requiere un protocolo específico para evaluar y comparar la generación de reportes entre LLaVA-Med y el Mini-VLM. Este se estructura en tres niveles:
 
-\textbf{Nivel 1 — Evaluación automática con referencia (SkinCaRe + MM-Skin).} Ambos VLMs generan reportes sobre el split de test de SkinCaRe y sobre el test set de MM-Skin. Los reportes generados se comparan contra los textos de referencia (ground truth) utilizando las métricas léxicas y semánticas de la Tabla~\ref{tab:metricas_gen}: BLEU-4, ROUGE-L, BERTScore, METEOR y CIDEr. Esta evaluación mide la fidelidad del texto generado respecto a descripciones validadas clínicamente. El uso de dos datasets de referencia independientes (SkinCaRe con validación clínica directa, MM-Skin con textos de libros de texto) permite evaluar la robustez de los resultados.
+\textbf{Nivel 1 — Evaluación automática con referencia (MM-Skin test split).} Ambos VLMs generan reportes sobre el split de test de MM-Skin ($\sim$20\% del dataset). Los reportes generados se comparan contra los textos de referencia (ground truth) utilizando las métricas léxicas y semánticas de la Tabla~\ref{tab:metricas_gen}: BLEU-4, ROUGE-L, BERTScore, METEOR y CIDEr. MM-Skin actúa como benchmark externo: el modelo fue entrenado con SkinCaRe y es evaluado sobre MM-Skin, lo que constituye una evaluación de generalización más rigurosa que evaluar sobre datos de entrenamiento.
 
 \textbf{Nivel 2 — Evaluación automática sin referencia (HAM10000 + HIBA).} Como HAM10000 y HIBA carecen de reportes textuales, los reportes generados se evalúan mediante: (a) Coincidencia de Entidades Clínicas, verificando que el reporte mencione hallazgos coherentes con el diagnóstico conocido del paciente (metadatos disponibles: diagnóstico, edad, sexo, localización); y (b) consistencia diagnóstica, comprobando si la impresión diagnóstica del reporte coincide con la etiqueta de clasificación.
 
@@ -521,8 +518,7 @@ La Tabla~\ref{tab:eval_reportes} resume este protocolo.
 \toprule
 \textbf{Nivel} & \textbf{Dataset} & \textbf{Métricas} & \textbf{Modelos} \\
 \midrule
-1 (con referencia) & SkinCaRe (test) & BLEU-4, ROUGE-L, BERTScore, METEOR, CIDEr & LLaVA-Med, Mini-VLM \\
-1 (con referencia) & MM-Skin (test) & BLEU-4, ROUGE-L, BERTScore, Recall & LLaVA-Med, Mini-VLM \\
+1 (con referencia) & MM-Skin (test, $\sim$2.2k) & BLEU-4, ROUGE-L, BERTScore, METEOR, CIDEr & LLaVA-Med, Mini-VLM \\
 2 (sin referencia) & HAM10000 & Entidades clínicas, consistencia diagnóstica & LLaVA-Med, Mini-VLM \\
 2 (sin referencia) & HIBA & Entidades clínicas, consistencia diagnóstica & LLaVA-Med, Mini-VLM \\
 3 (cualitativo) & Muestra cruzada & Coherencia, completitud, alucinaciones & LLaVA-Med, Mini-VLM \\
@@ -603,11 +599,11 @@ El desarrollo experimental se organiza en cuatro fases con hitos verificables. L
 \textbf{Fase} & \textbf{Nombre} & \textbf{Actividades} & \textbf{Entregable} \\
 \midrule
 \rowcolor{phase0!15}
-0 & Preparación & Descarga de datasets (SkinCaRe, HAM10000, HIBA, MM-Skin), configuración de entorno, análisis exploratorio de datos, preprocesamiento y definición de splits estratificados & Datos listos \\
+0 & Preparación & Descarga de datasets (HAM10000, SkinCaRe via HuggingFace, MM-Skin, HIBA), configuración de entorno, análisis exploratorio de datos, preprocesamiento y definición de splits estratificados. & Datos listos \\
 \rowcolor{phase1!15}
 1 & Clasificación & Entrenar DenseNet121 y ViT-B/16 (transfer learning desde ImageNet) sobre HAM10000. Adaptar LLaVA-Med y Mini-VLM para clasificación vía prompt. Evaluación comparativa con métricas de la Tabla~\ref{tab:metricas_clas} & Tabla comparativa \\
 \rowcolor{phase2!15}
-2 & Generación & Entrenamiento de dos etapas para LLaVA-Med y Mini-VLM (alineamiento con SkinCAP + instruction tuning con SkinCaRe). Evaluación de reportes según protocolo de la Tabla~\ref{tab:eval_reportes} sobre SkinCaRe, MM-Skin, HAM10000 y HIBA & Reportes generados \\
+2 & Generación & Entrenamiento de dos etapas para LLaVA-Med y Mini-VLM (alineamiento con SkinCAP + instruction tuning con SkinCoT EN). Evaluación de reportes según protocolo de la Tabla~\ref{tab:eval_reportes} sobre MM-Skin (test, benchmark externo), HAM10000 y HIBA & Reportes generados \\
 \rowcolor{phase3!15}
 3 & Integración & Análisis cruzado clasificación/generación. Estudios de ablación (rango LoRA, escala del modelo LLaVA-Med vs. Mini-VLM, LoRA vs. QLoRA). Documentación y escritura final de la tesina & Tesina completa \\
 \bottomrule
@@ -625,7 +621,7 @@ El desarrollo experimental se organiza en cuatro fases con hitos verificables. L
 \textbf{Riesgo} & \textbf{Prob.} & \textbf{Mitigación} \\
 \midrule
 VRAM insuficiente con LoRA & Media & Activar QLoRA 4-bit ($\sim$10 GB) \\
-SkinCaRe insuficiente & Baja & Complementar con MM-Skin (27k VQA) \\
+SkinCaRe inaccesible & \textbf{Resuelto} & SkinCaRe disponible en HuggingFace (\texttt{yuhos16/SkinCaRe}, dataset gated). Descarga automatizada con \texttt{snapshot\_download} vía \texttt{HF\_TOKEN}. Ver Sección~\ref{sec:skincare_training}. \\
 Tiempo de entrenamiento excesivo & Media & Reducir épocas, subsets estratificados, early stopping \\
 Alucinaciones en reportes & Alta & Clinical Entity Matching + revisión cualitativa manual \\
 \bottomrule
@@ -637,7 +633,7 @@ Alucinaciones en reportes & Alta & Clinical Entity Matching + revisión cualitat
 \begin{itemize}
     \item \textbf{Hardware local:} GPU en pc personal NVIDIA RTX 4070 12GB para pruebas locales.
     \item \textbf{Hardware Primario:} Cluster TOKO (ICB-ITIC, UNCuyo) y Mendieta (CCAD, UNC).
-    \item \textbf{Repositorios base:} \texttt{microsoft/LLaVA-Med}, \texttt{microsoft/Phi-3-mini-4k-instruct}, \texttt{ZwQ803/MM-Skin}, \texttt{piashiba/HIBASkinLesionsDataset}.
+    \item \textbf{Repositorios base:} \texttt{microsoft/LLaVA-Med}, \texttt{microsoft/Phi-3-mini-4k-instruct}, \texttt{yuhos16/SkinCaRe} (HuggingFace), \texttt{ZwQ803/MM-Skin}, \texttt{piashiba/HIBASkinLesionsDataset}.
 \end{itemize}
 
 % ============================================================================

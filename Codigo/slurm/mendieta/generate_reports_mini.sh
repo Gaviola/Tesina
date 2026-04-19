@@ -15,7 +15,7 @@
 
 ## Mini-VLM: Generacion de reportes clinicos en batch (~8GB en A30 24GB)
 ## Modelo: CLIP ViT-B/16 + Phi-3-mini (Stage 2 fine-tuned)
-## Datasets: MM-SkinQA (Nivel 1 con referencias) + HAM10000 (Nivel 2 NER)
+## Datasets: MM-SkinQA (Nivel 1 con referencias) + HAM10000 (Nivel 2 NER) + SkinCoT (dataset de entrenamiento)
 
 . /etc/profile
 module load cuda 2>/dev/null || true
@@ -50,9 +50,9 @@ echo "Python: $(${PYTHON} --version)"
 
 find ${HOME}/miniconda3/envs/dermvlm -name "__pycache__" -path "*/scipy/*" -exec rm -rf {} + 2>/dev/null
 
-# Datasets a procesar (space-separated): mmskin ham10000
+# Datasets a procesar (space-separated): mmskin ham10000 skincare
 # Sobreescribir con: sbatch --export=ALL,DATASETS="mmskin" script.sh
-DATASETS="${DATASETS:-mmskin ham10000}"
+DATASETS="${DATASETS:-mmskin ham10000 skincare}"
 echo "Datasets a procesar: ${DATASETS}"
 echo ""
 
@@ -78,6 +78,20 @@ if [[ "$DATASETS" == *"ham10000"* ]]; then
         --checkpoint outputs/checkpoints/stage2_mini_vlm/best_model.pt \
         --images_dir data/processed/HAM10000 \
         --output_dir outputs/generated_reports/mini_vlm/HAM10000 \
+        --max_tokens 512 \
+        --seed 42
+    echo ""
+fi
+
+# --- Paso 3: Reportes sobre SkinCoT test split (dataset de entrenamiento Stage 2) ---
+if [[ "$DATASETS" == *"skincare"* ]]; then
+    echo "=== Generando reportes SkinCoT test split (dataset de entrenamiento) ==="
+    ${PYTHON} scripts/generate_report.py \
+        --model mini_vlm \
+        --checkpoint outputs/checkpoints/stage2_mini_vlm/best_model.pt \
+        --images_dir data/raw/skincare/skincare/SkinCoT/images \
+        --reference_dir data/raw/skincare/skincare/SkinCoT/EN \
+        --output_dir outputs/generated_reports/mini_vlm/skincare \
         --max_tokens 512 \
         --seed 42
     echo ""

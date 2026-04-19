@@ -45,55 +45,75 @@ def download(remote: str, local: Path, label: str, skip_existing: bool = False) 
 
 
 def download_differential(remote_base: str, local_base: Path, label: str) -> int:
-    """Descarga diferencial: solo baja subdirectorios model/dataset/ que faltan localmente.
+    """Descarga diferencial: soporta estructura plana (un nivel) o anidada (model/dataset/).
 
-    Estructura esperada:
+    Estructura plana:
+        remote_base/<dir>/  (ej: stage1_llava_med/, stage2_mini_vlm/)
+        Los archivos viven directamente dentro del directorio.
+
+    Estructura anidada:
         remote_base/<model>/<dataset>/  (ej: llava_med/HAM10000/, mini_vlm/MM-Skin/)
 
     Los directorios que ya existen localmente con archivos se saltean.
     Los vacios o ausentes se descargan completos.
     """
     print(f"Analizando estado local vs remoto para {label}...")
-    model_dirs = list_remote_subdirs(remote_base)
-    if not model_dirs:
+    top_dirs = list_remote_subdirs(remote_base)
+    if not top_dirs:
         print(f"  ADVERTENCIA: no se encontraron subdirectorios en {remote_base}")
         print(f"  Verifique la conexion SSH o que el path remoto exista.")
         return 1
 
-    to_skip: list[tuple[str, str]] = []
-    to_download: list[tuple[str, str]] = []
+    # (top, sub) donde sub=None indica estructura plana (descarga directa de top)
+    to_skip: list[tuple[str, str | None]] = []
+    to_download: list[tuple[str, str | None]] = []
 
-    for model in model_dirs:
-        dataset_dirs = list_remote_subdirs(f"{remote_base}/{model}")
-        if not dataset_dirs:
-            print(f"  ADVERTENCIA: {model}/ no tiene subdirectorios remotos, saltando.")
-            continue
-        for dataset in dataset_dirs:
-            local_dataset = local_base / model / dataset
-            if local_dataset.exists() and any(local_dataset.iterdir()):
-                to_skip.append((model, dataset))
+    for top in top_dirs:
+        sub_dirs = list_remote_subdirs(f"{remote_base}/{top}")
+        if not sub_dirs:
+            # Estructura plana: el directorio contiene archivos directamente
+            local_dir = local_base / top
+            if local_dir.exists() and any(local_dir.iterdir()):
+                to_skip.append((top, None))
             else:
-                to_download.append((model, dataset))
+                to_download.append((top, None))
+        else:
+            for sub in sub_dirs:
+                local_sub = local_base / top / sub
+                if local_sub.exists() and any(local_sub.iterdir()):
+                    to_skip.append((top, sub))
+                else:
+                    to_download.append((top, sub))
 
     print(f"\n  Resumen diferencial — {label}:")
-    for model, dataset in to_skip:
-        n = sum(1 for f in (local_base / model / dataset).rglob("*") if f.is_file())
-        print(f"  [SKIP]  {model}/{dataset}/  ({n} archivos locales)")
-    for model, dataset in to_download:
-        print(f"  [BAJAR] {model}/{dataset}/")
+    for top, sub in to_skip:
+        local_dir = local_base / top / sub if sub else local_base / top
+        n = sum(1 for f in local_dir.rglob("*") if f.is_file())
+        path = f"{top}/{sub}/" if sub else f"{top}/"
+        print(f"  [SKIP]  {path}  ({n} archivos locales)")
+    for top, sub in to_download:
+        path = f"{top}/{sub}/" if sub else f"{top}/"
+        print(f"  [BAJAR] {path}")
     if not to_download:
         print("  Todo al dia. Nada que descargar.")
         return 0
     print()
 
     errors = 0
-    for model, dataset in to_download:
-        local_dst = local_base / model
-        local_dst.mkdir(parents=True, exist_ok=True)
-        rc = download(f"{remote_base}/{model}/{dataset}",
-                      local_dst / dataset, f"{model}/{dataset}/")
-        if rc != 0:
-            print(f"  ERROR: fallo la descarga de {model}/{dataset}/")
+    for top, sub in to_download:
+        if sub:
+            local_dst = local_base / top
+            local_dst.mkdir(parents=True, exist_ok=True)
+            rc = download(f"{remote_base}/{top}/{sub}",
+                          local_dst / sub, f"{top}/{sub}/")
+            if rc != 0:
+                print(f"  ERROR: fallo la descarga de {top}/{sub}/")
+        else:
+            local_base.mkdir(parents=True, exist_ok=True)
+            rc = download(f"{remote_base}/{top}",
+                          local_base / top, f"{top}/")
+            if rc != 0:
+                print(f"  ERROR: fallo la descarga de {top}/")
         errors += rc
     return errors
 

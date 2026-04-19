@@ -135,7 +135,8 @@ python scripts/mendieta/submit.py classifier # DenseNet + ViT baselines
 python scripts/mendieta/submit.py gen_llava        # reportes LLaVA-Med (~12h) 1145773
 python scripts/mendieta/submit.py gen_mini         # reportes Mini-VLM (~8h) 1145774
 python scripts/mendieta/submit.py all_gen_mmskin   # reportes MM-SkinQA ambos modelos 1145824, 1145825
-python scripts/mendieta/submit.py all_gen_ham      # reportes HAM10000 ambos modelos 
+python scripts/mendieta/submit.py all_gen_ham      # reportes HAM10000 ambos modelos
+python scripts/mendieta/submit.py all_gen_skincare
 python scripts/mendieta/submit.py all_gen          # ambos modelos
 
 python scripts/mendieta/submit.py classify_llava   # clasificacion zero-shot LLaVA-Med (~4h) 1145779

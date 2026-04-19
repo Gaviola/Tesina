@@ -114,13 +114,16 @@ def build_slurm_script(combo: dict, trial_idx: int, total: int,
         combo_summary=combo_summary,
     )
 
+    s1_ckpt_dir = f"stage1_{model}_{run_name}"
     train_cmd = f"""\
 echo "--- Stage 1: alineamiento visual-textual ({model}) ---"
 {python_bin} scripts/train_vlm_stage1.py \\
     --model {model} \\
     --lr {shell_val(combo["stage1_lr"])} \\
     --epochs {combo["stage1_epochs"]} \\
-    --seed 42
+    --seed 42 \\
+    --run-name {run_name} \\
+    --wandb
 
 echo ""
 echo "--- Stage 2: fine-tuning con LoRA ({model}) ---"
@@ -132,8 +135,10 @@ echo "--- Stage 2: fine-tuning con LoRA ({model}) ---"
     --lora_r {lora_r} \\
     --lora_alpha {lora_alpha} \\
     --lora_dropout {shell_val(combo["lora_dropout"])} \\
-    --checkpoint outputs/checkpoints/stage1_{model}/best_model.pt \\
-    --seed 42
+    --checkpoint outputs/checkpoints/{s1_ckpt_dir}/best_model.pt \\
+    --seed 42 \\
+    --run-name {run_name} \\
+    --wandb
 """
 
     footer = """

@@ -71,6 +71,19 @@ def _load_model_with_checkpoint(args):
         if lora_config_path.exists():
             with open(lora_config_path, encoding="utf-8") as f:
                 lora_cfg = json.load(f)
+
+            # Inferir r real desde shapes del checkpoint (lora_A.weight shape = [r, in_features])
+            state_dict = ckpt.get("model_state_dict", {})
+            lora_a_key = next((k for k in state_dict if "lora_A.default.weight" in k), None)
+            if lora_a_key is not None:
+                r_actual = state_dict[lora_a_key].shape[0]
+                if r_actual != lora_cfg["r"]:
+                    logger.warning(
+                        "LoRA r en lora_config.json (%d) difiere del checkpoint (%d). Usando r=%d del checkpoint.",
+                        lora_cfg["r"], r_actual, r_actual,
+                    )
+                    lora_cfg["r"] = r_actual
+
             logger.info("LoRA config detectada: r=%d, alpha=%d", lora_cfg["r"], lora_cfg["lora_alpha"])
             lora_config = get_lora_config(
                 r=lora_cfg["r"],
@@ -112,6 +125,10 @@ def main():
     parser.add_argument("--output_dir", type=str, default="outputs/generated_reports")
     parser.add_argument("--reference_csv", type=str, default=None,
                         help="CSV con columnas image_id y caption/report para referencias")
+    parser.add_argument("--reference_dir", type=str, default=None,
+                        help="Directorio con archivos .txt de referencia en estructura paralela "
+                             "a --images_dir. Para cada imagen <images_dir>/A/B.jpg busca "
+                             "<reference_dir>/A/B.jpg.txt (formato SkinCoT).")
     parser.add_argument("--max_tokens", type=int, default=512)
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
@@ -160,14 +177,14 @@ def main():
             sys.exit(1)
 
         image_paths = sorted(
-            p for p in images_dir.iterdir()
-            if p.suffix.lower() in _IMAGE_EXTENSIONS
+            p for p in images_dir.rglob("*")
+            if p.is_file() and p.suffix.lower() in _IMAGE_EXTENSIONS
         )
         if not image_paths:
             logger.error("No se encontraron imágenes en %s", args.images_dir)
             sys.exit(1)
 
-        # Cargar referencias opcionales
+        # Cargar referencias opcionales desde CSV (ej: MM-SkinQA)
         references = {}
         if args.reference_csv:
             import pandas as pd
@@ -179,19 +196,34 @@ def main():
                 if img_id and text:
                     references[img_id] = str(text)
 
+        # Directorio de referencias en estructura paralela (ej: SkinCoT EN/)
+        reference_dir = Path(args.reference_dir) if args.reference_dir else None
+        if reference_dir and not reference_dir.exists():
+            logger.error("Directorio de referencias no encontrado: %s", args.reference_dir)
+            sys.exit(1)
+
         output_dir = Path(args.output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
 
         logger.info("Generando reportes para %d imágenes...", len(image_paths))
         for i, img_path in enumerate(image_paths):
             try:
+                # Resolver referencia: primero reference_dir, luego reference_csv
+                reference = references.get(img_path.name, "")
+                if not reference and reference_dir is not None:
+                    # Misma subestructura que images_dir: <reference_dir>/A/B.jpg.txt
+                    rel = img_path.relative_to(images_dir)
+                    txt_path = reference_dir / rel.parent / (rel.name + ".txt")
+                    if txt_path.exists():
+                        reference = txt_path.read_text(encoding="utf-8").strip()
+
                 report = _generate_single(model, img_path, args.max_tokens)
                 result = {
                     "image_id": img_path.name,
                     "model": args.model,
                     "checkpoint": args.checkpoint,
                     "report": report,
-                    "reference": references.get(img_path.name, ""),
+                    "reference": reference,
                     "gt_label": "",
                 }
                 out_file = output_dir / f"{img_path.stem}_report.json"

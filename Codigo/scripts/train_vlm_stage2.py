@@ -73,6 +73,9 @@ def main():
     parser.add_argument("--lora_dropout", type=float, default=0.05)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--wandb", action="store_true")
+    parser.add_argument("--run-name", type=str, default=None, dest="run_name",
+                        help="Nombre del run para wandb y sufijo del directorio de checkpoint. "
+                             "Si no se pasa, se genera automáticamente con timestamp.")
     parser.add_argument("--num_workers", type=int, default=None)
     parser.add_argument(
         "--eval-only", action="store_true", dest="eval_only",
@@ -101,7 +104,7 @@ def main():
 
     set_seed(args.seed)
 
-    run_name = f"stage2_{args.model}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    run_name = args.run_name or f"stage2_{args.model}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
     output_dir = Path(args.output_dir)
 
     setup_logger(
@@ -213,7 +216,8 @@ def main():
     num_workers = args.num_workers if args.num_workers is not None else get_num_workers()
 
     # --- Configuración ---
-    checkpoint_dir = str(output_dir / "checkpoints" / f"stage2_{args.model}")
+    ckpt_subdir = f"stage2_{args.model}_{args.run_name}" if args.run_name else f"stage2_{args.model}"
+    checkpoint_dir = str(output_dir / "checkpoints" / ckpt_subdir)
     cfg = {
         "epochs": args.epochs,
         "lr": args.lr,
@@ -313,6 +317,17 @@ def main():
     results_path = str(output_dir / "results" / args.model / "stage2_metrics.json")
     save_results(metrics, results_path)
     logger.info("Métricas Stage 2 guardadas en %s", results_path)
+
+    # --- Guardar hiperparámetros junto al checkpoint (para reproducibilidad del sweep) ---
+    if args.run_name:
+        import json as _json
+        sweep_cfg_path = Path(checkpoint_dir) / "sweep_config.json"
+        sweep_cfg = {k: v for k, v in vars(args).items() if k not in ("wandb", "dry_run", "dry_run_batches", "eval_only")}
+        sweep_cfg["best_val_loss"] = min(metrics["val_loss"]) if metrics["val_loss"] else None
+        sweep_cfg["best_epoch"] = metrics["best_epoch"]
+        with open(sweep_cfg_path, "w", encoding="utf-8") as f:
+            _json.dump(sweep_cfg, f, indent=2)
+        logger.info("Hiperparámetros del sweep guardados en %s", sweep_cfg_path)
     logger.info(
         "Stage 2 finalizado | Best epoch: %d | Best val_loss: %.4f",
         metrics["best_epoch"],
