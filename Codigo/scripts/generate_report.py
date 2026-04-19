@@ -184,6 +184,17 @@ def main():
             logger.error("No se encontraron imágenes en %s", args.images_dir)
             sys.exit(1)
 
+        def _is_valid_report(path: Path) -> bool:
+            """True si el archivo existe y tiene un reporte no vacío (resume defensivo)."""
+            if not path.exists():
+                return False
+            try:
+                with open(path, encoding="utf-8") as f:
+                    data = json.load(f)
+                return bool(data.get("report", "").strip())
+            except (json.JSONDecodeError, OSError):
+                return False
+
         # Cargar referencias opcionales desde CSV (ej: MM-SkinQA)
         references = {}
         if args.reference_csv:
@@ -205,8 +216,22 @@ def main():
         output_dir = Path(args.output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
 
+        skipped = sum(
+            1 for p in image_paths
+            if _is_valid_report(output_dir / f"{p.stem}_report.json")
+        )
+        if skipped:
+            logger.info(
+                "Resume: %d/%d reportes ya existen y son válidos, se saltarán",
+                skipped, len(image_paths),
+            )
+
         logger.info("Generando reportes para %d imágenes...", len(image_paths))
+        processed = 0
         for i, img_path in enumerate(image_paths):
+            out_file = output_dir / f"{img_path.stem}_report.json"
+            if _is_valid_report(out_file):
+                continue
             try:
                 # Resolver referencia: primero reference_dir, luego reference_csv
                 reference = references.get(img_path.name, "")
@@ -226,15 +251,21 @@ def main():
                     "reference": reference,
                     "gt_label": "",
                 }
-                out_file = output_dir / f"{img_path.stem}_report.json"
                 save_results(result, str(out_file))
+                processed += 1
 
-                if (i + 1) % 50 == 0 or i == 0:
-                    logger.info("Progreso: %d/%d imágenes procesadas", i + 1, len(image_paths))
+                if processed % 10 == 0 or processed == 1:
+                    logger.info(
+                        "Progreso: %d nuevos / %d totales (de %d imágenes)",
+                        processed, processed + skipped, len(image_paths),
+                    )
             except Exception as e:
                 logger.warning("Error procesando %s: %s", img_path.name, e)
 
-        logger.info("Reportes guardados en %s (%d archivos)", output_dir, len(image_paths))
+        logger.info(
+            "Reportes guardados en %s (%d nuevos, %d ya existían)",
+            output_dir, processed, skipped,
+        )
 
 
 if __name__ == "__main__":

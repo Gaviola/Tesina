@@ -20,6 +20,9 @@
 PYTHON="${HOME}/miniconda3/envs/dermvlm/bin/python"
 export LD_LIBRARY_PATH="${HOME}/miniconda3/envs/dermvlm/lib:${LD_LIBRARY_PATH}"
 
+# Desactivar buffering de stdout/stderr para que los logs aparezcan en tiempo real
+export PYTHONUNBUFFERED=1
+
 cd /home/$USER/scratch/dermvlm
 
 export TMPDIR="/tmp/${SLURM_JOB_ID}"

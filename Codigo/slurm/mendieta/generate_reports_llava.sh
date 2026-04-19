@@ -8,7 +8,7 @@
 #SBATCH --cpus-per-task=10
 #SBATCH --mem=0
 #SBATCH --gres=gpu:1
-#SBATCH --time=12:00:00
+#SBATCH --time=2-00:00
 #SBATCH --signal=B:SIGTERM@595
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=facundo.gaviola@gmail.com
@@ -26,6 +26,9 @@ export LD_LIBRARY_PATH="${HOME}/miniconda3/envs/dermvlm/lib:${LD_LIBRARY_PATH}"
 # Nodos de computo no tienen internet — usar modelos pre-descargados del cache
 export HF_HUB_OFFLINE=1
 export TRANSFORMERS_OFFLINE=1
+
+# Desactivar buffering de stdout/stderr para que los logs aparezcan en tiempo real
+export PYTHONUNBUFFERED=1
 
 cd /home/$USER/dermvlm
 
