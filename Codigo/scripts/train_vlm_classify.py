@@ -1,8 +1,18 @@
-"""Fase 1: Clasificación zero-shot vía prompt con VLMs.
+"""Fase 1: Clasificacion con VLMs sobre HAM10000.
+
+Dos metodos soportados via --method:
+  - generate   (default): prompt de clasificacion -> generate autoregresivo
+                -> regex parse. Metodo original, propenso a colapso de clase.
+  - likelihood: scoring teacher-forced de P(clase | imagen, prompt) por cada
+                clase y prompt. Ensemble de 4 prompts (2 abiertos + 2 cerrados),
+                3 sinonimos por clase agregados por max, length-normalized.
+                Evita el colapso de clase por construccion.
 
 Uso:
-    python scripts/train_vlm_classify.py --model llava_med
-    python scripts/train_vlm_classify.py --model mini_vlm
+    python scripts/train_vlm_classify.py --model llava_med --method generate
+    python scripts/train_vlm_classify.py --model mini_vlm --method likelihood
+    python scripts/train_vlm_classify.py --model llava_med --method likelihood \\
+        --checkpoint outputs/checkpoints/stage2_llava_med/best_model.pt
 """
 
 import argparse
@@ -20,6 +30,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from src.data.collators import VLMCollator
 from src.data.ham10000 import HAM10000_CLASSES, HAM10000_LABEL_MAP, HAM10000Dataset
+from src.evaluation.vlm_scoring import CLASS_SYNONYMS, PROMPT_TEMPLATES, score_image
 from src.models.factory import build_model
 from src.training.lora_config import apply_lora, get_lora_config
 from src.utils.device import check_vram, get_device, get_training_dtype, get_vram_gb
@@ -59,9 +70,234 @@ def parse_vlm_response(response: str) -> str:
     return "UNKNOWN"
 
 
+def run_likelihood_eval(args, model, test_dataset, is_finetuned, script_start):
+    """Evalua clasificacion via likelihood scoring en lugar de generate.
+
+    Itera por imagen (score_image trabaja 1 imagen a la vez) y computa
+    log P(clase | imagen, prompt) para cada prompt del ensemble y cada
+    clase. El argmax sobre las 7 clases nunca es UNKNOWN por construccion.
+
+    Guarda:
+      - {model}_likelihood[_finetuned]_predictions.json: matriz completa
+        de log-probs, predicciones por prompt, prediccion ensemble.
+      - {model}_likelihood[_finetuned]_test_results.json: metricas
+        (accuracy ensemble + por-prompt, F1, sens/spec).
+    """
+    from src.evaluation.classification import evaluate_classification
+
+    prompts = PROMPT_TEMPLATES
+    prompt_keys = list(prompts.keys())
+    num_prompts = len(prompt_keys)
+    num_classes = len(HAM10000_CLASSES)
+
+    total_images = len(test_dataset)
+    limit = args.dry_run_batches if args.dry_run else total_images
+
+    if args.dry_run:
+        logger.info("=== MODO DRY-RUN (likelihood): procesando %d imagenes ===", limit)
+    logger.info(
+        "Likelihood scoring: %d imagenes x %d prompts x %d clases x sinonimos",
+        limit, num_prompts, num_classes,
+    )
+    logger.info("Prompts ensemble: %s", prompt_keys)
+
+    inference_start = time.perf_counter()
+
+    all_y_true: list[int] = []
+    all_y_pred: list[int] = []                       # ensemble argmax
+    all_y_pred_per_prompt: list[list[int]] = []      # shape: (N, num_prompts)
+    all_logp_matrix: list[list[list[float]]] = []    # shape: (N, num_prompts, num_classes)
+    all_image_ids: list[str] = []
+
+    per_syn_dump: list = [] if args.keep_synonym_details else None
+
+    for idx in range(limit):
+        sample = test_dataset[idx]
+        image = sample["image"]
+        label = int(sample["label"])
+        image_id = sample.get("image_id", "")
+
+        scored = score_image(
+            vlm=model,
+            vlm_name=args.model,
+            image=image,
+            class_codes=HAM10000_CLASSES,
+            prompts=prompts,
+            length_normalize=True,
+            keep_synonym_details=args.keep_synonym_details,
+        )
+
+        all_y_true.append(label)
+        all_y_pred.append(HAM10000_LABEL_MAP[scored["pred_ensemble"]])
+        all_y_pred_per_prompt.append(
+            [HAM10000_LABEL_MAP[p] for p in scored["pred_per_prompt"]]
+        )
+        all_logp_matrix.append(scored["logp_per_prompt_class"])
+        all_image_ids.append(image_id)
+
+        if args.keep_synonym_details:
+            per_syn_dump.append(scored["per_synonym_details"])
+
+        if (idx + 1) % 25 == 0 or (idx + 1) == limit:
+            elapsed = time.perf_counter() - inference_start
+            images_per_sec = (idx + 1) / max(elapsed, 0.001)
+            remaining = limit - (idx + 1)
+            eta = elapsed / max(idx + 1, 1) * remaining
+            logger.info(
+                "Progreso: %d/%d imagenes [%.2f img/s, ETA: %s]",
+                idx + 1, limit, images_per_sec, format_duration(eta),
+            )
+
+    inference_time = time.perf_counter() - inference_start
+    logger.info("Likelihood scoring completado en %s", format_duration(inference_time))
+
+    # --- Resumen dry-run ---
+    if args.dry_run:
+        if torch.cuda.is_available():
+            peak_mb = torch.cuda.max_memory_allocated() / (1024**2)
+            total_vram_mb = torch.cuda.get_device_properties(0).total_memory / (1024**2)
+            headroom_mb = total_vram_mb - peak_mb
+        else:
+            peak_mb = total_vram_mb = headroom_mb = 0
+
+        images_done = len(all_y_true)
+        images_per_sec = images_done / max(inference_time, 0.001)
+        est_total_secs = inference_time / max(images_done, 1) * total_images
+
+        # Distribucion de predicciones ensemble
+        pred_counts = {cls: 0 for cls in HAM10000_CLASSES}
+        for p in all_y_pred:
+            pred_counts[HAM10000_CLASSES[p]] += 1
+        dominant_cls = max(pred_counts, key=pred_counts.get)
+        dominant_pct = 100 * pred_counts[dominant_cls] / max(images_done, 1)
+
+        sample_n = min(5, len(all_y_true))
+        sample_lines = []
+        for i in range(sample_n):
+            true_label = HAM10000_CLASSES[all_y_true[i]]
+            pred_ens = HAM10000_CLASSES[all_y_pred[i]]
+            per_prompt = [HAM10000_CLASSES[p] for p in all_y_pred_per_prompt[i]]
+            sample_lines.append(
+                f"    [{i}] true={true_label} pred_ensemble={pred_ens} "
+                f"per_prompt={dict(zip(prompt_keys, per_prompt))}"
+            )
+
+        status = "OK"
+        warnings = []
+        if dominant_pct > 80:
+            warnings.append(
+                f"prediccion dominante {dominant_cls} = {dominant_pct:.0f}% "
+                f"(posible colapso aun con likelihood)"
+            )
+        if 0 < headroom_mb < 500:
+            warnings.append(f"headroom VRAM bajo ({headroom_mb:.0f} MB)")
+        if warnings:
+            status = "ADVERTENCIA - " + "; ".join(warnings)
+
+        logger.info(
+            "\n=== RESUMEN DRY-RUN (likelihood %s) ===\n"
+            "  VRAM pico           : %.0f MB / %.0f MB\n"
+            "  VRAM headroom       : %.0f MB\n"
+            "  Imagenes procesadas : %d / %d\n"
+            "  Velocidad           : %.2f img/s\n"
+            "  Distribucion preds  : %s\n"
+            "  Est. tiempo total   : %s (%d imagenes)\n"
+            "  Primeras muestras   :\n%s\n"
+            "  Estado              : %s",
+            args.model,
+            peak_mb, total_vram_mb,
+            headroom_mb,
+            images_done, total_images,
+            images_per_sec,
+            pred_counts,
+            format_duration(est_total_secs), total_images,
+            "\n".join(sample_lines),
+            status,
+        )
+        logger.info("Ejecucion total: %s", format_duration(time.perf_counter() - script_start))
+        sys.exit(0)
+
+    # --- Guardar resultados ---
+    results_dir = Path(args.output_dir) / "results"
+    results_dir.mkdir(parents=True, exist_ok=True)
+    suffix = "_likelihood_finetuned" if is_finetuned else "_likelihood"
+
+    predictions = {
+        "model": args.model,
+        "finetuned": is_finetuned,
+        "method": "likelihood",
+        "length_normalized": True,
+        "prompts": prompts,
+        "class_names": HAM10000_CLASSES,
+        "class_synonyms": CLASS_SYNONYMS,
+        "image_ids": all_image_ids,
+        "y_true": all_y_true,
+        "y_pred": all_y_pred,
+        "y_pred_per_prompt": all_y_pred_per_prompt,
+        "logp_matrix": all_logp_matrix,
+        "unknown_count": 0,
+    }
+    if args.keep_synonym_details:
+        predictions["per_synonym_details"] = per_syn_dump
+    pred_path = results_dir / f"{args.model}{suffix}_predictions.json"
+    save_results(predictions, str(pred_path))
+    logger.info("Predicciones likelihood guardadas en %s", pred_path)
+
+    # --- Metricas ---
+    total = len(all_y_true)
+    ensemble_results = evaluate_classification(
+        all_y_true, all_y_pred, class_names=HAM10000_CLASSES,
+    )
+
+    mode_label = f"{args.model} (likelihood, fine-tuned)" if is_finetuned else f"{args.model} (likelihood)"
+    logger.info("=== Resultados %s ===", mode_label)
+    logger.info("Accuracy (ensemble)     : %.4f", ensemble_results["accuracy"])
+    logger.info("F1 weighted (ensemble)  : %.4f", ensemble_results["f1_weighted"])
+    logger.info("Sens. macro (ensemble)  : %.4f", ensemble_results["sensitivity_macro"])
+    logger.info("Spec. macro (ensemble)  : %.4f", ensemble_results["specificity_macro"])
+
+    # Accuracy por prompt individual
+    per_prompt_accuracy = {}
+    for pi, pk in enumerate(prompt_keys):
+        y_pred_p = [row[pi] for row in all_y_pred_per_prompt]
+        correct = sum(1 for yt, yp in zip(all_y_true, y_pred_p) if yt == yp)
+        per_prompt_accuracy[pk] = correct / max(total, 1)
+        logger.info("Accuracy prompt %s      : %.4f", pk, per_prompt_accuracy[pk])
+
+    metrics_path = results_dir / f"{args.model}{suffix}_test_results.json"
+    save_results(
+        {
+            "model": args.model,
+            "finetuned": is_finetuned,
+            "method": "likelihood",
+            "prompts": prompts,
+            "accuracy": ensemble_results["accuracy"],
+            "f1_weighted": ensemble_results["f1_weighted"],
+            "auc_roc_macro": ensemble_results["auc_roc_macro"],
+            "sensitivity_macro": ensemble_results["sensitivity_macro"],
+            "specificity_macro": ensemble_results["specificity_macro"],
+            "sensitivity_per_class": ensemble_results.get("sensitivity_per_class", []),
+            "specificity_per_class": ensemble_results.get("specificity_per_class", []),
+            "confusion_matrix": ensemble_results["confusion_matrix"],
+            "per_prompt_accuracy": per_prompt_accuracy,
+            "unknown_count": 0,
+            "total_samples": total,
+            "valid_samples": total,
+        },
+        str(metrics_path),
+    )
+    logger.info("Metricas guardadas en %s", metrics_path)
+    logger.info("Ejecucion total: %s", format_duration(time.perf_counter() - script_start))
+
+
 def main():
-    parser = argparse.ArgumentParser(description="F1: Clasificación zero-shot con VLMs")
+    parser = argparse.ArgumentParser(description="F1: Clasificacion con VLMs (generate o likelihood)")
     parser.add_argument("--model", type=str, required=True, choices=["llava_med", "mini_vlm"])
+    parser.add_argument("--method", type=str, default="generate",
+                        choices=["generate", "likelihood"],
+                        help="generate: prompt + autoregresivo + regex parse. "
+                             "likelihood: teacher-forced scoring P(clase|imagen,prompt) "
+                             "con ensemble de 4 prompts, sinonimos y length-normalization.")
     parser.add_argument("--data_dir", type=str, default="data")
     parser.add_argument("--output_dir", type=str, default="outputs")
     parser.add_argument("--splits_file", type=str, default=None)
@@ -78,6 +314,9 @@ def main():
     parser.add_argument("--checkpoint", type=str, default=None,
                         help="Ruta al checkpoint fine-tuneado (best_model.pt). "
                              "Carga LoRA config del mismo directorio y restaura pesos.")
+    parser.add_argument("--keep_synonym_details", action="store_true",
+                        help="(likelihood) Guardar log-probs por sinonimo en el JSON. "
+                             "Util para debug, triplica el tamano del archivo.")
     args = parser.parse_args()
 
     if args.dry_run:
@@ -187,6 +426,17 @@ def main():
         test_dataset, batch_size=batch_size, shuffle=False,
         collate_fn=collator, num_workers=args.num_workers,
     )
+
+    # 6a. Ruta alternativa: likelihood scoring (evita colapso de clase).
+    if args.method == "likelihood":
+        run_likelihood_eval(
+            args=args,
+            model=model,
+            test_dataset=test_dataset,
+            is_finetuned=is_finetuned,
+            script_start=script_start,
+        )
+        return
 
     # 6. Inferencia zero-shot
     all_image_ids = []

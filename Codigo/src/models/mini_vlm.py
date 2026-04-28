@@ -44,6 +44,22 @@ if not hasattr(DynamicCache, "from_legacy_cache"):
 
     DynamicCache.from_legacy_cache = _from_legacy_cache
 
+if not hasattr(DynamicCache, "to_legacy_cache"):
+    def _to_legacy_cache(self):
+        """Convierte DynamicCache al formato legacy (tupla de (key, value) por capa).
+
+        Transformers >= 4.47 removio to_legacy_cache() pero el codigo remoto
+        de Phi-3.5-vision (modeling_phi3_v.py:1504) aun lo invoca durante el
+        forward pass. Re-inyectamos el metodo para mantener compatibilidad.
+        """
+        legacy: tuple = ()
+        num_layers = len(getattr(self, "key_cache", []))
+        for layer_idx in range(num_layers):
+            legacy += ((self.key_cache[layer_idx], self.value_cache[layer_idx]),)
+        return legacy
+
+    DynamicCache.to_legacy_cache = _to_legacy_cache
+
 class MiniVLM(VLMBase):
     """Phi-3.5-vision-instruct: VLM integrado de Microsoft.
 

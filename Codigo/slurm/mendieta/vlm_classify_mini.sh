@@ -8,7 +8,7 @@
 #SBATCH --cpus-per-task=10
 #SBATCH --mem=0
 #SBATCH --gres=gpu:1
-#SBATCH --time=4:00:00
+#SBATCH --time=12:00:00
 #SBATCH --signal=B:SIGTERM@595
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=facundo.gaviola@gmail.com
@@ -51,8 +51,14 @@ echo "Python: $(${PYTHON} --version)"
 find ${HOME}/miniconda3/envs/dermvlm -name "__pycache__" -path "*/scipy/*" -exec rm -rf {} + 2>/dev/null
 echo ""
 
+## Metodo de clasificacion. Configurable via variable de entorno para permitir
+## reutilizar el mismo script sbatch en ambos metodos (generate | likelihood).
+METHOD="${METHOD:-generate}"
+echo "Metodo de clasificacion: ${METHOD}"
+
 ${PYTHON} scripts/train_vlm_classify.py \
     --model mini_vlm \
+    --method "${METHOD}" \
     --batch_size 1 \
     --seed 42 \
     --wandb

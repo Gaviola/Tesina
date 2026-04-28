@@ -19,6 +19,10 @@ Uso:
   python scripts/mendieta/submit.py classify_mini     # Clasificacion zero-shot Mini-VLM (~4h)
   python scripts/mendieta/submit.py classify_mini_ft  # Clasificacion fine-tuned Mini-VLM (~4h)
   python scripts/mendieta/submit.py classify_llava_ft # Clasificacion fine-tuned LLaVA-Med (~4h)
+  python scripts/mendieta/submit.py classify_mini_lik     # Clasificacion likelihood Mini-VLM base (~4h)
+  python scripts/mendieta/submit.py classify_llava_lik    # Clasificacion likelihood LLaVA-Med base (~4h)
+  python scripts/mendieta/submit.py classify_mini_ft_lik  # Clasificacion likelihood Mini-VLM fine-tuned (~4h)
+  python scripts/mendieta/submit.py classify_llava_ft_lik # Clasificacion likelihood LLaVA-Med fine-tuned (~4h)
   python scripts/mendieta/submit.py all               # todos los jobs de training (default)
   python scripts/mendieta/submit.py all_s1            # solo stage1 (mini + llava)
   python scripts/mendieta/submit.py all_s2            # solo stage2 (mini + llava)
@@ -27,6 +31,7 @@ Uso:
   python scripts/mendieta/submit.py all_gen_ham      # solo HAM10000 (ambos modelos)
   python scripts/mendieta/submit.py all_classify      # clasificacion VLM zero-shot (ambos)
   python scripts/mendieta/submit.py all_classify_ft   # clasificacion VLM fine-tuned (ambos)
+  python scripts/mendieta/submit.py all_classify_lik  # clasificacion likelihood (4 jobs: base + ft)
   python scripts/mendieta/submit.py all --no-sync     # sin sincronizar
 """
 import sys
@@ -41,12 +46,83 @@ from scripts.sweep_utils import append_jobs_log
 ## Cada entrada puede ser:
 ##   "script.sh"                          — job sin variables extra
 ##   ("script.sh", {"VAR": "valor"})      — job con variables de entorno extra
+## Cluster paths para LR de cada clasificador. ConvNeXt y Swin requieren
+## pesos torchvision pre-descargados en ~/.cache/torch/hub/checkpoints/.
+_CLS_SCRIPT = "slurm/mendieta/train_classifier.sh"
+_CLS_LR = {
+    "densenet":      "7.91e-5",   # del sweep fase 1
+    "vit":           "1.56e-5",   # del sweep fase 1
+    "convnext_tiny": "1e-4",      # default modern (ajustable)
+    "swin_tiny":     "1e-4",      # default modern (ajustable)
+}
+## Modelo target para ablaciones. Actualizar al ganador real tras cls_<m>_modern.
+_ABL_MODEL = "convnext_tiny"
+
 JOBS = {
     "mini_s1":        "slurm/mendieta/train_vlm_s1_mini.sh",
     "llava_s1":       "slurm/mendieta/train_vlm_s1_llava.sh",
     "mini_s2":        "slurm/mendieta/train_vlm_s2_mini.sh",
     "llava_s2":       "slurm/mendieta/train_vlm_s2.sh",
-    "classifier":     "slurm/mendieta/train_classifier.sh",
+    ## Clasificadores Fase 1 — verificación legacy (reproducir baselines)
+    "cls_densenet_legacy": (_CLS_SCRIPT, {
+        "MODEL": "densenet", "RECIPE": "legacy", "LR": _CLS_LR["densenet"],
+    }),
+    "cls_vit_legacy": (_CLS_SCRIPT, {
+        "MODEL": "vit", "RECIPE": "legacy", "LR": _CLS_LR["vit"],
+        "EXTRA_FLAGS": "--scheduler none",   # baseline ViT no usaba scheduler
+    }),
+    ## Clasificadores Fase 1 — corridas finales modern (con HIBA OOD eval)
+    "cls_densenet_modern": (_CLS_SCRIPT, {
+        "MODEL": "densenet", "RECIPE": "modern", "LR": _CLS_LR["densenet"],
+        "EXTRA_FLAGS": "--eval-hiba",
+    }),
+    "cls_vit_modern": (_CLS_SCRIPT, {
+        "MODEL": "vit", "RECIPE": "modern", "LR": _CLS_LR["vit"],
+        "EXTRA_FLAGS": "--eval-hiba",
+    }),
+    "cls_convnext_modern": (_CLS_SCRIPT, {
+        "MODEL": "convnext_tiny", "RECIPE": "modern", "LR": _CLS_LR["convnext_tiny"],
+        "EXTRA_FLAGS": "--eval-hiba",
+    }),
+    "cls_swin_modern": (_CLS_SCRIPT, {
+        "MODEL": "swin_tiny", "RECIPE": "modern", "LR": _CLS_LR["swin_tiny"],
+        "EXTRA_FLAGS": "--eval-hiba",
+    }),
+    ## Ablaciones sobre el modelo ganador. Override _ABL_MODEL al inicio.
+    "cls_abl_no_mixup": (_CLS_SCRIPT, {
+        "MODEL": _ABL_MODEL, "RECIPE": "modern", "LR": _CLS_LR[_ABL_MODEL],
+        "RUN_NAME": f"{_ABL_MODEL}_abl_no_mixup",
+        "EXTRA_FLAGS": "--mixup-alpha 0 --cutmix-alpha 0 --eval-hiba",
+    }),
+    "cls_abl_no_randaug": (_CLS_SCRIPT, {
+        "MODEL": _ABL_MODEL, "RECIPE": "modern", "LR": _CLS_LR[_ABL_MODEL],
+        "RUN_NAME": f"{_ABL_MODEL}_abl_no_randaug",
+        "EXTRA_FLAGS": "--no-randaugment --eval-hiba",
+    }),
+    "cls_abl_no_focal": (_CLS_SCRIPT, {
+        "MODEL": _ABL_MODEL, "RECIPE": "modern", "LR": _CLS_LR[_ABL_MODEL],
+        "RUN_NAME": f"{_ABL_MODEL}_abl_no_focal",
+        "EXTRA_FLAGS": "--focal-gamma 0 --eval-hiba",
+    }),
+    "cls_abl_no_tta": (_CLS_SCRIPT, {
+        "MODEL": _ABL_MODEL, "RECIPE": "modern", "LR": _CLS_LR[_ABL_MODEL],
+        "RUN_NAME": f"{_ABL_MODEL}_abl_no_tta",
+        "EXTRA_FLAGS": "--no-tta --eval-hiba",
+    }),
+    "cls_abl_no_two_stage": (_CLS_SCRIPT, {
+        "MODEL": _ABL_MODEL, "RECIPE": "modern", "LR": _CLS_LR[_ABL_MODEL],
+        "RUN_NAME": f"{_ABL_MODEL}_abl_no_two_stage",
+        "EXTRA_FLAGS": "--no-two-stage --eval-hiba",
+    }),
+    "cls_abl_no_label_smoothing": (_CLS_SCRIPT, {
+        "MODEL": _ABL_MODEL, "RECIPE": "modern", "LR": _CLS_LR[_ABL_MODEL],
+        "RUN_NAME": f"{_ABL_MODEL}_abl_no_label_smoothing",
+        "EXTRA_FLAGS": "--label-smoothing 0 --eval-hiba",
+    }),
+    ## Compat alias del registro previo (corre densenet_legacy con script genérico)
+    "classifier": (_CLS_SCRIPT, {
+        "MODEL": "densenet", "RECIPE": "legacy", "LR": _CLS_LR["densenet"],
+    }),
     "gen_llava":      "slurm/mendieta/generate_reports_llava.sh",
     "gen_mini":       "slurm/mendieta/generate_reports_mini.sh",
     "gen_llava_mmskin": ("slurm/mendieta/generate_reports_llava.sh", {"DATASETS": "mmskin"}),
@@ -59,20 +135,47 @@ JOBS = {
     "classify_mini":  "slurm/mendieta/vlm_classify_mini.sh",
     "classify_mini_ft":  "slurm/mendieta/vlm_classify_mini_ft.sh",
     "classify_llava_ft": "slurm/mendieta/vlm_classify_llava_ft.sh",
+    ## Variantes likelihood: reutilizan los mismos scripts SLURM y cambian
+    ## el metodo via variable de entorno METHOD (ver scripts sbatch).
+    "classify_llava_lik":    ("slurm/mendieta/vlm_classify_llava.sh",    {"METHOD": "likelihood"}),
+    "classify_mini_lik":     ("slurm/mendieta/vlm_classify_mini.sh",     {"METHOD": "likelihood"}),
+    "classify_llava_ft_lik": ("slurm/mendieta/vlm_classify_llava_ft.sh", {"METHOD": "likelihood"}),
+    "classify_mini_ft_lik":  ("slurm/mendieta/vlm_classify_mini_ft.sh",  {"METHOD": "likelihood"}),
 }
 
 # Grupos de jobs para envios multiples
 _TRAINING_JOBS = ["mini_s1", "llava_s1", "mini_s2", "llava_s2", "classifier"]
+_CLS_LEGACY_JOBS = ["cls_densenet_legacy", "cls_vit_legacy"]
+_CLS_MODERN_JOBS = ["cls_densenet_modern", "cls_vit_modern", "cls_convnext_modern", "cls_swin_modern"]
+_CLS_ABLATION_JOBS = [
+    "cls_abl_no_mixup", "cls_abl_no_randaug", "cls_abl_no_focal",
+    "cls_abl_no_tta", "cls_abl_no_two_stage", "cls_abl_no_label_smoothing",
+]
 GROUPS = {
     "all":          _TRAINING_JOBS,
     "all_s1":       ["mini_s1", "llava_s1"],
     "all_s2":       ["mini_s2", "llava_s2"],
+    ## Fase 1 — clasificadores
+    "all_cls_legacy":   _CLS_LEGACY_JOBS,    # 2 jobs verificación
+    "all_cls_modern":   _CLS_MODERN_JOBS,    # 4 jobs corridas finales
+    "all_cls_ablation": _CLS_ABLATION_JOBS,  # 6 jobs ablaciones (modelo en _ABL_MODEL)
+    "all_cls":          _CLS_LEGACY_JOBS + _CLS_MODERN_JOBS,
+    "all_cls_full":     _CLS_LEGACY_JOBS + _CLS_MODERN_JOBS + _CLS_ABLATION_JOBS,
     "all_gen":        ["gen_llava", "gen_mini"],
     "all_gen_mmskin": ["gen_llava_mmskin", "gen_mini_mmskin"],
     "all_gen_ham":      ["gen_llava_ham", "gen_mini_ham"],
     "all_gen_skincare": ["gen_llava_skincare", "gen_mini_skincare"],
     "all_classify": ["classify_llava", "classify_mini"],
     "all_classify_ft": ["classify_mini_ft", "classify_llava_ft"],
+    ## Comparacion 2x2: {base, ft} x {generate, likelihood}.
+    ## Este grupo corre los 4 jobs de likelihood (los de generate se corren
+    ## con all_classify y all_classify_ft).
+    "all_classify_lik": [
+        "classify_llava_lik",
+        "classify_mini_lik",
+        "classify_llava_ft_lik",
+        "classify_mini_ft_lik",
+    ],
 }
 
 # Mapeo de job name → subcarpeta de logs

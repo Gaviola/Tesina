@@ -1,0 +1,548 @@
+% =============================================================
+% TABLAS COMPARATIVAS — ESTADO DEL ARTE  (versión 3 — verificada)
+% Cambios respecto a v2:
+%   (1) Se agrega Skin-R1 y sus baselines en HAM10000 (Tabla 2 y 3 del paper).
+%   (2) Se corrige MM-Skin: BLEU-4 = 22.04 era para patología;
+%       para dermoscopía: BLEU-4 = 2.84 (SkinVL-MM).
+%   (3) Se agregan baselines de clasificación de MM-Skin paper en HAM10000.
+%   (4) Se incluye DenseNet121 de Kreouzi (2024) como referencia binaria.
+%   (5) Se incorporan resultados experimentales de este trabajo.
+%   (6) Se separa tabla de generación en: métricas automáticas y NER clínico.
+%
+% REQUISITOS EN EL PREÁMBULO:
+%   \usepackage{booktabs}
+%   \usepackage{graphicx}
+%   \usepackage{xcolor}
+%   \usepackage{colortbl}
+%   \usepackage{multirow}
+% =============================================================
+
+\definecolor{thiswork}{RGB}{230, 242, 255}
+\definecolor{bestval}{RGB}{200, 230, 200}
+
+% ──────────────────────────────────────────────────────────────
+%  TABLA 1 — Clasificación de lesiones dermatológicas (HAM10000)
+% ──────────────────────────────────────────────────────────────
+\begin{table}[htbp]
+\centering
+\caption{%
+  Comparativa del estado del arte en clasificación de lesiones dermatológicas
+  sobre el dataset \textbf{HAM10000} (7 clases).
+  $^\dagger$~indica arquitectura basada en VLM\@.
+  \textit{FT}: ajuste fino supervisado;
+  \textit{ZS}: evaluación \textit{zero-shot};
+  \textit{RL}: aprendizaje por refuerzo.
+  ``—''~indica métrica no reportada.
+  Las filas sombreadas corresponden a los resultados de este trabajo.
+}
+\label{tab:sota_clasificacion_ham}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{@{}llccrrrrr@{}}
+\toprule
+\textbf{Referencia}
+  & \textbf{Arquitectura}
+  & \textbf{Modo}
+  & \textbf{Cls.}
+  & \textbf{Acc.\ (\%)}
+  & \textbf{AUC-ROC}
+  & \textbf{F1}
+  & \textbf{Sens.\ macro}
+  & \textbf{Espec.\ macro} \\
+\midrule
+
+% ── CNN / ViT ────────────────────────────────────────────────
+\multicolumn{9}{@{}l}{\small\itshape Enfoques basados en CNN / ViT} \\[2pt]
+
+\cite{SkinHealthMate2024}
+  & EfficientNetB1$+$B5 (ens.)
+  & FT & 7
+  & \textbf{93.00} & — & \textbf{0.93}$^{(w)}$ / 0.81$^{(m)}$ & — & — \\
+
+\cite{SkinSavvy22025}
+  & EfficientNetV2~$+$~Swin-Transf.
+  & FT & 7
+  & 77.70$^{(\dagger\dagger)}$ & — & 0.793$^{(m)}$ & — & — \\
+
+\addlinespace[5pt]
+% ── VLM ──────────────────────────────────────────────────────
+\multicolumn{9}{@{}l}{\small\itshape Enfoques basados en VLM$\,^\dagger$} \\[2pt]
+
+\cite{SkinR12025}$^\dagger$
+  & Skin-R1 (Qwen2.5-VL-7B~$+$~RL)
+  & FT+RL & 7
+  & \textbf{87.86} & — & \textbf{0.879} & — & — \\
+
+\addlinespace[3pt]
+\multicolumn{9}{@{}l}{\small\itshape Baselines evaluados en HAM10000 por~\cite{SkinR12025}} \\[2pt]
+
+\cite{SkinR12025}$^\dagger$~(baseline)
+  & LLaVA-Med-7B
+  & ZS & 7
+  & 62.16 & — & 0.577 & — & — \\
+
+\cite{SkinR12025}$^\dagger$~(baseline)
+  & GPT-4V
+  & ZS & 7
+  & 55.21 & — & 0.561 & — & — \\
+
+\cite{SkinR12025}$^\dagger$~(baseline)
+  & LLaVA-v1.6-13B
+  & ZS & 7
+  & 61.25 & — & 0.466 & — & — \\
+
+\cite{SkinR12025}$^\dagger$~(baseline)
+  & SkinVL-PubMM (LLaVA-Med$+$LoRA)
+  & FT & 7
+  & 60.54 & — & 0.311 & — & — \\
+
+\cite{SkinR12025}$^\dagger$~(baseline)
+  & MedGemma-4B
+  & ZS & 7
+  & 58.59 & — & 0.474 & — & — \\
+
+\addlinespace[3pt]
+\multicolumn{9}{@{}l}{\small\itshape Baselines evaluados en HAM10000 por~\cite{MMSkin2025}} \\[2pt]
+
+\cite{MMSkin2025}$^\dagger$~(baseline)
+  & LLaVA-Med-v1.5-7B
+  & FT & 7
+  & 62.59 & — & — & — & — \\
+
+\cite{MMSkin2025}$^\dagger$
+  & SkinVL-Pub (LLaVA-Med$+$LoRA)
+  & FT & 7
+  & 63.46 & — & — & — & — \\
+
+\midrule
+% ── Este trabajo ─────────────────────────────────────────────
+\multicolumn{9}{@{}l}{\small\itshape Este trabajo} \\[2pt]
+
+\rowcolor{thiswork}
+(a) & DenseNet121
+  & FT & 7
+  & 52.29 & — & 0.581$^{(w)}$ & 39.42\% & 91.98\% \\
+
+\rowcolor{thiswork}
+(b) & ViT-B/16
+  & FT & 7
+  & 63.14 & — & 0.668$^{(w)}$ & 51.96\% & 93.26\% \\
+
+\rowcolor{thiswork}
+(c)$^\dagger$ & LLaVA-Med 7B
+  & ZS & 7
+  & 11.44 & — & 0.030 & 15.61\% & 85.80\% \\
+
+\rowcolor{thiswork}
+(d)$^\dagger$ & Mini-VLM (CLIP ViT-B/16~$+$~Phi-3-mini)
+  & ZS & 7
+  & 5.12 & — & 0.006 & 14.39\% & 85.71\% \\
+
+\bottomrule
+\end{tabular}%
+}
+\vspace{4pt}
+\begin{minipage}{\textwidth}
+  \footnotesize
+  $^{(w)}$~F1 ponderado (\textit{weighted}); $^{(m)}$~F1 macro.
+  $^{(\dagger\dagger)}$~Exactitud balanceada reportada sobre dataset HAM10000
+  aumentado y rebalanceado (no sobre HAM10000 original);
+  el F1-macro de 0.793 corresponde al Swin-Transformer~\cite{SkinSavvy22025}.\\
+  Los baselines de~\cite{SkinR12025} provienen de su Tabla~3
+  (evaluación \textit{in-distribution} sobre HAM10000, 7 clases).
+  Los baselines de~\cite{MMSkin2025} provienen de su Tabla~4 de clasificación supervisada.\\[4pt]
+  \textbf{Nota sobre comparabilidad:}
+  Todos los modelos en esta tabla fueron evaluados en HAM10000 con 7 clases.
+  Sin embargo, los protocolos de evaluación difieren:
+  \cite{SkinHealthMate2024} y~\cite{SkinSavvy22025} usan el split ISIC 2018;
+  \cite{SkinR12025} usa evaluación basada en prompts con parseo de respuesta;
+  este trabajo usa el split estándar 70/15/15 para clasificadores y prompt
+  de clasificación directa para VLMs.
+  La comparabilidad entre clasificadores supervisados y VLMs evaluados
+  vía prompt es inherentemente limitada.
+\end{minipage}
+\end{table}
+
+
+% ──────────────────────────────────────────────────────────────
+%  TABLA 2 — Clasificación con contexto adicional (otros datasets)
+% ──────────────────────────────────────────────────────────────
+\begin{table}[htbp]
+\centering
+\caption{%
+  Referencia complementaria: resultados de clasificación con
+  \textbf{modelos similares} a este trabajo pero en \textbf{otros datasets}.
+  No directamente comparables con HAM10000 (7 clases), pero proporcionan
+  contexto sobre las capacidades de las arquitecturas empleadas.
+}
+\label{tab:sota_clasificacion_otros}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{@{}lllccrrrr@{}}
+\toprule
+\textbf{Referencia}
+  & \textbf{Arquitectura}
+  & \textbf{Dataset}
+  & \textbf{Modo}
+  & \textbf{Cls.}
+  & \textbf{Acc.\ (\%)}
+  & \textbf{AUC-ROC}
+  & \textbf{F1}
+  & \textbf{Sens.} \\
+\midrule
+
+\cite{Kreouzi2024}
+  & DenseNet121
+  & DermNet (bin.)
+  & FT & 2
+  & 92.30 & 0.951 & — & — \\
+
+\cite{EnsembleDL2025}
+  & DenseNet121$+$ResNet50$+$EffNetB3
+  & ISIC (bin.)
+  & FT & 2
+  & 97.67 & — & 0.976$^{(\alpha)}$ & 0.963$^{(\alpha)}$ \\
+
+\cite{PanDerm2024}
+  & PanDerm (ViT-Large)
+  & 2.1M imág.\ / 11 inst.
+  & FT & bin.
+  & — & \textbf{0.964} & — & 0.893 \\
+
+\cite{MPXVCNN2023}
+  & ResNet34
+  & Multi-dataset (mpox)
+  & FT & 2
+  & — & 0.966 & — & 0.830$^{(\beta)}$ \\
+
+\cite{MpoxVLM2024}$^\dagger$
+  & CLIP~$+$~ViT~$+$~LLaMA-2-7B
+  & Mpox dataset
+  & FT & 2
+  & 90.38 & 0.952 & 0.857 & 0.844 \\
+
+\cite{DermLIP2025}$^\dagger$
+  & DermLIP (CLIP ViT-B/16)
+  & Derm1M
+  & ZS & múlt.
+  & 56.07 & 0.731 & — & — \\
+
+\cite{DermatoLlama2025}$^\dagger$
+  & DermatoLlama (Llama 3.2-11B)
+  & DermaSynth (sint.)
+  & FT & múlt.
+  & 91.00 & — & — & — \\
+
+\bottomrule
+\end{tabular}%
+}
+\vspace{4pt}
+\begin{minipage}{\textwidth}
+  \footnotesize
+  $^{(\alpha)}$~F1 y Sensibilidad corresponden a la clase NV (benigna);
+  métricas globales del ensemble no reportadas~\cite{EnsembleDL2025}.\\
+  $^{(\beta)}$~Sensibilidad del cohorte de validación cruzada~\cite{MPXVCNN2023}.
+  AUC proviene del cohorte de testeo externo.\\
+  $^\dagger$~Modelo basado en VLM\@.
+  Estas referencias son complementarias y no directamente comparables
+  con la clasificación multiclase (7 clases) en HAM10000
+  debido a diferencias en datasets, número de clases y protocolos.
+\end{minipage}
+\end{table}
+
+
+% ──────────────────────────────────────────────────────────────
+%  TABLA 3 — Generación de reportes: métricas automáticas
+% ──────────────────────────────────────────────────────────────
+\begin{table}[htbp]
+\centering
+\caption{%
+  Comparativa del estado del arte en generación automática de reportes
+  clínicos dermatológicos.
+  Las métricas de texto están en la escala indicada entre paréntesis.
+  ``—''~indica métrica no reportada.
+  Las filas sombreadas serán completadas con los resultados experimentales
+  (Nivel~1 pendiente de ejecución).
+}
+\label{tab:sota_reportes}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{@{}lllrrrrrl@{}}
+\toprule
+\textbf{Referencia}
+  & \textbf{Arquitectura}
+  & \textbf{Dataset (eval.)}
+  & \textbf{BLEU-4}
+  & \textbf{ROUGE-1}
+  & \textbf{ROUGE-L}
+  & \textbf{METEOR}
+  & \textbf{BERTScore}
+  & \textbf{Eval.\ clínica} \\
+\midrule
+
+% ── Evaluados sobre MM-Skin (dermoscopía) ───────────────────
+\multicolumn{9}{@{}l}{\small\itshape Evaluados sobre MM-Skin — imágenes dermoscópicas (VQA)} \\[2pt]
+
+\cite{MMSkin2025}
+  & SkinVL-MM (LLaVA-Med-v1.5$+$LoRA)
+  & MM-Skin (dermoscopía)
+  & 2.84
+  & —
+  & 19.53
+  & 22.41
+  & 57.76$^{(\zeta)}$
+  & — \\
+
+\cite{MMSkin2025}
+  & SkinVL-PubMM (LLaVA-Med$+$LoRA$+$púb.)
+  & MM-Skin (dermoscopía)
+  & 2.60
+  & —
+  & 24.53
+  & 20.99
+  & 60.94$^{(\zeta)}$
+  & — \\
+
+\cite{MMSkin2025}~(baseline)
+  & LLaVA-Med-v1.5-7B
+  & MM-Skin (dermoscopía)
+  & 2.58
+  & —
+  & 14.81
+  & 22.73
+  & 63.31$^{(\zeta)}$
+  & — \\
+
+\addlinespace[5pt]
+% ── Evaluados sobre MM-Skin (patología) ─────────────────────
+\multicolumn{9}{@{}l}{\small\itshape Evaluados sobre MM-Skin — imágenes de patología (VQA)} \\[2pt]
+
+\cite{MMSkin2025}
+  & SkinVL-MM
+  & MM-Skin (patología)
+  & 22.04$^{(\eta)}$
+  & —
+  & 44.09
+  & 42.70
+  & 70.59$^{(\zeta)}$
+  & — \\
+
+\addlinespace[5pt]
+% ── Otros datasets / tareas ────────────────────────────────
+\multicolumn{9}{@{}l}{\small\itshape Evaluados sobre otros datasets (referencia metodológica)} \\[2pt]
+
+\cite{AutomatedReport2025}
+  & LLaVA-v1.5-13B (KD$^{(\theta)}$)
+  & Dermoscopía priv.\ (305 img.)
+  & 55.59$^{(\iota)}$
+  & 54.38
+  & 38.28
+  & —
+  & 0.9025$^{(\kappa)}$
+  & — \\
+
+\cite{DermatoLlama2025}
+  & DermatoLlama (Llama 3.2-11B)
+  & DERM12345 (Eval1)
+  & 65.59$^{(\lambda)}$
+  & 93.49$^{(\lambda)}$
+  & 93.44$^{(\lambda)}$
+  & —
+  & —
+  & Acc.\ MCQA: 90.93\% \\
+
+\cite{SkinGPT4_2024}
+  & ViT~$+$~Q-Former~$+$~LLaMA-2-13B
+  & Privado (52k~img.)
+  & —
+  & —
+  & —
+  & —
+  & —
+  & 80.63\%~correctos \\
+
+\cite{PeFoMed2024}
+  & ViT-EVA~$+$~LLaMA-2-7B~$+$~LoRA
+  & IU-Xray$^{(\mu)}$
+  & —
+  & —
+  & 28.60
+  & 15.70
+  & —
+  & WASM: 2.79/4 \\
+
+\midrule
+\multicolumn{9}{@{}l}{\small\itshape Este trabajo} \\[2pt]
+
+\rowcolor{thiswork}
+(c)$^\dagger$
+  & Mini-VLM (CLIP ViT-B/16~$+$~Phi-3-mini)
+  & MM-Skin (test split)
+  & — & — & — & — & — & — \\
+
+\rowcolor{thiswork}
+(d)$^\dagger$
+  & LLaVA-Med 7B~$+$~LoRA~$(r{=}64)$
+  & MM-Skin (test split)
+  & — & — & — & — & — & — \\
+
+\bottomrule
+\end{tabular}%
+}
+\vspace{4pt}
+\begin{minipage}{\textwidth}
+  \footnotesize
+  $^{(\zeta)}$~BERTScore reportado en escala 0--100 en MM-Skin~\cite{MMSkin2025}.
+  Las demás métricas (BLEU-4, ROUGE-L, METEOR) también en escala 0--100.\\
+  $^{(\eta)}$~BLEU-4 sobre el subconjunto de \textbf{patología} de MM-Skin.
+  Incluido para referencia; \textbf{no comparable con dermoscopía}.\\
+  $^{(\theta)}$~Modelo estudiante entrenado mediante destilación de conocimiento
+  con GPT-4V como maestro~\cite{AutomatedReport2025}.\\
+  $^{(\iota)}$~Reportado como SacreBLEU (escala 0--100); no equivalente a
+  BLEU-4 estándar. ROUGE-1 y ROUGE-L en escala 0--100.\\
+  $^{(\lambda)}$~Valores originales en escala 0--1 multiplicados por 100.
+  Los valores de ROUGE inusualmente altos pueden reflejar consistencia
+  estructural en datos sintéticos~\cite{DermatoLlama2025}.\\
+  $^{(\kappa)}$~BERTScore F1 en escala 0--1.\\
+  $^{(\mu)}$~PeFoMed genera reportes radiológicos (IU-Xray), no dermatológicos;
+  incluido como referencia de la arquitectura VLM$+$LoRA~\cite{PeFoMed2024}.\\[4pt]
+  \textbf{Comparabilidad directa:} Las filas bajo ``MM-Skin — dermoscopía''
+  son las únicas directamente comparables con \textit{este trabajo},
+  ya que comparten dataset y modalidad de imagen.
+  Los demás papers usan datasets privados o tareas distintas.\\[4pt]
+  \textbf{Nota sobre MM-Skin VQA:} Los valores de dermoscopía provienen
+  de la Tabla~3 de~\cite{MMSkin2025} (columna ``Dermoscopy'').
+  Se recomienda verificar los valores exactos contra el paper original,
+  ya que la tabla reporta métricas por tres modalidades
+  (patología, clínica, dermoscopía) con valores sustancialmente distintos.
+\end{minipage}
+\end{table}
+
+
+% ──────────────────────────────────────────────────────────────
+%  TABLA 4 — Evaluación NER Clínico (Nivel 2)
+% ──────────────────────────────────────────────────────────────
+\begin{table}[htbp]
+\centering
+\caption{%
+  Evaluación de calidad clínica de los reportes generados
+  mediante NER (\textit{Named Entity Recognition}) — Nivel~2.
+  \textit{Clinical Entity Recall}: proporción de categorías
+  terminológicas dermatológicas mencionadas.
+  \textit{Diagnostic Consistency}: porcentaje de reportes donde
+  el diagnóstico correcto (o sinónimo) aparece en el texto.
+  Estas métricas no requieren reporte de referencia.
+}
+\label{tab:nivel2_ner}
+\begin{tabular}{@{}lrr@{}}
+\toprule
+\textbf{Modelo}
+  & \textbf{Clinical Entity Recall (\%)}
+  & \textbf{Diagnostic Consistency (\%)} \\
+\midrule
+\rowcolor{thiswork}
+LLaVA-Med 7B~$+$~LoRA~$(r{=}64)$
+  & 45.69
+  & \textbf{71.47} \\
+\rowcolor{thiswork}
+Mini-VLM (CLIP ViT-B/16~$+$~Phi-3-mini)
+  & \textbf{60.68}
+  & 31.34 \\
+\bottomrule
+\end{tabular}
+\vspace{4pt}
+\begin{minipage}{0.95\textwidth}
+  \footnotesize
+  Evaluación basada en diccionario dermatológico personalizado
+  (categorías ABCDE, tipos de lesión, características clínicas).
+  Backend SciSpaCy no disponible en el entorno de evaluación;
+  con NER biomédico activo los valores de \textit{entity recall}
+  podrían ser mayores.
+  Evaluado sobre 1.503 reportes generados a partir del test set HAM10000.\\[4pt]
+  \textbf{Interpretación:} LLaVA-Med produce reportes más orientados
+  al diagnóstico final (alta consistencia, 71.5\%);
+  Mini-VLM genera descripciones morfológicas más ricas
+  (mayor \textit{entity recall}, 60.7\%) pero con menor
+  precisión diagnóstica (31.3\%).
+\end{minipage}
+\end{table}
+
+
+% ──────────────────────────────────────────────────────────────
+%  TABLA 5 — Resumen posicional de este trabajo vs. SOTA
+% ──────────────────────────────────────────────────────────────
+\begin{table}[htbp]
+\centering
+\caption{%
+  Posicionamiento de los modelos de este trabajo respecto al estado del arte
+  en HAM10000 (7 clases). Se incluyen solo referencias directamente
+  comparables (mismo dataset, misma tarea).
+}
+\label{tab:posicionamiento}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{@{}llrrrl@{}}
+\toprule
+\textbf{Modelo}
+  & \textbf{Tipo}
+  & \textbf{Acc.\ (\%)}
+  & \textbf{F1}
+  & \textbf{$\Delta$ vs.\ SOTA$^{(\star)}$}
+  & \textbf{Observaciones} \\
+\midrule
+
+\cite{SkinHealthMate2024} EfficientNet Ens.
+  & CNN (FT) & \textbf{93.00} & \textbf{0.93}$^{(w)}$ & — & Mejor resultado CNN \\
+
+\cite{SkinR12025} Skin-R1
+  & VLM (FT+RL) & \textbf{87.86} & \textbf{0.879} & — & Mejor resultado VLM \\
+
+\cite{SkinSavvy22025} Swin$+$EfficientNetV2
+  & CNN (FT) & 77.70$^{(\dagger\dagger)}$ & 0.793$^{(m)}$ & $-$15.30 & HAM10000 aumentado \\
+
+\rowcolor{thiswork}
+(b) ViT-B/16 [\textit{este trabajo}]
+  & ViT (FT) & 63.14 & 0.668$^{(w)}$ & $-$29.86 & Comparable a LLaVA-Med ZS \\
+
+\cite{MMSkin2025} SkinVL-Pub
+  & VLM (FT) & 63.46 & — & $-$29.54 & LLaVA-Med$+$LoRA \\
+
+\cite{SkinR12025} LLaVA-Med-7B
+  & VLM (ZS) & 62.16 & 0.577 & $-$30.84 & Baseline de Skin-R1 \\
+
+\cite{SkinR12025} LLaVA-v1.6-13B
+  & VLM (ZS) & 61.25 & 0.466 & $-$31.75 & Modelo mayor, F1 menor \\
+
+\cite{SkinR12025} GPT-4V
+  & VLM (ZS) & 55.21 & 0.561 & $-$37.79 & — \\
+
+\rowcolor{thiswork}
+(a) DenseNet121 [\textit{este trabajo}]
+  & CNN (FT) & 52.29 & 0.581$^{(w)}$ & $-$40.71 & 7 clases, desbalance severo \\
+
+\rowcolor{thiswork}
+(c) LLaVA-Med 7B ZS [\textit{este trabajo}]
+  & VLM (ZS) & 11.44 & 0.030 & $-$81.56 & Colapso de clase \\
+
+\rowcolor{thiswork}
+(d) Mini-VLM ZS [\textit{este trabajo}]
+  & VLM (ZS) & 5.12 & 0.006 & $-$87.88 & Colapso de clase \\
+
+\bottomrule
+\end{tabular}%
+}
+\vspace{4pt}
+\begin{minipage}{\textwidth}
+  \footnotesize
+  $^{(\star)}$~$\Delta$ calculado respecto al mejor resultado global
+  (EfficientNet Ensemble, 93.00\%).
+  $^{(w)}$~F1 weighted; $^{(m)}$~F1 macro.\\[4pt]
+  \textbf{Hallazgos clave:}
+  (1)~El ViT-B/16 de este trabajo (63.14\%) se posiciona al nivel
+  de LLaVA-Med-7B en ZS (62.16\%) y SkinVL-Pub (63.46\%),
+  lo que valida su rendimiento como baseline competitivo.
+  (2)~La brecha con el SOTA CNN (93\%) se explica por el uso de
+  ensembles y augmentación más agresiva en~\cite{SkinHealthMate2024}.
+  (3)~Los VLMs en zero-shot sufren colapso de clase, consistente
+  con la hipótesis de que los VLMs generativos no están diseñados
+  para clasificación de etiqueta discreta.
+  (4)~Skin-R1 (87.86\%) demuestra que con RL y razonamiento
+  clínico, los VLMs pueden competir con CNNs especializadas.
+\end{minipage}
+\end{table}

@@ -1,0 +1,21 @@
+name: swin_tiny
+architecture: Swin-Tiny
+pretrained: imagenet
+num_classes: 7
+batch_size: 16
+
+# Documentación de hiperparámetros sugeridos para Fase 1.
+# El script train_classifier.py NO lee este YAML; valores reales vienen de CLI.
+training:
+  freeze_backbone: false
+  unfreeze_layers: null
+  optimizer:
+    lr: 1e-4
+    weight_decay: 0.05
+  scheduler:
+    name: CosineAnnealingLR
+  loss:
+    label_smoothing: 0.1
+
+# Modern recipe activa: RandAug, RandomErasing, RRC, MixUp, CutMix, Focal,
+# warmup, two-stage, LLRD=0.75, TTA. Ver Codigo/src/training/recipes.py.

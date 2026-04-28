@@ -3,6 +3,8 @@
 Métricas: Accuracy, AUC-ROC (macro), F1-Score ponderado, Sensibilidad, Especificidad.
 """
 
+import logging
+
 import numpy as np
 from sklearn.metrics import (
     accuracy_score,
@@ -11,6 +13,8 @@ from sklearn.metrics import (
     f1_score,
     roc_auc_score,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def evaluate_classification(
@@ -39,10 +43,25 @@ def evaluate_classification(
     # AUC-ROC (requiere probabilidades)
     if y_prob is not None:
         try:
-            results["auc_roc_macro"] = roc_auc_score(
-                y_true, y_prob, multi_class="ovr", average="macro"
-            )
-        except ValueError:
+            present_classes = sorted(set(y_true))
+            n_classes = y_prob.shape[1] if y_prob.ndim == 2 else None
+            if n_classes is not None and len(present_classes) < n_classes:
+                # Restringir a clases efectivamente presentes en y_true.
+                y_prob_restricted = y_prob[:, present_classes]
+                # Renormalizar para que las filas sumen 1.
+                y_prob_restricted = y_prob_restricted / y_prob_restricted.sum(
+                    axis=1, keepdims=True
+                ).clip(min=1e-12)
+                results["auc_roc_macro"] = roc_auc_score(
+                    y_true, y_prob_restricted, multi_class="ovr", average="macro",
+                    labels=present_classes,
+                )
+            else:
+                results["auc_roc_macro"] = roc_auc_score(
+                    y_true, y_prob, multi_class="ovr", average="macro"
+                )
+        except (ValueError, IndexError) as e:
+            logger.warning("AUC-ROC no calculable: %s", e)
             results["auc_roc_macro"] = None
     else:
         results["auc_roc_macro"] = None

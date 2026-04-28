@@ -7,9 +7,25 @@ from PIL import Image
 
 from src.data.base_dataset import BaseDataset
 
+# Mapeo HIBA diagnosis → HAM10000 7-clase (para eval OOD).
+# Caveat: SCC mapeado a AKIEC es debatible (AKIEC original = AK + Bowen,
+# no SCC invasivo). Se documenta como limitación en la tabla SOTA.
+HIBA_TO_HAM10000: dict[str, str] = {
+    "nevus":                   "NV",
+    "basal cell carcinoma":    "BCC",
+    "melanoma":                "MEL",
+    "squamous cell carcinoma": "AKIEC",
+    "seborrheic keratosis":    "BKL",
+    "actinic keratosis":       "AKIEC",
+    "dermatofibroma":          "DF",
+    "vascular lesion":         "VASC",
+    "solar lentigo":           "BKL",
+    "lichenoid keratosis":     "BKL",
+}
+
 
 class HIBADataset(BaseDataset):
-    """Dataset HIBA para evaluación de sesgo por fototipo.
+    """Dataset HIBA para evaluación de sesgo por fototipo y OOD.
 
     Estructura real del dataset:
         root_dir/
@@ -18,10 +34,10 @@ class HIBADataset(BaseDataset):
         ├── attribution.txt
         └── licenses/
 
-    Columnas principales del metadata.csv:
-        isic_id, age_approx, anatom_site_general, benign_malignant,
-        diagnosis, diagnosis_1, diagnosis_2, diagnosis_3,
-        fitzpatrick_skin_type, image_type, sex
+    Cuando ``ham10000_mapping=True`` se aplica el mapeo HIBA → 7-clase
+    HAM10000 (definido en ``HIBA_TO_HAM10000``) y los labels devueltos son
+    índices alineados con ``HAM10000_CLASSES``. Modo recomendado para
+    eval cross-dataset de modelos entrenados en HAM10000.
     """
 
     def __init__(
@@ -30,8 +46,10 @@ class HIBADataset(BaseDataset):
         split: str = "train",
         transform=None,
         splits_file: Optional[str] = None,
+        ham10000_mapping: bool = False,
     ):
         self.splits_file = splits_file
+        self.ham10000_mapping = ham10000_mapping
         self._class_names = []
         super().__init__(root_dir, split, transform)
 
@@ -57,12 +75,20 @@ class HIBADataset(BaseDataset):
             split_ids = set(splits[self.split])
             df = df[df[id_col].isin(split_ids)]
 
-        # Construir mapeo de diagnósticos a índices
-        unique_dx = sorted(df["diagnosis"].dropna().unique())
-        self._class_names = unique_dx
-        dx_to_label = {dx: i for i, dx in enumerate(unique_dx)}
+        if self.ham10000_mapping:
+            from src.data.ham10000 import HAM10000_CLASSES, HAM10000_LABEL_MAP
+            self._class_names = list(HAM10000_CLASSES)
+            dx_to_label = {
+                dx: HAM10000_LABEL_MAP[mapped]
+                for dx, mapped in HIBA_TO_HAM10000.items()
+            }
+        else:
+            unique_dx = sorted(df["diagnosis"].dropna().unique())
+            self._class_names = unique_dx
+            dx_to_label = {dx: i for i, dx in enumerate(unique_dx)}
 
         images_dir = root / "images"
+        skipped_unmapped = 0
 
         for _, row in df.iterrows():
             image_id = row[id_col]
@@ -73,13 +99,18 @@ class HIBADataset(BaseDataset):
                 continue
 
             diagnosis = row.get("diagnosis", "")
+            label = dx_to_label.get(diagnosis, -1)
+            if self.ham10000_mapping and label == -1:
+                skipped_unmapped += 1
+                continue
+
             phototype = row.get("fitzpatrick_skin_type", "")
             if pd.isna(phototype):
                 phototype = ""
 
             self.samples.append({
                 "image_path": str(img_path),
-                "label": dx_to_label.get(diagnosis, -1),
+                "label": label,
                 "image_id": image_id,
                 "diagnosis": diagnosis,
                 "phototype": str(phototype),
@@ -89,6 +120,13 @@ class HIBADataset(BaseDataset):
                 "anatom_site": row.get("anatom_site_general", ""),
                 "image_type": row.get("image_type", ""),
             })
+
+        if self.ham10000_mapping and skipped_unmapped > 0:
+            import logging
+            logging.getLogger(__name__).warning(
+                "HIBA: %d muestras descartadas por diagnosis no mapeable a HAM10000",
+                skipped_unmapped,
+            )
 
     def __getitem__(self, idx: int) -> dict:
         sample = self.samples[idx]

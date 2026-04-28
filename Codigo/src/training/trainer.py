@@ -87,10 +87,14 @@ class Trainer:
         for batch_idx, batch in enumerate(train_iter):
             images = batch["image"].to(self.device, non_blocking=True)
             labels = batch["label"].to(self.device, non_blocking=True)
+            # ``target`` (soft, B×C) inyectado por MixupCutmixCollator.
+            # Si no está, usamos los índices duros (CE/Focal soportan ambos).
+            loss_target = batch["target"].to(self.device, non_blocking=True) \
+                if "target" in batch else labels
 
             with torch.amp.autocast("cuda", dtype=self.dtype, enabled=self.use_amp):
                 outputs = self.model(images)
-                loss = self.criterion(outputs, labels)
+                loss = self.criterion(outputs, loss_target)
                 loss = loss / self.gradient_accumulation_steps
 
             if self.scaler is not None:
@@ -190,29 +194,40 @@ class Trainer:
             "val_time":     val_time,
         }
 
-    def fit(self) -> dict:
-        """Ejecuta el loop de entrenamiento completo."""
+    def fit(self, start_epoch: int = 0) -> dict:
+        """Ejecuta el loop de entrenamiento.
+
+        Args:
+            start_epoch: número de la última época ya completada (default 0).
+                Útil para encadenar fit() en pipelines two-stage: se itera
+                de start_epoch+1 hasta max_epochs.
+        """
         self.model.to(self.device)
         best_metrics  = {}
         best_val_loss = float("inf")
         fit_start     = time.perf_counter()
         epoch_times   = []
 
+        if start_epoch < 0 or start_epoch >= self.max_epochs:
+            raise ValueError(
+                f"start_epoch ({start_epoch}) debe estar en [0, max_epochs={self.max_epochs})"
+            )
+
         logger.info(
             "=== Configuración del entrenamiento ===\n"
-            "  Épocas        : %d\n"
+            "  Épocas        : %d → %d (%d a correr)\n"
             "  Train batches : %d | Val batches: %d\n"
             "  Grad accum    : %d\n"
             "  Dispositivo   : %s | dtype: %s\n"
             "  Checkpoint    : %s",
-            self.max_epochs,
+            start_epoch + 1, self.max_epochs, self.max_epochs - start_epoch,
             len(self.train_loader), len(self.val_loader),
             self.gradient_accumulation_steps,
             self.device, self.dtype,
             self.checkpoint_dir,
         )
 
-        for epoch in range(1, self.max_epochs + 1):
+        for epoch in range(start_epoch + 1, self.max_epochs + 1):
             train_metrics = self.train_epoch(epoch)
             val_metrics   = self.validate(epoch)
 

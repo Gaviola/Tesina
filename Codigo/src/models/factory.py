@@ -2,13 +2,20 @@ from typing import Any
 
 import torch.nn as nn
 
-from src.models.classifiers import DenseNet121Classifier, ViTClassifier
+from src.models.classifiers import (
+    ConvNeXtTinyClassifier,
+    DenseNet121Classifier,
+    SwinTinyClassifier,
+    ViTClassifier,
+)
 from src.models.llava_med import LLaVAMed
 from src.models.mini_vlm import MiniVLM
 
 MODEL_REGISTRY: dict[str, type[nn.Module]] = {
     "densenet": DenseNet121Classifier,
     "vit": ViTClassifier,
+    "convnext_tiny": ConvNeXtTinyClassifier,
+    "swin_tiny": SwinTinyClassifier,
     "llava_med": LLaVAMed,
     "mini_vlm": MiniVLM,
 }

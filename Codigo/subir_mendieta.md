@@ -114,6 +114,28 @@ python scripts/train_vlm_classify.py --model llava_med --dry-run --dry-run-batch
 
 El resumen muestra las primeras respuestas parseadas, % UNKNOWN, VRAM y velocidad estimada.
 
+### Dry-run para clasificacion VLM via likelihood scoring
+
+El metodo `likelihood` reemplaza el `generate + regex parse` por scoring
+teacher-forced de P(clase | imagen, prompt) con ensemble de 4 prompts y
+sinonimos por clase. Evita el colapso a una sola clase que sufren los VLMs
+generativos en clasificacion multiclase. Ver `Codigo/cambios_clasificacion_vlms.md`
+para el diseño completo.
+
+```
+python scripts/train_vlm_classify.py --model mini_vlm --method likelihood --dry-run
+python scripts/train_vlm_classify.py --model llava_med --method likelihood --dry-run --dry-run-batches 20
+
+# Con checkpoint fine-tuneado (requiere el checkpoint y lora_config.json localmente)
+python scripts/train_vlm_classify.py --model llava_med --method likelihood --dry-run \
+    --checkpoint outputs/checkpoints/stage2_llava_med/best_model.pt
+```
+
+El resumen del dry-run reporta distribucion de predicciones por clase,
+muestras (true vs. pred ensemble vs. pred por prompt), VRAM y tiempo total
+estimado para las 1503 imagenes del test set. Si la prediccion dominante
+supera el 80%, marca advertencia (posible colapso aun con likelihood).
+
 ---
 
 ## 2. Enviar jobs
@@ -147,7 +169,34 @@ python scripts/mendieta/submit.py classify_mini_ft # clasificacion Mini-VLM fine
 python scripts/mendieta/submit.py classify_llava_ft # clasificacion LLaVA-Med fine-tuneado en Stage 2 (~4h) 1145827
 python scripts/mendieta/submit.py all_classify_ft # ambos modelos fine-tuneados
 
+# --- Clasificacion via likelihood scoring (evita colapso de clase) ---
+# Reutilizan los mismos scripts SLURM pero pasan METHOD=likelihood por
+# variable de entorno. Outputs separados (sufijo _likelihood en el JSON).
+python scripts/mendieta/submit.py classify_mini_lik      # zero-shot Mini-VLM base
+python scripts/mendieta/submit.py classify_llava_lik     # zero-shot LLaVA-Med base
+python scripts/mendieta/submit.py classify_mini_ft_lik   # Mini-VLM fine-tuneado
+python scripts/mendieta/submit.py classify_llava_ft_lik  # LLaVA-Med fine-tuneado
+python scripts/mendieta/submit.py all_classify_lik       # los 4 jobs de la tabla 2x2
 
+```
+
+### Tabla 2x2 de comparacion {base, fine-tuned} x {generate, likelihood}
+
+Para el analisis final se ejecutan los 4 cuadrantes. Los resultados se
+guardan en `outputs/results/` con sufijos que los distinguen:
+
+| Cuadrante | JSON de predicciones                               | JSON de metricas                                |
+|-----------|----------------------------------------------------|-------------------------------------------------|
+| base + generate    | `{model}_predictions.json`                 | `{model}_test_results.json`                     |
+| ft   + generate    | `{model}_finetuned_predictions.json`       | `{model}_finetuned_test_results.json`           |
+| base + likelihood  | `{model}_likelihood_predictions.json`      | `{model}_likelihood_test_results.json`          |
+| ft   + likelihood  | `{model}_likelihood_finetuned_predictions.json` | `{model}_likelihood_finetuned_test_results.json` |
+
+Flujo tipico (asumiendo `all_classify` + `all_classify_ft` ya ejecutados):
+```
+python scripts/mendieta/submit.py all_classify_lik   # 4 jobs de likelihood
+python scripts/mendieta/monitor.py                   # seguir progreso
+python scripts/mendieta/sync_down.py                 # bajar JSONs a local
 ```
 
 Los jobs de generacion crean reportes sobre MM-SkinQA (Nivel 1, con referencias) y HAM10000
