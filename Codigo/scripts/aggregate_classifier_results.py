@@ -23,12 +23,19 @@ from pathlib import Path
 
 # Mapeo run_name → fila tabla SOTA. Ajustar tras decisiones de Fase 4-5.
 ROW_LABELS = {
-    "densenet_modern":      "(a)",
-    "densenet_legacy":      "(a) [legacy]",
-    "vit_modern":           "(b)",
-    "vit_legacy":           "(b) [legacy]",
-    "convnext_tiny_modern": "(a$')",
-    "swin_tiny_modern":     "(b$')",
+    # Legacy (sweep-optimizado, sin Focal ni augmentaciones avanzadas)
+    "densenet_legacy":         "(a) legacy",
+    "vit_legacy":              "(b) legacy",
+    # Modern v2 (sin MixUp, focal_gamma=1.0, llrd=0.85)
+    "densenet_modern":         "(a) v2",
+    "vit_modern":              "(b) v2",
+    "convnext_tiny_modern":    "(a$') v2",
+    "swin_tiny_modern":        "(b$') v2",
+    # Modern v3 (sin Focal Loss → CE + class weights; DenseNet RandAug m=6)
+    "densenet_modern_v3":      "(a) v3",
+    "vit_modern_v3":           "(b) v3",
+    "convnext_tiny_modern_v3": "(a$') v3",
+    "swin_tiny_modern_v3":     "(b$') v3",
 }
 
 ARCH_NAME = {
@@ -48,37 +55,58 @@ def fmt_num(x, digits=4):
 
 
 def load_results(results_dir: Path) -> list[dict]:
-    """Carga todos los _test_results.json y _test_results_hiba.json del dir."""
+    """Carga todos los _test_results.json del dir.
+
+    Soporta dos formatos:
+    - Nuevo (v2): JSON consolidado con claves "ham10000", "hiba", "combined".
+    - Legado: métricas planas en la raíz del JSON (sin subclave "ham10000").
+    """
     out = []
     for path in sorted(results_dir.glob("*_test_results.json")):
+        # Ignorar archivos _hiba.json del formato legado
+        if path.stem.endswith("_test_results_hiba"):
+            continue
         with open(path, encoding="utf-8") as f:
             data = json.load(f)
         run_name = data.get("run_name") or data.get("model") or path.stem.replace("_test_results", "")
-        # Buscar el correspondiente HIBA si existe
-        hiba_path = results_dir / f"{run_name}_test_results_hiba.json"
-        hiba = None
-        if hiba_path.exists():
-            with open(hiba_path, encoding="utf-8") as f:
-                hiba = json.load(f)
+
+        # Detectar formato nuevo vs legado
+        if "ham10000" in data:
+            # Formato consolidado v2
+            ham = data["ham10000"]
+            hiba = data.get("hiba")
+            combined = data.get("combined")
+        else:
+            # Formato legado: métricas planas = HAM10000, buscar archivo HIBA separado
+            ham = data
+            hiba_path = results_dir / f"{run_name}_test_results_hiba.json"
+            hiba = None
+            if hiba_path.exists():
+                with open(hiba_path, encoding="utf-8") as f:
+                    hiba = json.load(f)
+            combined = None
+
         out.append({
-            "run_name":    run_name,
-            "model":       data.get("model", run_name),
-            "recipe":      data.get("recipe"),
-            "ham":         data,
-            "hiba":        hiba,
-            "path":        path,
+            "run_name": run_name,
+            "model":    data.get("model", run_name),
+            "recipe":   data.get("recipe"),
+            "ham":      ham,
+            "hiba":     hiba,
+            "combined": combined,
+            "path":     path,
         })
     return out
 
 
 def emit_markdown(rows: list[dict]) -> str:
     lines = [
-        "| Run | Modelo | Recipe | Acc HAM | F1 HAM | AUC HAM | Acc HIBA | F1 HIBA |",
-        "|---|---|---|---|---|---|---|---|",
+        "| Run | Modelo | Recipe | Acc HAM | F1 HAM | AUC HAM | Acc HIBA | F1 HIBA | Acc Comb | F1 Comb |",
+        "|---|---|---|---|---|---|---|---|---|---|",
     ]
     for r in rows:
         ham = r["ham"]
         hiba = r["hiba"]
+        comb = r["combined"]
         lines.append(
             f"| {r['run_name']} | {ARCH_NAME.get(r['model'], r['model'])} | "
             f"{r.get('recipe') or '—'} | "
@@ -86,7 +114,9 @@ def emit_markdown(rows: list[dict]) -> str:
             f"{fmt_num(ham.get('f1_weighted'))} | "
             f"{fmt_num(ham.get('auc_roc_macro'))} | "
             f"{fmt_pct(hiba.get('accuracy')) if hiba else '—'} | "
-            f"{fmt_num(hiba.get('f1_weighted')) if hiba else '—'} |"
+            f"{fmt_num(hiba.get('f1_weighted')) if hiba else '—'} | "
+            f"{fmt_pct(comb.get('accuracy')) if comb else '—'} | "
+            f"{fmt_num(comb.get('f1_weighted')) if comb else '—'} |"
         )
     return "\n".join(lines)
 

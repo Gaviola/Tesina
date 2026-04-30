@@ -477,34 +477,41 @@ def main():
     results_dir = Path(args.output_dir) / "results"
     results_dir.mkdir(parents=True, exist_ok=True)
 
-    # Guardar métricas
+    def _metrics_dict(res, n_samples):
+        return {
+            "n_samples": n_samples,
+            "accuracy": res["accuracy"],
+            "f1_weighted": res["f1_weighted"],
+            "auc_roc_macro": res["auc_roc_macro"],
+            "sensitivity_macro": res["sensitivity_macro"],
+            "specificity_macro": res["specificity_macro"],
+            "sensitivity_per_class": res["sensitivity_per_class"],
+            "specificity_per_class": res["specificity_per_class"],
+            "confusion_matrix": res["confusion_matrix"],
+        }
+
+    # Resultado consolidado: HAM10000 obligatorio; HIBA y combined opcionales
+    consolidated = {
+        "model": args.model,
+        "run_name": args.run_name,
+        "recipe": args.recipe,
+        "tta": args.tta,
+        "ham10000": _metrics_dict(test_results, len(test_dataset)),
+    }
+
+    # Guardar predicciones HAM10000 para evaluate_classify.py
     save_results(
         {
             "model": args.model,
             "run_name": args.run_name,
-            "recipe": args.recipe,
-            "accuracy": test_results["accuracy"],
-            "f1_weighted": test_results["f1_weighted"],
-            "auc_roc_macro": test_results["auc_roc_macro"],
-            "sensitivity_macro": test_results["sensitivity_macro"],
-            "specificity_macro": test_results["specificity_macro"],
-            "sensitivity_per_class": test_results["sensitivity_per_class"],
-            "specificity_per_class": test_results["specificity_per_class"],
-            "confusion_matrix": test_results["confusion_matrix"],
+            "dataset": "ham10000",
+            "y_true": y_true,
+            "y_pred": y_pred,
+            "y_prob": y_prob.tolist(),
+            "class_names": class_names,
         },
-        str(results_dir / f"{args.run_name}_test_results.json"),
+        str(results_dir / f"{args.run_name}_predictions.json"),
     )
-
-    # Guardar predicciones para evaluate_classify.py
-    predictions = {
-        "model": args.model,
-        "run_name": args.run_name,
-        "y_true": y_true,
-        "y_pred": y_pred,
-        "y_prob": y_prob.tolist(),
-        "class_names": class_names,
-    }
-    save_results(predictions, str(results_dir / f"{args.run_name}_predictions.json"))
 
     # 13. Evaluación cross-dataset en HIBA (OOD)
     if args.eval_hiba:
@@ -523,7 +530,7 @@ def main():
             logger.info("Cargando HIBA para eval OOD: %s", hiba_root)
             hiba_dataset = HIBADataset(
                 root_dir=hiba_root,
-                split="train",  # ignorado cuando no hay splits_file
+                split="train",
                 transform=val_tfm,
                 ham10000_mapping=True,
             )
@@ -558,30 +565,24 @@ def main():
             logger.info("Sensibilidad (macro): %.4f", hiba_results["sensitivity_macro"])
             logger.info("Especificidad (macro): %.4f", hiba_results["specificity_macro"])
 
-            save_results(
-                {
-                    "model": args.model,
-                    "run_name": args.run_name,
-                    "recipe": args.recipe,
-                    "dataset": "HIBA",
-                    "tta": args.tta,
-                    "n_samples": len(hiba_dataset),
-                    "accuracy": hiba_results["accuracy"],
-                    "f1_weighted": hiba_results["f1_weighted"],
-                    "auc_roc_macro": hiba_results["auc_roc_macro"],
-                    "sensitivity_macro": hiba_results["sensitivity_macro"],
-                    "specificity_macro": hiba_results["specificity_macro"],
-                    "sensitivity_per_class": hiba_results["sensitivity_per_class"],
-                    "specificity_per_class": hiba_results["specificity_per_class"],
-                    "confusion_matrix": hiba_results["confusion_matrix"],
-                },
-                str(results_dir / f"{args.run_name}_test_results_hiba.json"),
+            consolidated["hiba"] = _metrics_dict(hiba_results, len(hiba_dataset))
+
+            # Métricas combinadas HAM10000 + HIBA
+            y_true_comb = y_true + y_true_h
+            y_pred_comb = y_pred + y_pred_h
+            y_prob_comb = np.concatenate([y_prob, y_prob_h], axis=0)
+            combined_results = evaluate_classification(
+                y_true_comb, y_pred_comb, y_prob_comb, class_names
             )
+            consolidated["combined"] = _metrics_dict(
+                combined_results, len(test_dataset) + len(hiba_dataset)
+            )
+
             save_results(
                 {
                     "model": args.model,
                     "run_name": args.run_name,
-                    "dataset": "HIBA",
+                    "dataset": "hiba",
                     "y_true": y_true_h,
                     "y_pred": y_pred_h,
                     "y_prob": y_prob_h.tolist(),
@@ -589,6 +590,9 @@ def main():
                 },
                 str(results_dir / f"{args.run_name}_predictions_hiba.json"),
             )
+
+    # Guardar JSON consolidado único
+    save_results(consolidated, str(results_dir / f"{args.run_name}_test_results.json"))
 
     logger.info("Resultados guardados en %s", results_dir)
     logger.info("Ejecución total: %s", format_duration(time.perf_counter() - script_start))

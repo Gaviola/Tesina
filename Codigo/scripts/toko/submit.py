@@ -44,15 +44,18 @@ JOBS = {
     "llava_s1":       "slurm/toko/train_vlm_s1_llava.sh",
     "mini_s2":        "slurm/toko/train_vlm_s2_mini.sh",
     "llava_s2":       "slurm/toko/train_vlm_s2_llava.sh",
-    ## Clasificadores Fase 1 — verificación legacy
+    ## Clasificadores Fase 1 — verificación legacy (con HIBA OOD y AUC-ROC corregido)
     "cls_densenet_legacy": (_CLS_SCRIPT, {
         "MODEL": "densenet", "RECIPE": "legacy", "LR": _CLS_LR["densenet"],
+        "RUN_NAME": "densenet_legacy",
+        "EXTRA_FLAGS": "--eval-hiba",
     }),
     "cls_vit_legacy": (_CLS_SCRIPT, {
         "MODEL": "vit", "RECIPE": "legacy", "LR": _CLS_LR["vit"],
-        "EXTRA_FLAGS": "--scheduler none",
+        "RUN_NAME": "vit_legacy",
+        "EXTRA_FLAGS": "--scheduler none --eval-hiba",
     }),
-    ## Clasificadores Fase 1 — corridas finales modern (con HIBA OOD eval)
+    ## Clasificadores Fase 1 — corridas modern v2 (con HIBA OOD eval)
     "cls_densenet_modern": (_CLS_SCRIPT, {
         "MODEL": "densenet", "RECIPE": "modern", "LR": _CLS_LR["densenet"],
         "EXTRA_FLAGS": "--eval-hiba",
@@ -68,6 +71,29 @@ JOBS = {
     "cls_swin_modern": (_CLS_SCRIPT, {
         "MODEL": "swin_tiny", "RECIPE": "modern", "LR": _CLS_LR["swin_tiny"],
         "EXTRA_FLAGS": "--eval-hiba",
+    }),
+    ## Clasificadores Fase 1 — corridas modern v3 (sin Focal Loss → CE + class weights)
+    ## Hipótesis: focal_gamma causa colapso hacia clases minoritarias en datasets desbalanceados.
+    ## DenseNet: también reduce RandAugment de m=9 a m=6 (BatchNorm sensible a varianza alta).
+    "cls_densenet_modern_v3": (_CLS_SCRIPT, {
+        "MODEL": "densenet", "RECIPE": "modern", "LR": _CLS_LR["densenet"],
+        "RUN_NAME": "densenet_modern_v3",
+        "EXTRA_FLAGS": "--focal-gamma 0 --randaugment-m 6 --eval-hiba",
+    }),
+    "cls_vit_modern_v3": (_CLS_SCRIPT, {
+        "MODEL": "vit", "RECIPE": "modern", "LR": _CLS_LR["vit"],
+        "RUN_NAME": "vit_modern_v3",
+        "EXTRA_FLAGS": "--focal-gamma 0 --eval-hiba",
+    }),
+    "cls_convnext_modern_v3": (_CLS_SCRIPT, {
+        "MODEL": "convnext_tiny", "RECIPE": "modern", "LR": _CLS_LR["convnext_tiny"],
+        "RUN_NAME": "convnext_tiny_modern_v3",
+        "EXTRA_FLAGS": "--focal-gamma 0 --eval-hiba",
+    }),
+    "cls_swin_modern_v3": (_CLS_SCRIPT, {
+        "MODEL": "swin_tiny", "RECIPE": "modern", "LR": _CLS_LR["swin_tiny"],
+        "RUN_NAME": "swin_tiny_modern_v3",
+        "EXTRA_FLAGS": "--focal-gamma 0 --eval-hiba",
     }),
     ## Ablaciones (override _ABL_MODEL al ganador real tras corridas modern)
     "cls_abl_no_mixup": (_CLS_SCRIPT, {
@@ -112,8 +138,12 @@ JOBS = {
 
 # Grupos de jobs para envios multiples
 _TRAINING_JOBS = ["mini_s1", "llava_s1", "mini_s2", "llava_s2", "classifier"]
-_CLS_LEGACY_JOBS = ["cls_densenet_legacy", "cls_vit_legacy"]
-_CLS_MODERN_JOBS = ["cls_densenet_modern", "cls_vit_modern", "cls_convnext_modern", "cls_swin_modern"]
+_CLS_LEGACY_JOBS   = ["cls_densenet_legacy", "cls_vit_legacy"]
+_CLS_MODERN_JOBS   = ["cls_densenet_modern", "cls_vit_modern", "cls_convnext_modern", "cls_swin_modern"]
+_CLS_MODERN_V3_JOBS = [
+    "cls_densenet_modern_v3", "cls_vit_modern_v3",
+    "cls_convnext_modern_v3", "cls_swin_modern_v3",
+]
 _CLS_ABLATION_JOBS = [
     "cls_abl_no_mixup", "cls_abl_no_randaug", "cls_abl_no_focal",
     "cls_abl_no_tta", "cls_abl_no_two_stage", "cls_abl_no_label_smoothing",
@@ -127,8 +157,10 @@ GROUPS = {
     ## Fase 1 — clasificadores
     "all_cls_legacy":   _CLS_LEGACY_JOBS,
     "all_cls_modern":   _CLS_MODERN_JOBS,
+    "all_cls_modern_v3": _CLS_MODERN_V3_JOBS,
     "all_cls_ablation": _CLS_ABLATION_JOBS,
     "all_cls":          _CLS_LEGACY_JOBS + _CLS_MODERN_JOBS,
+    "all_cls_v3":       _CLS_LEGACY_JOBS + _CLS_MODERN_V3_JOBS,
     "all_cls_full":     _CLS_LEGACY_JOBS + _CLS_MODERN_JOBS + _CLS_ABLATION_JOBS,
 }
 

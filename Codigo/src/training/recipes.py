@@ -75,12 +75,14 @@ RECIPES: dict[str, Recipe] = {
         random_erasing=0.25,
         random_resized_crop=True,
         rrc_scale_min=0.7,
-        mixup_alpha=0.2,
-        cutmix_alpha=1.0,
+        # MixUp/CutMix desactivado (v2): producía val_loss explosion y calibración dañada.
+        # Ver docs/ideas/mejoras_clasificadores_fase1_v2.md §2.1
+        mixup_alpha=0.0,
+        cutmix_alpha=0.0,
         mixup_prob=0.5,
-        focal_gamma=2.0,
+        focal_gamma=1.0,   # v1=2.0 → v2=1.0: gamma suave, sin MixUp gamma=2 era excesivo
         two_stage=True,
-        llrd=0.75,
+        llrd=0.85,         # v1=0.75 → v2=0.85: capas tempranas reciben ~20% de base_lr
         tta=True,
         weight_decay=0.05,
     ),

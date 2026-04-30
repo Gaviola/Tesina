@@ -43,12 +43,13 @@ def evaluate_classification(
     # AUC-ROC (requiere probabilidades)
     if y_prob is not None:
         try:
+            # Normalizar siempre: TTA averaging en bf16 puede producir filas que no suman 1.0
+            y_prob_norm = y_prob / y_prob.sum(axis=1, keepdims=True).clip(min=1e-12)
             present_classes = sorted(set(y_true))
-            n_classes = y_prob.shape[1] if y_prob.ndim == 2 else None
+            n_classes = y_prob_norm.shape[1] if y_prob_norm.ndim == 2 else None
             if n_classes is not None and len(present_classes) < n_classes:
                 # Restringir a clases efectivamente presentes en y_true.
-                y_prob_restricted = y_prob[:, present_classes]
-                # Renormalizar para que las filas sumen 1.
+                y_prob_restricted = y_prob_norm[:, present_classes]
                 y_prob_restricted = y_prob_restricted / y_prob_restricted.sum(
                     axis=1, keepdims=True
                 ).clip(min=1e-12)
@@ -58,7 +59,7 @@ def evaluate_classification(
                 )
             else:
                 results["auc_roc_macro"] = roc_auc_score(
-                    y_true, y_prob, multi_class="ovr", average="macro"
+                    y_true, y_prob_norm, multi_class="ovr", average="macro"
                 )
         except (ValueError, IndexError) as e:
             logger.warning("AUC-ROC no calculable: %s", e)
