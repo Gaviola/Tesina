@@ -178,23 +178,36 @@ python scripts/mendieta/submit.py classify_mini_ft_lik   # Mini-VLM fine-tuneado
 python scripts/mendieta/submit.py classify_llava_ft_lik  # LLaVA-Med fine-tuneado
 python scripts/mendieta/submit.py all_classify_lik       # los 4 jobs de la tabla 2x2
 
+# --- Clasificacion via Chain-of-Thought (CoT) ---
+# El modelo razona sobre features ABCDE antes del diagnostico final.
+# El parser extrae la etiqueta del campo "Final diagnosis:" con fallback
+# a likelihood si el campo no aparece. Outputs con sufijo _cot.
+python scripts/mendieta/submit.py classify_mini_cot      # zero-shot Mini-VLM base (~6h)
+python scripts/mendieta/submit.py classify_llava_cot     # zero-shot LLaVA-Med base (~6h)
+python scripts/mendieta/submit.py classify_mini_ft_cot   # Mini-VLM fine-tuneado (~6h)
+python scripts/mendieta/submit.py classify_llava_ft_cot  # LLaVA-Med fine-tuneado (~6h)
+python scripts/mendieta/submit.py all_classify_cot       # los 4 jobs CoT
+
 ```
 
-### Tabla 2x2 de comparacion {base, fine-tuned} x {generate, likelihood}
+### Tabla de comparacion {base, fine-tuned} x {generate, likelihood, cot}
 
-Para el analisis final se ejecutan los 4 cuadrantes. Los resultados se
+Para el analisis final se ejecutan los 3 metodos en ambas variantes. Los resultados se
 guardan en `outputs/results/` con sufijos que los distinguen:
 
-| Cuadrante | JSON de predicciones                               | JSON de metricas                                |
-|-----------|----------------------------------------------------|-------------------------------------------------|
-| base + generate    | `{model}_predictions.json`                 | `{model}_test_results.json`                     |
-| ft   + generate    | `{model}_finetuned_predictions.json`       | `{model}_finetuned_test_results.json`           |
-| base + likelihood  | `{model}_likelihood_predictions.json`      | `{model}_likelihood_test_results.json`          |
-| ft   + likelihood  | `{model}_likelihood_finetuned_predictions.json` | `{model}_likelihood_finetuned_test_results.json` |
+| Cuadrante | JSON de predicciones | JSON de metricas |
+|-----------|---------------------|-----------------|
+| base + generate    | `{model}_predictions.json`                      | `{model}_test_results.json`                         |
+| ft   + generate    | `{model}_finetuned_predictions.json`            | `{model}_finetuned_test_results.json`               |
+| base + likelihood  | `{model}_likelihood_predictions.json`           | `{model}_likelihood_test_results.json`              |
+| ft   + likelihood  | `{model}_likelihood_finetuned_predictions.json` | `{model}_likelihood_finetuned_test_results.json`    |
+| base + cot         | `{model}_cot_predictions.json`                  | `{model}_cot_test_results.json`                     |
+| ft   + cot         | `{model}_cot_finetuned_predictions.json`        | `{model}_cot_finetuned_test_results.json`           |
 
 Flujo tipico (asumiendo `all_classify` + `all_classify_ft` ya ejecutados):
 ```
 python scripts/mendieta/submit.py all_classify_lik   # 4 jobs de likelihood
+python scripts/mendieta/submit.py all_classify_cot   # 4 jobs de CoT
 python scripts/mendieta/monitor.py                   # seguir progreso
 python scripts/mendieta/sync_down.py                 # bajar JSONs a local
 ```

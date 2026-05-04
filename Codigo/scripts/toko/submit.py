@@ -9,13 +9,23 @@ Uso:
   python scripts/toko/submit.py classifier     # DenseNet + ViT baselines
   python scripts/toko/submit.py gen_llava      # Generacion reportes LLaVA-Med
   python scripts/toko/submit.py gen_mini       # Generacion reportes Mini-VLM
-  python scripts/toko/submit.py classify_llava # Clasificacion zero-shot LLaVA-Med
-  python scripts/toko/submit.py classify_mini  # Clasificacion zero-shot Mini-VLM
+  python scripts/toko/submit.py classify_llava     # Clasificacion generate LLaVA-Med
+  python scripts/toko/submit.py classify_mini      # Clasificacion generate Mini-VLM
+  python scripts/toko/submit.py classify_llava_lik # Clasificacion likelihood LLaVA-Med base
+  python scripts/toko/submit.py classify_mini_lik  # Clasificacion likelihood Mini-VLM base
+  python scripts/toko/submit.py classify_llava_ft_lik  # Clasificacion likelihood LLaVA-Med ft
+  python scripts/toko/submit.py classify_mini_ft_lik   # Clasificacion likelihood Mini-VLM ft
+  python scripts/toko/submit.py classify_llava_cot     # Clasificacion CoT LLaVA-Med base
+  python scripts/toko/submit.py classify_mini_cot      # Clasificacion CoT Mini-VLM base
+  python scripts/toko/submit.py classify_llava_ft_cot  # Clasificacion CoT LLaVA-Med ft
+  python scripts/toko/submit.py classify_mini_ft_cot   # Clasificacion CoT Mini-VLM ft
   python scripts/toko/submit.py all            # todos los jobs de training (default)
   python scripts/toko/submit.py all_s1         # solo stage1 (mini + llava)
   python scripts/toko/submit.py all_s2         # solo stage2 (mini + llava)
   python scripts/toko/submit.py all_gen        # generacion reportes (ambos modelos)
-  python scripts/toko/submit.py all_classify   # clasificacion VLM (ambos modelos)
+  python scripts/toko/submit.py all_classify   # clasificacion generate (ambos modelos)
+  python scripts/toko/submit.py all_classify_lik  # likelihood base + ft (4 jobs)
+  python scripts/toko/submit.py all_classify_cot  # CoT base + ft (4 jobs)
 """
 import sys
 import argparse
@@ -134,6 +144,17 @@ JOBS = {
     "gen_mini":       "slurm/toko/generate_reports_mini.sh",
     "classify_llava": "slurm/toko/vlm_classify_llava.sh",
     "classify_mini":  "slurm/toko/vlm_classify_mini.sh",
+    ## Variantes likelihood: reutilizan los mismos scripts SLURM y cambian
+    ## el metodo via variable de entorno METHOD (ver scripts sbatch).
+    "classify_llava_lik":    ("slurm/toko/vlm_classify_llava.sh",    {"METHOD": "likelihood"}),
+    "classify_mini_lik":     ("slurm/toko/vlm_classify_mini.sh",     {"METHOD": "likelihood"}),
+    "classify_llava_ft_lik": ("slurm/toko/vlm_classify_llava_ft.sh", {"METHOD": "likelihood"}),
+    "classify_mini_ft_lik":  ("slurm/toko/vlm_classify_mini_ft.sh",  {"METHOD": "likelihood"}),
+    ## Variantes CoT: mismo mecanismo de env var METHOD=cot.
+    "classify_llava_cot":    ("slurm/toko/vlm_classify_llava.sh",    {"METHOD": "cot"}),
+    "classify_mini_cot":     ("slurm/toko/vlm_classify_mini.sh",     {"METHOD": "cot"}),
+    "classify_llava_ft_cot": ("slurm/toko/vlm_classify_llava_ft.sh", {"METHOD": "cot"}),
+    "classify_mini_ft_cot":  ("slurm/toko/vlm_classify_mini_ft.sh",  {"METHOD": "cot"}),
 }
 
 # Grupos de jobs para envios multiples
@@ -154,14 +175,28 @@ GROUPS = {
     "all_s2":       ["mini_s2", "llava_s2"],
     "all_gen":      ["gen_llava", "gen_mini"],
     "all_classify": ["classify_llava", "classify_mini"],
+    ## Comparacion 2x2: {base, ft} x {generate, likelihood}.
+    "all_classify_lik": [
+        "classify_llava_lik",
+        "classify_mini_lik",
+        "classify_llava_ft_lik",
+        "classify_mini_ft_lik",
+    ],
+    ## CoT base + ft (4 jobs).
+    "all_classify_cot": [
+        "classify_llava_cot",
+        "classify_mini_cot",
+        "classify_llava_ft_cot",
+        "classify_mini_ft_cot",
+    ],
     ## Fase 1 — clasificadores
-    "all_cls_legacy":   _CLS_LEGACY_JOBS,
-    "all_cls_modern":   _CLS_MODERN_JOBS,
+    "all_cls_legacy":    _CLS_LEGACY_JOBS,
+    "all_cls_modern":    _CLS_MODERN_JOBS,
     "all_cls_modern_v3": _CLS_MODERN_V3_JOBS,
-    "all_cls_ablation": _CLS_ABLATION_JOBS,
-    "all_cls":          _CLS_LEGACY_JOBS + _CLS_MODERN_JOBS,
-    "all_cls_v3":       _CLS_LEGACY_JOBS + _CLS_MODERN_V3_JOBS,
-    "all_cls_full":     _CLS_LEGACY_JOBS + _CLS_MODERN_JOBS + _CLS_ABLATION_JOBS,
+    "all_cls_ablation":  _CLS_ABLATION_JOBS,
+    "all_cls":           _CLS_LEGACY_JOBS + _CLS_MODERN_JOBS,
+    "all_cls_v3":        _CLS_LEGACY_JOBS + _CLS_MODERN_V3_JOBS,
+    "all_cls_full":      _CLS_LEGACY_JOBS + _CLS_MODERN_JOBS + _CLS_ABLATION_JOBS,
 }
 
 # Mapeo de job name → subcarpeta de logs

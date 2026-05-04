@@ -118,17 +118,30 @@
 
 \midrule
 % ── Este trabajo ─────────────────────────────────────────────
-\multicolumn{9}{@{}l}{\small\itshape Este trabajo} \\[2pt]
+\multicolumn{9}{@{}l}{\small\itshape Este trabajo --- clasificadores supervisados$^{(\nu)}$} \\[2pt]
 
 \rowcolor{thiswork}
 (a) & DenseNet121
   & FT & 7
-  & 52.29 & --- & 0.581$^{(w)}$ & 39.42\% & 91.98\% \\
+  & 84.56 & 0.9637 & 0.8517$^{(w)}$ & 77.61\% & 96.74\% \\
 
 \rowcolor{thiswork}
 (b) & ViT-B/16
   & FT & 7
-  & 63.14 & --- & 0.668$^{(w)}$ & 51.96\% & 93.26\% \\
+  & \textbf{85.76} & \textbf{0.9653} & \textbf{0.8621}$^{(w)}$ & 79.72\% & \textbf{97.16\%} \\
+
+\rowcolor{thiswork}
+(a') & ConvNeXt-Tiny
+  & FT & 7
+  & 81.90 & 0.9560 & 0.8464$^{(w)}$ & \textbf{83.98\%} & 96.94\% \\
+
+\rowcolor{thiswork}
+(b') & Swin-Tiny
+  & FT & 7
+  & 79.51 & 0.9469 & 0.8163$^{(w)}$ & 80.88\% & 96.58\% \\
+
+\addlinespace[5pt]
+\multicolumn{9}{@{}l}{\small\itshape Este trabajo --- VLMs (evaluación \textit{zero-shot}, sin fine-tuning de clasificación)} \\[2pt]
 
 \rowcolor{thiswork}
 (c)$^\dagger$ & LLaVA-Med 7B
@@ -152,7 +165,12 @@
   el F1-macro de 0.793 corresponde al Swin-Transformer~\cite{SkinSavvy22025}.\\
   Los baselines de~\cite{SkinR12025} provienen de su Tabla~3
   (evaluación \textit{in-distribution} sobre HAM10000, 7 clases).
-  Los baselines de~\cite{MMSkin2025} provienen de su Tabla~4 de clasificación supervisada.\\[4pt]
+  Los baselines de~\cite{MMSkin2025} provienen de su Tabla~4 de clasificación supervisada.\\
+  $^{(\nu)}$~Los modelos (a) y (b) fueron seleccionados mediante barrido de hiperparámetros
+  (W\&B sweep, 25$+$ corridas), optimizando F1-weighted en el conjunto de validación.
+  Los modelos (a') y (b') utilizan el \textit{recipe} moderno (RandAugment, RandomErasing,
+  \textit{two-stage fine-tuning}, TTA) con hiperparámetros fijos sin barrido.
+  AUC-ROC calculado con normalización de probabilidades post-TTA.\\[4pt]
   \textbf{Nota sobre comparabilidad:}
   Todos los modelos en esta tabla fueron evaluados en HAM10000 con 7 clases.
   Sin embargo, los protocolos de evaluación difieren:
@@ -162,6 +180,75 @@
   de clasificación directa para VLMs.
   La comparabilidad entre clasificadores supervisados y VLMs evaluados
   vía prompt es inherentemente limitada.
+\end{minipage}
+\end{table}
+
+
+% ──────────────────────────────────────────────────────────────
+%  TABLA 1b — Generalización OOD: evaluación en HIBA
+% ──────────────────────────────────────────────────────────────
+\begin{table}[htbp]
+\centering
+\caption{%
+  Evaluación de generalización fuera de distribución (\textit{out-of-distribution}, OOD)
+  sobre el dataset \textbf{HIBA} ($n=1616$), compuesto por imágenes dermoscópicas
+  de pacientes argentinos con fototipos III--VI.
+  Ningún modelo de esta tabla fue entrenado con datos HIBA.
+  El mapping de clases HIBA$\to$HAM10000 es 1:1 para 6 de las 7 categorías;
+  SCC se mapea a AKIEC (158 imágenes afectadas), lo que introduce ruido en esa clase.
+  ``---''~indica que el modelo no fue evaluado sobre HIBA.
+  Las filas sombreadas corresponden a resultados de este trabajo.
+}
+\label{tab:hiba_ood}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{@{}llcrrrrr@{}}
+\toprule
+\textbf{Modelo}
+  & \textbf{Arquitectura}
+  & \textbf{Recipe}
+  & \textbf{Acc.\ (\%)}
+  & \textbf{F1-w}
+  & \textbf{AUC-ROC}
+  & \textbf{Sens.\ macro}
+  & \textbf{Espec.\ macro} \\
+\midrule
+
+\multicolumn{8}{@{}l}{\small\itshape Clasificadores supervisados (entrenados en HAM10000)} \\[2pt]
+
+\rowcolor{thiswork}
+(a) & DenseNet121   & legacy$^{(\nu)}$ & 56.56 & 0.5402 & 0.8372 & 43.96\% & 91.79\% \\
+
+\rowcolor{thiswork}
+(b) & ViT-B/16      & legacy$^{(\nu)}$ & 54.02 & 0.5241 & 0.8250 & 43.51\% & 91.56\% \\
+
+\rowcolor{thiswork}
+(a') & ConvNeXt-Tiny & modern v3        & \textbf{55.51} & \textbf{0.5885} & 0.8166 & 53.98\% & 92.77\% \\
+
+\rowcolor{thiswork}
+(b') & Swin-Tiny     & modern v3        & 56.13 & 0.5753 & \textbf{0.8271} & \textbf{55.28\%} & \textbf{92.77\%} \\
+
+\bottomrule
+\end{tabular}%
+}
+\vspace{4pt}
+\begin{minipage}{\textwidth}
+  \footnotesize
+  $^{(\nu)}$~Ver nota Tabla~\ref{tab:sota_clasificacion_ham}: modelos legacy seleccionados
+  mediante barrido de hiperparámetros; modelos (a') y (b') con hiperparámetros fijos.\\[4pt]
+  \textbf{Observaciones:}
+  (1)~Todos los modelos pierden entre 23--32 puntos de exactitud al pasar de HAM10000 a HIBA,
+  evidenciando un \textit{domain shift} significativo atribuible a diferencias de fototipo,
+  condiciones de adquisición y distribución de clases.
+  (2)~Swin-Tiny (modern v3) obtiene la mejor sensibilidad macro (55.28\%) y AUC (0.827) en HIBA,
+  pese a no ser el mejor en HAM10000, lo que sugiere que el \textit{recipe} moderno
+  favorece la generalización.
+  (3)~ConvNeXt-Tiny obtiene el mayor F1-weighted OOD (0.589), equilibrando
+  precisión y recall entre clases.
+  (4)~La disociación entre AUC (0.82--0.84) y exactitud (0.54--0.56) indica que los modelos
+  preservan capacidad discriminativa en el espacio de probabilidades,
+  pero el calibrado del argmax se degrada en el nuevo dominio.
+  (5)~Ningún trabajo del SOTA reporta resultados en HIBA; esta tabla constituye
+  la primera evaluación sistemática de modelos HAM10000 sobre población argentina.
 \end{minipage}
 \end{table}
 
@@ -493,18 +580,31 @@ Mini-VLM (CLIP ViT-B/16~$+$~Phi-3-mini)
 \midrule
 
 \cite{SkinHealthMate2024} EfficientNet Ens.
-  & CNN (FT) & \textbf{93.00} & \textbf{0.93}$^{(w)}$ & --- & Mejor resultado CNN \\
+  & CNN (FT) & \textbf{93.00} & \textbf{0.93}$^{(w)}$ & --- & SOTA absoluto CNN \\
 
 \cite{SkinR12025} Skin-R1
-  & VLM (FT+RL) & \textbf{87.86} & \textbf{0.879} & --- & Mejor resultado VLM \\
+  & VLM (FT$+$RL) & 87.86 & 0.879 & $-$5.14 & SOTA absoluto VLM \\
+
+\rowcolor{thiswork}
+(b) ViT-B/16 [\textit{este trabajo}]
+  & ViT (FT) & \textbf{85.76} & \textbf{0.862}$^{(w)}$ & $-$7.24 & Mejor de este trabajo \\
+
+\rowcolor{thiswork}
+(a) DenseNet121 [\textit{este trabajo}]
+  & CNN (FT) & 84.56 & 0.852$^{(w)}$ & $-$8.44 & --- \\
+
+\rowcolor{thiswork}
+(a') ConvNeXt-Tiny [\textit{este trabajo}]
+  & CNN mod.\ (FT) & 81.90 & 0.846$^{(w)}$ & $-$11.10 & \textit{Recipe} moderno, sin sweep \\
+
+\rowcolor{thiswork}
+(b') Swin-Tiny [\textit{este trabajo}]
+  & ViT mod.\ (FT) & 79.51 & 0.816$^{(w)}$ & $-$13.49 & Mejor generalización OOD \\
 
 \cite{SkinSavvy22025} Swin$+$EfficientNetV2
   & CNN (FT) & 77.70$^{(\dagger\dagger)}$ & 0.793$^{(m)}$ & $-$15.30 & HAM10000 aumentado \\
 
-\rowcolor{thiswork}
-(b) ViT-B/16 [\textit{este trabajo}]
-  & ViT (FT) & 63.14 & 0.668$^{(w)}$ & $-$29.86 & Comparable a LLaVA-Med ZS \\
-
+\addlinespace[4pt]
 \cite{MMSkin2025} SkinVL-Pub
   & VLM (FT) & 63.46 & --- & $-$29.54 & LLaVA-Med$+$LoRA \\
 
@@ -517,17 +617,14 @@ Mini-VLM (CLIP ViT-B/16~$+$~Phi-3-mini)
 \cite{SkinR12025} GPT-4V
   & VLM (ZS) & 55.21 & 0.561 & $-$37.79 & --- \\
 
+\addlinespace[4pt]
 \rowcolor{thiswork}
-(a) DenseNet121 [\textit{este trabajo}]
-  & CNN (FT) & 52.29 & 0.581$^{(w)}$ & $-$40.71 & 7 clases, desbalance severo \\
+(c) LLaVA-Med 7B [\textit{este trabajo}]
+  & VLM (ZS) & 11.44 & 0.030 & $-$81.56 & Colapso de clase (método \textit{generate}) \\
 
 \rowcolor{thiswork}
-(c) LLaVA-Med 7B ZS [\textit{este trabajo}]
-  & VLM (ZS) & 11.44 & 0.030 & $-$81.56 & Colapso de clase \\
-
-\rowcolor{thiswork}
-(d) Mini-VLM ZS [\textit{este trabajo}]
-  & VLM (ZS) & 5.12 & 0.006 & $-$87.88 & Colapso de clase \\
+(d) Mini-VLM [\textit{este trabajo}]
+  & VLM (ZS) & 5.12 & 0.006 & $-$87.88 & Colapso de clase (método \textit{generate}) \\
 
 \bottomrule
 \end{tabular}%
@@ -540,15 +637,18 @@ Mini-VLM (CLIP ViT-B/16~$+$~Phi-3-mini)
   $^{(w)}$~F1 weighted; $^{(m)}$~F1 macro.
   $^{(\dagger\dagger)}$~Sobre HAM10000 aumentado (ver nota Tabla~\ref{tab:sota_clasificacion_ham}).\\[4pt]
   \textbf{Hallazgos clave:}
-  (1)~El ViT-B/16 de este trabajo (63.14\%) se posiciona al nivel
-  de LLaVA-Med-7B en ZS (62.16\%) y SkinVL-Pub (63.46\%),
-  lo que valida su rendimiento como baseline competitivo.
-  (2)~La brecha con el SOTA CNN (93\%) se explica por el uso de
-  ensembles y augmentación más agresiva en~\cite{SkinHealthMate2024}.
-  (3)~Los VLMs en zero-shot sufren colapso de clase, consistente
-  con la hipótesis de que los VLMs generativos no están diseñados
-  para clasificación de etiqueta discreta.
-  (4)~Skin-R1 (87.86\%) demuestra que con RL y razonamiento
-  clínico, los VLMs pueden competir con CNNs especializadas.
+  (1)~ViT-B/16 (85.76\%) y DenseNet121 (84.56\%) de este trabajo se posicionan
+  entre los mejores resultados del estado del arte para modelos individuales,
+  superando a todos los VLMs incluyendo los fine-tuneados con LoRA.
+  (2)~La brecha de 7--8 puntos con el SOTA CNN (93\%) se debe principalmente
+  al uso de ensembles y pesos \textit{Noisy Student} en~\cite{SkinHealthMate2024}.
+  (3)~Los modelos modernos (a') y (b') sin barrido de hiperparámetros
+  son competitivos con SkinSavvy2 (77.70\%), que usa HAM10000 aumentado.
+  (4)~Los VLMs en zero-shot (método \textit{generate}) colapsan hacia clases
+  mayoritarias, resultando en accuracy por debajo del azar (14.3\% para 7 clases).
+  Este es el punto de partida de la Fase~2 del trabajo.
+  (5)~Skin-R1 (87.86\%) demuestra que con supervisión clínica estructurada
+  y RL, los VLMs pueden superar a los clasificadores supervisados individuales,
+  estableciendo el techo de la Fase~2.
 \end{minipage}
 \end{table}

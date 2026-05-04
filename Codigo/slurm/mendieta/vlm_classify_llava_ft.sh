@@ -52,7 +52,7 @@ find ${HOME}/miniconda3/envs/dermvlm -name "__pycache__" -path "*/scipy/*" -exec
 echo ""
 
 ## Metodo de clasificacion. Configurable via variable de entorno para permitir
-## reutilizar el mismo script sbatch en ambos metodos (generate | likelihood).
+## reutilizar el mismo script sbatch en todos los metodos (generate | likelihood | cot).
 METHOD="${METHOD:-generate}"
 echo "Metodo de clasificacion: ${METHOD}"
 

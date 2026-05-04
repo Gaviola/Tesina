@@ -15,23 +15,28 @@ Uso:
   python scripts/mendieta/submit.py gen_mini_mmskin   # Solo MM-SkinQA con Mini-VLM
   python scripts/mendieta/submit.py gen_llava_ham     # Solo HAM10000 con LLaVA-Med
   python scripts/mendieta/submit.py gen_mini_ham      # Solo HAM10000 con Mini-VLM
-  python scripts/mendieta/submit.py classify_llava    # Clasificacion zero-shot LLaVA-Med (~4h)
-  python scripts/mendieta/submit.py classify_mini     # Clasificacion zero-shot Mini-VLM (~4h)
+  python scripts/mendieta/submit.py classify_llava    # Clasificacion generate LLaVA-Med (~4h)
+  python scripts/mendieta/submit.py classify_mini     # Clasificacion generate Mini-VLM (~4h)
   python scripts/mendieta/submit.py classify_mini_ft  # Clasificacion fine-tuned Mini-VLM (~4h)
   python scripts/mendieta/submit.py classify_llava_ft # Clasificacion fine-tuned LLaVA-Med (~4h)
   python scripts/mendieta/submit.py classify_mini_lik     # Clasificacion likelihood Mini-VLM base (~4h)
   python scripts/mendieta/submit.py classify_llava_lik    # Clasificacion likelihood LLaVA-Med base (~4h)
   python scripts/mendieta/submit.py classify_mini_ft_lik  # Clasificacion likelihood Mini-VLM fine-tuned (~4h)
   python scripts/mendieta/submit.py classify_llava_ft_lik # Clasificacion likelihood LLaVA-Med fine-tuned (~4h)
+  python scripts/mendieta/submit.py classify_llava_cot    # Clasificacion CoT LLaVA-Med base (~6h)
+  python scripts/mendieta/submit.py classify_mini_cot     # Clasificacion CoT Mini-VLM base (~6h)
+  python scripts/mendieta/submit.py classify_llava_ft_cot # Clasificacion CoT LLaVA-Med fine-tuned (~6h)
+  python scripts/mendieta/submit.py classify_mini_ft_cot  # Clasificacion CoT Mini-VLM fine-tuned (~6h)
   python scripts/mendieta/submit.py all               # todos los jobs de training (default)
   python scripts/mendieta/submit.py all_s1            # solo stage1 (mini + llava)
   python scripts/mendieta/submit.py all_s2            # solo stage2 (mini + llava)
   python scripts/mendieta/submit.py all_gen           # generacion reportes (ambos modelos)
   python scripts/mendieta/submit.py all_gen_mmskin   # solo MM-SkinQA (ambos modelos)
   python scripts/mendieta/submit.py all_gen_ham      # solo HAM10000 (ambos modelos)
-  python scripts/mendieta/submit.py all_classify      # clasificacion VLM zero-shot (ambos)
+  python scripts/mendieta/submit.py all_classify      # clasificacion generate (ambos)
   python scripts/mendieta/submit.py all_classify_ft   # clasificacion VLM fine-tuned (ambos)
-  python scripts/mendieta/submit.py all_classify_lik  # clasificacion likelihood (4 jobs: base + ft)
+  python scripts/mendieta/submit.py all_classify_lik  # likelihood base + ft (4 jobs)
+  python scripts/mendieta/submit.py all_classify_cot  # CoT base + ft (4 jobs)
   python scripts/mendieta/submit.py all --no-sync     # sin sincronizar
 """
 import sys
@@ -141,6 +146,12 @@ JOBS = {
     "classify_mini_lik":     ("slurm/mendieta/vlm_classify_mini.sh",     {"METHOD": "likelihood"}),
     "classify_llava_ft_lik": ("slurm/mendieta/vlm_classify_llava_ft.sh", {"METHOD": "likelihood"}),
     "classify_mini_ft_lik":  ("slurm/mendieta/vlm_classify_mini_ft.sh",  {"METHOD": "likelihood"}),
+    ## Variantes CoT: mismo mecanismo de env var METHOD=cot.
+    ## CoT genera respuestas largas (~200 tokens vs ~32) — puede ser ~2x mas lento.
+    "classify_llava_cot":    ("slurm/mendieta/vlm_classify_llava.sh",    {"METHOD": "cot"}),
+    "classify_mini_cot":     ("slurm/mendieta/vlm_classify_mini.sh",     {"METHOD": "cot"}),
+    "classify_llava_ft_cot": ("slurm/mendieta/vlm_classify_llava_ft.sh", {"METHOD": "cot"}),
+    "classify_mini_ft_cot":  ("slurm/mendieta/vlm_classify_mini_ft.sh",  {"METHOD": "cot"}),
 }
 
 # Grupos de jobs para envios multiples
@@ -175,6 +186,13 @@ GROUPS = {
         "classify_mini_lik",
         "classify_llava_ft_lik",
         "classify_mini_ft_lik",
+    ],
+    ## CoT base + ft (4 jobs).
+    "all_classify_cot": [
+        "classify_llava_cot",
+        "classify_mini_cot",
+        "classify_llava_ft_cot",
+        "classify_mini_ft_cot",
     ],
 }
 

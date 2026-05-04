@@ -76,6 +76,58 @@ PROMPT_TEMPLATES: dict[str, str] = {
     ),
 }
 
+## Descriptores clinicos ABCDE por clase. Usados en el prompt CoT para
+## guiar el razonamiento morfologico antes del diagnostico final.
+## Basado en criterios dermoscopicos estandar y terminologia de SkinCaRe.
+ABCDE_FEATURES: dict[str, str] = {
+    "MEL": (
+        "asymmetric shape, irregular or notched borders, multiple colors "
+        "(brown, black, red, white, blue-gray), diameter often >6mm, "
+        "atypical pigment network, regression areas, vascular structures"
+    ),
+    "NV": (
+        "symmetric shape, regular well-defined borders, uniform brown or "
+        "tan color, typical pigment network, round or oval, "
+        "homogeneous pattern, no atypical structures"
+    ),
+    "BCC": (
+        "pearly or translucent appearance, arborizing telangiectasias, "
+        "leaf-like areas, blue-gray ovoid nests, ulceration possible, "
+        "spoke-wheel structures, shiny white areas"
+    ),
+    "AKIEC": (
+        "scaly or keratotic surface, irregular borders, pink to red color, "
+        "strawberry pattern, dotted or coiled vessels, white circles, "
+        "follicular openings, hairpin vessels"
+    ),
+    "BKL": (
+        "milia-like cysts, comedo-like openings, fissures and ridges, "
+        "moth-eaten borders, cerebriform surface, light to dark brown, "
+        "sharp demarcation, no pigment network"
+    ),
+    "DF": (
+        "central white scar-like patch, peripheral pigment network, "
+        "delicate pigment network at periphery, symmetric, "
+        "ring-like pattern, brown color, firm on palpation"
+    ),
+    "VASC": (
+        "red, purple or dark red color, lacunae (round red areas), "
+        "red-blue to black areas, no pigment network, "
+        "vascular structures, homogeneous red pattern"
+    ),
+}
+
+## Prompt CoT para evaluacion mediante generacion estructurada (--method cot).
+## El modelo debe seguir el formato exacto para que el parser extraiga la clase.
+## Se usa con train_vlm_classify.py --method cot, NO con likelihood scoring.
+COT_PROMPT = (
+    "You are a dermatology expert analyzing a dermoscopic image. "
+    "Think step by step and use the following format exactly:\n"
+    "Features: [describe asymmetry, borders, colors, diameter, special structures]\n"
+    "Differential: [list the most likely diagnoses with brief reasoning]\n"
+    "Final diagnosis: [one of: MEL, NV, BCC, AKIEC, BKL, DF, VASC]"
+)
+
 
 def _build_prefix(vlm_name: str, processor, prompt_text: str) -> str:
     """Construye el prefijo con chat template para cada familia de VLM.

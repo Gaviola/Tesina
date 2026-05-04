@@ -13,6 +13,7 @@
 
 ## LLaVA-Med: Clasificacion zero-shot en HAM10000 test (~14GB, RTX 4080 16GB)
 ## Modelo: CLIP ViT-L/14 + Mistral-7B-Med (sin fine-tuning, zero-shot)
+## Metodo configurable via variable de entorno METHOD (generate | likelihood | cot)
 
 . /etc/profile
 
@@ -43,8 +44,14 @@ echo "Python: $(${PYTHON} --version)"
 find ${HOME}/miniconda3/envs/dermvlm -name "__pycache__" -path "*/scipy/*" -exec rm -rf {} + 2>/dev/null
 echo ""
 
+## Metodo de clasificacion. Configurable via variable de entorno para permitir
+## reutilizar el mismo script sbatch en ambos metodos (generate | likelihood | cot).
+METHOD="${METHOD:-generate}"
+echo "Metodo de clasificacion: ${METHOD}"
+
 ${PYTHON} scripts/train_vlm_classify.py \
     --model llava_med \
+    --method "${METHOD}" \
     --batch_size 4 \
     --seed 42 \
     --wandb

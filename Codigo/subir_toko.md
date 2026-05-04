@@ -103,10 +103,42 @@ encolados: 93312 (mini), 93313 (llava)
 python scripts/toko/submit.py gen_llava        # reportes LLaVA-Med  93325
 python scripts/toko/submit.py gen_mini         # reportes Mini-VLM   93326
 python scripts/toko/submit.py all_gen          # ambos modelos
+
+# --- Clasificacion generate (metodo original, propenso a colapso de clase) ---
 python scripts/toko/submit.py classify_llava   # clasificacion zero-shot LLaVA-Med  93327
-python scripts/toko/submit.py classify_mini    # clasificacion zero-shot Mini-VLM  93328
-python scripts/toko/submit.py all_classify     # ambos modelos
+python scripts/toko/submit.py classify_mini    # clasificacion zero-shot Mini-VLM   93328
+python scripts/toko/submit.py all_classify     # ambos modelos base
+
+# --- Clasificacion likelihood (evita colapso de clase, sin entrenamiento extra) ---
+# Reutilizan los mismos scripts SLURM con METHOD=likelihood.
+# Outputs separados (sufijo _likelihood en el JSON).
+python scripts/toko/submit.py classify_llava_lik     # zero-shot LLaVA-Med base
+python scripts/toko/submit.py classify_mini_lik      # zero-shot Mini-VLM base
+python scripts/toko/submit.py classify_llava_ft_lik  # LLaVA-Med fine-tuneado Stage 2
+python scripts/toko/submit.py classify_mini_ft_lik   # Mini-VLM fine-tuneado Stage 2
+python scripts/toko/submit.py all_classify_lik       # los 4 jobs likelihood
+
+# --- Clasificacion CoT (Chain-of-Thought estructurado) ---
+# El modelo razona sobre features ABCDE antes del diagnostico final.
+# Parser extrae la etiqueta de "Final diagnosis:". Outputs con sufijo _cot.
+# Genera respuestas largas (~200 tokens) → ~2x mas lento que generate.
+python scripts/toko/submit.py classify_llava_cot     # zero-shot LLaVA-Med base
+python scripts/toko/submit.py classify_mini_cot      # zero-shot Mini-VLM base
+python scripts/toko/submit.py classify_llava_ft_cot  # LLaVA-Med fine-tuneado Stage 2
+python scripts/toko/submit.py classify_mini_ft_cot   # Mini-VLM fine-tuneado Stage 2
+python scripts/toko/submit.py all_classify_cot       # los 4 jobs CoT
 ```
+
+### Tabla de comparacion {base, fine-tuned} x {generate, likelihood, cot}
+
+| Cuadrante | JSON de predicciones | JSON de metricas |
+|-----------|---------------------|-----------------|
+| base + generate    | `{model}_predictions.json`                      | `{model}_test_results.json`                      |
+| ft   + generate    | `{model}_finetuned_predictions.json`            | `{model}_finetuned_test_results.json`            |
+| base + likelihood  | `{model}_likelihood_predictions.json`           | `{model}_likelihood_test_results.json`           |
+| ft   + likelihood  | `{model}_likelihood_finetuned_predictions.json` | `{model}_likelihood_finetuned_test_results.json` |
+| base + cot         | `{model}_cot_predictions.json`                  | `{model}_cot_test_results.json`                  |
+| ft   + cot         | `{model}_cot_finetuned_predictions.json`        | `{model}_cot_finetuned_test_results.json`        |
 
 Los jobs de generacion crean reportes sobre MM-SkinQA (Nivel 1, con referencias) y HAM10000
 (Nivel 2, NER). Los reportes se guardan en `outputs/generated_reports/{modelo}/{dataset}/`.

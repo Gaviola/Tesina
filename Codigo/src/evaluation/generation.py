@@ -45,7 +45,9 @@ def _compute_rouge_l(predictions: list[str], references: list[str]) -> Optional[
 
 
 def _compute_bertscore(predictions: list[str], references: list[str]) -> Optional[float]:
-    for model_type in ("microsoft/deberta-xlarge-mnli", "distilbert-base-uncased"):
+    # distilbert-base-uncased primero: ligero y compatible con transformers>=5.x
+    # deberta-xlarge-mnli falla con "int too big to convert" en transformers>=5.0
+    for model_type in ("distilbert-base-uncased", "microsoft/deberta-xlarge-mnli"):
         try:
             import evaluate
             bertscore = evaluate.load("bertscore")

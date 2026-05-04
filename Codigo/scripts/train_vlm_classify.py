@@ -1,16 +1,21 @@
 """Fase 1: Clasificacion con VLMs sobre HAM10000.
 
-Dos metodos soportados via --method:
+Tres metodos soportados via --method:
   - generate   (default): prompt de clasificacion -> generate autoregresivo
                 -> regex parse. Metodo original, propenso a colapso de clase.
   - likelihood: scoring teacher-forced de P(clase | imagen, prompt) por cada
                 clase y prompt. Ensemble de 4 prompts (2 abiertos + 2 cerrados),
                 3 sinonimos por clase agregados por max, length-normalized.
                 Evita el colapso de clase por construccion.
+  - cot:        Chain-of-Thought estructurado: el modelo razona sobre features
+                ABCDE, lista diferenciales y concluye con "Final diagnosis: [CLASS]".
+                Usa generate autoregresivo con COT_PROMPT y parser dedicado que
+                extrae la etiqueta del campo "Final diagnosis:".
 
 Uso:
     python scripts/train_vlm_classify.py --model llava_med --method generate
     python scripts/train_vlm_classify.py --model mini_vlm --method likelihood
+    python scripts/train_vlm_classify.py --model llava_med --method cot
     python scripts/train_vlm_classify.py --model llava_med --method likelihood \\
         --checkpoint outputs/checkpoints/stage2_llava_med/best_model.pt
 """
@@ -30,7 +35,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from src.data.collators import VLMCollator
 from src.data.ham10000 import HAM10000_CLASSES, HAM10000_LABEL_MAP, HAM10000Dataset
-from src.evaluation.vlm_scoring import CLASS_SYNONYMS, PROMPT_TEMPLATES, score_image
+from src.evaluation.vlm_scoring import CLASS_SYNONYMS, COT_PROMPT, PROMPT_TEMPLATES, score_image
 from src.models.factory import build_model
 from src.training.lora_config import apply_lora, get_lora_config
 from src.utils.device import check_vram, get_device, get_training_dtype, get_vram_gb
@@ -68,6 +73,32 @@ def parse_vlm_response(response: str) -> str:
             return label
 
     return "UNKNOWN"
+
+
+def parse_cot_response(response: str) -> str:
+    """Extrae la etiqueta del campo 'Final diagnosis:' en respuestas CoT.
+
+    Busca la linea con 'Final diagnosis:' y extrae el codigo de clase.
+    Si el campo no existe o no contiene un label valido, cae en
+    parse_vlm_response() como fallback para capturar cualquier mencion.
+    """
+    # Buscar "Final diagnosis: <LABEL>" (case-insensitive, con variantes de formato)
+    match = re.search(
+        r'Final\s+diagnosis\s*:\s*\[?([A-Za-z /]+)\]?',
+        response, re.IGNORECASE,
+    )
+    if match:
+        candidate = match.group(1).strip().upper()
+        # Verificar match exacto primero
+        if candidate in _VALID_LABELS:
+            return candidate
+        # Buscar label valido dentro del candidato (e.g. "MEL (melanoma)")
+        for label in HAM10000_CLASSES:
+            if re.search(rf'\b{label}\b', candidate):
+                return label
+
+    # Fallback: buscar en toda la respuesta
+    return parse_vlm_response(response)
 
 
 def run_likelihood_eval(args, model, test_dataset, is_finetuned, script_start):
@@ -290,14 +321,213 @@ def run_likelihood_eval(args, model, test_dataset, is_finetuned, script_start):
     logger.info("Ejecucion total: %s", format_duration(time.perf_counter() - script_start))
 
 
+def run_cot_eval(args, model, test_loader, test_dataset, is_finetuned, script_start):
+    """Evalua clasificacion via Chain-of-Thought estructurado.
+
+    Usa COT_PROMPT para forzar al VLM a razonar sobre features dermoscopicas
+    (asimetria, bordes, colores, estructuras) antes de emitir un diagnostico.
+    El parser extrae la etiqueta del campo "Final diagnosis:" y cae en
+    parse_vlm_response() como fallback si el campo no existe.
+
+    Guarda:
+      - {model}_cot[_finetuned]_predictions.json: respuestas crudas + parseo.
+      - {model}_cot[_finetuned]_test_results.json: accuracy, F1, sens/spec.
+    """
+    from src.evaluation.classification import evaluate_classification
+
+    total_images = len(test_dataset)
+    limit_batches = args.dry_run_batches if args.dry_run else None
+
+    # CoT genera respuestas largas: necesita mas tokens que generate clasico
+    max_new_tokens = max(args.max_new_tokens, 200)
+
+    if args.dry_run:
+        logger.info("=== MODO DRY-RUN (cot): procesando %d batches ===", args.dry_run_batches)
+    logger.info("CoT scoring: %d imagenes, max_new_tokens=%d", total_images, max_new_tokens)
+    logger.info("COT_PROMPT: %s", COT_PROMPT[:120] + "...")
+
+    all_image_ids: list[str] = []
+    all_y_true: list[int] = []
+    all_y_pred: list[int] = []
+    all_responses: list[str] = []
+    unknown_count = 0
+
+    inference_start = time.perf_counter()
+    with torch.no_grad():
+        for batch_idx, batch in enumerate(test_loader):
+            images = batch["image"]
+            labels = batch["label"].tolist()
+            metadata = batch.get("metadata", [{}] * len(labels))
+            bs = len(images)
+
+            prompts = [COT_PROMPT] * bs
+            responses = model.generate(images, prompts, max_new_tokens=max_new_tokens)
+
+            for i, response in enumerate(responses):
+                parsed = parse_cot_response(response)
+                pred_idx = HAM10000_LABEL_MAP.get(parsed, -1)
+                if parsed == "UNKNOWN":
+                    unknown_count += 1
+
+                image_id = metadata[i].get("dx", "") if isinstance(metadata[i], dict) else ""
+                all_image_ids.append(image_id)
+                all_y_true.append(labels[i])
+                all_y_pred.append(pred_idx)
+                all_responses.append(response.strip())
+
+            if (batch_idx + 1) % 10 == 0:
+                elapsed = time.perf_counter() - inference_start
+                images_done = (batch_idx + 1) * bs
+                images_per_sec = images_done / max(elapsed, 0.001)
+                remaining = len(test_loader) - (batch_idx + 1)
+                eta = elapsed / (batch_idx + 1) * remaining
+                logger.info(
+                    "Progreso: %d/%d batches (unknown: %d) [%.1f img/s, ETA: %s]",
+                    batch_idx + 1, len(test_loader), unknown_count,
+                    images_per_sec, format_duration(eta),
+                )
+
+            if args.dry_run and (batch_idx + 1) >= args.dry_run_batches:
+                logger.info("Dry-run: %d batches procesados, finalizando.", args.dry_run_batches)
+                break
+
+    inference_time = time.perf_counter() - inference_start
+    logger.info("CoT inferencia completada en %s", format_duration(inference_time))
+
+    if args.dry_run:
+        images_done = len(all_y_true)
+        images_per_sec = images_done / max(inference_time, 0.001)
+
+        if torch.cuda.is_available():
+            peak_mb = torch.cuda.max_memory_allocated() / (1024**2)
+            total_vram_mb = torch.cuda.get_device_properties(0).total_memory / (1024**2)
+            headroom_mb = total_vram_mb - peak_mb
+        else:
+            peak_mb = total_vram_mb = headroom_mb = 0
+
+        sample_n = min(5, len(all_responses))
+        sample_lines = []
+        for i in range(sample_n):
+            parsed = parse_cot_response(all_responses[i])
+            true_label = HAM10000_CLASSES[all_y_true[i]] if all_y_true[i] < len(HAM10000_CLASSES) else "?"
+            # Mostrar las primeras 120 chars para ver si el formato CoT se genera bien
+            sample_lines.append(
+                f"    [{i}] true={true_label} parsed={parsed} raw={all_responses[i][:120]!r}"
+            )
+
+        total_batches = len(test_loader)
+        est_total_secs = inference_time / max(args.dry_run_batches, 1) * total_batches
+        unknown_pct = 100 * unknown_count / max(images_done, 1)
+
+        warnings = []
+        if unknown_pct > 50:
+            warnings.append(f">50% sin 'Final diagnosis:' ({unknown_pct:.0f}%) — revisar formato CoT")
+        if 0 < headroom_mb < 500:
+            warnings.append(f"headroom VRAM bajo ({headroom_mb:.0f} MB)")
+        status = "ADVERTENCIA — " + "; ".join(warnings) if warnings else "OK"
+
+        logger.info(
+            "\n=== RESUMEN DRY-RUN (CoT %s) ===\n"
+            "  VRAM pico          : %.0f MB / %.0f MB\n"
+            "  VRAM headroom      : %.0f MB\n"
+            "  Imagenes procesadas: %d / %d\n"
+            "  Velocidad          : %.2f img/s\n"
+            "  UNKNOWN            : %d (%.1f%%)\n"
+            "  Est. tiempo total  : %s (%d batches)\n"
+            "  Primeras respuestas:\n%s\n"
+            "  Estado             : %s",
+            args.model,
+            peak_mb, total_vram_mb,
+            headroom_mb,
+            images_done, total_images,
+            images_per_sec,
+            unknown_count, unknown_pct,
+            format_duration(est_total_secs), total_batches,
+            "\n".join(sample_lines),
+            status,
+        )
+        logger.info("Ejecucion total: %s", format_duration(time.perf_counter() - script_start))
+        sys.exit(0)
+
+    # --- Guardar resultados ---
+    total = len(all_y_true)
+    logger.info(
+        "CoT completado: %d imagenes, %d UNKNOWN (%.1f%%)",
+        total, unknown_count, 100 * unknown_count / max(total, 1),
+    )
+
+    results_dir = Path(args.output_dir) / "results"
+    results_dir.mkdir(parents=True, exist_ok=True)
+    suffix = "_cot_finetuned" if is_finetuned else "_cot"
+
+    predictions = {
+        "model": args.model,
+        "finetuned": is_finetuned,
+        "method": "cot",
+        "cot_prompt": COT_PROMPT,
+        "class_names": HAM10000_CLASSES,
+        "image_ids": all_image_ids,
+        "y_true": all_y_true,
+        "y_pred": all_y_pred,
+        "responses": all_responses,
+        "unknown_count": unknown_count,
+    }
+    pred_path = results_dir / f"{args.model}{suffix}_predictions.json"
+    save_results(predictions, str(pred_path))
+    logger.info("Predicciones CoT guardadas en %s", pred_path)
+
+    # --- Metricas ---
+    valid_indices = [i for i, p in enumerate(all_y_pred) if p >= 0]
+    if valid_indices:
+        y_true_valid = [all_y_true[i] for i in valid_indices]
+        y_pred_valid = [all_y_pred[i] for i in valid_indices]
+        results = evaluate_classification(y_true_valid, y_pred_valid, class_names=HAM10000_CLASSES)
+
+        mode_label = f"{args.model} (CoT, fine-tuned)" if is_finetuned else f"{args.model} (CoT)"
+        logger.info("=== Resultados %s (excluyendo %d UNKNOWN) ===", mode_label, unknown_count)
+        logger.info("Accuracy      : %.4f", results["accuracy"])
+        logger.info("F1 weighted   : %.4f", results["f1_weighted"])
+        logger.info("Sens. macro   : %.4f", results["sensitivity_macro"])
+        logger.info("Spec. macro   : %.4f", results["specificity_macro"])
+
+        metrics_path = results_dir / f"{args.model}{suffix}_test_results.json"
+        save_results(
+            {
+                "model": args.model,
+                "finetuned": is_finetuned,
+                "method": "cot",
+                "accuracy": results["accuracy"],
+                "f1_weighted": results["f1_weighted"],
+                "auc_roc_macro": results["auc_roc_macro"],
+                "sensitivity_macro": results["sensitivity_macro"],
+                "specificity_macro": results["specificity_macro"],
+                "sensitivity_per_class": results.get("sensitivity_per_class", []),
+                "specificity_per_class": results.get("specificity_per_class", []),
+                "confusion_matrix": results["confusion_matrix"],
+                "unknown_count": unknown_count,
+                "total_samples": total,
+                "valid_samples": len(valid_indices),
+            },
+            str(metrics_path),
+        )
+        logger.info("Metricas CoT guardadas en %s", metrics_path)
+    else:
+        logger.warning("Todas las respuestas CoT fueron UNKNOWN. No se pueden calcular metricas.")
+
+    logger.info("Ejecucion total: %s", format_duration(time.perf_counter() - script_start))
+
+
 def main():
-    parser = argparse.ArgumentParser(description="F1: Clasificacion con VLMs (generate o likelihood)")
+    parser = argparse.ArgumentParser(description="F1: Clasificacion con VLMs (generate, likelihood o cot)")
     parser.add_argument("--model", type=str, required=True, choices=["llava_med", "mini_vlm"])
     parser.add_argument("--method", type=str, default="generate",
-                        choices=["generate", "likelihood"],
+                        choices=["generate", "likelihood", "cot"],
                         help="generate: prompt + autoregresivo + regex parse. "
                              "likelihood: teacher-forced scoring P(clase|imagen,prompt) "
-                             "con ensemble de 4 prompts, sinonimos y length-normalization.")
+                             "con ensemble de 4 prompts, sinonimos y length-normalization. "
+                             "cot: Chain-of-Thought estructurado con formato Features/"
+                             "Differential/Final diagnosis; parser extrae la etiqueta "
+                             "del campo 'Final diagnosis:'.")
     parser.add_argument("--data_dir", type=str, default="data")
     parser.add_argument("--output_dir", type=str, default="outputs")
     parser.add_argument("--splits_file", type=str, default=None)
@@ -427,11 +657,22 @@ def main():
         collate_fn=collator, num_workers=args.num_workers,
     )
 
-    # 6a. Ruta alternativa: likelihood scoring (evita colapso de clase).
+    # 6a. Rutas alternativas: evitan el colapso de clase del metodo generate.
     if args.method == "likelihood":
         run_likelihood_eval(
             args=args,
             model=model,
+            test_dataset=test_dataset,
+            is_finetuned=is_finetuned,
+            script_start=script_start,
+        )
+        return
+
+    if args.method == "cot":
+        run_cot_eval(
+            args=args,
+            model=model,
+            test_loader=test_loader,
             test_dataset=test_dataset,
             is_finetuned=is_finetuned,
             script_start=script_start,

@@ -21,6 +21,7 @@ Uso:
 import argparse
 import json
 import logging
+import re
 import sys
 from pathlib import Path
 
@@ -36,6 +37,14 @@ from src.utils.logging import log_time, setup_logger
 from src.utils.seed import set_seed
 
 logger = logging.getLogger(__name__)
+
+_COT_TAG_RE = re.compile(r"<think>.*?</think>", re.DOTALL)
+
+
+def _strip_cot(text: str) -> str:
+    """Remove <think>...</think> blocks, keeping only the final summary."""
+    return _COT_TAG_RE.sub("", text).strip()
+
 
 REPORT_PROMPT = (
     "Describe this skin lesion with a structured clinical report that includes: "
@@ -128,7 +137,12 @@ def main():
     parser.add_argument("--reference_dir", type=str, default=None,
                         help="Directorio con archivos .txt de referencia en estructura paralela "
                              "a --images_dir. Para cada imagen <images_dir>/A/B.jpg busca "
-                             "<reference_dir>/A/B.jpg.txt (formato SkinCoT).")
+                             "<reference_dir>/A/B.jpg.txt (formato SkinCoT). "
+                             "Los bloques <think>...</think> se eliminan automáticamente.")
+    parser.add_argument("--label_csv", type=str, default=None,
+                        help="CSV con columnas skincap_file_path/image_id y disease para "
+                             "poblar gt_label. Si no hay match en el CSV, se usa el nombre "
+                             "de la carpeta padre de la imagen (estructura SkinCoT).")
     parser.add_argument("--max_tokens", type=int, default=512)
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
@@ -195,6 +209,18 @@ def main():
             except (json.JSONDecodeError, OSError):
                 return False
 
+        # Cargar labels desde CSV (ej: SkinCAP skincap_v240623.csv)
+        label_lookup: dict[str, str] = {}
+        if args.label_csv:
+            import pandas as pd
+            lbl_df = pd.read_csv(args.label_csv)
+            id_col = "skincap_file_path" if "skincap_file_path" in lbl_df.columns else "image_id"
+            for _, row in lbl_df.iterrows():
+                img_id = Path(str(row.get(id_col, ""))).name
+                label = str(row.get("disease", "")).strip()
+                if img_id and label:
+                    label_lookup[img_id] = label
+
         # Cargar referencias opcionales desde CSV (ej: MM-SkinQA)
         references = {}
         if args.reference_csv:
@@ -233,14 +259,21 @@ def main():
             if _is_valid_report(out_file):
                 continue
             try:
+                rel = img_path.relative_to(images_dir)
+
                 # Resolver referencia: primero reference_dir, luego reference_csv
                 reference = references.get(img_path.name, "")
                 if not reference and reference_dir is not None:
                     # Misma subestructura que images_dir: <reference_dir>/A/B.jpg.txt
-                    rel = img_path.relative_to(images_dir)
                     txt_path = reference_dir / rel.parent / (rel.name + ".txt")
                     if txt_path.exists():
-                        reference = txt_path.read_text(encoding="utf-8").strip()
+                        raw = txt_path.read_text(encoding="utf-8").strip()
+                        reference = _strip_cot(raw)
+
+                # Resolver gt_label: CSV primero, luego carpeta padre (SkinCoT)
+                gt_label = label_lookup.get(img_path.name, "")
+                if not gt_label and rel.parent != Path("."):
+                    gt_label = rel.parent.name
 
                 report = _generate_single(model, img_path, args.max_tokens)
                 result = {
@@ -249,7 +282,7 @@ def main():
                     "checkpoint": args.checkpoint,
                     "report": report,
                     "reference": reference,
-                    "gt_label": "",
+                    "gt_label": gt_label,
                 }
                 save_results(result, str(out_file))
                 processed += 1
