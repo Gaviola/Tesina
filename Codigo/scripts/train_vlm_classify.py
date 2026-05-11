@@ -607,9 +607,28 @@ def main():
                 sys.exit(1)
             with open(lora_cfg_path, encoding="utf-8") as f:
                 lora_params = json.load(f)
+
+            # Detectar el rank real del checkpoint inspeccionando los pesos
+            # antes de aplicar LoRA — evita el crash por size mismatch si
+            # lora_config.json quedó desincronizado con el entrenamiento real.
+            ckpt_data = torch.load(args.checkpoint, map_location="cpu", weights_only=False)
+            actual_r = next(
+                (t.shape[0] for k, t in ckpt_data["model_state_dict"].items()
+                 if "lora_A" in k and t.ndim == 2),
+                None,
+            )
+            if actual_r is not None and actual_r != lora_params["r"]:
+                logger.warning(
+                    "LoRA rank en checkpoint (%d) difiere de lora_config.json (%d). "
+                    "Usando rank del checkpoint.",
+                    actual_r, lora_params["r"],
+                )
+                lora_params["r"] = actual_r
+                lora_params["lora_alpha"] = actual_r * 2
+
             lora_config = get_lora_config(**lora_params)
             model.model = apply_lora(model.model, lora_config)
-            load_checkpoint(args.checkpoint, model=model, device="cpu")
+            model.load_state_dict(ckpt_data["model_state_dict"])
             logger.info(
                 "Checkpoint fine-tuneado cargado: %s (LoRA r=%d, alpha=%d)",
                 args.checkpoint, lora_params["r"], lora_params["lora_alpha"],

@@ -26,16 +26,79 @@ DERMATOLOGY_TERMS = {
     ],
 }
 
-# Sinónimos para consistency check de diagnósticos
+# Sinónimos para consistency check de diagnósticos.
+# Incluye tanto etiquetas HAM10000 (clases cortas) como nombres de carpeta de
+# SkinCoT (ej. "Melanoma") y SkinCaRe (ej. "Eczema Photos", "Psoriasis Images").
+# La función _normalize_label() convierte folder-names a clave canónica antes
+# de buscar en este dict.
 _DIAGNOSIS_SYNONYMS = {
     "melanoma": ["melanoma", "mel"],
-    "nevus": ["nevus", "nv", "mole", "benign nevus", "melanocytic nevus"],
+    "nevus": ["nevus", "nv", "mole", "benign nevus", "melanocytic nevus", "melanocytic nevi"],
     "basal cell carcinoma": ["basal cell carcinoma", "bcc", "basalioma"],
-    "actinic keratosis": ["actinic keratosis", "akiec", "solar keratosis"],
-    "benign keratosis": ["benign keratosis", "bkl", "seborrheic keratosis"],
+    "actinic keratosis": ["actinic keratosis", "akiec", "solar keratosis", "actinic keratoses"],
+    "benign keratosis": ["benign keratosis", "bkl", "seborrheic keratosis", "seborrhoeic keratosis",
+                         "keratosis", "seborrheic keratoses"],
     "dermatofibroma": ["dermatofibroma", "df"],
-    "vascular lesion": ["vascular lesion", "vasc", "hemangioma", "angioma"],
+    "vascular lesion": ["vascular lesion", "vasc", "hemangioma", "angioma", "vascular"],
+    # SkinCaRe / SkinCoT folder-name labels (normalized)
+    "eczema": ["eczema", "atopic dermatitis", "dermatitis"],
+    "psoriasis": ["psoriasis"],
+    "tinea ringworm candidiasis": ["tinea", "ringworm", "candidiasis", "fungal infection",
+                                   "dermatophytosis"],
+    "chickenpox": ["chickenpox", "varicella"],
+    "nail fungus": ["nail fungus", "onychomycosis"],
+    "warts molluscum": ["warts", "molluscum", "verruca", "papillomavirus"],
+    "seborrheic keratoses": ["seborrheic keratosis", "seborrhoeic keratosis", "keratosis",
+                             "bkl", "benign keratosis"],
+    "acne": ["acne", "comedone", "papule", "pustule"],
+    "rosacea": ["rosacea"],
+    "contact dermatitis": ["contact dermatitis", "allergic dermatitis", "dermatitis"],
+    "alopecia areata": ["alopecia", "hair loss"],
+    "urticaria hives": ["urticaria", "hives", "wheals"],
+    "squamous cell carcinoma": ["squamous cell carcinoma", "scc"],
+    "light diseases": ["photosensitivity", "light eruption", "porphyria"],
+    "lupus": ["lupus", "systemic lupus", "discoid lupus"],
+    "cellulitis impetigo": ["cellulitis", "impetigo", "bacterial"],
 }
+
+# Mapeo de folder-names de SkinCaRe a clave canónica del dict.
+# Necesario porque gt_label viene del nombre de carpeta del dataset.
+_FOLDER_TO_CANONICAL = {
+    "eczema photos": "eczema",
+    "psoriasis pictures lichen planus and related diseases": "psoriasis",
+    "tinea ringworm candidiasis and other fungal infections": "tinea ringworm candidiasis",
+    "chicken pox": "chickenpox",
+    "nail fungus": "nail fungus",
+    "warts molluscum and other viral infections": "warts molluscum",
+    "seborrheic keratoses and other benign tumors": "seborrheic keratoses",
+    "acne and rosacea photos": "acne",
+    "acne": "acne",
+    "rosacea": "rosacea",
+    "atopic dermatitis photos": "eczema",
+    "exanthems and drug eruptions": "contact dermatitis",
+    "hair loss photos alopecia and other hair diseases": "alopecia areata",
+    "urticaria hives": "urticaria hives",
+    "light diseases and disorders of pigmentation": "light diseases",
+    "lupus and other connective tissue diseases": "lupus",
+    "cellulitis impetigo and other bacterial infections": "cellulitis impetigo",
+    "systemic disease": "lupus",
+    "scabies lyme disease and other infestations and bites": "contact dermatitis",
+    "vascular tumors": "vascular lesion",
+    # HAM10000 folder names (SkinCoT uses HAM class names directly)
+    "melanoma": "melanoma",
+    "melanocytic nevi": "nevus",
+    "basal cell carcinoma": "basal cell carcinoma",
+    "actinic keratosis": "actinic keratosis",
+    "benign keratosis-like lesions": "benign keratosis",
+    "dermatofibroma": "dermatofibroma",
+    "vascular lesions": "vascular lesion",
+}
+
+
+def _normalize_label(label: str) -> str:
+    """Normaliza un gt_label (posiblemente folder-name) a clave canónica del dict."""
+    key = label.lower().strip()
+    return _FOLDER_TO_CANONICAL.get(key, key)
 
 
 # ---------------------------------------------------------------------------
@@ -144,8 +207,8 @@ def _compute_diagnostic_consistency(
     matches = 0
     for report, label in zip(reports, gt_labels):
         report_lower = report.lower()
-        label_lower = label.lower() if label else ""
-        synonyms = _DIAGNOSIS_SYNONYMS.get(label_lower, [label_lower])
+        canonical = _normalize_label(label) if label else ""
+        synonyms = _DIAGNOSIS_SYNONYMS.get(canonical, [canonical])
         if any(syn in report_lower for syn in synonyms if syn):
             matches += 1
 

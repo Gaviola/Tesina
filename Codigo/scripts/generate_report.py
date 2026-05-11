@@ -46,10 +46,10 @@ def _strip_cot(text: str) -> str:
     return _COT_TAG_RE.sub("", text).strip()
 
 
-REPORT_PROMPT = (
-    "Describe this skin lesion with a structured clinical report that includes: "
-    "findings, diagnostic impression, and differential diagnosis."
-)
+# Instrucción alineada con Stage 2 (VLMTrainCollator.CAPTION_INSTRUCTION).
+# La v1 usaba un prompt estructurado más largo que no coincidía con el training,
+# generando baja superposición léxica con las referencias SkinCoT.
+REPORT_PROMPT = "Describe this skin lesion."
 
 _VRAM_REQUIRED = {"llava_med": 14.0, "mini_vlm": 10.0}
 _IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".tif"}

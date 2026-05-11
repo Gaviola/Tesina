@@ -8,6 +8,8 @@ Uso:
   python scripts/mendieta/submit.py llava_s1       # LLaVA-Med stage1 (~14GB LoRA)
   python scripts/mendieta/submit.py mini_s2        # Mini-VLM stage2  (~8GB)
   python scripts/mendieta/submit.py llava_s2       # LLaVA-Med stage2 (~14GB LoRA)
+  python scripts/mendieta/submit.py mini_s2_v2     # Mini-VLM stage2 v2 — epochs=10 (~8GB)
+  python scripts/mendieta/submit.py llava_s2_v2    # LLaVA-Med stage2 v2 — epochs=10 (~14GB)
   python scripts/mendieta/submit.py classifier     # DenseNet + ViT baselines
   python scripts/mendieta/submit.py gen_llava      # Generacion reportes LLaVA-Med (~12h)
   python scripts/mendieta/submit.py gen_mini       # Generacion reportes Mini-VLM (~8h)
@@ -68,6 +70,9 @@ JOBS = {
     "llava_s1":       "slurm/mendieta/train_vlm_s1_llava.sh",
     "mini_s2":        "slurm/mendieta/train_vlm_s2_mini.sh",
     "llava_s2":       "slurm/mendieta/train_vlm_s2.sh",
+    ## Stage 2 v2: mismos HPs del mejor trial del sweep, con epochs=10
+    "mini_s2_v2":     "slurm/mendieta/train_vlm_s2_mini_v2.sh",
+    "llava_s2_v2":    "slurm/mendieta/train_vlm_s2_v2.sh",
     ## Clasificadores Fase 1 — verificación legacy (reproducir baselines)
     "cls_densenet_legacy": (_CLS_SCRIPT, {
         "MODEL": "densenet", "RECIPE": "legacy", "LR": _CLS_LR["densenet"],
@@ -166,6 +171,7 @@ GROUPS = {
     "all":          _TRAINING_JOBS,
     "all_s1":       ["mini_s1", "llava_s1"],
     "all_s2":       ["mini_s2", "llava_s2"],
+    "all_s2_v2":    ["mini_s2_v2", "llava_s2_v2"],
     ## Fase 1 — clasificadores
     "all_cls_legacy":   _CLS_LEGACY_JOBS,    # 2 jobs verificación
     "all_cls_modern":   _CLS_MODERN_JOBS,    # 4 jobs corridas finales

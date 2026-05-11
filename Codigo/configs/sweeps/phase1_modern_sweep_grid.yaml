@@ -1,0 +1,41 @@
+# Sweep grid para clasificadores ConvNeXt-Tiny y Swin-Tiny con recipe modern v3.
+#
+# Diseño: 5 valores de lr × 3 valores de weight_decay = 15 trials por modelo.
+# randaugment_m rota en patrón balanceado (cada valor aparece 5 veces).
+# Todos los demás parámetros fijos en defaults de modern v3:
+#   --focal-gamma 0  (CE + class weights, sin Focal Loss)
+#   epochs=40, seed=42, scheduler=CosineAnnealingLR
+#   label_smoothing=0.1, llrd=0.85, two_stage=True, TTA=True
+#
+# Uso:
+#   python scripts/toko/submit_sweep.py --model convnext_tiny
+#   python scripts/toko/submit_sweep.py --model swin_tiny
+#   python scripts/toko/submit_sweep.py --all   # ambos modelos (30 jobs)
+#
+# Métrica objetivo: val_f1_weighted (maximizar).
+# Sin --eval-hiba durante el sweep; evaluar HIBA solo sobre el mejor checkpoint.
+
+models:
+  - convnext_tiny
+  - swin_tiny
+
+# Parámetros base fijos (recipe modern v3)
+base_flags: "--focal-gamma 0"
+
+# Grid de 15 trials: lr × weight_decay, randaugment_m balanceado
+trials:
+  - {trial: "t01", lr: 3.0e-5, weight_decay: 0.01, randaugment_m: 6}
+  - {trial: "t02", lr: 3.0e-5, weight_decay: 0.05, randaugment_m: 9}
+  - {trial: "t03", lr: 3.0e-5, weight_decay: 0.10, randaugment_m: 12}
+  - {trial: "t04", lr: 7.5e-5, weight_decay: 0.01, randaugment_m: 9}
+  - {trial: "t05", lr: 7.5e-5, weight_decay: 0.05, randaugment_m: 12}
+  - {trial: "t06", lr: 7.5e-5, weight_decay: 0.10, randaugment_m: 6}
+  - {trial: "t07", lr: 1.5e-4, weight_decay: 0.01, randaugment_m: 12}
+  - {trial: "t08", lr: 1.5e-4, weight_decay: 0.05, randaugment_m: 6}
+  - {trial: "t09", lr: 1.5e-4, weight_decay: 0.10, randaugment_m: 9}
+  - {trial: "t10", lr: 2.5e-4, weight_decay: 0.01, randaugment_m: 6}
+  - {trial: "t11", lr: 2.5e-4, weight_decay: 0.05, randaugment_m: 9}
+  - {trial: "t12", lr: 2.5e-4, weight_decay: 0.10, randaugment_m: 12}
+  - {trial: "t13", lr: 5.0e-4, weight_decay: 0.01, randaugment_m: 9}
+  - {trial: "t14", lr: 5.0e-4, weight_decay: 0.05, randaugment_m: 12}
+  - {trial: "t15", lr: 5.0e-4, weight_decay: 0.10, randaugment_m: 6}
