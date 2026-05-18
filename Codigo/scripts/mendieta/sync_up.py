@@ -129,12 +129,19 @@ def _add_text_lf(tar: tarfile.TarFile, local_path: Path, arcname: str) -> None:
     tar.addfile(info, io.BytesIO(content))
 
 
-def sync_with_rsync() -> int:
+def sync_with_rsync(delete: bool = False) -> int:
     print("Usando rsync para sincronizacion incremental...")
     cmd = [
         "rsync", "-av", "--progress",
         "-e", f"ssh {' '.join(SSH_OPTS)}",
         *RSYNC_EXCLUDES,
+    ]
+    if delete:
+        # --delete: eliminar en el remoto cualquier archivo dentro del scope
+        # transferido que no exista en local (mantiene paridad estructural).
+        # No afecta a directorios excluidos (data/, outputs/, etc.).
+        cmd.append("--delete")
+    cmd += [
         f"{CODIGO_DIR}/",
         f"{MENDIETA_USER}@{MENDIETA_HOST}:{REMOTE_BASE}/"
     ]
@@ -225,6 +232,11 @@ def main():
     parser = argparse.ArgumentParser(description="Sincroniza codigo hacia Mendieta")
     parser.add_argument("--install-deps", action="store_true",
                         help="Instalar requirements.txt en Mendieta despues de sincronizar")
+    parser.add_argument("--delete", action="store_true",
+                        help="Eliminar en el remoto los archivos/directorios que no "
+                             "existan en local (solo rsync). Util tras reorganizaciones "
+                             "para evitar SLURM scripts o codigo huerfano en el cluster. "
+                             "No afecta data/ ni outputs/ (excluidos del sync).")
     args = parser.parse_args()
 
     check_tools()
@@ -232,11 +244,16 @@ def main():
     print(f"=== Sincronizando codigo hacia Mendieta ===")
     print(f"Local:  {CODIGO_DIR}/")
     print(f"Remoto: {MENDIETA_USER}@{MENDIETA_HOST}:{REMOTE_BASE}/")
+    if args.delete:
+        print("Modo --delete activado: archivos huerfanos en remoto seran eliminados")
     print()
 
     if has_rsync():
-        rc = sync_with_rsync()
+        rc = sync_with_rsync(delete=args.delete)
     else:
+        if args.delete:
+            print("ADVERTENCIA: --delete requiere rsync (no disponible).")
+            print("Usando tar sin delete. Limpie archivos huerfanos manualmente por SSH.")
         rc = sync_with_tar()
 
     if rc != 0:

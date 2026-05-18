@@ -39,7 +39,16 @@ Uso:
   python scripts/mendieta/submit.py all_classify_ft   # clasificacion VLM fine-tuned (ambos)
   python scripts/mendieta/submit.py all_classify_lik  # likelihood base + ft (4 jobs)
   python scripts/mendieta/submit.py all_classify_cot  # CoT base + ft (4 jobs)
-  python scripts/mendieta/submit.py all --no-sync     # sin sincronizar
+  # --- v2 (Stage 2 v2 checkpoint, epochs=10): ---
+  python scripts/mendieta/submit.py classify_llava_ft_v2  # FT v2 generate LLaVA-Med
+  python scripts/mendieta/submit.py classify_mini_ft_v2   # FT v2 generate Mini-VLM
+  python scripts/mendieta/submit.py gen_llava_v2          # Generacion v2 LLaVA-Med (3 datasets)
+  python scripts/mendieta/submit.py gen_mini_v2           # Generacion v2 Mini-VLM (3 datasets)
+  python scripts/mendieta/submit.py all_classify_lik_v2   # 2 jobs FT v2 likelihood
+  python scripts/mendieta/submit.py all_classify_cot_v2   # 2 jobs FT v2 CoT
+  python scripts/mendieta/submit.py all_gen_v2            # 2 jobs generacion v2
+  python scripts/mendieta/submit.py all_vlm_v2            # 6 jobs: clasif FT + generacion (v2)
+  python scripts/mendieta/submit.py all --no-sync         # sin sincronizar
 """
 import sys
 import argparse
@@ -68,11 +77,13 @@ _ABL_MODEL = "convnext_tiny"
 JOBS = {
     "mini_s1":        "slurm/mendieta/train_vlm_s1_mini.sh",
     "llava_s1":       "slurm/mendieta/train_vlm_s1_llava.sh",
-    "mini_s2":        "slurm/mendieta/train_vlm_s2_mini.sh",
-    "llava_s2":       "slurm/mendieta/train_vlm_s2.sh",
+    ## Stage 2 v1: training original (epochs=3, HPs default)
+    "mini_s2":        "slurm/mendieta/v1/train_vlm_s2_mini.sh",
+    "llava_s2":       "slurm/mendieta/v1/train_vlm_s2.sh",
     ## Stage 2 v2: mismos HPs del mejor trial del sweep, con epochs=10
-    "mini_s2_v2":     "slurm/mendieta/train_vlm_s2_mini_v2.sh",
-    "llava_s2_v2":    "slurm/mendieta/train_vlm_s2_v2.sh",
+    ## (los scripts viven en slurm/mendieta/v2/; nombres sin sufijo _v2 porque la carpeta indica version)
+    "mini_s2_v2":     "slurm/mendieta/v2/train_vlm_s2_mini.sh",
+    "llava_s2_v2":    "slurm/mendieta/v2/train_vlm_s2.sh",
     ## Clasificadores Fase 1 — verificación legacy (reproducir baselines)
     "cls_densenet_legacy": (_CLS_SCRIPT, {
         "MODEL": "densenet", "RECIPE": "legacy", "LR": _CLS_LR["densenet"],
@@ -133,30 +144,51 @@ JOBS = {
     "classifier": (_CLS_SCRIPT, {
         "MODEL": "densenet", "RECIPE": "legacy", "LR": _CLS_LR["densenet"],
     }),
-    "gen_llava":      "slurm/mendieta/generate_reports_llava.sh",
-    "gen_mini":       "slurm/mendieta/generate_reports_mini.sh",
-    "gen_llava_mmskin": ("slurm/mendieta/generate_reports_llava.sh", {"DATASETS": "mmskin"}),
-    "gen_mini_mmskin":  ("slurm/mendieta/generate_reports_mini.sh",  {"DATASETS": "mmskin"}),
-    "gen_llava_ham":      ("slurm/mendieta/generate_reports_llava.sh", {"DATASETS": "ham10000"}),
-    "gen_mini_ham":       ("slurm/mendieta/generate_reports_mini.sh",  {"DATASETS": "ham10000"}),
-    "gen_llava_skincare": ("slurm/mendieta/generate_reports_llava.sh", {"DATASETS": "skincare"}),
-    "gen_mini_skincare":  ("slurm/mendieta/generate_reports_mini.sh",  {"DATASETS": "skincare"}),
+    ## Generacion de reportes v1 (Stage 2 v1: epochs=3)
+    "gen_llava":      "slurm/mendieta/v1/generate_reports_llava.sh",
+    "gen_mini":       "slurm/mendieta/v1/generate_reports_mini.sh",
+    "gen_llava_mmskin": ("slurm/mendieta/v1/generate_reports_llava.sh", {"DATASETS": "mmskin"}),
+    "gen_mini_mmskin":  ("slurm/mendieta/v1/generate_reports_mini.sh",  {"DATASETS": "mmskin"}),
+    "gen_llava_ham":      ("slurm/mendieta/v1/generate_reports_llava.sh", {"DATASETS": "ham10000"}),
+    "gen_mini_ham":       ("slurm/mendieta/v1/generate_reports_mini.sh",  {"DATASETS": "ham10000"}),
+    "gen_llava_skincare": ("slurm/mendieta/v1/generate_reports_llava.sh", {"DATASETS": "skincare"}),
+    "gen_mini_skincare":  ("slurm/mendieta/v1/generate_reports_mini.sh",  {"DATASETS": "skincare"}),
+    ## Generacion de reportes v2 (Stage 2 v2: epochs=10, mejores HPs del sweep)
+    "gen_llava_v2":      "slurm/mendieta/v2/generate_reports_llava.sh",
+    "gen_mini_v2":       "slurm/mendieta/v2/generate_reports_mini.sh",
+    "gen_llava_mmskin_v2": ("slurm/mendieta/v2/generate_reports_llava.sh", {"DATASETS": "mmskin"}),
+    "gen_mini_mmskin_v2":  ("slurm/mendieta/v2/generate_reports_mini.sh",  {"DATASETS": "mmskin"}),
+    "gen_llava_ham_v2":      ("slurm/mendieta/v2/generate_reports_llava.sh", {"DATASETS": "ham10000"}),
+    "gen_mini_ham_v2":       ("slurm/mendieta/v2/generate_reports_mini.sh",  {"DATASETS": "ham10000"}),
+    "gen_llava_skincare_v2": ("slurm/mendieta/v2/generate_reports_llava.sh", {"DATASETS": "skincare"}),
+    "gen_mini_skincare_v2":  ("slurm/mendieta/v2/generate_reports_mini.sh",  {"DATASETS": "skincare"}),
+    ## Clasificacion VLM zero-shot (no cambia con Stage 2 v2)
     "classify_llava": "slurm/mendieta/vlm_classify_llava.sh",
     "classify_mini":  "slurm/mendieta/vlm_classify_mini.sh",
-    "classify_mini_ft":  "slurm/mendieta/vlm_classify_mini_ft.sh",
-    "classify_llava_ft": "slurm/mendieta/vlm_classify_llava_ft.sh",
+    ## Clasificacion VLM fine-tuned v1 (Stage 2 v1 checkpoint)
+    "classify_mini_ft":  "slurm/mendieta/v1/vlm_classify_mini_ft.sh",
+    "classify_llava_ft": "slurm/mendieta/v1/vlm_classify_llava_ft.sh",
+    ## Clasificacion VLM fine-tuned v2 (Stage 2 v2 checkpoint, post-mv a outputs/results/{model}/v2/)
+    "classify_mini_ft_v2":  "slurm/mendieta/v2/vlm_classify_mini_ft.sh",
+    "classify_llava_ft_v2": "slurm/mendieta/v2/vlm_classify_llava_ft.sh",
     ## Variantes likelihood: reutilizan los mismos scripts SLURM y cambian
     ## el metodo via variable de entorno METHOD (ver scripts sbatch).
-    "classify_llava_lik":    ("slurm/mendieta/vlm_classify_llava.sh",    {"METHOD": "likelihood"}),
-    "classify_mini_lik":     ("slurm/mendieta/vlm_classify_mini.sh",     {"METHOD": "likelihood"}),
-    "classify_llava_ft_lik": ("slurm/mendieta/vlm_classify_llava_ft.sh", {"METHOD": "likelihood"}),
-    "classify_mini_ft_lik":  ("slurm/mendieta/vlm_classify_mini_ft.sh",  {"METHOD": "likelihood"}),
+    "classify_llava_lik":    ("slurm/mendieta/vlm_classify_llava.sh",       {"METHOD": "likelihood"}),
+    "classify_mini_lik":     ("slurm/mendieta/vlm_classify_mini.sh",        {"METHOD": "likelihood"}),
+    "classify_llava_ft_lik": ("slurm/mendieta/v1/vlm_classify_llava_ft.sh", {"METHOD": "likelihood"}),
+    "classify_mini_ft_lik":  ("slurm/mendieta/v1/vlm_classify_mini_ft.sh",  {"METHOD": "likelihood"}),
+    ## Variantes likelihood v2 (Stage 2 v2 checkpoint)
+    "classify_llava_ft_lik_v2": ("slurm/mendieta/v2/vlm_classify_llava_ft.sh", {"METHOD": "likelihood"}),
+    "classify_mini_ft_lik_v2":  ("slurm/mendieta/v2/vlm_classify_mini_ft.sh",  {"METHOD": "likelihood"}),
     ## Variantes CoT: mismo mecanismo de env var METHOD=cot.
     ## CoT genera respuestas largas (~200 tokens vs ~32) — puede ser ~2x mas lento.
-    "classify_llava_cot":    ("slurm/mendieta/vlm_classify_llava.sh",    {"METHOD": "cot"}),
-    "classify_mini_cot":     ("slurm/mendieta/vlm_classify_mini.sh",     {"METHOD": "cot"}),
-    "classify_llava_ft_cot": ("slurm/mendieta/vlm_classify_llava_ft.sh", {"METHOD": "cot"}),
-    "classify_mini_ft_cot":  ("slurm/mendieta/vlm_classify_mini_ft.sh",  {"METHOD": "cot"}),
+    "classify_llava_cot":    ("slurm/mendieta/vlm_classify_llava.sh",       {"METHOD": "cot"}),
+    "classify_mini_cot":     ("slurm/mendieta/vlm_classify_mini.sh",        {"METHOD": "cot"}),
+    "classify_llava_ft_cot": ("slurm/mendieta/v1/vlm_classify_llava_ft.sh", {"METHOD": "cot"}),
+    "classify_mini_ft_cot":  ("slurm/mendieta/v1/vlm_classify_mini_ft.sh",  {"METHOD": "cot"}),
+    ## Variantes CoT v2 (Stage 2 v2 checkpoint)
+    "classify_llava_ft_cot_v2": ("slurm/mendieta/v2/vlm_classify_llava_ft.sh", {"METHOD": "cot"}),
+    "classify_mini_ft_cot_v2":  ("slurm/mendieta/v2/vlm_classify_mini_ft.sh",  {"METHOD": "cot"}),
 }
 
 # Grupos de jobs para envios multiples
@@ -182,8 +214,13 @@ GROUPS = {
     "all_gen_mmskin": ["gen_llava_mmskin", "gen_mini_mmskin"],
     "all_gen_ham":      ["gen_llava_ham", "gen_mini_ham"],
     "all_gen_skincare": ["gen_llava_skincare", "gen_mini_skincare"],
+    "all_gen_v2":        ["gen_llava_v2", "gen_mini_v2"],
+    "all_gen_mmskin_v2": ["gen_llava_mmskin_v2", "gen_mini_mmskin_v2"],
+    "all_gen_ham_v2":    ["gen_llava_ham_v2", "gen_mini_ham_v2"],
+    "all_gen_skincare_v2": ["gen_llava_skincare_v2", "gen_mini_skincare_v2"],
     "all_classify": ["classify_llava", "classify_mini"],
     "all_classify_ft": ["classify_mini_ft", "classify_llava_ft"],
+    "all_classify_ft_v2": ["classify_mini_ft_v2", "classify_llava_ft_v2"],
     ## Comparacion 2x2: {base, ft} x {generate, likelihood}.
     ## Este grupo corre los 4 jobs de likelihood (los de generate se corren
     ## con all_classify y all_classify_ft).
@@ -193,12 +230,31 @@ GROUPS = {
         "classify_llava_ft_lik",
         "classify_mini_ft_lik",
     ],
+    ## v2: solo los 2 jobs FT con Stage 2 v2 checkpoint (ZS no cambia entre v1 y v2).
+    "all_classify_lik_v2": [
+        "classify_llava_ft_lik_v2",
+        "classify_mini_ft_lik_v2",
+    ],
     ## CoT base + ft (4 jobs).
     "all_classify_cot": [
         "classify_llava_cot",
         "classify_mini_cot",
         "classify_llava_ft_cot",
         "classify_mini_ft_cot",
+    ],
+    ## v2: solo los 2 jobs FT con Stage 2 v2 checkpoint.
+    "all_classify_cot_v2": [
+        "classify_llava_ft_cot_v2",
+        "classify_mini_ft_cot_v2",
+    ],
+    ## Conjunto completo de evaluacion VLM v2: 4 clasificacion + 2 generacion = 6 jobs.
+    "all_vlm_v2": [
+        "classify_llava_ft_lik_v2",
+        "classify_mini_ft_lik_v2",
+        "classify_llava_ft_cot_v2",
+        "classify_mini_ft_cot_v2",
+        "gen_llava_v2",
+        "gen_mini_v2",
     ],
 }
 

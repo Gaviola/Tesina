@@ -64,7 +64,7 @@ ${PYTHON} scripts/train_vlm_stage2.py \
     --lora_r 64 \
     --lora_alpha 64 \
     --lora_dropout 0.0 \
-    --run-name llava_med_s2_v2 \
+    --run-name v2 \
     --wandb
 
 echo ""
