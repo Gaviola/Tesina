@@ -167,6 +167,11 @@
   & 13.44 & --- & 0.098 & 16.30\% & 85.88\% \\
 
 \rowcolor{thiswork}
+(c.lik.ft.v2)$^\dagger$ & LLaVA-Med 7B (Stage 2 v2, LoRA)$^{(\rho)}$
+  & FT lik & 7
+  & 17.90 & --- & 0.198 & 13.72\% & 85.25\% \\
+
+\rowcolor{thiswork}
 (c.cot.zs)$^\dagger$ & LLaVA-Med 7B
   & ZS CoT & 7
   & 10.23 & --- & 0.019 & 14.29\% & 85.71\% \\
@@ -175,6 +180,11 @@
 (c.cot.ft)$^\dagger$ & LLaVA-Med 7B (Stage 2 v1, LoRA)
   & FT CoT & 7
   & 8.12 & --- & 0.029 & 11.86\% & 85.58\% \\
+
+\rowcolor{thiswork}
+(c.cot.ft.v2)$^\dagger$ & LLaVA-Med 7B (Stage 2 v2, LoRA)$^{(\rho,\sigma)}$
+  & FT CoT & 7
+  & 16.79 & --- & 0.059 & 17.87\% & 86.05\% \\
 
 \rowcolor{thiswork}
 (d.lik.zs)$^\dagger$ & Mini-VLM
@@ -187,6 +197,11 @@
   & \textbf{66.60}$^{(\pi)}$ & --- & 0.536$^{(\pi)}$ & 14.21\% & 85.72\% \\
 
 \rowcolor{thiswork}
+(d.lik.ft.v2)$^\dagger$ & Mini-VLM (Stage 2 v2, LoRA)$^{(\rho,\pi)}$
+  & FT lik & 7
+  & 66.00 & --- & 0.532 & 14.09\% & 85.56\% \\
+
+\rowcolor{thiswork}
 (d.cot.zs)$^\dagger$ & Mini-VLM
   & ZS CoT & 7
   & 9.29 & --- & 0.022 & 12.37\% & 85.55\% \\
@@ -195,6 +210,11 @@
 (d.cot.ft)$^\dagger$ & Mini-VLM (Stage 2 v1, LoRA)
   & FT CoT & 7
   & 11.53 & --- & 0.040 & 14.13\% & 85.74\% \\
+
+\rowcolor{thiswork}
+(d.cot.ft.v2)$^\dagger$ & Mini-VLM (Stage 2 v2, LoRA)$^{(\rho)}$
+  & FT CoT & 7
+  & 11.12 & --- & 0.026 & 14.51\% & 85.72\% \\
 
 \bottomrule
 \end{tabular}%
@@ -226,7 +246,17 @@
   $^{(\pi)}$~Mini-VLM FT \textit{likelihood} alcanza \textit{accuracy} 66.6\% pero con
   \textit{sensitivity macro} 14.2\%, indicando colapso hacia la clase mayoritaria (NV, ${\sim}67\%$
   del test). Es un artefacto del prior lingüístico del Stage 2 entrenado sobre SkinCaRe
-  donde NV domina; no representa capacidad discriminativa real.\\[4pt]
+  donde NV domina; no representa capacidad discriminativa real.
+  La iteración v2 (\texttt{epochs}=10) no rompe este colapso (sens.\ macro $\approx 14.1\%$).\\[4pt]
+  $^{(\rho)}$~\textit{Stage 2 v2}: re-entrenamiento del Stage 2 con \texttt{epochs}=10 (vs 3 en v1)
+  e hiperparámetros del mejor trial del sweep (t04: \texttt{lr=2.495e-5}, \texttt{lora\_r=64},
+  \texttt{lora\_alpha=64}). Diseñado para mejorar convergencia. Resultado: F1 sube +0.100 absoluto
+  en LLaVA-Med FT lik (+0.098$\to$0.198), pero \textbf{el class collapse persiste} en los modelos
+  competitivos (\textit{sens.\ macro} sigue $\le 1/7$). El cuello de botella es \textit{imbalance + objective},
+  no convergencia; ver detalles en \texttt{Codigo/docs/resul/vlm\_clasificacion\_resul\_v3\_20260517.md}.\\[4pt]
+  $^{(\sigma)}$~LLaVA-Med FT CoT v2 produce salida no parseable (\textit{UNKNOWN}) en 81\% de los casos
+  (1223/1503). El \textit{sensitivity macro} reportado se calcula sobre los 280 válidos y no es
+  comparable con los demás combos.\\[4pt]
   \textbf{Nota sobre comparabilidad:}
   Todos los modelos en esta tabla fueron evaluados en HAM10000 con 7 clases.
   Sin embargo, los protocolos de evaluación difieren:

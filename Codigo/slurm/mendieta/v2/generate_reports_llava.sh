@@ -14,12 +14,14 @@
 #SBATCH --mail-user=facundo.gaviola@gmail.com
 
 ## LLaVA-Med v2: Generacion de reportes con checkpoint Stage 2 v2 (10 epochs)
-## Datasets: MM-SkinQA + HAM10000 + SkinCoT
+## Datasets (orden: HAM10000 -> SkinCoT -> MM-SkinQA)
 ## Output: outputs/generated_reports/llava_med/v2/{dataset}/
 ##
 ## NOTA: el limite SLURM es 2 dias. Si el job se interrumpe por timeout,
 ## re-enviar el mismo job: generate_report.py tiene resume defensivo
 ## (skip reportes ya existentes) y continuara donde quedo.
+## ORDEN INVERTIDO 2026-05-25: el orden original (mmskin primero) hacia que
+## el job timeout antes de procesar HAM10000 (necesario para diag_consistency).
 
 . /etc/profile
 module load cuda 2>/dev/null || true
@@ -54,27 +56,13 @@ echo "Python: $(${PYTHON} --version)"
 
 find ${HOME}/miniconda3/envs/dermvlm -name "__pycache__" -path "*/scipy/*" -exec rm -rf {} + 2>/dev/null
 
-DATASETS="${DATASETS:-mmskin ham10000 skincare}"
+DATASETS="${DATASETS:-ham10000 skincare mmskin}"
 echo "Datasets a procesar: ${DATASETS}"
 echo ""
 
 CHECKPOINT="outputs/checkpoints/stage2_llava_med_v2/best_model.pt"
 
-# --- Paso 1: MM-SkinQA (Nivel 1) ---
-if [[ "$DATASETS" == *"mmskin"* ]]; then
-    echo "=== Generando reportes MM-SkinQA v2 ==="
-    ${PYTHON} scripts/generate_report.py \
-        --model llava_med \
-        --checkpoint "${CHECKPOINT}" \
-        --images_dir data/processed/MM-SkinQA \
-        --reference_csv data/processed/MM-SkinQA/caption.csv \
-        --output_dir outputs/generated_reports/llava_med/v2/mmskin \
-        --max_tokens 512 \
-        --seed 42
-    echo ""
-fi
-
-# --- Paso 2: HAM10000 (Nivel 2 NER) ---
+# --- Paso 1: HAM10000 (Nivel 2 NER, gating criterion: diag_consistency) ---
 if [[ "$DATASETS" == *"ham10000"* ]]; then
     echo "=== Generando reportes HAM10000 v2 ==="
     ${PYTHON} scripts/generate_report.py \
@@ -87,7 +75,7 @@ if [[ "$DATASETS" == *"ham10000"* ]]; then
     echo ""
 fi
 
-# --- Paso 3: SkinCoT (dataset de entrenamiento) ---
+# --- Paso 2: SkinCoT (dataset de entrenamiento, Nivel 1 con referencias) ---
 if [[ "$DATASETS" == *"skincare"* ]]; then
     echo "=== Generando reportes SkinCoT v2 ==="
     ${PYTHON} scripts/generate_report.py \
@@ -96,6 +84,20 @@ if [[ "$DATASETS" == *"skincare"* ]]; then
         --images_dir data/raw/skincare/skincare/SkinCoT/images \
         --reference_dir data/raw/skincare/skincare/SkinCoT/EN \
         --output_dir outputs/generated_reports/llava_med/v2/skincare \
+        --max_tokens 512 \
+        --seed 42
+    echo ""
+fi
+
+# --- Paso 3: MM-SkinQA (Nivel 1, mejor esfuerzo: ~22k imagenes) ---
+if [[ "$DATASETS" == *"mmskin"* ]]; then
+    echo "=== Generando reportes MM-SkinQA v2 ==="
+    ${PYTHON} scripts/generate_report.py \
+        --model llava_med \
+        --checkpoint "${CHECKPOINT}" \
+        --images_dir data/processed/MM-SkinQA \
+        --reference_csv data/processed/MM-SkinQA/caption.csv \
+        --output_dir outputs/generated_reports/llava_med/v2/mmskin \
         --max_tokens 512 \
         --seed 42
     echo ""
