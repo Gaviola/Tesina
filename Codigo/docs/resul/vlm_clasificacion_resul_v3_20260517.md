@@ -163,6 +163,41 @@ Gap VLM vs supervisor en F1: **0.350 absoluto (~40% relativo)**. El gap es enorm
 
 Mejor VLM SOTA (Skin-R1, FT+RL): Acc=0.879. Gap del Mini-VLM v2: ~22pp. Muy por encima del margen aceptable de 8pp.
 
+### 5.4 CORRECCIÓN del §5.2 — re-diagnóstico (2026-06-03)
+
+> **El diagnóstico de §5.2 ("imbalance + objective") es INCORRECTO. La premisa nunca se
+> verificó contra los datos.** Re-diagnóstico al planificar v3:
+
+**Evidencia 1 — los datos de entrenamiento NO están sesgados a NV/MEL** (medido sobre los datasets reales):
+- **Stage 2 (SkinCoT, 2136 train):** 23 clases tipo DermNet, balanceadas ~6:1. La carpeta
+  *"Melanoma Skin Cancer Nevi and Moles"* es **puesto 9 (76 samples, 3.6%)**, no domina.
+- **Stage 1 (SkinCAP, 2492 train):** 179 clases, `melanocytic-nevi` top con **83 (3.3%)**, cola larga.
+- → La afirmación de §5.2 ("SkinCaRe sesgada hacia NV y MEL ... NV es la clase más frecuente") es **falsa**.
+
+**Evidencia 2 — el colapso existe en ZERO-SHOT, antes del fine-tuning:** sens_macro ZS = LLaVA lik
+0.157, Mini lik 0.181, LLaVA CoT 0.143, Mini CoT 0.124 (todos ≈ 1/7). El FT no lo causa ni lo cambia
+→ no puede ser un sesgo aprendido de SkinCoT.
+
+**Evidencia 3 — cada combo colapsa a una clase ARBITRARIA distinta** (de las predicciones v2):
+LLaVA lik→MEL 59%, LLaVA CoT→VASC 81%, Mini lik→NV 99%, Mini CoT→MEL 97%. Si fuera sesgo de
+frecuencia, todos colapsarían a la misma clase. No lo hacen → el colapso depende del prompt/scoring,
+no del contenido de la imagen.
+
+**Evidencia 4 — los CNN supervisados sobre la MISMA HAM dermatoscópica dan F1=0.88** → HAM es
+discriminable; el fallo es específico del VLM.
+
+**Diagnóstico correcto:** el class collapse es una **limitación de capacidad de los VLMs** para la
+clasificación dermatológica de grano fino. No es corregible por re-balanceo de Stage 2. El plan v3
+(class-balanced sampling) queda **anulado** por esta premisa falsificada.
+
+> **REFINAMIENTO (2026-06-04):** se testeó afirmativamente la hipótesis de "domain gap dermatoscopía"
+> evaluando el VLM ZS sobre **foto clínica** (SkinCAP→7 clases HAM). **El domain gap NO se confirmó:**
+> la clínica tampoco discrimina (sens_macro 0.106 LLaVA / 0.176 Mini, ≈ azar, incluso *peor* que HAM),
+> y el modelo **colapsa a una clase distinta según el dominio** (HAM→NV/MEL, clínica→DF). Conclusión
+> refinada: **no es un domain gap específico de dermatoscopía, sino una incapacidad general de grano
+> fino** — la predicción está guiada por artefactos del prompt/likelihood, no por la imagen. Ver
+> [vlm_domain_gap_clinica_resul_20260604.md](vlm_domain_gap_clinica_resul_20260604.md).
+
 ---
 
 ## 6. Decisión sobre actualización de tabla SOTA
@@ -197,10 +232,17 @@ Las filas v1 se mantienen (no se sobreescriben). El nota al pie debe explicitar 
 | Mejorar F1-weighted vs v1 en al menos un combo competitivo | **SÍ** (LLaVA-Med FT lik: +0.100) |
 | Gap vs SOTA ≤ 8pp                                          | **NO** (gap ~22pp) |
 
-Stage 2 v2 (epochs=10) **no es suficiente** para alcanzar el criterio mínimo de cierre de Fase 2 (class collapse roto). Se confirma la hipótesis del análisis 5.2: el cuello de botella es **imbalance + objective**, no convergencia.
+Stage 2 v2 (epochs=10) **no es suficiente** para alcanzar el criterio mínimo de cierre de Fase 2 (class collapse roto).
 
-**Siguiente paso: iteración v3 con class weights / focal loss en Stage 2.** Ver
-[reportes_mejoras_v3_class_weights_plan_20260525.md](../ideas/reportes_mejoras_v3_class_weights_plan_20260525.md).
+> **NOTA (2026-06-03):** la causa de §5.2 ("imbalance + objective") fue **refutada** — ver §5.4.
+> El colapso es zero-shot y los datos de entrenamiento no están sesgados a NV/MEL. Es una
+> limitación de dominio (dermatoscopía) del VLM, no de convergencia ni de balance.
+
+**Siguiente paso (revisado 2026-06-03): NO iterar v3 (class weights).** El re-diagnóstico (§5.4)
+anula la premisa de v3. Re-enmarcar el class collapse como hallazgo (domain gap clínica→dermatoscopía)
+y, si se quiere confirmar afirmativamente, evaluar el VLM en un test set de foto clínica (su dominio).
+El plan [reportes_mejoras_v3_class_weights_plan](../ideas/reportes_mejoras_v3_class_weights_plan_20260525.md)
+queda **EN PAUSA / anulado** (ver encabezado del plan).
 
 ---
 

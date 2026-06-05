@@ -8,6 +8,7 @@ from src.models.classifiers import (
     SwinTinyClassifier,
     ViTClassifier,
 )
+from src.models.dermlip import DermLIPClassifier
 from src.models.llava_med import LLaVAMed
 from src.models.mini_vlm import MiniVLM
 
@@ -18,6 +19,7 @@ MODEL_REGISTRY: dict[str, type[nn.Module]] = {
     "swin_tiny": SwinTinyClassifier,
     "llava_med": LLaVAMed,
     "mini_vlm": MiniVLM,
+    "dermlip": DermLIPClassifier,
 }
 
 

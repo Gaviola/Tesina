@@ -252,6 +252,8 @@ def run_likelihood_eval(args, model, test_dataset, is_finetuned, script_start):
     results_dir = Path(args.output_dir) / "results"
     results_dir.mkdir(parents=True, exist_ok=True)
     suffix = "_likelihood_finetuned" if is_finetuned else "_likelihood"
+    if getattr(args, "eval_dataset", "ham10000") == "skincap_clinical":
+        suffix += "_clinical"  # no pisar los resultados de HAM (dermatoscopía)
 
     predictions = {
         "model": args.model,
@@ -459,6 +461,8 @@ def run_cot_eval(args, model, test_loader, test_dataset, is_finetuned, script_st
     results_dir = Path(args.output_dir) / "results"
     results_dir.mkdir(parents=True, exist_ok=True)
     suffix = "_cot_finetuned" if is_finetuned else "_cot"
+    if getattr(args, "eval_dataset", "ham10000") == "skincap_clinical":
+        suffix += "_clinical"  # no pisar los resultados de HAM (dermatoscopía)
 
     predictions = {
         "model": args.model,
@@ -531,6 +535,11 @@ def main():
     parser.add_argument("--data_dir", type=str, default="data")
     parser.add_argument("--output_dir", type=str, default="outputs")
     parser.add_argument("--splits_file", type=str, default=None)
+    parser.add_argument("--eval-dataset", type=str, default="ham10000",
+                        choices=["ham10000", "skincap_clinical"], dest="eval_dataset",
+                        help="Dominio de evaluación. 'ham10000' (dermatoscopía, default) o "
+                             "'skincap_clinical' (foto clínica SkinCAP mapeada a 7 clases HAM, "
+                             "para confirmar el domain gap en zero-shot).")
     parser.add_argument("--batch_size", type=int, default=4)
     parser.add_argument("--max_new_tokens", type=int, default=32)
     parser.add_argument("--seed", type=int, default=42)
@@ -642,23 +651,48 @@ def main():
         vram_total = get_vram_gb()
         logger.info("VRAM post-carga: %.1fGB / %.1fGB (%.0f%%)", vram_used, vram_total, 100 * vram_used / vram_total)
 
-    # 6. Cargar HAM10000 test split
-    splits_file = args.splits_file
-    if splits_file is None:
-        splits_file = str(Path(args.data_dir) / "splits" / "ham10000_splits.json")
-    if not Path(splits_file).exists():
-        logger.error("Archivo de splits no encontrado: %s", splits_file)
-        logger.error("Ejecutar primero: python scripts/prepare_data.py")
-        sys.exit(1)
+    # 6. Cargar el test set según el dominio (--eval-dataset)
+    if args.eval_dataset == "skincap_clinical":
+        # Foto clínica (SkinCAP) mapeada a las 7 clases HAM. Zero-shot: se usa TODO SkinCAP
+        # (split=None) para maximizar n por clase; no hay circularidad porque el modelo es base.
+        from src.data.skincare import SkinCAPClassificationDataset
 
-    data_root = str(Path(args.data_dir) / "processed" / "HAM10000")
-    test_dataset = HAM10000Dataset(
-        root_dir=data_root,
-        split="test",
-        splits_file=splits_file,
-        return_pil=True,  # VLMs necesitan PIL Images (el processor aplica sus propias transforms)
-    )
-    logger.info("Test set cargado: %d imágenes", len(test_dataset))
+        if is_finetuned:
+            logger.warning(
+                "eval-dataset=skincap_clinical con checkpoint fine-tuneado: SkinCAP se usó en "
+                "Stage 1, la comparación deja de ser limpia. Se recomienda zero-shot."
+            )
+        skincare_root = str(Path(args.data_dir) / "raw" / "skincare")
+        test_dataset = SkinCAPClassificationDataset(
+            root_dir=skincare_root, splits_file=None, split=None, transform=None,
+        )
+        logger.info(
+            "Test set SkinCAP-clínica (7 clases HAM) cargado: %d imágenes | distribución: %s",
+            len(test_dataset), test_dataset.class_distribution(),
+        )
+        if len(test_dataset) == 0:
+            logger.error(
+                "SkinCAP-clínica vacío. Verificá data/raw/skincare/SkinCAP y el mapeo SKINCAP_TO_HAM."
+            )
+            sys.exit(1)
+    else:
+        # HAM10000 (dermatoscopía) — test split, comportamiento por defecto.
+        splits_file = args.splits_file
+        if splits_file is None:
+            splits_file = str(Path(args.data_dir) / "splits" / "ham10000_splits.json")
+        if not Path(splits_file).exists():
+            logger.error("Archivo de splits no encontrado: %s", splits_file)
+            logger.error("Ejecutar primero: python scripts/prepare_data.py")
+            sys.exit(1)
+
+        data_root = str(Path(args.data_dir) / "processed" / "HAM10000")
+        test_dataset = HAM10000Dataset(
+            root_dir=data_root,
+            split="test",
+            splits_file=splits_file,
+            return_pil=True,  # VLMs necesitan PIL Images (el processor aplica sus propias transforms)
+        )
+        logger.info("Test set cargado: %d imágenes", len(test_dataset))
 
     # Ajustar batch_size según el modelo
     batch_size = args.batch_size

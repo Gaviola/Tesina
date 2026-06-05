@@ -4,6 +4,154 @@ Ayuda-memoria cronológico de experimentos enviados a cluster, ordenado de más 
 
 ---
 
+## 2026-06-05
+
+### Pilot ensamble (grounding) — baseline vs oracle — Mendieta
+De-risk del [plan ensamble](ideas/ensamble_clasificador_generador_plan_20260605.md): ¿inyectar el
+diagnóstico en el prompt sube la `diagnostic_consistency` (que hedea, 0.63)? El pilot local quedó
+**bloqueado** (torch local es CPU-only `2.10.0+cpu` → LLaVA-Med 7B no corre local; DermLIP sí porque
+es chico y cae a CPU). Se adapta a SLURM de Mendieta (donde la generación VLM ya funciona + checkpoint v2).
+
+**Implementación grounding (en `generate_report.py`):** `--grounded_prompt` + `--diagnosis_source`
+(CSV image_id→dx) inyecta el dx por imagen vía `GROUNDED_TEMPLATE`; `--limit N` para pilots. El SLURM
+genera ~100 imgs HAM bajo (0) baseline y (A) oracle (gt) sobre las mismas imágenes, checkpoint v2,
+max_tokens 256. El CSV oracle se construye en el cluster desde el metadata HAM.
+
+**Job:** 1155834 (LLaVA-Med v2, baseline + oracle, ~100 imgs)
+**Cluster:** Mendieta | **Tiempo:** ~4-5h (200 generaciones)
+**Resultados (pendiente):** al volver, enriquecer gt_label + `evaluate_reports --level 2` y comparar
+consistency oracle vs baseline. Si el oracle sube fuerte → el grounding funciona → corrida completa
+(4 condiciones: baseline/oracle/Swin/DermLIP).
+
+```bash
+python scripts/mendieta/sync_up.py && python scripts/mendieta/submit.py pilot_ensemble_llava
+python scripts/mendieta/sync_down.py --reports   # al volver
+```
+
+### DermLIP ZS — clasificación derm-especializada en HAM — local (sin cluster)
+Sin jobs SLURM. Se agregó **DermLIP** (VL classifier CLIP-style, derm-especializado, entrenado en
+Derm1M) y se evaluó zero-shot sobre HAM10000 test. Corre **local** (RTX 4070, ViT-B/16 ~150M, 1503
+imgs en ~1m44s) — no necesita cluster.
+
+**Implementación:** `src/models/dermlip.py` (`DermLIPClassifier`, ZS por similitud imagen-texto +
+linear-probe opcional), registro `"dermlip"` en factory, `scripts/eval_dermlip_classify.py`,
+`open_clip_torch` en requirements.
+
+**Resultado (CUMPLE ambos criterios):** [dermlip_clasificacion_resul_20260605.md](resul/dermlip_clasificacion_resul_20260605.md).
+- **ZS HAM:** sens_macro **0.510** (vs LLaVA 0.157 / Mini 0.181 ≈ azar) → +0.37. Rompe el collapse,
+  predice las 7 clases, spec 0.90, alta sens MEL (0.76). Acc 0.377 (sesgo a MEL + desbalance NV).
+- **Linear-probe HAM** (encoder congelado + LR, n_train=7010, ~9min CPU): **F1 0.762, acc 0.741,
+  sens_macro 0.739** — cerca del Swin supervisado (0.88), sens balanceada.
+- **ZS clínica (SkinCAP):** sens_macro **0.454** → discrimina en ambos dominios.
+
+Confirma: *VLM general → colapsa en ambos dominios; VL derm-especializado → discrimina (ZS y
+linear-probe), dermatoscopía y clínica; supervisado → mejor accuracy.* Filas DermLIP agregadas a
+tabla SOTA v32 ((e.zs), (e.lp)). USAGE.md + plan_implementacion.md actualizados.
+
+```bash
+pip install open_clip_torch
+python scripts/eval_dermlip_classify.py --checkpoint vit-b-16
+python scripts/eval_dermlip_classify.py --checkpoint vit-b-16 --eval-dataset skincap_clinical
+python scripts/eval_dermlip_linearprobe.py --checkpoint vit-b-16
+```
+
+**Pendiente (baja prioridad):** variante `DermLIP_PanDerm` (bloqueada: config custom de open_clip),
+fine-tune completo del encoder. Plan: [dermlip_clasificacion_plan_20260604.md](ideas/dermlip_clasificacion_plan_20260604.md).
+
+---
+
+## 2026-06-03
+
+### Domain gap — clasificación VLM ZS sobre foto clínica (SkinCAP) — Mendieta
+Confirmación afirmativa del domain gap (ver re-diagnóstico abajo). Se evalúa la clasificación VLM
+**zero-shot likelihood** sobre **foto clínica** (SkinCAP mapeado a 7 clases HAM) para comparar
+`sens_macro` contra HAM dermatoscópica (ZS: LLaVA 0.157, Mini 0.181).
+
+**Implementación (local, verificada):** adaptador `SkinCAPClassificationDataset` + `SKINCAP_TO_HAM`
+en `src/data/skincare.py` (mapeo curado, 624 imgs, 7 clases, min 34/clase); flag `--eval-dataset
+{ham10000,skincap_clinical}` en `train_vlm_classify.py` (+ tag `_clinical` en outputs); SLURM
+`slurm/mendieta/vlm_classify_{llava,mini}_clinical.sh`; aliases `classify_{llava,mini}_clinical` +
+grupo `all_classify_clinical`. SkinCAP confirmado en cluster (ruta anidada, manejada por `_resolve_root`).
+
+**Jobs:** 1155373 (LLaVA-Med ZS clínica), 1155374 (Mini-VLM ZS clínica) — ambos COMPLETED (2-3h).
+**Cluster:** Mendieta
+**Plan:** [vlm_domain_gap_clinica_plan_20260603.md](ideas/vlm_domain_gap_clinica_plan_20260603.md)
+**Resultados (analizado 2026-06-04):** [vlm_domain_gap_clinica_resul_20260604.md](resul/vlm_domain_gap_clinica_resul_20260604.md).
+
+**Veredicto: domain gap NO confirmado.** sens_macro clínica = 0.106 (LLaVA) / 0.176 (Mini) ≈ azar,
+≤ HAM ZS (0.157/0.181). El VLM **también colapsa en clínica**, y a una clase **distinta** (HAM→NV/MEL,
+clínica→**DF**) → la predicción es artefacto del prompt, no de la imagen. **Reenmarcado:** no es domain
+gap dermatoscopía, sino **incapacidad general de grano fino**. Cierra la línea de clasificación VLM
+(resultado negativo sólido); la contribución VLM queda del lado de la **generación de reportes**.
+
+```bash
+python scripts/mendieta/sync_up.py && python scripts/mendieta/submit.py all_classify_clinical
+python scripts/mendieta/sync_down.py   # al volver
+```
+
+### Re-diagnóstico del class collapse — premisa de v3 falsificada — local
+Sin jobs. Al empezar a implementar v3 (class-balanced sampling) se verificó la premisa contra los
+datos reales y **se cayó**: el class collapse NO es por imbalance de entrenamiento.
+
+**Evidencia (todo local, sobre datos/predicciones existentes):**
+1. **Stage 2 (SkinCoT) está balanceado:** 23 clases DermNet, "Melanoma...Nevi and Moles" en puesto 9
+   (76, 3.6%). **Stage 1 (SkinCAP):** 179 clases, melanocytic-nevi top 3.3%. Ninguno sesgado a NV/MEL.
+2. **El colapso existe en zero-shot** (sens_macro ZS 0.12–0.18 ≈ 1/7), antes del fine-tuning → no
+   lo causa SkinCoT.
+3. **Cada combo colapsa a una clase arbitraria distinta:** LLaVA lik→MEL 59%, LLaVA CoT→VASC 81%,
+   Mini lik→NV 99%, Mini CoT→MEL 97%. No es frecuencia (sería la misma clase) → incapacidad de
+   discriminar dermatoscopía.
+4. CNN supervisados sobre la misma HAM → F1=0.88 (HAM es discriminable; fallo VLM-específico).
+
+**Diagnóstico correcto:** limitación de **dominio** (VLMs de foto clínica/texto no transfieren a
+dermatoscopía). Es un hallazgo de tesis, no corregible por re-balanceo.
+
+**Decisión: v3 (class weights) ANULADO.** No se implementa ni se envían jobs. Documentado en
+[vlm_clasificacion_resul_v3 §5.4](resul/vlm_clasificacion_resul_v3_20260517.md), banner en
+[plan v3](ideas/reportes_mejoras_v3_class_weights_plan_20260525.md), notas en
+[reportes_resul_v2 §5](resul/reportes_resul_v2_20260517.md).
+
+**Siguiente paso decidido:** (a) **confirmación afirmativa del domain gap** — evaluar VLM zero-shot
+sobre foto clínica (SkinCAP mapeado a 7 clases HAM) vs dermatoscopía. Plan:
+[vlm_domain_gap_clinica_plan_20260603.md](ideas/vlm_domain_gap_clinica_plan_20260603.md).
+**En pausa / a futuro:** (b) iteración de *solo generación* (foco: reporte de la imagen; el estilo
+CoT/commitment-line es secundario), problema independiente del collapse.
+
+---
+
+## 2026-06-02
+
+### Análisis gen v2 (jobs 1154471-1154472) + decisión Camino B — Mendieta
+Sin jobs nuevos. Análisis de los re-envíos de generación v2 (orden invertido) que terminaron en Mendieta.
+
+**Ambos re-envíos volvieron a hacer TIMEOUT 48h**, esta vez muriendo **dentro de HAM10000**
+(1154471 LLaVA: 2587/10015; 1154472 Mini: 6855/10015). **SkinCoT nunca alcanzado (0 reportes).**
+
+**Causa raíz (el "fix de orden invertido" trató el síntoma):** el SLURM genera sobre las **10015
+imágenes completas** de HAM (no el test split; el plan asumió ~1.5k, error ×7) y LLaVA genera a
+~1,1 min/img (`max_tokens=512`, sin batch) → 10015 imgs ≈ 7,6 días, imposible en 48h. Regresión
+extra: el SLURM v2 omitió `--label_csv`, dejando `gt_label` vacío en los reportes.
+
+**Aproximación de métricas (sin re-correr cluster):** se reconstruyó `gt_label` localmente
+(`enrich_reports.py`: `image_id → dx → nombre`) sobre el prefijo generado. El prefijo es
+estadísticamente representativo (nevus ~69% ≈ full 66.9%). **Veredicto: NO CUMPLE GATING** —
+diagnostic_consistency HAM regresa −0.084 (LLaVA 0.72→0.63) y −0.124 (Mini 0.35→0.23). Recall
+sube en LLaVA (0.46→0.82, por fix A1) pero con costo de fidelidad diagnóstica (hedging/CoT).
+Nivel 1 (BLEU/CIDEr) plano y ~0.
+
+**Resultados:** [reportes_resul_v2_20260517.md §4-§8](resul/reportes_resul_v2_20260517.md) completado.
+
+**Decisión: Camino B** — pivotear a v3 sin re-correr v2 (su número de gating ya existe y falla).
+La generación v3 debe bakear los fixes de scope (HAM→test split, re-agregar `--label_csv`,
+recortar MM-SkinQA, evaluar `max_tokens` 512→256). El plan v3 se actualiza con estos fixes.
+
+```bash
+python scripts/mendieta/sync_down.py --reports
+python scripts/evaluate_reports.py --model {llava_med,mini_vlm} --level {1,2} --dataset v2/{HAM10000,mmskin}
+```
+
+---
+
 ## 2026-05-25
 
 ### Análisis de jobs 1154209-1154214 + re-envío gen v2 — Mendieta
@@ -190,6 +338,11 @@ Modelos: DenseNet121, ViT-B/16, ConvNeXt-Tiny, Swin-Tiny. Con evaluación HIBA O
 
 | Documento | Tipo | Descripción |
 |-----------|------|-------------|
+| [vlm_domain_gap_clinica_plan_20260603.md](ideas/vlm_domain_gap_clinica_plan_20260603.md) | Plan | Confirmación afirmativa domain gap (VLM ZS foto clínica vs dermatoscopía) |
+| [vlm_domain_gap_clinica_resul_20260604.md](resul/vlm_domain_gap_clinica_resul_20260604.md) | Resultado | Domain gap NO confirmado → limitación general de grano fino; clasificación VLM cerrada |
+| [dermlip_clasificacion_plan_20260604.md](ideas/dermlip_clasificacion_plan_20260604.md) | Plan | Agregar DermLIP (VL classifier derm-especializado, CLIP-style) — ¿resuelve la clasificación? |
+| [dermlip_clasificacion_resul_20260605.md](resul/dermlip_clasificacion_resul_20260605.md) | Resultado | DermLIP ZS rompe el collapse (sens_macro 0.51 vs 0.14) — CUMPLE |
+| [ensamble_clasificador_generador_plan_20260605.md](ideas/ensamble_clasificador_generador_plan_20260605.md) | Plan | Ensamble cascada clasificador→generador (grounding) — arregla clasificación + hedging de generación |
 | [clasificadores_sweep_modern_v4_plan_20260510.md](ideas/clasificadores_sweep_modern_v4_plan_20260510.md) | Plan | Sweep HPs ConvNeXt/Swin en TOKO |
 | [reportes_mejoras_v2_plan_20260510.md](ideas/reportes_mejoras_v2_plan_20260510.md) | Plan | Stage 2 v2 + fixes A1/A2 |
 | [clasificadores_resul_sweep_v4_20260510.md](resul/clasificadores_resul_sweep_v4_20260510.md) | Resultado | Sweep v4: ConvNeXt-Tiny + Swin-Tiny HPs (§7 HIBA completado 2026-05-17) |

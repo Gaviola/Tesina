@@ -213,3 +213,109 @@ class SkinCaReDataset(BaseDataset):
 
     def get_class_names(self) -> list[str]:
         return []  # dataset de generación, no clasificación
+
+
+# ----------------------------------------------------------------------------
+# Adaptador: SkinCAP como clasificación de 7 clases HAM (confirmación domain gap)
+# ----------------------------------------------------------------------------
+
+# Mapeo CURADO de las etiquetas finas de SkinCAP (foto clínica) a las 7 clases de
+# HAM10000. Listas explícitas (NO substring) para evitar falsos positivos:
+#   - 'epidermal-nevus'/'nevus sebaceous' NO son nv melanocítico.
+#   - 'porokeratosis actinic' NO es akiec.
+#   - 'seborrheic dermatitis' NO es bkl.
+#   - SCC invasivo no tiene clase HAM equivalente (solo SCC in-situ = Bowen → akiec).
+# Las claves se comparan en minúsculas (.strip().lower()).
+SKINCAP_TO_HAM = {
+    # NV — nevos melanocíticos benignos comunes
+    "melanocytic-nevi": "NV", "nevocytic nevus": "NV", "congenital nevus": "NV",
+    "halo nevus": "NV", "blue-nevus": "NV",
+    # MEL — melanoma (todas las variantes)
+    "malignant melanoma": "MEL", "melanoma": "MEL", "melanoma-acral-lentiginous": "MEL",
+    "melanoma-in-situ": "MEL", "nodular-melanoma-(nm)": "MEL",
+    "superficial spreading melanoma ssm": "MEL",
+    # BCC — carcinoma basocelular
+    "basal cell carcinoma": "BCC", "basal cell carcinoma morpheiform": "BCC",
+    "solid cystic basal cell carcinoma": "BCC",
+    # AKIEC — queratosis actínica + carcinoma intraepitelial (Bowen = SCC in-situ)
+    "actinic keratosis": "AKIEC", "actinic-keratosis": "AKIEC",
+    "squamous-cell-carcinoma-in-situ": "AKIEC",
+    # BKL — queratosis benignas (seborreica, lichenoide)
+    "seborrheic keratosis": "BKL", "seborrheic-keratosis": "BKL",
+    "seborrheic-keratosis-irritated": "BKL", "benign-keratosis": "BKL",
+    "lichenoid-keratosis": "BKL",
+    # DF — dermatofibroma
+    "dermatofibroma": "DF",
+    # VASC — lesiones vasculares (angiomas, granuloma piógeno)
+    "angioma": "VASC", "arteriovenous-hemangioma": "VASC", "glomangioma": "VASC",
+    "pyogenic granuloma": "VASC", "granuloma pyogenic": "VASC", "pyogenic-granuloma": "VASC",
+}
+
+
+class SkinCAPClassificationDataset:
+    """SkinCAP (foto clínica) como tarea de clasificación de 7 clases HAM, para zero-shot.
+
+    Adaptador para confirmar el domain gap (dermatoscopía vs foto clínica): corre la MISMA
+    clasificación de 7 clases que `HAM10000Dataset` pero sobre fotos clínicas. Reusa
+    `SkinCaReDataset(subset='skincap')` y filtra/remapea las etiquetas finas de SkinCAP a las
+    7 clases HAM vía `SKINCAP_TO_HAM` (las no mapeables se descartan).
+
+    `__getitem__` respeta el mismo contrato que `HAM10000Dataset(return_pil=True)` consumido por
+    `train_vlm_classify.py` / `score_image`:
+        {"image": PIL, "label": int(0..6), "image_id": str, "metadata": {...}}
+
+    Args:
+        root_dir: raíz de SkinCaRe (la misma que usa SkinCaReDataset, e.g. data/raw/skincare).
+        splits_file: opcional. Solo se aplica si `split` no es None.
+        split: "train"|"val"|"test" para filtrar, o None para usar TODO SkinCAP (recomendado en
+            zero-shot: maximiza n por clase y no hay circularidad porque el modelo es base).
+        transform: transform opcional (los VLMs usan PIL crudo, dejar None).
+    """
+
+    def __init__(self, root_dir, splits_file=None, split=None, transform=None):
+        from src.data.ham10000 import HAM10000_LABEL_MAP
+
+        self._base = SkinCaReDataset(
+            root_dir=root_dir,
+            split=split or "train",
+            transform=transform,
+            splits_file=splits_file if split else None,
+            subset="skincap",
+        )
+        self.items = []
+        for s in self._base.samples:
+            ham = SKINCAP_TO_HAM.get(str(s.get("disease", "")).strip().lower())
+            if ham is None:
+                continue
+            self.items.append({
+                "image_path": s["image_path"],
+                "label": HAM10000_LABEL_MAP[ham],
+                "image_id": s["image_id"],
+                "disease": s["disease"],
+                "ham_class": ham,
+            })
+
+    def __len__(self) -> int:
+        return len(self.items)
+
+    def __getitem__(self, idx: int) -> dict:
+        it = self.items[idx]
+        image = self._base._open_image(it["image_path"])
+        if self._base.transform:
+            image = self._base.transform(image)
+        return {
+            "image": image,
+            "label": it["label"],
+            "image_id": it["image_id"],
+            "metadata": {
+                "image_id": it["image_id"],
+                "disease": it["disease"],
+                "ham_class": it["ham_class"],
+                "source": "skincap",
+            },
+        }
+
+    def class_distribution(self) -> dict:
+        """Histograma {clase_HAM: n} de las muestras incluidas (para sanity check)."""
+        from collections import Counter
+        return dict(Counter(it["ham_class"] for it in self.items))

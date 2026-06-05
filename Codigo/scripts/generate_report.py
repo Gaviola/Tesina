@@ -111,12 +111,21 @@ def _load_model_with_checkpoint(args):
     return model
 
 
-def _generate_single(model, image_path: Path, max_tokens: int) -> str:
-    """Genera reporte para una imagen."""
+# Template de grounding (ensamble cascada): inyecta el diagnóstico del clasificador
+# para que el VLM se comprometa con un dx en vez de hedear (ver plan ensamble).
+GROUNDED_TEMPLATE = (
+    "The most likely diagnosis for this skin lesion is {dx}. Write a structured clinical "
+    "report describing the lesion's morphology, dermatoscopic features and findings "
+    "consistent with this diagnosis."
+)
+
+
+def _generate_single(model, image_path: Path, max_tokens: int, prompt: str = REPORT_PROMPT) -> str:
+    """Genera reporte para una imagen con el prompt dado (default: REPORT_PROMPT)."""
     image = Image.open(image_path).convert("RGB")
     reports = model.generate(
         images=[image],
-        prompts=[REPORT_PROMPT],
+        prompts=[prompt],
         max_new_tokens=max_tokens,
     )
     return reports[0]
@@ -145,6 +154,15 @@ def main():
                              "de la carpeta padre de la imagen (estructura SkinCoT).")
     parser.add_argument("--max_tokens", type=int, default=512)
     parser.add_argument("--seed", type=int, default=42)
+    # Ensamble cascada (grounding): inyecta el dx de un clasificador en el prompt.
+    parser.add_argument("--diagnosis_source", type=str, default=None,
+                        help="CSV con columnas image_id,diagnosis (dx en nombre completo) para "
+                             "grounding. La clave se matchea por nombre de archivo o stem.")
+    parser.add_argument("--grounded_prompt", action="store_true",
+                        help="Si se pasa, usa GROUNDED_TEMPLATE con el dx de --diagnosis_source "
+                             "por imagen; si no hay dx para una imagen, cae al REPORT_PROMPT.")
+    parser.add_argument("--limit", type=int, default=None,
+                        help="Procesar a lo sumo N imágenes (para pilots).")
     args = parser.parse_args()
 
     if args.image is None and args.images_dir is None:
@@ -198,6 +216,10 @@ def main():
             logger.error("No se encontraron imágenes en %s", args.images_dir)
             sys.exit(1)
 
+        if args.limit is not None:
+            image_paths = image_paths[: args.limit]
+            logger.info("Limit: procesando a lo sumo %d imágenes", len(image_paths))
+
         def _is_valid_report(path: Path) -> bool:
             """True si el archivo existe y tiene un reporte no vacío (resume defensivo)."""
             if not path.exists():
@@ -220,6 +242,20 @@ def main():
                 label = str(row.get("disease", "")).strip()
                 if img_id and label:
                     label_lookup[img_id] = label
+
+        # Cargar diagnósticos para grounding (ensamble cascada): image_id -> dx_full
+        diagnosis_lookup: dict[str, str] = {}
+        if args.diagnosis_source:
+            import pandas as pd
+            dx_df = pd.read_csv(args.diagnosis_source)
+            for _, row in dx_df.iterrows():
+                key = str(row.get("image_id", "")).strip()
+                dx = str(row.get("diagnosis", "")).strip()
+                if key and dx:
+                    diagnosis_lookup[key] = dx
+                    diagnosis_lookup[Path(key).stem] = dx  # tolerar con/sin extensión
+            logger.info("Grounding: %d diagnósticos cargados de %s",
+                        len(dx_df), args.diagnosis_source)
 
         # Cargar referencias opcionales desde CSV (ej: MM-SkinQA)
         references = {}
@@ -275,7 +311,18 @@ def main():
                 if not gt_label and rel.parent != Path("."):
                     gt_label = rel.parent.name
 
-                report = _generate_single(model, img_path, args.max_tokens)
+                # Resolver prompt: grounded (con dx del clasificador) o el default
+                prompt = REPORT_PROMPT
+                grounded_dx = ""
+                if args.grounded_prompt:
+                    grounded_dx = (
+                        diagnosis_lookup.get(img_path.name)
+                        or diagnosis_lookup.get(img_path.stem, "")
+                    )
+                    if grounded_dx:
+                        prompt = GROUNDED_TEMPLATE.format(dx=grounded_dx)
+
+                report = _generate_single(model, img_path, args.max_tokens, prompt=prompt)
                 result = {
                     "image_id": img_path.name,
                     "model": args.model,
@@ -283,6 +330,8 @@ def main():
                     "report": report,
                     "reference": reference,
                     "gt_label": gt_label,
+                    "grounded_dx": grounded_dx,
+                    "prompt": prompt,
                 }
                 save_results(result, str(out_file))
                 processed += 1

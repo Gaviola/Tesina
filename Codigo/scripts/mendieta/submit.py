@@ -180,6 +180,12 @@ JOBS = {
     ## Variantes likelihood v2 (Stage 2 v2 checkpoint)
     "classify_llava_ft_lik_v2": ("slurm/mendieta/v2/vlm_classify_llava_ft.sh", {"METHOD": "likelihood"}),
     "classify_mini_ft_lik_v2":  ("slurm/mendieta/v2/vlm_classify_mini_ft.sh",  {"METHOD": "likelihood"}),
+    ## Domain gap: clasificacion ZERO-SHOT likelihood sobre FOTO CLINICA (SkinCAP -> 7 clases HAM).
+    ## Los scripts hardcodean --method likelihood --eval-dataset skincap_clinical.
+    "classify_llava_clinical": "slurm/mendieta/vlm_classify_llava_clinical.sh",
+    "classify_mini_clinical":  "slurm/mendieta/vlm_classify_mini_clinical.sh",
+    ## Ensamble cascada: pilot de grounding (baseline vs oracle, ~100 imgs HAM, LLaVA v2).
+    "pilot_ensemble_llava": "slurm/mendieta/pilot_ensemble_llava.sh",
     ## Variantes CoT: mismo mecanismo de env var METHOD=cot.
     ## CoT genera respuestas largas (~200 tokens vs ~32) — puede ser ~2x mas lento.
     "classify_llava_cot":    ("slurm/mendieta/vlm_classify_llava.sh",       {"METHOD": "cot"}),
@@ -234,6 +240,11 @@ GROUPS = {
     "all_classify_lik_v2": [
         "classify_llava_ft_lik_v2",
         "classify_mini_ft_lik_v2",
+    ],
+    ## Domain gap: clasificacion ZS likelihood sobre foto clinica (SkinCAP), 2 jobs.
+    "all_classify_clinical": [
+        "classify_llava_clinical",
+        "classify_mini_clinical",
     ],
     ## CoT base + ft (4 jobs).
     "all_classify_cot": [
