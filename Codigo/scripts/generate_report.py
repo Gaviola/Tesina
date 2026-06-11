@@ -111,13 +111,41 @@ def _load_model_with_checkpoint(args):
     return model
 
 
-# Template de grounding (ensamble cascada): inyecta el diagnóstico del clasificador
+# Templates de grounding (ensamble cascada): inyectan el diagnóstico del clasificador
 # para que el VLM se comprometa con un dx en vez de hedear (ver plan ensamble).
-GROUNDED_TEMPLATE = (
-    "The most likely diagnosis for this skin lesion is {dx}. Write a structured clinical "
-    "report describing the lesion's morphology, dermatoscopic features and findings "
-    "consistent with this diagnosis."
-)
+# El pilot 1 mostró que "soft" es débil (el modelo ignora el dx ~40%); las variantes
+# fuerzan el commitment (dx primero / conclusión obligada / sin diferenciales).
+GROUNDED_TEMPLATES = {
+    # v0 (pilot 1): débil — el modelo suele ignorar el dx.
+    "soft": (
+        "The most likely diagnosis for this skin lesion is {dx}. Write a structured clinical "
+        "report describing the lesion's morphology, dermatoscopic features and findings "
+        "consistent with this diagnosis."
+    ),
+    # v1: el dx PRIMERO y como apertura obligada del reporte.
+    "dxfirst": (
+        "Diagnosis: {dx}. Write a clinical report that begins by stating this diagnosis "
+        "({dx}), then describes the dermatoscopic and morphological features that support it."
+    ),
+    # v2: conclusión obligada con el dx textual.
+    "conclude": (
+        "Write a structured clinical report for this skin lesion. You must end the report "
+        "with this exact line: 'Most likely diagnosis: {dx}.'"
+    ),
+    # v3: dx confirmado, nombrarlo explícito, sin listar diferenciales.
+    "confirmed": (
+        "The confirmed diagnosis is {dx}. Write a concise clinical report that explicitly "
+        "names this diagnosis ({dx}) and describes the supporting morphological and "
+        "dermatoscopic features. Do not list alternative or differential diagnoses."
+    ),
+    # v4: prohíbe explícitamente el razonamiento/<think>; solo el reporte final comprometido.
+    "noreasoning": (
+        "The confirmed diagnosis is {dx}. Output ONLY the final clinical report — do NOT include "
+        "any reasoning, thinking steps, or <think> blocks. The report must explicitly state the "
+        "diagnosis ({dx}) and describe the supporting morphological and dermatoscopic features. "
+        "Do not mention alternative or differential diagnoses."
+    ),
+}
 
 
 def _generate_single(model, image_path: Path, max_tokens: int, prompt: str = REPORT_PROMPT) -> str:
@@ -159,10 +187,18 @@ def main():
                         help="CSV con columnas image_id,diagnosis (dx en nombre completo) para "
                              "grounding. La clave se matchea por nombre de archivo o stem.")
     parser.add_argument("--grounded_prompt", action="store_true",
-                        help="Si se pasa, usa GROUNDED_TEMPLATE con el dx de --diagnosis_source "
-                             "por imagen; si no hay dx para una imagen, cae al REPORT_PROMPT.")
+                        help="Si se pasa, usa el template de grounding con el dx de "
+                             "--diagnosis_source por imagen; si no hay dx, cae al REPORT_PROMPT.")
+    parser.add_argument("--grounded_variant", type=str, default="soft",
+                        choices=list(GROUNDED_TEMPLATES.keys()),
+                        help="Variante de prompt de grounding (soft|dxfirst|conclude|confirmed).")
     parser.add_argument("--limit", type=int, default=None,
                         help="Procesar a lo sumo N imágenes (para pilots).")
+    parser.add_argument("--splits_file", type=str, default=None,
+                        help="JSON de splits {train,val,test:[image_ids]}. Si se pasa con --split, "
+                             "restringe la generación a las imágenes de ese split.")
+    parser.add_argument("--split", type=str, default=None,
+                        help="Split a usar (train|val|test) si se pasa --splits_file.")
     args = parser.parse_args()
 
     if args.image is None and args.images_dir is None:
@@ -215,6 +251,14 @@ def main():
         if not image_paths:
             logger.error("No se encontraron imágenes en %s", args.images_dir)
             sys.exit(1)
+
+        if args.splits_file and args.split:
+            with open(args.splits_file, encoding="utf-8") as f:
+                split_ids = set(json.load(f).get(args.split, []))
+            before = len(image_paths)
+            image_paths = [p for p in image_paths if p.stem in split_ids]
+            logger.info("Split '%s': %d/%d imágenes tras filtrar por %s",
+                        args.split, len(image_paths), before, args.splits_file)
 
         if args.limit is not None:
             image_paths = image_paths[: args.limit]
@@ -320,7 +364,7 @@ def main():
                         or diagnosis_lookup.get(img_path.stem, "")
                     )
                     if grounded_dx:
-                        prompt = GROUNDED_TEMPLATE.format(dx=grounded_dx)
+                        prompt = GROUNDED_TEMPLATES[args.grounded_variant].format(dx=grounded_dx)
 
                 report = _generate_single(model, img_path, args.max_tokens, prompt=prompt)
                 result = {

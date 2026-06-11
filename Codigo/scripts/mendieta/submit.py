@@ -186,6 +186,15 @@ JOBS = {
     "classify_mini_clinical":  "slurm/mendieta/vlm_classify_mini_clinical.sh",
     ## Ensamble cascada: pilot de grounding (baseline vs oracle, ~100 imgs HAM, LLaVA v2).
     "pilot_ensemble_llava": "slurm/mendieta/pilot_ensemble_llava.sh",
+    ## Ensamble v2: re-pilot con 3 variantes de prompt que fuerzan commitment (oracle).
+    "pilot_ensemble_v2_llava": "slurm/mendieta/pilot_ensemble_v2_llava.sh",
+    ## Ensamble v3: variante "noreasoning" (prohíbe el razonamiento) — último lever de prompt.
+    "pilot_ensemble_v3_llava": "slurm/mendieta/pilot_ensemble_v3_llava.sh",
+    ## Ensamble — corrida completa 4 condiciones (baseline/oracle/swin/dermlip), noreasoning, test split.
+    "ensemble_full_llava": "slurm/mendieta/ensemble_full_llava.sh",
+    "ensemble_full_mini":  "slurm/mendieta/ensemble_full_mini.sh",
+    ## Ensamble — Nivel 1 sobre SkinCoT (con referencias): baseline vs oracle-noreasoning, LLaVA.
+    "ensemble_skincot_l1_llava": "slurm/mendieta/ensemble_skincot_level1_llava.sh",
     ## Variantes CoT: mismo mecanismo de env var METHOD=cot.
     ## CoT genera respuestas largas (~200 tokens vs ~32) — puede ser ~2x mas lento.
     "classify_llava_cot":    ("slurm/mendieta/vlm_classify_llava.sh",       {"METHOD": "cot"}),

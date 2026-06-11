@@ -158,3 +158,69 @@ La clasificación ya está; el costo es solo la generación (que se haría igual
 | `docs/ejecuciones.md` | entrada |
 | `docs/resul/ensamble_resul_<fecha>.md` | resultados + veredicto |
 | (al cerrar) `Docs/tabla_resultados_sota/*.tex`, `CLAUDE.md` | si el ensamble se adopta como contribución |
+
+---
+
+## 9. Actualización 2026-06-06 — resultado pilot 1 + re-pilot de prompt + extensiones
+
+### 9.1 Pilot 1 (job 1155834): grounding ayuda pero el prompt "soft" es débil
+Sobre 100 imgs HAM (LLaVA v2), baseline vs oracle (gt):
+
+| Cond. | diag_consistency | recall |
+|-------|------------------|--------|
+| baseline | 0.480 | 0.653 |
+| oracle (soft) | 0.600 | 0.857 |
+
+El oracle (dx correcto) solo llega a 0.60 — el reporte menciona el dx dado en **61/100** casos →
+el modelo **ignora el dx ~40%** (prior CoT `<think>` + `max_tokens=256` trunca). El mecanismo es
+válido (consistency ≈ tasa de mención); falta **forzar el commitment**.
+
+### 9.2 Re-pilot de prompt (job 1156019): 3 variantes que fuerzan commitment
+`GROUNDED_TEMPLATES` en `generate_report.py` + flag `--grounded_variant`. Variantes oracle sobre las
+mismas 100 imgs, `max_tokens=384`:
+- **dxfirst:** el dx primero, como apertura obligada del reporte.
+- **conclude:** conclusión obligada con línea exacta `'Most likely diagnosis: {dx}.'`.
+- **confirmed:** dx confirmado, nombrarlo explícito, sin listar diferenciales.
+
+Criterio: la mejor variante debe llevar el **oracle a ~0.85+** (valida el mecanismo). La ganadora se
+usa en la corrida completa de 4 condiciones.
+
+### 9.3 Extensiones de evaluación (post-pilot)
+1. **Nivel 1 (BLEU/ROUGE/BERTScore/METEOR/CIDEr) vs referencias de SkinCoT.** HAM **no tiene** reportes
+   de referencia (solo dx) → el Nivel 1 del ensamble se evalúa sobre **SkinCoT test split** (que sí
+   tiene narrativas CoT de referencia). Grounding sobre SkinCoT: oracle = dx de SkinCoT (folder class);
+   clasificador real = DermLIP ZS sobre las clases de SkinCoT (o el supersep). Mide si el grounding
+   mejora/mantiene la calidad lingüística, no solo la consistency.
+2. **Segundo generador: Mini-VLM.** Repetir el grounding (mejor variante) con Mini-VLM para comparar
+   ambos VLM bajo el mismo esquema de ensamble.
+
+### 9.4 Idea: fine-tune "grounding-aware" (si el prompt no alcanza)
+El grounding actual es **solo inferencia** (prompt sobre el checkpoint v2). Si las variantes de prompt
+no llevan el oracle lo suficientemente alto, el siguiente lever es **re-entrenar Stage 2 para que el
+modelo APRENDA a comprometerse**: instrucción de entrenamiento con el dx inyectado + targets que
+enuncian el dx (≈ la vieja idea "commitment-line"). Esto enseña al modelo a no ignorar el dx, en vez
+de forzarlo por prompt. Costo: un re-entrenamiento LoRA (Mendieta). Se decide según el re-pilot:
+- prompt alcanza (~0.85) → no hace falta fine-tune; ir a corrida completa.
+- prompt no alcanza → plan de fine-tune grounding-aware (nuevo doc `ideas/`).
+
+**Orden sugerido:** re-pilot prompt (9.2) → corrida completa 4 cond. con la mejor variante + Nivel 1
+SkinCoT (9.3) → Mini-VLM (9.3) → fine-tune grounding-aware solo si hace falta (9.4).
+
+### 9.5 Diferenciar REPORTE vs RAZONAMIENTO (hallazgo 2026-06-07)
+
+**Problema detectado** (ver [ensamble_resul_20260607 §2](../resul/ensamble_resul_20260607.md)): SkinCoT
+bundlea razonamiento (`<think>...</think>` + prosa) y reporte; entrenamos/evaluamos sobre el texto
+completo. La `diagnostic_consistency` está **inflada por menciones dentro del razonamiento**: en el
+oracle, sacar `<think>` baja la consistency **0.60 → 0.30** (63% del texto es razonamiento). El
+"reporte comprometido" acierta el dx ~30%, no 60%.
+
+**Decisiones:**
+1. **Evaluar el reporte, no el texto completo.** Ajustar `evaluate_reports`/`clinical_ner` para medir
+   sobre la sección de reporte (mismo criterio en generación y referencia). El re-pilot se evalúa en
+   **full Y report-only**.
+2. **Salida estructurada** `Reasoning + Report` (no solo strippear `<think>`, porque el razonamiento
+   también aparece como prosa suelta).
+3. **Prompt vs fine-tune (decisión basada en datos):** prompt primero (re-pilot mide el techo);
+   **fine-tune grounding-aware solo si el prompt se estanca**. El fine-tune requiere curar targets
+   estructurados desde SkinCoT (que no los tiene) — costo de datos a evaluar. Regla: prompt para
+   descubrir el techo barato, fine-tune para romperlo si hace falta. (Detalle en el resul doc §3.)

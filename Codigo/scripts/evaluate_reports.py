@@ -182,10 +182,14 @@ def main():
     parser.add_argument("--dataset", type=str, default="HAM10000",
                         help="Subdirectorio del dataset dentro de reports_dir/model/")
     parser.add_argument("--output_dir", type=str, default="outputs/results")
+    parser.add_argument("--strip-reasoning", action="store_true", dest="strip_reasoning",
+                        help="Elimina los bloques <think>...</think> del reporte antes de evaluar "
+                             "(mide el REPORTE comprometido, no el razonamiento). Ver ensamble_resul.")
     args = parser.parse_args()
 
     setup_logger("evaluate_reports")
-    logger.info("=== Evaluación Nivel %d — modelo: %s ===", args.level, args.model)
+    logger.info("=== Evaluación Nivel %d — modelo: %s%s ===", args.level, args.model,
+                " (report-only)" if args.strip_reasoning else "")
 
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -193,6 +197,14 @@ def main():
     # Construir ruta: reports_dir/model/dataset/
     reports_path = Path(args.reports_dir) / args.model / args.dataset
     reports = _load_reports(str(reports_path), model_filter=args.model)
+
+    if args.strip_reasoning:
+        import re as _re
+        _TAG = _re.compile(r"<think>.*?</think>", _re.DOTALL)
+        for r in reports:
+            if r.get("report"):
+                r["report"] = _TAG.sub(" ", r["report"]).strip()
+        logger.info("Razonamiento <think> eliminado de %d reportes (report-only).", len(reports))
 
     if args.level == 1:
         _level1(reports, args.model, output_dir)

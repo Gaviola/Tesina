@@ -4,6 +4,116 @@ Ayuda-memoria cronológico de experimentos enviados a cluster, ordenado de más 
 
 ---
 
+## 2026-06-10
+
+### Ensamble — Nivel 1 sobre SkinCoT + prep local — Mendieta
+Para paralelizar (3 jobs simultáneos), se lanza el Nivel 1 sobre **SkinCoT** (único dataset con
+referencias). Genera el SkinCoT test split (460 imgs, 23 clases) con LLaVA bajo baseline vs
+oracle-noreasoning, `--reference_dir` para Nivel 1.
+
+**Implementación:** CSV oracle SkinCoT (`outputs/skincot_dx_oracle.csv`, image_id→clase DermNet, subida
+por scp); SLURM `ensemble_skincot_level1_llava.sh`. **Prep local:** flag `--strip-reasoning` agregado a
+`evaluate_reports.py` (elimina `<think>` → mide report-only automático).
+
+**Job:** 1156725 (LLaVA-Med v2, SkinCoT, baseline + oracle)
+**Cluster:** Mendieta | **Resultados (pendiente):** Nivel 1 (BLEU/ROUGE/BERTScore/METEOR/CIDEr) vs
+referencias + Nivel 2, baseline vs oracle.
+
+### Ensamble — corrida completa 4 condiciones — Mendieta
+Con el prompt ganador fijo (`noreasoning`), corrida realista del ensamble: 4 condiciones sobre un
+subconjunto del **HAM test split** (~400 imgs), evaluando **report-only**.
+
+**Condiciones (grounding):** (0) baseline, (A) oracle (gt), (B) **Swin** (acc test ~0.80), (C)
+**DermLIP** ZS (acc ~0.38). El gap oracle vs swin/dermlip = costo de propagación de error.
+
+**Implementación:** split-filtering (`--splits_file`/`--split`) agregado a `generate_report.py`;
+predicciones de Swin/DermLIP mapeadas a image_ids (orden idéntico, y_true coincide 1503/1503) →
+CSVs `outputs/full_dx_{oracle,swin,dermlip}.csv` (subidas por scp). SLURM `ensemble_full_llava.sh`,
+max_tokens 384. Swin: `modern_v3_predictions.json`; DermLIP: `dermlip_zeroshot_vit-b-16_predictions.json`.
+
+**Jobs (en paralelo):** 1156723 (LLaVA-Med v2) + **1156724 (Mini-VLM v2)** — misma corrida 4
+condiciones × 400 imgs, mismas CSVs de grounding (model-agnostic), `ensemble_full_{llava,mini}.sh`.
+**Cluster:** Mendieta | **Tiempo estimado:** ~20-24h c/u
+**Resultados (pendiente):** enriquecer + evaluar report-only por condición → tabla
+baseline/oracle/swin/dermlip **× {LLaVA, Mini}** (comparación cross-model). Luego: Nivel 1 sobre SkinCoT.
+
+```bash
+python scripts/mendieta/submit.py ensemble_full_llava
+```
+
+### Ensamble v3 — variante "noreasoning" (último lever de prompt) — Mendieta
+El re-pilot v2 dio `confirmed` report-only 0.70 pero con 53% de razonamiento residual. Antes de
+saltar al fine-tune, se prueba el último lever barato de prompt: variante **`noreasoning`** que
+**prohíbe explícitamente** el razonamiento/`<think>` y pide solo el reporte final comprometido.
+
+**Implementación:** variante `noreasoning` en `GROUNDED_TEMPLATES` (`generate_report.py`); SLURM
+`pilot_ensemble_v3_llava.sh` (oracle, mismas 100 imgs HAM, LLaVA v2, max_tokens 384).
+
+**Job:** 1156506 (LLaVA-Med v2, variante noreasoning, 100 imgs) — COMPLETED (~44min).
+**Cluster:** Mendieta
+**Resultado (analizado 2026-06-10):** **el prompt ALCANZÓ.** `noreasoning` → cons **report-only 0.850**
+(full 0.860, coinciden), **% razonamiento 1%** (vs 53-78% de las otras), recall 0.79. Eliminó el
+`<think>` y llevó el reporte comprometido de 0.30 (soft) → 0.85. **No hace falta fine-tune para el
+commitment.** Detalle: [ensamble_resul_20260607 §2.5/§4](resul/ensamble_resul_20260607.md).
+
+**Siguiente:** corrida completa 4 condiciones (baseline/oracle/Swin/DermLIP) con `noreasoning` sobre
+HAM test → ensamble realista; + Nivel 1 sobre SkinCoT; + Mini-VLM.
+
+```bash
+python scripts/mendieta/sync_up.py && python scripts/mendieta/submit.py pilot_ensemble_v3_llava
+```
+
+---
+
+## 2026-06-06
+
+### Ensamble v2 — re-pilot de prompt (3 variantes que fuerzan commitment) — Mendieta
+El pilot 1 (job 1155834) mostró que el grounding "soft" es débil: oracle solo 0.60, el modelo ignora
+el dx ~40% (ver entrada 2026-06-05). Re-diseño del prompt: 3 variantes oracle que fuerzan el commitment.
+
+**Implementación:** `GROUNDED_TEMPLATES` en `generate_report.py` (`soft`/`dxfirst`/`conclude`/`confirmed`)
++ flag `--grounded_variant`. SLURM `pilot_ensemble_v2_llava.sh` corre las 3 variantes oracle sobre las
+mismas 100 imgs HAM (LLaVA v2), `max_tokens=384` (vs 256, reduce truncamiento).
+
+**Job:** 1156019 (LLaVA-Med v2, 3 variantes oracle, 100 imgs c/u) — COMPLETED (~4h).
+**Cluster:** Mendieta
+**Resultados (analizado 2026-06-07):** [ensamble_resul_20260607 §2.5](resul/ensamble_resul_20260607.md).
+Evaluado **full Y report-only** (sin `<think>`):
+
+| Variante | cons full | cons report-only | %txt en `<think>` |
+|----------|-----------|------------------|-------------------|
+| dxfirst | 0.900 | 0.430 | 78% |
+| conclude | 0.970 | 0.570 | 72% |
+| **confirmed** | 0.930 | **0.700** | 53% |
+
+**Veredicto:** report-only reordena las variantes (conclude gana en full pero su reporte solo acierta
+0.57). **`confirmed` es la mejor** (report-only 0.70 vs 0.30 del soft) — el "no diferenciales" reduce
+el dumping a razonamiento. Pero el **prompt tiene techo** (~0.70, aún 53% razonamiento). Siguiente:
+una variante que **prohíba el razonamiento** (barato) o, si se estanca, **fine-tune grounding-aware**.
+
+**Extensiones planificadas** (plan ensamble §9): Nivel 1 (BLEU/ROUGE/BERTScore/METEOR/CIDEr) vs
+referencias **SkinCoT** (HAM no tiene referencias), segundo generador **Mini-VLM**, y **fine-tune
+grounding-aware** si el prompt no alcanza.
+
+```bash
+python scripts/mendieta/sync_up.py && python scripts/mendieta/submit.py pilot_ensemble_v2_llava
+```
+
+### Hallazgo: no diferenciamos reporte vs razonamiento (analizado 2026-06-07)
+SkinCoT bundlea razonamiento (`<think>`) + reporte; entrenamos/evaluamos sobre el texto completo. La
+`diagnostic_consistency` está **inflada por menciones dentro del razonamiento**: en el oracle del
+pilot 1, sacar `<think>` baja la consistency **0.60 → 0.30** (63% del texto es razonamiento). →
+**Hay que medir el reporte comprometido, no el texto completo.** Decisión prompt-vs-fine-tune:
+**prompt primero** (re-pilot mide el techo), fine-tune grounding-aware solo si se estanca. Documentado
+en [ensamble_resul_20260607.md](resul/ensamble_resul_20260607.md) + plan ensamble §9.5.
+
+### Actualización de documentación
+`plan_implementacion.md` actualizado (§0 estado actual + desviaciones: datasets reales, DermLIP,
+re-diagnóstico, ensamble, clusters; corregida estructura skincare/mmskin/dermlip). Plan ensamble §9
+con re-pilot + extensiones (Nivel 1 SkinCoT, Mini-VLM, fine-tune grounding-aware) + §9.5 reporte/razonamiento.
+
+---
+
 ## 2026-06-05
 
 ### Pilot ensamble (grounding) — baseline vs oracle — Mendieta
@@ -17,11 +127,23 @@ es chico y cae a CPU). Se adapta a SLURM de Mendieta (donde la generación VLM y
 genera ~100 imgs HAM bajo (0) baseline y (A) oracle (gt) sobre las mismas imágenes, checkpoint v2,
 max_tokens 256. El CSV oracle se construye en el cluster desde el metadata HAM.
 
-**Job:** 1155834 (LLaVA-Med v2, baseline + oracle, ~100 imgs)
-**Cluster:** Mendieta | **Tiempo:** ~4-5h (200 generaciones)
-**Resultados (pendiente):** al volver, enriquecer gt_label + `evaluate_reports --level 2` y comparar
-consistency oracle vs baseline. Si el oracle sube fuerte → el grounding funciona → corrida completa
-(4 condiciones: baseline/oracle/Swin/DermLIP).
+**Job:** 1155834 (LLaVA-Med v2, baseline + oracle, 100 imgs) — COMPLETED (~2h).
+**Cluster:** Mendieta
+**Resultados (analizado 2026-06-06):**
+| Condición | diag_consistency | recall |
+|-----------|------------------|--------|
+| (0) baseline | 0.480 | 0.653 |
+| (A) oracle (grounded gt) | 0.600 | 0.857 |
+| **Δ grounding** | **+0.120** | **+0.204** |
+
+**Veredicto: grounding ayuda pero el prompt es DÉBIL.** El oracle (con dx correcto) solo llega a 0.60,
+NO al >0.85 esperado (criterio §3 del plan). Causa: el reporte menciona el dx dado en solo **61/100**
+casos → el modelo **ignora el dx inyectado ~40%** (su prior CoT `<think>` se impone; y `max_tokens=256`
+puede truncar antes de enunciar el dx). El mecanismo es válido (consistency ≈ tasa de mención).
+
+**Siguiente paso:** rediseñar el prompt para **forzar el commitment** (dx primero y obligado, ej.
+`"Diagnosis: {dx}. Now describe..."`) → re-pilot oracle barato → si llega a ~0.85, recién la corrida
+completa de 4 condiciones (baseline/oracle/Swin/DermLIP).
 
 ```bash
 python scripts/mendieta/sync_up.py && python scripts/mendieta/submit.py pilot_ensemble_llava
@@ -343,6 +465,7 @@ Modelos: DenseNet121, ViT-B/16, ConvNeXt-Tiny, Swin-Tiny. Con evaluación HIBA O
 | [dermlip_clasificacion_plan_20260604.md](ideas/dermlip_clasificacion_plan_20260604.md) | Plan | Agregar DermLIP (VL classifier derm-especializado, CLIP-style) — ¿resuelve la clasificación? |
 | [dermlip_clasificacion_resul_20260605.md](resul/dermlip_clasificacion_resul_20260605.md) | Resultado | DermLIP ZS rompe el collapse (sens_macro 0.51 vs 0.14) — CUMPLE |
 | [ensamble_clasificador_generador_plan_20260605.md](ideas/ensamble_clasificador_generador_plan_20260605.md) | Plan | Ensamble cascada clasificador→generador (grounding) — arregla clasificación + hedging de generación |
+| [ensamble_resul_20260607.md](resul/ensamble_resul_20260607.md) | Resultado | Pilot 1 (grounding soft débil) + hallazgo reporte-vs-razonamiento (consistency inflada por el `<think>`) |
 | [clasificadores_sweep_modern_v4_plan_20260510.md](ideas/clasificadores_sweep_modern_v4_plan_20260510.md) | Plan | Sweep HPs ConvNeXt/Swin en TOKO |
 | [reportes_mejoras_v2_plan_20260510.md](ideas/reportes_mejoras_v2_plan_20260510.md) | Plan | Stage 2 v2 + fixes A1/A2 |
 | [clasificadores_resul_sweep_v4_20260510.md](resul/clasificadores_resul_sweep_v4_20260510.md) | Resultado | Sweep v4: ConvNeXt-Tiny + Swin-Tiny HPs (§7 HIBA completado 2026-05-17) |
