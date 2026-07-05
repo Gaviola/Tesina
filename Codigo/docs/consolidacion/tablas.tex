@@ -1,0 +1,107 @@
+% ============================================================================
+% Tablas de resultados — Tesina DermVLM (consolidación 2026-06-18)
+% Requiere: \usepackage{booktabs}
+% Fuentes: docs/resul/*  +  docs/resumen_experimentos_20260610.md
+% NOTA: T4 usa el subconjunto de 400 imgs del test split; se actualizará con el
+%       test split completo (1503) cuando vuelvan los jobs 1157589/1157590.
+% ============================================================================
+
+% ---- T1: Clasificación HAM10000 (7 clases) — comparación de enfoques ----
+\begin{table}[htbp]
+  \centering
+  \caption{Clasificación en HAM10000 (test). Comparación de clasificadores supervisados, VLMs médicos
+  generales (zero-shot y fine-tuned) y un VL classifier derm-especializado (DermLIP).}
+  \label{tab:clasificacion}
+  \begin{tabular}{llccc}
+    \toprule
+    \textbf{Enfoque} & \textbf{Modelo / método} & \textbf{Acc} & \textbf{F1} & \textbf{Sens.\ macro} \\
+    \midrule
+    \multirow{4}{*}{Supervisado}
+      & DenseNet121      & 0.846 & 0.852 & 0.776 \\
+      & ViT-B/16         & 0.858 & 0.862 & 0.797 \\
+      & ConvNeXt-Tiny    & 0.827 & 0.861 & 0.849 \\
+      & \textbf{Swin-Tiny} & \textbf{0.827} & \textbf{0.882} & \textbf{0.870} \\
+    \midrule
+    \multirow{4}{*}{VLM general}
+      & LLaVA-Med likelihood (ZS)      & 0.037 & 0.028 & 0.157 \\
+      & Mini-VLM likelihood (ZS)       & 0.189 & 0.268 & 0.181 \\
+      & LLaVA-Med likelihood (FT)      & 0.179 & 0.198 & 0.137 \\
+      & Mini-VLM likelihood (FT)       & 0.660 & 0.532 & 0.141 \\
+    \midrule
+    \multirow{2}{*}{VL derm-especializado}
+      & DermLIP (zero-shot)            & 0.377 & 0.424 & 0.510 \\
+      & DermLIP (linear-probe)         & 0.741 & 0.762 & 0.739 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+% ---- T2: DermLIP por dominio (dermatoscopía vs clínica) ----
+\begin{table}[htbp]
+  \centering
+  \caption{DermLIP por dominio de imagen: HAM10000 (dermatoscopía) vs SkinCAP (foto clínica),
+  ambas sobre las 7 clases HAM. La discriminación se mantiene en ambos dominios.}
+  \label{tab:dermlip_dominio}
+  \begin{tabular}{llccc}
+    \toprule
+    \textbf{Dominio} & \textbf{Modo} & \textbf{Acc} & \textbf{F1} & \textbf{Sens.\ macro} \\
+    \midrule
+    HAM (dermatoscopía) & zero-shot      & 0.377 & 0.424 & 0.510 \\
+    HAM (dermatoscopía) & linear-probe   & 0.741 & 0.762 & 0.739 \\
+    SkinCAP (clínica)   & zero-shot      & 0.386 & 0.375 & 0.454 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+% ---- T3: Generación de reportes v1 vs v2 (Nivel 2, HAM) ----
+\begin{table}[htbp]
+  \centering
+  \caption{Generación de reportes en HAM10000 (Nivel 2, NER clínico). El fine-tuning v2 enriquece los
+  reportes (recall $\uparrow$) pero la consistencia diagnóstica regresa (hedging estilo CoT).}
+  \label{tab:generacion_v1v2}
+  \begin{tabular}{lcccc}
+    \toprule
+    \textbf{Modelo} & \multicolumn{2}{c}{\textbf{Diagnostic consistency}} & \multicolumn{2}{c}{\textbf{Clinical entity recall}} \\
+    & v1 & v2 & v1 & v2 \\
+    \midrule
+    LLaVA-Med & 0.718 & 0.634 & 0.457 & 0.824 \\
+    Mini-VLM  & 0.353 & 0.229 & 0.607 & 0.546 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+% ---- T4: Ensamble cascada (resultado central) ----
+\begin{table}[htbp]
+  \centering
+  \caption{Ensamble en cascada (clasificador $\rightarrow$ generador con grounding \textit{noreasoning}).
+  Diagnostic consistency (\textit{report-only}) sobre HAM10000 por condición de grounding y modelo
+  generador. La calidad del clasificador propaga monótonamente; un clasificador débil (DermLIP ZS)
+  puede empeorar respecto al baseline. Subconjunto de 400 imgs del test split.}
+  \label{tab:ensamble}
+  \begin{tabular}{llcc}
+    \toprule
+    \textbf{Grounding} & \textbf{Acc.\ clasif.} & \textbf{LLaVA-Med} & \textbf{Mini-VLM} \\
+    \midrule
+    Baseline (sin grounding) & ---  & 0.595 & 0.198 \\
+    DermLIP (ZS)             & 0.38 & 0.445 & 0.485 \\
+    Swin (supervisado)       & 0.80 & 0.703 & \textbf{0.830} \\
+    Oracle (gt)              & 1.00 & \textbf{0.845} & \textbf{1.000} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+% ---- T5: Ensamble Nivel 1 sobre SkinCoT (trade-off) ----
+\begin{table}[htbp]
+  \centering
+  \caption{Ensamble sobre SkinCoT (con referencias). El grounding+\textit{noreasoning} sube la
+  consistencia diagnóstica pero baja la similitud léxica con la referencia CoT verbosa
+  (trade-off de estilo/longitud, no de calidad clínica).}
+  \label{tab:ensamble_skincot}
+  \begin{tabular}{lcccc}
+    \toprule
+    \textbf{Condición} & \textbf{BLEU-4} & \textbf{METEOR} & \textbf{CIDEr} & \textbf{Consistency} \\
+    \midrule
+    Baseline           & 0.102 & 0.330 & 0.054 & 0.392 \\
+    Oracle (noreasoning) & 0.040 & 0.209 & 0.038 & \textbf{0.567} \\
+    \bottomrule
+  \end{tabular}
+\end{table}

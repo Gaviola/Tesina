@@ -116,6 +116,55 @@ para el commitment** — el prior CoT se vence por prompt si se prohíbe explíc
 
 ---
 
+## 6. Corrida completa (2026-06-18) — jobs 1156723/1156724/1156725
+
+Prompt fijo `noreasoning`. 4 condiciones × {LLaVA, Mini} sobre HAM test (400 imgs, report-only) +
+Nivel 1 sobre SkinCoT (457, con referencias).
+
+### 6.1 HAM — diagnostic_consistency (report-only) por condición y modelo
+
+| Condición (grounding) | clasif. acc | **LLaVA** | **Mini-VLM** |
+|-----------------------|-------------|-----------|--------------|
+| baseline (sin grounding) | — | 0.595 | 0.198 |
+| DermLIP ZS | 0.38 | 0.445 | 0.485 |
+| Swin (supervisado) | 0.80 | 0.703 | 0.830 |
+| oracle (gt) | 1.00 | 0.845 | **1.000** |
+
+Recall (report-only) se mantiene ~0.74–0.79 en todas; `<think>` 0–4% (noreasoning funcionó).
+
+**Hallazgos:**
+1. **El ensamble funciona y la calidad del clasificador propaga monótonamente** (oracle > Swin >
+   DermLIP > baseline). Con **Swin** (F1 0.88): LLaVA 0.595→0.703, **Mini 0.198→0.830**.
+2. **Un clasificador débil puede empeorar:** DermLIP ZS (acc 0.38) en LLaVA da 0.445 < baseline 0.595
+   → groundear con un dx equivocado hace que el reporte se comprometa con el error. El clasificador
+   debe ser suficientemente bueno (costo de propagación de error, concreto).
+3. **Mini-VLM obedece el grounding perfecto (oracle 1.000)** pese a su baseline pésima (0.198) — su
+   prior CoT es débil, sigue la instrucción al pie. LLaVA oracle 0.845 (prior CoT algo más fuerte).
+4. **Receta práctica óptima:** Swin (mejor clasificador) + generador con prompt noreasoning.
+
+### 6.2 SkinCoT — Nivel 1 (léxico vs referencias) + Nivel 2
+
+| Condición | BLEU-4 | METEOR | CIDEr | consistency (Nivel 2) |
+|-----------|--------|--------|-------|------------------------|
+| baseline | 0.102 | 0.330 | 0.054 | 0.392 |
+| oracle (noreasoning) | 0.040 | 0.209 | 0.038 | **0.567** |
+
+**Trade-off central:** grounding+noreasoning **↑ consistency (0.39→0.57)** pero **↓ similitud léxica**
+(BLEU 0.10→0.04). El reporte conciso y comprometido calza menos con la referencia CoT verbosa de
+SkinCoT — es un trade-off de **estilo/longitud**, no de calidad clínica (un reporte que afirma el dx
+es más útil aunque se parezca menos al texto de referencia verboso).
+
+### 6.3 Veredicto de la corrida completa
+
+- **El ensamble cascada (clasificador → generador grounded noreasoning) es la solución para reportes
+  comprometidos.** Con un clasificador fuerte (Swin) la consistency del reporte sube sustancialmente
+  (Mini +0.63, LLaVA +0.11) sin perder riqueza.
+- **El clasificador importa:** un débil (DermLIP ZS) puede ser peor que no groundear.
+- **Las métricas léxicas (Nivel 1) penalizan la concisión** → para la tesis hay que reportar Nivel 2
+  (fidelidad diagnóstica) como métrica principal del reporte, y Nivel 1 con el caveat del trade-off.
+
+---
+
 ## 5. Archivos de referencia
 
 | Archivo | Descripción |

@@ -8,7 +8,7 @@
 #SBATCH --cpus-per-task=10
 #SBATCH --mem=0
 #SBATCH --gres=gpu:1
-#SBATCH --time=1-12:00:00
+#SBATCH --time=2-00:00:00
 #SBATCH --signal=B:SIGTERM@595
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=facundo.gaviola@gmail.com
@@ -35,8 +35,8 @@ echo "=== ensemble_full_llava (JOBID: $SLURM_JOB_ID) ==="; date; nvidia-smi
 
 CKPT="outputs/checkpoints/stage2_llava_med_v2/best_model.pt"
 SPLIT="--splits_file data/splits/ham10000_splits.json --split test"
-LIMIT=400
-COMMON="--model llava_med --checkpoint ${CKPT} --images_dir data/processed/HAM10000 ${SPLIT} --max_tokens 384 --limit ${LIMIT} --seed 42"
+## Sin --limit: corre el test split completo (1503). Resume defensivo saltea las 400 ya hechas.
+COMMON="--model llava_med --checkpoint ${CKPT} --images_dir data/processed/HAM10000 ${SPLIT} --max_tokens 384 --seed 42"
 
 echo "=== (0) BASELINE ==="
 ${PYTHON} scripts/generate_report.py ${COMMON} \

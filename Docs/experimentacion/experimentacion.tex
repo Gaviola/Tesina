@@ -1,0 +1,895 @@
+\documentclass[11pt, a4paper]{article}
+
+% Codificación e idioma
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish,es-noshorthands]{babel}
+\usepackage{csquotes}
+
+% Bibliografía
+\usepackage[backend=biber, style=apa]{biblatex}
+\addbibresource{referencias.bib}
+
+% Matemáticas
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+% Tablas y figuras
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{placeins}
+
+% Listas
+\usepackage{enumitem}
+
+% Formato de página
+\usepackage[margin=2.5cm]{geometry}
+
+% Enlaces
+\usepackage[colorlinks=true, linkcolor=blue, urlcolor=blue, citecolor=blue]{hyperref}
+
+% Diagramas
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, fit, backgrounds}
+\usepackage{xcolor}
+\definecolor{sup}{HTML}{4CAF50}
+\definecolor{vlmgen}{HTML}{C62828}
+\definecolor{vlcls}{HTML}{1565C0}
+
+\graphicspath{{imagenes/}}
+
+\title{\textbf{Experimentación: Clasificación y Generación de Reportes\\ de Lesiones de Piel con Modelos Visión--Lenguaje}}
+\author{Facundo Tomás Gaviola}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent
+Este documento reporta de forma detallada los experimentos realizados para la tesina, organizados en
+torno a dos preguntas centrales: \textbf{(1)} ¿pueden los Modelos Visión--Lenguaje (\emph{Vision--Language
+Models}, VLMs) clasificar lesiones de piel con una precisión comparable a la de los clasificadores
+visuales tradicionales?, y \textbf{(2)} ¿pueden generar reportes clínicos confiables a partir de la
+imagen? El trabajo se desarrolló de manera \emph{iterativa}: cada resultado es analizado y medido, y a
+partir de ese análisis se decide cuál es el siguiente experimento. Hasta el momento, la evidencia
+sugiere que, en clasificación, los VLMs médicos generales no resultan competitivos frente a los modelos
+especializados, y que el factor determinante no parece ser la modalidad ``VLM'' sino la
+\emph{especialización de dominio}; en generación, los VLMs producen descripciones ricas pero
+diagnósticamente poco confiables, una limitación que un sistema en cascada (clasificador + generador)
+parece mitigar de forma sustancial. Estas conclusiones son parciales: la experimentación continúa y
+algunas líneas (corridas a mayor escala, incorporación de modelos derm-especializados de generación)
+están en curso.
+\end{abstract}
+
+\tableofcontents
+\bigskip
+
+% ============================================================
+\section{Introducción}
+\label{sec:intro}
+% ============================================================
+El diagnóstico asistido de lesiones de piel combina dos tareas complementarias: \emph{clasificar} la
+lesión (asignarle una categoría diagnóstica) y \emph{describirla} mediante un reporte clínico. Los VLMs
+—que acoplan un codificador visual a un modelo de lenguaje— prometen abordar ambas con un solo sistema.
+Es por esto que se pone a prueba esa promesa de manera empírica, y este documento detalla el recorrido
+experimental, los resultados obtenidos y las conclusiones (parciales) que se desprenden.
+
+\paragraph{Un proceso iterativo.} La experimentación se realizó en un ciclo de
+\emph{hipótesis $\rightarrow$ ejecución $\rightarrow$ análisis $\rightarrow$ decisión}: cada resultado
+se midió con métricas definidas de antemano y, según ese análisis, se decidió el siguiente experimento.
+Este enfoque fue necesario porque varios resultados contradijeron las hipótesis iniciales y obligaron a
+re-diagnosticar el problema. El recorrido, que las secciones siguientes desarrollan en detalle, fue:
+
+\begin{enumerate}[leftmargin=1.6em]
+  \item \textbf{Baseline de clasificación.} Se entrenaron clasificadores supervisados (redes
+  convolucionales y \emph{Vision Transformers}) sobre HAM10000, para tener un punto de comparación
+  fuerte (Sección~\ref{sec:clasif}).
+  \item \textbf{VLMs en clasificación.} Se evaluaron VLMs médicos generales con cuatro estrategias:
+  (i) \emph{zero-shot}, pidiéndole al modelo la clase y leyendo su respuesta; (ii) \emph{likelihood
+  scoring}, eligiendo la clase a la que el modelo asigna mayor probabilidad; (iii) razonamiento
+  estructurado (\emph{Chain-of-Thought}); y (iv) \emph{fine-tuning} (ajuste fino). Estas estrategias se
+  explican en detalle en la Sección~\ref{sec:clasif_diseno}. Los resultados fueron muy inferiores al
+  baseline.
+  \item \textbf{Primera hipótesis y su refutación.} Se conjeturó que la causa era el \emph{desbalance}
+  de clases. Para verificarlo se realizó una iteración de re-entrenamiento orientada a re-balancear y,
+  además, se inspeccionaron los datos y las predicciones. La hipótesis no se sostuvo: el bajo
+  rendimiento aparece incluso \emph{sin} entrenamiento (en \emph{zero-shot}), los datos de entrenamiento
+  no están sesgados hacia las clases problemáticas, y el modelo concentra sus predicciones en clases
+  distintas según la configuración. La Sección~\ref{sec:rediag} presenta esta evidencia.
+  \item \textbf{Especialización de dominio.} Guiados por el estado del arte, se incorporó un modelo
+  visión--lenguaje \emph{específico de dermatología} (DermLIP). Este \emph{recuperó la capacidad de
+  discriminar} entre clases —que los VLMs generales habían perdido— acercándose al desempeño de los
+  clasificadores supervisados, aunque sin superarlos en exactitud absoluta (Sección~\ref{sec:dermlip}).
+  \item \textbf{Generación de reportes.} Se ajustaron los VLMs para generar reportes. El análisis reveló
+  un problema de fidelidad diagnóstica y un sesgo en la forma de evaluar; a partir de ese diagnóstico se
+  diseñó e iteró un sistema en cascada que mejoró sustancialmente los resultados
+  (Sección~\ref{sec:gen}).
+\end{enumerate}
+
+
+% ============================================================
+\section{Configuración experimental}
+\label{sec:config}
+% ============================================================
+\subsection{Conjuntos de datos}
+Se utilizaron cuatro conjuntos de datos, con roles diferenciados (Cuadro~\ref{tab:datasets}). Es
+importante notar que \emph{no todos se usaron para lo mismo}: algunos para entrenar, otros solo para
+evaluar, y difieren en la modalidad de imagen.
+
+\begin{table}[H]
+  \centering
+  \caption{Conjuntos de datos y su rol en la experimentación.}
+  \label{tab:datasets}
+  \small
+  \begin{tabular}{p{2.8cm}p{3cm}p{2.4cm}p{6.1cm}}
+    \toprule
+    \textbf{Dataset} & \textbf{Modalidad} & \textbf{Rol} & \textbf{Detalle} \\
+    \midrule
+    HAM10000 & Dermatoscópica & Clasificación (train+test) y evaluación de reportes &
+    10.015 imágenes, 7 clases. Fuertemente desbalanceado (Figura~\ref{fig:ham}). Split estratificado
+    70/15/15. En clasificación se usa el conjunto completo. \\
+    \addlinespace
+    SkinCaRe \mbox{(SkinCAP+SkinCoT)} & Foto clínica & Entrenamiento de generación &
+    $\sim$7k pares imagen--texto. SkinCAP aporta descripciones; SkinCoT aporta narrativas de
+    razonamiento diagnóstico paso a paso. Usado para el ajuste del VLM generador. \\
+    \addlinespace
+    MM-Skin & Clínica/derma\-toscópica/patológica & Evaluación de generación (con referencia) &
+    Pares imagen--texto de libros de texto~\cite{zeng2025mmskin}; \emph{benchmark} externo, no de
+    entrenamiento. \\
+    \addlinespace
+    Derm1M & Multi-modal & Pre-entrenamiento de un modelo externo &
+    $\sim$1M pares con ontología clínica~\cite{yan2025derm1m}; corpus con el que se pre-entrenó DermLIP
+    (Sección~\ref{sec:dermlip}). \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\paragraph{El desbalance de HAM10000.} La Figura~\ref{fig:ham} muestra la distribución de las 7 clases.
+La clase ``nevo'' (NV, lesión benigna) representa cerca del $67\%$ de las imágenes, mientras que clases
+como dermatofibroma (DF) o vascular (VASC) apenas superan el $1\%$. Este desbalance es central: hace que
+la \emph{exactitud} global sea una métrica engañosa (un modelo que prediga siempre ``nevo'' acierta
+$\approx 67\%$) y motiva el uso de la \emph{sensibilidad macro} (Sección~\ref{sec:metricas}).
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.7\textwidth]{F0_ham_dist.png}
+  \caption{Distribución de clases en HAM10000. El fuerte predominio de la clase NV condiciona la
+  elección de métricas y la interpretación de los resultados.}
+  \label{fig:ham}
+\end{figure}
+
+Cabe adelantar un dato relevante para la Sección~\ref{sec:rediag}: los datos con los que se
+\emph{entrena} la generación (SkinCoT) están organizados en $\sim$23 categorías clínicas y
+\emph{no} presentan el sesgo NV/MEL de HAM; este hecho será clave al analizar por qué fallan los VLMs.
+
+\subsection{Métricas y por qué se eligen}
+\label{sec:metricas}
+\paragraph{Clasificación.} Se reportan tres métricas. La \textbf{exactitud} (\emph{accuracy}) es la
+fracción de aciertos; en esta tesina es poco informativa por sí sola debido al desbalance de HAM. El
+\textbf{F1 ponderado} equilibra precisión y exhaustividad pero, al ponderar por frecuencia, también
+queda dominado por la clase mayoritaria. La métrica que se prioriza es la \textbf{sensibilidad macro}
+(promedio del \emph{recall} por clase, sin ponderar): da el mismo peso a cada clase y, por lo tanto,
+\emph{mide directamente si el modelo discrimina las clases minoritarias}. En este trabajo es la métrica
+clave porque un valor cercano a $1/7 \approx 0.143$ indica que el modelo no supera al azar, sin importar
+cuán alta sea su exactitud.
+
+\paragraph{Generación de reportes.} La evaluación tiene dos niveles. El \textbf{Nivel 1} (con
+referencia) compara el reporte generado contra uno de referencia: BLEU-4, ROUGE-L, METEOR y CIDEr miden
+solapamiento textual, y BERTScore mide similitud semántica. En este trabajo de experimentación, el Nivel 1 cuantifica
+\emph{cuán parecido es el reporte generado a uno escrito por un humano}, y solo puede aplicarse a
+datasets con reportes de referencia (MM-Skin, SkinCoT); HAM no los tiene. El \textbf{Nivel 2} (sin
+referencia) mide el contenido clínico directamente: \emph{clinical entity recall} (qué proporción de
+categorías de términos dermatológicos aparece en el reporte; mide \emph{riqueza}) y \emph{diagnostic
+consistency} (qué proporción de reportes menciona el diagnóstico correcto; mide \emph{fidelidad
+diagnóstica}). En esta tesina, la \emph{diagnostic consistency} es la métrica más importante de
+generación, porque captura lo que clínicamente más interesa: que el reporte acierte el diagnóstico.
+
+% ============================================================
+\section{Clasificación diagnóstica}
+\label{sec:clasif}
+% ============================================================
+\subsection{Diseño del experimento}
+\label{sec:clasif_diseno}
+Se comparan tres familias de modelos (Figura~\ref{fig:tipos}) sobre el conjunto completo de HAM10000.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  box/.style={rectangle, rounded corners, draw, thick, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+  lbl/.style={font=\footnotesize\itshape, align=center}, >=Stealth]
+  \node[box, draw=sup] (a) {CNN / ViT\\ \textbf{supervisado}};
+  \node[box, draw=vlmgen, right=1.2cm of a] (b) {VLM \textbf{generativo}\\ (codif.\ + LLM)};
+  \node[box, draw=vlcls, right=1.2cm of b] (c) {VL classifier\\ \textbf{CLIP-style}};
+  \node[lbl, below=0.12cm of a] {imagen $\rightarrow$ logits\\ \emph{solo clasifica}};
+  \node[lbl, below=0.12cm of b] {imagen+texto $\rightarrow$ texto\\ \emph{clasifica y genera}};
+  \node[lbl, below=0.12cm of c] {similitud imagen--texto\\ \emph{solo clasifica}};
+  \node[font=\scriptsize, below=1.05cm of a, text width=3.6cm, align=center] {DenseNet, ViT, ConvNeXt, Swin};
+  \node[font=\scriptsize, below=1.05cm of b, text width=3.6cm, align=center] {LLaVA-Med, Mini-VLM};
+  \node[font=\scriptsize, below=1.05cm of c, text width=3.6cm, align=center] {DermLIP (Derm1M)};
+\end{tikzpicture}
+\caption{Las tres familias de modelos. Un \emph{VL classifier} CLIP-style alinea un codificador de
+imagen y uno de texto en un espacio común y clasifica por similitud, pero \emph{no} genera texto.}
+\label{fig:tipos}
+\end{figure}
+
+\paragraph{Modelos supervisados (baseline).} DenseNet121, ViT-B/16, ConvNeXt-Tiny y Swin-Tiny, ajustados
+por \emph{transfer learning} desde ImageNet (optimizador AdamW, \emph{cosine annealing}, \emph{early
+stopping}, pérdida con pesos por clase para mitigar el desbalance). Producen directamente una
+distribución sobre las 7 clases.
+
+\paragraph{VLMs evaluados.} Se usaron dos VLMs generativos:
+\begin{itemize}[leftmargin=1.6em]
+  \item \textbf{LLaVA-Med 7B}~\cite{li2024llavamed}: codificador visual CLIP ViT-L/14 + modelo de
+  lenguaje Mistral-7B, conectados por una proyección. Es un asistente biomédico general.
+  \item \textbf{Mini-VLM}: codificador CLIP ViT-B/16 + modelo de lenguaje Phi-3.5, más pequeño.
+\end{itemize}
+Ambos son VLMs \emph{generativos}: producen \emph{texto}, no una distribución sobre clases. Para
+clasificar con ellos se probaron cuatro estrategias (Figura~\ref{fig:zsvslik}):
+
+\begin{enumerate}[leftmargin=1.6em]
+  \item \textbf{Zero-shot por generación.} Se le da la imagen y un \emph{prompt} (``clasifica esta
+  imagen en una de: MEL, NV, \dots'') y se \emph{parsea} la clase de su respuesta en texto libre. Su
+  debilidad es el \emph{greedy trap}: la respuesta depende de la decodificación y a veces no contiene
+  una clase válida (se marca como \emph{desconocido}).
+  \item \textbf{Likelihood scoring.} En lugar de leer la respuesta generada, se calcula, para cada
+  clase, la probabilidad que el modelo asigna a su \emph{nombre} (y sinónimos) dado la imagen y el
+  \emph{prompt}, y se elige la de mayor probabilidad. Evita el \emph{greedy trap} y nunca produce
+  ``desconocido''.
+  \item \textbf{Chain-of-Thought (CoT).} Se le pide razonar paso a paso (describir rasgos, listar
+  diferenciales) antes de concluir; se parsea el diagnóstico final.
+  \item \textbf{Fine-tuning.} Se ajusta el modelo a la tarea con LoRA (\emph{Low-Rank Adaptation}, que
+  entrena un pequeño conjunto de parámetros adicionales manteniendo congelado el resto), y luego se
+  evalúa con \emph{likelihood} o CoT.
+\end{enumerate}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  box/.style={rectangle, rounded corners, draw, align=center, minimum height=0.9cm, font=\footnotesize, inner sep=4pt},
+  >=Stealth, node distance=0.55cm and 0.9cm]
+  % zero-shot
+  \node[box] (zimg) {imagen + \emph{prompt}};
+  \node[box, right=of zimg, draw=vlmgen] (zgen) {VLM genera\\ texto libre};
+  \node[box, right=of zgen] (zpar) {\emph{parser} $\rightarrow$\\ clase / ``desconocido''};
+  \draw[->] (zimg)--(zgen); \draw[->] (zgen)--(zpar);
+  \node[left=0.1cm of zimg, font=\scriptsize\bfseries] {(a) zero-shot};
+  % likelihood
+  \node[box, below=1.0cm of zimg] (limg) {imagen + \emph{prompt}};
+  \node[box, right=of limg, draw=vlmgen] (lsc) {VLM puntúa $P(\text{nombre}_c \mid \text{img})$\\ para cada clase $c$};
+  \node[box, right=of lsc] (lmax) {$\arg\max_c$\\ (sin ``desconocido'')};
+  \draw[->] (limg)--(lsc); \draw[->] (lsc)--(lmax);
+  \node[left=0.1cm of limg, font=\scriptsize\bfseries] {(b) likelihood};
+\end{tikzpicture}
+\caption{Dos formas de clasificar con un VLM generativo. (a) \emph{Zero-shot}: se lee la clase de la
+respuesta en texto. (b) \emph{Likelihood scoring}: se elige la clase cuyo nombre el modelo considera más
+probable dada la imagen; evita ambigüedades de la decodificación.}
+\label{fig:zsvslik}
+\end{figure}
+
+\subsection{Resultados y comparación con el baseline}
+El Cuadro~\ref{tab:clasificacion} y la Figura~\ref{fig:f1} muestran el resultado. Los clasificadores
+supervisados rinden bien (Swin-Tiny~\cite{liu2021swin}: F1 = 0.882, sensibilidad macro 0.870). En
+contraste, los VLMs generales \textbf{colapsan}: su sensibilidad macro ($0.137$--$0.181$) está al nivel
+del azar ($1/7 \approx 0.143$), independientemente de la estrategia.
+
+\begin{table}[H]
+  \centering
+  \caption{Clasificación en HAM10000 (test). Supervisados vs VLMs médicos generales vs un VL classifier
+  derm-especializado (DermLIP).}
+  \label{tab:clasificacion}
+  \begin{tabular}{llccc}
+    \toprule
+    \textbf{Enfoque} & \textbf{Modelo / método} & \textbf{Acc} & \textbf{F1} & \textbf{Sens.\ macro} \\
+    \midrule
+    \multirow{4}{*}{Supervisado}
+      & DenseNet121      & 0.846 & 0.852 & 0.776 \\
+      & ViT-B/16         & 0.858 & 0.862 & 0.797 \\
+      & ConvNeXt-Tiny    & 0.827 & 0.861 & 0.849 \\
+      & \textbf{Swin-Tiny} & 0.827 & \textbf{0.882} & \textbf{0.870} \\
+    \midrule
+    \multirow{4}{*}{VLM general}
+      & LLaVA-Med likelihood (ZS) & 0.037 & 0.028 & 0.157 \\
+      & Mini-VLM likelihood (ZS)  & 0.189 & 0.268 & 0.181 \\
+      & LLaVA-Med likelihood (FT) & 0.179 & 0.198 & 0.137 \\
+      & Mini-VLM likelihood (FT)  & 0.660 & 0.532 & 0.141 \\
+    \midrule
+    \multirow{2}{*}{VL derm-especializado}
+      & DermLIP (zero-shot)    & 0.377 & 0.424 & 0.510 \\
+      & DermLIP (linear-probe) & 0.741 & 0.762 & 0.739 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{F1_clasificacion.png}
+  \caption{Clasificación HAM10000 por enfoque (línea punteada = azar en sensibilidad macro). Los VLMs
+  generales quedan al nivel del azar; DermLIP discrimina incluso en zero-shot.}
+  \label{fig:f1}
+\end{figure}
+
+\paragraph{Evidencia del colapso.} La métrica baja no es el único indicio. La Figura~\ref{fig:colapso}
+muestra, para cada combinación VLM/método, la distribución de las clases \emph{predichas} frente a la
+distribución verdadera. Cada combinación concentra casi todas sus predicciones en \emph{una sola} clase
+—pero en una clase \emph{distinta} en cada caso (LLaVA en likelihood predice mayoritariamente MEL; en
+CoT, VASC; Mini en likelihood, NV; en CoT, MEL)—. Es decir, el modelo prácticamente ignora el contenido
+de la imagen y responde una constante que depende de la configuración, no de la lesión.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\textwidth]{F_colapso.png}
+  \caption{Distribución de las clases predichas por cada combinación VLM (vs la distribución verdadera,
+  en gris). Cada configuración colapsa hacia una clase distinta, señal de que la predicción no depende
+  de la imagen.}
+  \label{fig:colapso}
+\end{figure}
+
+\subsection{Comparación con el estado del arte}
+\label{sec:clasif_sota}
+El Cuadro~\ref{tab:sota_clasif} sitúa los resultados frente a la literatura, incluyendo modelos
+supervisados del estado del arte (que honestamente, alcanzan exactitudes superiores a las nuestras en algunos casos) y
+VLMs. Se incluyen también nuestros VLMs tras \emph{fine-tuning} (FT): el caso de Mini-VLM es
+ilustrativo —el ajuste eleva la exactitud a $0.66$ pero su sensibilidad macro sigue en $0.14$ (nivel de
+azar)—, es decir, el modelo aprende a predecir la clase mayoritaria, no a discriminar. Es justamente el
+fenómeno que la siguiente sección analiza.
+
+La comparación también deja ver un \emph{gradiente de especialización}: los modelos derm-específicos
+ajustados (PanDerm, un \emph{foundation model} con F1 ponderado $\approx 0.87$; los VLMs SkinVL ajustados
+sobre dermatología, con sensibilidad macro $\approx 0.60$) recuperan capacidad de discriminación frente
+a los VLMs generales (sensibilidad macro $\approx 0.14$), aunque sin alcanzar a los mejores
+clasificadores supervisados. La especialización de dominio, más que la mera escala o el carácter
+``visión--lenguaje'', es lo que explica el desempeño.
+
+\begin{table}[H]
+  \centering
+  \caption{Comparación con el estado del arte en clasificación HAM10000 (7 clases). Los valores de los
+  VLMs provienen de las evaluaciones sobre HAM10000 de los trabajos citados: Skin-R1 (Tabla~3, basada en
+  \emph{prompts}, F1 macro) y MM-Skin (Tabla~4, \emph{fine-tuning} supervisado; su columna de
+  sensibilidad es el \emph{recall} macro). ``---'' = no reportado.
+  $^{\ast}$SkinSavvy2 se evalúa sobre un dataset aumentado derivado de HAM10000 (no el \emph{test}
+  estándar) y reporta exactitud \emph{balanceada}. $^{\dagger}$PanDerm: F1 ponderado sobre HAM10000
+  (7 clases) leído de la Fig.~2 del paper. Los protocolos de evaluación difieren entre trabajos, por lo
+  que la comparación es orientativa.}
+  \label{tab:sota_clasif}
+  \small
+  \begin{tabular}{llcccc}
+    \toprule
+    \textbf{Fuente} & \textbf{Modelo} & \textbf{Tipo} & \textbf{Acc} & \textbf{F1} & \textbf{Sens.\ macro} \\
+    \midrule
+    \multicolumn{6}{@{}l}{\itshape Estado del arte --- supervisados y \emph{foundation models}} \\
+    \cite{SkinHealthMate2024} & EfficientNetB1+B5 (ens.) & CNN (FT) & 0.930 & 0.930 & --- \\
+    \cite{yan2025panderm} & PanDerm (foundation ViT)$^{\dagger}$ & Foundation (FT) & --- & 0.870 & --- \\
+    \cite{SkinSavvy22025} & Swin-Transformer$^{\ast}$ & ViT (FT) & 0.780 & 0.793 & --- \\
+    \multicolumn{6}{@{}l}{\itshape Estado del arte --- VLMs} \\
+    \cite{liu2025skinr1} & Skin-R1 (Qwen2.5-VL-7B + RL) & VLM (FT+RL) & 0.747 & 0.404 & --- \\
+    \cite{liu2025skinr1} & LLaVA-Med-7B & VLM (ZS) & 0.230 & 0.125 & --- \\
+    \cite{zeng2025mmskin} & SkinVL-Pub (LLaVA-Med+LoRA) & VLM (FT) & 0.793 & --- & 0.602 \\
+    \cite{zeng2025mmskin} & SkinVL-PubMM (LLaVA-Med+LoRA) & VLM (FT) & 0.790 & --- & 0.626 \\
+    \midrule
+    \multicolumn{6}{@{}l}{\itshape Este trabajo} \\
+    & Swin-Tiny & Supervisado & 0.827 & 0.882 & \textbf{0.870} \\
+    & LLaVA-Med likelihood & VLM (ZS) & 0.037 & 0.028 & 0.157 \\
+    & Mini-VLM likelihood & VLM (ZS) & 0.189 & 0.268 & 0.181 \\
+    & LLaVA-Med likelihood & VLM (FT) & 0.179 & 0.198 & 0.137 \\
+    & Mini-VLM likelihood & VLM (FT) & 0.660 & 0.532 & 0.141 \\
+    & DermLIP & VL derm (ZS) & 0.377 & 0.424 & 0.510 \\
+    & DermLIP & VL derm (lin-probe) & 0.741 & 0.762 & 0.739 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{¿Por qué fallan los VLMs generales? Re-diagnóstico}
+\label{sec:rediag}
+Conviene primero situar nuestros resultados frente a la literatura, porque lejos de contradecirla, la
+\textbf{corroboran}. El trabajo de Skin-R1~\cite{liu2025skinr1} evalúa a estos mismos VLMs sobre
+HAM10000 (7 clases) y observa el mismo fenómeno que nosotros: reporta que LLaVA-Med-7B obtiene un F1
+muy bajo ($\approx 0.12$, Cuadro~\ref{tab:sota_clasif}) y lo atribuye explícitamente a un
+\emph{``fuerte sesgo hacia la clase mayoritaria (benigna), con 5563 de 8390 predicciones''}; y describe
+que otro VLM (MedGemma) colapsa, en cambio, hacia una clase \emph{rara}. Es exactamente el patrón de la
+Figura~\ref{fig:colapso}: cada VLM concentra sus predicciones en una clase distinta. No hay, por lo
+tanto, contradicción: tanto nuestros experimentos como la literatura encuentran que los VLMs generales
+fallan en la clasificación de grano fino de HAM10000.
+
+\paragraph{Sobre las diferencias de exactitud.} Nuestra exactitud ($0.037$) es aún más baja que la de
+esos baselines porque (a) usamos \emph{likelihood scoring} en lugar de generación con parseo, y
+(b) nuestra configuración colapsa hacia una clase \emph{minoritaria} (MEL), mientras que un colapso
+hacia la clase mayoritaria (NV, $67\%$) produciría una exactitud alta sin discriminar —de hecho,
+nuestro propio Mini-VLM alcanza $66\%$ de exactitud colapsando a NV, con sensibilidad macro de apenas
+$0.14$—. Por eso la \emph{exactitud} es engañosa y la \textbf{sensibilidad macro} (cercana al azar en
+todas las variantes) es la métrica que revela el colapso de fondo.
+
+Establecido que el fenómeno es real y compartido con la literatura, se investigó su causa. La primera
+hipótesis —el \emph{desbalance de entrenamiento}— se descartó con cuatro evidencias: (i) el colapso 
+aparece en \emph{zero-shot}, antes de todo fine-tuning; (ii) los
+datos de entrenamiento del generador no están sesgados a NV/MEL; (iii) cada configuración colapsa a una
+clase \emph{distinta} (Figura~\ref{fig:colapso}), incompatible con un sesgo de frecuencia; y (iv) al
+evaluar sobre \emph{foto clínica} el VLM \emph{tampoco} discrimina, descartando un problema específico
+de la dermatoscopía. \textbf{Conjetura resultante:} el bajo rendimiento es una limitación general de
+estos VLMs para la discriminación dermatológica de grano fino —sus predicciones están guiadas por el
+prior del lenguaje (qué nombre de clase es más ``esperable'' dado el \emph{prompt}) más que por el
+contenido visual—. Esto motiva incorporar un modelo \emph{especializado en el dominio}.
+
+\subsection{La especialización de dominio recupera la discriminación}
+\label{sec:dermlip}
+\paragraph{Qué es DermLIP.} DermLIP~\cite{yan2025derm1m} es un \emph{VL classifier} de tipo CLIP: un
+codificador de imagen (ViT-B/16) y un codificador de texto entrenados de forma \emph{contrastiva} para
+quedar alineados en un espacio común, de modo que la imagen y la descripción correcta de su diagnóstico
+queden ``cerca''. A diferencia de un VLM generativo, no produce texto: clasifica midiendo la
+\emph{similitud} entre la imagen y el nombre de cada clase. Su pre-entrenamiento usó Derm1M
+($\sim$1M pares imagen--texto dermatológicos con ontología clínica), lo que le da especialización de
+dominio.
+
+\paragraph{Evidencia de que recupera la discriminación.} Se evaluó de dos formas: \emph{zero-shot}
+(clasificando por similitud, sin entrenarlo en HAM) y \emph{linear-probe} (congelando el codificador y
+entrenando solo un clasificador lineal sobre sus \emph{embeddings}, lo que mide la calidad de las
+representaciones). Los resultados sostienen la afirmación de tres maneras concretas:
+\begin{itemize}[leftmargin=1.6em]
+  \item \textbf{Sensibilidad macro muy por encima del azar}: $0.510$ en zero-shot (vs $\approx 0.14$ de
+  los VLMs generales y $0.143$ del azar), y $0.739$ con linear-probe (Cuadro~\ref{tab:clasificacion}).
+  \item \textbf{No colapsa}: predice las 7 clases con sensibilidades por clase razonables (no concentra
+  todo en una), a diferencia de la Figura~\ref{fig:colapso}.
+  \item \textbf{Generaliza entre dominios de imagen} (Cuadro~\ref{tab:dermlip_dominio}): discrimina
+  tanto en dermatoscopía como en foto clínica, lo que confirma que el factor decisivo es la
+  especialización y no la modalidad.
+\end{itemize}
+Es importante ser preciso sobre el sentido de ``recuperar la discriminación'': DermLIP \emph{no} supera
+a los clasificadores supervisados en exactitud absoluta (Swin-Tiny sigue siendo el mejor); lo que hace
+es \emph{romper el colapso} de los VLMs generales y alcanzar, con un simple linear-probe, un F1
+($0.762$) cercano al supervisado ($0.882$), demostrando que el problema no era ``usar un modelo
+visión--lenguaje'' sino usar uno \emph{no especializado}.
+
+\begin{table}[H]
+  \centering
+  \caption{DermLIP por dominio de imagen (7 clases HAM). La discriminación se mantiene en dermatoscopía
+  y en foto clínica.}
+  \label{tab:dermlip_dominio}
+  \begin{tabular}{llccc}
+    \toprule
+    \textbf{Dominio} & \textbf{Modo} & \textbf{Acc} & \textbf{F1} & \textbf{Sens.\ macro} \\
+    \midrule
+    HAM (dermatoscopía) & zero-shot    & 0.377 & 0.424 & 0.510 \\
+    HAM (dermatoscopía) & linear-probe & 0.741 & 0.762 & 0.739 \\
+    SkinCAP (clínica)   & zero-shot    & 0.386 & 0.375 & 0.454 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\paragraph{Conclusión parcial (clasificación).} Para clasificar lesiones conviene un modelo
+\emph{especializado}: un CNN/ViT supervisado (mejor exactitud) o un VL classifier derm-específico
+(fuerte incluso sin entrenamiento sobre el dataset objetivo). Los VLMs generativos generales no son
+competitivos en esta tarea, hecho que la literatura también constata (Sección~\ref{sec:rediag}).
+
+% ============================================================
+\section{Generación de reportes}
+\label{sec:gen}
+% ============================================================
+La segunda parte de la tesina evalúa si un VLM puede \emph{describir} la lesión en un reporte clínico.
+Antes de los resultados, conviene ver la \emph{forma} de los reportes generados. La
+Figura~\ref{fig:estructura} muestra un ejemplo típico: el modelo describe rasgos morfológicos (color,
+forma, bordes, superficie, localización) y —en el mejor caso— concluye con un diagnóstico.
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox{0.96\textwidth}{\footnotesize\itshape
+``The diagnosis is a nevus, a benign pigmented lesion. Key features: (1) color brownish-red to
+reddish-brown; (2) shape irregular, asymmetrical, with a lobulated border; (3) surface rough and
+slightly elevated; (4) located on the lower leg, a common site for nevi. The absence of rapid growth or
+ulceration helps rule out malignancy.''
+}}
+\caption{Ejemplo de la estructura típica de un reporte generado (imagen ISIC\_0024321): descripción
+morfológica seguida de una conclusión diagnóstica.}
+\label{fig:estructura}
+\end{figure}
+
+\subsection{Diseño del experimento y resultados directos}
+\label{sec:gen_diseno}
+\paragraph{Ajuste en dos etapas.} El VLM generador se entrenó en dos etapas: \emph{(1) alineamiento
+visual--textual}, ajustando la proyección entre el codificador visual y el modelo de lenguaje con las
+descripciones de SkinCAP; y \emph{(2) ajuste de instrucciones} con LoRA, usando las narrativas de
+SkinCoT para que el modelo aprenda a producir un reporte a partir de la imagen. Se entrena con SkinCaRe
+(foto clínica, que \emph{sí} trae texto asociado) porque HAM \emph{no} tiene reportes de referencia,
+solo etiquetas.
+
+\paragraph{Cómo se evalúa.} Una vez entrenado, el modelo \emph{genera} reportes para imágenes de prueba.
+\emph{En HAM} la evaluación es de \emph{Nivel 2} (sin referencia: \emph{diagnostic consistency} y
+\emph{recall}), justamente porque HAM no tiene reportes de referencia pero sí etiquetas diagnósticas con
+las que verificar la fidelidad. \emph{En SkinCoT} (Sección~\ref{sec:skincot}) la evaluación es de
+\emph{Nivel 1} (con referencia). Esta separación explica por qué se \emph{entrena} con SkinCoT pero se
+\emph{evalúa la fidelidad} sobre HAM: cada dataset aporta lo que el otro no tiene.
+
+\paragraph{Resultado directo.} El Cuadro~\ref{tab:generacion_v1v2} compara dos iteraciones del ajuste de
+la segunda etapa. La diferencia entre ellas es la \emph{duración del entrenamiento}: la v1 usó 3 épocas
+y la v2, 10 épocas (con los mismos hiperparámetros del mejor punto del barrido), buscando mejorar la
+convergencia; además, la v2 incorporó una instrucción de generación corregida. De v1 a v2, el
+\emph{recall} de entidades sube (reportes más ricos) pero la \emph{diagnostic consistency}
+\textbf{empeora}: el modelo describe mejor, pero acierta menos el diagnóstico —es decir, más
+entrenamiento no resolvió el problema, lo que orientó el análisis hacia su verdadera causa.
+
+\begin{table}[H]
+  \centering
+  \caption{Generación de reportes en HAM10000 (Nivel 2). El ajuste v2 enriquece los reportes pero la
+  consistencia diagnóstica regresa.}
+  \label{tab:generacion_v1v2}
+  \begin{tabular}{lcccc}
+    \toprule
+    \textbf{Modelo} & \multicolumn{2}{c}{\textbf{Diagnostic consistency}} & \multicolumn{2}{c}{\textbf{Clinical entity recall}} \\
+    & v1 & v2 & v1 & v2 \\
+    \midrule
+    LLaVA-Med & 0.718 & 0.634 & 0.457 & 0.824 \\
+    Mini-VLM  & 0.353 & 0.229 & 0.607 & 0.546 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+La causa, como se analiza a continuación, es que el modelo enumera diagnósticos diferenciales sin
+\emph{comprometerse} con uno. A este comportamiento lo llamamos \textbf{\emph{hedging}}: el reporte
+``se cubre'' en lugar de concluir.
+
+\subsection{Hallazgo metodológico: reporte vs.\ razonamiento}
+\label{sec:reprazon}
+\paragraph{Por qué surge la diferencia.} El conjunto de la segunda etapa es SkinCoT, cuyo nombre
+proviene de \emph{Chain-of-Thought}: sus textos de referencia \emph{son}, deliberadamente, narrativas de
+razonamiento diagnóstico paso a paso, no reportes concluyentes. En ellos, los pasos de razonamiento se
+delimitan con bloques \texttt{<think>\dots</think>}. Al entrenar con esos textos completos, el modelo
+\emph{aprende a reproducir el razonamiento} —incluidos esos bloques—, mezclando ``razonamiento'' y
+``reporte'' en una sola salida.
+
+\paragraph{El razonamiento no es solo un problema.} Conviene matizar: los bloques \texttt{<think>} tienen
+valor —permiten \emph{auditar el proceso} por el que el modelo llega a un diagnóstico, lo que es
+deseable para la interpretabilidad clínica—. El problema no es que el modelo razone, sino que (a) el
+razonamiento se \emph{mezcla} con el reporte, y (b) ese razonamiento es donde ocurre el \emph{hedging}.
+
+\paragraph{Por qué importa para la evaluación.} La \emph{diagnostic consistency} busca el diagnóstico
+correcto en el texto. Si se evalúa el texto \emph{completo}, las menciones que el modelo hace
+\emph{dentro} de su razonamiento (donde hipotetiza varias clases) cuentan como aciertos, lo que
+\textbf{infla} la métrica. Lo medimos: en una condición controlada, la consistencia pasó de $0.60$ sobre
+el texto completo a $0.30$ al evaluar únicamente el \emph{reporte} (excluyendo \texttt{<think>}). Casi la
+mitad de la ``fidelidad'' provenía del razonamiento. Por ello, en adelante todas las métricas de
+generación se computan \textbf{sobre el reporte}, separándolo del razonamiento.
+
+\subsection{Por qué un ensamble en cascada}
+\label{sec:porque_ensamble}
+A esta altura hay \emph{dos problemas independientes}: (i) los VLMs no clasifican bien
+(Sección~\ref{sec:clasif}); y (ii) cuando generan, no se comprometen con un diagnóstico. La estrategia
+propuesta es un \textbf{ensamble en cascada} (Figura~\ref{fig:cascada}) que \emph{desacopla} las tareas:
+un \textbf{clasificador especializado} decide el diagnóstico, y un \textbf{VLM generativo} redacta el
+reporte \emph{condicionado} a ese diagnóstico. A inyectar el diagnóstico del clasificador en la
+instrucción del generador lo llamamos \textbf{\emph{grounding}} (anclaje).
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  box/.style={rectangle, rounded corners, draw, thick, align=center, minimum height=1.1cm, font=\small},
+  >=Stealth, node distance=0.85cm]
+  \node[box] (img) {Imagen};
+  \node[box, draw=vlcls, right=of img] (clf) {Clasificador\\ (Swin / DermLIP)};
+  \node[box, fill=gray!8, right=of clf] (dx) {diagnóstico\\ predicho};
+  \node[box, draw=vlmgen, right=of dx] (gen) {VLM generativo\\ (\emph{grounded, noreasoning})};
+  \node[box, right=of gen] (rep) {Reporte\\ comprometido};
+  \draw[->] (img)--(clf); \draw[->] (clf)--(dx); \draw[->] (dx)--(gen);
+  \draw[->] (img.south) to[bend right=20] (gen.south);
+  \draw[->] (gen)--(rep);
+\end{tikzpicture}
+\caption{Ensamble en cascada: el clasificador aporta el diagnóstico, que se inyecta (junto con la
+imagen) en el \emph{prompt} del generador; este produce un reporte que afirma ese diagnóstico.}
+\label{fig:cascada}
+\end{figure}
+
+\paragraph{Cómo funciona y por qué ayuda.} El clasificador (que \emph{sí} discrimina) entrega un
+diagnóstico; el generador lo recibe en el \emph{prompt} y produce un reporte que debe afirmarlo. Esto
+ataca directamente las dos fallas: el diagnóstico ya no depende del juicio colapsado del VLM, y el
+generador tiene un diagnóstico concreto al que comprometerse en lugar de hedear. Además es modular (no
+requiere re-entrenar ni fusionar modelos) y de bajo costo.
+
+\paragraph{Limitaciones del enfoque.} El ensamble no es gratis: (a) \emph{hereda los errores del
+clasificador} —si este se equivoca, el reporte se compromete con un diagnóstico incorrecto
+(Sección~\ref{sec:res_ensamble})—; (b) usa \emph{dos modelos} en lugar de uno, con mayor costo de
+cómputo y orquestación; y (c) no es un sistema \emph{end-to-end}. Frente a alternativas: un VLM
+\emph{más grande} podría, en principio, clasificar y generar a la vez, pero los VLMs grandes generales
+mostraron la misma limitación de discriminación (Sección~\ref{sec:clasif_sota}), por lo que ``más
+parámetros'' no resuelve por sí solo el problema; y un modelo \emph{supervisado} clasifica mejor pero no
+genera texto. El ensamble es un punto intermedio pragmático: combina lo mejor de cada familia sin
+entrenar un modelo nuevo.
+
+\paragraph{El \emph{grounding} debe forzar el compromiso: la variante \emph{noreasoning}.} Inyectar el
+diagnóstico no basta: por su prior de razonamiento, el modelo tiende a ``pensar en voz alta'' y a veces
+a contradecir el diagnóstico provisto. Se iteró el \emph{prompt} (usando el diagnóstico correcto, para
+aislar el mecanismo) midiendo la consistencia \emph{sobre el reporte}: un \emph{prompt} suave logró
+$0.30$; uno que prohíbe enumerar diferenciales, $0.70$; y la variante \textbf{\emph{noreasoning}} —que
+prohíbe explícitamente producir razonamiento o bloques \texttt{<think>} y exige solo el reporte final—
+alcanzó $0.85$. Esta es la variante adoptada.
+
+\subsection{Resultados del ensamble}
+\label{sec:res_ensamble}
+\paragraph{Condiciones comparadas.} Para medir el aporte del \emph{grounding} se comparan cuatro
+condiciones, todas con el mismo generador y el \emph{prompt} \emph{noreasoning}:
+\begin{itemize}[leftmargin=1.6em]
+  \item \textbf{Baseline}: el generador \emph{sin grounding} (instrucción genérica ``describe esta
+  lesión''). Es el punto de referencia o ``piso''.
+  \item \textbf{Oracle}: \emph{grounding} con la etiqueta verdadera (\emph{ground truth}, \emph{gt}) de
+  la imagen, es decir, el diagnóstico \emph{correcto}. No es un sistema usable en un entorno real (allí
+  no se conoce la etiqueta de antemano); es un experimento de control que da la \emph{cota superior} del
+  \emph{grounding}, aislando su efecto de los errores del clasificador.
+  \item \textbf{Swin} y \textbf{DermLIP}: \emph{grounding} con la predicción de un clasificador
+  \emph{real} (imperfecto). Representan el ensamble efectivamente utilizable; su distancia respecto al
+  oracle es el costo de los errores de clasificación.
+\end{itemize}
+(\emph{gt} = \emph{ground truth}, la etiqueta diagnóstica real de la imagen.)
+
+El Cuadro~\ref{tab:ensamble} y la Figura~\ref{fig:f2} muestran los resultados. La
+Figura~\ref{fig:f2}(a) grafica la \emph{diagnostic consistency} y la (b) el \emph{recall}, por condición
+(eje horizontal) y modelo (barras de color). Se observa:
+\begin{enumerate}[leftmargin=1.6em]
+  \item \textbf{El \emph{grounding} mejora drásticamente la fidelidad}, sobre todo en Mini-VLM
+  ($0.198 \rightarrow 0.830$ con Swin), sin sacrificar la riqueza (recall estable $\approx 0.75$).
+  \item \textbf{La calidad del clasificador propaga de forma monótona}: oracle $>$ Swin $>$ DermLIP $>$
+  baseline, en consonancia con su exactitud (1.00, 0.80, 0.38).
+  \item \textbf{Un clasificador débil puede empeorar}: con DermLIP zero-shot (exactitud 0.38), LLaVA
+  baja a $0.445$, por debajo de su baseline ($0.595$), porque el reporte se compromete con el
+  diagnóstico \emph{equivocado}. Esto cuantifica el costo de propagación de error.
+\end{enumerate}
+
+\begin{table}[H]
+  \centering
+  \caption{Ensamble (clasificador $\rightarrow$ generador \emph{noreasoning}). \emph{Diagnostic
+  consistency} (sobre el reporte) en HAM10000 por condición y modelo. Subconjunto de 400 imágenes del
+  \emph{test split} de HAM (ver Sección~\ref{sec:limitaciones}).}
+  \label{tab:ensamble}
+  \begin{tabular}{llcc}
+    \toprule
+    \textbf{Grounding} & \textbf{Acc.\ clasif.} & \textbf{LLaVA-Med} & \textbf{Mini-VLM} \\
+    \midrule
+    Baseline (sin grounding) & ---  & 0.595 & 0.198 \\
+    DermLIP (ZS)             & 0.38 & 0.445 & 0.485 \\
+    Swin (supervisado)       & 0.80 & 0.703 & \textbf{0.830} \\
+    Oracle (gt)              & 1.00 & \textbf{0.845} & \textbf{1.000} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{F2_ensamble.png}
+  \caption{Ensamble cascada: (a) \emph{diagnostic consistency} (fidelidad) y (b) \emph{clinical entity
+  recall} (riqueza), por condición de \emph{grounding} y modelo. La fidelidad crece con la calidad del
+  clasificador; la riqueza se mantiene.}
+  \label{fig:f2}
+\end{figure}
+
+\paragraph{Ejemplos.} La diferencia entre comprometerse y no hacerlo se ve claramente en el texto. El
+\emph{baseline} hedea (no concluye), mientras que con \emph{grounding} el mismo modelo afirma el
+diagnóstico:
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox{0.96\textwidth}{\footnotesize
+\textbf{Sin grounding (baseline)} \textemdash\ \itshape ``To analyze the case I will follow a structured
+approach\dots\ \textbf{1. High-Level Decision}: the category likely falls under \emph{inflammatory
+conditions}\dots'' \upshape (razona, no concluye, y se desvía a una categoría incorrecta).\\[4pt]
+\textbf{Con grounding (oracle, noreasoning)} \textemdash\ \itshape ``\textbf{The diagnosis is a nevus},
+a benign pigmented lesion. Key features: color brownish-red, irregular lobulated border\dots'' \upshape
+(afirma el diagnóstico y lo sustenta). \,[imagen ISIC\_0024321, \emph{gt}: nevo]
+}}
+\caption{Efecto del \emph{grounding}+\emph{noreasoning}: de un reporte ambiguo a uno comprometido.}
+\label{fig:ej_grounding}
+\end{figure}
+
+\subsection{Nivel 1 sobre SkinCoT: un \emph{trade-off} de estilo}
+\label{sec:skincot}
+Para evaluar la calidad lingüística con referencia se usó SkinCoT. Se comparan \textbf{baseline} y
+\textbf{oracle} (con \emph{noreasoning}). El Cuadro~\ref{tab:ensamble_skincot} muestra un
+\emph{trade-off}: el \emph{grounding} \textbf{sube} la fidelidad (consistency $0.39 \rightarrow 0.57$)
+pero \textbf{baja} la similitud léxica (BLEU-4 $0.10 \rightarrow 0.04$). La razón es estilística: las
+referencias de SkinCoT son narrativas \emph{verbosas}, y un reporte conciso se parece menos a ellas
+aunque sea clínicamente más útil. El siguiente contraste lo ilustra:
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox{0.96\textwidth}{\footnotesize
+\textbf{Reporte verboso (baseline, alto solapamiento léxico)} \textemdash\ \itshape ``To analyze the
+case I will follow a structured approach to arrive at a logical diagnostic conclusion\dots\ The general
+disease category may belong to neoplastic, specifically a lesion that could be benign or malignant\dots''
+\upshape (largo, parecido al estilo de la referencia, pero sin comprometerse).\\[4pt]
+\textbf{Reporte conciso (oracle/noreasoning, menor solapamiento léxico, mayor fidelidad)} \textemdash\
+\itshape ``The diagnosis is a nevus. Brownish pigmentation, regular borders, symmetric\dots'' \upshape
+(corto y comprometido).
+}}
+\caption{Verboso vs.\ conciso: el reporte verboso se parece más a la referencia (mayor BLEU) pero no
+concluye; el conciso acierta el diagnóstico (mayor consistency).}
+\label{fig:verboso}
+\end{figure}
+
+\begin{table}[H]
+  \centering
+  \caption{Ensamble sobre SkinCoT (con referencias). El \emph{grounding}+\emph{noreasoning} sube la
+  consistencia y baja la similitud léxica.}
+  \label{tab:ensamble_skincot}
+  \begin{tabular}{lcccc}
+    \toprule
+    \textbf{Condición} & \textbf{BLEU-4} & \textbf{METEOR} & \textbf{CIDEr} & \textbf{Consistency} \\
+    \midrule
+    Baseline             & 0.102 & 0.330 & 0.054 & 0.392 \\
+    Oracle (noreasoning) & 0.040 & 0.209 & 0.038 & \textbf{0.567} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\paragraph{Comparación con el estado del arte.} A diferencia de la clasificación —donde una métrica
+como la exactitud o la sensibilidad macro refleja de forma bastante fiel la calidad del modelo—, en
+generación de reportes las métricas más usadas en la literatura son de \emph{similitud léxica} (BLEU,
+ROUGE, METEOR), que comparan el texto generado con un reporte de referencia, palabra por palabra. Estas
+métricas son \emph{poco representativas} de la calidad clínica de un reporte: por la naturaleza del
+lenguaje, un mismo hallazgo puede expresarse de muchas formas igualmente correctas, de modo que un
+reporte clínicamente acertado pero redactado distinto a la referencia recibe un puntaje bajo (y, a la
+inversa, un reporte que copia el estilo pero yerra el diagnóstico puede puntuar alto). Aun así, son el
+estándar de comparación del área, por lo que el Cuadro~\ref{tab:sota_gen} las recopila.
+
+Dos cautelas al leer la tabla: (i) los valores dependen mucho del ajuste al \emph{estilo} del dataset de
+referencia —sobre MM-Skin, los VLMs generales obtienen BLEU-4 $\approx 8.9$ y solo el modelo
+derm-especializado y ajustado sobre ese corpus (SkinVL-MM) llega a $\approx 22$; sobre datos sintéticos
+de texto muy estructurado (DermatoLlama) las cifras se disparan a $\approx 65$—; y (ii) cada fila usa un
+dataset, una modalidad y un protocolo distintos (MM-Skin, DERM12345, IU-Xray, corpus privados), por lo
+que \textbf{no son comparables entre sí} ni con nuestros números sobre SkinCoT. Por eso este trabajo
+prioriza la \emph{fidelidad diagnóstica} (Nivel 2), que mide si el reporte efectivamente acierta el
+diagnóstico —dimensión que estas comparativas no capturan.
+
+Nuestros modelos aparecen al pie del Cuadro~\ref{tab:sota_gen}, evaluados sobre MM-Skin (el mismo
+\emph{benchmark} que las primeras filas). El contraste es la mejor evidencia del punto anterior: como
+fueron entrenados sobre SkinCaRe y se aplican a MM-Skin \emph{sin reajuste}, su BLEU-4 cae a
+$\approx 0.1$ —dos órdenes de magnitud por debajo de los modelos ajustados sobre MM-Skin—; sin embargo,
+su \emph{BERTScore} ($\approx 66$--$70$), que mide similitud \emph{semántica} y no de palabras exactas,
+queda al nivel del SOTA sobre ese mismo \emph{benchmark} ($\approx 67$--$71$). Es decir, el contenido es
+comparable pero la redacción difiere: el BLEU castiga la diferencia de estilo, no la de calidad clínica.
+Esto confirma por qué la evaluación de Nivel 2 es la métrica decisiva en este trabajo.
+
+\begin{table}[H]
+  \centering
+  \caption{Estado del arte en generación de reportes dermatológicos según métricas de similitud léxica
+  (escala 0--100, salvo donde se indique). Las cifras \textbf{no son directamente comparables entre
+  filas}: cada trabajo usa un dataset, una modalidad y un protocolo distintos (incluso métricas
+  homónimas difieren, p.\,ej.\ BLEU-4 vs SacreBLEU). Se incluyen como referencia del rango habitual en
+  el dominio, no como ranking. ``---'' = no reportado.}
+  \label{tab:sota_gen}
+  \small
+  \begin{tabular}{llcccc}
+    \toprule
+    \textbf{Fuente} & \textbf{Modelo / dataset} & \textbf{BLEU-4} & \textbf{ROUGE-L} & \textbf{METEOR} & \textbf{BERTScore} \\
+    \midrule
+    \multicolumn{6}{@{}l}{\itshape Evaluados sobre MM-Skin} \\
+    \cite{zeng2025mmskin} & LLaVA-Med-7B (derma.) & 8.88 & 34.83 & 33.74 & 66.60 \\
+    \cite{zeng2025mmskin} & SkinVL-MM (derma.) & 21.61 & 44.70 & 42.76 & 71.34 \\
+    \cite{zeng2025mmskin} & SkinVL-MM (patología) & 22.04 & 44.09 & 42.70 & 70.59 \\
+    \multicolumn{6}{@{}l}{\itshape Otros datasets (referencia metodológica)} \\
+    \cite{AutomatedReport2025} & KD-VLM / dermatosc.\ priv. & 55.59$^{a}$ & 38.28 & --- & 90.25$^{b}$ \\
+    \cite{DermatoLlama2025} & DermatoLlama / DERM12345 (sint.) & 65.59 & 93.44$^{c}$ & --- & --- \\
+    \cite{PeFoMed2024} & PeFoMed / IU-Xray (radiol.) & --- & 28.60$^{d}$ & 15.70 & --- \\
+    \multicolumn{6}{@{}l}{\itshape Este trabajo --- evaluado sobre MM-Skin$^{e}$} \\
+    & LLaVA-Med (FT SkinCaRe) & 0.08 & 3.12 & 8.10 & 65.80 \\
+    & Mini-VLM (FT SkinCaRe) & 0.15 & 5.36 & 10.36 & 69.91 \\
+    \bottomrule
+  \end{tabular}
+  \par\smallskip
+  {\footnotesize $^{a}$SacreBLEU (no equivalente a BLEU-4 estándar). $^{b}$BERTScore F1 original $0.9025$
+  (escala 0--1). $^{c}$ROUGE inusualmente alto, atribuible a la estructura repetitiva de los datos
+  sintéticos. $^{d}$Reportes radiológicos (IU-Xray), no dermatológicos; incluido como referencia de la
+  arquitectura VLM$+$LoRA. $^{e}$Nuestros modelos se entrenaron sobre SkinCaRe y se evalúan aquí sobre
+  MM-Skin \emph{sin ajuste a ese corpus} (transferencia entre datasets), de ahí los puntajes léxicos muy
+  bajos pese a producir reportes clínicamente coherentes (Nivel 2).\par}
+\end{table}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{F3_skincot_tradeoff.png}
+  \caption{SkinCoT: (a) la fidelidad diagnóstica sube con el \emph{grounding}; (b) las métricas léxicas
+  bajan porque el reporte comprometido es más conciso que la referencia verbosa.}
+  \label{fig:f3}
+\end{figure}
+
+\subsection{Ejemplos cualitativos: qué distingue un buen reporte}
+\label{sec:cualitativo}
+Más allá de las métricas, conviene mostrar qué separa un buen reporte de uno malo. Un \textbf{buen
+reporte} (i) afirma un diagnóstico, (ii) lo sustenta con rasgos morfológicos coherentes, y (iii) es
+conciso y sin contradicciones. Un \textbf{mal reporte} (i) hedea, (ii) se compromete con un diagnóstico
+\emph{incorrecto}, o (iii) degenera (p.\,ej.\ repite frases). Los Ejemplos de las
+Figuras~\ref{fig:ej_grounding} y~\ref{fig:verboso} ya ilustraron (i); los dos casos siguientes muestran
+los riesgos (ii) y (iii).
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox{0.96\textwidth}{\footnotesize
+\textbf{Riesgo (ii): propagación de error.} Imagen ISIC\_0024317 (\emph{gt}: nevo; DermLIP predijo
+\emph{melanoma}).\\
+\itshape ``The lesion is a melanoma, characterized by a large, irregularly shaped, dark brown to black
+pigmented area with a central umbilication\dots\ The presence of a central umbilication is highly
+specific for melanoma, making this diagnosis clear.'' \upshape \\[2pt]
+El reporte es fluido y se compromete\dots\ pero con el diagnóstico \emph{equivocado} que aportó el
+clasificador. El ensamble hereda los errores del clasificador y los presenta con (falsa) confianza.
+}}
+\caption{Cuando el clasificador se equivoca, el ensamble produce un reporte confiadamente incorrecto.}
+\label{fig:ej_error}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox{0.96\textwidth}{\footnotesize
+\textbf{Riesgo (iii): artefacto de generación (repetición).} Imagen ISIC\_0024333 (\emph{gt}: melanoma;
+Swin predijo \emph{melanoma}).\\
+\itshape ``\dots variegated color palette (brown, black, gray, red)\dots\ irregular borders\dots\ a
+hallmark of melanoma. The color variegation is a key feature\dots\ irregular borders\dots\ a hallmark of
+melanoma. The color variegation\dots'' \upshape \\[2pt]
+Diagnóstico correcto y rasgos pertinentes, pero el texto \emph{repite} las mismas frases (degeneración
+por repetición). Buen contenido diagnóstico, con una limitación de fluidez a vigilar.
+}}
+\caption{Un reporte diagnósticamente correcto puede aún presentar artefactos de generación, una
+limitación de calidad textual distinta de la fidelidad diagnóstica.}
+\label{fig:ej_rep}
+\end{figure}
+
+% ============================================================
+\section{Discusión y conclusiones}
+\label{sec:conclusion}
+% ============================================================
+Los objetivos específicos de la experimentación son: (a) diseñar y evaluar modelos de detección —de \emph{deep
+learning} y VLM— para identificar lesiones (en particular melanoma); (b) entrenar un VLM capaz de
+integrar visión y texto para producir diagnósticos preliminares y reportes; y (c) evaluar el desempeño
+en distintos escenarios (precisión diagnóstica, coherencia textual, utilidad). La evidencia recogida
+permite responderlos de forma parcial:
+
+\begin{enumerate}[leftmargin=1.6em]
+  \item \textbf{Detección/clasificación (objetivo a).} Los clasificadores supervisados resuelven bien la
+  tarea (Swin-Tiny F1 = 0.882). Los VLMs médicos \emph{generales} no son competitivos: su sensibilidad
+  macro está al nivel del azar (Cuadro~\ref{tab:clasificacion}, Figura~\ref{fig:colapso}). Se mostró que
+  no se debe al desbalance ni a la modalidad dermatoscópica (Sección~\ref{sec:rediag}), y que la
+  literatura constata el mismo fenómeno de colapso al evaluar estos VLMs sobre HAM10000. En cambio, un
+  VL model \emph{derm-especializado} (DermLIP) recupera la discriminación
+  (Sección~\ref{sec:dermlip}). Es decir: para detectar lesiones, la especialización —no la mera
+  capacidad ``visión--lenguaje''— es lo determinante.
+  \item \textbf{Generación de reportes (objetivo b).} Los VLMs generativos producen reportes ricos pero,
+  por sí solos, no se comprometen con un diagnóstico (Sección~\ref{sec:reprazon}). El ensamble en
+  cascada con \emph{grounding} (Sección~\ref{sec:porque_ensamble}) sí produce reportes que afirman un
+  diagnóstico: con un clasificador fuerte, la \emph{diagnostic consistency} sube sustancialmente
+  (Mini-VLM: $0.20 \rightarrow 0.83$).
+  \item \textbf{Evaluación en distintos escenarios (objetivo c).} Se evaluó precisión diagnóstica
+  (clasificación y Nivel 2 de reportes), coherencia/calidad textual (Nivel 1 y ejemplos cualitativos) y
+  el comportamiento entre dominios de imagen (dermatoscopía vs clínica). Surgió además un aporte
+  metodológico: al evaluar reportes provenientes de datos tipo \emph{Chain-of-Thought} es necesario
+  separar el \emph{reporte} del \emph{razonamiento}, pues evaluar el texto completo sobreestima la
+  fidelidad.
+\end{enumerate}
+
+\noindent\textbf{Síntesis (parcial).} La evidencia hasta el momento sugiere que, para \emph{diagnosticar},
+conviene un modelo especializado (supervisado o VL derm-específico), y que, para \emph{reportar}, un VLM
+generativo \emph{anclado} a un clasificador produce reportes más fieles que un VLM por sí solo. Ningún
+VLM general resolvió, por sí mismo, ambas tareas; un ensamble de modelos especializados se perfila como
+una vía efectiva para el objetivo de la experimentación. Estas conclusiones son parciales y sujetas a la
+experimentación en curso.
+
+\subsection{Limitaciones y trabajo en proceso o futuro}
+\label{sec:limitaciones}
+\begin{itemize}[leftmargin=1.6em]
+  \item \textbf{Escala de la evaluación de reportes.} Los resultados del ensamble
+  (Cuadro~\ref{tab:ensamble}) se obtuvieron sobre un subconjunto de \emph{400 imágenes del test split de
+  HAM10000}. Esta reducción aplica \emph{solo} a la generación de reportes (costosa); la
+  \emph{clasificación} se evaluó siempre sobre los conjuntos completos. La corrida de generación sobre el
+  test split completo (1503 imágenes) está en curso para consolidar los números.
+  \item \textbf{Costo experimental.} Cada prueba que involucra VLMs o generación de reportes requiere
+  enviar trabajos al clúster Mendieta (por la memoria de GPU necesaria), con tiempos de espera en cola
+  de aproximadamente 4 a 6 días en muchos casos. Esto limitó fuertemente la cantidad de iteraciones posibles
+  y condicionó el diseño de los experimentos (p.\,ej.\ usar subconjuntos, paralelizar trabajos).
+  \item \textbf{Artefactos de generación.} Persisten degeneraciones (repetición, Figura~\ref{fig:ej_rep})
+  ajenas a la fidelidad diagnóstica; mitigarlas (p.\,ej.\ penalización de repetición en el decodificado)
+  es trabajo futuro.
+  \item \textbf{Extensiones planificadas.} Incorporar un VLM generativo \emph{derm-especializado}
+  (SkinVL~\cite{zeng2025mmskin}) como tercer generador del ensamble, y modelos de razonamiento clínico
+  como Skin-R1~\cite{liu2025skinr1}; y una evaluación cualitativa formal con rúbrica clínica.
+\end{itemize}
+
+\printbibliography
+
+\end{document}

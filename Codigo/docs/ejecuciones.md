@@ -4,7 +4,39 @@ Ayuda-memoria cronológico de experimentos enviados a cluster, ordenado de más 
 
 ---
 
-## 2026-06-10
+## 2026-06-18
+
+### Consolidación + refinamiento (test split completo) en paralelo — Mendieta
+Inicio de la fase de consolidación (documento LaTeX: cuadros/figuras/samples). En paralelo, para
+aprovechar la cola, se lanza el **refinamiento**: completar el ensamble al **test split completo (1503)**
+(antes 400). Reutiliza `ensemble_full_{llava,mini}.sh` sin `--limit` (resume defensivo saltea las 400
+ya generadas) → números definitivos para las tablas.
+
+**Jobs:** 1157589 (LLaVA full test), 1157590 (Mini full test) — Mendieta, 2 días, resume si timeout.
+
+**Extensión (documentada, pendiente de integración):** **SkinVL** (`zwq803/SkinVL-MM`, HF) — VLM
+derm-especializado (LLaVA-Med-v1.5-7B + LoRA sobre MM-Skin). Candidato a tercer generador del ensamble.
+Requiere wrapper + descarga/cache en cluster. Plan: [consolidacion_y_extensiones_plan_20260618.md](ideas/consolidacion_y_extensiones_plan_20260618.md).
+
+**Entregables de consolidación creados:**
+- **Documento LaTeX formal:** `Docs/experimentacion/` (`experimentacion.tex` + `referencias.bib` +
+  `imagenes/`). Compila limpio (**15 páginas**, 0 citas sin resolver). 2.ª revisión (feedback tutor):
+  resumen reescrito; intro con estrategias explicadas + cómo se refutó el desbalance; figuras nuevas
+  (distribución HAM, colapso de predicciones); métricas contextualizadas a la tesina; diseño detallado
+  + diagrama zero-shot/likelihood; SOTA con supervisados + análisis de la contradicción LLaVA-Med
+  (accuracy inflada por NV); DermLIP descrito y sustentado; generación con ejemplo de estructura + diseño
+  detallado + por qué ensamble (con desventajas y valor del razonamiento); "entorno real" (no producción);
+  ejemplos verboso/conciso; tabla SOTA generación; conclusiones atadas a los objetivos del plan; límites
+  (400 solo en reportes, costo de cola 4-6 días). Versión previa:
+  intro detallada del proceso iterativo; datasets con rol explicado; métricas explicadas (qué/por qué);
+  **2 tablas de comparación SOTA** (clasif.\ + generación) con el caveat de accuracy-inflada-por-NV;
+  re-diagnóstico (4 evidencias) y conjetura del fallo; origen de `<think>` (SkinCoT=CoT); justificación
+  del ensamble + `diagnostic consistency` + `noreasoning`; baseline/oracle/gt definidos; figuras
+  descritas; **3 ejemplos cualitativos** largos con criterios buen/mal reporte. 7 cuadros, 3 figuras,
+  2 esquemas TikZ.
+- **Material de apoyo:** `Codigo/docs/consolidacion/` (tablas.tex, figuras/, samples.md).
+- Figuras con métricas ampliadas (Acc/F1/sens en clasificación; consistency+recall en ensamble;
+  léxicas en SkinCoT).
 
 ### Ensamble — Nivel 1 sobre SkinCoT + prep local — Mendieta
 Para paralelizar (3 jobs simultáneos), se lanza el Nivel 1 sobre **SkinCoT** (único dataset con
@@ -15,9 +47,13 @@ oracle-noreasoning, `--reference_dir` para Nivel 1.
 por scp); SLURM `ensemble_skincot_level1_llava.sh`. **Prep local:** flag `--strip-reasoning` agregado a
 `evaluate_reports.py` (elimina `<think>` → mide report-only automático).
 
-**Job:** 1156725 (LLaVA-Med v2, SkinCoT, baseline + oracle)
-**Cluster:** Mendieta | **Resultados (pendiente):** Nivel 1 (BLEU/ROUGE/BERTScore/METEOR/CIDEr) vs
-referencias + Nivel 2, baseline vs oracle.
+**Job:** 1156725 (LLaVA-Med v2, SkinCoT, baseline + oracle) — COMPLETED.
+**Cluster:** Mendieta
+**Resultados (analizado 2026-06-18):** baseline BLEU 0.102 / METEOR 0.330 / CIDEr 0.054, consistency
+0.392; oracle BLEU 0.040 / METEOR 0.209 / CIDEr 0.038, consistency **0.567**. **Trade-off:**
+grounding+noreasoning ↑ consistency (0.39→0.57) pero ↓ léxico (reporte conciso vs referencia CoT
+verbosa) → para reportes, Nivel 2 es la métrica principal; Nivel 1 con caveat. Ver
+[ensamble_resul §6.2](resul/ensamble_resul_20260607.md).
 
 ### Ensamble — corrida completa 4 condiciones — Mendieta
 Con el prompt ganador fijo (`noreasoning`), corrida realista del ensamble: 4 condiciones sobre un
@@ -31,11 +67,22 @@ predicciones de Swin/DermLIP mapeadas a image_ids (orden idéntico, y_true coinc
 CSVs `outputs/full_dx_{oracle,swin,dermlip}.csv` (subidas por scp). SLURM `ensemble_full_llava.sh`,
 max_tokens 384. Swin: `modern_v3_predictions.json`; DermLIP: `dermlip_zeroshot_vit-b-16_predictions.json`.
 
-**Jobs (en paralelo):** 1156723 (LLaVA-Med v2) + **1156724 (Mini-VLM v2)** — misma corrida 4
-condiciones × 400 imgs, mismas CSVs de grounding (model-agnostic), `ensemble_full_{llava,mini}.sh`.
-**Cluster:** Mendieta | **Tiempo estimado:** ~20-24h c/u
-**Resultados (pendiente):** enriquecer + evaluar report-only por condición → tabla
-baseline/oracle/swin/dermlip **× {LLaVA, Mini}** (comparación cross-model). Luego: Nivel 1 sobre SkinCoT.
+**Jobs (en paralelo):** 1156723 (LLaVA-Med v2) + 1156724 (Mini-VLM v2) — COMPLETED.
+**Cluster:** Mendieta
+**Resultados (analizado 2026-06-18):** [ensamble_resul_20260607 §6](resul/ensamble_resul_20260607.md).
+HAM diagnostic_consistency **report-only**:
+
+| grounding (clasif. acc) | LLaVA | Mini |
+|-------------------------|-------|------|
+| baseline | 0.595 | 0.198 |
+| DermLIP ZS (0.38) | 0.445 | 0.485 |
+| Swin (0.80) | 0.703 | 0.830 |
+| oracle (1.0) | 0.845 | 1.000 |
+
+**Veredicto: el ensamble funciona y la calidad del clasificador propaga monótonamente.** Con Swin:
+Mini 0.20→0.83, LLaVA 0.60→0.70. Un clasificador débil (DermLIP ZS) puede empeorar (LLaVA 0.445 <
+baseline). Mini obedece el grounding perfecto (oracle 1.0). Receta óptima: **Swin + generador
+noreasoning**.
 
 ```bash
 python scripts/mendieta/submit.py ensemble_full_llava
