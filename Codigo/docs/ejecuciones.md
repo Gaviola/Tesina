@@ -4,6 +4,120 @@ Ayuda-memoria cronológico de experimentos enviados a cluster, ordenado de más 
 
 ---
 
+## 2026-07-05
+
+### Extensión jul-ago: arranque — verificación SOTA + P0.1 Calibración — **Sin jobs SLURM** (local)
+Se organizó el feedback del tutor ([feedback_20260705.md](feedback_20260705.md)) en un backlog
+priorizado: [plan-julio-agosto.md](plan-julio-agosto.md) (P0 local / P1 cluster SkinVL / P2 / P3).
+
+**Previo (misma tanda, docs `Docs/`):** verificación de TODOS los números SOTA contra los papers
+(Skin-R1, MM-Skin, SkinSavvy2 tenían cifras erróneas → corregidas en `experimentacion.tex` y
+`tablas_comparativas_sota_v32.tex`; los 9 papers externos estaban OK). Enriquecimiento de las tablas
+SOTA de clasificación (PanDerm, SkinVL, Mini-VLM, FT) y generación (nuestros modelos + KD/DermatoLlama/
+PeFoMed, con caveat de métricas léxicas).
+
+**P0.1 Calibración (local):** ECE/MCE/Brier + reliability diagrams sobre `y_prob` ya guardado
+(`modern_v3`, n=1503). Código nuevo: `src/evaluation/classification.py` (funciones de calibración) +
+`scripts/evaluate_calibration.py`. Salida: `outputs/results/calibration/`.
+**Hallazgo:** los clasificadores están mal calibrados (ECE 0.19–0.39) pero **sub-confiados**, no
+sobre-confiados (Swin: conf media 0.42 vs acc 0.795); los más precisos (Swin/ConvNeXt) son los peor
+calibrados. `eval_dermlip_classify.py` modificado para guardar `y_prob` (falta re-correr DermLIP local).
+Resul: [calibracion_resul_20260705.md](resul/calibracion_resul_20260705.md). **Veredicto: CUMPLE.**
+
+**P0.2 Tests estadísticos (local):** IC bootstrap 95% + McNemar exacto sobre los 1503 del test HAM
+(Swin vs DermLIP vs Mini-VLM vs LLaVA-Med). Código: `scripts/statistical_tests.py`. Todas las diferencias
+p<0.001; el gradiente de especialización tiene IC no solapados y los VLMs generales quedan en IC que
+abrazan el azar (sens. macro Mini [0.137,0.152], LLaVA [0.145,0.168], azar=0.143). Ensamble pendiente de
+P0.3 (script acepta `--consistency_json`). Resul:
+[tests_estadisticos_resul_20260705.md](resul/tests_estadisticos_resul_20260705.md). **Veredicto: CUMPLE.**
+
+**P0.3 Análisis por clase del ensamble (local):** Diagnostic Consistency / Clinical Recall por clase gt
+× condición de grounding (report-only), sobre los 400×4×2 reportes ya generados. Código:
+`src/evaluation/clinical_ner.py` (`diagnostic_consistency_flags`) + `scripts/per_class_ensemble.py`.
+Salida: `outputs/results/per_class/` (heatmap + summary + arrays por-reporte). **Hallazgo:** el grounding
+rescata sobre todo las clases **minoritarias** colapsadas (Mini-VLM AKIEC 0.00→0.83, BKL 0.07→0.77 con
+Swin); un clasificador débil (DermLIP) **daña** las clases fuertes de LLaVA (mel 0.85→0.69). Cierra P0.2
+ensamble: propagación monótona significativa (McNemar p<1e-16, IC no solapados). Resul:
+[per_class_ensemble_resul_20260705.md](resul/per_class_ensemble_resul_20260705.md). **Veredicto: CUMPLE.**
+
+**P0.4 Comparación de costo (local + logs):** params/VRAM/latencia. Clasificadores medidos en vivo (RTX
+4070); VLMs parseados de logs SLURM (A30). Código: `scripts/measure_cost.py`. Salida:
+`outputs/results/cost/` (json + `cost_latency.png`). **Hallazgo:** brecha ~3–4 órdenes: clasificadores
+4–12 ms/img y <1 GB en GPU de consumo; VLMs 24 s (Mini) / 66 s (LLaVA-Med) por reporte y 10–14 GB en A30.
+La clasificación es barata; la generación domina el costo del ensamble. Resul:
+[costo_resul_20260705.md](resul/costo_resul_20260705.md). **Veredicto: CUMPLE.**
+
+**P0.5 Taxonomía de errores (local):** clasificación por reglas del error principal de cada reporte, por
+condición de grounding. Código: `scripts/error_taxonomy.py`. Salida: `outputs/results/error_taxonomy/`
+(barras apiladas + summary). **Hallazgo:** el grounding bueno elimina `dx_incorrecto` (→0 con oracle) y
+`contradiccion`; un clasificador débil (DermLIP) **dispara** `dx_incorrecto` (Mini 0.30→0.60 = propagación
+de error); el `hedging` **persiste** aun con dx perfecto (Mini oracle 0.43). Resul:
+[error_taxonomy_resul_20260705.md](resul/error_taxonomy_resul_20260705.md). **Veredicto: CUMPLE.**
+
+**P0.6 Integración en LaTeX (local):** los 5 resultados P0.1–P0.5 integrados en
+`Docs/experimentacion/experimentacion.tex` (**21 págs**, 0 refs sin resolver): subsección de calibración
+(Cuadro+figura) + significancia estadística; análisis por clase (heatmap) + taxonomía de errores (figura)
+en la sección de ensamble; sección nueva de **Costo computacional** (tabla+figura); DermLIP en profundidad
+(por qué el contrastivo/Derm1M discrimina); frase-caveat de métricas. Figuras copiadas a `imagenes/`.
+**Veredicto: CUMPLE.**
+
+**Ola 1 — SkinVL (P1.1): conversión OK + ola completa lanzada (2026-07-07).**
+Tras 2 fixes del conversor (vocab 32000 vs 32064 → copia parcial de embed/lm_head conservando filas del
+token de imagen; tokenizer fast no parsea → copiar archivos crudos del base en vez de re-serializar), el
+**job 1159527 (COMPLETED)** convirtió SkinVL a HF y corrió el smoke: SkinVL carga (fallback tokenizer
+lento), genera texto derma coherente y **responde al grounding** (oracle: nevus/dermatofibroma/melanoma
+según dx). **Señal:** el *baseline* colapsa (5 imgs distintas → reporte idéntico "tinea corporis") y la
+morfología se ve boilerplate → SkinVL usa poco la imagen (lo cuantificará la ablación P1.2). Veredicto
+smoke: PASS. **Ola completa job 1159785 (PD)**: baseline + grounding{oracle,swin,dermlip} + no_image
+(P1.2) + wrong_dx (P1.3) sobre el test split 1503 (~4-7 s/reporte). `wrong_swap.csv` generado en cluster.
+
+**P2.1 Plantilla clínica (local):** baseline de generación por plantilla (clasificador→dx→morfología fija).
+Código: `scripts/generate_template_report.py`. **Hallazgo:** la plantilla iguala/supera a los VLM en
+diagnostic consistency (Swin-grounded 0.828 vs LLaVA 0.703 / Mini 0.830; oracle 1.000) a costo cero, pero
+con menor recall (0.42 vs 0.75–0.79). El aporte del VLM es riqueza/fluidez, no fidelidad. Resul:
+[plantilla_resul_20260707.md](resul/plantilla_resul_20260707.md). **Veredicto: CUMPLE.**
+
+**P2.2 Manejo del desbalance — TOKO jobs 96860–96863 (PD).** Swin-Tiny (recipe modern), variando solo la
+loss: CE-plano (`--class-weights none`) / CE-weighted / Focal γ=2 / Balanced-softmax. Código nuevo:
+`BalancedSoftmaxLoss` en `src/training/losses.py`; flags `--class-weights {auto,none}` y
+`--balanced-softmax` en `train_classifier.py`; aliases `imb_swin_*` en `toko/submit.py`. Fix del mismo bug
+de `stderr` None en `toko/submit.py`. Plan: [desbalance_plan_20260707.md](ideas/desbalance_plan_20260707.md).
+Objetivo: ver si el manejo del desbalance mueve la aguja o el clasificador ya es robusto.
+
+**P2.4 Robustez por perturbación (local, RTX 4070):** JPEG/ruido/blur/resolución en 5 niveles sobre el
+test de HAM, midiendo caída de sens. macro. Se bajaron de TOKO los checkpoints `swin_tiny_modern_v3` y
+`convnext_tiny_modern_v3` (los locales eran legacy colapsados). Código: `scripts/robustness_perturbations.py`.
+**Hallazgo:** el **ruido** es lo más dañino (Swin 0.74→0.38 con ruido moderado); la **resolución** lo más
+tolerado (~0.53 aun severa); degradación gradual. Integrado a `experimentacion.tex` (§Robustez, fig).
+Resul: [robustez_resul_20260707.md](resul/robustez_resul_20260707.md). **Veredicto: CUMPLE.**
+
+**P2.3 Clásicos sobre embeddings (local, RTX 4070):** SVM/RF/LogReg sobre embeddings congelados de DermLIP
+vs Swin-ImageNet. Se instaló `open_clip_torch 3.3.0` (+ `timm`) local para cargar DermLIP. Código:
+`scripts/embeddings_classical.py`. **Hallazgo:** SVM sobre embeddings **DermLIP F1 0.881 / sens 0.788 ≈
+Swin fine-tuneado (0.882)** sin entrenar modelo pesado; la representación genérica (Swin-ImageNet) rinde
+mucho menos (sens 0.58). La representación derm-especializada es lo determinante. Integrado a
+`experimentacion.tex` (§DermLIP). Resul: [embeddings_resul_20260707.md](resul/embeddings_resul_20260707.md).
+**Veredicto: CUMPLE.**
+
+**Ola 1 — SkinVL (P1.1): [historial] conversión movida al cluster (RAM local insuficiente, 32 GB).**
+`zwq803/SkinVL-MM` descargado en Mendieta (14 GB; base ya cacheado). Conversión a HF vía trasplante de
+pesos sobre el HF base + **smoke test** (5 imgs) en un mismo job GPU (Mendieta exige >=1 GPU):
+**job 1159067 (PD)**. Detalle de-risk: SkinVL trae solo pesos fine-tuneados (295 tensores, sin vision
+tower); el conversor los renombra al schema HF. Bug de descarga xet en Windows → se hace todo en el
+cluster (Linux). Fixes: `submit.py` (stderr None + `logs/skinvl`). Runbook:
+[skinvl_runbook_20260705.md](ideas/skinvl_runbook_20260705.md).
+
+**Prep Ola 1 — SkinVL (P1.1):** de-risk de `zwq803/SkinVL-MM` → **pesos FULL, formato original
+LLaVA-Med** (`LlavaMistralForCausalLM`), no HF → requiere conversión a HF (no LoRA; sin versión HF
+publicada; transformers 5.2 sin conversor). Creado: wrapper `src/models/skinvl.py` (subclass fino de
+LLaVAMed) + registro en `factory.py`; flag `generate_report.py --no_image` (P1.2, testeado);
+`scripts/make_wrong_dx.py` (P1.3, testeado); SLURM `slurm/mendieta/v3/generate_reports_skinvl.sh`
+(baseline+grounding+no_image+dx-erróneo). Plan/gating:
+[skinvl_ensemble_plan_20260705.md](ideas/skinvl_ensemble_plan_20260705.md). **Gate:** conversión HF +
+validar carga local antes de encolar.
+
+---
+
 ## 2026-06-18
 
 ### Consolidación + refinamiento (test split completo) en paralelo — Mendieta

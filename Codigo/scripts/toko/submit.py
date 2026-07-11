@@ -82,6 +82,29 @@ JOBS = {
         "MODEL": "swin_tiny", "RECIPE": "modern", "LR": _CLS_LR["swin_tiny"],
         "EXTRA_FLAGS": "--eval-hiba",
     }),
+    ## P2.2 — Manejo del desbalance sobre Swin (mismo recipe modern, varía SOLO la loss).
+    ## Objetivo: mostrar si el manejo explícito del desbalance mueve la aguja (o si el
+    ## clasificador ya es robusto → el problema del colapso VLM no es el desbalance).
+    "imb_swin_ce": (_CLS_SCRIPT, {
+        "MODEL": "swin_tiny", "RECIPE": "modern", "LR": _CLS_LR["swin_tiny"],
+        "RUN_NAME": "swin_imb_ce",
+        "EXTRA_FLAGS": "--focal-gamma 0 --class-weights none",
+    }),
+    "imb_swin_weighted": (_CLS_SCRIPT, {
+        "MODEL": "swin_tiny", "RECIPE": "modern", "LR": _CLS_LR["swin_tiny"],
+        "RUN_NAME": "swin_imb_weighted",
+        "EXTRA_FLAGS": "--focal-gamma 0 --class-weights auto",
+    }),
+    "imb_swin_focal": (_CLS_SCRIPT, {
+        "MODEL": "swin_tiny", "RECIPE": "modern", "LR": _CLS_LR["swin_tiny"],
+        "RUN_NAME": "swin_imb_focal",
+        "EXTRA_FLAGS": "--focal-gamma 2.0 --class-weights auto",
+    }),
+    "imb_swin_balsoftmax": (_CLS_SCRIPT, {
+        "MODEL": "swin_tiny", "RECIPE": "modern", "LR": _CLS_LR["swin_tiny"],
+        "RUN_NAME": "swin_imb_balsoftmax",
+        "EXTRA_FLAGS": "--balanced-softmax",
+    }),
     ## Clasificadores Fase 1 — corridas modern v3 (sin Focal Loss → CE + class weights)
     ## Hipótesis: focal_gamma causa colapso hacia clases minoritarias en datasets desbalanceados.
     ## DenseNet: también reduce RandAugment de m=9 a m=6 (BatchNorm sensible a varianza alta).
@@ -223,7 +246,7 @@ def submit_job(name: str, script: str, env_vars: dict | None = None) -> str | No
         f"sbatch{export_flag} {script}"
     )
     result = ssh(cmd, capture=True)
-    output = result.stdout.strip() + result.stderr.strip()
+    output = (result.stdout or "").strip() + (result.stderr or "").strip()
     print(f"  {output}")
 
     # Extraer JOBID del mensaje "Submitted batch job XXXXX"

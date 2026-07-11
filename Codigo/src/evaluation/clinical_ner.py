@@ -193,26 +193,36 @@ def _compute_entity_recall(entities: list[dict]) -> float:
     return len(covered) / max(len(DERMATOLOGY_TERMS), 1)
 
 
-def _compute_diagnostic_consistency(
+def diagnostic_consistency_flags(
     reports: list[str],
     gt_labels: list[str],
-) -> float:
-    """Fracción de reportes donde el diagnóstico GT (o sinónimo) está mencionado."""
+) -> list[int]:
+    """Consistencia diagnóstica POR reporte: 1 si el dx GT (o un sinónimo) aparece, 0 si no.
+
+    Expuesto para análisis por-clase (P0.3) y tests estadísticos por-reporte (P0.2).
+    """
     if len(reports) != len(gt_labels):
         raise ValueError(
             f"reports ({len(reports)}) y gt_labels ({len(gt_labels)}) "
             "deben tener el mismo tamaño."
         )
 
-    matches = 0
+    flags = []
     for report, label in zip(reports, gt_labels):
-        report_lower = report.lower()
+        report_lower = (report or "").lower()
         canonical = _normalize_label(label) if label else ""
         synonyms = _DIAGNOSIS_SYNONYMS.get(canonical, [canonical])
-        if any(syn in report_lower for syn in synonyms if syn):
-            matches += 1
+        flags.append(int(any(syn in report_lower for syn in synonyms if syn)))
+    return flags
 
-    return matches / max(len(reports), 1)
+
+def _compute_diagnostic_consistency(
+    reports: list[str],
+    gt_labels: list[str],
+) -> float:
+    """Fracción de reportes donde el diagnóstico GT (o sinónimo) está mencionado."""
+    flags = diagnostic_consistency_flags(reports, gt_labels)
+    return sum(flags) / max(len(reports), 1)
 
 
 # ---------------------------------------------------------------------------

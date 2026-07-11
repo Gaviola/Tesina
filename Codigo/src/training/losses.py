@@ -89,17 +89,46 @@ class FocalLoss(nn.Module):
         return per_sample_loss
 
 
+class BalancedSoftmaxLoss(nn.Module):
+    """Balanced Softmax (Ren et al., NeurIPS 2020).
+
+    Ajusta los logits sumando ``log(prior_de_clase)`` antes de la cross-entropy, de modo que
+    el entrenamiento compensa el desbalance sin re-pesar la pérdida. No usa pesos por clase.
+
+    Args:
+        class_counts: tensor de tamaño C con la cantidad de muestras por clase (train).
+        label_smoothing: ε en [0, 1).
+    """
+
+    def __init__(self, class_counts: torch.Tensor, label_smoothing: float = 0.0):
+        super().__init__()
+        counts = class_counts.float()
+        prior = counts / counts.sum().clamp(min=1e-8)
+        self.register_buffer("log_prior", prior.clamp(min=1e-8).log(), persistent=False)
+        self.label_smoothing = label_smoothing
+
+    def forward(self, logits: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        adjusted = logits + self.log_prior.view(1, -1)
+        return F.cross_entropy(adjusted, target.long(), label_smoothing=self.label_smoothing)
+
+
 def build_loss(
     focal_gamma: float,
     class_weights: Optional[torch.Tensor],
     label_smoothing: float,
+    balanced_softmax: bool = False,
+    class_counts: Optional[torch.Tensor] = None,
 ) -> nn.Module:
     """Factory de loss para clasificación.
 
-    Si ``focal_gamma > 0`` devuelve FocalLoss.
-    Si ``focal_gamma == 0`` devuelve ``nn.CrossEntropyLoss`` (más rápido,
-    soporta soft targets nativamente desde PyTorch 1.10+).
+    - ``balanced_softmax=True`` → BalancedSoftmaxLoss (ignora focal/pesos; requiere class_counts).
+    - ``focal_gamma > 0`` → FocalLoss.
+    - en otro caso → ``nn.CrossEntropyLoss`` (soporta soft targets nativamente).
     """
+    if balanced_softmax:
+        if class_counts is None:
+            raise ValueError("balanced_softmax=True requiere class_counts")
+        return BalancedSoftmaxLoss(class_counts, label_smoothing=label_smoothing)
     if focal_gamma > 0:
         return FocalLoss(
             gamma=focal_gamma,

@@ -20,6 +20,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+import numpy as np
 import torch
 
 from src.data.ham10000 import HAM10000_CLASSES, HAM10000Dataset
@@ -86,7 +87,7 @@ def main():
     model = DermLIPClassifier(checkpoint=args.checkpoint)
     test_dataset = _load_dataset(args)
 
-    all_y_true, all_y_pred, all_image_ids = [], [], []
+    all_y_true, all_y_pred, all_y_prob, all_image_ids = [], [], [], []
     t0 = time.perf_counter()
     n = len(test_dataset)
     batch_imgs, batch_labels, batch_ids = [], [], []
@@ -96,7 +97,10 @@ def main():
             return
         logits = model.zero_shot_logits(batch_imgs, HAM_PROMPT_NAMES)
         preds = logits.argmax(dim=1).tolist()
+        # Guardar probabilidades (softmax) para poder analizar calibración (P0.1).
+        probs = torch.softmax(logits.float(), dim=1).tolist()
         all_y_pred.extend(preds)
+        all_y_prob.extend(probs)
         all_y_true.extend(batch_labels)
         all_image_ids.extend(batch_ids)
         batch_imgs.clear(); batch_labels.clear(); batch_ids.clear()
@@ -115,7 +119,11 @@ def main():
     elapsed = time.perf_counter() - t0
     logger.info("Inferencia completada en %s (%d imágenes)", format_duration(elapsed), n)
 
-    results = evaluate_classification(all_y_true, all_y_pred, class_names=HAM10000_CLASSES)
+    results = evaluate_classification(
+        all_y_true, all_y_pred,
+        y_prob=np.asarray(all_y_prob) if all_y_prob else None,
+        class_names=HAM10000_CLASSES,
+    )
     logger.info("=== Resultados DermLIP (%s, %s) ===", args.checkpoint, args.eval_dataset)
     logger.info("Accuracy        : %.4f", results["accuracy"])
     logger.info("F1 weighted     : %.4f", results["f1_weighted"])
@@ -140,6 +148,7 @@ def main():
         "image_ids": all_image_ids,
         "y_true": all_y_true,
         "y_pred": all_y_pred,
+        "y_prob": all_y_prob,
     }, str(results_dir / f"dermlip{suffix}_predictions.json"))
 
     save_results({

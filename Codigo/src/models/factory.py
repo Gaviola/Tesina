@@ -11,6 +11,7 @@ from src.models.classifiers import (
 from src.models.dermlip import DermLIPClassifier
 from src.models.llava_med import LLaVAMed
 from src.models.mini_vlm import MiniVLM
+from src.models.skinvl import SkinVL
 
 MODEL_REGISTRY: dict[str, type[nn.Module]] = {
     "densenet": DenseNet121Classifier,
@@ -19,6 +20,7 @@ MODEL_REGISTRY: dict[str, type[nn.Module]] = {
     "swin_tiny": SwinTinyClassifier,
     "llava_med": LLaVAMed,
     "mini_vlm": MiniVLM,
+    "skinvl": SkinVL,
     "dermlip": DermLIPClassifier,
 }
 

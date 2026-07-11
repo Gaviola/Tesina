@@ -114,6 +114,12 @@ def main():
                              "Las flags individuales sobreescriben los defaults del recipe.")
     parser.add_argument("--label-smoothing", type=float, default=None, dest="label_smoothing",
                         help="Override de label_smoothing del recipe.")
+    # Manejo del desbalance (P2.2)
+    parser.add_argument("--class-weights", type=str, default="auto", choices=["auto", "none"],
+                        dest="class_weights_mode",
+                        help="auto: pesos inversos a la frecuencia (default); none: sin pesos.")
+    parser.add_argument("--balanced-softmax", action="store_true", dest="balanced_softmax",
+                        help="Usar Balanced Softmax (ignora --class-weights y --focal-gamma).")
     parser.add_argument("--warmup-epochs", type=int, default=None, dest="warmup_epochs",
                         help="Override de warmup_epochs del recipe.")
     # Augmentations (Fase 2)
@@ -348,13 +354,23 @@ def main():
     total_params = sum(p.numel() for p in model.parameters())
     logger.info("Modelo: %s | Parámetros: %d total, %d entrenables", args.model, total_params, trainable)
 
-    # 8. Loss (compartido entre stages)
-    class_weights = compute_class_weights(train_dataset, num_classes).to(device)
-    logger.info("Class weights: %s", class_weights.tolist())
+    # 8. Loss (compartido entre stages) — manejo del desbalance (P2.2)
+    class_counts = torch.tensor(
+        [Counter(s["label"] for s in train_dataset.samples).get(i, 0) for i in range(num_classes)],
+        dtype=torch.float32, device=device,
+    )
+    class_weights = None
+    if args.class_weights_mode == "auto" and not args.balanced_softmax:
+        class_weights = compute_class_weights(train_dataset, num_classes).to(device)
+        logger.info("Class weights (auto): %s", class_weights.tolist())
+    logger.info("Manejo desbalance: class_weights=%s | balanced_softmax=%s | focal_gamma=%.2f",
+                args.class_weights_mode, args.balanced_softmax, args.focal_gamma)
     criterion = build_loss(
         focal_gamma=args.focal_gamma,
         class_weights=class_weights,
         label_smoothing=args.label_smoothing,
+        balanced_softmax=args.balanced_softmax,
+        class_counts=class_counts,
     )
     logger.info("Loss: %s", type(criterion).__name__)
 

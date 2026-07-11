@@ -193,6 +193,10 @@ JOBS = {
     ## Ensamble — corrida completa 4 condiciones (baseline/oracle/swin/dermlip), noreasoning, test split.
     "ensemble_full_llava": "slurm/mendieta/ensemble_full_llava.sh",
     "ensemble_full_mini":  "slurm/mendieta/ensemble_full_mini.sh",
+    ## Ola 1 (P1.1) — SkinVL derm-especializado. Orden: convert -> smoke -> ensemble.
+    "convert_skinvl":   "slurm/mendieta/v3/convert_skinvl.sh",
+    "smoke_skinvl":     "slurm/mendieta/v3/smoke_skinvl.sh",
+    "ensemble_skinvl":  "slurm/mendieta/v3/generate_reports_skinvl.sh",
     ## Ensamble — Nivel 1 sobre SkinCoT (con referencias): baseline vs oracle-noreasoning, LLaVA.
     "ensemble_skincot_l1_llava": "slurm/mendieta/ensemble_skincot_level1_llava.sh",
     ## Variantes CoT: mismo mecanismo de env var METHOD=cot.
@@ -298,11 +302,11 @@ def submit_job(name: str, script: str, env_vars: dict | None = None) -> str | No
     # Crear subdirectorios de logs antes de enviar el job
     cmd = (
         f"cd {REMOTE_BASE} && "
-        f"mkdir -p logs/mini_vlm logs/llava_med logs/shared && "
+        f"mkdir -p logs/mini_vlm logs/llava_med logs/shared logs/skinvl && "
         f"sbatch{export_flag} {script}"
     )
     result = ssh(cmd, capture=True)
-    output = result.stdout.strip() + result.stderr.strip()
+    output = (result.stdout or "").strip() + (result.stderr or "").strip()
     print(f"  {output}")
 
     # Extraer JOBID del mensaje "Submitted batch job XXXXX"

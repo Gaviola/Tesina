@@ -51,7 +51,7 @@ def _strip_cot(text: str) -> str:
 # generando baja superposición léxica con las referencias SkinCoT.
 REPORT_PROMPT = "Describe this skin lesion."
 
-_VRAM_REQUIRED = {"llava_med": 14.0, "mini_vlm": 10.0}
+_VRAM_REQUIRED = {"llava_med": 14.0, "mini_vlm": 10.0, "skinvl": 14.0}
 _IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".tif"}
 
 
@@ -148,9 +148,18 @@ GROUNDED_TEMPLATES = {
 }
 
 
-def _generate_single(model, image_path: Path, max_tokens: int, prompt: str = REPORT_PROMPT) -> str:
-    """Genera reporte para una imagen con el prompt dado (default: REPORT_PROMPT)."""
-    image = Image.open(image_path).convert("RGB")
+def _generate_single(model, image_path: Path, max_tokens: int, prompt: str = REPORT_PROMPT,
+                     no_image: bool = False) -> str:
+    """Genera reporte para una imagen con el prompt dado (default: REPORT_PROMPT).
+
+    Si no_image=True (ablación P1.2 "aporte de la imagen"), se reemplaza la imagen por
+    una imagen neutra en gris: el modelo solo dispone del diagnóstico inyectado en el
+    prompt, permitiendo medir cuánto sigue usando la señal visual una vez conocido el dx.
+    """
+    if no_image:
+        image = Image.new("RGB", (336, 336), (128, 128, 128))
+    else:
+        image = Image.open(image_path).convert("RGB")
     reports = model.generate(
         images=[image],
         prompts=[prompt],
@@ -161,7 +170,8 @@ def _generate_single(model, image_path: Path, max_tokens: int, prompt: str = REP
 
 def main():
     parser = argparse.ArgumentParser(description="Genera reporte clínico para imagen(es)")
-    parser.add_argument("--model", type=str, required=True, choices=["llava_med", "mini_vlm"])
+    parser.add_argument("--model", type=str, required=True,
+                        choices=["llava_med", "mini_vlm", "skinvl"])
     parser.add_argument("--checkpoint", type=str, default=None, help="Path al checkpoint")
     # Modo imagen única
     parser.add_argument("--image", type=str, default=None, help="Path a imagen única")
@@ -192,6 +202,9 @@ def main():
     parser.add_argument("--grounded_variant", type=str, default="soft",
                         choices=list(GROUNDED_TEMPLATES.keys()),
                         help="Variante de prompt de grounding (soft|dxfirst|conclude|confirmed).")
+    parser.add_argument("--no_image", action="store_true",
+                        help="Ablación P1.2: reemplaza la imagen por una neutra (gris). Con "
+                             "--grounded_prompt mide cuánto aporta la imagen una vez conocido el dx.")
     parser.add_argument("--limit", type=int, default=None,
                         help="Procesar a lo sumo N imágenes (para pilots).")
     parser.add_argument("--splits_file", type=str, default=None,
@@ -217,7 +230,7 @@ def main():
             sys.exit(1)
 
         with log_time("Generando reporte", logger):
-            report = _generate_single(model, image_path, args.max_tokens)
+            report = _generate_single(model, image_path, args.max_tokens, no_image=args.no_image)
 
         result = {
             "image": str(image_path),
@@ -366,7 +379,8 @@ def main():
                     if grounded_dx:
                         prompt = GROUNDED_TEMPLATES[args.grounded_variant].format(dx=grounded_dx)
 
-                report = _generate_single(model, img_path, args.max_tokens, prompt=prompt)
+                report = _generate_single(model, img_path, args.max_tokens, prompt=prompt,
+                                          no_image=args.no_image)
                 result = {
                     "image_id": img_path.name,
                     "model": args.model,

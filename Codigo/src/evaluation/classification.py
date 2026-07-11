@@ -96,3 +96,79 @@ def evaluate_classification(
     )
 
     return results
+
+
+# ---------------------------------------------------------------------------
+# Calibración (P0.1 — plan julio-agosto): ¿cuando el modelo dice 99% de
+# confianza, realmente acierta el 99%? Todas operan sobre y_prob (N, num_classes).
+# ---------------------------------------------------------------------------
+def _confidence_and_correct(y_true, y_prob):
+    """Devuelve (confianza=max prob, correcto=1/0) por muestra, con y_prob normalizado."""
+    y_true = np.asarray(y_true)
+    y_prob = np.asarray(y_prob, dtype=float)
+    y_prob = y_prob / y_prob.sum(axis=1, keepdims=True).clip(min=1e-12)
+    conf = y_prob.max(axis=1)
+    correct = (y_prob.argmax(axis=1) == y_true).astype(float)
+    return conf, correct
+
+
+def reliability_curve(y_true, y_prob, n_bins: int = 10) -> list[dict]:
+    """Datos para el reliability diagram: por bin de confianza, confianza media,
+    exactitud observada y conteo."""
+    conf, correct = _confidence_and_correct(y_true, y_prob)
+    edges = np.linspace(0.0, 1.0, n_bins + 1)
+    idx = np.digitize(conf, edges[1:-1], right=False)
+    out = []
+    for b in range(n_bins):
+        mask = idx == b
+        count = int(mask.sum())
+        out.append({
+            "bin_lower": float(edges[b]),
+            "bin_upper": float(edges[b + 1]),
+            "count": count,
+            "avg_confidence": float(conf[mask].mean()) if count else None,
+            "accuracy": float(correct[mask].mean()) if count else None,
+        })
+    return out
+
+
+def expected_calibration_error(y_true, y_prob, n_bins: int = 10) -> tuple[float, float]:
+    """ECE (promedio ponderado del gap |exactitud - confianza|) y MCE (gap máximo)."""
+    conf, correct = _confidence_and_correct(y_true, y_prob)
+    n = len(conf)
+    edges = np.linspace(0.0, 1.0, n_bins + 1)
+    idx = np.digitize(conf, edges[1:-1], right=False)
+    ece, mce = 0.0, 0.0
+    for b in range(n_bins):
+        mask = idx == b
+        m = int(mask.sum())
+        if m == 0:
+            continue
+        gap = abs(correct[mask].mean() - conf[mask].mean())
+        ece += (m / n) * gap
+        mce = max(mce, gap)
+    return float(ece), float(mce)
+
+
+def brier_score_multiclass(y_true, y_prob) -> float:
+    """Brier multiclase: media de la suma de cuadrados (prob - onehot). Rango [0, 2]."""
+    y_true = np.asarray(y_true)
+    y_prob = np.asarray(y_prob, dtype=float)
+    y_prob = y_prob / y_prob.sum(axis=1, keepdims=True).clip(min=1e-12)
+    n, k = y_prob.shape
+    onehot = np.zeros((n, k))
+    onehot[np.arange(n), y_true] = 1.0
+    return float(np.mean(np.sum((y_prob - onehot) ** 2, axis=1)))
+
+
+def evaluate_calibration(y_true, y_prob, n_bins: int = 10) -> dict:
+    """Resumen de calibración: ECE, MCE, Brier y curva de fiabilidad."""
+    ece, mce = expected_calibration_error(y_true, y_prob, n_bins)
+    return {
+        "ece": ece,
+        "mce": mce,
+        "brier": brier_score_multiclass(y_true, y_prob),
+        "n_bins": n_bins,
+        "n_samples": int(len(y_true)),
+        "reliability_curve": reliability_curve(y_true, y_prob, n_bins),
+    }
