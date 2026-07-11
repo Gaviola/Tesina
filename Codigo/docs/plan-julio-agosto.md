@@ -54,14 +54,14 @@ Leyenda: ✅ completa · 🔄 en curso · ⬜ pendiente. Se marca al cerrar cada
 | P0.4 Comparación de costo | ✅ | [costo_resul_20260705.md](resul/costo_resul_20260705.md) |
 | P0.5 Taxonomía de errores | ✅ | [error_taxonomy_resul_20260705.md](resul/error_taxonomy_resul_20260705.md) |
 | P0.6 Escritura (reframe/DermLIP/caveat/ejemplos) | ✅ | integrado en `Docs/experimentacion/experimentacion.tex` (21 págs): calibración, tests, por-clase, costo, taxonomía + DermLIP en profundidad + caveat |
-| P1.1 SkinVL generación (+ ZS clasif) | 🔄 | conversión OK (job 1159527, smoke PASS: genera+responde grounding; baseline colapsa). **Ola completa job 1159785 (PD)**: 6 condiciones (baseline/oracle/swin/dermlip/no_image/wrong_dx) sobre 1503. |
-| P1.2 Ablación imagen-vs-dx | 🔄 | código listo (`generate_report.py --no_image`), corre en la ola SkinVL |
-| P1.3 Ablación dx-erróneo | 🔄 | código listo (`scripts/make_wrong_dx.py`), corre en la ola SkinVL |
+| P1.1 SkinVL generación (+ ZS clasif) | ✅ | [skinvl_resul_20260707.md](resul/skinvl_resul_20260707.md) — grounded ≈ Mini, **no hedea**, pero terse; fidelidad = clasificador |
+| P1.2 Ablación imagen-vs-dx | ✅ | oracle 1.00 vs sin-imagen 0.97 → **la imagen aporta ~nada** dado el dx ([skinvl_resul](resul/skinvl_resul_20260707.md)) |
+| P1.3 Ablación dx-erróneo | ✅ | wrong_dx cons 0.11 → SkinVL se compromete con el dx errado ([skinvl_resul](resul/skinvl_resul_20260707.md)) |
 | P2.1 Plantilla clínica | ✅ | [plantilla_resul_20260707.md](resul/plantilla_resul_20260707.md) |
-| P2.2 Desbalance (Focal/balanced) | 🔄 | **TOKO jobs 96860–96863 (PD)**: Swin × {CE-plano, CE-weighted, Focal, Balanced-softmax}. Plan: [desbalance_plan](ideas/desbalance_plan_20260707.md) |
+| P2.2 Desbalance (Focal/balanced) | ✅ | [desbalance_resul_20260707.md](resul/desbalance_resul_20260707.md) — CE-plano (sens 0.887) mejor que weighted/focal/balsoftmax → no es desbalance |
 | P2.3 Clásicos sobre embeddings | ✅ | [embeddings_resul_20260707.md](resul/embeddings_resul_20260707.md) (SVM/DermLIP≈Swin FT; integrado al `.tex`) |
 | P2.4 Robustez por perturbación | ✅ | [robustez_resul_20260707.md](resul/robustez_resul_20260707.md) (Swin+ConvNeXt; integrado al `.tex`) |
-| P2.5 Interpretabilidad | ⬜ | — |
+| P2.5 Interpretabilidad | ✅ | [interpretabilidad_resul_20260707.md](resul/interpretabilidad_resul_20260707.md) (Grad-CAM Swin + saliencia DermLIP; integrado al `.tex`) |
 | P3 Multi-candidato / PanDerm / cross-dataset / dermatólogo | ⬜ | — |
 
 ---

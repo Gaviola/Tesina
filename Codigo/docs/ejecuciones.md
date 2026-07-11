@@ -70,6 +70,13 @@ según dx). **Señal:** el *baseline* colapsa (5 imgs distintas → reporte idé
 morfología se ve boilerplate → SkinVL usa poco la imagen (lo cuantificará la ablación P1.2). Veredicto
 smoke: PASS. **Ola completa job 1159785 (PD)**: baseline + grounding{oracle,swin,dermlip} + no_image
 (P1.2) + wrong_dx (P1.3) sobre el test split 1503 (~4-7 s/reporte). `wrong_swap.csv` generado en cluster.
+**Resultado (COMPLETED, 10h24m):** SkinVL grounded ≈ Mini-VLM (Swin 0.80, oracle 1.00) y supera a
+LLaVA; **NO hedea** (0.00 vs LLaVA 0.20-0.27 / Mini 0.37-0.43) → decisivo; pero reportes terse (recall
+0.33-0.50 vs 0.75-0.79) y baseline colapsa total (0.00). **Ablaciones:** P1.2 oracle 1.00 vs sin-imagen
+0.97 → la imagen aporta ~nada dado el dx; P1.3 dx-erróneo cons 0.11 → se compromete con el error. Fidelidad
+del ensamble = clasificador, no la visión del generador. (`gt_label` parcheado desde `full_dx_oracle.csv`;
+el SLURM no pasó `--label_csv`.) Resul: [skinvl_resul_20260707.md](resul/skinvl_resul_20260707.md).
+**Veredicto: CUMPLE.**
 
 **P2.1 Plantilla clínica (local):** baseline de generación por plantilla (clasificador→dx→morfología fija).
 Código: `scripts/generate_template_report.py`. **Hallazgo:** la plantilla iguala/supera a los VLM en
@@ -83,6 +90,10 @@ loss: CE-plano (`--class-weights none`) / CE-weighted / Focal γ=2 / Balanced-so
 `--balanced-softmax` en `train_classifier.py`; aliases `imb_swin_*` en `toko/submit.py`. Fix del mismo bug
 de `stderr` None en `toko/submit.py`. Plan: [desbalance_plan_20260707.md](ideas/desbalance_plan_20260707.md).
 Objetivo: ver si el manejo del desbalance mueve la aguja o el clasificador ya es robusto.
+**Resultado (COMPLETED):** CE-plano (sin manejo) es el MEJOR — acc 0.923 / sens_macro **0.887**; las
+class-weights EMPEORAN (sens 0.809), Focal/Balanced-softmax intermedios (0.857). El desbalance de HAM no
+es el cuello de botella del clasificador → refuerza que el colapso VLM no es desbalance. Resul:
+[desbalance_resul_20260707.md](resul/desbalance_resul_20260707.md). **Veredicto: CUMPLE.**
 
 **P2.4 Robustez por perturbación (local, RTX 4070):** JPEG/ruido/blur/resolución en 5 niveles sobre el
 test de HAM, midiendo caída de sens. macro. Se bajaron de TOKO los checkpoints `swin_tiny_modern_v3` y
@@ -98,6 +109,15 @@ Swin fine-tuneado (0.882)** sin entrenar modelo pesado; la representación gené
 mucho menos (sens 0.58). La representación derm-especializada es lo determinante. Integrado a
 `experimentacion.tex` (§DermLIP). Resul: [embeddings_resul_20260707.md](resul/embeddings_resul_20260707.md).
 **Veredicto: CUMPLE.**
+
+**P2.5 Interpretabilidad (local, RTX 4070):** Grad-CAM sobre Swin + saliencia por gradiente sobre DermLIP,
+una imagen por clase. Código: `scripts/interpretability.py`. **Hallazgo:** ambos atienden la **lesión**
+(no el fondo); Swin más focalizado. Caso honesto: BCC → atiende bien pero predice MEL (error de
+discriminación, no de atención). Integrado a `experimentacion.tex`. Resul:
+[interpretabilidad_resul_20260707.md](resul/interpretabilidad_resul_20260707.md). **Veredicto: CUMPLE.**
+
+**Integración LaTeX final:** `experimentacion.tex` = **24 páginas**, 0 refs sin resolver. Todo el backlog
+P0/P1/P2 del plan jul-ago quedó cerrado.
 
 **Ola 1 — SkinVL (P1.1): [historial] conversión movida al cluster (RAM local insuficiente, 32 GB).**
 `zwq803/SkinVL-MM` descargado en Mendieta (14 GB; base ya cacheado). Conversión a HF vía trasplante de

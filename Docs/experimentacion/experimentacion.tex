@@ -418,6 +418,32 @@ estos VLMs para la discriminación dermatológica de grano fino —sus prediccio
 prior del lenguaje (qué nombre de clase es más ``esperable'' dado el \emph{prompt}) más que por el
 contenido visual—. Esto motiva incorporar un modelo \emph{especializado en el dominio}.
 
+\paragraph{El desbalance tampoco limita al clasificador supervisado.} Para cerrar la hipótesis del
+desbalance también del lado del \emph{clasificador}, se entrenó Swin-Tiny variando \emph{únicamente} la
+función de pérdida: entropía cruzada simple (sin manejo del desbalance), CE con pesos por clase, Focal
+Loss y \emph{Balanced Softmax} (Cuadro~\ref{tab:desbalance}). El resultado es contundente: la
+\textbf{CE simple, sin ningún manejo del desbalance, es la mejor} (sensibilidad macro $0.887$), y los
+métodos de re-balanceo no mejoran —las \emph{class-weights} incluso empeoran ($0.809$)—. La arquitectura
+y la augmentación ya bastan para discriminar las clases minoritarias de HAM: el desbalance no es el
+cuello de botella del clasificador, y por lo tanto tampoco explica el colapso de los VLMs.
+
+\begin{table}[H]
+  \centering
+  \caption{Manejo explícito del desbalance sobre Swin-Tiny (mismo recipe, varía solo la loss; test HAM,
+  con TTA). El re-balanceo no mejora a la CE simple.}
+  \label{tab:desbalance}
+  \begin{tabular}{lccc}
+    \toprule
+    \textbf{Pérdida} & \textbf{Acc} & \textbf{F1-w} & \textbf{Sens.\ macro} \\
+    \midrule
+    CE simple (sin manejo)   & \textbf{0.923} & \textbf{0.923} & \textbf{0.887} \\
+    Balanced Softmax         & 0.856 & 0.872 & 0.857 \\
+    Focal Loss ($\gamma=2$)  & 0.820 & 0.843 & 0.857 \\
+    CE + class-weights       & 0.795 & 0.816 & 0.809 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
 \subsection{La especialización de dominio recupera la discriminación}
 \label{sec:dermlip}
 \paragraph{Qué es DermLIP.} DermLIP~\cite{yan2025derm1m} es un \emph{VL classifier} de tipo CLIP: un
@@ -554,6 +580,23 @@ salvo bajo ruido o JPEG extremos—. ConvNeXt-Tiny resulta algo más robusto que
   \caption{Sensibilidad macro vs.\ severidad de perturbación (HAM10000 test). El ruido degrada más rápido;
   la resolución es la perturbación mejor tolerada. Línea punteada = azar ($1/7$).}
   \label{fig:robustez}
+\end{figure}
+
+\subsection{Interpretabilidad: ¿el modelo mira la lesión?}
+\label{sec:interpret}
+Para verificar que la decisión se basa en la lesión y no en señales espurias del fondo, se calcularon
+mapas de atención: \emph{Grad-CAM} sobre Swin-Tiny y saliencia por gradiente sobre DermLIP
+(Figura~\ref{fig:interpret}). En ambos modelos, las activaciones se concentran \textbf{sobre la lesión}
+—no sobre piel sana ni artefactos—, siendo los mapas de Swin más focalizados. Un caso ilustrativo: en un
+basocarcinoma, Swin atiende la región correcta pero lo clasifica como melanoma —mira lo correcto y aun
+así confunde clases visualmente similares: un error de \emph{discriminación}, no de atención—.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.82\textwidth]{P25_interpretability.png}
+  \caption{Grad-CAM (Swin) y saliencia (DermLIP) superpuestas, una imagen por clase. Las activaciones se
+  concentran sobre la lesión, dando respaldo cualitativo a la validez clínica de la decisión.}
+  \label{fig:interpret}
 \end{figure}
 
 \paragraph{Conclusión parcial (clasificación).} Para clasificar lesiones conviene un modelo
@@ -821,6 +864,61 @@ automáticas.
   (DermLIP) dispara \emph{dx incorrecto}; el \emph{hedging} persiste aun con el oracle.}
   \label{fig:taxonomia}
 \end{figure}
+
+\subsection{Un generador derm-especializado: SkinVL}
+\label{sec:skinvl}
+¿La especialización que rescató la \emph{clasificación} (DermLIP) ayuda también en la \emph{generación}?
+Se integró \textbf{SkinVL-MM} —un VLM derm-especializado (LLaVA-Med v1.5 ajustado sobre MM-Skin)— al mismo
+ensamble (Cuadro~\ref{tab:skinvl}). Tres observaciones:
+\begin{itemize}[leftmargin=1.6em]
+  \item \textbf{Sin grounding colapsa por completo} (consistencia $0.00$, peor que los VLMs generales):
+  sobre imágenes dermatoscópicas de HAM, sin diagnóstico, produce una respuesta memorizada de su
+  entrenamiento clínico (MM-Skin), idéntica entre imágenes. La especialización sobre \emph{otra}
+  distribución de imágenes no transfiere por sí sola.
+  \item \textbf{Con grounding alcanza el nivel de Mini-VLM} (Swin $0.80$, oracle $1.00$) y supera a
+  LLaVA-Med; la propagación de la calidad del clasificador es monótona.
+  \item \textbf{No hace \emph{hedging}} —a diferencia de LLaVA-Med y Mini-VLM, que hedean entre el $20$ y
+  el $43\%$ de las veces—: la especialización lo vuelve \emph{decisivo}. El precio es que sus reportes son
+  \emph{escuetos} (\emph{entity recall} $0.33$–$0.50$ vs $\sim0.77$): esencialmente enuncia el diagnóstico.
+\end{itemize}
+
+\begin{table}[H]
+  \centering
+  \caption{Diagnostic consistency (report-only) por condición de grounding: SkinVL vs los VLMs generales.
+  SkinVL sobre el test completo ($n=1503$); LLaVA-Med/Mini-VLM sobre el subconjunto de $400$.}
+  \label{tab:skinvl}
+  \begin{tabular}{lccc}
+    \toprule
+    \textbf{Condición} & \textbf{SkinVL} & \textbf{LLaVA-Med} & \textbf{Mini-VLM} \\
+    \midrule
+    baseline (sin grounding) & 0.00 & 0.59 & 0.20 \\
+    DermLIP (clasif.\ 0.38)  & 0.43 & 0.45 & 0.48 \\
+    Swin (clasif.\ 0.80)     & 0.80 & 0.70 & 0.83 \\
+    oracle (gt)              & \textbf{1.00} & 0.84 & \textbf{1.00} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{¿Cuánto aporta la imagen? Ablaciones del ensamble}
+\label{sec:ablaciones}
+Dos ablaciones (sobre SkinVL, $n=1503$) aíslan el rol de cada componente del pipeline.
+
+\paragraph{¿Aporta la imagen una vez conocido el diagnóstico?} Se generó el reporte con grounding oracle
+pero \emph{reemplazando la imagen por una imagen neutra}. La consistencia pasa de $1.00$ (con imagen) a
+$0.97$ (sin imagen): quitar la imagen \textbf{casi no cambia nada} ($\Delta=0.03$). Una vez dado el
+diagnóstico, el generador prácticamente \emph{no usa la señal visual}: redacta a partir del texto del
+diagnóstico.
+
+\paragraph{¿Qué hace con un diagnóstico erróneo?} Al inyectar un diagnóstico \emph{incorrecto} (una clase
+confundible), la consistencia respecto del \emph{gt} cae a $0.11$: el generador \textbf{se compromete con
+el diagnóstico equivocado} y no lo corrige mirando la imagen (propagación de error total).
+
+\paragraph{Consecuencia.} Ambas ablaciones apuntan a lo mismo: \emph{la fidelidad diagnóstica del
+ensamble proviene del clasificador, no de la visión del generador}. El VLM generativo actúa como un
+\emph{transcriptor} del diagnóstico a prosa clínica. Esto —junto con el hecho de que una plantilla trivial
+sobre el clasificador iguala al VLM en consistencia diagnóstica, a costo de generación nulo— reposiciona
+el aporte del generador: agrega \emph{fluidez y estilo}, no valor diagnóstico. La \textbf{contribución
+metodológica es el pipeline en cascada}; el diagnóstico lo produce el clasificador especializado.
 
 \subsection{Nivel 1 sobre SkinCoT: un \emph{trade-off} de estilo}
 \label{sec:skincot}
