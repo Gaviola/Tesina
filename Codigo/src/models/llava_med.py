@@ -194,6 +194,7 @@ class LLaVAMed(VLMBase):
                 max_new_tokens=max_tok,
                 do_sample=False,
                 pad_token_id=self.processor.tokenizer.pad_token_id,
+                **kwargs,
             )
 
             input_len = inputs["input_ids"].shape[1]

@@ -147,9 +147,24 @@ GROUNDED_TEMPLATES = {
     ),
 }
 
+# P5.3 (RAG): plantillas que inyectan el contexto de casos similares recuperados.
+# "rag": solo recuperación (sin diagnóstico de un clasificador). "grounded_rag": recuperación
+# COMO evidencia de apoyo al diagnóstico del clasificador.
+RAG_TEMPLATE = (
+    "{rag_context} Based on this dermatoscopic image and the retrieved similar cases, write a "
+    "clinical report describing the lesion's morphology and dermatoscopic features, and state the "
+    "single most likely diagnosis."
+)
+GROUNDED_RAG_TEMPLATE = (
+    "The confirmed diagnosis is {dx}. {rag_context} Output ONLY the final clinical report — no "
+    "reasoning or <think> blocks. The report must explicitly state the diagnosis ({dx}) and "
+    "describe the supporting morphological and dermatoscopic features. Do not list differential "
+    "diagnoses."
+)
+
 
 def _generate_single(model, image_path: Path, max_tokens: int, prompt: str = REPORT_PROMPT,
-                     no_image: bool = False) -> str:
+                     no_image: bool = False, **gen_kwargs) -> str:
     """Genera reporte para una imagen con el prompt dado (default: REPORT_PROMPT).
 
     Si no_image=True (ablación P1.2 "aporte de la imagen"), se reemplaza la imagen por
@@ -164,6 +179,7 @@ def _generate_single(model, image_path: Path, max_tokens: int, prompt: str = REP
         images=[image],
         prompts=[prompt],
         max_new_tokens=max_tokens,
+        **gen_kwargs,
     )
     return reports[0]
 
@@ -205,6 +221,19 @@ def main():
     parser.add_argument("--no_image", action="store_true",
                         help="Ablación P1.2: reemplaza la imagen por una neutra (gris). Con "
                              "--grounded_prompt mide cuánto aporta la imagen una vez conocido el dx.")
+    parser.add_argument("--baseline_prompt", type=str, default=None,
+                        help="P4.2: prompt de baseline alternativo (sin grounding) para probar si "
+                             "un fraseo distinto des-colapsa el modo de un modelo (p.ej. SkinVL).")
+    parser.add_argument("--rag_context_csv", type=str, default=None,
+                        help="P5.3: CSV con columnas image_id,rag_context (casos similares "
+                             "recuperados). Requiere --rag o --grounded_prompt para usarse.")
+    parser.add_argument("--rag", action="store_true",
+                        help="P5.3: modo RAG-only (recuperación como contexto, sin clasificador). "
+                             "Requiere --rag_context_csv.")
+    parser.add_argument("--repetition_penalty", type=float, default=None,
+                        help="P5.5: penalización de repetición en el decoding (>1.0, p.ej. 1.2).")
+    parser.add_argument("--no_repeat_ngram_size", type=int, default=None,
+                        help="P5.5: prohíbe repetir n-gramas de este tamaño (p.ej. 3).")
     parser.add_argument("--limit", type=int, default=None,
                         help="Procesar a lo sumo N imágenes (para pilots).")
     parser.add_argument("--splits_file", type=str, default=None,
@@ -220,6 +249,13 @@ def main():
     set_seed(args.seed)
     setup_logger("generate_report")
 
+    # P5.5: parámetros de decoding opcionales (fix de repetición).
+    gen_kwargs = {}
+    if args.repetition_penalty is not None:
+        gen_kwargs["repetition_penalty"] = args.repetition_penalty
+    if args.no_repeat_ngram_size is not None:
+        gen_kwargs["no_repeat_ngram_size"] = args.no_repeat_ngram_size
+
     model = _load_model_with_checkpoint(args)
 
     # ---- Modo imagen única ----
@@ -230,7 +266,8 @@ def main():
             sys.exit(1)
 
         with log_time("Generando reporte", logger):
-            report = _generate_single(model, image_path, args.max_tokens, no_image=args.no_image)
+            report = _generate_single(model, image_path, args.max_tokens, no_image=args.no_image,
+                                      **gen_kwargs)
 
         result = {
             "image": str(image_path),
@@ -314,6 +351,19 @@ def main():
             logger.info("Grounding: %d diagnósticos cargados de %s",
                         len(dx_df), args.diagnosis_source)
 
+        # Cargar contexto RAG (casos similares recuperados): image_id -> contexto
+        rag_lookup: dict[str, str] = {}
+        if args.rag_context_csv:
+            import pandas as pd
+            rag_df = pd.read_csv(args.rag_context_csv)
+            for _, row in rag_df.iterrows():
+                key = str(row.get("image_id", "")).strip()
+                ctx = str(row.get("rag_context", "")).strip()
+                if key and ctx:
+                    rag_lookup[key] = ctx
+                    rag_lookup[Path(key).stem] = ctx
+            logger.info("RAG: %d contextos cargados de %s", len(rag_df), args.rag_context_csv)
+
         # Cargar referencias opcionales desde CSV (ej: MM-SkinQA)
         references = {}
         if args.reference_csv:
@@ -368,8 +418,14 @@ def main():
                 if not gt_label and rel.parent != Path("."):
                     gt_label = rel.parent.name
 
-                # Resolver prompt: grounded (con dx del clasificador) o el default
-                prompt = REPORT_PROMPT
+                # Resolver contexto RAG (casos similares recuperados) si aplica.
+                rag_context = (
+                    rag_lookup.get(img_path.name) or rag_lookup.get(img_path.stem, "")
+                ) if args.rag_context_csv else ""
+
+                # Resolver prompt: grounded (con dx del clasificador) o el baseline
+                # (REPORT_PROMPT por defecto, o --baseline_prompt si se pasa).
+                prompt = args.baseline_prompt or REPORT_PROMPT
                 grounded_dx = ""
                 if args.grounded_prompt:
                     grounded_dx = (
@@ -377,10 +433,17 @@ def main():
                         or diagnosis_lookup.get(img_path.stem, "")
                     )
                     if grounded_dx:
-                        prompt = GROUNDED_TEMPLATES[args.grounded_variant].format(dx=grounded_dx)
+                        # grounding + RAG (recuperación como evidencia de apoyo) o solo grounding.
+                        if rag_context:
+                            prompt = GROUNDED_RAG_TEMPLATE.format(dx=grounded_dx, rag_context=rag_context)
+                        else:
+                            prompt = GROUNDED_TEMPLATES[args.grounded_variant].format(dx=grounded_dx)
+                elif args.rag and rag_context:
+                    # RAG-only: recuperación como contexto, sin clasificador.
+                    prompt = RAG_TEMPLATE.format(rag_context=rag_context)
 
                 report = _generate_single(model, img_path, args.max_tokens, prompt=prompt,
-                                          no_image=args.no_image)
+                                          no_image=args.no_image, **gen_kwargs)
                 result = {
                     "image_id": img_path.name,
                     "model": args.model,
@@ -389,6 +452,7 @@ def main():
                     "reference": reference,
                     "gt_label": gt_label,
                     "grounded_dx": grounded_dx,
+                    "rag_context": rag_context,
                     "prompt": prompt,
                 }
                 save_results(result, str(out_file))

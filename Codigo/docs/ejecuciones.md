@@ -4,6 +4,52 @@ Ayuda-memoria cronológico de experimentos enviados a cluster, ordenado de más 
 
 ---
 
+## 2026-07-13
+
+### P5.3 (RAG) + P5.5 (fix repetición) — Mini-VLM con casos similares (DermLIP)
+**Job Mendieta 1160209 (enviado).** SLURM: `slurm/mendieta/v3/rag_generation.sh` (alias `rag_gen`).
+Índice RAG precomputado **local** con embeddings DermLIP (`scripts/build_rag_index.py` →
+`outputs/rag/rag_context.csv`, k=3; **dato: kNN-dx da 0.831 acc**, la recuperación sola casi iguala a un
+clasificador). Subido por scp (outputs/ excluido de sync_up). Condiciones (Mini-VLM, n=400, con
+rep_penalty=1.3/no_repeat_ngram=3): (1) `full_rag` RAG-only, (2) `full_swin_rag` grounding+RAG,
+(3) `full_swin_rep` grounding sin RAG con fix (aísla RAG + valida P5.5 vs `full_swin` previo).
+Cambios de código: `--rag_context_csv/--rag`, templates RAG, `--repetition_penalty/--no_repeat_ngram_size`
++ forward de `**kwargs` a `model.generate` en llava_med/mini_vlm (SkinVL hereda). **Pendiente análisis.**
+
+### P5.1 Ensamble de clasificadores + P5.2 Wilcoxon — **Sin jobs SLURM** (local)
+Ronda P5 (mejorar resultados). **P5.1:** voto suave Swin+ConvNeXt (re-eval con TTA local,
+`scripts/reeval_tta_probs.py` + `scripts/classifier_ensemble.py`) → sens. macro 0.846 vs mejor individual
+0.827 (Δ+0.019, a 2× costo). **P5.2:** Wilcoxon por clase agregado a `statistical_tests.py` (Swin domina
+todo clase-a-clase p<0.05; los 2 VLMs generales indistinguibles entre sí p=1.0). Resul:
+[mejoras_p5_local_resul_20260713.md](resul/mejoras_p5_local_resul_20260713.md). **Veredicto: CUMPLE.**
+Plan: [mejoras_resultados_p5_plan](ideas/mejoras_resultados_p5_plan_20260713.md). Pendiente integrar a tex.
+
+### P4.2 (mejoras.md #8) — SkinVL baseline con prompts alternativos
+**Job Mendieta 1160208 (enviado).** SLURM: `slurm/mendieta/v3/skinvl_baseline_prompts.sh` (alias
+`skinvl_prompts`). Prueba 2 prompts de baseline alternativos (diagnóstico directo / rol clínico) sobre
+400 imágenes, para ver si el colapso de modo del baseline SkinVL (72% "tinea corporis") es del prompt o
+del mismatch de distribución MM-Skin→HAM. Requirió agregar `--baseline_prompt` a `generate_report.py`.
+Al volver: medir fracción de reportes idénticos + consistency por prompt. **Pendiente de análisis.**
+
+### P4.1 (mejoras.md #9) — Ablaciones imagen-vs-dx y dx-erróneo en LLaVA-Med y Mini-VLM
+**Job Mendieta 1160045 (COMPLETED, 6h20m).** SLURM: `slurm/mendieta/v3/ablations_llava_mini.sh`
+(alias `abl_llava_mini`). Genera, para `llava_med` y `mini_vlm` (checkpoints `stage2_*_v2`, `--limit 400`):
+`full_oracle_noimage` (`--no_image`) y `full_wrong_swap` (dx swap). Objetivo: extender a los otros
+generadores las ablaciones que estaban solo sobre SkinVL.
+
+Bajada targeted (tar+scp, 4 carpetas × 400). **Bug conocido:** el job no pasó `--label_csv` → `gt_label`
+vacío; parcheado local desde `outputs/full_dx_oracle.csv` (image_id sin `.jpg` → diagnosis). Evaluación
+de *diagnostic consistency* sobre el conjunto común (n=400): `outputs/results/ablation_llava_mini_p41.json`.
+
+**Resultado (consistency):** P1.2 imagen-vs-dx Δ(oracle−noimage): SkinVL +0.03, **LLaVA-Med −0.15**
+(la imagen introduce duda: 0.85→1.00 al quitarla), Mini-VLM 0.00. P1.3 dx-erróneo: 0.07–0.11 en los tres.
+El patrón de SkinVL se generaliza: la fidelidad la aporta el clasificador, la imagen es prescindible, el
+error del clasificador se propaga íntegro. Resul:
+[ablaciones_p41_resul_20260713.md](resul/ablaciones_p41_resul_20260713.md). **Veredicto: CUMPLE.**
+Integrado a `experimentacion.tex` §Ablaciones (Cuadro nuevo, 3 generadores). Cierra mejora #9.
+
+---
+
 ## 2026-07-05
 
 ### Extensión jul-ago: arranque — verificación SOTA + P0.1 Calibración — **Sin jobs SLURM** (local)

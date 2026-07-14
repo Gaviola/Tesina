@@ -288,13 +288,14 @@ Tras leer el documento (24 págs), el tutorando marcó 11 ítems + 2 lineamiento
 **mejoras de texto** con los datos que ya tenemos; solo #9 (y #8-stretch) requieren cómputo nuevo.
 
 ### 6.1 Tareas de EXPERIMENTO (nuevas)
-- **P4.1 — Extender ablaciones a LLaVA-Med y Mini-VLM** (mejora #9). Correr imagen-vs-dx (oracle sin
-  imagen) + dx-erróneo para LLaVA/Mini (hasta ahora solo SkinVL), subconjunto 400. SLURM
-  `slurm/mendieta/v3/ablations_llava_mini.sh` (alias `abl_llava_mini`). **Job 1160045 (lanzado).** Al
-  volver: patch de `gt_label` desde `full_dx_oracle.csv` + `per_class_ensemble.py` sobre esas condiciones.
-- **P4.2 (stretch) — Re-probar el baseline de SkinVL con otro prompt** (mejora #8). El baseline colapsa a
-  modo (72% reportes idénticos = "tinea corporis"); probar si un prompt de baseline distinto lo
-  des-colapsa, para confirmar que es mismatch de distribución y no del prompt. Opcional, 1 condición.
+- **P4.1 — Extender ablaciones a LLaVA-Med y Mini-VLM** (mejora #9). ✅ **HECHO.** Job 1160045 COMPLETED
+  (6h20m). imagen-vs-dx Δ: SkinVL +0.03, LLaVA −0.15, Mini 0.00; dx-erróneo 0.07–0.11 (los tres). El
+  patrón de SkinVL se generaliza. Resul: `resul/ablaciones_p41_resul_20260713.md`; integrado a
+  `experimentacion.tex` §Ablaciones (Cuadro `tab:ablaciones`, 3 generadores).
+- **P4.2 (stretch) — Re-probar el baseline de SkinVL con otro prompt** (mejora #8). ⏳ **ENVIADO** (job
+  1160208, alias `skinvl_prompts`). 2 prompts alternativos (diagnóstico directo / rol clínico) × 400. Se
+  agregó `--baseline_prompt` a `generate_report.py`. Al volver: medir % reportes idénticos + consistency
+  por prompt → confirmar si el colapso es del prompt o del mismatch MM-Skin→HAM.
 
 ### 6.2 Tareas de TEXTO / pulido del `.tex` (con datos actuales)
 | # mejora | Qué mejorar | Estado |

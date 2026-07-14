@@ -254,6 +254,7 @@ class MiniVLM(VLMBase):
                 max_new_tokens=max_tok,
                 do_sample=False,
                 eos_token_id=self.processor.tokenizer.eos_token_id,
+                **kwargs,
             )
 
             # Decodificar solo los tokens generados (excluir el input)

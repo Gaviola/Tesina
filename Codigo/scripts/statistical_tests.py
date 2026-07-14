@@ -22,7 +22,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import numpy as np
-from scipy.stats import binomtest
+from scipy.stats import binomtest, wilcoxon
 from sklearn.metrics import accuracy_score, f1_score, recall_score
 
 logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s - %(message)s")
@@ -125,6 +125,26 @@ def main():
             sig = "***" if mc["p_value"] < 0.001 else ("**" if mc["p_value"] < 0.01 else ("*" if mc["p_value"] < 0.05 else "ns"))
             print(f"  {a:<16} vs {b:<16}  p={mc['p_value']:.2e} {sig:>3}  "
                   f"(solo {a}={mc['n_a_only']}, solo {b}={mc['n_b_only']})")
+
+        # Wilcoxon de rangos con signo sobre el recall POR CLASE (7 pares por par de modelos).
+        # Complementa a McNemar (por-muestra global) con un test de si un modelo mejora la
+        # discriminación de forma sistemática CLASE a CLASE.
+        print("\n=== Wilcoxon (rangos con signo) - recall por clase, clasificadores pareados ===")
+        result["wilcoxon_perclass"] = {}
+        for a, b in itertools.combinations(aligned, 2):
+            ra = recall_score(aligned[a]["y_true"], aligned[a]["y_pred"], average=None, zero_division=0)
+            rb = recall_score(aligned[b]["y_true"], aligned[b]["y_pred"], average=None, zero_division=0)
+            diff = np.asarray(ra) - np.asarray(rb)
+            if np.all(diff == 0):
+                w = {"statistic": None, "p_value": 1.0, "median_diff": 0.0, "n_classes": len(diff)}
+            else:
+                stat, p = wilcoxon(ra, rb, zero_method="wilcox")
+                w = {"statistic": float(stat), "p_value": float(p),
+                     "median_diff": float(np.median(diff)), "n_classes": int(len(diff))}
+            result["wilcoxon_perclass"][f"{a} vs {b}"] = w
+            sig = "*" if w["p_value"] < 0.05 else "ns"
+            print(f"  {a:<16} vs {b:<16}  p={w['p_value']:.3f} {sig:>3}  "
+                  f"(mediana Δrecall {a}-{b}={w['median_diff']:+.3f}, n_clases={w['n_classes']})")
 
     # --- Ensamble (opcional, requiere consistencia por-reporte de P0.3) ---
     if args.consistency_json:

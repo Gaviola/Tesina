@@ -1002,23 +1002,42 @@ ensamble (Cuadro~\ref{tab:skinvl}). Tres observaciones:
 
 \subsection{¿Cuánto aporta la imagen? Ablaciones del ensamble}
 \label{sec:ablaciones}
-Dos ablaciones aíslan el rol de cada componente del pipeline. Se aplican sobre SkinVL, evaluado sobre el
-\emph{test split completo} ($n=1503$): es el generador cuyo comportamiento las hace más nítidas —no hace
-\emph{hedging} (Sección~\ref{sec:skinvl}), así que cualquier caída de fidelidad se atribuye limpiamente a
-la señal manipulada y no a la ambigüedad propia del modelo—. Las mismas dos ablaciones sobre LLaVA-Med y
-Mini-VLM están corriendo en el clúster para confirmar que el patrón no es exclusivo de SkinVL; los
-resultados parciales del ensamble ya lo anticipan (la fidelidad de los tres sube con la calidad del
-clasificador y se derrumba con DermLIP, Sección~\ref{sec:porclase}).
+Dos ablaciones aíslan el rol de cada componente del pipeline. Se aplican a los \textbf{tres generadores}
+(SkinVL, LLaVA-Med, Mini-VLM), midiendo en cada caso la \emph{diagnostic consistency}
+(Cuadro~\ref{tab:ablaciones}).
+
+\begin{table}[H]
+  \centering
+  \caption{Ablaciones del ensamble sobre los tres generadores (\emph{diagnostic consistency}). P1.2:
+  con grounding \emph{oracle} (dx correcto), con imagen vs.\ con imagen neutra. P1.3: con un dx
+  \emph{incorrecto} inyectado, consistencia respecto del GT. SkinVL sobre el test completo ($n{=}1503$);
+  LLaVA-Med y Mini-VLM sobre $n{=}400$.}
+  \label{tab:ablaciones}
+  \begin{tabular}{lccc}
+    \toprule
+    & \textbf{SkinVL} & \textbf{LLaVA-Med} & \textbf{Mini-VLM} \\
+    \midrule
+    Oracle, con imagen        & 1.00 & 0.85 & 1.00 \\
+    Oracle, \emph{sin} imagen & 0.97 & \textbf{1.00} & 1.00 \\
+    \quad$\Delta$ (P1.2 imagen-vs-dx) & $+0.03$ & $\mathbf{-0.15}$ & $0.00$ \\
+    \addlinespace
+    dx-erróneo (P1.3)         & 0.11 & 0.07 & 0.07 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
 
 \paragraph{¿Aporta la imagen una vez conocido el diagnóstico?} Se generó el reporte con grounding oracle
-pero \emph{reemplazando la imagen por una imagen neutra}. La consistencia pasa de $1.00$ (con imagen) a
-$0.97$ (sin imagen): quitar la imagen \textbf{casi no cambia nada} ($\Delta=0.03$). Una vez dado el
-diagnóstico, el generador prácticamente \emph{no usa la señal visual}: redacta a partir del texto del
-diagnóstico.
+pero \emph{reemplazando la imagen por una imagen neutra}. Quitar la imagen \textbf{no mejora la
+fidelidad en ninguno} de los tres: SkinVL apenas cae ($\Delta=0.03$), Mini-VLM queda \emph{idéntico}
+($\Delta=0.00$) y, de forma reveladora, LLaVA-Med \emph{sube} de $0.85$ a $1.00$ ($\Delta=-0.15$) —dado el
+texto del diagnóstico, lo nombra siempre; cuando además \emph{ve} la imagen, la evidencia visual a veces
+lo hace dudar y desviarse—. Una vez dado el diagnóstico, el generador prácticamente \emph{no usa la señal
+visual}: redacta a partir del texto del diagnóstico, y la imagen en el mejor caso es neutra.
 
 \paragraph{¿Qué hace con un diagnóstico erróneo?} Al inyectar un diagnóstico \emph{incorrecto} (una clase
-confundible), la consistencia respecto del \emph{gt} cae a $0.11$: el generador \textbf{se compromete con
-el diagnóstico equivocado} y no lo corrige mirando la imagen (propagación de error total).
+confundible), la consistencia respecto del \emph{gt} se derrumba a $0.07$--$0.11$ en los tres modelos: el
+generador \textbf{se compromete con el diagnóstico equivocado} y no lo corrige mirando la imagen
+(propagación de error total, universal a los tres generadores).
 
 \paragraph{Consecuencia.} Ambas ablaciones apuntan a lo mismo: \emph{la fidelidad diagnóstica del
 ensamble proviene del clasificador, no de la visión del generador}. El VLM generativo actúa como un
@@ -1283,9 +1302,10 @@ permite responderlos de forma parcial:
   cascada con \emph{grounding} (Sección~\ref{sec:porque_ensamble}) sí produce reportes que afirman un
   diagnóstico: con un clasificador fuerte, la \emph{diagnostic consistency} sube sustancialmente
   (Mini-VLM: $0.20 \rightarrow 0.83$). Las ablaciones precisan \emph{de dónde} viene esa fidelidad: es el
-  \textbf{diagnóstico del clasificador}, no la visión del generador, lo que la determina —quitarle la
-  imagen al generador casi no cambia el resultado ($\Delta 0.03$), mientras que inyectarle un diagnóstico
-  equivocado lo arrastra al error ($0.11$)—. Incluso un generador \emph{derm-especializado} (SkinVL,
+  \textbf{diagnóstico del clasificador}, no la visión del generador, lo que la determina. En los tres
+  generadores, quitarle la imagen al generador no baja la fidelidad —incluso la \emph{sube} en LLaVA-Med
+  ($\Delta=-0.15$)—, mientras que inyectarle un diagnóstico equivocado la derrumba ($0.07$--$0.11$,
+  Cuadro~\ref{tab:ablaciones}). Incluso un generador \emph{derm-especializado} (SkinVL,
   Sección~\ref{sec:skinvl}) confirma el patrón: sin \emph{grounding} colapsa, y con él acierta gracias a
   la etiqueta que recibe, no a lo que ``ve''.
   \item \textbf{Evaluación en distintos escenarios (objetivo c).} Se evaluó precisión diagnóstica

@@ -199,6 +199,10 @@ JOBS = {
     "ensemble_skinvl":  "slurm/mendieta/v3/generate_reports_skinvl.sh",
     ## P4.1 (mejoras #9) — ablaciones imagen-vs-dx / dx-erróneo para LLaVA-Med y Mini-VLM.
     "abl_llava_mini":   "slurm/mendieta/v3/ablations_llava_mini.sh",
+    ## P4.2 (mejoras #8) — SkinVL baseline con prompts alternativos (¿des-colapsa el modo?).
+    "skinvl_prompts":   "slurm/mendieta/v3/skinvl_baseline_prompts.sh",
+    ## P5.3 (RAG) + P5.5 (fix repetición) — Mini-VLM con contexto de casos similares (DermLIP).
+    "rag_gen":          "slurm/mendieta/v3/rag_generation.sh",
     ## Ensamble — Nivel 1 sobre SkinCoT (con referencias): baseline vs oracle-noreasoning, LLaVA.
     "ensemble_skincot_l1_llava": "slurm/mendieta/ensemble_skincot_level1_llava.sh",
     ## Variantes CoT: mismo mecanismo de env var METHOD=cot.
