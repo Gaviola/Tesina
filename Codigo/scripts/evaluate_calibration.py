@@ -111,18 +111,24 @@ def main():
         logger.error("Ningún archivo tenía 'y_prob'. Nada que calibrar.")
         return
 
-    # Reliability diagrams (grid)
-    ncols = 2
-    nrows = (len(summary) + ncols - 1) // ncols
-    fig, axes = plt.subplots(nrows, ncols, figsize=(6 * ncols, 4.2 * nrows), squeeze=False)
-    for ax in axes.flat:
-        ax.axis("off")
-    for i, s in enumerate(summary):
-        ax = axes[i // ncols][i % ncols]
-        ax.axis("on")
-        _plot_reliability(ax, s["reliability_curve"], s["label"], s["ece"], s["brier"])
-    fig.suptitle("Reliability diagrams — HAM10000 (rojo = brecha confianza-exactitud)", fontsize=12)
-    fig.tight_layout(rect=[0, 0, 1, 0.97])
+    # Reliability diagram: un solo panel, una curva por modelo (exactitud vs confianza).
+    # Las curvas POR ENCIMA de la diagonal indican sub-confianza; por debajo, sobre-confianza.
+    fig, ax = plt.subplots(figsize=(6.8, 5.8))
+    ax.plot([0, 1], [0, 1], "--", color="gray", lw=1.2, label="calibración perfecta")
+    ax.fill_between([0, 1], [0, 1], [1, 1], color="#1565C0", alpha=0.05)
+    ax.fill_between([0, 1], [0, 0], [0, 1], color="#C62828", alpha=0.05)
+    ax.text(0.03, 0.9, "sub-confianza", color="#1565C0", fontsize=9)
+    ax.text(0.40, 0.04, "sobre-confianza", color="#C62828", fontsize=9)
+    for s in sorted(summary, key=lambda x: x["ece"]):
+        xs = [b["avg_confidence"] for b in s["reliability_curve"] if b["count"]]
+        ys = [b["accuracy"] for b in s["reliability_curve"] if b["count"]]
+        ax.plot(xs, ys, marker="o", ms=4, lw=1.6, label=f"{s['label']}  (ECE={s['ece']:.2f})")
+    ax.set_xlim(0, 1); ax.set_ylim(0, 1)
+    ax.set_xlabel("Confianza media del modelo (probabilidad máxima)")
+    ax.set_ylabel("Exactitud observada")
+    ax.set_title("Reliability diagram — HAM10000\n(curvas por encima de la diagonal = el modelo subestima su certeza)")
+    ax.legend(fontsize=8, loc="lower right")
+    fig.tight_layout()
     png = out_dir / "reliability_diagrams.png"
     fig.savefig(png, dpi=150)
     logger.info("Figura guardada en %s", png)

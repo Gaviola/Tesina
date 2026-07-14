@@ -118,7 +118,8 @@ re-diagnosticar el problema. El recorrido, que las secciones siguientes desarrol
 \label{sec:config}
 % ============================================================
 \subsection{Conjuntos de datos}
-Se utilizaron cuatro conjuntos de datos, con roles diferenciados (Cuadro~\ref{tab:datasets}). Es
+\label{sec:datasets}
+Se utilizaron cinco conjuntos de datos, con roles diferenciados (Cuadro~\ref{tab:datasets}). Es
 importante notar que \emph{no todos se usaron para lo mismo}: algunos para entrenar, otros solo para
 evaluar, y difieren en la modalidad de imagen.
 
@@ -146,6 +147,11 @@ evaluar, y difieren en la modalidad de imagen.
     Derm1M & Multi-modal & Pre-entrenamiento de un modelo externo &
     $\sim$1M pares con ontología clínica~\cite{yan2025derm1m}; corpus con el que se pre-entrenó DermLIP
     (Sección~\ref{sec:dermlip}). \\
+    \addlinespace
+    HIBA & Dermatoscópica & Evaluación OOD (solo test) &
+    $1616$ imágenes de pacientes argentinos con fototipos III--VI. Ningún modelo se entrena con HIBA:
+    se usa exclusivamente para medir la generalización a una población distinta a la de HAM10000
+    (Sección~\ref{sec:robustez}). \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -419,18 +425,27 @@ prior del lenguaje (qué nombre de clase es más ``esperable'' dado el \emph{pro
 contenido visual—. Esto motiva incorporar un modelo \emph{especializado en el dominio}.
 
 \paragraph{El desbalance tampoco limita al clasificador supervisado.} Para cerrar la hipótesis del
-desbalance también del lado del \emph{clasificador}, se entrenó Swin-Tiny variando \emph{únicamente} la
-función de pérdida: entropía cruzada simple (sin manejo del desbalance), CE con pesos por clase, Focal
-Loss y \emph{Balanced Softmax} (Cuadro~\ref{tab:desbalance}). El resultado es contundente: la
-\textbf{CE simple, sin ningún manejo del desbalance, es la mejor} (sensibilidad macro $0.887$), y los
-métodos de re-balanceo no mejoran —las \emph{class-weights} incluso empeoran ($0.809$)—. La arquitectura
-y la augmentación ya bastan para discriminar las clases minoritarias de HAM: el desbalance no es el
-cuello de botella del clasificador, y por lo tanto tampoco explica el colapso de los VLMs.
+desbalance también del lado del \emph{clasificador}, se entrenó Swin-Tiny cuatro veces variando
+\emph{únicamente} la función de pérdida y dejando fijo todo lo demás (arquitectura, augmentación,
+hiperparámetros, semilla), de modo que cualquier diferencia se atribuya a cómo la pérdida trata a las
+clases minoritarias. Las cuatro variantes son: \emph{entropía cruzada} (CE) simple, que no distingue
+clases; \emph{CE con pesos por clase}, que multiplica el error de cada clase por un peso inverso a su
+frecuencia (castiga más equivocarse en una clase rara); \emph{Focal Loss}, que baja el peso de los
+ejemplos ya bien clasificados para concentrarse en los difíciles; y \emph{Balanced Softmax}, que corrige
+el sesgo de frecuencia dentro del propio softmax (Cuadro~\ref{tab:desbalance}). La métrica de interés es
+la \textbf{sensibilidad macro} —promedio no ponderado del recall por clase—, porque le da el mismo peso a
+una clase rara que a una frecuente y es, por tanto, la que un método de re-balanceo debería mejorar. El
+resultado es contundente: la \textbf{CE simple, sin ningún manejo del desbalance, es la mejor}
+(sensibilidad macro $0.887$), y los métodos de re-balanceo no mejoran —las \emph{class-weights} incluso
+empeoran ($0.809$)—. La arquitectura y la augmentación ya bastan para discriminar las clases minoritarias
+de HAM: el desbalance no es el cuello de botella del clasificador, y por lo tanto tampoco explica el
+colapso de los VLMs.
 
 \begin{table}[H]
   \centering
   \caption{Manejo explícito del desbalance sobre Swin-Tiny (mismo recipe, varía solo la loss; test HAM,
-  con TTA). El re-balanceo no mejora a la CE simple.}
+  con \emph{test-time augmentation}, TTA: se promedia la predicción sobre varias vistas aumentadas de la
+  imagen). El re-balanceo no mejora a la CE simple.}
   \label{tab:desbalance}
   \begin{tabular}{lccc}
     \toprule
@@ -500,20 +515,35 @@ capacidad ``visión--lenguaje'' en abstracto lo que ayuda, sino el \emph{preentr
 dominio} —a gran escala y con supervisión contrastiva— lo que produce representaciones útiles para el
 grano fino dermatológico, en línea con la tendencia actual de los \emph{foundation models} médicos.
 
-\paragraph{Evidencia: la representación ya separa las clases.} Para confirmar que la ventaja está en la
-\emph{representación} y no en el clasificador, se entrenaron modelos clásicos (SVM, Random Forest,
-regresión logística) sobre embeddings \emph{congelados}. Un simple \textbf{SVM sobre embeddings de DermLIP
-alcanza F1 $0.881$ y sensibilidad macro $0.788$} —a la par del Swin fine-tuneado ($0.882$), sin entrenar
-un modelo pesado ni la cabeza—. La misma familia de clasificadores sobre una representación
-\emph{genérica} (Swin preentrenado en ImageNet, congelado) rinde bastante menos (sens.\ macro
-$0.58$–$0.60$). Es decir, las clases de lesiones ya están \emph{separadas en el espacio de embeddings
-derm-especializado}, y no tanto en el genérico: lo determinante es la especialización de dominio de la
-\emph{representación}, no la arquitectura ni el clasificador.
+\paragraph{Evidencia: la representación ya separa las clases.} Un modelo profundo hace dos cosas: primero
+transforma la imagen en un vector de características (el \emph{embedding}) y luego una capa final decide la
+clase a partir de ese vector. Para separar ambos aportes se hizo un experimento de \emph{linear probing}:
+se congela el modelo preentrenado —no se ajusta ni un peso—, se extrae el embedding de cada imagen y sobre
+esos vectores fijos se entrenan clasificadores \emph{clásicos} y livianos (SVM, Random Forest, regresión
+logística). Si esos clasificadores simples ya aciertan, la información discriminante está en el embedding;
+si no, hace falta que la red aprenda representaciones nuevas. Un simple \textbf{SVM sobre embeddings de
+DermLIP alcanza F1 $0.881$ y sensibilidad macro $0.788$} —a la par del Swin fine-tuneado ($0.882$), sin
+entrenar un modelo pesado ni ajustar la cabeza—. La misma familia de clasificadores sobre una
+representación \emph{genérica} (Swin preentrenado en ImageNet, congelado) rinde bastante menos (sens.\
+macro $0.58$–$0.60$). Es decir, las clases de lesiones ya están \emph{separadas en el espacio de
+embeddings derm-especializado}, y no tanto en el genérico: lo determinante es la especialización de
+dominio de la \emph{representación}, no la arquitectura ni el clasificador.
 
 \subsection{Robustez de las probabilidades y significancia estadística}
 \label{sec:calib}
 Dos preguntas de rigor completan la evaluación de clasificación: ¿son confiables las \emph{probabilidades}
 de los clasificadores?, y ¿son \emph{significativas} las diferencias observadas?
+
+\paragraph{Qué miden estas métricas.} Para la \emph{calibración} se agrupan las predicciones en
+\emph{bins} según su confianza (la probabilidad máxima que asigna el modelo) y, en cada bin, se compara
+la confianza promedio con la exactitud real. El \textbf{ECE} (\emph{Expected Calibration Error}) es el
+promedio —ponderado por la cantidad de muestras de cada bin— de esa brecha $|\text{exactitud}-\text{
+confianza}|$; el \textbf{MCE} (\emph{Maximum Calibration Error}) es la brecha \emph{máxima} entre bins; y
+el \textbf{Brier score} es el error cuadrático medio entre la distribución de probabilidad predicha y la
+etiqueta real (0 = perfecto). En los tres, menor es mejor. Para la \emph{significancia}, el test de
+\textbf{McNemar} compara dos modelos sobre las \emph{mismas} imágenes contando solo los casos
+\emph{discordantes} (uno acierta y el otro no): si esos desacuerdos se reparten muy desigualmente, la
+diferencia entre los modelos no es atribuible al azar (un $p$ bajo).
 
 \paragraph{Calibración.} Un clasificador puede tener buena exactitud pero probabilidades mal calibradas
 —afirmar, por ejemplo, 99\% de confianza y acertar mucho menos—, lo cual es peligroso en medicina. Se
@@ -521,8 +551,8 @@ midió el \emph{Expected Calibration Error} (ECE), el \emph{Maximum Calibration 
 \emph{Brier score} sobre el test de HAM (Cuadro~\ref{tab:calib}, Figura~\ref{fig:calib}). El resultado es
 matizado: los clasificadores están mal calibrados (ECE $0.19$--$0.39$), pero \emph{en la dirección
 opuesta a la temida}: son \textbf{sub-confiados}, no sobre-confiados. Swin, por ejemplo, tiene confianza
-media $0.42$ pero exactitud $0.795$: cuando ``dice 30\%'' en realidad acierta $\sim$80\% (las barras de
-exactitud quedan \emph{por encima} de la diagonal en la Figura~\ref{fig:calib}). Además, \emph{a mayor
+media $0.42$ pero exactitud $0.795$: cuando ``dice 30\%'' en realidad acierta $\sim$80\% (su curva queda
+\emph{por encima} de la diagonal en la Figura~\ref{fig:calib}). Además, \emph{a mayor
 exactitud, peor calibración}: los mejores modelos (Swin, ConvNeXt) producen las probabilidades más
 difusas, efecto atribuible al promediado de \emph{test-time augmentation} y la regularización del
 \emph{recipe} moderno. La implicancia es que la probabilidad cruda no sirve como estimador de certeza sin
@@ -548,8 +578,10 @@ calibrar previamente.
 \begin{figure}[H]
   \centering
   \includegraphics[width=\textwidth]{P01_calibration.png}
-  \caption{Reliability diagrams. Las barras (exactitud observada) quedan \emph{por encima} de la
-  diagonal de calibración perfecta, sobre todo en confianza baja: los modelos subestiman su certeza.}
+  \caption{Reliability diagram: exactitud observada vs.\ confianza media del modelo, una curva por
+  clasificador (ECE entre paréntesis). Un modelo perfectamente calibrado seguiría la diagonal; las curvas
+  quedan \emph{por encima} de ella (zona azul), es decir, los modelos \emph{subestiman} su certeza
+  —``dicen'' menos confianza de la que su exactitud justifica—.}
   \label{fig:calib}
 \end{figure}
 
@@ -564,10 +596,27 @@ $[0.137,0.152]$ y el de LLaVA-Med $[0.145,0.168]$, ambos \emph{abrazando el nive
 
 \subsection{Robustez a condiciones de adquisición}
 \label{sec:robustez}
-Además del cambio de población (evaluado sobre HIBA), interesa la robustez a la \emph{calidad de imagen}.
-Se perturbaron las imágenes de test —compresión JPEG, ruido gaussiano, desenfoque y bajada de
-resolución— en niveles crecientes, midiendo la caída de sensibilidad macro de los clasificadores
-\emph{modern} (Figura~\ref{fig:robustez}). Tres observaciones: (i) el \textbf{ruido} es la perturbación
+Un clasificador entrenado sobre HAM10000 puede degradarse por dos vías al usarse en el entorno real:
+porque cambia la \emph{población} de pacientes o porque cambia la \emph{calidad de imagen} de la cámara.
+Ambas se evaluaron por separado.
+
+\paragraph{Cambio de población (HIBA).} Se re-evaluaron los clasificadores —sin reentrenar— sobre
+\textbf{HIBA} (Sección~\ref{sec:datasets}): $1616$ imágenes dermatoscópicas de pacientes argentinos con
+fototipos III--VI, una población distinta a la de HAM10000 (mayoritariamente europea). Es una prueba
+\emph{out-of-distribution} (OOD): mide cuánto cae el modelo cuando la piel y las condiciones de
+adquisición no coinciden con las del entrenamiento. Todos los modelos pierden entre $27$ y $40$ puntos
+de exactitud al pasar de HAM10000 a HIBA (Swin-Tiny $\approx 0.88 \to 0.58$), un \emph{domain shift}
+marcado atribuible a la diferencia de fototipo y de equipo. Es la limitación más seria para el despliegue
+clínico y justifica la evaluación de robustez que sigue.
+
+\paragraph{Cambio de calidad de imagen.}
+Se perturbaron las imágenes de test de HAM10000 ($n=1503$) —compresión JPEG, ruido gaussiano, desenfoque
+gaussiano y bajada de resolución— y se volvió a correr el clasificador sobre las imágenes degradadas,
+midiendo la caída de sensibilidad macro (Figura~\ref{fig:robustez}). Cada perturbación se aplicó en cinco
+\textbf{niveles de severidad} crecientes (sev1$\to$sev5), variando su parámetro de forma monótona: calidad
+JPEG de $70$ a $5$, desviación del ruido $\sigma$ de $8$ a $64$, radio de desenfoque de $1$ a $6$~px, y
+factor de resolución de $0.75$ a $0.15$ (se reduce la imagen y se re-escala al tamaño original, perdiendo
+detalle). sev1 simula una degradación apenas perceptible y sev5 una imagen muy dañada. Tres observaciones: (i) el \textbf{ruido} es la perturbación
 más dañina —la sensibilidad macro de Swin cae de $0.74$ a $\approx 0.38$ ya con ruido moderado—; (ii) la
 \textbf{resolución} es lo más tolerado (se mantiene $\approx 0.53$ aun con degradación severa: la
 clasificación dermatoscópica no depende del detalle fino de píxel); y (iii) la degradación es
@@ -584,18 +633,27 @@ salvo bajo ruido o JPEG extremos—. ConvNeXt-Tiny resulta algo más robusto que
 
 \subsection{Interpretabilidad: ¿el modelo mira la lesión?}
 \label{sec:interpret}
-Para verificar que la decisión se basa en la lesión y no en señales espurias del fondo, se calcularon
-mapas de atención: \emph{Grad-CAM} sobre Swin-Tiny y saliencia por gradiente sobre DermLIP
-(Figura~\ref{fig:interpret}). En ambos modelos, las activaciones se concentran \textbf{sobre la lesión}
-—no sobre piel sana ni artefactos—, siendo los mapas de Swin más focalizados. Un caso ilustrativo: en un
-basocarcinoma, Swin atiende la región correcta pero lo clasifica como melanoma —mira lo correcto y aun
-así confunde clases visualmente similares: un error de \emph{discriminación}, no de atención—.
+Un modelo puede acertar por la razón equivocada —fijándose en el fondo, en una regla milimétrica o en un
+marcador de tinta en lugar de la lesión—. Para descartarlo se calcularon \textbf{mapas de saliencia}, que
+señalan qué píxeles influyeron más en la decisión. Se usaron dos técnicas complementarias
+(Figura~\ref{fig:interpret}). \emph{Grad-CAM} sobre Swin-Tiny: retropropaga el gradiente de la clase
+predicha hasta el último bloque convolucional y pondera cada canal de activación por ese gradiente,
+produciendo un mapa de calor de baja resolución donde las zonas \textbf{cálidas (rojas)} son las que más
+empujaron la predicción. \emph{Saliencia por gradiente} sobre DermLIP: como es un clasificador por
+similitud imagen--texto, se retropropaga la similitud imagen--diagnóstico hasta los píxeles de entrada;
+la magnitud del gradiente en cada píxel indica cuánto altera esa similitud. En ambos modelos las zonas
+destacadas se concentran \textbf{sobre la lesión} —no sobre piel sana ni artefactos—, siendo los mapas de
+Swin más focalizados y los de DermLIP más difusos. Un caso ilustrativo: en un basocarcinoma, Swin atiende
+la región correcta pero lo clasifica como melanoma —mira lo correcto y aun así confunde clases
+visualmente similares: un error de \emph{discriminación}, no de atención—.
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.82\textwidth]{P25_interpretability.png}
-  \caption{Grad-CAM (Swin) y saliencia (DermLIP) superpuestas, una imagen por clase. Las activaciones se
-  concentran sobre la lesión, dando respaldo cualitativo a la validez clínica de la decisión.}
+  \caption{Mapas de saliencia, una fila por clase. Columna 1: imagen original; columna 2: Grad-CAM de
+  Swin-Tiny (rojo = mayor contribución a la clase predicha); columna 3: saliencia por gradiente de
+  DermLIP. En ambos modelos las zonas cálidas caen sobre la lesión y no sobre el fondo, dando respaldo
+  cualitativo a la validez clínica de la decisión.}
   \label{fig:interpret}
 \end{figure}
 
@@ -615,13 +673,20 @@ forma, bordes, superficie, localización) y —en el mejor caso— concluye con 
 
 \begin{figure}[H]
 \centering
-\fbox{\parbox{0.96\textwidth}{\footnotesize\itshape
+\fbox{\parbox{0.96\textwidth}{\footnotesize
+\begin{minipage}[c]{0.24\textwidth}
+  \centering
+  \includegraphics[width=\textwidth]{ej_ISIC_0024321.jpg}\\[2pt]
+  {\scriptsize ISIC\_0024321\\ \emph{gt}: nevo}
+\end{minipage}\hfill
+\begin{minipage}[c]{0.70\textwidth}\itshape
 ``The diagnosis is a nevus, a benign pigmented lesion. Key features: (1) color brownish-red to
 reddish-brown; (2) shape irregular, asymmetrical, with a lobulated border; (3) surface rough and
 slightly elevated; (4) located on the lower leg, a common site for nevi. The absence of rapid growth or
 ulceration helps rule out malignancy.''
+\end{minipage}
 }}
-\caption{Ejemplo de la estructura típica de un reporte generado (imagen ISIC\_0024321): descripción
+\caption{Ejemplo de la estructura típica de un reporte generado sobre una imagen de nevo: descripción
 morfológica seguida de una conclusión diagnóstica.}
 \label{fig:estructura}
 \end{figure}
@@ -636,10 +701,14 @@ SkinCoT para que el modelo aprenda a producir un reporte a partir de la imagen. 
 solo etiquetas.
 
 \paragraph{Cómo se evalúa.} Una vez entrenado, el modelo \emph{genera} reportes para imágenes de prueba.
-\emph{En HAM} la evaluación es de \emph{Nivel 2} (sin referencia: \emph{diagnostic consistency} y
-\emph{recall}), justamente porque HAM no tiene reportes de referencia pero sí etiquetas diagnósticas con
-las que verificar la fidelidad. \emph{En SkinCoT} (Sección~\ref{sec:skincot}) la evaluación es de
-\emph{Nivel 1} (con referencia). Esta separación explica por qué se \emph{entrena} con SkinCoT pero se
+Se emplean los dos niveles de evaluación definidos en la Sección~\ref{sec:metricas}: el \textbf{Nivel 2}
+mide la \emph{fidelidad clínica} sin necesidad de un reporte de referencia —\emph{diagnostic consistency}
+(¿el reporte nombra el diagnóstico correcto?) y \emph{clinical entity recall} (¿menciona las entidades
+clínicas esperadas?)—, mientras que el \textbf{Nivel 1} mide la \emph{calidad textual} comparando contra
+un reporte de referencia (BLEU/ROUGE/METEOR de solapamiento y BERTScore de similitud semántica).
+\emph{En HAM} la evaluación es de \emph{Nivel 2}, justamente porque HAM no tiene reportes de referencia
+pero sí etiquetas diagnósticas con las que verificar la fidelidad. \emph{En SkinCoT}
+(Sección~\ref{sec:skincot}) la evaluación es de \emph{Nivel 1} (con referencia). Esta separación explica por qué se \emph{entrena} con SkinCoT pero se
 \emph{evalúa la fidelidad} sobre HAM: cada dataset aporta lo que el otro no tiene.
 
 \paragraph{Resultado directo.} El Cuadro~\ref{tab:generacion_v1v2} compara dos iteraciones del ajuste de
@@ -808,14 +877,22 @@ diagnóstico:
 \begin{figure}[H]
 \centering
 \fbox{\parbox{0.96\textwidth}{\footnotesize
+\begin{minipage}[c]{0.24\textwidth}
+  \centering
+  \includegraphics[width=\textwidth]{ej_ISIC_0024321.jpg}\\[2pt]
+  {\scriptsize ISIC\_0024321\\ \emph{gt}: nevo}
+\end{minipage}\hfill
+\begin{minipage}[c]{0.70\textwidth}
 \textbf{Sin grounding (baseline)} \textemdash\ \itshape ``To analyze the case I will follow a structured
 approach\dots\ \textbf{1. High-Level Decision}: the category likely falls under \emph{inflammatory
 conditions}\dots'' \upshape (razona, no concluye, y se desvía a una categoría incorrecta).\\[4pt]
 \textbf{Con grounding (oracle, noreasoning)} \textemdash\ \itshape ``\textbf{The diagnosis is a nevus},
 a benign pigmented lesion. Key features: color brownish-red, irregular lobulated border\dots'' \upshape
-(afirma el diagnóstico y lo sustenta). \,[imagen ISIC\_0024321, \emph{gt}: nevo]
+(afirma el diagnóstico y lo sustenta).
+\end{minipage}
 }}
-\caption{Efecto del \emph{grounding}+\emph{noreasoning}: de un reporte ambiguo a uno comprometido.}
+\caption{Efecto del \emph{grounding}+\emph{noreasoning} sobre la misma imagen (un nevo): de un reporte
+ambiguo a uno comprometido con el diagnóstico correcto.}
 \label{fig:ej_grounding}
 \end{figure}
 
@@ -843,18 +920,38 @@ Es la propagación de error, ahora resuelta clase por clase.
 
 \subsection{Taxonomía de errores}
 \label{sec:taxonomia}
-Para ir más allá de ejemplos aislados, cada reporte se clasificó automáticamente en su \emph{tipo de
-error principal} (Figura~\ref{fig:taxonomia}), convirtiendo el análisis cualitativo en un resultado
-cuantitativo. Esto responde tres preguntas: \textbf{(1) qué elimina el \emph{grounding} bueno} —el
-\emph{diagnóstico incorrecto} cae a $0.00$ con el oracle y la \emph{contradicción} (nombrar varios
-diagnósticos) baja fuerte, mientras crece la fracción de reportes ``limpios''—; \textbf{(2) qué introduce
-el \emph{grounding} malo} —con DermLIP el \emph{diagnóstico incorrecto} se dispara (Mini-VLM
-$0.30\to0.60$), confirmando la propagación de error—; y \textbf{(3) qué persiste aun con el clasificador
-perfecto} —el \emph{hedging} no desaparece ni con el oracle (Mini-VLM $0.43$): el modelo sigue usando
-lenguaje de incertidumbre aunque se le entregue el diagnóstico correcto—. Este último es el error
-residual que el \emph{grounding} no resuelve, y marca un límite del enfoque. Un análisis estructurado de
-errores como este es, además, poco frecuente en la literatura de VLMs, que suele quedarse en métricas
-automáticas.
+Para ir más allá de ejemplos aislados, se \emph{cuantificó} el análisis cualitativo: cada reporte
+generado se clasificó automáticamente, con reglas determinísticas (búsqueda de menciones de clases y de
+marcadores lingüísticos), en su \textbf{tipo de error principal}. Las categorías, con un ejemplo de cada
+una, son:
+\begin{itemize}[leftmargin=1.6em]
+  \item \textbf{ok}: menciona el diagnóstico correcto y no dispara otras banderas.
+  \item \textbf{dx incorrecto}: no menciona el diagnóstico correcto pero sí \emph{otro} (p.ej.\ afirma
+  ``melanoma'' cuando la lesión es un nevo).
+  \item \textbf{contradicción}: nombra \emph{dos o más} diagnósticos distintos en el mismo reporte
+  (diferencial sin comprometerse con uno).
+  \item \textbf{hedging}: lenguaje de incertidumbre (``podría ser\ldots'', ``consistente con\ldots'').
+  \item \textbf{repetición}: texto degenerado, con frases repetidas en bucle.
+  \item \textbf{insuficiente}: reporte demasiado corto o sin contenido morfológico.
+  \item \textbf{otros}: no encaja en las anteriores (p.ej.\ enuncia una enfermedad ajena a las 7 clases).
+\end{itemize}
+Contar la \emph{fracción de reportes} de cada categoría, por modelo y condición de grounding
+(Figura~\ref{fig:taxonomia}), convierte la intuición cualitativa en una distribución medible —algo poco
+frecuente en la literatura de VLMs, que suele quedarse en métricas automáticas—. Emergen tres lecturas:
+
+\textbf{(1) Qué elimina el \emph{grounding} bueno.} Con el oracle, la fracción de reportes con
+\emph{diagnóstico incorrecto} cae a $0$ (ya no hay un dx errado que copiar) y la de \emph{contradicción}
+baja fuerte, mientras la fracción de reportes \emph{ok} (dx correcto y sin banderas) crece hasta dominar.
+
+\textbf{(2) Qué introduce el \emph{grounding} malo.} Al anclar con un clasificador débil (DermLIP), la
+fracción de reportes con \emph{diagnóstico incorrecto} se \emph{dispara}: en Mini-VLM pasa del $30\%$ sin
+grounding al $60\%$ con DermLIP —seis de cada diez reportes afirman el diagnóstico equivocado que le
+inyectó el mal clasificador—, confirmando la propagación de error.
+
+\textbf{(3) Qué persiste aun con el clasificador perfecto.} El \emph{hedging} no desaparece ni con el
+oracle (Mini-VLM lo mantiene en el $43\%$): el modelo sigue usando lenguaje de incertidumbre aunque se le
+entregue el diagnóstico correcto. Es el error residual que el grounding no resuelve, y marca un límite
+del enfoque.
 
 \begin{figure}[H]
   \centering
@@ -871,10 +968,14 @@ automáticas.
 Se integró \textbf{SkinVL-MM} —un VLM derm-especializado (LLaVA-Med v1.5 ajustado sobre MM-Skin)— al mismo
 ensamble (Cuadro~\ref{tab:skinvl}). Tres observaciones:
 \begin{itemize}[leftmargin=1.6em]
-  \item \textbf{Sin grounding colapsa por completo} (consistencia $0.00$, peor que los VLMs generales):
-  sobre imágenes dermatoscópicas de HAM, sin diagnóstico, produce una respuesta memorizada de su
-  entrenamiento clínico (MM-Skin), idéntica entre imágenes. La especialización sobre \emph{otra}
-  distribución de imágenes no transfiere por sí sola.
+  \item \textbf{Sin grounding sufre un \emph{colapso de modo}:} el $72\%$ de sus reportes son
+  \emph{idénticos} (solo $72$ respuestas únicas entre las $1503$ imágenes) —una respuesta memorizada de
+  su entrenamiento clínico en MM-Skin, p.ej.\ ``tinea corporis''—, por lo que casi nunca menciona la
+  clase correcta (consistencia $0.00$). No es que ``genere peor'' que los VLMs generales —que producen
+  texto \emph{variado} ($400/400$ reportes únicos)—: es que, aplicado \emph{fuera de su distribución de
+  entrenamiento} (MM-Skin clínico $\to$ HAM dermatoscópico) y sin un diagnóstico que lo ancle, se refugia
+  en una respuesta constante. La especialización sobre otra distribución de imágenes no transfiere por sí
+  sola.
   \item \textbf{Con grounding alcanza el nivel de Mini-VLM} (Swin $0.80$, oracle $1.00$) y supera a
   LLaVA-Med; la propagación de la calidad del clasificador es monótona.
   \item \textbf{No hace \emph{hedging}} —a diferencia de LLaVA-Med y Mini-VLM, que hedean entre el $20$ y
@@ -901,7 +1002,13 @@ ensamble (Cuadro~\ref{tab:skinvl}). Tres observaciones:
 
 \subsection{¿Cuánto aporta la imagen? Ablaciones del ensamble}
 \label{sec:ablaciones}
-Dos ablaciones (sobre SkinVL, $n=1503$) aíslan el rol de cada componente del pipeline.
+Dos ablaciones aíslan el rol de cada componente del pipeline. Se aplican sobre SkinVL, evaluado sobre el
+\emph{test split completo} ($n=1503$): es el generador cuyo comportamiento las hace más nítidas —no hace
+\emph{hedging} (Sección~\ref{sec:skinvl}), así que cualquier caída de fidelidad se atribuye limpiamente a
+la señal manipulada y no a la ambigüedad propia del modelo—. Las mismas dos ablaciones sobre LLaVA-Med y
+Mini-VLM están corriendo en el clúster para confirmar que el patrón no es exclusivo de SkinVL; los
+resultados parciales del ensamble ya lo anticipan (la fidelidad de los tres sube con la calidad del
+clasificador y se derrumba con DermLIP, Sección~\ref{sec:porclase}).
 
 \paragraph{¿Aporta la imagen una vez conocido el diagnóstico?} Se generó el reporte con grounding oracle
 pero \emph{reemplazando la imagen por una imagen neutra}. La consistencia pasa de $1.00$ (con imagen) a
@@ -1043,13 +1150,19 @@ los riesgos (ii) y (iii).
 \begin{figure}[H]
 \centering
 \fbox{\parbox{0.96\textwidth}{\footnotesize
-\textbf{Riesgo (ii): propagación de error.} Imagen ISIC\_0024317 (\emph{gt}: nevo; DermLIP predijo
-\emph{melanoma}).\\
+\textbf{Riesgo (ii): propagación de error.}\\[3pt]
+\begin{minipage}[c]{0.22\textwidth}
+  \centering
+  \includegraphics[width=\textwidth]{ej_ISIC_0024317.jpg}\\[2pt]
+  {\scriptsize ISIC\_0024317\\ \emph{gt}: nevo\\ DermLIP: melanoma}
+\end{minipage}\hfill
+\begin{minipage}[c]{0.72\textwidth}
 \itshape ``The lesion is a melanoma, characterized by a large, irregularly shaped, dark brown to black
 pigmented area with a central umbilication\dots\ The presence of a central umbilication is highly
 specific for melanoma, making this diagnosis clear.'' \upshape \\[2pt]
 El reporte es fluido y se compromete\dots\ pero con el diagnóstico \emph{equivocado} que aportó el
 clasificador. El ensamble hereda los errores del clasificador y los presenta con (falsa) confianza.
+\end{minipage}
 }}
 \caption{Cuando el clasificador se equivoca, el ensamble produce un reporte confiadamente incorrecto.}
 \label{fig:ej_error}
@@ -1058,13 +1171,19 @@ clasificador. El ensamble hereda los errores del clasificador y los presenta con
 \begin{figure}[H]
 \centering
 \fbox{\parbox{0.96\textwidth}{\footnotesize
-\textbf{Riesgo (iii): artefacto de generación (repetición).} Imagen ISIC\_0024333 (\emph{gt}: melanoma;
-Swin predijo \emph{melanoma}).\\
+\textbf{Riesgo (iii): artefacto de generación (repetición).}\\[3pt]
+\begin{minipage}[c]{0.22\textwidth}
+  \centering
+  \includegraphics[width=\textwidth]{ej_ISIC_0024333.jpg}\\[2pt]
+  {\scriptsize ISIC\_0024333\\ \emph{gt}: melanoma\\ Swin: melanoma}
+\end{minipage}\hfill
+\begin{minipage}[c]{0.72\textwidth}
 \itshape ``\dots variegated color palette (brown, black, gray, red)\dots\ irregular borders\dots\ a
 hallmark of melanoma. The color variegation is a key feature\dots\ irregular borders\dots\ a hallmark of
 melanoma. The color variegation\dots'' \upshape \\[2pt]
 Diagnóstico correcto y rasgos pertinentes, pero el texto \emph{repite} las mismas frases (degeneración
 por repetición). Buen contenido diagnóstico, con una limitación de fluidez a vigilar.
+\end{minipage}
 }}
 \caption{Un reporte diagnósticamente correcto puede aún presentar artefactos de generación, una
 limitación de calidad textual distinta de la fidelidad diagnóstica.}
@@ -1076,25 +1195,32 @@ limitación de calidad textual distinta de la fidelidad diagnóstica.}
 \label{sec:costo}
 % ============================================================
 Un eje central de la tesina es el \emph{costo}: hallar una estructura que funcione en hardware modesto y
-se acerque a los modelos grandes, en lugar de asumir que un supermodelo lo resuelve todo. El
-Cuadro~\ref{tab:costo} y la Figura~\ref{fig:costo} comparan parámetros, memoria y latencia de inferencia
-(clasificadores medidos en una RTX 4070; VLMs, en A30 a partir de los registros de las corridas).
+se acerque a los modelos grandes, en lugar de asumir que un supermodelo lo resuelve todo. Se reportan dos
+dimensiones de costo: el \textbf{costo temporal} —el \emph{tiempo de procesamiento de un ítem}, es decir
+clasificar una imagen o generar un reporte, con \emph{batch}=1— y el \textbf{costo espacial} —la memoria
+de GPU (VRAM) necesaria para cargar y ejecutar el modelo, que determina qué hardware puede alojarlo—. El
+Cuadro~\ref{tab:costo} los resume (clasificadores medidos en una RTX 4070; VLMs, en A30 a partir de los
+registros de las corridas: el tiempo por reporte se obtiene dividiendo el \emph{wall-clock} de cada job
+por la cantidad de reportes generados).
 
 \begin{table}[H]
   \centering
-  \caption{Costo de inferencia. Latencia de clasificadores: por imagen (\emph{batch}=1); de VLMs: por
-  reporte generado. VRAM de clasificadores: estimación por pesos.}
+  \caption{Costo de inferencia. Tiempo por ítem de clasificadores: por imagen (\emph{batch}=1); de VLMs:
+  por reporte generado. VRAM (costo espacial): estimación por pesos en clasificadores, pico observado en
+  VLMs.}
   \label{tab:costo}
   \small
   \begin{tabular}{llccc}
     \toprule
-    \textbf{Modelo} & \textbf{Tipo} & \textbf{Params} & \textbf{VRAM} & \textbf{Latencia/item} \\
+    \textbf{Modelo} & \textbf{Tipo} & \textbf{Params} & \textbf{VRAM (espacial)} & \textbf{Tiempo/ítem} \\
     \midrule
     ConvNeXt-Tiny        & Clasificador     & 28.6\,M & $\sim$0.6\,GB & \textbf{3.9\,ms} \\
     Swin-Tiny            & Clasificador     & 28.3\,M & $\sim$0.6\,GB & 8.7\,ms \\
     DenseNet121          & Clasificador     & 8.0\,M  & $\sim$0.5\,GB & 11.5\,ms \\
-    DermLIP (ViT-B/16)   & VL-classifier    & 150\,M  & $\sim$2\,GB   & (clase clasif.) \\
+    DermLIP (ViT-B/16)   & VL-classifier    & 150\,M  & $\sim$2\,GB   & $\sim$15\,ms \\
+    \midrule
     Mini-VLM (Phi-3.5-V) & VLM generativo   & 4.2\,B  & 10\,GB        & \textbf{24\,s} \\
+    SkinVL-MM            & VLM generativo   & 7\,B    & 14\,GB        & $\sim$4\,s \\
     LLaVA-Med v1.5       & VLM generativo   & 7\,B    & 14\,GB        & \textbf{66\,s} \\
     \bottomrule
   \end{tabular}
@@ -1103,20 +1229,35 @@ Cuadro~\ref{tab:costo} y la Figura~\ref{fig:costo} comparan parámetros, memoria
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.92\textwidth]{P04_cost.png}
-  \caption{Latencia por item en escala logarítmica: clasificadores (verde, ms/imagen, RTX 4070) vs VLMs
-  generativos (rojo, s/reporte, A30). La brecha es de $\sim$3--4 órdenes de magnitud.}
+  \caption{Tiempo de procesamiento por ítem en escala logarítmica: clasificadores (verde, ms/imagen, RTX
+  4070) vs VLMs generativos (rojo, s/reporte, A30). La brecha es de $\sim$3--4 órdenes de magnitud.}
   \label{fig:costo}
 \end{figure}
 
-La brecha es de \textbf{tres a cuatro órdenes de magnitud}: un clasificador diagnostica en $4$--$12$\,ms
-con menos de $1$\,GB de VRAM en una GPU de consumo, mientras que un VLM generativo tarda $24$--$66$\,s por
-reporte y exige $10$--$14$\,GB (GPU de datacenter). LLaVA-Med ($66$\,s/reporte) es unas $6000$ veces más
-lento por item que ConvNeXt ($4$\,ms). La lectura para la tesina es que \emph{la tarea determina el costo
-del hardware}: para la detección/diagnóstico basta hardware modesto (un clasificador o DermLIP); el costo
-alto aparece solo en la generación del reporte. En el ensamble, el paso de clasificación es despreciable
-y la generación domina la cuenta; y Mini-VLM ($4.2$\,B, $24$\,s, $10$\,GB) es $\sim$$2.7\times$ más rápido
-que LLaVA-Med y, con \emph{grounding}, alcanza su consistencia: es el candidato de ``hardware modesto''
-para generación.
+\paragraph{Costo entre clasificadores.} Los tres clasificadores supervisados diagnostican en $4$--$12$\,ms
+con menos de $1$\,GB de VRAM; DermLIP, siendo mayor ($150$\,M, $\sim$2\,GB), sigue en el rango de los
+milisegundos. Las diferencias entre ellos son de \emph{fracciones de milisegundo} y de pocos cientos de
+MB: a efectos prácticos, cualquiera de los cuatro corre holgadamente en una GPU de consumo e incluso en
+CPU. La elección del clasificador se decide por exactitud, no por costo.
+
+\paragraph{Costo entre generadores.} Entre los VLMs generativos sí hay diferencias relevantes. Mini-VLM
+($4.2$\,B, $10$\,GB) entra en una GPU de consumo de gama alta; LLaVA-Med y SkinVL ($7$\,B, $14$\,GB)
+requieren una GPU de más memoria. En tiempo, Mini-VLM ($24$\,s) es $\sim$$2.7\times$ más rápido que
+LLaVA-Med ($66$\,s); SkinVL, pese a compartir tamaño con LLaVA-Med, resulta el más rápido ($\sim$4\,s)
+\emph{precisamente porque produce reportes muy cortos} —el mismo colapso de estilo que lastra su
+fidelidad (Sección~\ref{sec:skinvl}) abarata su generación—. Un tiempo bajo no es aquí una virtud:
+refleja que el modelo dice poco.
+
+\paragraph{Dónde vive el costo en el ensamble.} Comparar directamente los milisegundos de un clasificador
+con los segundos de un generador \emph{no es una comparación justa} —son tareas distintas: una asigna una
+etiqueta, la otra redacta texto—. El valor de contrastarlos es \emph{ubicar el costo dentro del
+\emph{pipeline}} de dos etapas. La brecha es de \textbf{tres a cuatro órdenes de magnitud} (LLaVA-Med es
+$\sim$$6000\times$ más lento por ítem que ConvNeXt), de modo que en el ensamble el paso de
+clasificación es \emph{despreciable} y la generación domina la cuenta, tanto en tiempo como en memoria.
+La lectura para la tesina es que \emph{la tarea determina el costo del hardware}: para la
+detección/diagnóstico basta hardware modesto (un clasificador o DermLIP), y el costo alto aparece solo al
+generar el reporte. Mini-VLM ($24$\,s, $10$\,GB) es el mejor candidato de ``hardware modesto'' para la
+generación, ya que con \emph{grounding} alcanza la consistencia de los modelos más grandes.
 
 % ============================================================
 \section{Discusión y conclusiones}
@@ -1141,7 +1282,12 @@ permite responderlos de forma parcial:
   por sí solos, no se comprometen con un diagnóstico (Sección~\ref{sec:reprazon}). El ensamble en
   cascada con \emph{grounding} (Sección~\ref{sec:porque_ensamble}) sí produce reportes que afirman un
   diagnóstico: con un clasificador fuerte, la \emph{diagnostic consistency} sube sustancialmente
-  (Mini-VLM: $0.20 \rightarrow 0.83$).
+  (Mini-VLM: $0.20 \rightarrow 0.83$). Las ablaciones precisan \emph{de dónde} viene esa fidelidad: es el
+  \textbf{diagnóstico del clasificador}, no la visión del generador, lo que la determina —quitarle la
+  imagen al generador casi no cambia el resultado ($\Delta 0.03$), mientras que inyectarle un diagnóstico
+  equivocado lo arrastra al error ($0.11$)—. Incluso un generador \emph{derm-especializado} (SkinVL,
+  Sección~\ref{sec:skinvl}) confirma el patrón: sin \emph{grounding} colapsa, y con él acierta gracias a
+  la etiqueta que recibe, no a lo que ``ve''.
   \item \textbf{Evaluación en distintos escenarios (objetivo c).} Se evaluó precisión diagnóstica
   (clasificación y Nivel 2 de reportes), coherencia/calidad textual (Nivel 1 y ejemplos cualitativos) y
   el comportamiento entre dominios de imagen (dermatoscopía vs clínica). Surgió además un aporte
@@ -1160,11 +1306,13 @@ experimentación en curso.
 \subsection{Limitaciones y trabajo en proceso o futuro}
 \label{sec:limitaciones}
 \begin{itemize}[leftmargin=1.6em]
-  \item \textbf{Escala de la evaluación de reportes.} Los resultados del ensamble
+  \item \textbf{Escala de la evaluación de reportes.} Los resultados del ensamble con LLaVA-Med y Mini-VLM
   (Cuadro~\ref{tab:ensamble}) se obtuvieron sobre un subconjunto de \emph{400 imágenes del test split de
   HAM10000}. Esta reducción aplica \emph{solo} a la generación de reportes (costosa); la
-  \emph{clasificación} se evaluó siempre sobre los conjuntos completos. La corrida de generación sobre el
-  test split completo (1503 imágenes) está en curso para consolidar los números.
+  \emph{clasificación} se evaluó siempre sobre los conjuntos completos. El ensamble con SkinVL sí se corrió
+  sobre el \emph{test split completo} (1503 imágenes) y reprodujo el mismo patrón, lo que respalda la
+  estabilidad de las conclusiones; queda pendiente extender esa corrida completa a LLaVA-Med y Mini-VLM
+  para consolidar sus números absolutos.
   \item \textbf{Costo experimental.} Cada prueba que involucra VLMs o generación de reportes requiere
   enviar trabajos al clúster Mendieta (por la memoria de GPU necesaria), con tiempos de espera en cola
   de aproximadamente 4 a 6 días en muchos casos. Esto limitó fuertemente la cantidad de iteraciones posibles
@@ -1172,9 +1320,17 @@ experimentación en curso.
   \item \textbf{Artefactos de generación.} Persisten degeneraciones (repetición, Figura~\ref{fig:ej_rep})
   ajenas a la fidelidad diagnóstica; mitigarlas (p.\,ej.\ penalización de repetición en el decodificado)
   es trabajo futuro.
-  \item \textbf{Extensiones planificadas.} Incorporar un VLM generativo \emph{derm-especializado}
-  (SkinVL~\cite{zeng2025mmskin}) como tercer generador del ensamble, y modelos de razonamiento clínico
-  como Skin-R1~\cite{liu2025skinr1}; y una evaluación cualitativa formal con rúbrica clínica.
+  \item \textbf{Generalización fuera de distribución.} La caída de $27$--$40$ puntos de exactitud sobre
+  HIBA (Sección~\ref{sec:robustez}) muestra que los clasificadores no transfieren bien a otra población
+  (fototipos III--VI). Cerrar esa brecha —con \emph{fine-tuning} sobre datos diversos o técnicas de
+  adaptación de dominio— queda como trabajo futuro y es probablemente el paso más importante para un uso
+  clínico real.
+  \item \textbf{Extensiones planificadas.} Evaluar modelos de razonamiento clínico como
+  Skin-R1~\cite{liu2025skinr1} como generadores del ensamble, y realizar una evaluación cualitativa formal
+  de los reportes con rúbrica clínica. La incorporación de un generador \emph{derm-especializado}
+  (SkinVL~\cite{zeng2025mmskin}), inicialmente planificada, ya se concretó (Sección~\ref{sec:skinvl}): su
+  resultado —colapso sin \emph{grounding}, reportes muy breves con él— reforzó, en lugar de matizar, la
+  conclusión de que la fidelidad proviene del clasificador.
 \end{itemize}
 
 \printbibliography

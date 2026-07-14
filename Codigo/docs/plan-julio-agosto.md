@@ -279,3 +279,38 @@ riesgo de integración— y **arrancar P0 el mismo día** (no depende del cluste
 | #21 desbalance | P2.2 | P2 |
 | #23 plantilla clínica | P2.1 | P2 |
 | #24 RAG | Afuera | — |
+
+---
+
+## 6. Segunda ronda — feedback sobre `experimentacion.tex` (`mejoras.md`, 2026-07-08)
+
+Tras leer el documento (24 págs), el tutorando marcó 11 ítems + 2 lineamientos. Triage: la mayoría son
+**mejoras de texto** con los datos que ya tenemos; solo #9 (y #8-stretch) requieren cómputo nuevo.
+
+### 6.1 Tareas de EXPERIMENTO (nuevas)
+- **P4.1 — Extender ablaciones a LLaVA-Med y Mini-VLM** (mejora #9). Correr imagen-vs-dx (oracle sin
+  imagen) + dx-erróneo para LLaVA/Mini (hasta ahora solo SkinVL), subconjunto 400. SLURM
+  `slurm/mendieta/v3/ablations_llava_mini.sh` (alias `abl_llava_mini`). **Job 1160045 (lanzado).** Al
+  volver: patch de `gt_label` desde `full_dx_oracle.csv` + `per_class_ensemble.py` sobre esas condiciones.
+- **P4.2 (stretch) — Re-probar el baseline de SkinVL con otro prompt** (mejora #8). El baseline colapsa a
+  modo (72% reportes idénticos = "tinea corporis"); probar si un prompt de baseline distinto lo
+  des-colapsa, para confirmar que es mismatch de distribución y no del prompt. Opcional, 1 condición.
+
+### 6.2 Tareas de TEXTO / pulido del `.tex` (con datos actuales)
+| # mejora | Qué mejorar | Estado |
+|---|---|:--:|
+| D1 (#1) | Desbalance: explicar más las pruebas realizadas | ✅ |
+| D2 (#2) | Embeddings: explicar mejor el experimento de modelos clásicos | ✅ |
+| D3 (#3) | Explicar ECE/MCE/Brier y McNemar (cómo se calculan, qué significan); **rediseñar el reliability diagram** (colores poco claros; evaluar mejor gráfico) | ✅ |
+| D4 (#4) | **Introducir HIBA** en §Conjuntos de datos + qué se evaluó; explicar los niveles de intensidad de las perturbaciones y cómo se hicieron | ✅ |
+| D5 (#5) | Interpretabilidad: cómo se construyen los mapas, qué significan, descripción más clara de la figura | ✅ |
+| D6 (#6) | §Diseño: breve descripción de Nivel 1 / Nivel 2 donde se los menciona | ✅ |
+| D7 (#7) | **Taxonomía de errores: reescribir** — listar categorías + ejemplos + por qué; justificar "cualitativo→cuantitativo" y cómo; explicar qué cae/baja/crece y qué son los 0.30→0.60 | ✅ |
+| D8 (#8) | **SkinVL baseline: reenmarcar** con la evidencia (72% reportes idénticos = colapso de modo por mismatch MM-Skin→HAM, no "peor que los VLMs") | ✅ (hecho) |
+| D9 (#10) | Costo: renombrar "latencia"→"tiempo de procesamiento individual"; agregar **costo espacial**; agregar **SkinVL**; separar comparaciones clasif-vs-clasif y gen-vs-gen (no comparar clasif con gen como si fuera justo) | ✅ |
+| D10 (#11) | Actualizar §Discusión y conclusiones + §Limitaciones (SkinVL ya no es "planificado"; reflejar hallazgos nuevos: fidelidad=clasificador, generador transcribe) | ✅ |
+| D11 (G1) | Reemplazar los `[imagen ISIC_xxxx]` por las imágenes reales en los ejemplos cualitativos | ✅ |
+| G2 | Mantener el hilo conductor: no nombrar cosas antes de explicarlas (o avisar "se explica más adelante") | ✅ (TTA definido en 1er uso; términos clave con def. al introducirse) |
+
+**Orden sugerido:** D8 ✅ → D7, D3 (los más señalados como confusos) → D4, D6, D5, D1, D2 (explicaciones) →
+D9, D10 (costo + conclusiones, tras P4.1) → D11 (imágenes) → G2 (revisión de hilo conductor).

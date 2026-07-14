@@ -197,6 +197,8 @@ JOBS = {
     "convert_skinvl":   "slurm/mendieta/v3/convert_skinvl.sh",
     "smoke_skinvl":     "slurm/mendieta/v3/smoke_skinvl.sh",
     "ensemble_skinvl":  "slurm/mendieta/v3/generate_reports_skinvl.sh",
+    ## P4.1 (mejoras #9) — ablaciones imagen-vs-dx / dx-erróneo para LLaVA-Med y Mini-VLM.
+    "abl_llava_mini":   "slurm/mendieta/v3/ablations_llava_mini.sh",
     ## Ensamble — Nivel 1 sobre SkinCoT (con referencias): baseline vs oracle-noreasoning, LLaVA.
     "ensemble_skincot_l1_llava": "slurm/mendieta/ensemble_skincot_level1_llava.sh",
     ## Variantes CoT: mismo mecanismo de env var METHOD=cot.
