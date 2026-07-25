@@ -4,6 +4,49 @@ Ayuda-memoria cronológico de experimentos enviados a cluster, ordenado de más 
 
 ---
 
+## 2026-07-25
+
+### P5.4 — Generación consciente de la incertidumbre — Mendieta
+**Job Mendieta 1161538 (enviado).** Plan:
+[incertidumbre_p54_plan](ideas/incertidumbre_p54_plan_20260725.md). SLURM
+`slurm/mendieta/v3/uncertainty_generation.sh` (alias `unc_gen`), Mini-VLM n=400, modo `--uncertainty`.
+**Trabajo local previo:** (1) `temperature_scaling.py` (Swin, T=0.53, ECE 0.39→0.34) — la **confianza
+softmax NO sirve para rutear** (no monótona vs exactitud; sub-confianza en la clase mayoritaria).
+(2) Pivote a **acuerdo Swin↔kNN-DermLIP** (`build_uncertainty_agreement.py`): acuerdo 74% acc 0.944;
+desacuerdo 26% con gt∈{Swin,kNN} 88% (vs Swin solo 0.37). CSV subido por scp. generate_report.py: nuevo
+modo `--uncertainty` + `DIFFERENTIAL_TEMPLATE`. **Pendiente análisis de generación.**
+
+## 2026-07-21
+
+### Desbalance extendido a ConvNeXt + DenseNet (mejora #2, 2.ª tanda) — Mendieta
+**Jobs Mendieta 1161112–1161119.** Plan:
+[desbalance_multimodelo_plan](ideas/desbalance_multimodelo_plan_20260721.md). Replica el desbalance de Swin
+(P2.2) en **ConvNeXt-Tiny y DenseNet121** × 4 pérdidas, mismo recipe modern. (Se planeó TOKO pero estaba
+caído → Mendieta.)
+- **ConvNeXt (1161112–1161115): COMPLETED.** CE-plano mejor global (acc 0.912 / f1-w 0.910; sens macro
+  0.824); class-weights degrada fuerte (acc 0.691); Focal sube sens macro a 0.842 pero −11 pts de acc. El
+  patrón de Swin se repite (2 arquitecturas: transformer + CNN).
+- **DenseNet (1161116–1161119): FALLARON** — nodos de Mendieta offline, torchvision no pudo bajar los
+  pesos ImageNet (`Network is unreachable`). Re-envío 1161532–1161535 en Mendieta **cancelado**; TOKO
+  volvió (cola casi nula, pesos DenseNet ya cacheados de `cls_densenet_modern`) → **re-enviados a TOKO
+  (jobs 97086–97089, PENDING).**
+
+Resul: [desbalance_multimodelo_resul_20260725.md](resul/desbalance_multimodelo_resul_20260725.md).
+**Veredicto: CUMPLE (parcial, 2/3 arquitecturas).** Cuadro `tab:desbalance` de `experimentacion.tex`
+extendido a Swin+ConvNeXt (DenseNet se agrega al completar). Descarga: `outputs/results/imb_extra/`.
+
+### Mejoras al documento (2.ª tanda de `mejoras.md`) — **Sin jobs SLURM** (local)
+Pulido de `experimentacion.tex` (6 ítems + lineamiento): (#2) nueva figura `P24_robustness_examples.png`
+—una imagen en los 5 niveles de cada perturbación con la predicción de Swin, verde/rojo según acierto—
+(`scripts/robustness_examples.py`); (#3) **regenerada** `P25_interpretability.png` en layout landscape
+(2 clases/fila) para que no deje hoja en blanco ni se salga de márgenes; (#4) taxonomía con ejemplos
+reales de cada error + jerarquía de gravedad (hedging/contradicción < dx incorrecto/repetición); (#5)
+aclarado el $\approx$0.00 del baseline SkinVL (verificado: 3/1503 aciertos = consistency 0.002, colapso de
+modo); (#6) nuevo Cuadro `tab:costo_total` con costo de entrenar (stage2 Mini 9.4h / LLaVA 7.0h, medido)
+y de generar el test completo; lineamiento: auditados los floats (15 tablas + 20 figuras, todos con
+caption/número). **Pendiente #1** (desbalance en más modelos) — requiere experimento nuevo en TOKO.
+Doc compila 30 págs, 0 undefined.
+
 ## 2026-07-13
 
 ### P5.3 (RAG) + P5.5 (fix repetición) — Mini-VLM con casos similares (DermLIP)
@@ -25,11 +68,23 @@ todo clase-a-clase p<0.05; los 2 VLMs generales indistinguibles entre sí p=1.0)
 Plan: [mejoras_resultados_p5_plan](ideas/mejoras_resultados_p5_plan_20260713.md). Pendiente integrar a tex.
 
 ### P4.2 (mejoras.md #8) — SkinVL baseline con prompts alternativos
-**Job Mendieta 1160208 (enviado).** SLURM: `slurm/mendieta/v3/skinvl_baseline_prompts.sh` (alias
-`skinvl_prompts`). Prueba 2 prompts de baseline alternativos (diagnóstico directo / rol clínico) sobre
-400 imágenes, para ver si el colapso de modo del baseline SkinVL (72% "tinea corporis") es del prompt o
-del mismatch de distribución MM-Skin→HAM. Requirió agregar `--baseline_prompt` a `generate_report.py`.
-Al volver: medir fracción de reportes idénticos + consistency por prompt. **Pendiente de análisis.**
+**Job Mendieta 1160208 (COMPLETED, 1h03m).** SLURM: `slurm/mendieta/v3/skinvl_baseline_prompts.sh` (alias
+`skinvl_prompts`). 2 prompts alternativos (diagnóstico directo / rol clínico) × 400. **Resultado:** el
+prompt NO des-colapsa — solo cambia el atractor (baseline 72% "tinea corporis" → prompts nuevos 33–56%
+"lichen planus pigmentosus"). Ambos diagnósticos están **fuera de las 7 clases de HAM** → confirma mismatch
+de distribución MM-Skin→HAM, no del prompt. Resul:
+[skinvl_prompts_p42_resul_20260715.md](resul/skinvl_prompts_p42_resul_20260715.md). **Veredicto: CUMPLE.**
+Integrado a `experimentacion.tex` §SkinVL. Cierra mejora #8.
+
+### P5.3 (RAG) — Grounding por recuperación (DermLIP), Mini-VLM
+**Job Mendieta 1160552 (COMPLETED, 5h44m)** (re-envío del 1160209 que crasheó por los params de repetición
+P5.5, incompatibles con Mini-VLM). Índice RAG local (`build_rag_index.py`, k=3, kNN-dx acc **0.831**).
+Condiciones `full_rag` (RAG-only) y `full_swin_rag` (grounding+RAG), n=400.
+**Resultado:** RAG-only lleva consistency 0.20→**0.76** (≈ clasificador Swin 0.83) SIN clasificador
+entrenado, con el **entity recall más alto (0.91)**; sumar RAG sobre el clasificador aporta poco
+(0.83→0.84, baja riqueza). Resul: [rag_resul_20260719.md](resul/rag_resul_20260719.md). **Veredicto:
+CUMPLE.** Integrado a `experimentacion.tex` §Grounding por recuperación (RAG) (`tab:rag`).
+P5.5 sigue diferido a LLaVA-Med.
 
 ### P4.1 (mejoras.md #9) — Ablaciones imagen-vs-dx y dx-erróneo en LLaVA-Med y Mini-VLM
 **Job Mendieta 1160045 (COMPLETED, 6h20m).** SLURM: `slurm/mendieta/v3/ablations_llava_mini.sh`

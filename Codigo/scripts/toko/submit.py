@@ -105,6 +105,48 @@ JOBS = {
         "RUN_NAME": "swin_imb_balsoftmax",
         "EXTRA_FLAGS": "--balanced-softmax",
     }),
+    ## Desbalance extendido a ConvNeXt y DenseNet (mejora #2, 2.ª tanda mejoras.md).
+    ## Mismo diseño que imb_swin_*: mismo recipe modern, varía SOLO la loss.
+    "imb_convnext_ce": (_CLS_SCRIPT, {
+        "MODEL": "convnext_tiny", "RECIPE": "modern", "LR": _CLS_LR["convnext_tiny"],
+        "RUN_NAME": "convnext_imb_ce",
+        "EXTRA_FLAGS": "--focal-gamma 0 --class-weights none",
+    }),
+    "imb_convnext_weighted": (_CLS_SCRIPT, {
+        "MODEL": "convnext_tiny", "RECIPE": "modern", "LR": _CLS_LR["convnext_tiny"],
+        "RUN_NAME": "convnext_imb_weighted",
+        "EXTRA_FLAGS": "--focal-gamma 0 --class-weights auto",
+    }),
+    "imb_convnext_focal": (_CLS_SCRIPT, {
+        "MODEL": "convnext_tiny", "RECIPE": "modern", "LR": _CLS_LR["convnext_tiny"],
+        "RUN_NAME": "convnext_imb_focal",
+        "EXTRA_FLAGS": "--focal-gamma 2.0 --class-weights auto",
+    }),
+    "imb_convnext_balsoftmax": (_CLS_SCRIPT, {
+        "MODEL": "convnext_tiny", "RECIPE": "modern", "LR": _CLS_LR["convnext_tiny"],
+        "RUN_NAME": "convnext_imb_balsoftmax",
+        "EXTRA_FLAGS": "--balanced-softmax",
+    }),
+    "imb_densenet_ce": (_CLS_SCRIPT, {
+        "MODEL": "densenet", "RECIPE": "modern", "LR": _CLS_LR["densenet"],
+        "RUN_NAME": "densenet_imb_ce",
+        "EXTRA_FLAGS": "--focal-gamma 0 --class-weights none",
+    }),
+    "imb_densenet_weighted": (_CLS_SCRIPT, {
+        "MODEL": "densenet", "RECIPE": "modern", "LR": _CLS_LR["densenet"],
+        "RUN_NAME": "densenet_imb_weighted",
+        "EXTRA_FLAGS": "--focal-gamma 0 --class-weights auto",
+    }),
+    "imb_densenet_focal": (_CLS_SCRIPT, {
+        "MODEL": "densenet", "RECIPE": "modern", "LR": _CLS_LR["densenet"],
+        "RUN_NAME": "densenet_imb_focal",
+        "EXTRA_FLAGS": "--focal-gamma 2.0 --class-weights auto",
+    }),
+    "imb_densenet_balsoftmax": (_CLS_SCRIPT, {
+        "MODEL": "densenet", "RECIPE": "modern", "LR": _CLS_LR["densenet"],
+        "RUN_NAME": "densenet_imb_balsoftmax",
+        "EXTRA_FLAGS": "--balanced-softmax",
+    }),
     ## Clasificadores Fase 1 — corridas modern v3 (sin Focal Loss → CE + class weights)
     ## Hipótesis: focal_gamma causa colapso hacia clases minoritarias en datasets desbalanceados.
     ## DenseNet: también reduce RandAugment de m=9 a m=6 (BatchNorm sensible a varianza alta).
@@ -192,7 +234,12 @@ _CLS_ABLATION_JOBS = [
     "cls_abl_no_mixup", "cls_abl_no_randaug", "cls_abl_no_focal",
     "cls_abl_no_tta", "cls_abl_no_two_stage", "cls_abl_no_label_smoothing",
 ]
+_IMB_EXTRA_JOBS = [
+    "imb_convnext_ce", "imb_convnext_weighted", "imb_convnext_focal", "imb_convnext_balsoftmax",
+    "imb_densenet_ce", "imb_densenet_weighted", "imb_densenet_focal", "imb_densenet_balsoftmax",
+]
 GROUPS = {
+    "imb_all_extra": _IMB_EXTRA_JOBS,
     "all":          _TRAINING_JOBS,
     "all_s1":       ["mini_s1", "llava_s1"],
     "all_s2":       ["mini_s2", "llava_s2"],

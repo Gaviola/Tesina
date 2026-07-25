@@ -116,17 +116,27 @@ def main():
         if all(v >= args.n_per_class for v in seen.values()):
             break
 
-    fig, axes = plt.subplots(len(picks), 3, figsize=(7.5, 2.5 * len(picks)), squeeze=False)
-    for r, (pil, lbl) in enumerate(picks):
+    # Layout landscape: 2 clases por fila (cada clase = 3 paneles: original / Grad-CAM / saliencia).
+    # Evita la figura vertical demasiado alta que se salía de la página.
+    per_row = 2
+    n_rows = (len(picks) + per_row - 1) // per_row
+    n_cols = per_row * 3
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(2.15 * n_cols, 2.35 * n_rows), squeeze=False)
+    for ax_row in axes:
+        for ax in ax_row:
+            ax.axis("off")
+    for idx, (pil, lbl) in enumerate(picks):
+        r = idx // per_row
+        cb = (idx % per_row) * 3
         x = tf(pil).unsqueeze(0).to(device)
         cam, pred = _swin_gradcam(swin, x)
         sal = _dermlip_saliency(dermlip, pil, lbl)
-        axes[r][0].imshow(pil.resize((224, 224))); axes[r][0].axis("off")
-        axes[r][0].set_title(f"{HAM10000_CLASSES[lbl]}", fontsize=9)
-        _overlay(axes[r][1], pil, cam, f"Swin Grad-CAM (pred {HAM10000_CLASSES[pred]})")
-        _overlay(axes[r][2], pil, sal, "DermLIP saliencia")
-    fig.suptitle("¿El modelo mira la lesión? Grad-CAM (Swin) y saliencia (DermLIP)", fontsize=12)
-    fig.tight_layout(rect=[0, 0, 1, 0.98])
+        axes[r][cb].imshow(pil.resize((224, 224))); axes[r][cb].axis("off")
+        axes[r][cb].set_title(f"{HAM10000_CLASSES[lbl]}", fontsize=9)
+        _overlay(axes[r][cb + 1], pil, cam, f"Swin Grad-CAM (pred {HAM10000_CLASSES[pred]})")
+        _overlay(axes[r][cb + 2], pil, sal, "DermLIP saliencia")
+    fig.suptitle("¿El modelo mira la lesión? Grad-CAM (Swin) y saliencia (DermLIP)", fontsize=13)
+    fig.tight_layout(rect=[0, 0, 1, 0.97])
     png = out_dir / "interpretability.png"
     fig.savefig(png, dpi=150, bbox_inches="tight")
     logger.info("Figura: %s", png)

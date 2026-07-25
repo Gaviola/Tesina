@@ -13,13 +13,15 @@
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=facundo.gaviola@gmail.com
 
-## P5.3 (RAG) + P5.5 (fix repetición) — Mini-VLM, n=400.
+## P5.3 (RAG) — Mini-VLM, n=400.
 ## Contexto RAG precomputado local con embeddings DermLIP (outputs/rag/rag_context.csv).
-## Condiciones (todas con fix de repetición rep_penalty=1.3 / no_repeat_ngram=3):
+## NOTA: la primera corrida (job 1160209) con repetition_penalty/no_repeat_ngram (P5.5) crasheó con
+## CUDA device-side assert: en Mini-VLM (Phi-3.5) los input_ids llevan tokens de imagen fuera del rango
+## del vocabulario, y el logits-processor de repetición hace gather fuera de límites. Se quita P5.5 acá
+## (se probará por separado en LLaVA-Med). Condiciones:
 ##   (1) rag                -> RAG-only: recuperación como contexto, sin clasificador.
 ##   (2) grounded_swin_rag  -> grounding Swin + RAG (¿la recuperación agrega sobre el clasificador?).
-##   (3) grounded_swin_rep  -> grounding Swin, SIN RAG (aísla el aporte de RAG y valida el fix P5.5
-##                             contra el full_swin previo, que no tenía fix de repetición).
+## El baseline sin RAG y el grounding-Swin sin RAG ya existen (full_baseline / full_swin del ensamble).
 
 . /etc/profile
 module load cuda 2>/dev/null || true
@@ -33,8 +35,7 @@ echo "=== rag_generation (JOBID: $SLURM_JOB_ID) ==="; date; nvidia-smi
 
 MODEL="mini_vlm"; CKPT="outputs/checkpoints/stage2_mini_vlm_v2/best_model.pt"
 SPLIT="--splits_file data/splits/ham10000_splits.json --split test"
-REP="--repetition_penalty 1.3 --no_repeat_ngram_size 3"
-COMMON="--model ${MODEL} --checkpoint ${CKPT} --images_dir data/processed/HAM10000 ${SPLIT} --max_tokens 384 --seed 42 --limit 400 ${REP}"
+COMMON="--model ${MODEL} --checkpoint ${CKPT} --images_dir data/processed/HAM10000 ${SPLIT} --max_tokens 384 --seed 42 --limit 400"
 
 echo "=== (1) RAG-only ==="
 ${PYTHON} scripts/generate_report.py ${COMMON} \
@@ -47,12 +48,6 @@ ${PYTHON} scripts/generate_report.py ${COMMON} \
     --diagnosis_source outputs/full_dx_swin.csv --grounded_prompt --grounded_variant noreasoning \
     --rag_context_csv outputs/rag/rag_context.csv \
     --output_dir outputs/generated_reports/${MODEL}/full_swin_rag
-echo ""
-
-echo "=== (3) grounding Swin (SIN RAG, con fix repetición) ==="
-${PYTHON} scripts/generate_report.py ${COMMON} \
-    --diagnosis_source outputs/full_dx_swin.csv --grounded_prompt --grounded_variant noreasoning \
-    --output_dir outputs/generated_reports/${MODEL}/full_swin_rep
 echo ""
 
 echo "=== Job completado ==="; date; rm -rf "$TMPDIR"

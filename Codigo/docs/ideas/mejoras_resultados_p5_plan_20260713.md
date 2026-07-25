@@ -35,9 +35,10 @@ modesto se acerque a los modelos grandes. Toda mejora se juzga también por su c
 - **Código:** extender `scripts/statistical_tests.py` con Wilcoxon. **Salida:** actualizar
   `resul/tests_estadisticos_*`.
 
-### P5.3 — RAG / generación basada en casos similares (CLUSTER) · mejora reportes · ⏳ ENVIADO (job 1160209)
-> Índice DermLIP + retrieval hechos local (`build_rag_index.py`, kNN-dx acc 0.831). Job Mini-VLM n=400:
-> full_rag / full_swin_rag / full_swin_rep (con fix repetición P5.5).
+### P5.3 — RAG / generación basada en casos similares (CLUSTER) · mejora reportes · ✅ HECHO (job 1160552)
+> **Resultado:** RAG-only consistency 0.20→0.76 (≈ clasificador) + entity recall 0.91 (el más alto); apilar
+> RAG sobre el clasificador aporta poco. kNN-dx (DermLIP) acc 0.831. Ver
+> [rag_resul](../resul/rag_resul_20260719.md). Integrado a `experimentacion.tex` §RAG.
 
 - **Idea:** con los embeddings **DermLIP** de HAM-train (ya tenemos el encoder), para cada imagen de test
   recuperar los k=3 vecinos más cercanos del train + su dx y morfología, e inyectarlos como contexto en el
@@ -58,7 +59,12 @@ modesto se acerque a los modelos grandes. Toda mejora se juzga también por su c
 - **Criterio:** en imágenes de baja confianza, el reporte diferencial menciona el dx correcto entre sus
   candidatos con mayor recall que el grounding forzado (que propaga el error, ver P4.1).
 
-### P5.5 — Fix de repetición en el decoding (CLUSTER, barato) · mejora reportes · ⏳ ENVIADO (con P5.3, job 1160209)
+### P5.5 — Fix de repetición en el decoding (CLUSTER, barato) · mejora reportes · ⚠️ DIFERIDO a LLaVA-Med
+> `repetition_penalty`/`no_repeat_ngram_size` crashean Mini-VLM (Phi-3.5): sus input_ids llevan tokens de
+> imagen fuera del rango del vocabulario y el logits-processor de repetición hace gather fuera de límites
+> (CUDA device-side assert). En LLaVA-Med el image token (32000) está dentro del vocab (32064) → seguro.
+> Pendiente: probarlo en LLaVA-Med sobre una condición existente (p.ej. grounding-swin) y medir si baja la
+> repetición. El código ya soporta los flags (`--repetition_penalty/--no_repeat_ngram_size`).
 - **Idea:** agregar `repetition_penalty` / `no_repeat_ngram_size` al `generate` para eliminar el artefacto de
   repetición (Fig. ej_rep). Se pliega a las corridas de P5.3/P5.4 (mismo job) para no gastar cola extra.
 - **Criterio:** desaparece la degeneración por repetición sin bajar consistency.

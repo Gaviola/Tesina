@@ -292,10 +292,10 @@ Tras leer el documento (24 págs), el tutorando marcó 11 ítems + 2 lineamiento
   (6h20m). imagen-vs-dx Δ: SkinVL +0.03, LLaVA −0.15, Mini 0.00; dx-erróneo 0.07–0.11 (los tres). El
   patrón de SkinVL se generaliza. Resul: `resul/ablaciones_p41_resul_20260713.md`; integrado a
   `experimentacion.tex` §Ablaciones (Cuadro `tab:ablaciones`, 3 generadores).
-- **P4.2 (stretch) — Re-probar el baseline de SkinVL con otro prompt** (mejora #8). ⏳ **ENVIADO** (job
-  1160208, alias `skinvl_prompts`). 2 prompts alternativos (diagnóstico directo / rol clínico) × 400. Se
-  agregó `--baseline_prompt` a `generate_report.py`. Al volver: medir % reportes idénticos + consistency
-  por prompt → confirmar si el colapso es del prompt o del mismatch MM-Skin→HAM.
+- **P4.2 (stretch) — Re-probar el baseline de SkinVL con otro prompt** (mejora #8). ✅ **HECHO** (job
+  1160208). El prompt NO des-colapsa: solo cambia el atractor (72% "tinea corporis" → 33–56% "lichen
+  planus pigmentosus", ambos fuera de HAM). Confirma mismatch de distribución. Resul:
+  `resul/skinvl_prompts_p42_resul_20260715.md`; integrado a `experimentacion.tex` §SkinVL.
 
 ### 6.2 Tareas de TEXTO / pulido del `.tex` (con datos actuales)
 | # mejora | Qué mejorar | Estado |

@@ -162,6 +162,15 @@ GROUNDED_RAG_TEMPLATE = (
     "diagnoses."
 )
 
+# P5.4 (incertidumbre): cuando el clasificador NO está seguro, en vez de forzar un dx, se pide un
+# reporte DIFERENCIAL con los candidatos más probables (degradación elegante ante incertidumbre).
+DIFFERENTIAL_TEMPLATE = (
+    "The classifier is uncertain about this lesion; its most likely diagnoses are: {candidates}. "
+    "Output ONLY the final clinical report — no reasoning or <think> blocks. Describe the "
+    "morphological and dermatoscopic features, and present these as a differential diagnosis "
+    "(discuss the candidates) rather than committing to a single one."
+)
+
 
 def _generate_single(model, image_path: Path, max_tokens: int, prompt: str = REPORT_PROMPT,
                      no_image: bool = False, **gen_kwargs) -> str:
@@ -230,6 +239,13 @@ def main():
     parser.add_argument("--rag", action="store_true",
                         help="P5.3: modo RAG-only (recuperación como contexto, sin clasificador). "
                              "Requiere --rag_context_csv.")
+    parser.add_argument("--uncertainty_csv", type=str, default=None,
+                        help="P5.4: CSV con image_id,unc_dx,unc_candidates,unc_confident "
+                             "(temperature_scaling.py). Requiere --uncertainty.")
+    parser.add_argument("--uncertainty", action="store_true",
+                        help="P5.4: modo consciente de incertidumbre. Si el clasificador está seguro "
+                             "(unc_confident=1) → reporte definitivo con unc_dx; si no → reporte "
+                             "diferencial con los candidatos. Requiere --uncertainty_csv.")
     parser.add_argument("--repetition_penalty", type=float, default=None,
                         help="P5.5: penalización de repetición en el decoding (>1.0, p.ej. 1.2).")
     parser.add_argument("--no_repeat_ngram_size", type=int, default=None,
@@ -364,6 +380,24 @@ def main():
                     rag_lookup[Path(key).stem] = ctx
             logger.info("RAG: %d contextos cargados de %s", len(rag_df), args.rag_context_csv)
 
+        # P5.4: incertidumbre por imagen (image_id -> dict con top-1, candidatos, bandera confident).
+        unc_lookup: dict[str, dict] = {}
+        if args.uncertainty_csv:
+            import pandas as pd
+            unc_df = pd.read_csv(args.uncertainty_csv)
+            for _, row in unc_df.iterrows():
+                key = str(row.get("image_id", "")).strip()
+                if not key:
+                    continue
+                entry = {
+                    "dx": str(row.get("unc_dx", "")).strip(),
+                    "candidates": str(row.get("unc_candidates", "")).strip(),
+                    "confident": int(row.get("unc_confident", 0)),
+                }
+                unc_lookup[key] = entry
+                unc_lookup[Path(key).stem] = entry
+            logger.info("Incertidumbre: %d entradas cargadas de %s", len(unc_df), args.uncertainty_csv)
+
         # Cargar referencias opcionales desde CSV (ej: MM-SkinQA)
         references = {}
         if args.reference_csv:
@@ -427,7 +461,19 @@ def main():
                 # (REPORT_PROMPT por defecto, o --baseline_prompt si se pasa).
                 prompt = args.baseline_prompt or REPORT_PROMPT
                 grounded_dx = ""
-                if args.grounded_prompt:
+                unc_mode = ""  # "definitivo" | "diferencial" (para trazabilidad)
+                if args.uncertainty and unc_lookup:
+                    # P5.4: consciente de incertidumbre. Seguro -> definitivo; inseguro -> diferencial.
+                    u = unc_lookup.get(img_path.name) or unc_lookup.get(img_path.stem)
+                    if u:
+                        if u["confident"] and u["dx"]:
+                            grounded_dx = u["dx"]
+                            unc_mode = "definitivo"
+                            prompt = GROUNDED_TEMPLATES["noreasoning"].format(dx=grounded_dx)
+                        elif u["candidates"]:
+                            unc_mode = "diferencial"
+                            prompt = DIFFERENTIAL_TEMPLATE.format(candidates=u["candidates"])
+                elif args.grounded_prompt:
                     grounded_dx = (
                         diagnosis_lookup.get(img_path.name)
                         or diagnosis_lookup.get(img_path.stem, "")
@@ -453,6 +499,7 @@ def main():
                     "gt_label": gt_label,
                     "grounded_dx": grounded_dx,
                     "rag_context": rag_context,
+                    "unc_mode": unc_mode,
                     "prompt": prompt,
                 }
                 save_results(result, str(out_file))
