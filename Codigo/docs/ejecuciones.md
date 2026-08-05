@@ -10,6 +10,10 @@ Ayuda-memoria cronológico de experimentos enviados a cluster, ordenado de más 
 **Job Mendieta 1161538 (enviado).** Plan:
 [incertidumbre_p54_plan](ideas/incertidumbre_p54_plan_20260725.md). SLURM
 `slurm/mendieta/v3/uncertainty_generation.sh` (alias `unc_gen`), Mini-VLM n=400, modo `--uncertainty`.
+**⚠️ NO CORRIÓ:** al 2026-07-30 sigue PENDING sin arrancar (0 reportes, sin logs) — el planificador de
+Mendieta (`slurmctld`) está **caído** ("Unable to contact slurm controller"). El job quedó fantasma
+(sacct lo ve PENDING pero squeue/scontrol/scancel fallan). Infra lista y esperando (CSV subido, código
+sincronizado); reenviar cuando CCAD restablezca el scheduler.
 **Trabajo local previo:** (1) `temperature_scaling.py` (Swin, T=0.53, ECE 0.39→0.34) — la **confianza
 softmax NO sirve para rutear** (no monótona vs exactitud; sub-confianza en la clase mayoritaria).
 (2) Pivote a **acuerdo Swin↔kNN-DermLIP** (`build_uncertainty_agreement.py`): acuerdo 74% acc 0.944;
@@ -28,8 +32,11 @@ caído → Mendieta.)
   patrón de Swin se repite (2 arquitecturas: transformer + CNN).
 - **DenseNet (1161116–1161119): FALLARON** — nodos de Mendieta offline, torchvision no pudo bajar los
   pesos ImageNet (`Network is unreachable`). Re-envío 1161532–1161535 en Mendieta **cancelado**; TOKO
-  volvió (cola casi nula, pesos DenseNet ya cacheados de `cls_densenet_modern`) → **re-enviados a TOKO
-  (jobs 97086–97089, PENDING).**
+  volvió (cola casi nula, pesos DenseNet ya cacheados de `cls_densenet_modern`) → re-enviados a TOKO.
+  **TOKO 97086–97089: COMPLETED.** DenseNet: **CE-plano gana las tres métricas** (acc 0.876 / f1-w 0.870 /
+  sens 0.738); el re-balanceo desploma la exactitud (→0.56–0.63) por ~0 de sens. **Cierra 3/3
+  arquitecturas.** Descarga: `outputs/results/imb_extra/`. Resul actualizado (veredicto CUMPLE completo);
+  `tab:desbalance` extendido a 3 arquitecturas (32 págs, compila).
 
 Resul: [desbalance_multimodelo_resul_20260725.md](resul/desbalance_multimodelo_resul_20260725.md).
 **Veredicto: CUMPLE (parcial, 2/3 arquitecturas).** Cuadro `tab:desbalance` de `experimentacion.tex`

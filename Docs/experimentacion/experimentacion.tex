@@ -440,14 +440,15 @@ ejemplos ya bien clasificados para concentrarse en los difíciles; y \emph{Balan
 el sesgo de frecuencia dentro del propio softmax (Cuadro~\ref{tab:desbalance}). La métrica de interés es
 la \textbf{sensibilidad macro} —promedio no ponderado del recall por clase—, porque le da el mismo peso a
 una clase rara que a una frecuente y es, por tanto, la que un método de re-balanceo debería mejorar. Para
-que la conclusión no dependa de una sola arquitectura, el experimento se repitió en \textbf{dos modelos}:
-Swin-Tiny (transformer) y ConvNeXt-Tiny (CNN) (Cuadro~\ref{tab:desbalance}). El resultado es consistente:
-la \textbf{CE simple, sin ningún manejo del desbalance, es la mejor opción global} en ambos (en Swin gana
-las tres métricas con sensibilidad macro $0.887$; en ConvNeXt domina claramente exactitud y F1-w). Los
-métodos de re-balanceo no compensan: las \emph{class-weights} \emph{empeoran} en las dos arquitecturas
-(Swin $0.923\to0.795$ de exactitud, ConvNeXt $0.912\to0.691$), y aunque en ConvNeXt la \emph{Focal Loss}
-sube apenas la sensibilidad macro ($0.824\to0.842$), lo hace a costa de \emph{once puntos} de exactitud
-($0.912\to0.803$) —no es un almuerzo gratis—. La arquitectura y la augmentación ya bastan para discriminar
+que la conclusión no dependa de una sola arquitectura, el experimento se repitió en \textbf{tres modelos}:
+Swin-Tiny (transformer), ConvNeXt-Tiny (CNN moderno) y DenseNet121 (CNN clásico) (Cuadro~\ref{tab:desbalance}).
+El resultado es consistente: la \textbf{CE simple, sin ningún manejo del desbalance, es la mejor opción
+global} en las tres (gana las tres métricas en Swin —sensibilidad macro $0.887$— y en DenseNet, y domina
+exactitud y F1-w en ConvNeXt). Los métodos de re-balanceo no compensan: las \emph{class-weights}
+\emph{empeoran} en las tres arquitecturas (Swin $0.923\to0.795$ de exactitud, ConvNeXt $0.912\to0.691$,
+DenseNet $0.876\to0.563$), y aunque en ConvNeXt la \emph{Focal Loss} sube apenas la sensibilidad macro
+($0.824\to0.842$), lo hace a costa de \emph{once puntos} de exactitud ($0.912\to0.803$) —no es un almuerzo
+gratis—. La arquitectura y la augmentación ya bastan para discriminar
 las clases minoritarias de HAM: el desbalance no es el cuello de botella del clasificador, y por lo tanto
 tampoco explica el colapso de los VLMs.
 
@@ -460,9 +461,10 @@ mezclar corridas; la conclusión relevante —que el manejo del desbalance no ay
 
 \begin{table}[H]
   \centering
-  \caption{Manejo explícito del desbalance sobre dos arquitecturas (Swin-Tiny, transformer; ConvNeXt-Tiny,
-  CNN), mismo recipe, variando solo la loss; test HAM con \emph{test-time augmentation} (TTA: se promedia
-  la predicción sobre varias vistas aumentadas). En ambas, el re-balanceo no compensa a la CE simple.}
+  \caption{Manejo explícito del desbalance sobre tres arquitecturas (Swin-Tiny, transformer; ConvNeXt-Tiny,
+  CNN moderno; DenseNet121, CNN clásico), mismo recipe, variando solo la loss; test HAM con
+  \emph{test-time augmentation} (TTA: se promedia la predicción sobre varias vistas aumentadas). En las
+  tres, el re-balanceo no compensa a la CE simple.}
   \label{tab:desbalance}
   \begin{tabular}{llccc}
     \toprule
@@ -479,6 +481,12 @@ mezclar corridas; la conclusión relevante —que el manejo del desbalance no ay
       & Focal Loss ($\gamma=2$) & 0.803 & 0.840 & \textbf{0.842} \\
       & Balanced Softmax       & 0.783 & 0.826 & 0.834 \\
       & CE + class-weights     & 0.691 & 0.753 & 0.808 \\
+    \midrule
+    \multirow{4}{*}{DenseNet121}
+      & CE simple (sin manejo) & \textbf{0.876} & \textbf{0.870} & \textbf{0.738} \\
+      & Balanced Softmax       & 0.629 & 0.701 & 0.735 \\
+      & CE + class-weights     & 0.563 & 0.652 & 0.735 \\
+      & Focal Loss ($\gamma=2$) & 0.564 & 0.658 & 0.725 \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -1408,8 +1416,8 @@ refleja que el modelo dice poco.
 \paragraph{Dónde vive el costo en el ensamble.} Comparar directamente los milisegundos de un clasificador
 con los segundos de un generador \emph{no es una comparación justa} —son tareas distintas: una asigna una
 etiqueta, la otra redacta texto—. El valor de contrastarlos es \emph{ubicar el costo dentro del
-\emph{pipeline}} de dos etapas. La brecha es de \textbf{tres a cuatro órdenes de magnitud} (LLaVA-Med es
-$\sim$$6000\times$ más lento por ítem que ConvNeXt), de modo que en el ensamble el paso de
+\emph{pipeline}} de dos etapas. La brecha es de \textbf{tres a cuatro órdenes de magnitud} (Mini-VLM es $\sim$$6000\times$ y LLaVA-Med
+$\sim$$17\,000\times$ más lentos por ítem que ConvNeXt), de modo que en el ensamble el paso de
 clasificación es \emph{despreciable} y la generación domina la cuenta, tanto en tiempo como en memoria.
 La lectura para la tesina es que \emph{la tarea determina el costo del hardware}: para la
 detección/diagnóstico basta hardware modesto (un clasificador o DermLIP), y el costo alto aparece solo al
@@ -1421,31 +1429,42 @@ distinguir dos costos globales de otra naturaleza: el de \textbf{entrenar} (una 
 \textbf{evaluar/generar} sobre todo el conjunto (Cuadro~\ref{tab:costo_total}). El entrenamiento de un
 \emph{clasificador} es barato ($\sim$2--4\,h en una RTX 4080, $\sim$6--8\,GB de VRAM); el de un
 \emph{VLM generativo} con LoRA es el más caro en tiempo —Mini-VLM $9.4$\,h y LLaVA-Med $7.0$\,h en una A30
-(medido), con $\sim$10--14\,GB de VRAM y $\sim$32\,GB de RAM de host—. Del lado de la \emph{evaluación}, lo
-caro no es clasificar (todo el test de $1503$ imágenes se clasifica en segundos) sino \emph{generar}:
-producir los reportes de un VLM sobre el test completo bajo todas las condiciones de \emph{grounding} toma
-del orden de $6$--$10$\,h por modelo. Es decir, tanto en entrenamiento como en evaluación, el costo global
-del pipeline vuelve a concentrarse en el componente generativo, no en el de detección.
+(medido), con $\sim$10--14\,GB de VRAM y $\sim$32\,GB de RAM de host—. Del lado de la \emph{evaluación}, la
+asimetría es enorme: clasificar las $1503$ imágenes de test cuesta \emph{segundos} de inferencia ($\approx
+4$\,s con TTA; unos minutos si se cuenta la carga del modelo/datos y el cómputo de todas las métricas),
+mientras que \emph{generar} los reportes es el verdadero cuello de botella. Producir los reportes de un VLM
+sobre el test completo en todas las condiciones de \emph{grounding} tomó, según el modelo, entre
+$\sim$$7.5$\,h (Mini-VLM) y \textbf{más de $37$\,h} (LLaVA-Med) por corrida —consumiendo $\sim$26--31\,GB de
+RAM de host (Cuadro~\ref{tab:costo_total})—: los modelos de $7$\,B \emph{superan el límite de $48$\,h del
+clúster en una sola corrida}, de modo que completar las $1503$ imágenes en todas las condiciones exigió
+\emph{encadenar varias corridas} apoyándose en el \emph{resume} defensivo (que saltea los reportes ya
+escritos). Es decir, tanto en entrenamiento como en evaluación, el costo global del pipeline se concentra
+—de forma abrumadora— en el componente generativo, no en el de detección.
 
 \begin{table}[H]
   \centering
-  \caption{Costo global aproximado de entrenamiento (una vez) y de evaluación/generación sobre el test
-  completo. Clasificadores medidos en RTX 4080; VLMs (LoRA) en A30 (tiempos de entrenamiento de la
-  segunda etapa, medidos). ``Generación completa'' = todas las condiciones de \emph{grounding} sobre las
-  $1503$ imágenes de test.}
+  \caption{Costo global de entrenamiento (una vez) y de evaluación/generación sobre el test completo, con
+  tiempos \emph{medidos} de los \emph{jobs} reales (clasificadores en RTX 4080; VLMs en A30, entrenamiento
+  de la segunda etapa y generación sobre HAM). ``Generación completa'' = todas las condiciones de
+  \emph{grounding} (baseline, DermLIP, Swin, oracle) sobre las $1503$ imágenes; la memoria de los VLMs es
+  RAM de host (\emph{MaxRSS}), la VRAM ronda $10$--$14$\,GB.}
   \label{tab:costo_total}
   \small
   \begin{tabular}{lccc}
     \toprule
-    \textbf{Proceso} & \textbf{Tiempo} & \textbf{VRAM} & \textbf{Tipo de costo} \\
+    \textbf{Proceso} & \textbf{Tiempo} & \textbf{Memoria} & \textbf{Tipo de costo} \\
     \midrule
-    Entrenar un clasificador (Swin/ConvNeXt) & $\sim$2--4\,h & $\sim$6--8\,GB & una vez \\
-    Entrenar VLM LoRA — Mini-VLM (etapa 2)   & $9.4$\,h & $\sim$10\,GB & una vez \\
-    Entrenar VLM LoRA — LLaVA-Med (etapa 2)  & $7.0$\,h & $\sim$14\,GB & una vez \\
-    Clasificar el test completo ($1503$)     & segundos & $<$1\,GB & por evaluación \\
-    Generar reportes (test completo, todas las condiciones) & $\sim$6--10\,h & $10$--$14$\,GB & por evaluación \\
+    Entrenar un clasificador (Swin/ConvNeXt) & $\sim$2--4\,h & $\sim$6--8\,GB VRAM & una vez \\
+    Entrenar VLM LoRA — Mini-VLM (etapa 2)   & $9.4$\,h & $\sim$10\,GB VRAM & una vez \\
+    Entrenar VLM LoRA — LLaVA-Med (etapa 2)  & $7.0$\,h & $\sim$14\,GB VRAM & una vez \\
+    Clasificar el test completo ($1503$)     & $\approx$4\,s (inferencia) & $<$1\,GB VRAM & por evaluación \\
+    Generar reportes — Mini-VLM (test completo) & $\sim$7.5$\,$--$20$\,h & $\sim$26\,GB RAM & por evaluación \\
+    Generar reportes — LLaVA-Med (test completo) & $13.6$--$>37$\,h$^{\dagger}$ & $\sim$31\,GB RAM & por evaluación \\
     \bottomrule
   \end{tabular}
+  \\[2pt]
+  {\footnotesize $^{\dagger}$Superó el límite de $48$\,h del clúster en una sola corrida: completar las
+  $1503$ imágenes en todas las condiciones requirió varias corridas encadenadas con \emph{resume}.}
 \end{table}
 
 % ============================================================

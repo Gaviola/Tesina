@@ -38,18 +38,32 @@ TTA) sobre **ConvNeXt-Tiny** (CNN moderno) y **DenseNet121** (CNN clásico).
    bien las clases minoritarias. El desbalance de HAM \textbf{no es el cuello de botella}, no importa la
    arquitectura.
 
-## Nota — DenseNet121
+## Resultados — DenseNet121 (test HAM10000, n=1503, con TTA)
 
-Los 4 jobs de DenseNet (1161116–1161119) **fallaron** en la primera corrida: los nodos de cómputo de
-Mendieta están \emph{offline} y torchvision no pudo descargar los pesos ImageNet de DenseNet121
-(`Network is unreachable`). Al recuperarse **TOKO** (cola casi nula, con los pesos de DenseNet ya cacheados
-de `cls_densenet_modern`), se **re-enviaron a TOKO** (jobs 97086–97089, PENDING) tras cancelar el re-envío
-en Mendieta. Se agregarán a esta tabla al completar.
+| Variante | Acc | F1-w | Sens.\ macro | Sens.\ por clase (MEL,NV,BCC,AKIEC,BKL,DF,VASC) |
+|----------|:-:|:-:|:-:|:-:|
+| **CE-plano (sin manejo)** | **0.876** | **0.870** | **0.738** | 0.55, 0.97, 0.70, 0.73, 0.77, 0.71, 0.73 |
+| Balanced Softmax | 0.629 | 0.701 | 0.735 | 0.63, 0.61, 0.75, 0.82, 0.53, 0.88, 0.91 |
+| CE + class-weights | 0.563 | 0.652 | 0.735 | 0.63, 0.48, 0.77, 0.69, 0.78, 0.88, 0.91 |
+| Focal γ=2 | 0.564 | 0.658 | 0.725 | 0.59, 0.50, 0.70, 0.73, 0.70, 0.88, 0.95 |
+
+**Nota de proceso:** los 4 jobs de DenseNet fallaron en Mendieta (nodos offline → torchvision no pudo bajar
+los pesos ImageNet, `Network is unreachable`). Se re-enviaron a **TOKO** (jobs 97086–97089, COMPLETED), que
+ya tenía los pesos cacheados.
+
+**DenseNet es el caso más limpio:** la CE-plano **gana las tres métricas** (acc 0.876, f1-w 0.870, sens
+macro 0.738), y el re-balanceo **desploma la exactitud** (0.876 → 0.56–0.63) a cambio de **cero** ganancia
+en sensibilidad macro (0.738 → 0.725–0.735).
 
 ## Conclusión (veredicto)
 
-**CUMPLE (parcial → 2 de 3 arquitecturas).** ConvNeXt confirma el hallazgo de Swin: la CE-plano es la mejor
-opción global y el manejo explícito del desbalance no compensa (class-weights degrada; Focal solo mueve la
-sensibilidad macro a costa de la exactitud). El patrón se sostiene en transformer (Swin) y CNN (ConvNeXt);
-falta consolidar DenseNet (re-enviado). Se integra a `experimentacion.tex` (Cuadro de desbalance extendido
-a las arquitecturas disponibles).
+**CUMPLE (completo, 3 de 3 arquitecturas).** El hallazgo se sostiene en las tres familias:
+- **Swin (transformer):** CE-plano gana las tres métricas (sens 0.887).
+- **ConvNeXt (CNN moderno):** CE-plano gana acc/F1; Focal sube la sens macro apenas (+0.018) a costa de −11
+  pts de exactitud.
+- **DenseNet (CNN clásico):** CE-plano gana las tres; el re-balanceo destroza la exactitud por ~0 de sens.
+
+En las tres, **el manejo explícito del desbalance no compensa** (class-weights siempre degrada; Focal, en
+el mejor caso, un intercambio desfavorable). El clasificador con recipe moderno ya aprende bien las clases
+minoritarias: **el desbalance de HAM no es el cuello de botella, sin importar la arquitectura.** Se integra
+a `experimentacion.tex` (Cuadro `tab:desbalance` extendido a las 3 arquitecturas).
