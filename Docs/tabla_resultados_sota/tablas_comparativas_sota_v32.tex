@@ -301,6 +301,52 @@
 
 
 % ──────────────────────────────────────────────────────────────
+%  TABLA 1a-mel — Detección de melanoma (binaria)
+% ──────────────────────────────────────────────────────────────
+\begin{table}[htbp]
+\centering
+\caption{%
+  \textbf{Detección de melanoma} (tarea binaria melanoma-vs-resto). Este trabajo: sobre HAM10000 test
+  ($n{=}1503$), con el umbral fijado en validación (esp.\ objetivo $\ge0.85$). AUC-ROC y PR-AUC son
+  independientes del umbral. Las referencias del SOTA se evalúan sobre datasets distintos (ISIC/DermNet)
+  y en binario, por lo que la comparación es \textbf{orientativa} (protocolos y datos difieren).
+  Filas sombreadas $=$ este trabajo.
+}
+\label{tab:sota_melanoma}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{@{}llcrrrr@{}}
+\toprule
+\textbf{Referencia} & \textbf{Modelo} & \textbf{Dataset} & \textbf{AUC-ROC} & \textbf{Sens.\ (\%)}
+  & \textbf{Espec.\ (\%)} & \textbf{Acc.\ (\%)} \\
+\midrule
+\multicolumn{7}{@{}l}{\small\itshape Estado del arte (detección binaria de melanoma)} \\[2pt]
+\cite{Kreouzi2024} & DenseNet121 & DermNet & \textbf{0.951} & --- & --- & 92.30 \\
+\cite{Kreouzi2024} & DenseNet121$+$ResNet50$+$EffNetB3 (ens.) & ISIC & --- & --- & --- & \textbf{97.67} \\
+\addlinespace[3pt]
+\multicolumn{7}{@{}l}{\small\itshape Este trabajo (HAM10000, umbral fijado en validación)} \\[2pt]
+\rowcolor{thiswork}
+ & Swin-Tiny ($\sim$28\,M) & HAM10000 & 0.931 & 86.2 & 85.8 & --- \\
+\rowcolor{thiswork}
+ & ConvNeXt-Tiny ($\sim$28\,M) & HAM10000 & 0.949 & 91.0 & 86.2 & --- \\
+\rowcolor{thiswork}
+ & Ensamble (Swin$+$ConvNeXt) & HAM10000 & \textbf{0.954} & 92.8 & 86.0 & --- \\
+\bottomrule
+\end{tabular}%
+}
+\vspace{2pt}
+\begin{minipage}{\textwidth}\footnotesize
+  \textbf{Nota.} La detección de melanoma de este trabajo alcanza \textbf{AUC-ROC 0.95}, a la par de la
+  referencia SOTA de detección binaria (0.951), pero con clasificadores \textbf{Tiny} ($\sim$28\,M de
+  parámetros) sobre GPU de consumo y sin entrenar un detector dedicado —en línea con el eje de costo de la
+  tesina—. En el punto de operación fijado en validación, la \textbf{tasa de falsos negativos de melanoma}
+  baja a $0.07$ (ensamble) con valor predictivo negativo $\approx0.99$; con el argmax por defecto sería
+  $0.27$ (ver documento principal). El SOTA reporta exactitudes muy altas ($97.67\%$) sobre datasets
+  binarios distintos (ISIC), no directamente comparables con el melanoma-vs-resto derivado de HAM.
+\end{minipage}
+\end{table}
+
+
+% ──────────────────────────────────────────────────────────────
 %  TABLA 1b — Generalización OOD: evaluación en HIBA
 % ──────────────────────────────────────────────────────────────
 \begin{table}[htbp]

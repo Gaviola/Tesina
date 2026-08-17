@@ -246,6 +246,9 @@ def main():
                         help="P5.4: modo consciente de incertidumbre. Si el clasificador está seguro "
                              "(unc_confident=1) → reporte definitivo con unc_dx; si no → reporte "
                              "diferencial con los candidatos. Requiere --uncertainty_csv.")
+    parser.add_argument("--only_ids_csv", type=str, default=None,
+                        help="Restringe la generación a las imágenes cuyo image_id está en el CSV "
+                             "(D2: generar solo los reportes del nivel diferencial).")
     parser.add_argument("--repetition_penalty", type=float, default=None,
                         help="P5.5: penalización de repetición en el decoding (>1.0, p.ej. 1.2).")
     parser.add_argument("--no_repeat_ngram_size", type=int, default=None,
@@ -325,6 +328,15 @@ def main():
             image_paths = [p for p in image_paths if p.stem in split_ids]
             logger.info("Split '%s': %d/%d imágenes tras filtrar por %s",
                         args.split, len(image_paths), before, args.splits_file)
+
+        if args.only_ids_csv:
+            import pandas as pd
+            keep = {str(x).strip() for x in pd.read_csv(args.only_ids_csv)["image_id"]}
+            keep |= {Path(x).stem for x in keep}
+            before = len(image_paths)
+            image_paths = [p for p in image_paths if p.stem in keep or p.name in keep]
+            logger.info("only_ids_csv: %d/%d imágenes tras filtrar por %s",
+                        len(image_paths), before, args.only_ids_csv)
 
         if args.limit is not None:
             image_paths = image_paths[: args.limit]

@@ -31,12 +31,17 @@ echo "=== uncertainty_generation (JOBID: $SLURM_JOB_ID) ==="; date; nvidia-smi
 
 MODEL="mini_vlm"; CKPT="outputs/checkpoints/stage2_mini_vlm_v2/best_model.pt"
 SPLIT="--splits_file data/splits/ham10000_splits.json --split test"
-COMMON="--model ${MODEL} --checkpoint ${CKPT} --images_dir data/processed/HAM10000 ${SPLIT} --max_tokens 384 --seed 42 --limit 400"
+COMMON="--model ${MODEL} --checkpoint ${CKPT} --images_dir data/processed/HAM10000 ${SPLIT} --max_tokens 384 --seed 42"
 
-echo "=== uncertainty-aware (definitivo si seguro, diferencial si no) ==="
+## D2 — ensamble consciente de la incertidumbre de 3 niveles. Solo se generan los reportes del nivel
+## DIFERENCIAL (334 imágenes, uncertainty_differential.csv): el nivel afirmativo reutiliza full_swin y el
+## de abstención no genera. --only_ids_csv restringe a esas 334; --uncertainty (unc_confident=0) dispara la
+## plantilla diferencial con los candidatos {Swin, kNN}.
+echo "=== uncertainty 3-tier: reportes DIFERENCIALES (n=334) ==="
 ${PYTHON} scripts/generate_report.py ${COMMON} \
-    --uncertainty_csv outputs/uncertainty/uncertainty.csv --uncertainty \
-    --output_dir outputs/generated_reports/${MODEL}/full_uncertainty
+    --uncertainty_csv outputs/uncertainty/uncertainty_differential.csv --uncertainty \
+    --only_ids_csv outputs/uncertainty/uncertainty_differential.csv \
+    --output_dir outputs/generated_reports/${MODEL}/full_differential
 echo ""
 
 echo "=== Job completado ==="; date; rm -rf "$TMPDIR"

@@ -44,10 +44,13 @@ def main():
     data_root = "data/processed/HAM10000"
     # modern_v3 usa RandomResizedCrop -> val/test con center_crop=True
     tfm = get_val_transforms(size=224, center_crop=True)
-    test_ds = HAM10000Dataset(root_dir=data_root, split="test", transform=tfm, splits_file=splits_file)
-    loader = DataLoader(test_ds, batch_size=32, shuffle=False, num_workers=0,
-                        collate_fn=ClassificationCollator())
-    logger.info("Test HAM10000: n=%d | device=%s dtype=%s", len(test_ds), device, dtype)
+    # Genera probs con TTA para test Y validación (val -> fijar umbrales / calibración).
+    splits = {
+        "test": HAM10000Dataset(root_dir=data_root, split="test", transform=tfm, splits_file=splits_file),
+        "val": HAM10000Dataset(root_dir=data_root, split="val", transform=tfm, splits_file=splits_file),
+    }
+    logger.info("device=%s dtype=%s | test=%d val=%d",
+                device, dtype, len(splits["test"]), len(splits["val"]))
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     for name, ckpt_path in CKPTS.items():
@@ -56,16 +59,20 @@ def main():
         sd = ckpt.get("model_state_dict", ckpt)
         model.load_state_dict(sd, strict=True)
         model.to(device)
-        y_pred, y_true, y_prob = evaluate_with_tta(
-            model, loader, device, dtype, num_classes=7, tta_modes=("original", "hflip"))
-        out = {"model": name, "run_name": f"{name}_modern_v3_tta",
-               "y_true": list(map(int, y_true)), "y_pred": list(map(int, y_pred)),
-               "y_prob": [list(map(float, r)) for r in y_prob]}
-        (OUT_DIR / f"{name}_tta_predictions.json").write_text(
-            json.dumps(out, ensure_ascii=False), encoding="utf-8")
-        from sklearn.metrics import balanced_accuracy_score
-        logger.info("%s TTA sens_macro=%.3f (guardado)", name,
-                    balanced_accuracy_score(y_true, y_pred))
+        for split, ds in splits.items():
+            loader = DataLoader(ds, batch_size=32, shuffle=False, num_workers=0,
+                                collate_fn=ClassificationCollator())
+            y_pred, y_true, y_prob = evaluate_with_tta(
+                model, loader, device, dtype, num_classes=7, tta_modes=("original", "hflip"))
+            out = {"model": name, "run_name": f"{name}_modern_v3_tta_{split}", "split": split,
+                   "y_true": list(map(int, y_true)), "y_pred": list(map(int, y_pred)),
+                   "y_prob": [list(map(float, r)) for r in y_prob]}
+            suffix = "" if split == "test" else f"_{split}"
+            (OUT_DIR / f"{name}_tta{suffix}_predictions.json").write_text(
+                json.dumps(out, ensure_ascii=False), encoding="utf-8")
+            from sklearn.metrics import balanced_accuracy_score
+            logger.info("%s [%s] TTA sens_macro=%.3f (guardado)", name, split,
+                        balanced_accuracy_score(y_true, y_pred))
         del model
         if device.type == "cuda":
             torch.cuda.empty_cache()

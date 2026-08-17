@@ -305,7 +305,7 @@ del azar ($1/7 \approx 0.143$), independientemente de la estrategia.
       & DenseNet121      & 0.846 & 0.852 & 0.776 \\
       & ViT-B/16         & 0.858 & 0.862 & 0.797 \\
       & ConvNeXt-Tiny    & 0.827 & 0.861 & 0.849 \\
-      & \textbf{Swin-Tiny} & 0.868 & \textbf{0.882} & \textbf{0.870} \\
+      & \textbf{Swin-Tiny} & \textbf{0.868} & \textbf{0.882} & \textbf{0.870} \\
     \midrule
     \multirow{4}{*}{VLM general}
       & LLaVA-Med likelihood (ZS) & 0.037 & 0.028 & 0.157 \\
@@ -372,28 +372,28 @@ clasificadores supervisados. La especialización de dominio, más que la mera es
   que la comparación es orientativa.}
   \label{tab:sota_clasif}
   \small
-  \begin{tabular}{llcccc}
+  \begin{tabular}{llccc}
     \toprule
-    \textbf{Fuente} & \textbf{Modelo} & \textbf{Tipo} & \textbf{Acc} & \textbf{F1} & \textbf{Sens.\ macro} \\
+    \textbf{Modelo} & \textbf{Tipo} & \textbf{Acc} & \textbf{F1} & \textbf{Sens.\ macro} \\
     \midrule
-    \multicolumn{6}{@{}l}{\itshape Estado del arte --- supervisados y \emph{foundation models}} \\
-    \cite{SkinHealthMate2024} & EfficientNetB1+B5 (ens.) & CNN (FT) & 0.930 & 0.930 & --- \\
-    \cite{yan2025panderm} & PanDerm (foundation ViT)$^{\dagger}$ & Foundation (FT) & --- & 0.870 & --- \\
-    \cite{SkinSavvy22025} & Swin-Transformer$^{\ast}$ & ViT (FT) & 0.780 & 0.793 & --- \\
-    \multicolumn{6}{@{}l}{\itshape Estado del arte --- VLMs} \\
-    \cite{liu2025skinr1} & Skin-R1 (Qwen2.5-VL-7B + RL) & VLM (FT+RL) & 0.747 & 0.404 & --- \\
-    \cite{liu2025skinr1} & LLaVA-Med-7B & VLM (ZS) & 0.230 & 0.125 & --- \\
-    \cite{zeng2025mmskin} & SkinVL-Pub (LLaVA-Med+LoRA) & VLM (FT) & 0.793 & --- & 0.602 \\
-    \cite{zeng2025mmskin} & SkinVL-PubMM (LLaVA-Med+LoRA) & VLM (FT) & 0.790 & --- & 0.626 \\
+    \multicolumn{5}{@{}l}{\itshape Estado del arte --- supervisados y \emph{foundation models}} \\
+    EfficientNetB1+B5 (ens.)~\cite{SkinHealthMate2024} & CNN (FT) & \textbf{0.930} & \textbf{0.930} & --- \\
+    PanDerm (foundation ViT)$^{\dagger}$~\cite{yan2025panderm} & Foundation (FT) & --- & 0.870 & --- \\
+    Swin-Transformer$^{\ast}$~\cite{SkinSavvy22025} & ViT (FT) & 0.780 & 0.793 & --- \\
+    \multicolumn{5}{@{}l}{\itshape Estado del arte --- VLMs} \\
+    Skin-R1 (Qwen2.5-VL-7B + RL)~\cite{liu2025skinr1} & VLM (FT+RL) & 0.747 & 0.404 & --- \\
+    LLaVA-Med-7B~\cite{liu2025skinr1} & VLM (ZS) & 0.230 & 0.125 & --- \\
+    SkinVL-Pub (LLaVA-Med+LoRA)~\cite{zeng2025mmskin} & VLM (FT) & 0.793 & --- & 0.602 \\
+    SkinVL-PubMM (LLaVA-Med+LoRA)~\cite{zeng2025mmskin} & VLM (FT) & 0.790 & --- & 0.626 \\
     \midrule
-    \multicolumn{6}{@{}l}{\itshape Este trabajo} \\
-    & Swin-Tiny & Supervisado & 0.868 & 0.882 & \textbf{0.870} \\
-    & LLaVA-Med likelihood & VLM (ZS) & 0.037 & 0.028 & 0.157 \\
-    & Mini-VLM likelihood & VLM (ZS) & 0.189 & 0.268 & 0.181 \\
-    & LLaVA-Med likelihood & VLM (FT) & 0.179 & 0.198 & 0.137 \\
-    & Mini-VLM likelihood & VLM (FT) & 0.660 & 0.532 & 0.141 \\
-    & DermLIP & VL derm (ZS) & 0.377 & 0.424 & 0.510 \\
-    & DermLIP & VL derm (lin-probe) & 0.741 & 0.762 & 0.739 \\
+    \multicolumn{5}{@{}l}{\itshape Este trabajo} \\
+    Swin-Tiny & Supervisado & 0.868 & 0.882 & \textbf{0.870} \\
+    LLaVA-Med likelihood & VLM (ZS) & 0.037 & 0.028 & 0.157 \\
+    Mini-VLM likelihood & VLM (ZS) & 0.189 & 0.268 & 0.181 \\
+    LLaVA-Med likelihood & VLM (FT) & 0.179 & 0.198 & 0.137 \\
+    Mini-VLM likelihood & VLM (FT) & 0.660 & 0.532 & 0.141 \\
+    DermLIP & VL derm (ZS) & 0.377 & 0.424 & 0.510 \\
+    DermLIP & VL derm (lin-probe) & 0.741 & 0.762 & 0.739 \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -648,19 +648,34 @@ Ambas se evaluaron por separado.
 \textbf{HIBA} (Sección~\ref{sec:datasets}): $1616$ imágenes dermatoscópicas de pacientes argentinos con
 fototipos III--VI, una población distinta a la de HAM10000 (mayoritariamente europea). Es una prueba
 \emph{out-of-distribution} (OOD): mide cuánto cae el modelo cuando la piel y las condiciones de
-adquisición no coinciden con las del entrenamiento. Todos los modelos pierden entre $27$ y $40$ puntos
-de exactitud al pasar de HAM10000 a HIBA (Swin-Tiny $\approx 0.88 \to 0.58$), un \emph{domain shift}
-marcado atribuible a la diferencia de fototipo y de equipo. Es la limitación más seria para el despliegue
-clínico y justifica la evaluación de robustez que sigue.
+adquisición no coinciden con las del entrenamiento.
+
+\emph{Cómo se comparan HAM y HIBA (espacio diagnóstico).} La comparación se hace bajo el \textbf{mismo
+espacio de 7 clases} de HAM10000. El mapeo de etiquetas HIBA$\to$HAM es \textbf{1:1 para 6 de las 7
+categorías}; la única salvedad es el carcinoma espinocelular (SCC), que HAM no tiene como clase propia y se
+\textbf{mapea a AKIEC} ($158$ imágenes afectadas), introduciendo algo de ruido de anotación en esa clase.
+No se eliminan clases: todas las imágenes de HIBA se evalúan contra las 7 clases de HAM. Por eso es
+importante ser cauto en la lectura: la caída puede provenir \emph{tanto} del cambio de población y de
+equipo (\emph{domain shift} real) \emph{como} de esas diferencias de anotación/composición de clases —no
+son totalmente separables con estos datos—.
+
+Con esa salvedad, todos los modelos pierden entre $27$ y $40$ puntos de exactitud al pasar de HAM10000 a
+HIBA (Swin-Tiny $\approx 0.87 \to 0.58$), un \emph{domain shift} marcado. Es la limitación más seria para
+el despliegue clínico y justifica la evaluación de robustez que sigue.
 
 \paragraph{Cambio de calidad de imagen.}
-Se perturbaron las imágenes de test de HAM10000 ($n=1503$) —compresión JPEG, ruido gaussiano, desenfoque
-gaussiano y bajada de resolución— y se volvió a correr el clasificador sobre las imágenes degradadas,
-midiendo la caída de sensibilidad macro (Figura~\ref{fig:robustez}). Cada perturbación se aplicó en cinco
-\textbf{niveles de severidad} crecientes (sev1$\to$sev5), variando su parámetro de forma monótona: calidad
-JPEG de $70$ a $5$, desviación del ruido $\sigma$ de $8$ a $64$, radio de desenfoque de $1$ a $6$~px, y
-factor de resolución de $0.75$ a $0.15$ (se reduce la imagen y se re-escala al tamaño original, perdiendo
-detalle). sev1 simula una degradación apenas perceptible y sev5 una imagen muy dañada. Lo relevante es la
+Se probaron cuatro perturbaciones —compresión JPEG, ruido gaussiano, desenfoque gaussiano y bajada de
+resolución—, cada una en cinco \textbf{niveles de severidad} crecientes (sev1$\to$sev5). \emph{Cómo se
+aplican, para que quede claro:} cada perturbación se aplica \textbf{por separado} (no se combinan entre
+sí) y de forma \textbf{determinística} (no aleatoria): fijado el tipo y el nivel, se toma \emph{todo} el
+test de HAM10000 ($n=1503$) y se le aplica ese único filtro con ese único parámetro, generando una
+\emph{versión degradada completa} del test; luego se vuelve a correr el clasificador sobre ella y se mide
+la sensibilidad macro. Es decir, se evalúan $4 \times 5 = 20$ versiones del conjunto de test (más el
+original sin perturbar), una por cada combinación (perturbación, nivel). El parámetro de cada nivel varía
+de forma monótona: calidad JPEG de $70$ a $5$, desviación del ruido $\sigma$ de $8$ a $64$, radio de
+desenfoque de $1$ a $6$~px, y factor de resolución de $0.75$ a $0.15$ (se reduce la imagen y se re-escala
+al tamaño original, perdiendo detalle). sev1 simula una degradación apenas perceptible y sev5 una imagen
+muy dañada; la Figura~\ref{fig:robustez_ej} lo ilustra sobre una misma imagen. Lo relevante es la
 \emph{degradación relativa}: el baseline se mide aquí \emph{single-view} (sin TTA), por lo que la
 sensibilidad macro sin perturbar ($0.74$) es algo menor que la \emph{headline} con TTA ($0.87$). Tres
 observaciones: (i) el \textbf{ruido} es la perturbación
@@ -697,8 +712,10 @@ JPEG severo son los que antes hacen fallar al modelo, coherente con las curvas�
 \subsection{Interpretabilidad: ¿el modelo mira la lesión?}
 \label{sec:interpret}
 Un modelo puede acertar por la razón equivocada —fijándose en el fondo, en una regla milimétrica o en un
-marcador de tinta en lugar de la lesión—. Para descartarlo se calcularon \textbf{mapas de saliencia}, que
-señalan qué píxeles influyeron más en la decisión. Se usaron dos técnicas complementarias
+marcador de tinta en lugar de la lesión—. Para explorarlo se calcularon \textbf{mapas de saliencia}, que
+señalan qué píxeles influyeron más en la decisión. Conviene enmarcar esto correctamente: se trata de un
+\textbf{análisis cualitativo complementario} de la atención espacial del modelo, \emph{no} de una prueba de
+que su razonamiento sea clínicamente correcto —eso requeriría la evaluación de un especialista—. Se usaron dos técnicas complementarias
 (Figura~\ref{fig:interpret}). \emph{Grad-CAM} sobre Swin-Tiny: retropropaga el gradiente de la clase
 predicha hasta el último bloque convolucional y pondera cada canal de activación por ese gradiente,
 produciendo un mapa de calor de baja resolución donde las zonas \textbf{cálidas (rojas)} son las que más
@@ -715,15 +732,71 @@ visualmente similares: un error de \emph{discriminación}, no de atención—.
   \includegraphics[width=\textwidth]{P25_interpretability.png}
   \caption{Mapas de saliencia, dos clases por fila; cada clase ocupa tres paneles: imagen original,
   Grad-CAM de Swin-Tiny (rojo = mayor contribución a la clase predicha) y saliencia por gradiente de
-  DermLIP. En ambos modelos las zonas cálidas caen sobre la lesión y no sobre el fondo, dando respaldo
-  cualitativo a la validez clínica de la decisión.}
+  DermLIP. En ambos modelos las zonas cálidas caen sobre la lesión y no sobre el fondo. Es evidencia
+  cualitativa complementaria de que el modelo atiende la región relevante, no una prueba de validez
+  clínica (que requeriría un especialista).}
   \label{fig:interpret}
 \end{figure}
+
+\subsection{Detección de melanoma: evaluación clínica binaria}
+\label{sec:melanoma}
+Hasta aquí la evaluación fue \emph{multiclase} (7 categorías), que es la formulación más exigente. Pero
+un evaluador clínico se hace una pregunta más específica: \emph{¿qué tan bien detecta el sistema el
+melanoma?} —la lesión cuyo diagnóstico tardío es más grave—. Esto conecta con un punto terminológico:
+el título de la tesina habla de \emph{detección}, mientras que los resultados anteriores son de
+\emph{clasificación}. No hay contradicción: la \emph{detección} en el sentido de \emph{localización}
+(¿dónde está la lesión?) viene resuelta por el protocolo de adquisición —las imágenes de HAM10000 y HIBA
+son dermatoscópicas \textbf{ya recortadas y centradas en una única lesión}, no hay múltiples lesiones que
+localizar—, por lo que el trabajo se concentra en el diagnóstico; y la \emph{detección de melanoma} en el
+sentido de \emph{cribado} (¿es melanoma o no?) se operacionaliza precisamente como la \textbf{clasificación
+binaria melanoma-vs-resto} que se reporta a continuación. En ese sentido, el binario \emph{es} la detección
+de melanoma.
+
+Se evaluaron dos tareas binarias sobre las probabilidades del clasificador (con TTA): \textbf{melanoma-vs-resto}
+(score $=P(\text{MEL})$) y \textbf{maligno-vs-benigno} (maligno $=$ \{MEL, BCC, AKIEC\}). Se reporta la suite
+clínica estándar: AUC-ROC, PR-AUC, sensibilidad, especificidad, valor predictivo negativo (VPN) y
+\textbf{tasa de falsos negativos (FN) de melanoma} (Cuadro~\ref{tab:melanoma}). El punto de operación de las
+variantes optimizadas se fija en el \emph{split de validación} y se aplica al test (sin sesgo optimista).
+
+\begin{table}[H]
+  \centering
+  \caption{Detección de melanoma sobre HAM10000 test ($n=1503$). AUC-ROC y PR-AUC son independientes del
+  umbral; ``esp$\ge$85'' fija el punto de operación en validación exigiendo especificidad $\ge0.85$
+  (prioriza no perder melanomas). Mejor por columna en negrita.}
+  \label{tab:melanoma}
+  \small
+  \begin{tabular}{lccccc}
+    \toprule
+    \textbf{Modelo} & \textbf{AUC-ROC} & \textbf{PR-AUC} & \textbf{Sens.\ (argmax)} & \textbf{Sens.\ (esp$\ge$85)} & \textbf{FN (esp$\ge$85)} \\
+    \midrule
+    \multicolumn{6}{@{}l}{\itshape Melanoma-vs-resto (prevalencia 0.11)} \\
+    Swin-Tiny        & 0.931 & 0.705 & 0.731 & 0.862 & 0.138 \\
+    ConvNeXt-Tiny    & 0.949 & \textbf{0.811} & 0.731 & 0.910 & 0.090 \\
+    Ensamble (voto)  & \textbf{0.954} & 0.799 & \textbf{0.760} & \textbf{0.928} & \textbf{0.072} \\
+    \midrule
+    \multicolumn{6}{@{}l}{\itshape Maligno-vs-benigno (prevalencia 0.20)} \\
+    ConvNeXt-Tiny    & 0.959 & \textbf{0.898} & 0.826 & \textbf{0.942} & \textbf{0.058} \\
+    Ensamble (voto)  & \textbf{0.961} & 0.891 & \textbf{0.857} & 0.922 & 0.078 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Tres lecturas: (i) la capacidad de \emph{discriminación} de melanoma es \textbf{alta} —AUC-ROC
+$0.93$--$0.95$ y macro-AUC one-vs-rest $0.94$--$0.95$—, mayor de lo que sugerían la exactitud o el F1
+(el AUC no depende del umbral); (ii) el \textbf{argmax por defecto es clínicamente peligroso}: pierde el
+$\approx$27\% de los melanomas (tasa de FN $0.27$), efecto de optimizar la exactitud global sobre un
+problema desbalanceado; (iii) \textbf{optimizar el punto de operación} —tolerando más falsos positivos para
+no perder melanomas— baja la tasa de FN a $\mathbf{0.07}$--$0.09$ con VPN $\approx0.99$, el compromiso
+clínicamente correcto. Todo esto con clasificadores \emph{Tiny} ($\sim$28\,M de parámetros) en GPU de
+consumo: la detección de melanoma alcanza cifras \textbf{competitivas con el estado del arte a una fracción
+del costo}, en línea con el eje de la tesina.
 
 \paragraph{Conclusión parcial (clasificación).} Para clasificar lesiones conviene un modelo
 \emph{especializado}: un CNN/ViT supervisado (mejor exactitud) o un VL classifier derm-específico
 (fuerte incluso sin entrenamiento sobre el dataset objetivo). Los VLMs generativos generales no son
-competitivos en esta tarea, hecho que la literatura también constata (Sección~\ref{sec:rediag}).
+competitivos en esta tarea, hecho que la literatura también constata (Sección~\ref{sec:rediag}). Y, para
+el problema clínicamente crítico —la detección de melanoma— un clasificador chico bien calibrado en su
+punto de operación alcanza sensibilidad $\approx0.93$ con tasa de FN $\approx0.07$ (Sección~\ref{sec:melanoma}).
 
 % ============================================================
 \section{Generación de reportes}
@@ -902,31 +975,31 @@ Figura~\ref{fig:f2}(a) grafica la \emph{diagnostic consistency} y la (b) el \emp
 (eje horizontal) y modelo (barras de color). Se observa:
 \begin{enumerate}[leftmargin=1.6em]
   \item \textbf{El \emph{grounding} mejora drásticamente la fidelidad}, sobre todo en Mini-VLM
-  ($0.198 \rightarrow 0.830$ con Swin), sin sacrificar la riqueza (recall estable $\approx 0.75$).
+  ($0.246 \rightarrow 0.812$ con Swin), sin sacrificar la riqueza (recall estable $\approx 0.77$).
   \item \textbf{La fidelidad crece con la calidad del clasificador}: un clasificador más exacto produce
   reportes más fieles (oracle $>$ Swin en ambos modelos, en consonancia con su exactitud 1.00 y 0.80). La
   progresión es \emph{monótona} en Mini-VLM (baseline $<$ DermLIP $<$ Swin $<$ oracle); en LLaVA-Med, en
   cambio, un clasificador \emph{débil} (DermLIP, 0.38) cae \emph{por debajo} de su propio baseline —lo que
   anticipa el punto siguiente—.
   \item \textbf{Un clasificador débil puede empeorar}: con DermLIP zero-shot (exactitud 0.38), LLaVA
-  baja a $0.445$, por debajo de su baseline ($0.595$), porque el reporte se compromete con el
+  baja a $0.454$, por debajo de su baseline ($0.645$), porque el reporte se compromete con el
   diagnóstico \emph{equivocado}. Esto cuantifica el costo de propagación de error.
 \end{enumerate}
 
 \begin{table}[H]
   \centering
   \caption{Ensamble (clasificador $\rightarrow$ generador \emph{noreasoning}). \emph{Diagnostic
-  consistency} (sobre el reporte) en HAM10000 por condición y modelo. Subconjunto de 400 imágenes del
-  \emph{test split} de HAM (ver Sección~\ref{sec:limitaciones}).}
+  consistency} (sobre el reporte) en HAM10000 por condición y modelo, sobre el \textbf{test split completo
+  ($n=1503$)}. Mejor por modelo en negrita.}
   \label{tab:ensamble}
   \begin{tabular}{llcc}
     \toprule
     \textbf{Grounding} & \textbf{Acc.\ clasif.} & \textbf{LLaVA-Med} & \textbf{Mini-VLM} \\
     \midrule
-    Baseline (sin grounding) & ---  & 0.595 & 0.198 \\
-    DermLIP (ZS)             & 0.38 & 0.445 & 0.485 \\
-    Swin (supervisado)       & 0.80 & 0.703 & \textbf{0.830} \\
-    Oracle (gt)              & 1.00 & \textbf{0.845} & \textbf{1.000} \\
+    Baseline (sin grounding) & ---  & 0.645 & 0.246 \\
+    DermLIP (ZS)             & 0.38 & 0.454 & 0.497 \\
+    Swin (supervisado)       & 0.80 & 0.696 & 0.812 \\
+    Oracle (gt)              & 1.00 & \textbf{0.852} & \textbf{0.999} \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -1085,20 +1158,20 @@ ensamble (Cuadro~\ref{tab:skinvl}). Tres observaciones:
 
 \begin{table}[H]
   \centering
-  \caption{Diagnostic consistency (report-only) por condición de grounding: SkinVL vs los VLMs generales.
-  SkinVL sobre el test completo ($n=1503$); LLaVA-Med/Mini-VLM sobre el subconjunto de $400$. El
-  $\approx$0.00 del baseline de SkinVL no es un error: es el efecto del colapso de modo —solo $3$ de las
-  $1503$ imágenes reciben un reporte que menciona la clase correcta (consistency $0.002$)—, porque el
-  modelo repite un diagnóstico fijo fuera de las clases de HAM (ver texto).}
+  \caption{Diagnostic consistency (report-only) por condición de grounding: SkinVL vs los VLMs generales,
+  sobre el \textbf{test completo ($n=1503$)} para los tres. Mejor por modelo en negrita. El $\approx$0.00
+  del baseline de SkinVL no es un error: es el colapso de modo —solo $3$ de las $1503$ imágenes reciben un
+  reporte que menciona la clase correcta (consistency $0.002$)—, porque el modelo repite un diagnóstico
+  fijo fuera de las clases de HAM (ver texto).}
   \label{tab:skinvl}
   \begin{tabular}{lccc}
     \toprule
     \textbf{Condición} & \textbf{SkinVL} & \textbf{LLaVA-Med} & \textbf{Mini-VLM} \\
     \midrule
-    baseline (sin grounding) & $\approx$0.00 & 0.59 & 0.20 \\
-    DermLIP (clasif.\ 0.38)  & 0.43 & 0.45 & 0.48 \\
-    Swin (clasif.\ 0.80)     & 0.80 & 0.70 & 0.83 \\
-    oracle (gt)              & \textbf{1.00} & 0.84 & \textbf{1.00} \\
+    baseline (sin grounding) & $\approx$0.00 & 0.65 & 0.25 \\
+    DermLIP (clasif.\ 0.38)  & 0.43 & 0.45 & 0.50 \\
+    Swin (clasif.\ 0.80)     & 0.80 & 0.70 & 0.81 \\
+    oracle (gt)              & \textbf{1.00} & \textbf{0.85} & \textbf{1.00} \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -1188,6 +1261,77 @@ baratos—, y la recuperación además enriquece el reporte.
     Grounding Swin                 & 0.83 & 0.77 \\
     Grounding Swin + RAG           & \textbf{0.84} & 0.68 \\
     Oracle (dx correcto)           & 1.00 & 0.79 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Ensamble consciente de la incertidumbre}
+\label{sec:incertidumbre}
+El ensamble en cascada tiene un riesgo estructural: transmite al generador una etiqueta diagnóstica
+\emph{dura}, de modo que un error del clasificador se propaga al reporte con falso aplomo
+(Sección~\ref{sec:ablaciones}). La calibración (Sección~\ref{sec:calib}) mostró además que la probabilidad
+cruda del clasificador no es un estimador de certeza confiable. La respuesta es un ensamble
+\textbf{consciente de la incertidumbre} que, en vez de comprometerse siempre con un único diagnóstico,
+\emph{modula su salida según cuán seguro está}: afirma cuando hay confianza, ofrece un \textbf{diferencial}
+cuando duda, y se \textbf{abstiene (deriva a un especialista)} cuando la ambigüedad es máxima.
+
+\paragraph{Cómo decide.} El ruteo usa una señal de confianza que \emph{sí} separa —el \textbf{acuerdo entre
+dos clasificadores especializados baratos}: el supervisado (Swin) y un \emph{kNN} sobre los embeddings de
+DermLIP (la recuperación de la Sección~\ref{sec:rag})— en lugar de la softmax mal calibrada. Las reglas
+(sobre las 1503 imágenes de test, Cuadro~\ref{tab:incertidumbre}) son: (i)~\textbf{afirmativo} si los dos
+coinciden; (ii)~\textbf{abstención} si difieren \emph{y} los tres vecinos recuperados son de clases todas
+distintas (sin consenso); (iii)~\textbf{diferencial} en el resto (difieren pero hay consenso parcial),
+presentando ambos candidatos.
+
+\begin{table}[H]
+  \centering
+  \caption{Ensamble consciente de la incertidumbre (3 niveles) sobre HAM10000 test ($n=1503$). ``Cobertura''
+  $=$ exactitud (nivel afirmativo, gt$=$dx) o fracción con gt entre los candidatos (diferencial/abstención).}
+  \label{tab:incertidumbre}
+  \begin{tabular}{lccl}
+    \toprule
+    \textbf{Nivel} & \textbf{Imágenes} & \textbf{Cobertura del gt} & \textbf{Acción} \\
+    \midrule
+    Afirmativo (acuerdo)        & 1111 (74\%) & \textbf{0.944} & reporte definitivo \\
+    Diferencial (consenso parc.) & 334 (22\%)  & 0.898 & diferencial \{Swin, kNN\} \\
+    Abstención (sin consenso)   & 58 (4\%)    & 0.793 & \emph{derivar a especialista} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+El resultado es que el sistema \textbf{pone el diagnóstico correcto ``sobre la mesa'' en el $93.4\%$ de los
+casos no derivados} (afirma bien, o incluye el gt entre dos candidatos cuando duda), frente a un
+\emph{grounding} forzado que emite un único diagnóstico y acierta $\approx$80\%. La \textbf{abstención}
+aísla el $4\%$ de máxima ambigüedad —donde incluso el par de candidatos contiene el gt solo el $79\%$— y lo
+deriva, evitando el reporte confiadamente incorrecto.
+
+\paragraph{Validación end-to-end (sobre los reportes generados).} La cobertura anterior es del
+\emph{componente de decisión}; para verificar que el \emph{texto} la realiza, se generaron los reportes de
+cada nivel (afirmativo $=$ grounding; diferencial $=$ se enuncian ambos candidatos; abstención $=$ sin
+reporte). En el subconjunto diferencial, el reporte diferencial \textbf{menciona el diagnóstico correcto el
+$90\%$ de las veces, frente al $39\%$ del grounding forzado} sobre esas mismas imágenes —donde el
+clasificador se equivoca—. Agregando los tres niveles, la \emph{diagnostic consistency} del \textbf{sistema
+completo} sobre los casos no derivados sube de $\mathbf{0.82}$ (grounding simple) a $\mathbf{0.94}$
+(Cuadro~\ref{tab:incertidumbre_e2e}). Así, la calibración deja de ser un análisis aparte y se
+\emph{integra al sistema}: es la lógica que decide cuándo comprometerse, cuándo dar un diferencial y cuándo
+callar y derivar.
+
+\begin{table}[H]
+  \centering
+  \caption{Validación end-to-end del ensamble consciente de la incertidumbre (Mini-VLM, sobre los $1445$
+  casos no derivados). El sistema avanzado supera al \emph{grounding} simple forzado, y sus reportes
+  diferenciales rescatan la fidelidad justo donde el clasificador falla.}
+  \label{tab:incertidumbre_e2e}
+  \begin{tabular}{lc}
+    \toprule
+    \textbf{Sistema} & \textbf{Diagnostic consistency} \\
+    \midrule
+    Grounding simple (forzado) & 0.822 \\
+    \textbf{Pipeline avanzado} (afirmativo $+$ diferencial) & \textbf{0.940} \\
+    \midrule
+    \multicolumn{2}{@{}l}{\itshape Solo el subconjunto diferencial ($n=334$):} \\
+    \quad grounding forzado (se compromete con Swin) & 0.392 \\
+    \quad \textbf{reporte diferencial} (\{Swin, kNN\}) & \textbf{0.901} \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -1490,7 +1634,7 @@ permite responderlos de forma parcial:
   por sí solos, no se comprometen con un diagnóstico (Sección~\ref{sec:reprazon}). El ensamble en
   cascada con \emph{grounding} (Sección~\ref{sec:porque_ensamble}) sí produce reportes que afirman un
   diagnóstico: con un clasificador fuerte, la \emph{diagnostic consistency} sube sustancialmente
-  (Mini-VLM: $0.20 \rightarrow 0.83$). Las ablaciones precisan \emph{de dónde} viene esa fidelidad: es el
+  (Mini-VLM: $0.25 \rightarrow 0.81$, sobre las 1503 imágenes). Las ablaciones precisan \emph{de dónde} viene esa fidelidad: es el
   \textbf{diagnóstico del clasificador}, no la visión del generador, lo que la determina. En los tres
   generadores, quitarle la imagen al generador no baja la fidelidad —incluso la \emph{sube} en LLaVA-Med
   ($\Delta=-0.15$)—, mientras que inyectarle un diagnóstico equivocado la derrumba ($0.07$--$0.11$,
@@ -1518,13 +1662,12 @@ experimentación en curso.
 \subsection{Limitaciones y trabajo en proceso o futuro}
 \label{sec:limitaciones}
 \begin{itemize}[leftmargin=1.6em]
-  \item \textbf{Escala de la evaluación de reportes.} Los resultados del ensamble con LLaVA-Med y Mini-VLM
-  (Cuadro~\ref{tab:ensamble}) se obtuvieron sobre un subconjunto de \emph{400 imágenes del test split de
-  HAM10000}. Esta reducción aplica \emph{solo} a la generación de reportes (costosa); la
-  \emph{clasificación} se evaluó siempre sobre los conjuntos completos. El ensamble con SkinVL sí se corrió
-  sobre el \emph{test split completo} (1503 imágenes) y reprodujo el mismo patrón, lo que respalda la
-  estabilidad de las conclusiones; queda pendiente extender esa corrida completa a LLaVA-Med y Mini-VLM
-  para consolidar sus números absolutos.
+  \item \textbf{Escala de la evaluación de reportes.} La comparación central del ensamble
+  (Cuadro~\ref{tab:ensamble}) se evaluó sobre el \emph{test split completo} (1503 imágenes) para los tres
+  generadores. Las ablaciones más finas (imagen-vs-dx, dx-erróneo, Cuadro~\ref{tab:ablaciones}) se hicieron
+  sobre un subconjunto de 400 imágenes por su costo de generación; los valores centrales sobre 400 y sobre
+  1503 coinciden estrechamente (p.ej.\ Mini-VLM con Swin $0.830$ vs $0.812$), lo que respalda la
+  representatividad del subconjunto.
   \item \textbf{Costo experimental.} Cada prueba que involucra VLMs o generación de reportes requiere
   enviar trabajos al clúster Mendieta (por la memoria de GPU necesaria), con tiempos de espera en cola
   de aproximadamente 4 a 6 días en muchos casos. Esto limitó fuertemente la cantidad de iteraciones posibles

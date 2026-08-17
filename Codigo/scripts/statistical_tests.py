@@ -56,6 +56,38 @@ def bootstrap_ci(y_true, y_pred, metric_fn, n_boot=2000, seed=42, alpha=0.05):
     return float(point), float(lo), float(hi)
 
 
+def paired_bootstrap_diff(y_true, pred_a, pred_b, metric_fn, n_boot=2000, seed=42, alpha=0.05):
+    """Bootstrap PAREADO de la diferencia metric(A) - metric(B) sobre las MISMAS imágenes.
+    Correcto para F1-macro / sensibilidad-macro (donde McNemar no aplica): remuestrea índices de
+    imagen y recomputa la diferencia. Devuelve (diff puntual, lo, hi, p_two_sided)."""
+    y_true = np.asarray(y_true); pred_a = np.asarray(pred_a); pred_b = np.asarray(pred_b)
+    n = len(y_true); rng = np.random.default_rng(seed)
+    point = metric_fn(y_true, pred_a) - metric_fn(y_true, pred_b)
+    diffs = np.empty(n_boot)
+    for b in range(n_boot):
+        idx = rng.integers(0, n, n)
+        diffs[b] = metric_fn(y_true[idx], pred_a[idx]) - metric_fn(y_true[idx], pred_b[idx])
+    lo, hi = np.percentile(diffs, [100 * alpha / 2, 100 * (1 - alpha / 2)])
+    # p aproximado (dos colas): fracción de remuestreos que cruzan 0.
+    p = 2 * min((diffs <= 0).mean(), (diffs >= 0).mean())
+    return float(point), float(lo), float(hi), float(min(p, 1.0))
+
+
+def paired_bootstrap_diff_flags(flags_a, flags_b, n_boot=2000, seed=42, alpha=0.05):
+    """Bootstrap pareado de la diferencia de MEDIAS entre dos vectores binarios pareados
+    (p.ej. diagnostic consistency por reporte entre dos condiciones sobre las mismas imágenes)."""
+    a = np.asarray(flags_a, dtype=float); b = np.asarray(flags_b, dtype=float)
+    n = len(a); rng = np.random.default_rng(seed)
+    point = a.mean() - b.mean()
+    diffs = np.empty(n_boot)
+    for i in range(n_boot):
+        idx = rng.integers(0, n, n)
+        diffs[i] = a[idx].mean() - b[idx].mean()
+    lo, hi = np.percentile(diffs, [100 * alpha / 2, 100 * (1 - alpha / 2)])
+    p = 2 * min((diffs <= 0).mean(), (diffs >= 0).mean())
+    return float(point), float(lo), float(hi), float(min(p, 1.0))
+
+
 def mcnemar_exact(correct_a, correct_b):
     """McNemar exacto (binomial two-sided) sobre pares discordantes."""
     a = np.asarray(correct_a, dtype=bool)
@@ -126,6 +158,23 @@ def main():
             print(f"  {a:<16} vs {b:<16}  p={mc['p_value']:.2e} {sig:>3}  "
                   f"(solo {a}={mc['n_a_only']}, solo {b}={mc['n_b_only']})")
 
+        # Bootstrap PAREADO de la diferencia en F1-macro y sensibilidad-macro (McNemar NO aplica a
+        # estas métricas; el tutor lo señaló). CI 95% de la diferencia sobre las mismas imágenes.
+        f1_macro = lambda yt, yp: f1_score(yt, yp, average="macro", zero_division=0)
+        sens_macro = lambda yt, yp: recall_score(yt, yp, average="macro", zero_division=0)
+        print("\n=== Bootstrap pareado (CI 95%%) - diferencia en F1-macro y Sens-macro (n=%d) ===" % len(ref_yt))
+        result["paired_bootstrap_diff"] = {}
+        for a, b in itertools.combinations(aligned, 2):
+            yt = np.asarray(aligned[a]["y_true"])
+            pa = np.asarray(aligned[a]["y_pred"]); pb = np.asarray(aligned[b]["y_pred"])
+            row = {}
+            for mname, fn in [("f1_macro", f1_macro), ("sens_macro", sens_macro)]:
+                d, lo, hi, p = paired_bootstrap_diff(yt, pa, pb, fn, args.n_boot, args.seed)
+                row[mname] = {"diff": d, "ci95": [lo, hi], "p": p}
+                sig = "*" if (lo > 0 or hi < 0) else "ns"
+                print(f"  {a:<14} vs {b:<14} Δ{mname:<10} {d:+.3f} [{lo:+.3f},{hi:+.3f}] {sig}")
+            result["paired_bootstrap_diff"][f"{a} vs {b}"] = row
+
         # Wilcoxon de rangos con signo sobre el recall POR CLASE (7 pares por par de modelos).
         # Complementa a McNemar (por-muestra global) con un test de si un modelo mejora la
         # discriminación de forma sistemática CLASE a CLASE.
@@ -168,6 +217,15 @@ def main():
                 mc = mcnemar_exact(cons[a], cons[b])
                 result["ensemble_mcnemar"][f"{a} vs {b}"] = mc
                 print(f"  {a:<20} vs {b:<20}  p={mc['p_value']:.2e}")
+            # Bootstrap pareado de la diferencia de consistencia entre condiciones (lo correcto
+            # para métricas de generación sobre las mismas imágenes; el tutor lo pidió).
+            print("\n=== Bootstrap pareado (CI 95%%) - Δ consistencia entre condiciones ===")
+            result["ensemble_paired_bootstrap"] = {}
+            for a, b in itertools.combinations(cons, 2):
+                d, lo, hi, p = paired_bootstrap_diff_flags(cons[a], cons[b], args.n_boot, args.seed)
+                sig = "*" if (lo > 0 or hi < 0) else "ns"
+                result["ensemble_paired_bootstrap"][f"{a} vs {b}"] = {"diff": d, "ci95": [lo, hi], "p": p}
+                print(f"  {a:<18} vs {b:<18} Δ={d:+.3f} [{lo:+.3f},{hi:+.3f}] {sig}")
         else:
             logger.warning("Condiciones del ensamble con distinta longitud: McNemar omitido.")
 

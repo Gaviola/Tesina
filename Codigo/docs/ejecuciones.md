@@ -4,6 +4,62 @@ Ayuda-memoria cronológico de experimentos enviados a cluster, ordenado de más 
 
 ---
 
+## 2026-08-05
+
+### Cierre agosto — Plan + B1/D1 Detección de melanoma — **Sin jobs SLURM** (local)
+Plan de cierre de experimentación: [cierre_experimentacion_plan](ideas/cierre_experimentacion_plan_20260805.md)
+(8 decisiones de grilling: robustez-first + SOTA acotado a melanoma/reportes vs hardware; sistema propuesto =
+pipeline avanzado con incertidumbre 3-niveles + RAG + abstención; rúbrica clínica no-bloqueante; 1503 por
+sync+re-eval; generación en TOKO; gap detección→clasificación justificado).
+**B1+D1 (melanoma):** `scripts/melanoma_detection.py` sobre probs TTA. **Melanoma-vs-resto AUC 0.93–0.95**
+(competitivo a bajo costo); el argmax pierde 27% de melanomas (FN 0.27) pero **optimizar el umbral baja la
+FN a 0.07** (esp≥85). Maligno-vs-benigno AUC 0.94–0.96. Macro-AUC-OvR 0.94–0.95. Resul:
+[melanoma_detection_resul_20260805.md](resul/melanoma_detection_resul_20260805.md). **Caveat:** umbral fijado
+sobre test (ilustrativo) → pendiente fijarlo en validación. **Veredicto: CUMPLE (con caveat).**
+
+### Cierre agosto — B2 (stats+val) + C (1503) — **Sin jobs SLURM** (local)
+**B2a:** `reeval_tta_probs.py` extendido a val+test → umbral de melanoma fijado en **validación** y aplicado
+a test (caveat CERRADO): ConvNeXt melanoma AUC 0.949 sens 0.91/FN 0.09; ensamble sens 0.93/FN 0.07.
+**B2b:** `statistical_tests.py` + **bootstrap pareado** de Δ F1-macro/sens-macro (McNemar no aplica a esas
+métricas — lo pidió el tutor) y Δ consistencia entre condiciones de generación; todas las Δ de Swin
+significativas. **C:** bajadas las 1503 de Mini/LLaVA (tar+scp por el login de Mendieta; scheduler sigue
+caído) y re-evaluado el ensamble → **1503 confirma el 400** (Mini Swin 0.812 vs 0.830; oracle 0.999).
+`tab:ensamble` + texto + limitación a 1503 (32 págs, compila). Elimina la asimetría 400/1503.
+
+### Cierre agosto — Workstream A (pulido) + integración melanoma al .tex — **Sin jobs SLURM**
+Aplicados los ítems de forma/claridad del feedback 2026-08-05: **Cuadro 3** (`tab:sota_clasif`) sin columna
+Fuente (cita a paréntesis) + mejores en negrita; **Cuadro 9** (`tab:skinvl`) actualizado a 1503 + negritas
+(la frase "mover 1.ª con 2.ª col" quedó ambigua para esta tabla → confirmar con tutor); **Grad-CAM**
+reencuadrado como análisis cualitativo complementario (no prueba de validez clínica); **HAM↔HIBA** aclarado
+(mapeo 6/7 1:1, SCC→AKIEC 158 imgs, mismo espacio 7-clases, caída = población y/o anotación); **protocolo de
+perturbaciones** explicado (cada filtro por separado, determinístico, 4×5=20 versiones del test); **gap
+detección→clasificación** justificado. **Nueva subsección `sec:melanoma`** (`tab:melanoma`) con la suite
+clínica: melanoma-vs-resto AUC 0.93–0.95, argmax FN 0.27 → optimizado (umbral en val) FN 0.07; maligno-vs-
+benigno; macro-AUC-OvR 0.94–0.95. Doc: **33 págs, compila, 0 undefined.** Pendiente: tabla SOTA + best-mark
+exhaustivo en tablas restantes.
+
+### Cierre agosto — D2 (incertidumbre 3 niveles) + E (rúbrica) — **Sin jobs SLURM** (local)
+**D2 routing:** `build_uncertainty_3tier.py` — ensamble consciente de la incertidumbre con el marco del
+tutor (afirmativo/diferencial/**abstención**) alimentado por el **acuerdo Swin↔kNN-DermLIP** (no softmax).
+Test 1503: afirmativo 74% (acc 0.944), diferencial 22% (gt∈candidatos 0.898), abstención 4% (deriva).
+**El sistema presenta el gt en el 93.4% de los no-derivados** vs ~80% del grounding forzado. Resul:
+[incertidumbre_3niveles_resul_20260805.md](resul/incertidumbre_3niveles_resul_20260805.md). Integrado al
+`.tex` (§`sec:incertidumbre`, `tab:incertidumbre`, 34 págs). **Generación de los 334 diferenciales:** intento local **falló** (el torch de la `.venv` es `2.10.0+cpu`,
+sin CUDA — la GPU RTX 4070 está pero el build no la usa; un VLM 4.2B en CPU es inviable). **El scheduler de
+Mendieta se recuperó** → se generan ahí (todo cacheado). Infra: `generate_report.py --only_ids_csv` +
+`uncertainty_differential.csv` (334), SLURM `uncertainty_generation.sh` actualizado a solo-diferenciales.
+Cancelado el job viejo 1161538 (usaba el CSV binario previo). **Job 1163000 (COMPLETED, 3h45m).** 334 diferenciales bajados y evaluados. **En el subconjunto
+diferencial:** el reporte diferencial menciona el gt **0.901 vs 0.392** del grounding forzado (entity recall
+0.87 vs 0.69). **Sistema completo (1445 no-abstenidos):** consistency **0.940 (avanzado) vs 0.822
+(grounding simple)** —el $0.940$ coincide con la cobertura del router $0.934$—. Integrado a
+`experimentacion.tex` (`tab:incertidumbre_e2e`, §incertidumbre, 34 págs). **D2 CERRADO. Veredicto: CUMPLE
+completo.** Cierra el pipeline avanzado end-to-end. **E:** rúbrica clínica (`docs/rubrica_validacion_clinica.md`, 5
+criterios del tutor + proxies) + muestra estratificada n=28 (`sample_reports_for_review.py` →
+`outputs/review/muestra_revision_clinica.csv`). No bloquea; lista para especialista.
+**Tabla SOTA:** nueva `tab:sota_melanoma` en `tablas_comparativas_sota_v32.tex` — detección de melanoma
+binaria: ensamble **AUC 0.954 ≈ SOTA (Kreouzi2024, 0.951)** con modelos Tiny/GPU consumo; FN 0.07, VPN 0.99.
+Compila (wrapper 6 págs).
+
 ## 2026-07-25
 
 ### P5.4 — Generación consciente de la incertidumbre — Mendieta
