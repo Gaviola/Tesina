@@ -4,7 +4,40 @@ Ayuda-memoria cronológico de experimentos enviados a cluster, ordenado de más 
 
 ---
 
-## 2026-08-05
+## 2026-08-17
+
+### S6 consolidación — E1 (bootstrap pareado ensamble/incertidumbre) + E2 (regenerar fig:robustez_ej) — **Sin jobs SLURM** (local)
+Handoff: [handoff_s6_consolidacion.md](review_sessions/handoff_s6_consolidacion.md) (aplica los 5 reportes de
+revisión `docs/review_sessions/reporte_s{1..5}_*.md`).
+**E1:** `scripts/ensemble_bootstrap.py` (nuevo, reusa `paired_bootstrap_diff_flags` de `statistical_tests.py`
+y `diagnostic_consistency_flags` de `clinical_ner.py`) sobre los reportes ya generados en
+`outputs/generated_reports/mini_vlm/full_{baseline,dermlip,swin,oracle,differential}` + gt_label de
+`data/raw/HAM10000`. Los puntuales reproducen exactamente los números ya citados en `tab:ensamble`
+(0.246/0.497/0.812/0.999) y `tab:incertidumbre_e2e` (0.822/0.940, subset diferencial 0.392/0.901) — valida el
+script. ICs pareados (n\_boot=2000): Swin vs Oracle Δ=-0.187 [-0.207,-0.168]; pipeline avanzado vs grounding
+simple Δ=+0.118 [+0.101,+0.134] (n=1445); diferencial vs forzado Δ=+0.509 [+0.452,+0.566] (n=334). Todas
+significativas (IC no cruza 0). Resultado: `outputs/results/ensemble_bootstrap.json`.
+**E2:** `scripts/robustness_examples.py` extendido a multi-ejemplo (antes 1 imagen fija). La imagen previa
+mostraba blur/resolución fallando antes que ruido/JPEG, **contradiciendo la curva agregada real**
+(`fig:robustez`: ruido es la perturbación más dañina, resolución la más tolerada — confirmado inspeccionando
+el PNG). El nuevo selector busca automáticamente ejemplos cuyo patrón de primera-falla coincide con esa
+tendencia agregada (ya no con la caracterización del handoff, que tenía la dirección invertida). 2 ejemplos
+(BKL, DF) regenerados, ambos coherentes con el texto y `fig:robustez`. Nota: el handoff S6 describía la
+tendencia agregada al revés ("falla primero en desenfoque/resolución") — se verificó contra `P24_robustness.png`
+y se siguió el dato real, no la descripción del handoff.
+
+#### Pasada de verificación final (post-S6) — cierre de E1/E2 en el `.tex`
+La verificación independiente detectó dos brechas que S6 dejó abiertas pese a reportarlas como hechas:
+**(P1)** los ICs bootstrap de E1 se habían computado (`ensemble_bootstrap.json`) pero **nunca se insertaron
+en el `.tex`** — `tab:ensamble` y `tab:incertidumbre_e2e` no tenían significancia. Corregido: se agregó la
+prosa de significancia pareada a ambas (Δ y IC95 del JSON; baseline→Swin Δ=+0.567 [0.536,0.596],
+Swin→oracle Δ=0.187, pipeline vs grounding Δ=+0.118, diferencial vs forzado Δ=+0.509).
+**(P2)** la figura regenerada por S6 seguía teniendo un ejemplo (DF) que **contradecía su caption** (ruido/JPEG
+verdes en los 5 niveles; solo fallaba desenfoque). El selector usaba `score<0`, que se satisface solo con el
+ruido. Se endureció `_exhibits_trend` a `max(fast) < min(slow)` (ruido *y* JPEG deben fallar antes que
+desenfoque *y* resolución) + early-stop por pool. Regenerada: 2 ejemplos BKL (ISIC\_0034291, ISIC\_0034175),
+ambos verificados visualmente coherentes con el caption. Docstrings del script corregidos (estaban invertidos).
+Compila limpio: 38 págs, 0 undefined, overfull máx 21.4pt (preexistente).
 
 ### Cierre agosto — Plan + B1/D1 Detección de melanoma — **Sin jobs SLURM** (local)
 Plan de cierre de experimentación: [cierre_experimentacion_plan](ideas/cierre_experimentacion_plan_20260805.md)
