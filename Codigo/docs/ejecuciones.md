@@ -39,6 +39,57 @@ desenfoque *y* resolución) + early-stop por pool. Regenerada: 2 ejemplos BKL (I
 ambos verificados visualmente coherentes con el caption. Docstrings del script corregidos (estaban invertidos).
 Compila limpio: 38 págs, 0 undefined, overfull máx 21.4pt (preexistente).
 
+## 2026-08-23
+
+### #2 Test del prior del lenguaje (P(clase|prompt) sin imagen) — TOKO — jobs 97463, 97464
+Plan: [prior_lenguaje_noimage_plan](ideas/prior_lenguaje_noimage_plan_20260823.md).
+Nuevo flag `--no_image` en `scripts/train_vlm_classify.py` (reemplaza cada imagen por una gris neutra
+224×224, aislando el prior del lenguaje; sufijo de salida `_noimage`). SLURM `vlm_classify_{mini,llava}.sh`
+extendidos con `EXTRA_ARGS`; aliases nuevos `classify_{mini,llava}_noimg` en `scripts/toko/submit.py`
+(METHOD=likelihood + EXTRA_ARGS=--no_image). Comando: `python scripts/toko/submit.py classify_mini_noimg`
+y `classify_llava_noimg`. **Jobs 97463 (Mini-VLM) y 97464 (LLaVA-Med), RUNNING en TOKO (gpu1/gpu2, sin cola).**
+**COMPLETADO** (jobs 97463/97464 terminaron OK: 6h22m / 5h05m). Resul:
+[prior_lenguaje_noimage_resul](resul/prior_lenguaje_noimage_resul_20260824.md). **Veredicto: CUMPLE** —
+sin imagen ambos VLMs colapsan al 100% a una clase fija (Mini→MEL acc 0.111, LLaVA→DF acc 0.011), nunca se
+abstienen; con imagen apenas se dispersan (Mini 1→2 clases/acc 0.189, LLaVA 1→5 clases/acc 0.037) → el prior
+del lenguaje domina sobre el contenido visual. `sec:rediag` actualizado: la conjetura pasó a **resultado
+directo** (se quitó "queda como trabajo futuro"). Doc compila limpio (40 págs, 0 undefined).
+#3 (penalización repetición) y #4-generación (SVM grounding) NO se lanzan: son corridas de generación de
+horas y valor bajo-medio; quedan declarados como trabajo futuro.
+
+
+### Revisión externa 2.ª pasada — aplicación de mejoras al `.tex` — **Sin jobs SLURM** (doc)
+Fuente: `review_experimentacion_20260823.md` (revisión de otro agente). Verificadas contra el `.tex` (todas
+se sostuvieron) y aplicadas: **consistencia numérica** (1.1 nota baseline RAG 0.20/n=400; 1.2 fuente del
+recall 0.77; 1.3 nota Swin Acc 0.80=checkpoint ancla vs headline 0.868 en `tab:ensamble`/`tab:skinvl`;
+1.5 abstract "diagnostic consistency"; 1.6 rango FN melanoma 0.07–0.14; 1.7 n/condición de mediciones
+puntuales; 1.8 rangos de costo texto↔tabla); **tablas** (2.1 columnas `tab:sota_melanoma`; 2.3 espaciado
+`tab:costo_total`; 2.5 cuadro/tabla en texto corrido; 2.6 fila "Total no derivado 0.934" + definición de
+cobertura); **figuras** (3.1 **nuevo diagrama TikZ `fig:incertidumbre`** de 3 niveles; 3.3 nota reportes en
+inglés); **claridad** (4.2 suavizar conjetura "prior del lenguaje" + test futuro; 4.3 calib "~40%" no "30%";
+4.4 conectar trade-off SkinCoT con `tab:sota_gen`; 4.6 **nueva subsección "Amenazas a la validez"**);
+**bibliografía** (5.1 citar HAM10000; 5.5 limpiar entrada Kreouzi); **estilo** (6.x coloquialismos).
+Compila limpio: **39 págs, 0 undefined, 0 citas rotas**, overfull máx 21.4pt (preexistente).
+Pendiente para el autor (no fabricado): referencias reales de SkinCaRe/HIBA (5.2/5.3, dejadas como footnote
+"recurso público") y autores completos de `liu2025skinr1`/`SkinHealthMate2024`/`SkinSavvy22025` (5.6).
+
+### Cierre de referencias + arreglo del diagrama de incertidumbre — **Sin jobs SLURM** (doc)
+Referencias faltantes completadas desde `Docs/estado_del_arte/{resumen_papers.tex,referencias.bib}` y
+`Papers/derma/`: **SkinCaRe** (`shen2025skincare`, Shen et al. 2025, arXiv:2405.18004) y **HIBA**
+(`riccilara2023hiba`, Ricci Lara et al. 2023, Sci Data) agregadas y citadas (se quitaron las footnotes
+"recurso público"); autores completados en `liu2025skinr1`, `SkinHealthMate2024`, `SkinSavvy22025`.
+`fig:incertidumbre` reescrita (cajas en columna con separación real, etiquetas `sloped` en las flechas) —
+se corrigió el solapamiento visual. Compila limpio: **40 págs, 0 undefined, 0 citas rotas**.
+
+### Cierre de experimentación — F4 (ejemplo humano vs generado) + análisis de trabajo futuro — **Sin jobs SLURM** (doc)
+**#1 (F4):** nueva `fig:human_vs_gen` (Figura 18) — reporte de dermatólogo (referencia SkinCoT,
+`03DermatitisArm1`, eczema) vs reporte generado por el ensamble sobre el mismo caso, usando datos ya
+existentes (`outputs/generated_reports/llava_med/skincot_oracle/`). Imagen copiada a
+`imagenes/ej_skincot_human.jpg`. Se actualizó la limitación correspondiente (ya no falta la comparación).
+**#2 verificado NO reutilizable:** `full_oracle_noimage` tiene el gt inyectado (oracle), no sirve para el
+test P(clase|prompt sin imagen); ese test requiere una corrida VLM nueva sin imagen (ver análisis de cierre).
+Compila: **40 págs, 0 undefined, 0 citas rotas**.
+
 ### Cierre agosto — Plan + B1/D1 Detección de melanoma — **Sin jobs SLURM** (local)
 Plan de cierre de experimentación: [cierre_experimentacion_plan](ideas/cierre_experimentacion_plan_20260805.md)
 (8 decisiones de grilling: robustez-first + SOTA acotado a melanoma/reportes vs hardware; sistema propuesto =

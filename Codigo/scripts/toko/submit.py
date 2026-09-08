@@ -215,6 +215,9 @@ JOBS = {
     "classify_mini_lik":     ("slurm/toko/vlm_classify_mini.sh",     {"METHOD": "likelihood"}),
     "classify_llava_ft_lik": ("slurm/toko/vlm_classify_llava_ft.sh", {"METHOD": "likelihood"}),
     "classify_mini_ft_lik":  ("slurm/toko/vlm_classify_mini_ft.sh",  {"METHOD": "likelihood"}),
+    ## #2 (cierre): test del prior del lenguaje — likelihood con imagen gris neutra (P(clase|prompt)).
+    "classify_llava_noimg":  ("slurm/toko/vlm_classify_llava.sh",    {"METHOD": "likelihood", "EXTRA_ARGS": "--no_image"}),
+    "classify_mini_noimg":   ("slurm/toko/vlm_classify_mini.sh",     {"METHOD": "likelihood", "EXTRA_ARGS": "--no_image"}),
     ## Variantes CoT: mismo mecanismo de env var METHOD=cot.
     "classify_llava_cot":    ("slurm/toko/vlm_classify_llava.sh",    {"METHOD": "cot"}),
     "classify_mini_cot":     ("slurm/toko/vlm_classify_mini.sh",     {"METHOD": "cot"}),

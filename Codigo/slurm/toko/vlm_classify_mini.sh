@@ -48,12 +48,14 @@ echo ""
 ## reutilizar el mismo script sbatch en ambos metodos (generate | likelihood | cot).
 METHOD="${METHOD:-generate}"
 echo "Metodo de clasificacion: ${METHOD}"
+echo "Extra args: ${EXTRA_ARGS}"
 
 ${PYTHON} scripts/train_vlm_classify.py \
     --model mini_vlm \
     --method "${METHOD}" \
     --batch_size 1 \
     --seed 42 \
+    ${EXTRA_ARGS} \
     --wandb
 
 echo ""

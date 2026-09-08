@@ -142,9 +142,16 @@ def run_likelihood_eval(args, model, test_dataset, is_finetuned, script_start):
 
     per_syn_dump: list = [] if args.keep_synonym_details else None
 
+    # #2 (cierre): imagen gris neutra para aislar el prior del lenguaje (P(clase | prompt)).
+    blank_image = None
+    if getattr(args, "no_image", False):
+        from PIL import Image as _PILImage
+        blank_image = _PILImage.new("RGB", (224, 224), (128, 128, 128))
+        logger.info("MODO --no_image: se reemplaza cada imagen por una gris neutra (224x224).")
+
     for idx in range(limit):
         sample = test_dataset[idx]
-        image = sample["image"]
+        image = blank_image if blank_image is not None else sample["image"]
         label = int(sample["label"])
         image_id = sample.get("image_id", "")
 
@@ -254,6 +261,8 @@ def run_likelihood_eval(args, model, test_dataset, is_finetuned, script_start):
     suffix = "_likelihood_finetuned" if is_finetuned else "_likelihood"
     if getattr(args, "eval_dataset", "ham10000") == "skincap_clinical":
         suffix += "_clinical"  # no pisar los resultados de HAM (dermatoscopía)
+    if getattr(args, "no_image", False):
+        suffix += "_noimage"  # test del prior del lenguaje (#2 cierre)
 
     predictions = {
         "model": args.model,
@@ -556,6 +565,10 @@ def main():
     parser.add_argument("--keep_synonym_details", action="store_true",
                         help="(likelihood) Guardar log-probs por sinonimo en el JSON. "
                              "Util para debug, triplica el tamano del archivo.")
+    parser.add_argument("--no_image", action="store_true",
+                        help="(likelihood) Reemplaza cada imagen por una imagen gris neutra (sin "
+                             "contenido visual) para medir P(clase | prompt) — test directo del "
+                             "'prior del lenguaje'. Guarda con sufijo _noimage.")
     args = parser.parse_args()
 
     if args.dry_run:
