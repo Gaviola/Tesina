@@ -66,9 +66,10 @@ diagnósticamente poco confiables, una limitación que un sistema en cascada (cl
 —que además de afirmar cuando hay confianza, ofrece un diferencial o deriva a un especialista cuando no la
 hay— mejora todavía más: la fidelidad diagnóstica (\emph{diagnostic consistency}) sube de $0.82$
 (\emph{grounding} simple) a $0.94$ sobre los casos no derivados, validado \emph{end-to-end} sobre los
-reportes generados. Estas conclusiones son parciales: la experimentación continúa: las corridas a mayor
-escala están en curso y la validación con especialistas queda pendiente, con el instrumento de evaluación
-ya preparado.
+reportes generados. El alcance de estas conclusiones está acotado: se sostienen sobre dermatoscopía de una
+población concreta —con una caída documentada al transferir a otra— y sobre métricas automáticas, ya que
+la validación por un especialista, cuyo instrumento queda preparado, excede el alcance de esta
+experimentación.
 \end{abstract}
 
 \tableofcontents
@@ -155,9 +156,11 @@ evaluar, y difieren en la modalidad de imagen.
     10.015 imágenes, 7 clases. Fuertemente desbalanceado (Figura~\ref{fig:ham}). Split estratificado
     70/15/15. En clasificación se usa el conjunto completo. \\
     \addlinespace
-    SkinCaRe \mbox{(SkinCAP+SkinCoT)}~\cite{shen2025skincare} & Foto clínica & Entrenamiento de generación &
-    $\sim$7k pares imagen--texto. SkinCAP aporta descripciones; SkinCoT aporta narrativas de
-    razonamiento diagnóstico paso a paso. Usado para el ajuste del VLM generador. \\
+    SkinCaRe (SkinCAP $+$ SkinCoT)~\cite{shen2025skincare} & Foto clínica & Entrenamiento de generación &
+    $\sim$7k pares imagen--texto. SkinCAP aporta descripciones \emph{redactadas} por dermatólogos;
+    SkinCoT aporta narrativas de razonamiento diagnóstico paso a paso \emph{generadas} por modelos de
+    lenguaje (a partir de la etiqueta verdadera) y luego \textbf{certificadas y filtradas} por
+    dermatólogos sobre seis criterios de calidad. Usado para el ajuste del VLM generador. \\
     \addlinespace
     MM-Skin & Clínica/derma\-toscópica/patológica & Evaluación de generación (con referencia) &
     Pares imagen--texto de libros de texto~\cite{zeng2025mmskin}; \emph{benchmark} externo, no de
@@ -207,8 +210,12 @@ cuán alta sea su exactitud.
 \paragraph{Generación de reportes.} La evaluación tiene dos niveles. El \textbf{Nivel 1} (con
 referencia) compara el reporte generado contra uno de referencia: BLEU-4, ROUGE-L, METEOR y CIDEr miden
 solapamiento textual, y BERTScore mide similitud semántica. En este trabajo de experimentación, el Nivel 1 cuantifica
-\emph{cuán parecido es el reporte generado a uno escrito por un humano}, y solo puede aplicarse a
-datasets con reportes de referencia (MM-Skin, SkinCoT); HAM no los tiene. El \textbf{Nivel 2} (sin
+\emph{cuán parecido es el reporte generado a uno de referencia}, y solo puede aplicarse a
+datasets que los traen (MM-Skin, SkinCoT); HAM no los tiene. Conviene precisar el origen de esas
+referencias: las de MM-Skin provienen de libros de texto y las de SkinCoT las genera un pipeline de
+modelos de lenguaje que luego \emph{certifican} dermatólogos (Sección~\ref{sec:datasets}). Es decir, el
+Nivel 1 mide parecido contra un texto de referencia validado, no necesariamente redactado por un
+especialista. El \textbf{Nivel 2} (sin
 referencia) mide el contenido clínico directamente: \emph{clinical entity recall} (qué proporción de
 categorías de términos dermatológicos aparece en el reporte; mide \emph{riqueza}) y \emph{diagnostic
 consistency} (qué proporción de reportes menciona el diagnóstico correcto; mide \emph{fidelidad
@@ -488,6 +495,19 @@ es gratuita—. La arquitectura y la augmentación ya bastan para discriminar
 las clases minoritarias de HAM: el desbalance no es el cuello de botella del clasificador, y por lo tanto
 tampoco explica el colapso de los VLMs.
 
+El \emph{porqué} de este comportamiento es coherente con esa lectura. Los métodos de re-balanceo corrigen
+un sesgo hacia la clase mayoritaria desplazando la frontera de decisión en favor de las raras. Pero ese
+sesgo, en este caso, \textbf{ya estaba compensado} por la augmentación fuerte del \emph{recipe} moderno:
+la CE simple alcanza sensibilidad macro $0.887$, es decir, el modelo ya reconoce bien las clases
+minoritarias. Al aplicar entonces una corrección adicional, esta no elimina un sesgo sino que
+\emph{introduce el opuesto}: el modelo pasa a sobre-predecir clases raras, generando falsos positivos
+masivos sobre el nevo —que concentra el $67\%$ del conjunto—, lo que derrumba la exactitud ($0.923 \to
+0.795$ en Swin, $0.876 \to 0.563$ en DenseNet) sin ganar sensibilidad macro a cambio. Cuanto más agresiva
+la corrección, peor el resultado: las \emph{class-weights}, que reponderan por frecuencia inversa y por
+tanto amplifican más las clases de menor prevalencia, son las que más daño hacen en las tres arquitecturas.
+En otras palabras, el re-balanceo falla aquí no por estar mal implementado, sino porque \textbf{corrige un
+problema que el modelo ya había resuelto por otra vía}.
+
 \emph{Una aclaración de cronología.} Los clasificadores \emph{headline} (Cuadro~\ref{tab:clasificacion})
 se entrenaron con \emph{pesos por clase}, una decisión previa a este análisis. El hallazgo de que la CE
 simple los iguala o supera es \emph{posterior} —surge de este experimento de re-balanceo—, de modo que los
@@ -685,6 +705,38 @@ $[0.137,0.152]$ y el de LLaVA-Med $[0.145,0.168]$, ambos \emph{abrazando el nive
 \emph{likelihood scoring} del Cuadro~\ref{tab:clasificacion} (donde Mini-VLM ZS alcanza sens.\ macro
 $0.181$): ambos colapsan, pero no son el mismo número y no deben leerse como IC el uno del otro.
 
+McNemar y los IC anteriores operan sobre la exactitud global; para contrastar el desempeño
+\emph{por clase} —donde el desbalance pesa— se aplicó además un \textbf{test de Wilcoxon de rangos con
+signo} sobre el \emph{recall} de las 7 clases, pareado por clase entre cada par de modelos
+(Cuadro~\ref{tab:wilcoxon}). La ventaja de Swin-Tiny es significativa frente a los tres modelos
+visión--lenguaje ($p \le 0.031$), con diferencias medianas de recall de $+0.24$ sobre DermLIP zero-shot y
+de $+0.73$--$0.79$ sobre los VLMs generales. En cambio, \textbf{Mini-VLM y LLaVA-Med son indistinguibles
+entre sí} ($p=1.00$, diferencia mediana $0.00$): ambos colapsan por igual, sin que ninguno domine al otro
+en ninguna clase. DermLIP se separa de LLaVA-Med ($p=0.047$) pero no alcanza significancia frente a
+Mini-VLM ($p=0.109$) con solo 7 pares, la limitación esperable de un test no paramétrico sobre tan pocas
+observaciones.
+
+\begin{table}[H]
+  \centering
+  \caption{Test de Wilcoxon de rangos con signo sobre el \emph{recall} por clase (7 pares, uno por clase de
+  HAM10000), pareado entre modelos. ``Dif.\ mediana'' es la mediana de la diferencia de recall a favor del
+  primer modelo. Complementa a McNemar, que compara aciertos globales pero no diferencias por clase.
+  En negrita, los contrastes significativos ($p<0.05$).}
+  \label{tab:wilcoxon}
+  \begin{tabular}{lcc}
+    \toprule
+    \textbf{Comparación (recall por clase)} & \textbf{Dif.\ mediana} & \textbf{$p$} \\
+    \midrule
+    Swin-Tiny vs.\ DermLIP (ZS)       & $+0.235$ & \textbf{0.016} \\
+    Swin-Tiny vs.\ Mini-VLM (ZS)      & $+0.794$ & \textbf{0.031} \\
+    Swin-Tiny vs.\ LLaVA-Med (ZS)     & $+0.733$ & \textbf{0.031} \\
+    DermLIP (ZS) vs.\ LLaVA-Med (ZS)  & $+0.329$ & \textbf{0.047} \\
+    DermLIP (ZS) vs.\ Mini-VLM (ZS)   & $+0.471$ & 0.109 \\
+    Mini-VLM (ZS) vs.\ LLaVA-Med (ZS) & $0.000$  & 1.000 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
 \subsection{Robustez a condiciones de adquisición}
 \label{sec:robustez}
 Un clasificador entrenado sobre HAM10000 puede degradarse por dos vías al usarse en el entorno real:
@@ -809,18 +861,33 @@ sentido de \emph{cribado} (¿es melanoma o no?) se operacionaliza precisamente c
 binaria melanoma-vs-resto} que se reporta a continuación. En ese sentido, el binario \emph{es} la detección
 de melanoma.
 
+Además de los clasificadores individuales se evalúa un \textbf{ensamble por voto suave} (promedio de las
+probabilidades de Swin-Tiny y ConvNeXt-Tiny, ambos con TTA). Conviene situar su aporte: en la tarea
+\emph{multiclase} de 7 clases su ganancia es \textbf{modesta} —sensibilidad macro $0.846$ frente a $0.827$
+del mejor individual (ConvNeXt-Tiny), es decir $+0.019$, y $+0.004$ en F1 ponderado— a costa de
+\textbf{duplicar} el tiempo de inferencia por usar dos modelos.\footnote{Medido con los checkpoints
+\emph{modern\_v3} locales y TTA para que la comparación ensamble-vs-individual sea bajo el mismo protocolo;
+por eso estos valores no coinciden con los \emph{headline} del Cuadro~\ref{tab:clasificacion}, obtenidos
+con el checkpoint del barrido.} Para el problema \emph{in-distribution} ya casi saturado, apilar modelos
+resulta una palanca más cara que el TTA sobre un único modelo especializado. En la detección binaria de
+melanoma, en cambio, ese mismo ensamble sí aporta el mejor AUC-ROC, como se ve a continuación.
+
 Se evaluaron dos tareas binarias sobre las probabilidades del clasificador (con TTA): \textbf{melanoma-vs-resto}
 (score $=P(\text{MEL})$) y \textbf{maligno-vs-benigno} (maligno $=$ \{MEL, BCC, AKIEC\}). Se reporta la suite
-clínica estándar: AUC-ROC, PR-AUC, sensibilidad, especificidad, valor predictivo negativo (VPN) y
-\textbf{tasa de falsos negativos (FN) de melanoma} (Cuadro~\ref{tab:melanoma}). El punto de operación de las
+clínica estándar: AUC-ROC, PR-AUC, sensibilidad, especificidad y valor predictivo negativo (VPN)
+(Cuadro~\ref{tab:melanoma}), junto con la \textbf{tasa de falsos negativos (FN) de melanoma}, que es el
+complemento de la sensibilidad en el punto de operación y por eso se discute en el texto en lugar de
+tabularse. El punto de operación de las
 variantes optimizadas se fija en el \emph{split de validación} y se aplica al test (sin sesgo optimista).
 
 \begin{table}[H]
   \centering
-  \caption{Detección de melanoma sobre HAM10000 test ($n=1503$). AUC-ROC y PR-AUC son independientes del
-  umbral; ``esp$\ge$85'' fija el punto de operación en validación exigiendo especificidad $\ge0.85$
-  (prioriza no perder melanomas); Espec.\ y VPN son los valores efectivamente alcanzados en test bajo ese
-  punto de operación. Mejor por columna en negrita; ``---'' = no disponible.}
+  \caption{Detección de melanoma sobre HAM10000 test ($n=1503$), en dos tareas binarias (las filas en
+  cursiva son encabezados de bloque, no datos). AUC-ROC y PR-AUC son independientes del umbral;
+  ``esp$\ge$85'' fija el punto de operación en validación exigiendo especificidad $\ge0.85$ (prioriza no
+  perder melanomas); Espec.\ y VPN son los valores efectivamente alcanzados en test bajo ese punto de
+  operación. La tasa de falsos negativos es el complemento de Sens.\ (esp$\ge$85), por lo que no se tabula
+  aparte. ``---'' = no disponible.}
   \label{tab:melanoma}
   \small
   \resizebox{\textwidth}{!}{%
@@ -828,12 +895,12 @@ variantes optimizadas se fija en el \emph{split de validación} y se aplica al t
     \toprule
     \textbf{Modelo} & \textbf{AUC-ROC} & \textbf{PR-AUC} & \textbf{Sens.\ (argmax)} & \textbf{Sens.\ (esp$\ge$85)} & \textbf{Espec.} & \textbf{VPN} \\
     \midrule
-    \multicolumn{7}{@{}l}{\itshape Melanoma-vs-resto (prevalencia 0.11); FN (esp$\ge$85) por fila (Swin/ConvNeXt/Ensamble): 0.138 / 0.090 / 0.072} \\
+    \multicolumn{7}{@{}l}{\itshape Tarea A --- Melanoma-vs-resto (prevalencia $0.11$)} \\
     Swin-Tiny        & 0.931 & 0.705 & 0.731 & 0.862 & 0.858 & 0.980 \\
-    ConvNeXt-Tiny    & 0.949 & \textbf{0.811} & 0.731 & 0.910 & 0.862 & 0.987 \\
-    Ensamble (voto)  & \textbf{0.954} & 0.799 & \textbf{0.760} & \textbf{0.928} & \textbf{0.860}$^{\ast}$ & \textbf{0.990} \\
+    ConvNeXt-Tiny    & 0.949 & \textbf{0.811} & 0.731 & 0.910 & \textbf{0.862} & 0.987 \\
+    Ensamble (voto)  & \textbf{0.954} & 0.799 & \textbf{0.760} & \textbf{0.928} & 0.860$^{\ast}$ & \textbf{0.990} \\
     \midrule
-    \multicolumn{7}{@{}l}{\itshape Maligno-vs-benigno (prevalencia 0.20); FN (esp$\ge$85) por fila (Swin/ConvNeXt/Ensamble): 0.143 / 0.058 / 0.078} \\
+    \multicolumn{7}{@{}l}{\itshape Tarea B --- Maligno-vs-benigno (prevalencia $0.20$)} \\
     Swin-Tiny        & 0.936 & 0.823 & --- & 0.857 & $\ge0.85$ & --- \\
     ConvNeXt-Tiny    & 0.959 & \textbf{0.898} & --- & \textbf{0.942} & $\ge0.85$ & --- \\
     Ensamble (voto)  & \textbf{0.961} & 0.891 & --- & 0.922 & $\ge0.85$ & --- \\
@@ -969,8 +1036,8 @@ entrenamiento no resolvió el problema, lo que orientó el análisis hacia su ve
     \textbf{Modelo} & \multicolumn{2}{c}{\textbf{Diagnostic consistency}} & \multicolumn{2}{c}{\textbf{Clinical entity recall}} \\
     & v1 & v2 & v1 & v2 \\
     \midrule
-    LLaVA-Med & 0.718 & 0.634 & 0.457 & 0.824 \\
-    Mini-VLM  & 0.353 & 0.229 & 0.607 & 0.546 \\
+    LLaVA-Med & \textbf{0.718} & 0.634 & 0.457 & \textbf{0.824} \\
+    Mini-VLM  & \textbf{0.353} & 0.229 & \textbf{0.607} & 0.546 \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -1090,6 +1157,16 @@ Figura~\ref{fig:f2}(a) grafica la \emph{diagnostic consistency} y la (b) el \emp
   \item \textbf{Un clasificador débil puede empeorar}: con DermLIP zero-shot (exactitud 0.38), LLaVA
   baja a $0.454$, por debajo de su baseline ($0.645$), porque el reporte se compromete con el
   diagnóstico \emph{equivocado}. Esto cuantifica el costo de propagación de error.
+  \item \textbf{El techo del \emph{grounding} depende del generador}: con el diagnóstico \emph{correcto}
+  inyectado, Mini-VLM lo enuncia casi siempre ($0.999$) pero LLaVA-Med se queda en $0.852$, es decir,
+  \emph{omite el diagnóstico que se le dio} en uno de cada siete reportes. La causa es el prior de
+  razonamiento del modelo más grande, ya cuantificado en la Sección~\ref{sec:porque_ensamble}: sobre
+  LLaVA-Med con oracle, el ajuste de \emph{prompt} llevó la consistencia de $0.30$ (prompt suave) a $0.85$
+  con la variante \emph{noreasoning}, y ese $0.85$ es exactamente el valor que reaparece aquí. Dicho de
+  otro modo, $0.852$ no es una limitación del \emph{grounding} sino \textbf{el techo alcanzable por
+  ingeniería de prompt} en un modelo que tiende a deliberar: incluso prohibiéndole razonar y dándole la
+  respuesta, a veces divaga hacia diferenciales en lugar de comprometerse. Mini-VLM, más escueto y literal,
+  se limita a transcribir el diagnóstico recibido, lo que explica su techo casi perfecto.
 \end{enumerate}
 
 Estas diferencias son \textbf{estadísticamente significativas}: un \emph{bootstrap} pareado ($2000$
@@ -1105,7 +1182,7 @@ excluyen el cero.
   consistency} (sobre el reporte) en HAM10000 por condición y modelo, sobre el \textbf{test split completo
   ($n=1503$)}. La columna ``Acc.\ clasif.'' es la exactitud del checkpoint de Swin efectivamente usado
   como ancla en el pipeline de generación ($0.80$, single-view), distinta del \emph{headline} con TTA
-  ($0.868$, Cuadro~\ref{tab:clasificacion}). Mejor por modelo en negrita.}
+  ($0.868$, Cuadro~\ref{tab:clasificacion}).}
   \label{tab:ensamble}
   \begin{tabular}{llcc}
     \toprule
@@ -1113,8 +1190,9 @@ excluyen el cero.
     \midrule
     Baseline (sin grounding) & ---  & 0.645 & 0.246 \\
     DermLIP (ZS)             & 0.38 & 0.454 & 0.497 \\
-    Swin (supervisado)       & 0.80 & 0.696 & 0.812 \\
-    Oracle (gt)              & 1.00 & \textbf{0.852} & \textbf{0.999} \\
+    Swin (supervisado)       & 0.80 & \textbf{0.696} & \textbf{0.812} \\
+    \midrule
+    \textit{Oracle (gt) --- cota superior} & \textit{1.00} & \textit{0.852} & \textit{0.999} \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -1283,7 +1361,7 @@ ensamble (Cuadro~\ref{tab:skinvl}). Tres observaciones:
 \begin{table}[H]
   \centering
   \caption{Diagnostic consistency (report-only) por condición de grounding: SkinVL vs los VLMs generales,
-  sobre el \textbf{test completo ($n=1503$)} para los tres. Mejor por modelo en negrita. El $\approx$0.00
+  sobre el \textbf{test completo ($n=1503$)} para los tres. El $\approx$0.00
   del baseline de SkinVL no es un error: es el colapso de modo —solo $3$ de las $1503$ imágenes reciben un
   reporte que menciona la clase correcta (consistency $0.002$)—, porque el modelo repite un diagnóstico
   fijo fuera de las clases de HAM (ver texto). Las exactitudes de clasificación entre paréntesis
@@ -1295,8 +1373,9 @@ ensamble (Cuadro~\ref{tab:skinvl}). Tres observaciones:
     \midrule
     baseline (sin grounding) & $\approx$0.00 & 0.65 & 0.25 \\
     DermLIP (clasif.\ 0.38)  & 0.43 & 0.45 & 0.50 \\
-    Swin (clasif.\ 0.80)     & 0.80 & 0.70 & 0.81 \\
-    oracle (gt)              & \textbf{1.00} & \textbf{0.85} & \textbf{1.00} \\
+    Swin (clasif.\ 0.80)     & \textbf{0.80} & \textbf{0.70} & \textbf{0.81} \\
+    \midrule
+    \textit{oracle (gt) --- cota superior} & \textit{1.00} & \textit{0.85} & \textit{1.00} \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -1318,9 +1397,9 @@ Dos ablaciones aíslan el rol de cada componente del pipeline. Se aplican a los 
     \toprule
     & \textbf{SkinVL} & \textbf{LLaVA-Med} & \textbf{Mini-VLM} \\
     \midrule
-    Oracle, con imagen        & 1.00 & 0.85 & 1.00 \\
-    Oracle, \emph{sin} imagen & 0.97 & \textbf{1.00} & 1.00 \\
-    \quad$\Delta$ (P1.2 imagen-vs-dx) & $+0.03$ & $\mathbf{-0.15}$ & $0.00$ \\
+    Oracle, con imagen        & \textbf{1.00} & 0.85 & \textbf{1.00} \\
+    Oracle, \emph{sin} imagen & 0.97 & \textbf{1.00} & \textbf{1.00} \\
+    \quad$\Delta$ (P1.2 imagen-vs-dx) & $+0.03$ & $-0.15$ & $0.00$ \\
     \addlinespace
     dx-erróneo (P1.3)         & 0.11 & 0.07 & 0.07 \\
     \bottomrule
@@ -1340,6 +1419,20 @@ confundible), la consistencia respecto del \emph{gt} se derrumba a $0.07$--$0.11
 generador \textbf{se compromete con el diagnóstico equivocado} y no lo corrige mirando la imagen
 (propagación de error total, universal a los tres generadores).
 
+\paragraph{Una simetría con el diagnóstico del colapso.} Vale conectar este resultado con el de la
+Sección~\ref{sec:rediag}, porque ambos usan \emph{el mismo recurso experimental} —sustituir la imagen por
+una neutra— y revelan la misma propiedad de fondo, aunque con signos opuestos. En \textbf{clasificación},
+quitar la imagen no impidió que el VLM siguiera prediciendo: colapsó al $100\%$ en una clase fija, prueba
+de que se apoya en el prior del lenguaje y no en la evidencia visual. En \textbf{generación}, quitar la
+imagen tampoco degrada la fidelidad: el modelo redacta igual a partir del texto del diagnóstico. Es, en
+los dos casos, el mismo hecho: \textbf{estos VLMs se anclan en el texto, no en la señal visual}. Lo
+interesante es que esa única propiedad explica a la vez el fracaso y el éxito del sistema. Como
+\emph{clasificadores} los inhabilita —sin capacidad de discriminación visual no hay diagnóstico posible—;
+como \emph{redactores dentro de la cascada} es precisamente lo que los vuelve confiables, porque garantiza
+que transcriban con fidelidad el diagnóstico que se les inyecta en lugar de contradecirlo con una lectura
+visual propia y poco fiable. La contracara es la propagación de error de la ablación anterior: esa misma
+docilidad textual hace que adopten sin resistencia un diagnóstico equivocado.
+
 \paragraph{Consecuencia.} Ambas ablaciones apuntan a lo mismo: \emph{la fidelidad diagnóstica del
 ensamble proviene del clasificador, no de la visión del generador}. El VLM generativo actúa como un
 \emph{transcriptor} del diagnóstico a prosa clínica. Un experimento adicional lo confirma directamente: el
@@ -1355,14 +1448,14 @@ especializado.
 \begin{table}[H]
   \centering
   \caption{Plantilla trivial (clasificador $\to$ texto fijo, costo de generación nulo) vs.\ generadores VLM,
-  misma métrica y mismas imágenes ($n=400$). Mejor por fila en negrita.}
+  misma métrica y mismas imágenes ($n=400$).}
   \label{tab:plantilla}
   \small
   \begin{tabular}{llcc}
     \toprule
     \textbf{Grounding} & \textbf{Sistema} & \textbf{Diagnostic consistency} & \textbf{Clinical entity recall} \\
     \midrule
-    Swin        & Plantilla   & \textbf{0.828} & 0.435 \\
+    Swin        & Plantilla   & 0.828 & 0.435 \\
                 & LLaVA-Med   & 0.703 & 0.754 \\
                 & Mini-VLM    & \textbf{0.830} & \textbf{0.766} \\
     \midrule
@@ -1411,14 +1504,14 @@ baratos—, y la recuperación además enriquece el reporte.
     Baseline (sin contexto)        & 0.20 & 0.55 \\
     RAG-only (recuperación)        & 0.76 & \textbf{0.91} \\
     Grounding Swin                 & 0.83 & 0.77 \\
-    Grounding Swin + RAG           & 0.84 & 0.68 \\
-    Oracle (dx correcto)           & \textbf{1.00} & 0.79 \\
+    Grounding Swin + RAG           & \textbf{0.84} & 0.68 \\
+    \midrule
+    \textit{Oracle (dx correcto) --- cota superior} & \textit{1.00} & \textit{0.79} \\
     \bottomrule
   \end{tabular}
   \\[2pt]
-  {\footnotesize El oracle es la cota superior del \emph{grounding} (recibe el dx verdadero, no es un
-  sistema usable) y se excluye de la comparación entre condiciones \emph{candidatas}; entre estas últimas,
-  la mejor consistencia es Grounding Swin + RAG ($0.84$).}
+  {\footnotesize El oracle (recibe el dx verdadero, no es un sistema usable) es la cota superior del
+  \emph{grounding} y se excluye de la comparación entre condiciones candidatas.}
 \end{table}
 
 \subsection{Ensamble consciente de la incertidumbre}
@@ -1431,9 +1524,21 @@ cruda del clasificador no es un estimador de certeza confiable. La respuesta es 
 \emph{modula su salida según cuán seguro está}: afirma cuando hay confianza, ofrece un \textbf{diferencial}
 cuando duda, y se \textbf{abstiene (deriva a un especialista)} cuando la ambigüedad es máxima.
 
-\paragraph{Cómo decide.} El ruteo usa una señal de confianza que \emph{sí} separa —el \textbf{acuerdo entre
-dos clasificadores especializados baratos}: el supervisado (Swin) y un \emph{kNN} sobre los embeddings de
-DermLIP (la recuperación de la Sección~\ref{sec:rag})— en lugar de la softmax mal calibrada. Las reglas
+\paragraph{Cómo decide, y por qué no con la softmax.} La señal natural para medir confianza sería la
+probabilidad del clasificador, pero la Sección~\ref{sec:calib} mostró que \emph{no sirve} como estimador de
+certeza: los modelos están mal calibrados (ECE $0.19$--$0.39$) y de forma sistemáticamente sub-confiada, de
+modo que el valor absoluto de la softmax no es interpretable como probabilidad de acierto; al usarla para
+rutear, la relación entre confianza y exactitud no resulta monótona y el umbral no separa bien los casos
+fáciles de los ambiguos. El ruteo usa por eso una señal distinta: el \textbf{acuerdo entre dos
+clasificadores especializados baratos}, el supervisado (Swin) y un \emph{kNN} sobre los embeddings de
+DermLIP (la recuperación de la Sección~\ref{sec:rag}). Funciona por dos razones. Primero, porque los dos
+sistemas tienen \emph{sesgos inductivos y datos de entrenamiento distintos} —Swin ajusta fronteras de
+decisión de extremo a extremo sobre HAM10000, mientras que el \emph{kNN} es no paramétrico y opera sobre
+una representación contrastiva preentrenada en Derm1M—, de manera que sus errores son en buena medida
+independientes: que coincidan es evidencia de que el caso es inequívoco, y que discrepen señala ambigüedad
+genuina en vez de ruido de un único modelo. Segundo, y decisivo aquí, porque la señal usa solo las
+\emph{decisiones} de ambos y no sus probabilidades, por lo que es \textbf{inmune a la mala calibración}
+que invalida a la softmax. Las reglas
 (sobre las 1503 imágenes de test, Cuadro~\ref{tab:incertidumbre}; esquema en la
 Figura~\ref{fig:incertidumbre}) son: (i)~\textbf{afirmativo} si los dos
 coinciden; (ii)~\textbf{abstención} si difieren \emph{y} los tres vecinos recuperados son de clases todas
@@ -1505,6 +1610,87 @@ $\Delta=+0.509$ $[0.452,\,0.566]$ del reporte diferencial sobre el forzado en el
 \emph{integra al sistema}: es la lógica que decide cuándo comprometerse, cuándo dar un diferencial y cuándo
 callar y derivar.
 
+\paragraph{¿Reduce los errores peligrosos?} La consistencia agregada no distingue \emph{qué tipo} de error
+se comete, y clínicamente no todos pesan igual (Sección~\ref{sec:taxonomia}). Se aplicó por eso la taxonomía
+de errores a ambos sistemas sobre las mismas imágenes (Cuadro~\ref{tab:taxonomia_incert}), con un ajuste
+necesario: la regla que marca \emph{contradicción} cuando el texto menciona dos clases no puede aplicarse al
+reporte diferencial, que enuncia dos candidatos \emph{por diseño}; para ese nivel se cuenta como correcto
+(\emph{ok diferencial}) si el diagnóstico verdadero está entre los candidatos, y como \emph{dx incorrecto}
+si no lo está. El resultado es contundente: el \textbf{diagnóstico incorrecto —el error clínicamente grave—
+cae del $19.0\%$ al $6.6\%$} sobre las no derivadas. Y las $58$ imágenes derivadas habrían producido
+$26$ reportes con diagnóstico equivocado bajo \emph{grounding} forzado: al abstenerse, el sistema los evita
+por completo. Sobre la cohorte completa de $1503$ pacientes la tasa de diagnóstico incorrecto pasa de
+$\mathbf{20.0\%}$ ($301/1503$) a $\mathbf{6.3\%}$ ($95/1503$), una \textbf{reducción del $68\%$}.
+La mejora no es solo un traslado de errores a categorías más benignas: la fracción de reportes
+\emph{diagnósticamente correctos} —contando el diferencial como acierto cuando el gt figura entre los
+candidatos— sube de $38.4\%$ a $\mathbf{51.1\%}$, de modo que el sistema no se limita a evitar
+afirmaciones falsas sino que además acierta más seguido.
+Como contrapartida honesta, la \textbf{repetición empeora} ($0.3\% \rightarrow 4.3\%$): enumerar dos
+candidatos favorece la degeneración de texto, de modo que el ruteo \emph{amplifica} el artefacto de
+repetición ya señalado como limitación.
+
+\begin{table}[H]
+  \centering
+  \caption{Taxonomía de errores del \emph{grounding} simple forzado vs.\ el ensamble consciente de la
+  incertidumbre, sobre las mismas $1445$ imágenes no derivadas (Mini-VLM). En el nivel diferencial,
+  mencionar los dos candidatos es el comportamiento esperado: se contabiliza como \emph{ok diferencial}
+  cuando el gt está entre ellos. Las categorías particionan el conjunto (suman $100\%$ en cada columna);
+  \emph{ok} y \emph{ok diferencial} son componentes de \emph{Correcto (total)}. Las flechas indican la
+  dirección deseable ($\uparrow$ más es mejor, $\downarrow$ menos es mejor).}
+  \label{tab:taxonomia_incert}
+  \begin{tabular}{lcc}
+    \toprule
+    \textbf{Categoría} & \textbf{Grounding simple} & \textbf{Pipeline avanzado} \\
+    \midrule
+    \quad ok                                    & 555 (38.4\%) & 498 (34.5\%) \\
+    \quad ok diferencial                        & ---          & 240 (16.6\%) \\
+    \textbf{Correcto (total)} $\uparrow$        & 555 (38.4\%) & \textbf{738 (51.1\%)} \\
+    \midrule
+    hedging $\downarrow$                        & 491 (34.0\%) & \textbf{436 (30.2\%)} \\
+    dx incorrecto $\downarrow$                  & 275 (19.0\%) & \textbf{95 (6.6\%)} \\
+    contradicción $\downarrow$                  & 120 (8.3\%)  & \textbf{114 (7.9\%)} \\
+    repetición $\downarrow$                     & \textbf{4 (0.3\%)} & 62 (4.3\%) \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\paragraph{¿Dónde duda el sistema?} El Cuadro~\ref{tab:ruteo_clase} desagrega el ruteo por clase
+diagnóstica y revela un comportamiento \textbf{consciente del riesgo que no fue diseñado explícitamente}:
+la señal de acuerdo afirma con confianza donde la tarea es fácil y benigna —nevo $81.3\%$ y lesión vascular
+$90.9\%$ de casos afirmativos, ambas de morfología distintiva— y se vuelve \textbf{marcadamente más cauta en
+melanoma}, donde solo el $52.7\%$ se afirma: el $40.1\%$ se enuncia como diferencial y un $7.2\%$ se deriva.
+Es decir, \textbf{el sistema no afirma melanoma a ciegas}: ante duda pone el melanoma sobre la mesa junto al
+otro candidato, o pide criterio humano. El mecanismo detrás de esa cautela se ve al inspeccionar
+\emph{con qué} se confunde: de los $67$ melanomas ruteados a diferencial, $32$ ($48\%$) tienen como par de
+candidatos \{melanoma, nevo\} y otros $13$ ($19\%$) \{melanoma, queratosis benigna\}; es decir, dos tercios
+de las discrepancias reproducen \textbf{los diagnósticos diferenciales clínicos canónicos} del melanoma
+—precisamente las lesiones pigmentadas con las que comparte apariencia—. El desacuerdo entre los dos
+clasificadores no es entonces ruido: aparece donde las clases genuinamente se solapan en la imagen, que es
+la razón por la cual sirve como estimador de ambigüedad. Dermatofibroma, la clase más rara ($n=17$), concentra la mayor tasa
+de abstención ($35.3\%$), coherente con su escasez en el entrenamiento. Este patrón es exactamente el
+deseable en un entorno clínico: cautela donde el error es caro, decisión donde el caso es claro.
+
+\begin{table}[H]
+  \centering
+  \caption{Ruteo del ensamble consciente de la incertidumbre por clase diagnóstica (HAM10000 test,
+  $n=1503$). Porcentajes por fila; en negrita, el máximo de cada columna. El sistema afirma más en las
+  clases fáciles/benignas y deriva o da diferencial con más frecuencia en melanoma y en las clases raras.}
+  \label{tab:ruteo_clase}
+  \begin{tabular}{lrccc}
+    \toprule
+    \textbf{Clase} & \textbf{n} & \textbf{Afirmativo} & \textbf{Diferencial} & \textbf{Abstención} \\
+    \midrule
+    Nevo (NV)                  & 1006 & 81.3\% & 17.4\% & 1.3\% \\
+    Melanoma (MEL)             & 167  & 52.7\% & \textbf{40.1\%} & 7.2\% \\
+    Queratosis benigna (BKL)   & 165  & 58.2\% & 31.5\% & 10.3\% \\
+    Basocarcinoma (BCC)        & 77   & 72.7\% & 22.1\% & 5.2\% \\
+    Queratosis actínica (AKIEC)& 49   & 55.1\% & 34.7\% & 10.2\% \\
+    Lesión vascular (VASC)     & 22   & \textbf{90.9\%} & 4.5\% & 4.5\% \\
+    Dermatofibroma (DF)        & 17   & 35.3\% & 29.4\% & \textbf{35.3\%} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
 \begin{table}[H]
   \centering
   \caption{Validación end-to-end del ensamble consciente de la incertidumbre (Mini-VLM, sobre los $1445$
@@ -1565,7 +1751,7 @@ concluye; el conciso acierta el diagnóstico (mayor consistency).}
   {\scriptsize SkinCoT: 03DermatitisArm1\\ \emph{gt}: eczema}
 \end{minipage}\hfill
 \begin{minipage}[c]{0.73\textwidth}
-\textbf{Referencia humana (dermatólogo, SkinCoT)} \textemdash\ \itshape ``The combination of erythema
+\textbf{Narrativa de referencia (SkinCoT, certificada por dermatólogos)} \textemdash\ \itshape ``The combination of erythema
 $+$ fine scaling $+$ excoriations/crusts $+$ lichenification $+$ intense pruritus is highly characteristic
 of chronic eczema, most likely atopic dermatitis\dots\ this presentation is consistent with atopic
 dermatitis (eczema). \dots\ I recommend consulting a dermatologist for confirmation and management.''
@@ -1576,8 +1762,12 @@ surrounding dry, flaky skin indicates chronicity and possible lichenification. T
 affecting the entire limb, which is typical for Eczema Photos.''\upshape
 \end{minipage}
 }}
-\caption{Reporte de un dermatólogo (referencia SkinCoT) vs.\ reporte generado por el ensamble sobre el
-\emph{mismo} caso (Nivel 1). Ambos identifican los rasgos clave —eritema, descamación,
+\caption{Narrativa de referencia de SkinCoT vs.\ reporte generado por el ensamble sobre el
+\emph{mismo} caso (Nivel 1). La referencia \textbf{no} es un reporte redactado por un dermatólogo: SkinCoT
+la produce con un pipeline de modelos de lenguaje —descripción observacional, borrador de razonamiento
+generado \emph{conociendo la etiqueta verdadera} y normalización— que luego \textbf{dermatólogos
+certifican y filtran} sobre seis criterios de calidad clínica~\cite{shen2025skincare}. Es, por tanto, una
+referencia validada por especialistas, no una redactada por ellos. Ambos identifican los rasgos clave —eritema, descamación,
 excoriaciones/costras, liquenificación— y concluyen eczema: la referencia razona el diferencial de forma
 narrativa y el generado describe la morfología de manera más directa. ``Eczema Photos'' es el nombre crudo
 de la categoría en la taxonomía de SkinCoT, empleada como etiqueta de \emph{grounding}.}
@@ -1593,16 +1783,22 @@ de la categoría en la taxonomía de SkinCoT, empleada como etiqueta de \emph{gr
     \toprule
     \textbf{Condición} & \textbf{BLEU-4} & \textbf{METEOR} & \textbf{CIDEr} & \textbf{Consistency} \\
     \midrule
-    Baseline             & 0.102 & 0.330 & 0.054 & 0.392 \\
+    Baseline             & \textbf{0.102} & \textbf{0.330} & \textbf{0.054} & 0.392 \\
     Oracle (noreasoning) & 0.040 & 0.209 & 0.038 & \textbf{0.567} \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-Como SkinCoT es el único conjunto con reportes de referencia escritos por especialistas, permite además
-el único contraste \emph{directo} entre un reporte humano y uno generado sobre el mismo caso
-(Figura~\ref{fig:human_vs_gen}): ambos capturan los mismos hallazgos morfológicos y concluyen el mismo
-diagnóstico, con la referencia razonando el diferencial de forma más narrativa.
+Como SkinCoT es el único de los conjuntos usados que trae narrativas de referencia validadas por
+dermatólogos, permite además el único contraste \emph{directo} entre reporte de referencia y reporte
+generado sobre el mismo caso (Figura~\ref{fig:human_vs_gen}): ambos capturan los mismos hallazgos
+morfológicos y concluyen el mismo diagnóstico, con la referencia razonando el diferencial de forma más
+narrativa. Cabe precisar el estatus de esa referencia: SkinCoT no contiene reportes \emph{redactados} por
+un dermatólogo, sino narrativas producidas por modelos de lenguaje —el borrador de razonamiento se genera
+\emph{con la etiqueta verdadera a la vista}— y luego certificadas y filtradas por dermatólogos según seis
+criterios de calidad~\cite{shen2025skincare}. Esto acota lo que la comparación demuestra: es un contraste
+contra una referencia \emph{validada clínicamente}, no contra la redacción espontánea de un especialista,
+y no reemplaza la evaluación por dermatólogo que se discute en las limitaciones.
 
 \paragraph{Comparación con el estado del arte.} A diferencia de la clasificación —donde una métrica
 como la exactitud o la sensibilidad macro refleja de forma bastante fiel la calidad del modelo—, en
@@ -1638,7 +1834,8 @@ Esto confirma por qué la evaluación de Nivel 2 es la métrica decisiva en este
   (escala 0--100, salvo donde se indique). Las cifras \textbf{no son directamente comparables entre
   filas}: cada trabajo usa un dataset, una modalidad y un protocolo distintos (incluso métricas
   homónimas difieren, p.\,ej.\ BLEU-4 vs SacreBLEU). Se incluyen como referencia del rango habitual en
-  el dominio, no como ranking. ``---'' = no reportado.}
+  el dominio, no como ranking; el resaltado se limita a cada bloque internamente comparable.
+  ``---'' = no reportado.}
   \label{tab:sota_gen}
   \small
   \resizebox{\textwidth}{!}{%
@@ -1648,15 +1845,15 @@ Esto confirma por qué la evaluación de Nivel 2 es la métrica decisiva en este
     \midrule
     \multicolumn{6}{@{}l}{\itshape Evaluados sobre MM-Skin} \\
     \cite{zeng2025mmskin} & LLaVA-Med-7B (derma.) & 8.88 & 34.83 & 33.74 & 66.60 \\
-    \cite{zeng2025mmskin} & SkinVL-MM (derma.) & 21.61 & 44.70 & 42.76 & 71.34 \\
-    \cite{zeng2025mmskin} & SkinVL-MM (patología) & 22.04 & 44.09 & 42.70 & 70.59 \\
+    \cite{zeng2025mmskin} & SkinVL-MM (derma.) & 21.61 & \textbf{44.70} & \textbf{42.76} & \textbf{71.34} \\
+    \cite{zeng2025mmskin} & SkinVL-MM (patología) & \textbf{22.04} & 44.09 & 42.70 & 70.59 \\
     \multicolumn{6}{@{}l}{\itshape Otros datasets (referencia metodológica)} \\
     \cite{AutomatedReport2025} & KD-VLM / dermatosc.\ priv. & 55.59$^{a}$ & 38.28 & --- & 90.25$^{b}$ \\
     \cite{DermatoLlama2025} & DermatoLlama / DERM12345 (sint.) & 65.59 & 93.44$^{c}$ & --- & --- \\
     \cite{PeFoMed2024} & PeFoMed / IU-Xray (radiol.) & --- & 28.60$^{d}$ & 15.70 & --- \\
     \multicolumn{6}{@{}l}{\itshape Este trabajo --- evaluado sobre MM-Skin$^{e}$} \\
     & LLaVA-Med (FT SkinCaRe) & 0.08 & 3.12 & 8.10 & 65.80 \\
-    & Mini-VLM (FT SkinCaRe) & 0.15 & 5.36 & 10.36 & 69.91 \\
+    & Mini-VLM (FT SkinCaRe) & \textbf{0.15} & \textbf{5.36} & \textbf{10.36} & \textbf{69.91} \\
     \bottomrule
   \end{tabular}%
   }
@@ -1759,7 +1956,7 @@ por la cantidad de reportes generados).
     DermLIP (ViT-B/16)   & VL-classifier    & 150\,M  & $\sim$2\,GB   & $\sim$15\,ms \\
     \midrule
     Mini-VLM (Phi-3.5-V) & VLM generativo   & 4.2\,B  & 10\,GB        & 24\,s \\
-    SkinVL-MM            & VLM generativo   & 7\,B    & 14\,GB        & $\sim$\textbf{4\,s} \\
+    SkinVL-MM            & VLM generativo   & 7\,B    & 14\,GB        & \textbf{$\sim$4\,s} \\
     LLaVA-Med v1.5       & VLM generativo   & 7\,B    & 14\,GB        & 66\,s \\
     \bottomrule
   \end{tabular}
@@ -1906,7 +2103,8 @@ según la confianza), que sube la fidelidad de $0.82$ a $0.94$ sobre los casos n
 VLM general resolvió, por sí mismo, ambas tareas; un ensamble de modelos especializados —chicos, sobre
 GPU de consumo, en línea con el eje de \textbf{hardware accesible} planteado desde la
 Introducción— se perfila como una vía efectiva para el objetivo de la experimentación. Estas conclusiones
-son parciales y sujetas a la experimentación en curso.
+valen dentro del alcance evaluado —dermatoscopía de HAM10000, medida con métricas automáticas—, cuyos
+límites se detallan en las dos secciones siguientes.
 
 \subsection{Amenazas a la validez}
 \label{sec:amenazas}
@@ -1928,14 +2126,16 @@ validez que afectan.
   HIBA$\to$HAM introduce además algo de ruido de anotación (Sección~\ref{sec:robustez}).
   \item \textbf{Validez de constructo (métricas como \emph{proxies}).} La fidelidad se mide con
   \emph{diagnostic consistency} y \emph{clinical entity recall} (Nivel 2), que aproximan pero no equivalen
-  al juicio de un especialista; la validación clínica humana aún está pendiente (véase abajo). Las métricas
+  al juicio de un especialista, que no interviene en ninguna de las evaluaciones reportadas. Las métricas
   léxicas de Nivel 1 (BLEU/ROUGE) penalizan el estilo más que la calidad clínica
   (Secciones~\ref{sec:skincot} y discusión del Cuadro~\ref{tab:sota_gen}), por lo que se las interpreta con
   cautela.
 \end{itemize}
 
-\subsection{Limitaciones y trabajo en proceso o futuro}
+\subsection{Limitaciones}
 \label{sec:limitaciones}
+La experimentación se da por cerrada con los resultados reportados hasta acá. Lo que sigue delimita
+\emph{hasta dónde} llegan esas conclusiones.
 \begin{itemize}[leftmargin=1.6em]
   \item \textbf{Escala de la evaluación de reportes.} La comparación central del ensamble
   (Cuadro~\ref{tab:ensamble}) se evaluó sobre el \emph{test split completo} (1503 imágenes) para los tres
@@ -1947,43 +2147,30 @@ validez que afectan.
   enviar trabajos al clúster Mendieta (por la memoria de GPU necesaria), con tiempos de espera en cola
   de aproximadamente 4 a 6 días en muchos casos. Esto limitó fuertemente la cantidad de iteraciones posibles
   y condicionó el diseño de los experimentos (p.\,ej.\ usar subconjuntos, paralelizar trabajos).
-  \item \textbf{Artefactos de generación.} Persisten degeneraciones (repetición, Figura~\ref{fig:ej_rep})
-  ajenas a la fidelidad diagnóstica; mitigarlas (p.\,ej.\ penalización de repetición en el decodificado)
-  es trabajo futuro.
-  \item \textbf{Referencia humana solo sobre foto clínica.} La comparación cualitativa directa entre el
-  reporte de un dermatólogo y el generado (Figura~\ref{fig:human_vs_gen}) solo es posible sobre SkinCoT,
+  \item \textbf{Ausencia de reportes redactados por especialistas.} Ninguno de los conjuntos usados
+  contiene reportes \emph{escritos} por un dermatólogo: la referencia más cercana es SkinCoT, cuyas
+  narrativas las genera un pipeline de modelos de lenguaje y las \emph{certifican} dermatólogos
+  (Figura~\ref{fig:human_vs_gen}). Esa comparación cualitativa solo es posible sobre SkinCoT,
   el único conjunto con referencias humanas; sobre HAM10000 (dermatoscopía) no hay reportes de referencia,
   de modo que allí la fidelidad se mide contra la etiqueta diagnóstica (Nivel 2), no contra un texto
-  humano. Ampliar la comparación lado a lado a más casos y a dermatoscopía queda pendiente de una fuente
-  de referencias apropiada.
+  humano. No existe públicamente un corpus de reportes dermatoscópicos redactados por especialistas, de
+  modo que la comparación lado a lado no puede extenderse más allá de SkinCoT.
   \item \textbf{Generalización fuera de distribución.} La caída de $27$--$40$ puntos de exactitud sobre
   HIBA (Sección~\ref{sec:robustez}) muestra que los clasificadores no transfieren bien a otra población
-  (fototipos III--VI). Cerrar esa brecha —con \emph{fine-tuning} sobre datos diversos o técnicas de
-  adaptación de dominio— queda como trabajo futuro y es probablemente el paso más importante para un uso
-  clínico real.
-  \item \textbf{Validación clínica con especialista.} Las métricas automáticas (Nivel 2, taxonomía de
-  errores) son \emph{proxies}; la validación definitiva de si un reporte es clínicamente aceptable requiere
-  un dermatólogo. El instrumento está \textbf{listo para ejecutar} y no es un enunciado vago: una
-  \textbf{rúbrica de 5 criterios} (corrección global, señales de peligro clínico, completitud, ahorro de
-  tiempo, utilidad de flujo, más un veredicto global de aceptación) sobre una \textbf{muestra de $n=30$
-  reportes} estratificada por clase diagnóstica y por condición del ensamble (baseline, \emph{grounding}-Swin,
-  oracle, diferencial), ya generada (\texttt{outputs/review/muestra\_revision\_clinica.csv} vía
-  \texttt{scripts/sample\_reports\_for\_review.py}). Es \textbf{no bloqueante} para el cierre de esta
-  experimentación —no se ejecuta un piloto ahora— pero queda como el paso inmediato siguiente en cuanto se
-  consiga un/a especialista disponible, idealmente antes de la defensa. Mientras tanto, tres proxies
-  automáticos ya calculados aproximan parcialmente sus criterios: \emph{diagnostic consistency}
-  (corrección), la taxonomía de errores y el nivel de abstención del ensamble consciente de la incertidumbre
-  (seguridad), y \emph{clinical entity recall} (completitud).
-  \item \textbf{Vía de \emph{grounding} no explorada.} El SVM-RBF sobre \emph{embeddings} congelados de
-  DermLIP (Sección~\ref{sec:dermlip}) iguala o supera a Swin en Acc/F1 con costo de entrenamiento casi nulo,
-  pero nunca se usó como clasificador de anclaje del ensamble de generación (que solo prueba Swin y
-  DermLIP zero-shot/linear-probe): queda como vía de trabajo futuro, potencialmente más barata que
-  fine-tunear un clasificador completo.
-  \item \textbf{Extensiones planificadas.} Evaluar modelos de razonamiento clínico como
-  Skin-R1~\cite{liu2025skinr1} como generadores del ensamble. La incorporación de un generador
-  \emph{derm-especializado} (SkinVL~\cite{zeng2025mmskin}), inicialmente planificada, ya se concretó
-  (Sección~\ref{sec:skinvl}): su resultado —colapso sin \emph{grounding}, reportes muy breves con él—
-  reforzó, en lugar de matizar, la conclusión de que la fidelidad proviene del clasificador.
+  (fototipos III--VI). Eso acota el alcance de todo lo reportado acá: como es el clasificador el que ancla
+  la fidelidad del ensamble, la mejora de $0.82$ a $0.94$ en \emph{diagnostic consistency} no debe leerse
+  como transferible a una población distinta de la evaluada.
+  \item \textbf{Anclajes no evaluados.} El ensamble de generación solo se probó con Swin y con DermLIP
+  zero-shot/linear-probe como clasificador de anclaje. El SVM-RBF sobre \emph{embeddings} congelados de
+  DermLIP (Sección~\ref{sec:dermlip}), que iguala o supera a Swin en Acc/F1, nunca se usó en ese rol, de
+  modo que la relación entre exactitud del ancla y fidelidad del reporte se caracteriza sobre tres puntos
+  ($0.38$, $0.80$, $1.00$) y no sobre un barrido.
+  \item \textbf{Generadores no evaluados.} Los modelos de razonamiento clínico como
+  Skin-R1 (\cite{liu2025skinr1}) no se probaron como generadores del ensamble. El otro candidato natural, un
+  generador \emph{derm-especializado} (SkinVL~\cite{zeng2025mmskin}), sí se incorporó
+  (Sección~\ref{sec:skinvl}) y su resultado —colapso sin \emph{grounding}, reportes muy breves con él—
+  reforzó, en lugar de matizar, la conclusión de que la fidelidad proviene del clasificador; eso vuelve
+  menos probable, aunque no descartable, que cambiar de generador altere el resultado central.
 \end{itemize}
 
 \printbibliography

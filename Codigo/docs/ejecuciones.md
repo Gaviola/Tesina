@@ -39,6 +39,223 @@ desenfoque *y* resolución) + early-stop por pool. Regenerada: 2 ejemplos BKL (I
 ambos verificados visualmente coherentes con el caption. Docstrings del script corregidos (estaban invertidos).
 Compila limpio: 38 págs, 0 undefined, overfull máx 21.4pt (preexistente).
 
+## 2026-09-08
+
+### Seccion final: solo limitaciones, sin trabajo futuro — **Sin jobs SLURM** (doc)
+Segunda pasada sobre la misma seccion: el autor decidio **borrar todo el trabajo futuro** y dejar solo
+limitaciones (ya habia borrado a mano los items de repeticion, un-solo-generador y validacion clinica).
+Renombrada `Limitaciones y lineas abiertas` -> **`Limitaciones`**; sacada de la entradilla la frase sobre
+"la via que tendria quien quisiera continuarlas". Los dos items que aun mezclaban limitacion con propuesta
+se reescribieron para que **la limitacion sea la afirmacion**, no el preambulo de una sugerencia:
+- **OOD**: antes cerraba con "cerrar esa brecha es la linea abierta de mayor impacto". Ahora dice que la
+  caida sobre HIBA **acota el alcance de lo reportado**: como el clasificador es el que ancla la fidelidad,
+  la mejora 0.82->0.94 no debe leerse como transferible a otra poblacion. Mas fuerte que la version previa,
+  porque conecta la limitacion con el resultado principal.
+- **"Via de grounding no explorada"** (era 100% propuesta: "potencialmente mas barata que fine-tunear")
+  -> **"Anclajes no evaluados"**: el ensamble se probo con tres anclas (0.38 / 0.80 / 1.00), de modo que la
+  relacion exactitud-del-ancla vs fidelidad se caracteriza sobre **tres puntos y no sobre un barrido**.
+- **Reportes de especialistas**: sacado "ampliar la comparacion requeriria antes conseguir una fuente" ->
+  "no existe publicamente un corpus dermatoscopico redactado por especialistas, de modo que la comparacion
+  no puede extenderse mas alla de SkinCoT".
+
+**Puntero roto detectado y arreglado:** "Validez de constructo" (Amenazas a la validez) decia "la validacion
+clinica humana aun esta pendiente **(vease abajo)**", apuntando al item que el autor habia borrado ->
+reescrito como "que no interviene en ninguna de las evaluaciones reportadas".
+
+Barrido final sin coincidencias para: "trabajo futuro", "lineas abiertas", "en curso", "en ejecucion",
+"se incorporaran", "queda pendiente", "paso siguiente/inmediato", "sin explorar", "quien quisiera/lo
+intente", "continuar". Las dos menciones que quedan a un especialista (Secc. interpretabilidad) son
+enunciados de limitacion, no compromisos. Compila limpio: **42 pags** (era 43), 0 errores, 0 undefined.
+
+### Cierre del marco temporal: fuera "trabajo en proceso/futuro" — **Sin jobs SLURM** (doc)
+El autor propuso sacar el "trabajo en proceso y futuro" y dejar las cosas como lineas para "si alguien
+quisiera" continuar. **De acuerdo, y con una razon adicional: parte del texto ya era falso.** El abstract
+decia "las corridas a mayor escala **estan en curso**" cuando la comparacion central ya se evaluo sobre el
+test completo (1503); y la conclusion cerraba con "conclusiones parciales y sujetas a la experimentacion en
+curso". Ambos arreglados: ahora acotan el **alcance** (dermatoscopia de HAM10000, metricas automaticas) en
+vez de prometer trabajo.
+
+**Seccion renombrada** `Limitaciones y trabajo en proceso o futuro` -> **`Limitaciones y lineas abiertas`**,
+con parrafo introductorio que declara la experimentacion cerrada y encuadra lo que sigue como "puntos de
+entrada para el siguiente, no compromisos pendientes de este trabajo". Reescritos los 9 items para sacar
+todo compromiso en primera persona:
+- **Repeticion**: "lo que constituye trabajo futuro" -> "quien lo intente debe saber que...".
+- **Reportes de especialistas**: "queda pendiente de una fuente apropiada" -> "requeriria antes conseguir
+  una fuente, que no existe publicamente para esa modalidad".
+- **Un solo generador** (era el unico "en proceso" real, job Mendieta 1172480): eliminado
+  "esa corrida esta en ejecucion... sus resultados se incorporaran cuando finalice" -> ahora dice cuan
+  barato seria cerrarlo (solo 334 reportes) y lo rotula "la linea abierta mas barata de todas".
+- **OOD**: "queda como trabajo futuro" -> "la de mayor impacto para uso clinico real", con el porque
+  (cualquier mejora en reportes es secundaria si el clasificador que ancla no transfiere).
+- **Validacion clinica**: sacado "idealmente antes de la defensa" -> dependencia externa que excede lo que
+  la experimentacion podia resolver; por eso se deja el instrumento listo.
+- **Extensiones planificadas** -> **Generadores no evaluados**; sacado el resabio de documento de
+  planificacion ("inicialmente planificada, ya se concreto") y agregado el argumento de que el resultado de
+  SkinVL vuelve menos probable que cambiar de generador altere la conclusion central.
+
+Nota: si el job 1172480 termina antes de la defensa, el resultado se agrega como resultado; el texto ya no
+depende de el. Verificado: **cero** ocurrencias de "en curso", "en ejecucion", "se incorporaran",
+"trabajo futuro", "en proceso" y "planificad" en todo el documento. Compila limpio: 43 pags, 0 errores,
+0 undefined.
+
+### Consistencia de negritas en los cuadros — **Sin jobs SLURM** (doc)
+El autor reporto 4 inconsistencias en el resaltado. **Las 4 verificadas y correctas**, mas **5 errores
+adicionales del mismo tipo** encontrados al barrer los 23 cuadros. Convencion unificada: **negrita = mejor
+valor dentro del bloque comparable**, sin aclararlo en el caption (el autor pidio explicitamente NO
+documentarlo: se sobreentiende).
+
+**Reportados por el autor:**
+1. `tab:generacion_v1v2` (C10): sin ninguna negrita -> resaltado el mejor entre v1/v2 por modelo y metrica.
+2. `tab:skinvl` (C12): resaltaba el **oracle** como mejor, lo cual es trivial y no informa. -> Oracle
+   separado con `\midrule`, en cursiva y rotulado "cota superior"; negrita al mejor **realizable** (Swin).
+3. `tab:melanoma` (C8): la primera fila no se entendia — era un encabezado de bloque `\multicolumn` que
+   ademas traia embutidas las tasas de FN de los 3 modelos. Ademas **las FN eran redundantes**: son
+   exactamente el complemento de Sens.(esp>=85). -> Encabezados limpios ("Tarea A/B — ..."), FN fuera de la
+   tabla (queda en la prosa, que ya las citaba), y corregida la negrita de Espec. (estaba en 0.860 cuando
+   el maximo es 0.862).
+4. `tab:taxonomia_incert` (C17), `tab:ruteo_clase` (C18), `tab:ensamble_skincot` (C20), `tab:sota_gen` (C21):
+   - C17: decia "mejor por fila" pero faltaban `ok` y `hedging`, y la direccion de "mejor" cambia por fila.
+     -> Agregada fila **Correcto (total)** (unica comparable: el pipeline reparte aciertos entre `ok` y
+     `ok diferencial`) con 555 (38.4%) vs **738 (51.1%)**, flechas de direccion y negritas completas.
+   - C18: negritas incompletas y sin criterio (los porcentajes suman 100% por fila, no hay "mejor").
+     -> Maximo por columna: VASC afirmativo, MEL diferencial, DF abstencion.
+   - C20: solo la consistencia resaltada. -> Maximo por columna; el resaltado queda **repartido**, que es
+     justamente el hallazgo (metricas lexicas y fidelidad apuntan en direcciones opuestas).
+   - C21: sin negritas. -> Resaltado **solo dentro de cada bloque internamente comparable** (los 3 modelos
+     de Zeng et al. entre si; los 2 propios entre si); entre bloques no, porque los protocolos difieren.
+
+**Encontrados de mas (mismo defecto):** `tab:ensamble` (C11) y `tab:rag` (C15) resaltaban el oracle igual
+que C12 -> mismo tratamiento (en C15 la negrita paso a Grounding Swin+RAG 0.84, el mejor candidato real, que
+la propia nota al pie ya senalaba sin resaltarlo); `tab:plantilla` (C14) decia "mejor por fila" cuando el
+resaltado es por columna dentro de cada bloque, y tenia doble negrita (0.828 y 0.830); `tab:ablaciones` (C13)
+resaltaba el `Delta` (que no es un "mejor") -> negrita al maximo por columna.
+
+**Analisis agregado:** un parrafo en la prosa del pipeline avanzado con el dato que la nueva fila hace
+visible — la fraccion de reportes **diagnosticamente correctos** sube de 38.4% a **51.1%**, o sea que el
+sistema no solo evita afirmaciones falsas sino que ademas acierta mas seguido.
+
+Verificado con un scan automatico de los 23 cuadros (script en scratchpad): los 7 casos que marca son
+falsos positivos por bloques internos (por arquitectura en C4, por tarea en C8, por grounding en C14,
+por bloque en C19/C21, significacion en C7, direcciones mixtas en C17). Compila limpio: **43 pags,
+0 errores, 0 undefined, 0 citas rotas**, sin overfull nuevos (max 21.4pt, igual que antes).
+
+### CORRECCION FACTUAL: SkinCoT no son reportes de dermatologo — **Sin jobs SLURM** (doc)
+El autor detecto que la Figura 18 describia la referencia de SkinCoT como "reporte de un dermatologo".
+**Verificado contra el paper** (`Papers/derma/SkinCaRe...pdf`, §2.3): es INCORRECTO. SkinCoT se construye
+con un pipeline de 3 LLMs —Gemini 2.5 Pro (descripcion observacional), GPT-o4-mini (borrador de
+razonamiento **usando la etiqueta verdadera**), DeepSeek-R1 (normalizacion)— y recien despues dermatologos
+**certifican y filtran** sobre 6 criterios (se descarta lo que puntua <4.5). SkinCAP si es
+dermatologist-authored, pero la figura usa un caso de SkinCoT. Corregidos **6 lugares**: etiqueta y caption
+de `fig:human_vs_gen`, parrafo que la introduce, limitacion de referencias humanas (renombrada "Ausencia de
+reportes redactados por especialistas"), descripcion del Nivel 1 (ya no dice "escrito por un humano") y
+fila de SkinCaRe en `tab:datasets` (distingue SkinCAP redactado vs SkinCoT generado+certificado).
+
+### Ultima pasada: resultados desconectados que se explican entre si — **Sin jobs SLURM** (doc)
+Conexion agregada en `sec:ablaciones`: la ablacion imagen-vs-dx y el test del prior del lenguaje
+(`sec:rediag`) usan **el mismo recurso experimental** (imagen neutra) y revelan la misma propiedad con
+signos opuestos —en clasificacion quitar la imagen no impide predecir (colapso 100% a una clase); en
+generacion no degrada la fidelidad—. Ambos: **los VLMs se anclan en el texto, no en la senal visual**. Esa
+unica propiedad explica a la vez el fracaso (inhabilita como clasificadores) y el exito (los vuelve
+transcriptores fieles dentro de la cascada), con la propagacion de error como contracara.
+Compila limpio: **43 pags, 0 undefined, 0 citas rotas**.
+
+
+### Auditoria de analisis EXPLICATIVO (no descriptivo) — **Sin jobs SLURM** (doc)
+Segunda pasada de auditoria, esta vez preguntando por cada resultado: ¿se explica el comportamiento y por
+que ocurre, o solo se describe? Bien explicados ya: colapso de VLMs (4 evidencias + test sin imagen),
+DermLIP (objetivo contrastivo + Derm1M + ontologia), calibracion (regularizacion del recipe moderno),
+propagacion de error, SkinVL (mode collapse), trade-off BLEU/consistency, hedging, repeticion en diferencial.
+**Cuatro huecos encontrados y cerrados:**
+1. **Por que el acuerdo funciona y la softmax no** (decision de diseno central del ruteo, estaba sin
+   justificar): softmax mal calibrada (ECE 0.19-0.39, sub-confiada, no monotona al rutear) vs acuerdo entre
+   dos modelos con sesgos inductivos y datos distintos (errores independientes) que ademas usa solo
+   DECISIONES, no probabilidades -> inmune a la mala calibracion.
+2. **Por que melanoma cae en diferencial** (dato calculado nuevo): de los 67 melanomas diferenciales, 32
+   (48%) son {melanoma, nevo} y 13 (19%) {melanoma, queratosis benigna} -> dos tercios reproducen los
+   diferenciales clinicos canonicos; el desacuerdo aparece donde las clases se solapan de verdad.
+3. **Por que el re-balanceo empeora** (0.923->0.795): la augmentacion ya habia compensado el sesgo, asi que
+   la correccion no elimina un sesgo sino que introduce el opuesto (sobre-prediccion de clases raras ->
+   falsos positivos masivos sobre nevo, 67% del conjunto). Las class-weights, las mas agresivas, son las
+   que mas danan.
+4. **Por que el oracle de LLaVA se queda en 0.852 y Mini llega a 0.999**: conexion que ya estaba en el doc
+   sin unir — el ajuste de prompt sobre LLaVA+oracle habia dado 0.85, el mismo numero; 0.852 no es limite
+   del grounding sino el techo de la ingenieria de prompt en un modelo con prior de deliberacion.
+Compila limpio: **42 pags, 0 undefined**.
+
+
+### Auditoria resultados-vs-escritura: hueco encontrado (ensamble de clasificadores) — **Sin jobs SLURM** (doc)
+Auditoria sistematica de (1) resultados calculados vs escritos, (2) completitud, (3) analisis por tabla.
+Verificado OK: 23 tablas y 22 figuras, **ninguna huerfana** (todas referenciadas); todos los `resul` docs
+tienen su contenido reflejado en el `.tex`; los JSON de `outputs/results/` estan cubiertos.
+**Hueco real:** el **ensamble de clasificadores por voto suave (Swin+ConvNeXt)** se usaba en `tab:melanoma`
+y `tab:sota_melanoma` (filas "Ensamble (voto)") **sin haberse definido ni caracterizado antes**, y su
+resultado multiclase (P5.1, `mejoras_p5_local_resul_20260713.md`) nunca se habia escrito. Agregado parrafo
+en `sec:melanoma` que lo define (voto suave de probabilidades con TTA) y situa su aporte: sens. macro 0.846
+vs 0.827 del mejor individual (+0.019), +0.004 F1-w, a costa de 2x inferencia -> apilar modelos es mas caro
+que TTA sobre un unico modelo in-distribution, pero en melanoma binario si da el mejor AUC. Nota al pie
+aclara que usa checkpoints modern_v3 locales (por eso no coincide con los headline del barrido).
+Compila limpio: **42 pags, 0 undefined**.
+
+
+### Cierre de pendientes de Limitaciones — Mendieta job 1172480 + post-proceso local
+Auditoria de los 9 items de `sec:limitaciones`: la mayoria NO son tareas pendientes sino limitaciones
+descriptivas ya justificadas. Dos si eran accionables:
+
+**(A) Replica del ruteo con el 2do generador (LLaVA-Med) — Mendieta job 1172480, PENDING.**
+Correccion importante: la limitacion decia que exigia "una corrida de generacion completa", lo cual era
+**inexacto** — LLaVA-Med ya tiene `full_swin` sobre las 1503 (nivel afirmativo) y la abstencion no genera,
+asi que solo faltan los **334 reportes diferenciales**. Script nuevo
+`slurm/mendieta/v3/uncertainty_generation_llava.sh` (alias `unc_gen_llava` en `scripts/mendieta/submit.py`),
+mismos hiperparametros que la corrida de Mini-VLM y que `full_swin` de LLaVA (checkpoint
+`stage2_llava_med_v2`, max_tokens 384, seed 42) para comparacion pareada. **Va a Mendieta, no a TOKO**:
+TOKO solo tiene `stage1_llava_med` y su `outputs/uncertainty/` esta vacio (sync_up excluye `outputs/`);
+Mendieta tiene el checkpoint v2, el CSV del diferencial y todos los `full_*`. Texto de la limitacion
+corregido en el `.tex`.
+
+**(B) ¿Es la repeticion mitigable sin regenerar? — NO.** `scripts/repetition_postprocess.py` (local):
+deduplicacion de oraciones + truncado del bucle final sobre los 334 reportes diferenciales. Recupera solo
+**11 de 59** afectados (17.7% -> 14.4%), pierde 2 menciones del gt y degrada 6 reportes a `otros`; la
+longitud media apenas baja (212 -> 208 palabras). Conclusion: la repeticion es **degeneracion pervasiva**,
+no un bucle final recortable -> requiere intervenir el **decodificado** (repetition_penalty), inviable en
+Mini-VLM (tokens de imagen fuera de vocabulario) y practicable en LLaVA-Med. Documentado como addendum en
+[analisis_pipeline_avanzado_resul](resul/analisis_pipeline_avanzado_resul_20260908.md) y aplicado a la
+limitacion de artefactos en el `.tex`.
+
+Compila limpio: **41 pags, 0 undefined, 0 citas rotas, overfull max 21.4pt**.
+
+
+### Caracterizacion del pipeline avanzado (taxonomia + ruteo por clase) — **Sin jobs SLURM** (local)
+Plan: [analisis_pipeline_avanzado_plan](ideas/analisis_pipeline_avanzado_plan_20260908.md) ·
+Resul: [analisis_pipeline_avanzado_resul](resul/analisis_pipeline_avanzado_resul_20260908.md).
+Script nuevo `scripts/uncertainty_analysis.py` sobre datos ya en disco (`uncertainty_3tier.csv`,
+`full_swin` 1503, `full_differential` 334). **Ajuste metodologico:** `classify_error` marca "contradiccion"
+si el texto menciona >=2 clases, pero el reporte diferencial menciona 2 candidatos POR DISENO; para ese
+nivel se reclasifica (`ok_diferencial` si el gt esta entre los candidatos).
+**Veredicto: CUMPLE.** (A) `dx_incorrecto` cae 19.0% -> 6.6% sobre las 1445 no derivadas; las 58 abstenidas
+habrian producido 26 dx incorrectos que se evitan al derivar; sobre la cohorte completa 20.0% -> 6.3%
+(reduccion del 68%, 3.2x). Contrapartida honesta: `repeticion` empeora 0.3% -> 4.3%. (B) El ruteo resulta
+**consciente del riesgo sin haber sido disenado asi**: afirma 81.3% en nevo y 90.9% en vascular, pero solo
+52.7% en melanoma (40.1% diferencial, 7.2% abstencion) -> no afirma melanoma a ciegas; dermatofibroma (n=17)
+es la de mayor abstencion (35.3%).
+Aplicado al `.tex`: nuevos `tab:taxonomia_incert` y `tab:ruteo_clase` + dos parrafos en `sec:incertidumbre`.
+Compila limpio: **41 pags, 0 undefined, 0 citas rotas, overfull max 21.4pt**.
+
+
+### Cierre: Wilcoxon reportado + limitacion del pipeline avanzado — **Sin jobs SLURM** (doc)
+Dos huecos detectados al auditar el feedback de las 3 rondas contra el `.tex`:
+**(1)** El test de **Wilcoxon** (pedido explicitamente en la ronda 1: "bootstrap, McNemar, Wilcoxon") estaba
+calculado en `scripts/statistical_tests.py` y guardado en `outputs/results/statistical_tests.json`, pero
+**nunca se reportaba en el documento**. Agregado: nuevo `tab:wilcoxon` (Cuadro 7) + parrafo en la seccion de
+significancia — recall por clase pareado (7 pares): Swin supera a los 3 VLM (p<=0.031); Mini-VLM y LLaVA-Med
+son indistinguibles (p=1.00, dif. mediana 0.00); DermLIP vs Mini-VLM no alcanza significancia (p=0.109).
+**(3)** Nueva limitacion declarada: el ensamble consciente de la incertidumbre se valido **end-to-end solo
+con Mini-VLM**; el componente de decision es independiente del generador (cobertura 0.934 se traslada), pero
+falta verificar la redaccion diferencial con LLaVA-Med.
+(El item 2 —dataset unificado— se dejo fuera por decision del autor.)
+Incidencia: la insercion inicial se corrompio (heredoc colapso `\`→`\`, ``→backspace); se reparo y
+re-inserto. Tambien se quito un `\mbox` en la fila de SkinCaRe que causaba overfull de 38pt.
+Compila limpio: **40 pags, 0 undefined, 0 citas rotas, overfull max 21.4pt** (preexistente).
+
 ## 2026-08-23
 
 ### #2 Test del prior del lenguaje (P(clase|prompt) sin imagen) — TOKO — jobs 97463, 97464

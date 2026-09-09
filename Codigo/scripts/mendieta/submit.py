@@ -239,6 +239,7 @@ JOBS = {
     "rag_gen":          "slurm/mendieta/v3/rag_generation.sh",
     ## P5.4 (incertidumbre) — Mini-VLM: definitivo si el clasificador está seguro, diferencial si no.
     "unc_gen":          "slurm/mendieta/v3/uncertainty_generation.sh",
+    "unc_gen_llava":    "slurm/mendieta/v3/uncertainty_generation_llava.sh",
     ## Ensamble — Nivel 1 sobre SkinCoT (con referencias): baseline vs oracle-noreasoning, LLaVA.
     "ensemble_skincot_l1_llava": "slurm/mendieta/ensemble_skincot_level1_llava.sh",
     ## Variantes CoT: mismo mecanismo de env var METHOD=cot.
