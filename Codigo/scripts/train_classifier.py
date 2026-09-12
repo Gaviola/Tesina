@@ -39,7 +39,7 @@ from src.training.recipes import RECIPES, get_recipe
 from src.training.schedulers import build_scheduler
 from src.training.trainer import Trainer
 from src.utils.device import get_device, get_num_workers, get_training_dtype
-from src.utils.io import save_results
+from src.utils.io import load_checkpoint, save_results
 from src.utils.logging import format_duration, log_time, setup_logger
 from src.utils.seed import set_seed
 
@@ -165,6 +165,12 @@ def main():
                         help="Tras eval en HAM10000 test, eval cross-dataset en HIBA.")
     parser.add_argument("--hiba-data-dir", type=str, default=None, dest="hiba_data_dir",
                         help="Directorio raíz de HIBA. Default: <data-dir>/processed/HIBA.")
+    parser.add_argument("--eval-best-checkpoint", action="store_true", dest="eval_best_checkpoint",
+                        help="Recarga best_model.pt (mejor val_f1) antes de evaluar en test/val/HIBA. "
+                             "Sin el flag se evalúan los pesos de la última época (comportamiento histórico).")
+    parser.add_argument("--save-val-predictions", action="store_true", dest="save_val_predictions",
+                        help="Guarda también <run_name>_val_predictions.json (mismo protocolo que test), "
+                             "para ajustar umbrales o calibración post-hoc en validación.")
     freeze_group = parser.add_mutually_exclusive_group()
     freeze_group.add_argument("--freeze-backbone", action="store_true", default=True,
                               dest="freeze_backbone")
@@ -467,6 +473,15 @@ def main():
         best_metrics = trainer.fit()
     logger.info("Entrenamiento finalizado. Mejores métricas: %s", best_metrics)
 
+    if args.eval_best_checkpoint:
+        best_path = Path(checkpoint_dir) / "best_model.pt"
+        if best_path.exists():
+            ckpt = load_checkpoint(str(best_path), model=model, device=str(device))
+            logger.info("Evaluando con el mejor checkpoint por val_f1: epoch %s (val_f1=%.4f)",
+                        ckpt.get("epoch"), ckpt.get("metrics", {}).get("val_f1", float("nan")))
+        else:
+            logger.warning("No existe %s; se evalúan los pesos de la última época", best_path)
+
     # 11. Evaluación en HAM10000 test set
     eval_start = time.perf_counter()
     if args.tta:
@@ -525,9 +540,34 @@ def main():
             "y_pred": y_pred,
             "y_prob": y_prob.tolist(),
             "class_names": class_names,
+            "image_ids": [smp["image_id"] for smp in test_dataset.samples],
+            "best_checkpoint": bool(args.eval_best_checkpoint),
         },
         str(results_dir / f"{args.run_name}_predictions.json"),
     )
+
+    if args.save_val_predictions:
+        if args.tta:
+            yv_pred, yv_true, yv_prob = evaluate_with_tta(
+                model, val_loader, device, dtype, num_classes, tta_modes=("original", "hflip"),
+            )
+        else:
+            yv_pred, yv_true, yv_prob = evaluate_on_split(model, val_loader, device, dtype, num_classes)
+        save_results(
+            {
+                "model": args.model,
+                "run_name": args.run_name,
+                "split": "val",
+                "y_true": yv_true,
+                "y_pred": yv_pred,
+                "y_prob": yv_prob.tolist(),
+                "class_names": class_names,
+                "image_ids": [smp["image_id"] for smp in val_dataset.samples],
+                "best_checkpoint": bool(args.eval_best_checkpoint),
+            },
+            str(results_dir / f"{args.run_name}_val_predictions.json"),
+        )
+        logger.info("Predicciones de validación guardadas (%d)", len(yv_true))
 
     # 13. Evaluación cross-dataset en HIBA (OOD)
     if args.eval_hiba:

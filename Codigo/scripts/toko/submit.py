@@ -65,6 +65,20 @@ JOBS = {
         "RUN_NAME": "vit_legacy",
         "EXTRA_FLAGS": "--scheduler none --eval-hiba",
     }),
+    ## Legacy sobre el split DISJUNTO POR LESIÓN (test idéntico), mismos HPs ya elegidos en val.
+    ## Ver docs/ideas/split_lesion_semillas_plan_20260912.md.
+    "les_densenet_legacy": (_CLS_SCRIPT, {
+        "MODEL": "densenet", "RECIPE": "legacy", "LR": _CLS_LR["densenet"],
+        "RUN_NAME": "densenet_legacy_les",
+        "EXTRA_FLAGS": "--splits-file data/splits/ham10000_splits_lesion.json "
+                       "--eval-best-checkpoint --save-val-predictions",
+    }),
+    "les_vit_legacy": (_CLS_SCRIPT, {
+        "MODEL": "vit", "RECIPE": "legacy", "LR": _CLS_LR["vit"],
+        "RUN_NAME": "vit_legacy_les",
+        "EXTRA_FLAGS": "--scheduler none --splits-file data/splits/ham10000_splits_lesion.json "
+                       "--eval-best-checkpoint --save-val-predictions",
+    }),
     ## Clasificadores Fase 1 — corridas modern v2 (con HIBA OOD eval)
     "cls_densenet_modern": (_CLS_SCRIPT, {
         "MODEL": "densenet", "RECIPE": "modern", "LR": _CLS_LR["densenet"],
@@ -241,7 +255,19 @@ _IMB_EXTRA_JOBS = [
     "imb_convnext_ce", "imb_convnext_weighted", "imb_convnext_focal", "imb_convnext_balsoftmax",
     "imb_densenet_ce", "imb_densenet_weighted", "imb_densenet_focal", "imb_densenet_balsoftmax",
 ]
+## Réplica del experimento de desbalance (imb_*) sobre el split DISJUNTO POR LESIÓN: mismo diseño (varía solo
+## la loss), + mejor checkpoint por val_f1 + predicciones de validación. Ver split_lesion_semillas_plan.
+_LESION_FLAGS = ("--splits-file data/splits/ham10000_splits_lesion.json "
+                 "--eval-best-checkpoint --save-val-predictions")
+for _name in [k for k in JOBS if k.startswith("imb_")]:
+    _script, _env = JOBS[_name]
+    JOBS[f"les_{_name}"] = (_script, {**_env, "RUN_NAME": f"{_env['RUN_NAME']}_les",
+                                      "EXTRA_FLAGS": f"{_env['EXTRA_FLAGS']} {_LESION_FLAGS}"})
+_LES_IMB_JOBS = [k for k in JOBS if k.startswith("les_imb_")]
+
 GROUPS = {
+    "les_imb_all": _LES_IMB_JOBS,
+    "les_legacy":  ["les_densenet_legacy", "les_vit_legacy"],
     "imb_all_extra": _IMB_EXTRA_JOBS,
     "all":          _TRAINING_JOBS,
     "all_s1":       ["mini_s1", "llava_s1"],

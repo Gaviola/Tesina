@@ -11,9 +11,11 @@ Para el nivel diferencial se reclasifica como `ok_diferencial` si el gt está en
 clases mencionadas, y `dx_incorrecto` si no lo está.
 
 Uso:
-    python scripts/uncertainty_analysis.py
+    python scripts/uncertainty_analysis.py                    # Mini-VLM (default)
+    python scripts/uncertainty_analysis.py --model llava_med  # 2do generador
 """
 
+import argparse
 import csv
 import json
 import logging
@@ -85,6 +87,15 @@ def classify_differential(report: str, gt: str) -> str:
 
 
 def main():
+    global REPORTS, OUT
+    parser = argparse.ArgumentParser(description="Taxonomía consciente del nivel + ruteo por clase")
+    parser.add_argument("--model", default="mini_vlm", choices=["mini_vlm", "llava_med"])
+    args = parser.parse_args()
+    REPORTS = Path("outputs/generated_reports") / args.model
+    if args.model != "mini_vlm":
+        OUT = OUT.with_name(f"uncertainty_analysis_{args.model}.json")
+    logger.info("Generador: %s", args.model)
+
     labels = build_label_map()
     tiers = {r["image_id"]: r["tier"] for r in csv.DictReader(open(TIER_CSV))}
     swin = load_reports("full_swin")

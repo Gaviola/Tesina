@@ -198,14 +198,26 @@ Cabe adelantar un dato relevante para la Sección~\ref{sec:rediag}: los datos co
 
 \subsection{Métricas y por qué se eligen}
 \label{sec:metricas}
-\paragraph{Clasificación.} Se reportan tres métricas. La \textbf{exactitud} (\emph{accuracy}) es la
+\paragraph{Clasificación.} Se reportan cuatro métricas. La \textbf{exactitud} (\emph{accuracy}) es la
 fracción de aciertos; en esta tesina es poco informativa por sí sola debido al desbalance de HAM. El
 \textbf{F1 ponderado} equilibra precisión y exhaustividad pero, al ponderar por frecuencia, también
-queda dominado por la clase mayoritaria. La métrica que se prioriza es la \textbf{sensibilidad macro}
-(promedio del \emph{recall} por clase, sin ponderar): da el mismo peso a cada clase y, por lo tanto,
-\emph{mide directamente si el modelo discrimina las clases minoritarias}. En este trabajo es la métrica
-clave porque un valor cercano a $1/7 \approx 0.143$ indica que el modelo no supera al azar, sin importar
-cuán alta sea su exactitud.
+queda dominado por la clase mayoritaria. El \textbf{F1 macro} promedia el F1 de cada clase sin ponderar,
+de modo que penaliza tanto no detectar una clase rara (\emph{recall} bajo) como sobre-predecirla
+(precisión baja). La métrica que se prioriza es la \textbf{sensibilidad macro} (promedio del
+\emph{recall} por clase, sin ponderar): da el mismo peso a cada clase y, por lo tanto, \emph{mide
+directamente si el modelo detecta las clases minoritarias}.
+
+La razón de esa prioridad es concreta. Nevo (NV) es el $67\%$ del conjunto, así que un clasificador
+trivial que responde ``nevo'' a todo obtiene \textbf{exactitud $0.669$} y F1 ponderado $0.537$ sin
+reconocer una sola lesión maligna; su sensibilidad macro es $1/7 \approx 0.143$ (azar) y su F1 macro
+$0.115$. No es un caso hipotético: Mini-VLM ajustado (Cuadro~\ref{tab:clasificacion}) llega a exactitud
+$0.660$ con sensibilidad macro $0.141$, porque colapsa a nevo. En un problema así, un número alto de
+exactitud puede no significar nada, y la sensibilidad macro lo expone de inmediato. Además, en este dominio
+el error más caro es no detectar una clase rara y maligna (melanoma, carcinoma basocelular), que es
+exactamente lo que el \emph{recall} por clase mide. El F1 macro se reporta como complemento porque la
+sensibilidad macro sola no ve el costo inverso: un modelo que sobre-predice las clases raras sube su
+sensibilidad a costa de falsos positivos masivos sobre nevo, y el F1 macro sí lo penaliza. Las dos se leen
+juntas; cuando divergen, la diferencia indica justamente ese intercambio entre detectar y sobre-alertar.
 
 \paragraph{Generación de reportes.} La evaluación tiene dos niveles. El \textbf{Nivel 1} (con
 referencia) compara el reporte generado contra uno de referencia: BLEU-4, ROUGE-L, METEOR y CIDEr miden
@@ -221,9 +233,16 @@ categorías de términos dermatológicos aparece en el reporte; mide \emph{rique
 consistency} (qué proporción de reportes menciona el diagnóstico correcto; mide \emph{fidelidad
 diagnóstica}). En esta tesina, la \emph{diagnostic consistency} es la métrica más importante de
 generación, porque captura lo que clínicamente más interesa: que el reporte acierte el diagnóstico.
-Aunque la \emph{diagnostic consistency} refleja mucho mejor la utilidad clínica que las métricas
-léxicas, sigue siendo una \emph{métrica automática}: verifica la presencia del diagnóstico, no la
-corrección clínica integral del reporte, y no reemplaza una evaluación realizada por especialistas.
+\paragraph{Fidelidad diagnóstica no es validez clínica.} Conviene fijar desde acá qué afirma y qué no
+afirma esta métrica, porque atraviesa todo el análisis de generación. La \emph{diagnostic consistency}
+mide \textbf{fidelidad diagnóstica automática}: si el diagnóstico verdadero (o un sinónimo) aparece en el
+texto. Está más cerca de lo clínicamente relevante que el solapamiento léxico, pero no verifica que la
+descripción morfológica sea correcta para esa lesión, que no haya afirmaciones falsas junto al
+diagnóstico correcto, ni que el reporte sea útil o seguro para quien lo lee. El \emph{clinical entity
+recall}, por su parte, mide la presencia de términos, no su pertinencia. Ambas son \emph{proxies}. Por
+eso, en este documento, ``fidelidad'' y ``consistencia'' se usan en ese sentido acotado, y
+\textbf{ningún resultado se presenta como evidencia de utilidad ni de validez clínica}: establecerlas
+requiere la evaluación de especialistas, que excede el alcance de esta experimentación.
 
 % ============================================================
 \section{Clasificación diagnóstica}
@@ -356,8 +375,9 @@ patrón de concentración en pocas clases.
 muestra, para cada combinación VLM/método, la distribución de las clases \emph{predichas} frente a la
 distribución verdadera. Cada combinación concentra casi todas sus predicciones en \emph{una sola} clase
 —pero en una clase \emph{distinta} en cada caso (LLaVA en likelihood predice mayoritariamente MEL; en
-CoT, VASC; Mini en likelihood, NV; en CoT, MEL)—. Es decir, el modelo prácticamente ignora el contenido
-de la imagen y responde una constante que depende de la configuración, no de la lesión.
+CoT, VASC; Mini en likelihood, NV; en CoT, MEL)—. Es decir, la predicción depende mucho más de la
+configuración que de la lesión: el contenido de la imagen apenas la mueve, y el modelo tiende a responder
+una clase casi constante.
 
 \begin{figure}[H]
   \centering
@@ -920,8 +940,8 @@ $0.93$--$0.95$ y macro-AUC one-vs-rest $0.94$--$0.96$—, mayor de lo que suger�
 $\approx$27\% de los melanomas (tasa de FN $0.27$), efecto de optimizar la exactitud global sobre un
 problema desbalanceado; (iii) \textbf{optimizar el punto de operación} —tolerando más falsos positivos para
 no perder melanomas— baja la tasa de FN a $\mathbf{0.07}$--$0.14$ (hasta $0.072$ en el ensamble;
-$0.07$--$0.09$ en los mejores modelos, ConvNeXt y el ensamble) con VPN $\approx0.99$, el compromiso
-clínicamente correcto. Todo esto con clasificadores \emph{Tiny} ($\sim$28\,M de parámetros) en GPU de
+$0.07$--$0.09$ en los mejores modelos, ConvNeXt y el ensamble) con VPN $\approx0.99$, un punto de
+operación que prioriza el error clínicamente más costoso. Todo esto con clasificadores \emph{Tiny} ($\sim$28\,M de parámetros) en GPU de
 consumo, en línea con el eje de hardware accesible de la tesina (Sección~\ref{sec:intro}).
 
 El Cuadro~\ref{tab:sota_melanoma} sitúa el AUC-ROC de melanoma-vs-resto frente a la literatura de detección
@@ -1411,8 +1431,19 @@ pero \emph{reemplazando la imagen por una imagen neutra}. Quitar la imagen \text
 fidelidad en ninguno} de los tres: SkinVL apenas cae ($\Delta=0.03$), Mini-VLM queda \emph{idéntico}
 ($\Delta=0.00$) y, de forma reveladora, LLaVA-Med \emph{sube} de $0.85$ a $1.00$ ($\Delta=-0.15$) —dado el
 texto del diagnóstico, lo nombra siempre; cuando además \emph{ve} la imagen, la evidencia visual a veces
-lo hace dudar y desviarse—. Una vez dado el diagnóstico, el generador prácticamente \emph{no usa la señal
-visual}: redacta a partir del texto del diagnóstico, y la imagen en el mejor caso es neutra.
+lo hace dudar y desviarse—. Bajo este protocolo, entonces, la contribución de la señal visual a la
+\emph{fidelidad diagnóstica} del reporte es mínima: dado el diagnóstico, la imagen no ayuda a nombrarlo y
+en el mejor caso es neutra.
+
+Esto \textbf{no equivale a afirmar que el generador ignore la imagen}, y los mismos reportes permiten
+precisar qué sí hace con ella. Sin imagen, todos los reportes de una misma clase son \emph{idénticos}
+(similitud de Jaccard intra-clase $1.00$ en ambos modelos: un único texto por diagnóstico); con imagen,
+el $99\%$ de los reportes es distinto y la similitud intra-clase cae a $0.36$ (Mini-VLM) y $0.28$
+(LLaVA-Med). En Mini-VLM la imagen además sostiene la riqueza del reporte: el \emph{clinical entity
+recall} baja de $0.79$ a $0.38$ al quitarla. Es decir, la imagen \textbf{no cambia qué diagnóstico se
+redacta, pero sí qué se describe} de cada lesión. Lo que las ablaciones permiten afirmar es acotado: la
+señal visual aporta poco a la fidelidad diagnóstica en estas condiciones, no que el modelo carezca de todo
+uso de información visual.
 
 \paragraph{¿Qué hace con un diagnóstico erróneo?} Al inyectar un diagnóstico \emph{incorrecto} (una clase
 confundible), la consistencia respecto del \emph{gt} se derrumba a $0.07$--$0.11$ en los tres modelos: el
@@ -1422,12 +1453,13 @@ generador \textbf{se compromete con el diagnóstico equivocado} y no lo corrige 
 \paragraph{Una simetría con el diagnóstico del colapso.} Vale conectar este resultado con el de la
 Sección~\ref{sec:rediag}, porque ambos usan \emph{el mismo recurso experimental} —sustituir la imagen por
 una neutra— y revelan la misma propiedad de fondo, aunque con signos opuestos. En \textbf{clasificación},
-quitar la imagen no impidió que el VLM siguiera prediciendo: colapsó al $100\%$ en una clase fija, prueba
-de que se apoya en el prior del lenguaje y no en la evidencia visual. En \textbf{generación}, quitar la
-imagen tampoco degrada la fidelidad: el modelo redacta igual a partir del texto del diagnóstico. Es, en
-los dos casos, el mismo hecho: \textbf{estos VLMs se anclan en el texto, no en la señal visual}. Lo
-interesante es que esa única propiedad explica a la vez el fracaso y el éxito del sistema. Como
-\emph{clasificadores} los inhabilita —sin capacidad de discriminación visual no hay diagnóstico posible—;
+quitar la imagen no impidió que el VLM siguiera prediciendo: colapsó al $100\%$ en una clase fija, señal de
+que su decisión está dominada por el prior del lenguaje más que por la evidencia visual. En
+\textbf{generación}, quitar la imagen tampoco degrada la fidelidad: el modelo nombra igual el diagnóstico
+que recibe en el texto. Es, en los dos casos, el mismo hecho: \textbf{en lo que respecta al diagnóstico,
+el texto pesa más que la señal visual} en estos VLMs —aunque, como se vio, la imagen sí modula la
+descripción—. Lo interesante es que esa única propiedad explica a la vez el fracaso y el éxito del sistema.
+Como \emph{clasificadores} los inhabilita —sin discriminación visual suficiente no hay diagnóstico posible—;
 como \emph{redactores dentro de la cascada} es precisamente lo que los vuelve confiables, porque garantiza
 que transcriban con fidelidad el diagnóstico que se les inyecta en lugar de contradecirlo con una lectura
 visual propia y poco fiable. La contracara es la propagación de error de la ablación anterior: esa misma
@@ -1440,10 +1472,22 @@ Cuadro~\ref{tab:plantilla} compara los VLM con una \textbf{plantilla trivial} (c
 $\rightarrow$ dx $\rightarrow$ texto fijo con morfología típica de la clase, sin VLM ni costo de
 generación). En consistencia diagnóstica, la plantilla \textbf{iguala o supera} a ambos generadores —con
 \emph{grounding} Swin empata a Mini-VLM ($0.828$ vs $0.830$) y supera a LLaVA-Med ($0.703$); con oracle
-llega a $1.000$—, aunque pierde en riqueza (\emph{entity recall} $\approx 0.42$ vs $0.75$--$0.79$). Esto
-reposiciona el aporte del generador: agrega \emph{fluidez y estilo}, no valor diagnóstico. La
-\textbf{contribución metodológica es el pipeline en cascada}; el diagnóstico lo produce el clasificador
-especializado.
+llega a $1.000$—, aunque pierde en riqueza (\emph{entity recall} $\approx 0.42$ vs $0.75$--$0.79$).
+
+\paragraph{¿Qué aporta entonces el VLM?} Si una plantilla alcanza la misma fidelidad diagnóstica, el aporte
+del componente generativo \textbf{no es diagnóstico}, y conviene delimitarlo con precisión porque define qué
+agrega realmente cada pieza del sistema. El diagnóstico lo produce el clasificador; el VLM aporta tres cosas
+que la plantilla no tiene: (i) \textbf{riqueza clínica} —casi duplica la cobertura de entidades
+dermatológicas (\emph{entity recall} $0.75$--$0.79$ frente a $0.41$--$0.44$), es decir, además de nombrar la
+clase habla de morfología, color, bordes y hallazgos dermatoscópicos—; (ii) \textbf{especificidad por
+caso} —la plantilla emite el mismo texto para todas las lesiones de una clase, mientras que el VLM describe
+cada imagen: el $99\%$ de sus reportes son distintos, y es precisamente la imagen la que introduce esa
+variación, como mostró la ablación anterior—; y (iii) \textbf{lenguaje y estructura de reporte clínico}.
+Ninguno de los tres aportes está validado clínicamente en este trabajo: el \emph{entity recall} mide la
+presencia de términos, no que la descripción sea correcta para esa lesión en particular, y verificarlo
+requiere un especialista. La lectura precisa es, entonces, que \textbf{el clasificador aporta el
+diagnóstico y el VLM aporta la descripción}; la \textbf{contribución metodológica es el pipeline en cascada}
+que los combina.
 
 \begin{table}[H]
   \centering
@@ -1610,13 +1654,43 @@ $\Delta=+0.509$ $[0.452,\,0.566]$ del reporte diferencial sobre el forzado en el
 \emph{integra al sistema}: es la lógica que decide cuándo comprometerse, cuándo dar un diferencial y cuándo
 callar y derivar.
 
+\paragraph{Réplica con el segundo generador.} Para descartar que la mejora sea una particularidad de
+Mini-VLM se repitió la validación con \textbf{LLaVA-Med}, con el mismo ruteo, las mismas imágenes y los
+mismos hiperparámetros de generación. Como el componente de decisión es independiente del generador, solo
+hizo falta generar los $334$ reportes del nivel diferencial: el nivel afirmativo reutiliza los reportes de
+\emph{grounding}-Swin ya existentes y el de abstención no produce texto. El resultado se replica con una
+magnitud casi idéntica (Cuadro~\ref{tab:incertidumbre_e2e}): la consistencia sobre los casos no derivados
+sube de $0.706$ a $0.831$ ($\Delta=+0.125$ $[0.109,\,0.143]$), y en el subconjunto diferencial el reporte
+diferencial nombra el diagnóstico correcto el $89.5\%$ de las veces frente al $35.3\%$ del forzado. Que el
+salto absoluto sea prácticamente el mismo en ambos modelos ($+0.118$ y $+0.125$) pese a que parten de niveles
+muy distintos es coherente con dónde se origina la mejora: en la \emph{decisión} de rutear, que es común a
+los dos, y no en la capacidad de redacción de cada generador. El nivel de partida más bajo de LLaVA-Med
+refleja lo ya visto en el Cuadro~\ref{tab:ensamble}: aun con el diagnóstico en el \emph{prompt}, lo nombra
+con menos regularidad que Mini-VLM.
+
+\paragraph{Cómo leer el $0.94$.} Es tentador comparar ese valor con una exactitud, pero \textbf{no es una
+exactitud multiclase} y su definición tiene tres particularidades que conviene explicitar. Primero, es una
+\emph{diagnostic consistency}: la proporción de reportes que mencionan el diagnóstico verdadero, no la
+proporción de casos en que el sistema emite un único diagnóstico correcto. Segundo, mezcla dos tipos de
+salida: en el nivel afirmativo ($77\%$ de los no derivados) el reporte nombra un solo diagnóstico y la
+consistencia es $0.951$ —prácticamente la exactitud del clasificador en ese subconjunto, $0.944$—, pero en
+el nivel diferencial ($23\%$) nombra \emph{dos} candidatos y cuenta como consistente si el verdadero es uno
+de ellos ($0.901$), un criterio análogo a una exactitud \emph{top-2}. Tercero, se calcula \emph{excluyendo}
+el $4\%$ de casos derivados, que son justamente los más difíciles. Por eso la comparación honesta no es
+$0.94$ contra la exactitud del ancla ($0.795$), sino contra el \emph{grounding} simple \emph{sobre las mismas
+imágenes} ($0.82$), y conviene acompañarla del valor sobre la cohorte completa, contando cada derivación
+como un reporte sin diagnóstico: $\mathbf{0.904}$ frente a $0.812$ (Mini-VLM) y $0.799$ frente a $0.696$
+(LLaVA-Med). Lo que el $0.94$ afirma, entonces, es que \emph{cuando el sistema entrega un reporte}, este
+contiene el diagnóstico correcto —solo o junto a un segundo candidato— en el $94\%$ de los casos; no que
+el sistema diagnostique correctamente al $94\%$ de los pacientes.
+
 \paragraph{¿Reduce los errores peligrosos?} La consistencia agregada no distingue \emph{qué tipo} de error
 se comete, y clínicamente no todos pesan igual (Sección~\ref{sec:taxonomia}). Se aplicó por eso la taxonomía
 de errores a ambos sistemas sobre las mismas imágenes (Cuadro~\ref{tab:taxonomia_incert}), con un ajuste
 necesario: la regla que marca \emph{contradicción} cuando el texto menciona dos clases no puede aplicarse al
 reporte diferencial, que enuncia dos candidatos \emph{por diseño}; para ese nivel se cuenta como correcto
 (\emph{ok diferencial}) si el diagnóstico verdadero está entre los candidatos, y como \emph{dx incorrecto}
-si no lo está. El resultado es contundente: el \textbf{diagnóstico incorrecto —el error clínicamente grave—
+si no lo está. Con Mini-VLM el resultado es contundente: el \textbf{diagnóstico incorrecto —el error clínicamente grave—
 cae del $19.0\%$ al $6.6\%$} sobre las no derivadas. Y las $58$ imágenes derivadas habrían producido
 $26$ reportes con diagnóstico equivocado bajo \emph{grounding} forzado: al abstenerse, el sistema los evita
 por completo. Sobre la cohorte completa de $1503$ pacientes la tasa de diagnóstico incorrecto pasa de
@@ -1625,33 +1699,47 @@ La mejora no es solo un traslado de errores a categorías más benignas: la frac
 \emph{diagnósticamente correctos} —contando el diferencial como acierto cuando el gt figura entre los
 candidatos— sube de $38.4\%$ a $\mathbf{51.1\%}$, de modo que el sistema no se limita a evitar
 afirmaciones falsas sino que además acierta más seguido.
-Como contrapartida honesta, la \textbf{repetición empeora} ($0.3\% \rightarrow 4.3\%$): enumerar dos
-candidatos favorece la degeneración de texto, de modo que el ruteo \emph{amplifica} el artefacto de
-repetición ya señalado como limitación.
+
+Con \textbf{LLaVA-Med} el patrón se repite: el diagnóstico incorrecto \textbf{se reduce a la mitad}
+($13.5\% \rightarrow 7.0\%$ sobre las no derivadas; $14.2\% \rightarrow 6.7\%$ sobre la cohorte completa,
+contando los $18$ errores que evita la derivación) y los reportes correctos suben de $35.6\%$ a $49.0\%$.
+La réplica corrige, además, una lectura previa. Con Mini-VLM la \textbf{repetición empeora}
+($0.3\% \rightarrow 4.3\%$) y parecía natural atribuirlo al formato —enumerar dos candidatos favorecería el
+bucle de texto—; pero con LLaVA-Med la repetición se mantiene en niveles marginales ($0.1\% \rightarrow
+0.3\%$) con el mismo formato diferencial. La amplificación es, por lo tanto, \textbf{propia de Mini-VLM} y
+no una consecuencia inevitable del ruteo. LLaVA-Med tiene, en cambio, su propio perfil de error: más
+contradicciones y reportes que no nombran ninguna clase (\emph{otros}), en línea con su estilo más verboso.
 
 \begin{table}[H]
   \centering
-  \caption{Taxonomía de errores del \emph{grounding} simple forzado vs.\ el ensamble consciente de la
-  incertidumbre, sobre las mismas $1445$ imágenes no derivadas (Mini-VLM). En el nivel diferencial,
-  mencionar los dos candidatos es el comportamiento esperado: se contabiliza como \emph{ok diferencial}
-  cuando el gt está entre ellos. Las categorías particionan el conjunto (suman $100\%$ en cada columna);
-  \emph{ok} y \emph{ok diferencial} son componentes de \emph{Correcto (total)}. Las flechas indican la
-  dirección deseable ($\uparrow$ más es mejor, $\downarrow$ menos es mejor).}
+  \caption{Taxonomía de errores del \emph{grounding} simple forzado (``simple'') vs.\ el ensamble consciente
+  de la incertidumbre (``avanzado''), con los dos generadores, sobre las mismas $1445$ imágenes no derivadas.
+  En el nivel diferencial, mencionar los dos candidatos es el comportamiento esperado: se contabiliza como
+  \emph{ok diferencial} cuando el gt está entre ellos. Las categorías particionan el conjunto (suman $100\%$
+  en cada columna); \emph{ok} y \emph{ok diferencial} son componentes de \emph{Correcto (total)}. Las
+  flechas indican la dirección deseable ($\uparrow$ más es mejor, $\downarrow$ menos es mejor).}
   \label{tab:taxonomia_incert}
-  \begin{tabular}{lcc}
+  \small
+  \resizebox{\textwidth}{!}{%
+  \begin{tabular}{lcccc}
     \toprule
-    \textbf{Categoría} & \textbf{Grounding simple} & \textbf{Pipeline avanzado} \\
+    & \multicolumn{2}{c}{\textbf{Mini-VLM}} & \multicolumn{2}{c}{\textbf{LLaVA-Med}} \\
+    \cmidrule(lr){2-3}\cmidrule(lr){4-5}
+    \textbf{Categoría} & \textbf{Simple} & \textbf{Avanzado} & \textbf{Simple} & \textbf{Avanzado} \\
     \midrule
-    \quad ok                                    & 555 (38.4\%) & 498 (34.5\%) \\
-    \quad ok diferencial                        & ---          & 240 (16.6\%) \\
-    \textbf{Correcto (total)} $\uparrow$        & 555 (38.4\%) & \textbf{738 (51.1\%)} \\
+    \quad ok                              & 555 (38.4\%) & 498 (34.5\%) & 514 (35.6\%) & 483 (33.4\%) \\
+    \quad ok diferencial                  & ---          & 240 (16.6\%) & ---          & 225 (15.6\%) \\
+    \textbf{Correcto (total)} $\uparrow$  & 555 (38.4\%) & \textbf{738 (51.1\%)} & 514 (35.6\%) & \textbf{708 (49.0\%)} \\
     \midrule
-    hedging $\downarrow$                        & 491 (34.0\%) & \textbf{436 (30.2\%)} \\
-    dx incorrecto $\downarrow$                  & 275 (19.0\%) & \textbf{95 (6.6\%)} \\
-    contradicción $\downarrow$                  & 120 (8.3\%)  & \textbf{114 (7.9\%)} \\
-    repetición $\downarrow$                     & \textbf{4 (0.3\%)} & 62 (4.3\%) \\
+    hedging $\downarrow$                  & 491 (34.0\%) & \textbf{436 (30.2\%)} & 257 (17.8\%) & \textbf{239 (16.5\%)} \\
+    dx incorrecto $\downarrow$            & 275 (19.0\%) & \textbf{95 (6.6\%)}   & 195 (13.5\%) & \textbf{101 (7.0\%)} \\
+    contradicción $\downarrow$            & 120 (8.3\%)  & \textbf{114 (7.9\%)}  & 257 (17.8\%) & \textbf{221 (15.3\%)} \\
+    repetición $\downarrow$               & \textbf{4 (0.3\%)} & 62 (4.3\%)      & \textbf{2 (0.1\%)} & 5 (0.3\%) \\
+    insuficiente $\downarrow$             & 0 (0.0\%)    & 0 (0.0\%)    & 45 (3.1\%)   & \textbf{25 (1.7\%)} \\
+    otros (sin clase) $\downarrow$        & 0 (0.0\%)    & 0 (0.0\%)    & 175 (12.1\%) & \textbf{146 (10.1\%)} \\
     \bottomrule
-  \end{tabular}
+  \end{tabular}%
+  }
 \end{table}
 
 \paragraph{¿Dónde duda el sistema?} El Cuadro~\ref{tab:ruteo_clase} desagrega el ruteo por clase
@@ -1667,13 +1755,14 @@ de las discrepancias reproducen \textbf{los diagnósticos diferenciales clínico
 —precisamente las lesiones pigmentadas con las que comparte apariencia—. El desacuerdo entre los dos
 clasificadores no es entonces ruido: aparece donde las clases genuinamente se solapan en la imagen, que es
 la razón por la cual sirve como estimador de ambigüedad. Dermatofibroma, la clase más rara ($n=17$), concentra la mayor tasa
-de abstención ($35.3\%$), coherente con su escasez en el entrenamiento. Este patrón es exactamente el
-deseable en un entorno clínico: cautela donde el error es caro, decisión donde el caso es claro.
+de abstención ($35.3\%$), coherente con su escasez en el entrenamiento. Es el patrón que se buscaría en un
+entorno clínico —cautela donde el error es caro, decisión donde el caso es claro—, aunque que efectivamente
+resulte útil para un especialista es algo que estas métricas no pueden establecer.
 
 \begin{table}[H]
   \centering
   \caption{Ruteo del ensamble consciente de la incertidumbre por clase diagnóstica (HAM10000 test,
-  $n=1503$). Porcentajes por fila; en negrita, el máximo de cada columna. El sistema afirma más en las
+  $n=1503$). Porcentajes por fila. El sistema afirma más en las
   clases fáciles/benignas y deriva o da diferencial con más frecuencia en melanoma y en las clases raras.}
   \label{tab:ruteo_clase}
   \begin{tabular}{lrccc}
@@ -1693,20 +1782,29 @@ deseable en un entorno clínico: cautela donde el error es caro, decisión donde
 
 \begin{table}[H]
   \centering
-  \caption{Validación end-to-end del ensamble consciente de la incertidumbre (Mini-VLM, sobre los $1445$
-  casos no derivados). El sistema avanzado supera al \emph{grounding} simple forzado, y sus reportes
-  diferenciales rescatan la fidelidad justo donde el clasificador falla.}
+  \caption{Validación end-to-end del ensamble consciente de la incertidumbre con los dos generadores, sobre
+  las mismas imágenes. Todas las filas son \emph{diagnostic consistency}; $\Delta$ con IC del $95\%$
+  (\emph{bootstrap} pareado, $2000$ remuestreos). En el nivel diferencial el reporte nombra \emph{dos}
+  candidatos, por lo que estos valores no equivalen a una exactitud de diagnóstico único (ver texto).}
   \label{tab:incertidumbre_e2e}
-  \begin{tabular}{lc}
+  \small
+  \begin{tabular}{lcc}
     \toprule
-    \textbf{Sistema} & \textbf{Diagnostic consistency} \\
+    \textbf{Sistema} & \textbf{Mini-VLM} & \textbf{LLaVA-Med} \\
     \midrule
-    Grounding simple (forzado) & 0.822 \\
-    \textbf{Pipeline avanzado} (afirmativo $+$ diferencial) & \textbf{0.940} \\
+    \multicolumn{3}{@{}l}{\itshape Casos no derivados ($n=1445$)} \\
+    Grounding simple (forzado)                      & 0.822 & 0.706 \\
+    Pipeline avanzado (afirmativo $+$ diferencial)  & \textbf{0.940} & \textbf{0.831} \\
+    \quad $\Delta$ [IC 95\%]                        & $+0.118$ [$0.101$, $0.134$] & $+0.125$ [$0.109$, $0.143$] \\
     \midrule
-    \multicolumn{2}{@{}l}{\itshape Solo el subconjunto diferencial ($n=334$):} \\
-    \quad grounding forzado (se compromete con Swin) & 0.392 \\
-    \quad \textbf{reporte diferencial} (\{Swin, kNN\}) & \textbf{0.901} \\
+    \multicolumn{3}{@{}l}{\itshape Solo el subconjunto diferencial ($n=334$)} \\
+    Grounding forzado (se compromete con Swin)      & 0.392 & 0.353 \\
+    Reporte diferencial (\{Swin, kNN\})             & \textbf{0.901} & \textbf{0.895} \\
+    \quad $\Delta$ [IC 95\%]                        & $+0.509$ [$0.452$, $0.566$] & $+0.542$ [$0.485$, $0.602$] \\
+    \midrule
+    \multicolumn{3}{@{}l}{\itshape Cohorte completa ($n=1503$; una derivación cuenta como reporte sin diagnóstico)} \\
+    Grounding simple (forzado)                      & 0.812 & 0.696 \\
+    Pipeline avanzado                               & \textbf{0.904} & \textbf{0.799} \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -1722,7 +1820,7 @@ lingüística con referencia se usó SkinCoT. Se comparan \textbf{baseline} y
 muestran un \emph{trade-off}: el \emph{grounding} \textbf{sube} la fidelidad (consistency $0.39 \rightarrow 0.57$)
 pero \textbf{baja} la similitud léxica (BLEU-4 $0.10 \rightarrow 0.04$). La razón es estilística: las
 referencias de SkinCoT son narrativas \emph{verbosas}, y un reporte conciso se parece menos a ellas
-aunque sea clínicamente más útil. Este \emph{trade-off} es evidencia adicional de lo discutido junto al
+aunque sea diagnósticamente más fiel. Este \emph{trade-off} es evidencia adicional de lo discutido junto al
 Cuadro~\ref{tab:sota_gen}: las métricas léxicas (BLEU/ROUGE) penalizan el estilo, no la calidad clínica.
 El siguiente contraste lo ilustra:
 
@@ -1806,7 +1904,7 @@ generación de reportes las métricas más usadas en la literatura son de \emph{
 ROUGE, METEOR), que comparan el texto generado con un reporte de referencia, palabra por palabra. Estas
 métricas son \emph{poco representativas} de la calidad clínica de un reporte: por la naturaleza del
 lenguaje, un mismo hallazgo puede expresarse de muchas formas igualmente correctas, de modo que un
-reporte clínicamente acertado pero redactado distinto a la referencia recibe un puntaje bajo (y, a la
+reporte diagnósticamente acertado pero redactado distinto a la referencia recibe un puntaje bajo (y, a la
 inversa, un reporte que copia el estilo pero yerra el diagnóstico puede puntuar alto). Aun así, son el
 estándar de comparación del área, por lo que el Cuadro~\ref{tab:sota_gen} las recopila.
 
@@ -1863,7 +1961,7 @@ Esto confirma por qué la evaluación de Nivel 2 es la métrica decisiva en este
   sintéticos. $^{d}$Reportes radiológicos (IU-Xray), no dermatológicos; incluido como referencia de la
   arquitectura VLM$+$LoRA. $^{e}$Nuestros modelos se entrenaron sobre SkinCaRe y se evalúan aquí sobre
   MM-Skin \emph{sin ajuste a ese corpus} (transferencia entre datasets), de ahí los puntajes léxicos muy
-  bajos pese a producir reportes clínicamente coherentes (Nivel 2).\par}
+  bajos pese a su fidelidad diagnóstica en Nivel 2.\par}
 \end{table}
 
 \begin{figure}[H]

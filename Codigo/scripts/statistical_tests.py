@@ -10,6 +10,9 @@ si se pasa --consistency_json (arrays 0/1 por condición; se genera en P0.3).
 100% local, sin cluster. Uso:
     python scripts/statistical_tests.py
     python scripts/statistical_tests.py --n_boot 5000
+    # Modelos finales (split por lesión) — alinea por image_ids cuando el JSON los trae:
+    python scripts/statistical_tests.py --models "Swin-Tiny=outputs/results/X_predictions.json" \
+        "DermLIP (ZS)=outputs/results/dermlip/dermlip_zeroshot_vit-b-16_predictions.json" --output ...
 """
 
 import argparse
@@ -39,7 +42,19 @@ METRICS = {
     "accuracy": lambda yt, yp: accuracy_score(yt, yp),
     "f1_weighted": lambda yt, yp: f1_score(yt, yp, average="weighted", zero_division=0),
     "sens_macro": lambda yt, yp: recall_score(yt, yp, average="macro", zero_division=0),
+    "f1_macro": lambda yt, yp: f1_score(yt, yp, average="macro", zero_division=0),
 }
+
+_META = Path("data/raw/HAM10000/HAM10000_metadata")
+_SPLITS = Path("data/splits/ham10000_splits.json")
+
+
+def _canonical_test_ids() -> list:
+    """Orden en que HAM10000Dataset recorre el test (metadata filtrada): el de los clasificadores."""
+    import pandas as pd
+    raw = pd.read_csv(_META)
+    test = set(json.loads(_SPLITS.read_text(encoding="utf-8"))["test"])
+    return [i for i in raw.image_id if i in test]
 
 
 def bootstrap_ci(y_true, y_pred, metric_fn, n_boot=2000, seed=42, alpha=0.05):
@@ -102,14 +117,23 @@ def mcnemar_exact(correct_a, correct_b):
 
 
 def _load(models: dict) -> dict:
-    loaded = {}
+    """Carga predicciones; si el JSON trae image_ids, las reordena al orden canónico del test para que
+    McNemar / bootstrap pareado comparen la MISMA imagen entre modelos."""
+    loaded, canon = {}, None
     for name, path in models.items():
         p = Path(path)
         if not p.exists():
             logger.warning("SKIP %s: no existe %s", name, path)
             continue
         d = json.loads(p.read_text(encoding="utf-8"))
-        loaded[name] = {"y_true": np.asarray(d["y_true"]), "y_pred": np.asarray(d["y_pred"])}
+        yt, yp = np.asarray(d["y_true"]), np.asarray(d["y_pred"])
+        if d.get("image_ids"):
+            canon = canon or _canonical_test_ids()
+            pos = {iid: i for i, iid in enumerate(d["image_ids"])}
+            if all(i in pos for i in canon):
+                idx = [pos[i] for i in canon]
+                yt, yp = yt[idx], yp[idx]
+        loaded[name] = {"y_true": yt, "y_pred": yp}
     return loaded
 
 
@@ -120,18 +144,23 @@ def main():
     parser.add_argument("--consistency_json", type=str, default=None,
                         help="JSON {condicion: [0/1 por reporte]} para el ensamble (P0.3).")
     parser.add_argument("--output", type=str, default="outputs/results/statistical_tests.json")
+    parser.add_argument("--models", nargs="*", default=None,
+                        help='Sobrescribe los modelos: "NOMBRE=ruta_predictions.json" (el primero es la referencia).')
     args = parser.parse_args()
 
     result = {"bootstrap_ci": {}, "mcnemar": {}}
 
     # --- Clasificadores ---
-    models = _load(DEFAULT_MODELS)
+    model_paths = DEFAULT_MODELS
+    if args.models:
+        model_paths = dict(item.split("=", 1) for item in args.models)
+    models = _load(model_paths)
     if models:
         ref_name = next(iter(models))
         ref_yt = models[ref_name]["y_true"]
 
         print("\n=== IC bootstrap 95%% (n_boot=%d) - clasificadores ===" % args.n_boot)
-        print(f"{'Modelo':<16} {'accuracy':>22} {'f1_weighted':>22} {'sens_macro':>22}")
+        print(f"{'Modelo':<16} {'accuracy':>22} {'f1_weighted':>22} {'sens_macro':>22} {'f1_macro':>22}")
         for name, m in models.items():
             row = {}
             cells = []
@@ -140,7 +169,7 @@ def main():
                 row[mk] = {"point": pt, "ci95": [lo, hi]}
                 cells.append(f"{pt:.3f} [{lo:.3f},{hi:.3f}]")
             result["bootstrap_ci"][name] = row
-            print(f"{name:<16} {cells[0]:>22} {cells[1]:>22} {cells[2]:>22}")
+            print(f"{name:<16} {cells[0]:>22} {cells[1]:>22} {cells[2]:>22} {cells[3]:>22}")
 
         # McNemar por pares (solo modelos alineados = misma secuencia y_true)
         aligned = {n: m for n, m in models.items()

@@ -5,9 +5,11 @@ Reusa `paired_bootstrap_diff_flags` (statistical_tests.py) y
 generados en outputs/generated_reports/mini_vlm/{full_*}. 100% local, CPU.
 
 Uso:
-    python scripts/ensemble_bootstrap.py
+    python scripts/ensemble_bootstrap.py                    # Mini-VLM (default)
+    python scripts/ensemble_bootstrap.py --model llava_med  # 2do generador
 """
 
+import argparse
 import json
 import logging
 import sys
@@ -24,7 +26,7 @@ logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 DATA_DIR = Path("data/raw/HAM10000")
-REPORTS_DIR = Path("outputs/generated_reports/mini_vlm")
+REPORTS_DIR = Path("outputs/generated_reports/mini_vlm")  # sobreescrito por --model
 UNCERTAINTY_DIR = Path("outputs/uncertainty")
 OUTPUT = Path("outputs/results/ensemble_bootstrap.json")
 
@@ -65,6 +67,15 @@ def flags_for(cond: dict, label_map: dict, ids: list) -> list:
 
 
 def main():
+    global REPORTS_DIR, OUTPUT
+    parser = argparse.ArgumentParser(description="IC bootstrap pareado (ensamble + pipeline avanzado)")
+    parser.add_argument("--model", default="mini_vlm", choices=["mini_vlm", "llava_med"])
+    args = parser.parse_args()
+    REPORTS_DIR = Path("outputs/generated_reports") / args.model
+    if args.model != "mini_vlm":
+        OUTPUT = OUTPUT.with_name(f"ensemble_bootstrap_{args.model}.json")
+    logger.info("Generador: %s", args.model)
+
     label_map = build_label_map()
     conds = {name: load_condition(name) for name in
               ["full_baseline", "full_dermlip", "full_swin", "full_oracle"]}
@@ -77,7 +88,7 @@ def main():
     flags = {name: flags_for(c, label_map, common_ids) for name, c in conds.items()}
     pairs = [("full_swin", "full_oracle"), ("full_dermlip", "full_swin"),
              ("full_baseline", "full_swin")]
-    print("\n=== tab:ensamble — bootstrap pareado (Mini-VLM, n=%d, n_boot=2000) ===" % len(common_ids))
+    print("\n=== tab:ensamble — bootstrap pareado (%s, n=%d, n_boot=2000) ===" % (args.model, len(common_ids)))
     for a, b in pairs:
         d, lo, hi, p = paired_bootstrap_diff_flags(flags[a], flags[b], n_boot=2000, seed=42)
         result["tab_ensamble"][f"{a} vs {b}"] = {"diff": d, "ci95": [lo, hi], "p": p}

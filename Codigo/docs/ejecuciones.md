@@ -39,6 +39,78 @@ desenfoque *y* resolución) + early-stop por pool. Regenerada: 2 ejemplos BKL (I
 ambos verificados visualmente coherentes con el caption. Docstrings del script corregidos (estaban invertidos).
 Compila limpio: 38 págs, 0 undefined, overfull máx 21.4pt (preexistente).
 
+## 2026-09-12
+
+### Split disjunto por lesión + selección en val + semillas — TOKO jobs 97933–98007 (73 jobs)
+Plan: [split_lesion_semillas_plan](ideas/split_lesion_semillas_plan_20260912.md) · Origen:
+[feedback_20260912](feedback_20260912.md). Resul: pendiente (se escribe al bajar resultados).
+
+**Auditoría previa (local, `scripts/leakage_analysis.py` → `outputs/results/leakage_analysis.json`):**
+- **LEAKAGE CONFIRMADO.** `prepare_data.py` estratifica POR IMAGEN. 543/1503 imágenes de test (36.1%)
+  comparten `lesion_id` con train; MEL 106/167 (63%), BCC 54/77 (70%). Swin headline sobre el subconjunto
+  limpio (n=894, lesión fuera de train y val): sens. macro 0.870 → 0.804, recall MEL 0.766 → 0.608 (acc sube
+  0.868 → 0.890 solo por composición: el limpio es 83% NV). Control: DermLIP ZS (nunca vio HAM) rinde PEOR en
+  las fugadas (sens 0.477 vs 0.527) → la ventaja de Swin en ellas (0.936) es leakage, no facilidad.
+- **Robusto al leakage:** pipeline avanzado sobre el limpio sigue significativo (Mini +0.077 [0.058,0.095];
+  LLaVA +0.096 [0.078,0.117]); cobertura del ruteo 0.941; colapso VLM igual.
+- **Selección:** checkpoint por época = `val_f1` ✓. Legacy ViT/DenseNet elegidos por `best_val_f1` (W&B solo
+  tiene val) ✓. Swin t08 = mejor también en val ✓. **ConvNeXt t06 fue elegido por TEST** (en val gana t09,
+  0.874 vs 0.861). **Bug:** nadie recargaba `best_model.pt` → test evaluado con pesos de la ÚLTIMA época
+  (Swin t08: mejor época 35, evaluado en 40).
+- **Estadística:** `statistical_tests.py` usaba Swin modern_v3 + VLMs de first_iteration (ZS por generación),
+  no los modelos de `tab:clasificacion`; el IC de Swin [0.77,0.85] ni contiene el headline 0.870.
+- **DermLIP por split (`scripts/dermlip_split_eval.py`, control reproduce el doc):** kNN sens 0.666→0.568,
+  SVM-RBF 0.788→0.673, linear-probe 0.747→0.729. La inflación escala con la capacidad de memorizar (métodos
+  locales caen, el lineal casi no).
+
+**Código:** `make_lesion_disjoint_split.py` (test IDÉNTICO; descarta 776 imágenes de lesiones de test;
+StratifiedGroupKFold → train 6447 / val 1289; solapamiento 0 verificado). `train_classifier.py`
+`--eval-best-checkpoint` + `--save-val-predictions` (+ image_ids en las predicciones). `submit_sweep.py`
+`--lesion-split --class-weights {auto,none,both} --trials --seeds` (defaults = sweep v4 original, verificado
+con --dry-run). `submit.py`: `les_legacy`, `les_imb_all`. `statistical_tests.py --models` (alinea por
+image_ids, agrega F1 macro). `posthoc_calibration.py` (TS + vector scaling en val).
+
+**Envíos (TOKO):**
+```
+python scripts/toko/submit_sweep.py --model swin_tiny --lesion-split --class-weights auto --trials t08  # 97933 (humo)
+python scripts/toko/submit_sweep.py --model convnext_tiny --lesion-split --class-weights both            # 97935-97964
+python scripts/toko/submit_sweep.py --model swin_tiny --lesion-split --class-weights none               # 97965-97979
+python scripts/toko/submit_sweep.py --model swin_tiny --lesion-split --class-weights auto --trials t01..t15 sin t08  # 97980-97993
+python scripts/toko/submit.py les_legacy     # 97994-97995
+python scripts/toko/submit.py les_imb_all    # 97996-98007
+```
+Humo 97933 OK (Swin t08 cw auto): corte por paciencia en época 18, evaluó con checkpoint de la época 13
+(val_f1 0.753), test acc 0.753 / sens 0.780, 1289 preds de val guardadas. Validación muy oscilante (0.75 →
+0.23 → 0.37 entre épocas) — el barrido elige en val. TOKO corre 1 job a la vez (~20–25 min c/u): se bajó la
+prioridad (`nice=500`) de ConvNeXt/legacy/imb para que Swin corra primero. Pendiente tanda C (semillas 43/44
+del ganador en val de cada modelo).
+
+**Calibración post-hoc (prototipo sobre modern_v3 TTA, split original):** TS apenas mejora (ECE 0.394→0.344,
+T=0.53); vector scaling la corrige (ECE→0.010, Brier 0.58→0.19) pero sube acc (0.80→0.87) y BAJA sens. macro
+(0.798→0.732): los pesos por clase desplazan el sesgo por clase; deshacerlo devuelve predicciones a NV.
+
+### Réplica del ensamble consciente de la incertidumbre con LLaVA-Med — Mendieta 1172480 (analizado)
+Resul: [incertidumbre_llava_replica_resul](resul/incertidumbre_llava_replica_resul_20260912.md).
+Job terminó 2026-09-11 16:39, 334/334 reportes, 0 errores. `ensemble_bootstrap.py` y
+`uncertainty_analysis.py` parametrizados con `--model` (Mini reproduce exacto sus números).
+**Veredicto: CUMPLE.** No derivados 0.706 → 0.831 (Δ +0.125 [0.109,0.143]); diferencial 0.353 → 0.895;
+cohorte completa 0.696 → 0.799. dx incorrecto 13.5% → 7.0% (cohorte 14.2% → 6.7%). **Corrige una lectura
+previa:** la repetición NO se amplifica con LLaVA-Med (0.1% → 0.3%) → la amplificación es propia de Mini-VLM,
+no del formato diferencial. Aplicado al `.tex`: `tab:incertidumbre_e2e` y `tab:taxonomia_incert` con ambos
+generadores, párrafos "Réplica con el segundo generador" y "Cómo leer el 0.94" (descomposición: afirmativo
+0.951 ≈ acc del ancla 0.944; diferencial 0.901 tipo top-2; cohorte completa 0.904).
+
+### Documento: reformulaciones del feedback (sin números nuevos de clasificación) — **Sin jobs SLURM**
+- Afirmaciones absolutas sobre la imagen → acotadas. Evidencia nueva (local): sin imagen todos los reportes
+  de una clase son IDÉNTICOS (Jaccard intra-clase 1.00); con imagen 99% distintos (0.36 Mini / 0.28 LLaVA);
+  entity recall de Mini 0.79 → 0.38 sin imagen. "La imagen no cambia qué diagnóstico se redacta, sí qué se
+  describe."
+- Párrafo "¿Qué aporta entonces el VLM?" (clasificador = diagnóstico; VLM = riqueza, especificidad por caso,
+  lenguaje; nada de eso validado clínicamente).
+- Métricas: agregado F1 macro y justificación concreta de sens. macro (clasificador "todo nevo": acc 0.669,
+  sens 0.143; Mini-VLM FT real: acc 0.660, sens 0.141). Párrafo "Fidelidad diagnóstica no es validez
+  clínica" + 5 frases que atribuían utilidad clínica reformuladas.
+
 ## 2026-09-08
 
 ### Seccion final: solo limitaciones, sin trabajo futuro — **Sin jobs SLURM** (doc)

@@ -11,6 +11,12 @@ Uso:
   python scripts/toko/submit_sweep.py --all                          # 30 jobs (ambos modelos)
   python scripts/toko/submit_sweep.py --all --dry-run                # previsualizar sin enviar
 
+  # Barrido sobre el split DISJUNTO POR LESIÓN (test idéntico), CE con y sin class weights,
+  # evaluando el mejor checkpoint por val_f1 y guardando predicciones de validación:
+  python scripts/toko/submit_sweep.py --model swin_tiny --lesion-split --class-weights both
+  # Semillas extra del trial ganador (selección hecha en validación):
+  python scripts/toko/submit_sweep.py --model swin_tiny --lesion-split --class-weights none --trials t08 --seeds 43 44
+
   # Re-run del mejor trial con --eval-hiba (OOD evaluation):
   python scripts/toko/submit_sweep.py --rerun-hiba convnext_tiny t06
   python scripts/toko/submit_sweep.py --rerun-hiba swin_tiny t08
@@ -48,13 +54,34 @@ _GRID_PATH = Path(__file__).resolve().parents[2] / "configs" / "sweeps" / "phase
 _TIME_LIMIT = "12:00:00"
 
 
-def _build_slurm_script(model: str, trial: dict) -> str:
-    """Genera el script SLURM completo para un trial del sweep."""
+_LESION_SPLIT = "data/splits/ham10000_splits_lesion.json"
+
+
+def _run_name(model: str, t: str, lesion_split: bool, class_weights: str, seed: int) -> str:
+    name = f"{model}_sweep_{t}"
+    if lesion_split:
+        name += "_les"
+    if class_weights == "none":
+        name += "_cwnone"
+    if seed != 42:
+        name += f"_s{seed}"
+    return name
+
+
+def _build_slurm_script(model: str, trial: dict, lesion_split: bool = False,
+                        class_weights: str = "auto", seed: int = 42) -> str:
+    """Genera el script SLURM completo para un trial del sweep.
+
+    Con los defaults reproduce exactamente el sweep v4 original (split por imagen, class weights, seed 42).
+    """
     t = trial["trial"]
     lr = trial["lr"]
     wd = trial["weight_decay"]
     m = trial["randaugment_m"]
-    run_name = f"{model}_sweep_{t}"
+    run_name = _run_name(model, t, lesion_split, class_weights, seed)
+    extra = f"--class-weights {class_weights}"
+    if lesion_split:
+        extra += f" --splits-file {_LESION_SPLIT} --eval-best-checkpoint --save-val-predictions"
 
     # Formato legible para floats en bash (evita notación científica con 'e+')
     lr_str = f"{lr:.2e}"
@@ -110,7 +137,8 @@ ${{PYTHON}} scripts/train_classifier.py \\
     --weight-decay {wd_str} \\
     --randaugment-m {m} \\
     --focal-gamma 0 \\
-    --seed 42 \\
+    --seed {seed} \\
+    {extra} \\
     --no-freeze-backbone \\
     --wandb
 
@@ -121,10 +149,11 @@ rm -rf "$TMPDIR"
 """
 
 
-def submit_trial(model: str, trial: dict, dry_run: bool) -> str | None:
+def submit_trial(model: str, trial: dict, dry_run: bool, lesion_split: bool = False,
+                 class_weights: str = "auto", seed: int = 42) -> str | None:
     t = trial["trial"]
-    run_name = f"{model}_sweep_{t}"
-    script = _build_slurm_script(model, trial)
+    run_name = _run_name(model, t, lesion_split, class_weights, seed)
+    script = _build_slurm_script(model, trial, lesion_split, class_weights, seed)
     print(f"  Enviando {run_name} "
           f"(lr={trial['lr']:.2e}, wd={trial['weight_decay']}, m={trial['randaugment_m']})...")
 
@@ -270,6 +299,13 @@ def main():
                             "Ej: --rerun-hiba convnext_tiny t06")
     parser.add_argument("--dry-run", action="store_true",
                         help="Mostrar scripts sin enviar al cluster")
+    parser.add_argument("--lesion-split", action="store_true",
+                        help=f"Usar {_LESION_SPLIT} (disjunto por lesión) + mejor checkpoint + preds de val")
+    parser.add_argument("--class-weights", choices=["auto", "none", "both"], default="auto",
+                        help="auto = sweep v4 original; both = duplica el grid (con y sin class weights)")
+    parser.add_argument("--trials", nargs="+", default=None, help="Subconjunto de trials (ej: t08)")
+    parser.add_argument("--seeds", nargs="+", type=int, default=[42], help="Semillas (default: 42)")
+    parser.add_argument("--print-script", action="store_true", help="Con --dry-run, imprime el script")
     args = parser.parse_args()
 
     check_tools()
@@ -300,12 +336,17 @@ def main():
         config = yaml.safe_load(f)
 
     trials = config["trials"]
+    if args.trials:
+        trials = [t for t in trials if t["trial"] in set(args.trials)]
     models = config["models"] if args.all else [args.model]
+    cw_values = ["auto", "none"] if args.class_weights == "both" else [args.class_weights]
+    combos = [(t, cw, sd) for t in trials for cw in cw_values for sd in args.seeds]
 
-    total_jobs = len(models) * len(trials)
+    total_jobs = len(models) * len(combos)
     print(f"=== Sweep fase1 modern en TOKO ===")
     print(f"Modelos: {models}")
-    print(f"Trials por modelo: {len(trials)}")
+    print(f"Trials por modelo: {len(combos)}  (split por lesión: {args.lesion_split}, "
+          f"class_weights: {cw_values}, seeds: {args.seeds})")
     print(f"Total jobs: {total_jobs}")
     if args.dry_run:
         print("Modo: DRY-RUN (no se envían jobs reales)")
@@ -315,16 +356,21 @@ def main():
     for model in models:
         print(f"--- Modelo: {model} ---")
         model_jobids = []
-        for trial in trials:
-            jid = submit_trial(model, trial, dry_run=args.dry_run)
+        for trial, cw, sd in combos:
+            if args.dry_run and args.print_script:
+                print(_build_slurm_script(model, trial, args.lesion_split, cw, sd))
+            jid = submit_trial(model, trial, dry_run=args.dry_run, lesion_split=args.lesion_split,
+                               class_weights=cw, seed=sd)
             if jid:
                 model_jobids.append(jid)
         all_jobids.extend(model_jobids)
-        print(f"  {len(model_jobids)}/{len(trials)} trials encolados para {model}")
+        print(f"  {len(model_jobids)}/{len(combos)} trials encolados para {model}")
         print()
 
     if all_jobids and not args.dry_run:
-        description = f"sweep_modern_v4 models={','.join(models)} n={len(trials)}"
+        tag = "sweep_lesion_split" if args.lesion_split else "sweep_modern_v4"
+        description = (f"{tag} models={','.join(models)} n={len(combos)} cw={args.class_weights} "
+                       f"seeds={args.seeds} trials={args.trials or 'all'}")
         append_jobs_log(all_jobids, "toko", description)
 
     print("=== Sweep enviado ===")
