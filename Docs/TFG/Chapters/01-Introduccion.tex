@@ -1,0 +1,58 @@
+\chapter[Introducción]{Introducción}
+\label{cp:introduccion}
+% Extensión estimada: 6--8 páginas.
+% Fuentes: Plan de trabajo (Introducción), Propuesta (secciones "Introducción y Propósito" y "Marco de la
+% Problemática") e introducción del documento de experimentación.
+
+\pendiente{Este capítulo presenta el problema, explica por qué importa y resume qué se hizo y qué se aporta,
+sin entrar en resultados numéricos detallados.}
+
+\section{Contexto y motivación}
+\label{sec:intro_contexto}
+\pendiente{Esta sección expone la carga del cáncer de piel y la relevancia de la detección temprana del
+melanoma, el rol de la dermatoscopía y la dificultad del diagnóstico visual, la escasez y distribución
+desigual de especialistas y el tiempo que insume la redacción de reportes. Se menciona también la situación
+regional: poblaciones con fototipos poco representados en los conjuntos de datos públicos, lo que motiva el
+uso de HIBA.}
+
+\section{El problema: clasificar y describir una lesión}
+\label{sec:intro_problema}
+\pendiente{El diagnóstico asistido involucra dos tareas complementarias: asignar una categoría diagnóstica y
+redactar un reporte que describa la lesión. Esta sección precisa qué significa ``detección'' en este
+trabajo (detección de melanoma como tarea binaria sobre la clasificación, no localización ni segmentación) y
+por qué un reporte correcto requiere a la vez un diagnóstico acertado y una descripción fiel de la imagen.}
+
+\section{La promesa de los modelos visión--lenguaje}
+\label{sec:intro_vlm}
+\pendiente{Se presentan los VLMs a alto nivel y por qué parecen resolver ambas tareas con un único sistema. De
+ahí surge la pregunta que motiva la tesina: si esa promesa se cumple en dermatología o si hace falta
+combinar modelos.}
+
+\section{Enfoque del trabajo}
+\label{sec:intro_enfoque}
+\pendiente{Se describe la metodología iterativa \emph{hipótesis $\rightarrow$ ejecución $\rightarrow$
+análisis $\rightarrow$ decisión}, en la que varios resultados contradijeron las hipótesis iniciales y
+reorientaron el trabajo. El recorrido se resume en una frase por etapa: baseline supervisado, VLMs en
+clasificación, refutación de la hipótesis del desbalance, especialización de dominio, generación de reportes
+y ensamble en cascada, y análisis de rigor y robustez. Se introduce además el eje transversal de hardware
+accesible (GPUs de consumo de 12--24\,GB).}
+
+\section{Contribuciones}
+\label{sec:intro_contribuciones}
+\pendiente{Las contribuciones del trabajo, cada una con remisión al capítulo donde se sustenta, son:
+\begin{itemize}
+  \item Una comparación sistemática, bajo un mismo protocolo, de clasificadores supervisados, VLMs médicos
+  generales (cuatro estrategias) y un modelo visión--lenguaje dermatológico sobre HAM10000.
+  \item Un diagnóstico del colapso de los VLMs generales en clasificación dermatológica y evidencia de que la
+  especialización de dominio, y no la modalidad, es el factor determinante.
+  \item Un ensamble en cascada consciente de la incertidumbre (clasificador $\rightarrow$ generador con
+  \emph{grounding}, recuperación y ruteo en tres niveles) que mejora la fidelidad diagnóstica de los
+  reportes, replicado con dos generadores.
+  \item Una auditoría de fuga de información entre particiones de HAM10000 y resultados corregidos con un
+  split disjunto por lesión.
+  \item Un análisis de viabilidad sobre hardware de consumo.
+\end{itemize}}
+
+\section{Organización del documento}
+\label{sec:intro_organizacion}
+\pendiente{Se describe brevemente el contenido de cada capítulo.}

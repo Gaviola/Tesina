@@ -1,0 +1,98 @@
+\chapter[Marco teórico]{Marco teórico}
+\label{cp:marco}
+% Extensión estimada: 15--20 páginas.
+% Fuentes: Docs/marco_teorico/Documento_LLMs_VLLMs.tex (recortar NLP general, one-hot, RNN/LSTM a una
+% mención breve). Los fundamentos clínicos, de calibración y de estadística no están en ese documento.
+
+\pendiente{Este capítulo presenta los conceptos teóricos necesarios para seguir el resto del trabajo:
+fundamentos clínicos de las lesiones de piel, arquitecturas de aprendizaje profundo para visión, modelos de
+lenguaje, modelos visión--lenguaje y herramientas de evaluación.}
+
+\section{Fundamentos clínicos}
+\label{sec:marco_clinico}
+
+\subsection{Lesiones cutáneas y categorías diagnósticas}
+\pendiente{Se describen las siete categorías de HAM10000 (MEL, NV, BCC, AKIEC, BKL, DF, VASC), cuáles son
+malignas o premalignas y por qué confundir unas con otras tiene costos clínicos distintos.}
+
+\subsection{Dermatoscopía y fotografía clínica}
+\pendiente{Se comparan ambas modalidades de imagen y se explica por qué sus diferencias importan al transferir
+modelos entre conjuntos de datos (HAM10000 es dermatoscópico; SkinCaRe, clínico).}
+
+\subsection{El reporte dermatológico}
+\pendiente{Se presenta la estructura típica de un reporte (descripción morfológica, diagnóstico, diferencial,
+recomendación) y el vocabulario clínico asociado, que sirve de base para las métricas de riqueza clínica del
+Capítulo~\ref{cp:metodos}.}
+
+\section{Aprendizaje profundo para visión}
+\label{sec:marco_vision}
+
+\subsection{Redes convolucionales}
+\pendiente{Se explican la operación de convolución, la jerarquía de características y las arquitecturas
+DenseNet y ConvNeXt, utilizadas en el trabajo.}
+
+\subsection{Transformers y mecanismo de atención}
+\pendiente{Se describen la atención escalada por producto punto, la atención multi-cabeza y la arquitectura
+codificador--decodificador.}
+
+\subsection{Vision Transformer y Swin Transformer}
+\pendiente{Se presentan el ViT, que trata \emph{patches} de la imagen como tokens, y el Swin Transformer, que
+introduce atención por ventanas desplazadas y una representación jerárquica.}
+
+\subsection{Transferencia de aprendizaje y desbalance de clases}
+\pendiente{Se explican el pre-entrenamiento en ImageNet y el ajuste fino, el aumento de datos y las
+estrategias frente al desbalance (pesos por clase, pérdida focal, \emph{balanced softmax}) evaluadas en el
+Capítulo~\ref{cp:res_clasif}.}
+
+\section{Modelos de lenguaje}
+\label{sec:marco_llm}
+
+\subsection{Grandes modelos de lenguaje}
+\pendiente{Se describen el pre-entrenamiento, el ajuste fino, la alineación y la decodificación en la
+generación de texto.}
+
+\subsection{Ajuste eficiente de parámetros: LoRA}
+\pendiente{Se presenta LoRA, su formulación y por qué permite ajustar modelos grandes en hardware de consumo.}
+
+\section{Modelos visión--lenguaje}
+\label{sec:marco_vlm}
+
+\subsection{Alineación contrastiva: CLIP}
+\pendiente{Se explica cómo CLIP proyecta imagen y texto a un espacio común, y cómo ese espacio permite la
+clasificación \emph{zero-shot} por similitud y el \emph{linear probe}. Es la base de DermLIP.}
+
+\subsection{Modelos multimodales generativos}
+\pendiente{Se describe la proyección de características visuales al espacio de un LLM (LLaVA) y el
+\emph{visual instruction tuning}, base de LLaVA-Med, Mini-VLM y SkinVL.}
+
+\subsection{Uso de un VLM generativo como clasificador}
+\pendiente{Se presentan las formas de obtener una clase de un modelo generativo: respuesta libre
+(\emph{zero-shot}), \emph{likelihood scoring}, razonamiento estructurado (\emph{Chain-of-Thought}) y ajuste
+fino.}
+
+\subsection{Generación aumentada por recuperación}
+\pendiente{Se explica RAG en general y su variante basada en vecinos visuales (kNN sobre
+\emph{embeddings}).}
+
+\section{Evaluación de modelos}
+\label{sec:marco_evaluacion}
+
+\subsection{Métricas de clasificación}
+\pendiente{Se definen exactitud, F1 ponderado y macro, sensibilidad macro, AUC, y sensibilidad y
+especificidad para la tarea binaria, y se muestra por qué la exactitud es engañosa con clases
+desbalanceadas.}
+
+\subsection{Calibración de probabilidades}
+\pendiente{Se presentan el diagrama de confiabilidad, ECE, MCE y Brier, y los métodos de calibración post-hoc
+\emph{temperature scaling} y \emph{vector scaling}.}
+
+\subsection{Métricas de generación de texto}
+\pendiente{Se describen las métricas con referencia (BLEU, ROUGE-L, METEOR, CIDEr, BERTScore) y sin
+referencia (entidades clínicas y consistencia diagnóstica), y qué mide y qué no mide cada familia.}
+
+\subsection{Inferencia estadística para comparar modelos}
+\pendiente{Se presentan los intervalos por \emph{bootstrap} pareado, la prueba de McNemar y la prueba de
+Wilcoxon, y qué pregunta responde cada una.}
+
+\subsection{Interpretabilidad visual}
+\pendiente{Se describen los mapas de activación (Grad-CAM) y sus limitaciones.}

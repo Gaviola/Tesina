@@ -1,0 +1,66 @@
+\chapter[Resultados: generación de reportes]{Resultados: generación de reportes}
+\label{cp:res_gen}
+% Extensión estimada: 20--25 páginas.
+% Fuentes: sección "Generación de reportes" del documento de experimentación y
+% Codigo/docs/resul/incertidumbre_llava_replica_resul_20260912.md.
+
+\pendiente{Este capítulo responde la PI2 y contrasta las hipótesis H2, H5 y H6. Los reportes se generaron
+sobre el test original, que es idéntico al del split por lesión; la robustez frente a la fuga de información
+se reporta sobre el subconjunto limpio.}
+
+\section{Generación directa con VLMs ajustados}
+\label{sec:res_gen_directa}
+\pendiente{Se presentan los resultados de Nivel 1 y Nivel 2 de los generadores ajustados sin
+\emph{grounding}, que producen descripciones ricas pero diagnósticamente poco fieles.}
+
+\section{Reporte frente a razonamiento}
+\label{sec:res_gen_razonamiento}
+\pendiente{Se describe el hallazgo metodológico sobre el entrenamiento con narrativas de razonamiento
+(SkinCoT) y el \emph{trade-off} de estilo que distorsiona las métricas con referencia.}
+
+\section{Ensamble en cascada}
+\label{sec:res_gen_cascada}
+\pendiente{Se justifica el uso de un ensamble y se presentan sus resultados con distintas fuentes de
+diagnóstico (clasificador, DermLIP y \emph{oracle} como cota superior), con dos generadores y por clase.}
+
+\section{Taxonomía de errores}
+\label{sec:res_gen_errores}
+\pendiente{Se clasifican los errores de los reportes (diagnóstico incorrecto, insuficiente, repetición, otros)
+y se analiza cómo cambian con cada arquitectura.}
+
+\section{Un generador dermatológico: SkinVL}
+\label{sec:res_gen_skinvl}
+\pendiente{Se evalúa si un generador especializado en dermatología evita la necesidad de la cascada.}
+
+\section{Aporte de la imagen y del VLM}
+\label{sec:res_gen_ablaciones}
+\pendiente{Las ablaciones sin imagen o con imagen cambiada muestran que la imagen no cambia qué diagnóstico se
+redacta, pero sí qué se describe. Se analiza qué aporta el VLM frente a una plantilla (riqueza clínica,
+especificidad por caso, lenguaje): el clasificador aporta el diagnóstico y el VLM, la descripción.}
+
+\section{Grounding por recuperación}
+\label{sec:res_gen_rag}
+\pendiente{Se compara el contexto construido con vecinos visuales frente al \emph{grounding} por
+clasificador.}
+
+\section{Ensamble consciente de la incertidumbre}
+\label{sec:res_gen_incertidumbre}
+\pendiente{Se presentan la distribución de casos por nivel (afirmativo, diferencial, abstención) y la
+fidelidad diagnóstica sobre los casos no derivados y sobre la cohorte completa, con intervalos, junto con la
+réplica con LLaVA-Med. Se explica cómo leer el valor de consistencia, que no es una exactitud multiclase
+porque incluye el diferencial y excluye los casos derivados. Se reporta la robustez con el clasificador y el
+kNN del split por lesión y sobre el subconjunto limpio.}
+
+\section{Ejemplos cualitativos}
+\label{sec:res_gen_cualitativos}
+\pendiente{Se muestran reportes seleccionados que ilustran aciertos, diferenciales, derivaciones y errores
+típicos.}
+
+% Sección condicionada a que se concrete la evaluación con dermatólogos (septiembre--octubre 2026). Si no se
+% realiza, se elimina y queda como limitación.
+% \section{Evaluación por especialistas}
+% \label{sec:res_gen_especialistas}
+
+\section{Síntesis del capítulo}
+\label{sec:res_gen_sintesis}
+\pendiente{Se resume qué arquitectura resulta más fiel diagnósticamente y bajo qué condiciones.}

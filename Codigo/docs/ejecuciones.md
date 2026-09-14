@@ -39,6 +39,36 @@ desenfoque *y* resolución) + early-stop por pool. Regenerada: 2 ejemplos BKL (I
 ambos verificados visualmente coherentes con el caption. Docstrings del script corregidos (estaban invertidos).
 Compila limpio: 38 págs, 0 undefined, overfull máx 21.4pt (preexistente).
 
+## 2026-09-13
+
+### Split por lesión: barrido terminado + tanda C (semillas) — TOKO jobs 98041–98044 + 2 reenvíos
+Continúa la entrada del 2026-09-12. Cola vacía; `sync_down.py` + `scripts/lesion_split_report.py`
+(`outputs/results/lesion_split_report.json`). Resul: pendiente (después de las semillas).
+
+- **72/74 corridas OK.** Fallaron `swin_tiny_sweep_t04_les` (97983) y `convnext_tiny_sweep_t15_les` (97963),
+  ambas con `class_weights=auto`: crash del DataLoader (`worker killed by signal: Segmentation fault/Aborted`),
+  no un error de código. Reenviadas. No cambian el ganador: con `auto` el mejor val F1w es 0.808 (Swin) y
+  0.819 (ConvNeXt), frente a 0.850 y 0.848 de los ganadores.
+- **Ganadores en val (seed 42):** ambos `t06_les_cwnone` (sin pesos por clase). Swin: val F1w 0.850 → test acc
+  0.847, F1w 0.850, F1m 0.755, sensM 0.716, recall MEL 0.701. ConvNeXt: val 0.848 → test acc 0.840, F1m 0.711,
+  sensM 0.682, recall MEL 0.503. Con pesos por clase la sensM de test sube (hasta ~0.78) pero val F1w cae.
+  Selección por F1 ponderado → gana siempre `cwnone`; queda para discutir en el doc (criterio de selección
+  vs métrica prioritaria).
+- **Legacy/desbalance (`_les`):** DenseNet 0.812/sensM 0.672, ViT 0.814/0.664; Swin CE 0.860/0.707, focal
+  0.781/0.773, weighted 0.752/0.783.
+- **Calibración (Swin ganador):** sin pesos por clase ya está bien calibrado (ECE 0.040 → TS 0.027 → VS 0.014;
+  VS baja sensM 0.716 → 0.675). Confirma que la descalibración anterior venía de los pesos por clase.
+- **Ruteo (Swin nuevo + kNN del split por lesión):** afirmativo 80.1% (cobertura 0.915), diferencial 16.5%
+  (0.847), abstención 3.4%; cobertura no derivados 0.904.
+
+**Envíos:**
+```
+python scripts/toko/submit_sweep.py --model swin_tiny --lesion-split --class-weights none --trials t06 --seeds 43 44      # 98041-98042
+python scripts/toko/submit_sweep.py --model convnext_tiny --lesion-split --class-weights none --trials t06 --seeds 43 44  # 98043-98044
+python scripts/toko/submit_sweep.py --model swin_tiny --lesion-split --class-weights auto --trials t04    # reenvío
+python scripts/toko/submit_sweep.py --model convnext_tiny --lesion-split --class-weights auto --trials t15  # reenvío
+```
+
 ## 2026-09-12
 
 ### Split disjunto por lesión + selección en val + semillas — TOKO jobs 97933–98007 (73 jobs)

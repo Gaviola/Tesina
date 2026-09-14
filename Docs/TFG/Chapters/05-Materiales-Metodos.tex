@@ -1,0 +1,116 @@
+\chapter[Materiales y métodos]{Materiales y métodos}
+\label{cp:metodos}
+% Extensión estimada: 15--20 páginas.
+% Fuentes: sección "Configuración experimental" y subsecciones "Diseño del experimento" del documento de
+% experimentación, Propuesta (datasets, técnicas), planes en Codigo/docs/ideas/ (en particular
+% split_lesion_semillas_plan_20260912.md). Incorpora el protocolo unificado pedido en el feedback del tutor
+% del 12/09/2026 (Codigo/docs/feedback_20260912.md).
+
+\pendiente{Este capítulo describe todo lo necesario para reproducir los experimentos: datos, particiones,
+modelos, sistema propuesto y protocolo de evaluación. Los resultados se presentan en los capítulos
+siguientes.}
+
+\section{Metodología de trabajo}
+\label{sec:met_metodologia}
+\pendiente{Se describe el ciclo iterativo con registro sistemático: un plan con hipótesis y criterio de
+éxito, la ejecución y un resultado con veredicto binario. Se explica cómo este ciclo se refleja en la
+organización de los capítulos de resultados.}
+
+\section{Conjuntos de datos}
+\label{sec:met_datasets}
+
+\subsection{HAM10000}
+\pendiente{Se presentan la composición del conjunto, la distribución de clases y su desbalance.}
+
+\subsection{Particiones y auditoría de fuga de información}
+\label{sec:met_particiones}
+\pendiente{Se describe el split original, estratificado por imagen, y la fuga de información detectada: el
+36\% del test comparte lesión con entrenamiento (63\% en melanoma). Se explica cómo se cuantificó su efecto
+(subconjunto limpio y control con DermLIP \emph{zero-shot}) y cómo se construyó el split disjunto por lesión,
+con test idéntico y validación agrupada (\texttt{StratifiedGroupKFold}). Se detallan los tamaños finales y
+qué resultados se recalcularon o se reportan sobre el subconjunto limpio.}
+
+\subsection{SkinCaRe, MM-Skin y HIBA}
+\pendiente{Se describe el rol de cada conjunto: entrenamiento de la generación (SkinCAP y SkinCoT),
+evaluación con referencia (MM-Skin) y evaluación fuera de distribución (HIBA, solo test).}
+
+\subsection{Preprocesamiento y aumento de datos}
+\pendiente{Se detallan la resolución, la normalización, los aumentos de entrenamiento y el TTA.}
+
+\section{Modelos evaluados}
+\label{sec:met_modelos}
+
+\subsection{Clasificadores supervisados}
+\pendiente{Se describen DenseNet121, ViT-B/16, Swin-Tiny y ConvNeXt-Tiny: pre-entrenamiento, cabeza de
+clasificación, pérdidas y estrategias de desbalance evaluadas.}
+
+\subsection{Modelos visión--lenguaje médicos generales}
+\pendiente{Se presentan Mini-VLM (Phi-3.5-Vision) y LLaVA-Med: arquitectura, tamaño y motivo de su
+elección.}
+
+\subsection{Modelo visión--lenguaje dermatológico: DermLIP}
+\pendiente{Se describen la arquitectura y el pre-entrenamiento de DermLIP (Derm1M) y sus modos de uso:
+\emph{zero-shot}, \emph{linear probe}, kNN y SVM sobre \emph{embeddings}.}
+
+\subsection{Generador dermatológico: SkinVL}
+\pendiente{Se presenta SkinVL y el motivo de incluirlo como generador especializado de comparación.}
+
+\section{Clasificación con modelos visión--lenguaje}
+\label{sec:met_clasif_vlm}
+\pendiente{Se detallan las cuatro estrategias (\emph{zero-shot}, \emph{likelihood scoring},
+\emph{Chain-of-Thought} y ajuste fino con LoRA), con los prompts, el parseo de respuestas y la configuración
+de cada una.}
+
+\section{Generación de reportes}
+\label{sec:met_generacion}
+\pendiente{Se describen el ajuste fino del generador sobre SkinCaRe con LoRA, el formato del reporte y la
+configuración de decodificación.}
+
+\section{Sistema propuesto: ensamble en cascada consciente de la incertidumbre}
+\label{sec:met_sistema}
+
+\subsection{Cascada clasificador--generador (\emph{grounding})}
+\pendiente{Se explica por qué separar el diagnóstico de la redacción, cómo se inyecta el diagnóstico en el
+prompt y qué variantes se evalúan (clasificador, DermLIP y \emph{oracle} como cota superior). Un diagrama
+resume el sistema.}
+
+\subsection{Grounding por recuperación}
+\pendiente{Se describen la búsqueda de vecinos visuales con DermLIP (kNN, $k=3$) y la construcción del
+contexto.}
+
+\subsection{Ruteo por incertidumbre en tres niveles}
+\pendiente{Se explica cómo el acuerdo entre clasificador y kNN determina el nivel de cada caso (afirmativo,
+diferencial o abstención con derivación) y se presentan las plantillas de cada nivel.}
+
+\section{Protocolo de evaluación}
+\label{sec:met_protocolo}
+
+\subsection{Selección de modelos e hiperparámetros}
+\pendiente{Se describen los barridos y el criterio de selección (F1 ponderado en validación), aplicado también
+a la pérdida y al \emph{checkpoint}, de modo que el test no interviene en ninguna decisión. Los resultados
+se reportan como media $\pm$ desvío entre semillas.}
+
+\subsection{Protocolos de inferencia}
+\pendiente{Una tabla única indica, para cada resultado reportado, si se usa vista única o TTA, qué
+\emph{checkpoint} y qué partición.}
+
+\subsection{Métricas}
+\pendiente{Se justifican las métricas de clasificación (sensibilidad macro como principal y F1 macro como
+complemento), de detección de melanoma (umbral de especificidad $\geq 0.85$ fijado en validación), de
+calibración y de generación (Nivel 1 con referencia; Nivel 2 con \emph{clinical entity recall} y
+\emph{diagnostic consistency}). Se distingue entre fidelidad diagnóstica y validez clínica.}
+
+\subsection{Análisis estadístico}
+\pendiente{Se indica qué intervalo o prueba corresponde a cada métrica y comparación: \emph{bootstrap}
+pareado para diferencias de métricas agregadas, McNemar para aciertos por imagen y Wilcoxon para
+\emph{recall} por clase.}
+
+\subsection{Robustez, calibración e interpretabilidad}
+\pendiente{Se describen la evaluación en HIBA, las perturbaciones de adquisición, la calibración post-hoc
+ajustada en validación y el uso de Grad-CAM.}
+
+\section{Infraestructura y reproducibilidad}
+\label{sec:met_infra}
+\pendiente{Se describen los recursos de cómputo (GPU local RTX 4070, clúster TOKO con RTX 4080 y Mendieta con
+A30), el uso de SLURM, el seguimiento de experimentos y la organización del código y del registro de
+ejecuciones. El detalle está en el Apéndice~\ref{ap:reproducibilidad}.}

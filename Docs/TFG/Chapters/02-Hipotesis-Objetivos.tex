@@ -1,0 +1,103 @@
+\chapter[Hipótesis y objetivos]{Hipótesis y objetivos}
+\label{cp:hipotesis}
+% Extensión estimada: 4--5 páginas.
+% Fuentes: PLAN_TFG_GAVIOLA_FACUNDO.pdf (plan aprobado, 25/11/2025: objetivos, metodología en dos fases,
+% actividades A--I) y el registro de ejecuciones (Codigo/docs/ejecuciones.md) para fechar las hipótesis que
+% surgieron durante el trabajo.
+% Criterio: el plan no enuncia hipótesis explícitas; las de partida se derivan de su metodología. Las demás
+% se presentan en el orden en que se formularon, para no presentarlas como previstas desde el inicio.
+
+\pendiente{Este capítulo presenta las preguntas de investigación, las hipótesis y los objetivos del trabajo.
+Las preguntas y los objetivos provienen del plan de trabajo aprobado. Las hipótesis se separan en dos grupos
+según cuándo se formularon: las de partida, implícitas en el plan, y las que surgieron del análisis de los
+resultados durante el trabajo. Cada una remite a la sección donde se contrasta.}
+
+\section{Preguntas de investigación}
+\label{sec:preguntas}
+\pendiente{Las preguntas corresponden a las dos fases de la metodología del plan de trabajo:
+\begin{enumerate}[label=\textbf{PI\arabic*.}]
+  \item ¿En qué medida un modelo visión--lenguaje aporta mejoras reales frente a modelos orientados
+  exclusivamente a visión (CNN y ViT) en el diagnóstico de lesiones de piel, en particular en la
+  identificación de melanoma?
+  \item ¿Qué tan precisos, completos y clínicamente relevantes resultan los reportes generados
+  automáticamente por un VLM ajustado a partir de la imagen?
+\end{enumerate}}
+
+\section{Hipótesis}
+\label{sec:hipotesis}
+
+\subsection{Hipótesis de partida}
+\label{sec:hipotesis_partida}
+\pendiente{Estas hipótesis están implícitas en el plan de trabajo, formulado antes de la experimentación:
+\begin{enumerate}[label=\textbf{H\arabic*.}]
+  \item Un VLM, al integrar información visual y textual, alcanza en el diagnóstico de lesiones de piel un
+  desempeño comparable o superior al de una CNN y un ViT entrenados sobre los mismos datos
+  (Capítulo~\ref{cp:res_clasif}).
+  \item Un VLM ajustado para generación puede producir reportes clínicos precisos y coherentes a partir de la
+  imagen (Capítulo~\ref{cp:res_gen}).
+\end{enumerate}}
+
+\subsection{Hipótesis surgidas durante el trabajo}
+\label{sec:hipotesis_emergentes}
+\pendiente{Estas hipótesis se formularon a partir de los resultados y se presentan en el orden en que
+surgieron, indicando qué resultado motivó cada una:
+\begin{enumerate}[label=\textbf{H\arabic*.}, start=3]
+  \item El bajo desempeño de los VLMs generales en clasificación se explica por el desbalance de clases.
+  Surge tras refutarse H1.
+  \item La especialización de dominio del modelo visión--lenguaje recupera la capacidad de discriminar entre
+  clases. Surge tras refutarse H3, al observarse el colapso también en \emph{zero-shot}.
+  \item Anclar el generador al diagnóstico de un clasificador especializado (ensamble en cascada) mejora la
+  fidelidad diagnóstica de los reportes respecto de la generación directa. Surge al observar que H2 se
+  cumple solo parcialmente: los reportes son ricos pero diagnósticamente poco fieles.
+  \item Incorporar la incertidumbre del clasificador (afirmar, ofrecer un diferencial o derivar) mejora la
+  fidelidad diagnóstica sobre los casos no derivados. Surge del análisis de errores de la cascada.
+\end{enumerate}}
+
+\section{Objetivos}
+\label{sec:objetivos}
+
+\subsection{Objetivo general}
+\pendiente{El objetivo general es desarrollar y evaluar un modelo de
+visión--lenguaje capaz de asistir en el diagnóstico de lesiones cutáneas y en la generación automática de
+reportes clínicos estructurados a partir de imágenes dermatológicas, con el fin de mejorar la precisión
+diagnóstica y optimizar el flujo de trabajo en el estudio de lesiones de piel.}
+
+\subsection{Objetivos específicos}
+\pendiente{Los objetivos específicos del plan de trabajo son:
+\begin{enumerate}[label=\textbf{OE\arabic*.}]
+  \item Diseñar, implementar y evaluar modelos de detección, entre ellos de \emph{deep learning} y VLM, para
+  identificar posibles melanomas malignos.
+  \item Diseñar y entrenar un modelo visión--lenguaje capaz de integrar información visual y textual para
+  producir diagnósticos preliminares y reportes automáticos de lesiones cutáneas.
+  \item Evaluar el desempeño del modelo en diferentes escenarios clínicos, analizando su precisión
+  diagnóstica, coherencia textual y utilidad práctica para el flujo de trabajo en dermatología.
+\end{enumerate}}
+
+\section{Evolución respecto del plan de trabajo}
+\label{sec:evolucion_plan}
+\pendiente{Esta sección explica, en orden cronológico, cómo se concretó cada objetivo y en qué puntos el
+trabajo se apartó del plan, y por qué:
+\begin{itemize}
+  \item \textbf{OE1.} La comparación CNN--ViT--VLM se amplió a cuatro estrategias de uso de VLMs y, tras su
+  colapso, a un modelo visión--lenguaje dermatológico. La detección de melanoma se evalúa como tarea binaria
+  derivada de la clasificación en siete clases.
+  \item \textbf{OE2.} No se entrena un VLM desde cero: se ajustan VLMs existentes con LoRA sobre datos con
+  texto. Como la generación directa resultó diagnósticamente poco fiel, el plan de no comparar la generación
+  contra otros enfoques se reemplaza por un ensamble en cascada con el clasificador especializado.
+  \item \textbf{OE3.} Los ``escenarios clínicos'' se concretan como robustez a otra población (HIBA) y a
+  condiciones de adquisición, calibración de probabilidades y manejo de la incertidumbre. La utilidad
+  práctica para el flujo de trabajo no puede establecerse con métricas automáticas.
+  \item \textbf{Métricas de generación.} A las métricas de similitud previstas (BERTScore, similitud,
+  Jaccard) se agrega la consistencia diagnóstica, porque la similitud textual no detecta reportes con el
+  diagnóstico equivocado.
+  \item \textbf{Datos.} Se trabaja con HAM10000 (derivado de ISIC 2018) en lugar de PH2, con SkinCaRe y
+  MM-Skin para generación y con HIBA para validación externa. Las imágenes histopatológicas quedan fuera
+  del alcance.
+\end{itemize}}
+
+\section{Alcance y delimitación}
+\label{sec:alcance}
+\pendiente{El trabajo abarca imágenes dermatoscópicas (HAM10000) como dominio principal, entiende la
+detección como clasificación y no como localización, evalúa con métricas automáticas (la validez clínica
+requiere especialistas) y se restringe a modelos que corren en GPUs de consumo. No se desarrolla un producto
+para uso clínico.}

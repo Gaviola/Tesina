@@ -1,0 +1,107 @@
+% !LW recipe=latexmk (xelatex)
+% Tesina de grado -- Licenciatura en Ciencias de la Computación
+% Autor: Facundo Tomás Gaviola
+%
+% Basado en la plantilla UMU Thesis v1.1.0 (Enrique Pérez Navarro), adaptación de ipleiria-thesis
+% (José Areia). La plantilla original, sin modificar, está en Tesis_Universidad_de_Murcia__UMU_/.
+%
+% Compilación: XeLaTeX con -shell-escape (minted) y biber.
+%     latexmk -xelatex -shell-escape tesina.tex
+%
+% Estado: ESTRUCTURA. Cada capítulo contiene sus secciones con un recuadro "Pendiente" (\pendiente) que
+% describe el contenido previsto. Las fuentes de cada capítulo y la extensión estimada figuran como
+% comentarios (% Fuentes: / % Extensión estimada:). Los recuadros se eliminan a medida que se redacta.
+
+%%% Opciones del documento %%%
+\documentclass[
+    language=spanish,
+    docstage=working,
+    media=screen,
+    linkcolor=black,
+    chapterstyle=fancy,
+]{UMUthesis}
+
+\DocumentVersion{0.1.0 (estructura)}
+
+%%% Marcadores de contenido pendiente (\pendiente, \listadependientes) %%%
+\usepackage{Configurations/12-Pendientes}
+
+%%% Metadatos %%%
+\input{Metadata/Metadata}
+
+%%% Glosario y acrónimos %%%
+\makeglossaries
+\loadglsentries{Matter/04-Glossary}
+\loadglsentries[\acronymtype]{Matter/05-Acronyms}
+% Lista todos los acrónimos definidos aunque todavía no se usen con \gls en el texto.
+% Requiere que latexmk ejecute makeglossaries (configurado en .latexmkrc).
+\glsaddall[types={\acronymtype}]
+
+\begin{document}
+
+%%% Portadas %%%
+\include{Matter/00-Cover}
+\include{Matter/01-Front-Page}
+
+%%% Declaración de autoría %%%
+% La plantilla incluye la declaración de la UMU. Reemplazar por la que exija la UNCuyo (si corresponde)
+% antes de reactivar esta línea.
+% \include{Matter/02-Copyright}
+\pagenumbering{gobble}
+
+%%% Numeración romana %%%
+\pagenumbering{roman}
+
+%%% Dedicatoria y agradecimientos %%%
+\include{Matter/03-Dedication}
+\include{Matter/04-Acknowledgements}
+
+%%% Resumen / Abstract %%%
+\include{Chapters/00-Resumen}
+
+%%% Índices %%%
+\bookmarktocentry\tableofcontents
+\listoffigures
+\listoftables
+\listadependientes % Solo con docstage=working.
+
+%%% Acrónimos %%%
+\acronymtoc\printglossary[type=\acronymtype,title={Acrónimos},nonumberlist]
+
+%%% Numeración arábiga %%%
+\cleardoublepage
+\pagenumbering{arabic}
+
+%%% Capítulos %%%
+\include{Chapters/01-Introduccion}
+\include{Chapters/02-Hipotesis-Objetivos}
+\include{Chapters/03-Marco-Teorico}
+\include{Chapters/04-Estado-del-Arte}
+\include{Chapters/05-Materiales-Metodos}
+\include{Chapters/06-Resultados-Clasificacion}
+\include{Chapters/07-Resultados-Generacion}
+\include{Chapters/08-Costo-Computacional}
+\include{Chapters/09-Discusion}
+\include{Chapters/10-Conclusiones}
+
+%%% Bibliografía %%%
+\renewcommand{\refname}{Bibliografía}
+\printbibliography[title={\refname},heading=bibintoc]
+
+%%% Apéndices: material desarrollado por el autor %%%
+\appendix
+\input{Matter/06-Appendices}
+\input{Chapters/Apendices/A-Hiperparametros}
+\input{Chapters/Apendices/B-Prompts}
+\input{Chapters/Apendices/C-Resultados-Complementarios}
+% \input{Chapters/Apendices/D-Rubrica-Clinica} % Pendiente: se incorpora si se concreta la evaluación con especialistas.
+\input{Chapters/Apendices/E-Reproducibilidad}
+
+%%% Anexos: material no desarrollado por el autor %%%
+\input{Matter/07-Annexes}
+\input{Chapters/Anexos/A-Fichas-Datasets-Modelos}
+
+%%% Contraportada %%%
+\input{Matter/08-Back-Page}
+
+\end{document}
