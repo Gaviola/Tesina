@@ -3,12 +3,14 @@
 Plan_TFG_GAVIOLA_FACUNDO.pdf
 .vscode/
 
-# LaTeX build artifacts in Docs/ — keep only .tex, .pdf, .bib, and images
+# LaTeX build artifacts in Docs/ — keep only .tex, .pdf, .bib, .md, and images
 Docs/**/*
 !Docs/**/
 !Docs/**/*.tex
 !Docs/**/*.pdf
 !Docs/**/*.bib
+!Docs/**/*.md
+!Docs/TFG/Bibliography/*.py
 !Docs/**/imagenes/
 !Docs/**/imagenes/**
 # VS Code LaTeX Workshop output folders

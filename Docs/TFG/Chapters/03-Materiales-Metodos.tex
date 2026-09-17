@@ -13,13 +13,13 @@
 %  - La subsección "Métricas" repetía el marco teórico. Se fusiona con la de selección: el marco teórico
 %    define qué es cada métrica, aquí se justifica cuál se usa para decidir.
 %  - "Robustez, calibración e interpretabilidad" no decía a qué se refería; se renombra por extenso.
-%  - Sobre "Sistema propuesto": el tutor sugiere "pipeline". Se deja "sistema" por ahora, según su propia
-%    indicación, y se revisa cuando el capítulo esté redactado.
+%  - "Sistema propuesto" pasa a llamarse "pipeline", que es el término corriente en el área para la
+%    arquitectura completa: clasificador, kNN y generador encadenados.
 %  - Se incorpora aquí "Uso de un VLM generativo como clasificador", que estaba en el marco teórico pese a
 %    ser parte del enfoque propio.
 
 \pendiente{Este capítulo describe todo lo necesario para reproducir los experimentos: datos, particiones,
-modelos, sistema propuesto y protocolo de evaluación. Los resultados se presentan en los capítulos
+modelos, \emph{pipeline} y protocolo de evaluación. Los resultados se presentan en los capítulos
 siguientes.}
 
 \section{Metodología de trabajo}
@@ -87,13 +87,13 @@ y ajuste fino con LoRA— junto con los prompts, el parseo de respuestas y la co
 \pendiente{Se describen el ajuste fino del generador sobre SkinCaRe con LoRA, el formato del reporte y la
 configuración de decodificación.}
 
-\section{Sistema propuesto: ensamble en cascada consciente de la incertidumbre}
-\label{sec:met_sistema}
+\section{Pipeline propuesto: ensamble en cascada consciente de la incertidumbre}
+\label{sec:met_pipeline}
 
 \subsection{Cascada clasificador--generador (\emph{grounding})}
 \pendiente{Se explica por qué separar el diagnóstico de la redacción, cómo se inyecta el diagnóstico en el
 prompt y qué variantes se evalúan (clasificador, DermLIP y \emph{oracle} como cota superior). Un diagrama
-resume el sistema.}
+resume el pipeline.}
 
 \subsection{Grounding por recuperación}
 \pendiente{Se describen la búsqueda de vecinos visuales con DermLIP (kNN, $k=3$) y la construcción del

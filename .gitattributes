@@ -1,0 +1,10 @@
+# Los PDF son binarios: no tiene sentido intentar un diff textual.
+*.pdf -diff
+
+# tesina.pdf es un artefacto generado a partir de los .tex. Se compila y se
+# commitea en cualquier rama, pero su conflicto de merge nunca se resuelve a
+# mano: se toma cualquiera de las dos versiones y se recompila. El driver
+# "keep-ours" hace justamente eso (se registra con git config; si no está
+# registrado, git cae en el merge binario habitual y hay que resolverlo con
+# `git checkout --ours` y recompilar).
+Docs/TFG/tesina.pdf -diff merge=keep-ours
