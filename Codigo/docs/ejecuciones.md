@@ -39,6 +39,108 @@ desenfoque *y* resolución) + early-stop por pool. Regenerada: 2 ejemplos BKL (I
 ambos verificados visualmente coherentes con el caption. Docstrings del script corregidos (estaban invertidos).
 Compila limpio: 38 págs, 0 undefined, overfull máx 21.4pt (preexistente).
 
+## 2026-09-17
+
+### Decisión: el ganador del barrido se elige por F1 macro en validación
+Cierra la tensión que quedaba abierta en la entrada del 2026-09-15. Plan:
+`docs/ideas/criterio_seleccion_plan_20260917.md`. Sin jobs: es una decisión de selección sobre
+resultados ya existentes.
+
+- **El F1 ponderado queda descartado como criterio**: está dominado por NV (67 % de los datos) y
+  excluía sistemáticamente las corridas con pesos por clase.
+- **La sensibilidad macro sola también queda descartada**: ignora los falsos positivos, así que
+  elegir por ella premia sobre-predecir las minoritarias. Con ese criterio Swin pasaba a
+  `t02_les` y perdía 12 puntos de exactitud y 14 de F1 macro (0.755 → 0.611).
+- **Se elige F1 macro en validación**: balanceado por clase y penaliza falsos positivos. La
+  sensibilidad macro sigue siendo la métrica principal de reporte en test.
+- **Ganadores con el criterio nuevo** (seed 42, sin TTA):
+  - Swin-Tiny: `t06_les_cwnone`, **no cambia**; conserva las semillas 42/43/44.
+  - ConvNeXt-Tiny: `t06_les_cwnone` → **`t02_les_cwnone`**, que mejora en todo respecto del
+    anterior: acc 0.840 → 0.845, F1m 0.711 → 0.727, sensM 0.682 → 0.694, recall MEL 0.503 → 0.599.
+- **Dos niveles de selección, solo cambia uno.** El *checkpoint* dentro de cada corrida se sigue
+  eligiendo por F1 ponderado (`trainer.py:188`, `monitor: val_f1`); cambiarlo obligaría a reentrenar
+  las 60 corridas. El documento tiene que decirlo con precisión.
+- **Pendiente de ejecución:** semillas 43/44 y HIBA del ConvNeXt nuevo. Hasta que estén, su fila es
+  de una sola semilla y la mejora de recall MEL (+0.096) es de ~1.5 desvíos, sugestiva y no firme.
+
+**Resul:** pendiente, junto con el del split por lesión (`docs/resul/split_lesion_resul_*.md`).
+
+### Semillas + HIBA del criterio nuevo, y dos arreglos aguas abajo — TOKO jobs 98243-98246
+Los 4 jobs terminaron el 2026-09-17 sin errores (early stopping ~17 épocas, 3-8 min cada uno).
+`sync_down.py` + `scripts/lesion_split_report.py`.
+
+- **Ganador nuevo de ConvNeXt con tres semillas** (`t02_les_cwnone`): acc 0.843±0.005,
+  F1w 0.840±0.005, **F1m 0.727±0.007**, sensM 0.691±0.009, recall MEL 0.553±0.042.
+  Contra el anterior (`t06_les_cwnone`): F1m 0.723±0.013, sensM 0.700±0.018, MEL 0.535±0.028.
+  **Criterio de éxito del plan: cumplido** — el F1 macro sube (0.723 → 0.727) y le baja la varianza
+  a la mitad; la sensibilidad macro cede 0.009, dentro del desvío anterior.
+- **La mejora de melanoma de la semilla 42 era ruido.** +0.096 con una semilla (0.503 → 0.599) queda
+  en +0.018 con tres (0.535 → 0.553), dentro del ±0.042. Segundo caso del mismo fenómeno que la
+  entrada del 2026-09-15: las métricas de clases minoritarias no se leen con una semilla.
+- **Primera validación externa en HIBA con el split por lesión.** Las únicas corridas con HIBA que
+  existían eran del barrido por imagen (`convnext_tiny_sweep_t06_hiba`, `swin_tiny_sweep_t08_hiba`).
+  Ahora: Swin HAM 0.847/sensM 0.716 → HIBA (n=1616) **0.546/0.424**; ConvNeXt HAM 0.845/0.694 →
+  HIBA **0.558/0.447**. Caída de ~30 puntos de exactitud en los dos, del mismo orden. El recall de
+  melanoma en HIBA queda en 0.455 (Swin) y 0.435 (ConvNeXt), por debajo de lo que dan en HAM10000
+  (0.623±0.071 y 0.553±0.042): la clase prioritaria es también la que peor generaliza.
+  `--rerun-hiba` no servía (reentrena sin `--lesion-split` ni `--class-weights`): se agregó
+  `--eval-hiba` al camino normal de `submit_sweep.py`.
+- **Perturbaciones: error de preprocesamiento, anterior a este cambio.**
+  `robustness_perturbations.py` evaluaba con `center_crop=False` (Resize cuadrado, legacy) modelos
+  de receta `modern`, que entrena y evalúa con Resize(256)+CenterCrop(224). El baseline de Swin daba
+  sensM 0.620 en lugar de 0.700. Corregido, y el script pasa a usar los checkpoints del split por
+  lesión en vez de los `*_modern_v3`. Resultados nuevos (sens. macro, severidad 0→5):
+  - Swin (base 0.700): ruido 0.572/0.409/0.221/0.156/0.143 · blur 0.629/0.429/0.286/0.235/0.201 ·
+    JPEG 0.644/0.619/0.577/0.468/0.177 · resolución 0.668/0.614/0.519/0.400/0.249.
+  - ConvNeXt (base 0.680): ruido 0.514/0.305/0.187/0.156/0.143 · blur 0.606/0.571/0.487/0.434/0.272 ·
+    JPEG 0.635/0.591/0.532/0.396/0.157 · resolución 0.650/0.657/0.616/0.548/0.425.
+  - **ConvNeXt aguanta bastante mejor la degradación espacial** (blur sev3 0.487 vs 0.286 de Swin;
+    resolución sev5 0.425 vs 0.249), mientras que Swin resiste algo mejor el ruido en severidad
+    baja. El 0.143 al que caen los dos es 1/7: colapso a una sola clase.
+  - El ruido gaussiano es la perturbación más dañina y la pérdida de resolución la más benigna, en
+    los dos modelos.
+- **El anclaje de la cascada sigue en v3.** Los dos Swin coinciden en 80.6% del test: cambian 291
+  diagnósticos (19.4%), y el anclaje nuevo es más exacto (0.795 → 0.847) y sobre-predice mucho menos
+  melanoma (279 → 221 casos, contra 167 reales). `outputs/full_dx_swin_les.csv` generado con el
+  script nuevo `scripts/make_dx_csv.py`. **Regenerar los reportes es una campaña de ~5000-6000
+  reportes en Mendieta: pendiente de decidir el alcance.**
+- Descartado: la sospecha de que el informe mezclaba números con y sin TTA. Todo el barrido es con
+  TTA; ver el plan.
+
+**Resul:** pendiente, junto con el del split por lesión (`docs/resul/split_lesion_resul_*.md`).
+
+### Re-anclaje de la cascada al split por lesión — Mendieta jobs 1177953-1177955
+Enviados el 2026-09-17, alcance «titulares»: `full_swin_les` con los tres generadores (1503 cada
+uno) y `full_differential_les` con Mini-VLM y LLaVA-Med. Scripts nuevos en `slurm/mendieta/v4/`,
+registrados en `submit.py` como `reanchor_{mini,llava,skinvl}`. Quedan afuera los brazos de RAG y
+`full_uncertainty` (400 cada uno), que son complementarios.
+
+- **Anclaje nuevo:** `outputs/full_dx_swin_les.csv`, generado con `scripts/make_dx_csv.py` desde
+  `swin_tiny_sweep_t06_les_cwnone`. Cambian 291/1503 diagnósticos (19.4%); exactitud del anclaje
+  0.795 → 0.847; melanomas predichos 279 → 221 (reales: 167).
+- **La calibración estaba mal, y era peor que el anclaje.** `temperature_scaling.py` tenía fijos el
+  checkpoint `swin_tiny_modern_v3` **y** el split aleatorio, cuyo val se solapa con el train del
+  split por lesión: ajustaba la temperatura sobre imágenes que el modelo ya había visto. Ambos
+  parametrizados. Antes → ahora: T 0.527 → 0.850, τ 0.930 → 0.680, **ECE test crudo 0.394 → 0.040**,
+  calibrado 0.344 → 0.027, casos inconfiados 1278 (85%) → **199 (13%)**. Los números viejos eran
+  implausibles y nadie los había mirado de cerca.
+- **El ruteo de 3 niveles cambia y los números bajan** (`build_uncertainty_3tier.py` con
+  `full_dx_swin_les.csv` + `rag_context_les.csv`, que ya existía del 12/09):
+
+  | Nivel | v3 | split por lesión |
+  |---|---|---|
+  | Afirmativo | 1111 (74%), acc 0.944 | 1204 (80%), acc 0.915 |
+  | Diferencial | 334 (22%), cobertura 0.898 | 248 (17%), 0.847 |
+  | Abstención | 58 (4%), 0.793 | 51 (3%), 0.647 |
+  | Cobertura de lo presentado | 0.934 | **0.904** |
+
+  El conjunto diferencial no solo se achica: son **otras** imágenes, así que el brazo se regenera
+  con lista nueva (`uncertainty_differential_les.csv`), no se re-prompearon los mismos casos.
+- Los brazos `full_baseline`, `full_oracle`, `full_dermlip`, `full_oracle_noimage` y
+  `full_wrong_swap` no dependen del Swin y no se tocan.
+
+**Resul:** pendiente hasta que bajen los reportes.
+
 ## 2026-09-15
 
 ### Semillas 43/44 + reenvíos: cierre del split por lesión — TOKO jobs 98041–98046

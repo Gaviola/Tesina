@@ -40,7 +40,12 @@ DX_FULL = {
     "AKIEC": "actinic keratosis", "BKL": "benign keratosis",
     "DF": "dermatofibroma", "VASC": "vascular lesion",
 }
-CKPT = "outputs/checkpoints/swin_tiny_modern_v3/best_model.pt"
+# Ganador del barrido sobre el split disjunto por lesión (ver
+# docs/ideas/criterio_seleccion_plan_20260917.md). El checkpoint y el archivo de particiones van
+# juntos: la temperatura se ajusta en el val del MISMO split con el que se entrenó el modelo, o se
+# calibra sobre imágenes que el modelo ya vio.
+CKPT = "outputs/checkpoints/swin_tiny_sweep_t06_les_cwnone/best_model.pt"
+SPLITS = "splits/ham10000_splits_lesion.json"
 
 
 def _probs_for_split(model, split, device, dtype, splits_file, data_root):
@@ -96,14 +101,18 @@ def main():
     parser.add_argument("--topk", type=int, default=3)
     parser.add_argument("--data-dir", type=str, default="data")
     parser.add_argument("--output", type=str, default="outputs/uncertainty/uncertainty.csv")
+    parser.add_argument("--checkpoint", type=str, default=CKPT)
+    parser.add_argument("--splits-file", type=str, default=None, dest="splits_file",
+                        help=f"Default: <data-dir>/{SPLITS}")
     args = parser.parse_args()
 
     set_seed(42)
     device = get_device(); dtype = get_training_dtype()
-    splits_file = str(Path(args.data_dir) / "splits" / "ham10000_splits.json")
+    splits_file = args.splits_file or str(Path(args.data_dir) / SPLITS)
     data_root = str(Path(args.data_dir) / "processed" / "HAM10000")
     model = build_model({"name": "swin_tiny", "num_classes": 7})
-    ck = torch.load(CKPT, map_location="cpu", weights_only=False)
+    logger.info("Checkpoint: %s | particiones: %s", args.checkpoint, splits_file)
+    ck = torch.load(args.checkpoint, map_location="cpu", weights_only=False)
     model.load_state_dict(ck.get("model_state_dict", ck), strict=True)
     model.to(device)
 

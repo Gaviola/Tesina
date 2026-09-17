@@ -17,7 +17,10 @@ Uso:
   # Semillas extra del trial ganador (selección hecha en validación):
   python scripts/toko/submit_sweep.py --model swin_tiny --lesion-split --class-weights none --trials t08 --seeds 43 44
 
-  # Re-run del mejor trial con --eval-hiba (OOD evaluation):
+  # Validación externa en HIBA del ganador del split por lesión (respeta las banderas):
+  python scripts/toko/submit_sweep.py --model convnext_tiny --lesion-split       --class-weights none --trials t02 --eval-hiba
+
+  # Re-run del mejor trial del barrido POR IMAGEN con --eval-hiba (no usa el split por lesión):
   python scripts/toko/submit_sweep.py --rerun-hiba convnext_tiny t06
   python scripts/toko/submit_sweep.py --rerun-hiba swin_tiny t08
 
@@ -28,7 +31,10 @@ Los resultados se sincronizan localmente con:
 Para comparar los trials buscar en outputs/wandb/:
   wandb sync outputs/wandb/
 
-El mejor trial se identifica por val_f1_weighted en el log de wandb.
+El mejor trial se identifica por F1 macro en validación (ver
+docs/ideas/criterio_seleccion_plan_20260917.md). El val_f1 que loguea wandb es el
+ponderado, que es el que monitorea el callback de checkpoint, no el criterio de
+selección entre trials: ese se calcula en scripts/lesion_split_report.py.
 """
 
 import argparse
@@ -57,7 +63,8 @@ _TIME_LIMIT = "12:00:00"
 _LESION_SPLIT = "data/splits/ham10000_splits_lesion.json"
 
 
-def _run_name(model: str, t: str, lesion_split: bool, class_weights: str, seed: int) -> str:
+def _run_name(model: str, t: str, lesion_split: bool, class_weights: str, seed: int,
+               eval_hiba: bool = False) -> str:
     name = f"{model}_sweep_{t}"
     if lesion_split:
         name += "_les"
@@ -65,11 +72,16 @@ def _run_name(model: str, t: str, lesion_split: bool, class_weights: str, seed: 
         name += "_cwnone"
     if seed != 42:
         name += f"_s{seed}"
+    if eval_hiba:
+        # El sufijo deja la corrida fuera del ranking del barrido (ver RUN_RE en
+        # scripts/lesion_split_report.py): es una re-corrida para validación externa, no un trial.
+        name += "_hiba"
     return name
 
 
 def _build_slurm_script(model: str, trial: dict, lesion_split: bool = False,
-                        class_weights: str = "auto", seed: int = 42) -> str:
+                        class_weights: str = "auto", seed: int = 42,
+                        eval_hiba: bool = False) -> str:
     """Genera el script SLURM completo para un trial del sweep.
 
     Con los defaults reproduce exactamente el sweep v4 original (split por imagen, class weights, seed 42).
@@ -78,10 +90,12 @@ def _build_slurm_script(model: str, trial: dict, lesion_split: bool = False,
     lr = trial["lr"]
     wd = trial["weight_decay"]
     m = trial["randaugment_m"]
-    run_name = _run_name(model, t, lesion_split, class_weights, seed)
+    run_name = _run_name(model, t, lesion_split, class_weights, seed, eval_hiba)
     extra = f"--class-weights {class_weights}"
     if lesion_split:
         extra += f" --splits-file {_LESION_SPLIT} --eval-best-checkpoint --save-val-predictions"
+    if eval_hiba:
+        extra += " --eval-hiba"
 
     # Formato legible para floats en bash (evita notación científica con 'e+')
     lr_str = f"{lr:.2e}"
@@ -150,10 +164,11 @@ rm -rf "$TMPDIR"
 
 
 def submit_trial(model: str, trial: dict, dry_run: bool, lesion_split: bool = False,
-                 class_weights: str = "auto", seed: int = 42) -> str | None:
+                 class_weights: str = "auto", seed: int = 42,
+                 eval_hiba: bool = False) -> str | None:
     t = trial["trial"]
-    run_name = _run_name(model, t, lesion_split, class_weights, seed)
-    script = _build_slurm_script(model, trial, lesion_split, class_weights, seed)
+    run_name = _run_name(model, t, lesion_split, class_weights, seed, eval_hiba)
+    script = _build_slurm_script(model, trial, lesion_split, class_weights, seed, eval_hiba)
     print(f"  Enviando {run_name} "
           f"(lr={trial['lr']:.2e}, wd={trial['weight_decay']}, m={trial['randaugment_m']})...")
 
@@ -305,6 +320,11 @@ def main():
                         help="auto = sweep v4 original; both = duplica el grid (con y sin class weights)")
     parser.add_argument("--trials", nargs="+", default=None, help="Subconjunto de trials (ej: t08)")
     parser.add_argument("--seeds", nargs="+", type=int, default=[42], help="Semillas (default: 42)")
+    parser.add_argument("--eval-hiba", action="store_true",
+                        help="Evaluar también en HIBA (validación externa). A diferencia de "
+                             "--rerun-hiba, respeta --lesion-split, --class-weights y --seeds, así que "
+                             "es la opción correcta para los ganadores del split por lesión. El run "
+                             "lleva sufijo _hiba.")
     parser.add_argument("--print-script", action="store_true", help="Con --dry-run, imprime el script")
     args = parser.parse_args()
 
@@ -360,7 +380,7 @@ def main():
             if args.dry_run and args.print_script:
                 print(_build_slurm_script(model, trial, args.lesion_split, cw, sd))
             jid = submit_trial(model, trial, dry_run=args.dry_run, lesion_split=args.lesion_split,
-                               class_weights=cw, seed=sd)
+                               class_weights=cw, seed=sd, eval_hiba=args.eval_hiba)
             if jid:
                 model_jobids.append(jid)
         all_jobids.extend(model_jobids)

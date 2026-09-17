@@ -76,7 +76,7 @@ los capítulos.
 | F1 ponderado, F1 macro | F1-score, puntaje F1 | |
 | ajuste fino | *fine-tuning* | El anglicismo solo en la definición inicial |
 | conjunto de datos | *dataset* | |
-| reporte | informe | Consistencia con el título de la tesina |
+| reporte | informe | Consistencia con el título de la tesina. **«Reporte» designa únicamente el informe clínico**: no se lo usa en el sentido de «lo que se reporta». Para eso se dice «métrica de selección» (con qué se elige el modelo, en validación) y «resultado principal» (qué número se presenta, en test) |
 | fidelidad diagnóstica | precisión diagnóstica | Es la métrica sin referencia, no una *precision* |
 
 **Prohibido:** la palabra «caveat» en cualquier contexto.

@@ -114,8 +114,16 @@ melanoma, las métricas de calibración y las dos de generación (Nivel 1 con re
 \emph{clinical entity recall} y \emph{diagnostic consistency}), con la distinción entre fidelidad diagnóstica
 y validez clínica.
 
-Se describen a continuación los barridos de hiperparámetros y el criterio de selección en validación,
-aplicado también a la pérdida y al \emph{checkpoint}, de modo que el test no interviene en ninguna decisión.
+Se describen a continuación los barridos de hiperparámetros y el criterio de selección, que opera
+enteramente en validación: el test no interviene en ninguna decisión. Hay que distinguir dos niveles. El
+\emph{checkpoint} de cada corrida es la época con mejor F1 ponderado en validación. La corrida ganadora
+entre las del barrido, en cambio, se elige por \emph{F1 macro} en validación, porque el F1 ponderado está
+dominado por la clase mayoritaria ---NV es el 67\,\% de las imágenes--- y la sensibilidad macro, que sería
+la alternativa natural por ser la métrica principal de este trabajo, ignora los falsos positivos y por lo
+tanto premia a los modelos que sobre-predicen las clases minoritarias. El F1 macro es el único de los tres
+que pondera las clases por igual y a la vez penaliza los falsos positivos. La sensibilidad macro se reporta
+como resultado principal, pero no se usa para elegir.
+
 Los resultados se reportan como media $\pm$ desvío entre semillas.}
 
 \subsection{Protocolos de inferencia}

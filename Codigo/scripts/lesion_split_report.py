@@ -4,7 +4,9 @@ Opera sobre lo que haya en outputs/results/ (se puede correr con resultados parc
 único JSON + salida por consola, todos los números que alimentan el documento:
 
   1. Selección SOLO en validación: para cada modelo y cada variante de pérdida, ranking de los trials por
-     F1 ponderado en val (mismo criterio que el checkpoint). El test se muestra al lado, sin intervenir.
+     F1 macro en val: es balanceado por clase, a diferencia del F1 ponderado que está dominado por NV, y
+     penaliza los falsos positivos, a diferencia de la sensibilidad macro. La sensibilidad macro sigue
+     siendo la métrica principal de reporte en test. El test se muestra al lado, sin intervenir.
   2. Ganador por modelo (entre las dos pérdidas, también por val) y sus semillas: media ± desvío en test.
   3. Legacy (DenseNet/ViT) y réplica del cuadro de desbalance.
   4. Detección de melanoma (umbral esp>=0.85 fijado en val) del ganador de cada modelo y de su ensamble.
@@ -88,12 +90,12 @@ def main():
         cands = {k: v for k, v in runs.items() if v["model"] == model and v["seed"] == 42}
         if not cands:
             continue
-        print(f"\n=== {model}: ranking por F1 ponderado en VAL (seed 42) ===")
-        print(f"{'run':38s} {'val_f1w':>7s} {'val_sM':>6s} | {'test_acc':>8s} {'f1w':>6s} {'f1m':>6s} {'sensM':>6s}")
-        for k, v in sorted(cands.items(), key=lambda kv: -kv[1]["val"]["f1_weighted"]):
-            print(f"{k:38s} {v['val']['f1_weighted']:.4f} {v['val']['sens_macro']:.3f} | "
+        print(f"\n=== {model}: ranking por F1 macro en VAL (seed 42) ===")
+        print(f"{'run':38s} {'val_f1m':>7s} {'val_sM':>6s} | {'test_acc':>8s} {'f1w':>6s} {'f1m':>6s} {'sensM':>6s}")
+        for k, v in sorted(cands.items(), key=lambda kv: -kv[1]["val"]["f1_macro"]):
+            print(f"{k:38s} {v['val']['f1_macro']:.4f} {v['val']['sens_macro']:.3f} | "
                   f"{v['test']['acc']:.4f} {v['test']['f1_weighted']:.3f} {v['test']['f1_macro']:.3f} {v['test']['sens_macro']:.3f}")
-        best = max(cands, key=lambda k: cands[k]["val"]["f1_weighted"])
+        best = max(cands, key=lambda k: cands[k]["val"]["f1_macro"])
         b = cands[best]
         seeds = {k: v for k, v in runs.items()
                  if v["model"] == model and v["trial"] == b["trial"] and v["cw"] == b["cw"]}

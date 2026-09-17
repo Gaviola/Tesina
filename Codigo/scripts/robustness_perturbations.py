@@ -5,9 +5,17 @@ en niveles crecientes, re-corre el clasificador y mide la caída de sensibilidad
 Responde al feedback #7: ¿qué pasa si cambian resolución/iluminación/ruido/compresión? HIBA ya
 cubrió cambio de población; esto cubre calidad de imagen.
 
-Local (RTX 4070) sobre los checkpoints ya entrenados (ViT / DenseNet). Uso:
+Local (RTX 4070) sobre los checkpoints ya entrenados. Corre sobre los ganadores del split disjunto
+por lesión, no sobre los modelos v3 del split aleatorio: esos están entrenados con fuga de
+información entre particiones y sus números no son comparables con el resto del documento.
+
+El archivo de particiones sigue siendo ham10000_splits.json porque el test del split por lesión es
+idéntico al original (mismas 1503 imágenes); lo que cambia entre ambos es train y val.
+
+Uso:
     python scripts/robustness_perturbations.py
     python scripts/robustness_perturbations.py --limit 600
+    python scripts/robustness_perturbations.py --swin-ckpt <ruta> --convnext-ckpt <ruta>
 """
 
 import argparse
@@ -39,10 +47,13 @@ from src.utils.seed import set_seed
 logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
-# Modelos headline (modern_v3, buena sens. macro). ViT/DenseNet legacy quedan como fallback.
+# Ganadores del barrido sobre el split disjunto por lesión, seleccionados por F1 macro en
+# validación (ver docs/ideas/criterio_seleccion_plan_20260917.md). Se pueden sobrescribir por CLI.
+CKPT_SWIN     = "outputs/checkpoints/swin_tiny_sweep_t06_les_cwnone/best_model.pt"
+CKPT_CONVNEXT = "outputs/checkpoints/convnext_tiny_sweep_t02_les_cwnone/best_model.pt"
 MODELS = {
-    "Swin-Tiny":     (SwinTinyClassifier,     "outputs/checkpoints/swin_tiny_modern_v3/best_model.pt"),
-    "ConvNeXt-Tiny": (ConvNeXtTinyClassifier, "outputs/checkpoints/convnext_tiny_modern_v3/best_model.pt"),
+    "Swin-Tiny":     (SwinTinyClassifier,     CKPT_SWIN),
+    "ConvNeXt-Tiny": (ConvNeXtTinyClassifier, CKPT_CONVNEXT),
 }
 
 # Niveles de severidad (0 = sin perturbar). Índices 1..5 crecientes.
@@ -109,13 +120,24 @@ def main():
     parser.add_argument("--limit", type=int, default=None, help="Nº de imágenes de test (default: todas).")
     parser.add_argument("--output_dir", type=str, default="outputs/results/robustness")
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--no-center-crop", action="store_false", dest="center_crop",
+                        help="Preprocesamiento legacy (Resize cuadrado). El default, center_crop, "
+                             "es el de la receta modern con la que están entrenados los modelos.")
+    parser.add_argument("--swin-ckpt", type=str, default=CKPT_SWIN, dest="swin_ckpt")
+    parser.add_argument("--convnext-ckpt", type=str, default=CKPT_CONVNEXT, dest="convnext_ckpt")
     args = parser.parse_args()
 
     set_seed(args.seed)
+    MODELS["Swin-Tiny"] = (SwinTinyClassifier, args.swin_ckpt)
+    MODELS["ConvNeXt-Tiny"] = (ConvNeXtTinyClassifier, args.convnext_ckpt)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     out_dir = Path(args.output_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
-    tf = get_val_transforms(size=224, center_crop=False)
+    # La receta `modern` entrena y evalúa con Resize(256)+CenterCrop(224)
+    # (src/training/recipes.py: random_resized_crop=True, y train_classifier.py pasa ese mismo
+    # valor a get_val_transforms). Evaluar acá con center_crop=False aplicaba el preprocesamiento
+    # legacy y hundía el baseline: Swin daba sens_macro 0.620 en lugar de 0.716.
+    tf = get_val_transforms(size=224, center_crop=args.center_crop)
 
     splits = str(Path(args.data_dir) / "splits" / "ham10000_splits.json")
     ds = HAM10000Dataset(root_dir=str(Path(args.data_dir) / "processed" / "HAM10000"),
@@ -167,8 +189,17 @@ def main():
     fig.savefig(png, dpi=150)
     logger.info("Figura: %s", png)
 
+    salida = {"checkpoints": {k: v[1] for k, v in MODELS.items()},
+              "split_test": "ham10000_splits.json (idéntico al test del split por lesión)",
+              "preprocesamiento": ("Resize(256)+CenterCrop(224), igual que la receta modern"
+                                   if args.center_crop else "Resize(224,224) legacy"),
+              "protocolo": ("vista única, sin TTA: las tablas del documento son con TTA "
+                            "(original+hflip), así que el baseline de acá queda algo por debajo; "
+                            "lo que mide este análisis es la caída relativa"),
+              "n_imagenes": n,
+              "modelos": summary}
     (out_dir / "robustness_summary.json").write_text(
-        __import__("json").dumps(summary, indent=2, ensure_ascii=False), encoding="utf-8")
+        __import__("json").dumps(salida, indent=2, ensure_ascii=False), encoding="utf-8")
     logger.info("Resumen: %s", out_dir / "robustness_summary.json")
 
 

@@ -11,6 +11,7 @@ Uso:
   python scripts/mendieta/submit.py mini_s2_v2     # Mini-VLM stage2 v2 — epochs=10 (~8GB)
   python scripts/mendieta/submit.py llava_s2_v2    # LLaVA-Med stage2 v2 — epochs=10 (~14GB)
   python scripts/mendieta/submit.py classifier     # DenseNet + ViT baselines
+  python scripts/mendieta/submit.py reanchor_mini   # Re-ancla la cascada (full_swin_les + diferencial)
   python scripts/mendieta/submit.py gen_llava      # Generacion reportes LLaVA-Med (~12h)
   python scripts/mendieta/submit.py gen_mini       # Generacion reportes Mini-VLM (~8h)
   python scripts/mendieta/submit.py gen_llava_mmskin  # Solo MM-SkinQA con LLaVA-Med
@@ -251,6 +252,11 @@ JOBS = {
     ## Variantes CoT v2 (Stage 2 v2 checkpoint)
     "classify_llava_ft_cot_v2": ("slurm/mendieta/v2/vlm_classify_llava_ft.sh", {"METHOD": "cot"}),
     "classify_mini_ft_cot_v2":  ("slurm/mendieta/v2/vlm_classify_mini_ft.sh",  {"METHOD": "cot"}),
+    ## Re-anclaje de la cascada al clasificador del split disjunto por lesion (2026-09-17).
+    ## Ver docs/ideas/criterio_seleccion_plan_20260917.md.
+    "reanchor_mini":   "slurm/mendieta/v4/reanchor_mini_vlm.sh",
+    "reanchor_llava":  "slurm/mendieta/v4/reanchor_llava_med.sh",
+    "reanchor_skinvl": "slurm/mendieta/v4/reanchor_skinvl.sh",
 }
 
 # Grupos de jobs para envios multiples
