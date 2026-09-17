@@ -1,8 +1,14 @@
-\chapter[Resultados: generación de reportes]{Resultados: generación de reportes}
+\chapter[Resultados: generación de reportes]{Resultados: generación de reportes y sistema integrado}
 \label{cp:res_gen}
-% Extensión estimada: 20--25 páginas.
-% Fuentes: sección "Generación de reportes" del documento de experimentación y
-% Codigo/docs/resul/incertidumbre_llava_replica_resul_20260912.md.
+% Extensión estimada: 25--30 páginas.
+% Fuentes: sección "Generación de reportes" del documento de experimentación,
+% Codigo/docs/resul/incertidumbre_llava_replica_resul_20260912.md y la sección "Costo computacional" del
+% mismo documento.
+%
+% Feedback del tutor (14/09/2026): el capítulo de costo computacional era demasiado corto para sostenerse
+% solo (3--5 páginas) y se incorpora como última sección de medición de este capítulo, que es donde se mide
+% el sistema completo. La comparación de hardware contra el estado del arte, que es interpretación y no
+% medición, pasa al Capítulo~\ref{cp:discusion}. La sección de cierre se llama "Discusión".
 
 \pendiente{Este capítulo responde la PI2 y contrasta las hipótesis H2, H5 y H6. Los reportes se generaron
 sobre el test original, que es idéntico al del split por lesión; la robustez frente a la fuga de información
@@ -61,6 +67,14 @@ típicos.}
 % \section{Evaluación por especialistas}
 % \label{sec:res_gen_especialistas}
 
-\section{Síntesis del capítulo}
-\label{sec:res_gen_sintesis}
+\section{Costo computacional del sistema}
+\label{sec:res_costo}
+\pendiente{Se reportan el tiempo y la memoria de entrenamiento o ajuste de cada modelo en las GPUs
+utilizadas, y el tiempo y la memoria por imagen de cada componente del sistema (clasificador, kNN y
+generador) junto con el costo por reporte del sistema completo. Estos números cierran el eje transversal de
+hardware accesible planteado en la introducción; su comparación con los requerimientos de los trabajos del
+estado del arte se retoma en el Capítulo~\ref{cp:discusion}.}
+
+\section{Discusión}
+\label{sec:res_gen_discusion}
 \pendiente{Se resume qué arquitectura resulta más fiel diagnósticamente y bajo qué condiciones.}

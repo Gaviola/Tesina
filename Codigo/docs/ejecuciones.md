@@ -39,6 +39,26 @@ desenfoque *y* resolución) + early-stop por pool. Regenerada: 2 ejemplos BKL (I
 ambos verificados visualmente coherentes con el caption. Docstrings del script corregidos (estaban invertidos).
 Compila limpio: 38 págs, 0 undefined, overfull máx 21.4pt (preexistente).
 
+## 2026-09-15
+
+### Semillas 43/44 + reenvíos: cierre del split por lesión — TOKO jobs 98041–98046
+Cierra la entrada del 2026-09-13. Cola vacía, los 6 jobs terminaron el 2026-09-14. `sync_down.py` +
+`scripts/lesion_split_report.py` (`outputs/results/lesion_split_report.json`).
+
+- **Ganadores confirmados** (ambos `t06_les_cwnone`, media ± sd sobre semillas 42/43/44 en test):
+  - Swin-Tiny: acc 0.846±0.002, F1w 0.846±0.004, F1m 0.733±0.026, sensM 0.692±0.025, **recall MEL 0.623±0.071**.
+  - ConvNeXt-Tiny: acc 0.844±0.004, F1w 0.841±0.007, F1m 0.723±0.013, sensM 0.700±0.018, recall MEL 0.535±0.028.
+- **La semilla 42 era optimista para melanoma.** El 0.701 de recall MEL que traía Swin con seed 42 queda en
+  0.623±0.071 al promediar: es la métrica con más varianza entre semillas (sd 0.071 vs 0.002 de accuracy).
+  El número que se reporta en el documento tiene que ser la media ± sd, no la semilla única.
+- **Reenvíos (`class_weights=auto`), ya sin crash del DataLoader:** `swin_tiny_sweep_t04_les` val F1w 0.782
+  (test sensM 0.772) y `convnext_tiny_sweep_t15_les` val F1w 0.814 (test sensM 0.738). Ninguno alcanza el
+  0.850/0.848 de los ganadores en validación → **el barrido queda completo (74/74) y el ganador no cambia**.
+- Sigue abierta la tensión de selección: por F1 ponderado en val gana siempre `cwnone`, pero las corridas con
+  pesos por clase llegan a sensM ~0.78 en test. Decidir el criterio antes de escribir los números finales.
+
+**Resul:** pendiente de redacción (`docs/resul/split_lesion_resul_*.md`).
+
 ## 2026-09-13
 
 ### Split por lesión: barrido terminado + tanda C (semillas) — TOKO jobs 98041–98044 + 2 reenvíos

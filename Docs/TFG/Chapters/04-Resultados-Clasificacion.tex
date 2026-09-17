@@ -1,8 +1,13 @@
 \chapter[Resultados: clasificación y detección de melanoma]{Resultados: clasificación diagnóstica y detección de melanoma}
 \label{cp:res_clasif}
-% Extensión estimada: 15--20 páginas.
+% Extensión estimada: 20--25 páginas.
 % Fuentes: sección "Clasificación diagnóstica" del documento de experimentación, con los números del split
-% disjunto por lesión (Codigo/outputs/results/lesion_split_report.json).
+% disjunto por lesión (Codigo/outputs/results/lesion_split_report.json, cerrado el 2026-09-15 con las
+% semillas 42/43/44).
+%
+% Feedback del tutor (14/09/2026): la sección de cierre se llama "Discusión" en lugar de "Síntesis del
+% capítulo". La discusión transversal, que cruza este capítulo con el de generación, queda en el
+% Capítulo~\ref{cp:discusion}.
 
 \pendiente{Este capítulo responde la PI1 y contrasta las hipótesis H1, H3 y H4. Los resultados se presentan
 en el orden en que se tomaron las decisiones: cada sección presenta un resultado, lo interpreta y justifica
@@ -12,7 +17,10 @@ el paso siguiente.}
 \label{sec:res_supervisados}
 \pendiente{Se presentan el barrido y el modelo elegido en validación, sus resultados en test como media
 $\pm$ desvío entre semillas (exactitud, F1 ponderado y macro, sensibilidad macro y \emph{recall} por clase),
-el efecto de las estrategias de desbalance y el efecto de corregir la fuga respecto del split original.}
+el efecto de las estrategias de desbalance y el efecto de corregir la fuga respecto del split original. Se
+discute también la dispersión entre semillas, muy desigual según la métrica: la exactitud varía poco mientras
+que el \emph{recall} de melanoma es la métrica más inestable, lo que obliga a reportar media y desvío y no
+una corrida única.}
 
 \section{Modelos visión--lenguaje médicos generales}
 \label{sec:res_vlm_generales}
@@ -32,8 +40,8 @@ por lesión) frente a los VLMs generales y a los clasificadores supervisados.}
 
 \section{Comparación con el estado del arte}
 \label{sec:res_sota_clasif}
-\pendiente{Se comparan los resultados con los publicados sobre HAM10000, señalando las diferencias de
-protocolo (particiones, fuga, métricas) que limitan la comparación.}
+\pendiente{Se comparan los resultados con los publicados sobre HAM10000 (Sección~\ref{sec:estado_arte}),
+señalando las diferencias de protocolo (particiones, fuga, métricas) que limitan la comparación.}
 
 \section{Calibración y significancia estadística}
 \label{sec:res_calib_stats}
@@ -56,7 +64,7 @@ condiciones de adquisición.}
 especificidad con umbral fijado en validación) por modelo y para el ensamble, y se comparan con referencias
 clínicas y de la literatura.}
 
-\section{Síntesis del capítulo}
-\label{sec:res_clasif_sintesis}
+\section{Discusión}
+\label{sec:res_clasif_discusion}
 \pendiente{Se resume qué hipótesis se sostienen y cuáles no, y por qué el clasificador especializado pasa a
 ser la fuente de diagnóstico del sistema de generación.}
