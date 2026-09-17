@@ -1,6 +1,6 @@
 \chapter[Introducción]{Introducción}
 \label{cp:introduccion}
-% Extensión estimada: 10--12 páginas.
+% Extensión estimada: 8--10 páginas (ver fichas/01-introduccion.md).
 % Fuentes: Plan de trabajo (Introducción y objetivos), Propuesta (secciones "Introducción y Propósito" y
 % "Marco de la Problemática"), PLAN_TFG_GAVIOLA_FACUNDO.pdf (objetivos verbatim) y el registro de ejecuciones
 % (Codigo/docs/ejecuciones.md) para fechar las hipótesis surgidas durante el trabajo.
@@ -86,18 +86,21 @@ Los objetivos específicos son:
 
 \section{Alcance y delimitación}
 \label{sec:intro_alcance}
-\pendiente{Esta sección delimita el trabajo y precisa cómo se concreta cada objetivo. El dominio principal
-son las imágenes dermatoscópicas de HAM10000; la detección se entiende como clasificación y no como
-localización; la evaluación es con métricas automáticas, de modo que se establece fidelidad diagnóstica y no
-validez clínica, que requiere especialistas; y solo se consideran modelos que corren en GPUs de consumo. No
-se desarrolla un producto para uso clínico y las imágenes histopatológicas quedan fuera del alcance.
+\pendiente{Esta sección enuncia sobre qué material se pronuncia el trabajo y qué establece. El dominio
+principal son las imágenes dermatoscópicas de HAM10000, con SkinCaRe como fuente de pares imagen--texto y
+HIBA para la validación externa; quedan fuera la histopatología y la fotografía clínica como dominio
+principal. Se precisa qué significan acá ``detección'' (clasificación, de la que se deriva la tarea binaria
+de melanoma, y no localización ni segmentación) y ``fidelidad diagnóstica'' (consistencia entre el
+diagnóstico que redacta el reporte y la etiqueta de referencia).
 
-Se indica además dónde el trabajo se apartó de lo previsto y por qué: la comparación CNN--ViT--VLM se amplió
-a cuatro estrategias de uso de VLMs y, tras su colapso, a un modelo visión--lenguaje dermatológico; no se
-entrena un VLM desde cero sino que se ajustan modelos existentes con LoRA; los ``escenarios clínicos'' se
-concretan como robustez a otra población y a condiciones de adquisición, calibración de probabilidades y
-manejo de la incertidumbre; y a las métricas de similitud previstas se agrega la consistencia diagnóstica,
-porque la similitud textual no detecta reportes con el diagnóstico equivocado.}
+Las métricas automáticas establecen fidelidad diagnóstica; establecer validez clínica requiere que
+especialistas lean los reportes. No se desarrolla un producto de uso clínico ni se valida con pacientes.
+
+La restricción de cómputo es una decisión de alcance: solo entran modelos que corren en GPUs de consumo de
+12--24\,GB. De ahí se sigue que no se pre-entrena un modelo visión--lenguaje desde cero, porque el
+pre-entrenamiento exige cómputo y volumen de datos de otro orden, y que se ajusten modelos existentes con
+LoRA. El análisis de limitaciones y amenazas a la validez no va acá, sino en el
+Capítulo~ef{cp:discusion}.}
 
 \section{Organización del documento}
 \label{sec:intro_organizacion}

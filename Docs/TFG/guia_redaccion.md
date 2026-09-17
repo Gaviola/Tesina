@@ -95,7 +95,7 @@ aparición de cada capítulo. No se redefine un acrónimo ya declarado.
 ## 5. Extensión
 
 La ficha fija la extensión de cada sección. Como referencia, el documento apunta a 90–110 páginas:
-introducción 6–8, marco teórico 25–30, materiales y métodos 20–25, cada capítulo de resultados
+introducción 8–10, marco teórico 25–30, materiales y métodos 20–25, cada capítulo de resultados
 25–30, discusión 8–12, conclusiones 4–6.
 
 Las estimaciones de extensión y las fuentes de cada capítulo van como **comentarios LaTeX**
@@ -103,9 +103,32 @@ Las estimaciones de extensión y las fuentes de cada capítulo van como **coment
 
 ## 6. Citas y bibliografía
 
-`Bibliography/Bibliography.bib` es el archivo único y canónico: 72 entradas, claves normalizadas
+`Bibliography/Bibliography.bib` es el archivo único y canónico: 80 entradas, claves normalizadas
 como `<apellido><año><palabra>` (`vaswani2017attention`, `tschandl2018ham10000`,
 `yan2025derm1m`).
+
+### Criterios de selección de fuentes
+
+- **Ventana de referencia: 2020–2026.** Se prefieren trabajos de los últimos seis años. Ahí están
+  las fuentes actualizadas y ahí se concentra la literatura efectivamente comparable con este
+  trabajo.
+- **El corte no es arbitrario: separa el análisis de imágenes anterior a los *transformers* del
+  posterior.** El cambio de paradigma es radical, de modo que un resultado obtenido con
+  arquitecturas previas no es comparable con los números actuales y no puede presentarse como
+  estado del arte. El estado del arte del Capítulo~2 se construye con trabajos de la ventana; los
+  anteriores entran como hitos y se los presenta como tales, fechados.
+- **Un trabajo anterior a 2020 se cita si cumple al menos una de estas condiciones:**
+  1. es fundacional y ampliamente aceptado, de manera que lo que aporta no quedó superado sino
+     incorporado: la definición de una arquitectura, de una métrica o de un concepto;
+  2. contiene información difícil de conseguir de otro modo, como los datos de Argentina o las
+     bases clínicas del problema;
+  3. es el artículo original de un recurso que el trabajo usa, como el del conjunto de datos.
+- **Acceso abierto cuando se pueda.** No es excluyente, pero entre dos fuentes equivalentes se toma
+  la que se lee sin barrera de pago. Se evalúa caso por caso, y para las fuentes clínicas suele no
+  haber alternativa.
+
+El encuadre de cada referencia anterior a 2020 que ya está en el `.bib` queda registrado en
+`refs_pendientes.md`.
 
 - **Solo se citan claves existentes.** Antes de citar se verifica:
   `grep "^@.*{clave," Bibliography/Bibliography.bib`.

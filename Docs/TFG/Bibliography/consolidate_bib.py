@@ -1,5 +1,9 @@
 """Consolidate the four scattered .bib files into a single normalized Bibliography.bib.
 
+ONE-SHOT MIGRATION, run on 2026-09-17. Bibliography.bib has hand-added entries since
+then (see refs_pendientes.md); re-running this script would drop them. To reuse it,
+merge its output with the current file instead of overwriting.
+
 Dedupes by DOI then by normalized title. Rewrites keys as <surname><year><word>.
 Drops Zotero-local fields (file, abstract, keywords, urldate).
 """
