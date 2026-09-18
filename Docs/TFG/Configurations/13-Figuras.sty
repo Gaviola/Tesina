@@ -1,0 +1,36 @@
+%%% Diagramas del documento %%%
+%
+% La clase ya carga tikz y graphicx; acá se agregan las bibliotecas y los estilos compartidos por los
+% diagramas de los capítulos, para que todos usen la misma tipografía, los mismos redondeos y las mismas
+% puntas de flecha. Los diagramas viven en Figures/Capitulos/ y se traen con \input.
+
+\ProvidesPackage{Configurations/13-Figuras}
+
+\usetikzlibrary{arrows.meta, positioning, fit, calc, backgrounds}
+
+% Gris de los recuadros y de las flechas. Todo el esquema es en escala de grises: los diagramas tienen que
+% seguir siendo legibles impresos en blanco y negro.
+\colorlet{figtrazo}{black!70}
+\colorlet{figrelleno}{black!5}
+
+\tikzset{
+    % Recuadro genérico.
+    fignodo/.style = {
+        draw=figtrazo, rounded corners=2pt, align=center, font=\small,
+        inner sep=4pt, minimum height=10mm,
+    },
+    % Lo que entra al sistema.
+    figentrada/.style = {fignodo, fill=figrelleno},
+    % Una tarea o un componente que transforma.
+    figtarea/.style = {fignodo, fill=white, thick},
+    % Lo que sale.
+    figsalida/.style = {fignodo, fill=none, densely dashed},
+    % Agrupación de componentes; se rotula con label.
+    figgrupo/.style = {
+        draw=figtrazo, densely dotted, rounded corners=3pt, inner sep=5mm,
+        label={[font=\small\itshape, text=figtrazo]above:#1},
+    },
+    figflecha/.style = {-{Latex[length=2mm, width=1.6mm]}, semithick, figtrazo},
+    % Rótulo sobre una flecha.
+    figetiqueta/.style = {font=\footnotesize, text=figtrazo, inner sep=2pt, fill=white},
+}

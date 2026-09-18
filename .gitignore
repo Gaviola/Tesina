@@ -3,13 +3,18 @@
 Plan_TFG_GAVIOLA_FACUNDO.pdf
 .vscode/
 
-# LaTeX build artifacts in Docs/ — keep only .tex, .pdf, .bib, .md, and images
+# LaTeX build artifacts in Docs/ — keep the sources, not the output
 Docs/**/*
 !Docs/**/
 !Docs/**/*.tex
 !Docs/**/*.pdf
 !Docs/**/*.bib
 !Docs/**/*.md
+# La clase, los paquetes de configuración y la receta de latexmk son fuentes, no
+# artefactos: sin ellos un clon nuevo no compila la tesina.
+!Docs/**/*.cls
+!Docs/**/*.sty
+!Docs/TFG/.latexmkrc
 !Docs/TFG/Bibliography/*.py
 !Docs/**/imagenes/
 !Docs/**/imagenes/**

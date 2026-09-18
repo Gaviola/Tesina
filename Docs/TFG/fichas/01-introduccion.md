@@ -25,7 +25,7 @@ modelo; este trabajo pone esa promesa a prueba con hardware accesible.
 
 | # | Párrafo | Afirmación que sostiene | Citas |
 |---|---|---|---|
-| 1 | Carga del cáncer de piel y valor de la detección temprana del melanoma: incidencia, mortalidad y la diferencia de supervivencia según el estadio en que se detecta | El problema tiene magnitud y la detección temprana cambia el desenlace | `bray2024global`, `loria2020cutaneous` |
+| 1 | Carga del cáncer de piel y valor de la detección temprana del melanoma: incidencia, mortalidad y la diferencia de supervivencia según el estadio en que se detecta | El problema tiene magnitud y la detección temprana cambia el desenlace | `sung2026global`, `nci2026melanoma`, `loria2020cutaneous` |
 | 2 | Por qué el diagnóstico visual es difícil: la dermatoscopía mejora la exactitud respecto de la inspección a ojo desnudo pero exige entrenamiento, y entre observadores hay variabilidad apreciable | La tarea no es trivial ni está resuelta por la vía humana | `kittler2002diagnostic`, `vestergaard2008dermoscopy`, `tschandl2019comparison` |
 | 3 | Acceso desigual al especialista y costo de tiempo del informe: la densidad de dermatólogos es muy dispar y la redacción del reporte consume tiempo clínico | Hay un problema de escala que justifica la asistencia automática | `freeman2026global`, `sinsky2016allocation` |
 | 4 | Qué resolvió el aprendizaje profundo y qué no: desempeño comparable al de especialistas en condiciones controladas, pero la salida es una etiqueta y no un informe, y el desempeño cae en fototipos poco representados en los conjuntos públicos —motivo por el cual la validación externa se hace sobre HIBA, de población argentina | El estado actual deja dos huecos concretos: la forma de la salida y la generalización | `esteva2017dermatologistlevel`, `tschandl2019comparison`, `magalhaes2024systematic`, `kreouzi2024learning`, `jones2022intelligence`, `daneshjou2022disparities`, `groh2021neural`, `riccilara2023dataset` |
@@ -33,10 +33,18 @@ modelo; este trabajo pone esa promesa a prueba con hardware accesible.
 | 6 | La promesa de los modelos visión–lenguaje: el espacio común imagen–texto y los generativos multimodales, con los modelos dermatológicos que ya existen. Cierra enunciando por qué *parecen* resolver ambas tareas de una vez | Hay una razón técnica concreta para esperar que funcione | `radford2021learning`, `liu2023visual`, `li2023llavamed`, `zhou2023skingpt4`, `yan2025derm1m` |
 | 7 | El eje transversal: hardware accesible. Qué significa una GPU de consumo de 12–24 GB, por qué eso decide qué modelos entran en el trabajo y qué hace viable el ajuste con LoRA | La restricción de cómputo es una decisión de diseño, no una limitación a disculpar | `hu2021lora`, `yilmaz2025resourceefficient` |
 
-**Figura.** Ninguna en esta pasada. El esquema de §1.1 se deriva del diagrama del *pipeline* del
-Capítulo 3 (`sec:met_pipeline`) una vez que ese exista, simplificándolo al planteo del problema: las
-dos tareas y por dónde entra un modelo visión--lenguaje. Queda anotado como `\pendiente{}` en el
-lugar donde irá, para que no se pierda. La sección se redacta sin depender de la figura.
+**Figura: hecha.** `fig:intro_dos_tareas`, en `Figures/Capitulos/01-planteo-problema.tex`, después del
+párrafo 5. Muestra las dos tareas, qué entra y qué sale de cada una, que la detección de melanoma se
+deriva de la clasificación, y encierra las dos tareas en un recuadro rotulado con lo que un modelo
+visión--lenguaje promete cubrir con un solo modelo.
+
+**La dependencia con el Capítulo 3 quedó al revés de lo previsto.** La ficha decía derivar esta figura
+del diagrama del *pipeline* (`sec:met_pipeline`), pero ese diagrama todavía no existe, así que esta se
+dibujó primero y es la abstracta: entra una imagen, salen una categoría y un texto, sin nombrar ningún
+componente concreto. **Cuando se dibuje el diagrama del Capítulo 3 hay que derivarlo de esta y
+mantener los dos consistentes**: si uno cambia de vocabulario o de forma de las salidas, el otro
+también. Los estilos compartidos están en `Configurations/13-Figuras.sty`, para que los dos diagramas
+salgan con la misma tipografía y las mismas flechas.
 
 **Cómo se citan las dos referencias anteriores a la ventana.** `esteva2017dermatologistlevel` y
 `tschandl2019comparison` son de la era de las CNN, previa a los *transformers*. En el párrafo 4 van
@@ -157,6 +165,14 @@ sobre texto que ya existe; §1.5 se escribe al final, cuando los títulos defini
 capítulos ya no se muevan.
 
 ## Decisiones tomadas
+
+0. **§1.1 ¶1 afirmaba algo falso y quedó corregido.** El borrador decía que el melanoma «concentra la
+   mayor parte de la mortalidad» por cáncer de piel. Con las cifras a la vista no se sostiene:
+   GLOBOCAN 2024 da 58 398 muertes por melanoma y 58 721 por el resto de los cánceres de piel, casi
+   por partes iguales. La afirmación correcta, que es igual de fuerte y además verificable, es que el
+   melanoma es menos de una cuarta parte de los casos y prácticamente la mitad de las muertes.
+   También cambió la fuente: `bray2024global` es GLOBOCAN 2022 y quedó superado por
+   `sung2026global` (GLOBOCAN 2024, publicado el 08/07/2026). Detalle en `refs_pendientes.md`.
 
 1. **Variabilidad interobservador (§1.1 ¶2): se sostiene con lo que ya está en el `.bib`.** Kittler
    establece que la exactitud depende de la experiencia del examinador y Tschandl 2019 muestra la

@@ -17,7 +17,7 @@ incorporaron ocho, cada una verificada contra la página del editor.
 
 | Clave | Referencia | Sostiene |
 |---|---|---|
-| `bray2024global` | Bray et al., *CA: A Cancer Journal for Clinicians* 74(3):229–263, 2024 (GLOBOCAN 2022) | Incidencia y mortalidad globales |
+| `bray2024global` (sin usar, ver más abajo) | Bray et al., *CA: A Cancer Journal for Clinicians* 74(3):229–263, 2024 (GLOBOCAN 2022) | Incidencia y mortalidad globales |
 | `loria2020cutaneous` | Loria et al., *ecancermedicalscience* 14:1017, 2020 — Registro Argentino de Melanoma Cutáneo, 10 199 casos entre 2002 y 2018 | Datos de Argentina, con diferencias regionales |
 | `kittler2002diagnostic` | Kittler et al., *The Lancet Oncology* 3(3):159–165, 2002 | La dermatoscopía mejora la exactitud, pero solo en examinadores experimentados |
 | `vestergaard2008dermoscopy` | Vestergaard et al., *British Journal of Dermatology* 159(3):669–676, 2008 | Meta-análisis de dermatoscopía frente a ojo desnudo en entorno clínico |
@@ -36,6 +36,32 @@ incorporaron ocho, cada una verificada contra la página del editor.
   `and others`. Como el estilo está configurado con `maxnames=1`, la bibliografía imprime igual
   «Autor et al.», así que la salida no cambia; completarla es prolijidad, no necesidad.
 
+### Epidemiología con cifras — incorporado el 17/09/2026
+
+Al redactar §1.1 hubo que poner números donde antes había solo afirmaciones cualitativas, y las ocho
+referencias anteriores no alcanzaban. Se incorporaron dos, verificadas contra la fuente.
+
+| Clave | Referencia | Sostiene |
+|---|---|---|
+| `sung2026global` | Sung et al., *CA: A Cancer Journal for Clinicians* 76(4):e70090, 2026 (GLOBOCAN 2024, 34 cánceres en 186 países) | Incidencia y mortalidad de melanoma (337 969 casos, 58 398 muertes) y de cáncer de piel no melanoma (1 138 314 casos, 58 721 muertes) |
+| `nci2026melanoma` | *SEER Cancer Stat Facts: Melanoma of the Skin*, National Cancer Institute, consultado el 17/09/2026 | Supervivencia relativa a cinco años por estadio (100.0 / 76.0 / 34.0 %) y distribución de los casos por estadio al diagnóstico (77 / 10 / 5 %), sobre SEER 21 (sin Illinois), 2016--2022 |
+
+**`bray2024global` quedó superado y ya no se cita.** Es GLOBOCAN 2022 y sus cifras difieren de las de
+GLOBOCAN 2024, publicado el 08/07/2026; citar las dos ediciones para la misma afirmación sería acumular
+referencias. La entrada se conserva en el `.bib` sin usar: no molesta, porque biblatex solo imprime lo
+citado. Si aparece una afirmación que necesite específicamente las estimaciones de 2022, está disponible.
+
+**`nci2026melanoma` es el único recurso en línea del `.bib`.** Es la cita habitual para la supervivencia
+por estadio y es de acceso abierto; la alternativa arbitrada equivalente no existe con esa granularidad y
+actualización. Lleva `urldate`, que es el único caso del archivo en el que ese campo hace falta.
+
+**Corrección que produjo `sung2026global`.** El primer borrador de §1.1 afirmaba que el melanoma
+«concentra la mayor parte de la mortalidad» por cáncer de piel. Es falso: GLOBOCAN 2024 da 58 398 muertes
+por melanoma y 58 721 por el resto de los cánceres de piel, es decir casi por partes iguales. Lo que sí es
+cierto, y es la afirmación que quedó en el texto, es que el melanoma es menos de una cuarta parte de los
+casos y prácticamente la mitad de las muertes. La subregistración conocida del cáncer de piel no melanoma
+solo refuerza esa asimetría, porque infla el denominador de la incidencia y no el de la mortalidad.
+
 ### Por incorporar
 
 | Título | Autores | Año | DOI / URL | Sección que la necesita |
@@ -49,7 +75,7 @@ El `.bib` se armó fusionando cuatro archivos dispersos: `estado_del_arte/refere
 versión previa de `Bibliography.bib` (16). De 100 entradas en bruto quedaron **72 únicas**: 28 eran
 duplicados del mismo trabajo con tres convenciones de clave distintas. Se conservó siempre la
 entrada con más campos bibliográficos. Con las ocho referencias de la sección 1, el archivo llegó a
-**80 entradas**.
+80 entradas, y con las dos de epidemiología con cifras, a **82 entradas**.
 
 Las claves quedaron normalizadas como `<apellido><año><palabra>`. Como ningún capítulo tenía citas
 todavía, el renombre no rompió nada. Validación: `biber --tool --validate-datamodel` pasa con 0
@@ -115,16 +141,16 @@ del 17/09/2026:
 
 Las 5 que no están en Zotero son `tschandl2018ham10000` (HAM10000), `liu2021swin` (Swin
 Transformer), `shen2025skincare` (SkinCaRe), `nvidia2023beginners` y
-`atkinsonabutridy2025language`. Las ocho de la sección 1 tampoco están, porque se agregaron
-directamente al `.bib`: en total son 13 referencias que solo existen en el documento.
+`atkinsonabutridy2025language`. Las diez de la sección 1 tampoco están, porque se agregaron
+directamente al `.bib`: en total son 15 referencias que solo existen en el documento.
 
 **Conviene recuperar de la papelera las 36 entradas antes de vaciarla**, porque son referencias que
 el documento usa y ahí están sus PDF y sus metadatos. Mientras esa diferencia exista, una
-exportación de Zotero sobre `Bibliography.bib` borraría 49 de las 80 referencias.
+exportación de Zotero sobre `Bibliography.bib` borraría 51 de las 82 referencias.
 
 ## 6. Auditoría por año (17/09/2026)
 
-La ventana de referencia fijada en la guía es 2020–2026. De las 80 entradas del `.bib`, **57 están
+La ventana de referencia fijada en la guía es 2020–2026. De las 82 entradas del `.bib`, **59 están
 dentro de la ventana y 23 son anteriores**. Las 23 cumplen alguna de las excepciones, así que
 ninguna se descarta, pero conviene tener escrito por qué está cada una: la razón determina *cómo*
 se la cita.

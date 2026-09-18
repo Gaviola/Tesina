@@ -103,7 +103,7 @@ Las estimaciones de extensión y las fuentes de cada capítulo van como **coment
 
 ## 6. Citas y bibliografía
 
-`Bibliography/Bibliography.bib` es el archivo único y canónico: 80 entradas, claves normalizadas
+`Bibliography/Bibliography.bib` es el archivo único y canónico: 82 entradas, claves normalizadas
 como `<apellido><año><palabra>` (`vaswani2017attention`, `tschandl2018ham10000`,
 `yan2025derm1m`).
 
@@ -157,6 +157,13 @@ El encuadre de cada referencia anterior a 2020 que ya está en el `.bib` queda r
   sección. La lista se imprime con `\listadependientes` y solo existe con `docstage=working`.
 - **Figuras** en `Figures/`, formato vectorial cuando sea posible, con `\caption` que se entienda
   sin leer el cuerpo del texto y `\label`. Las tablas llevan `\caption` arriba.
+- **Diagramas.** Uno por archivo en `Figures/Capitulos/`, con el flotante completo adentro
+  (`figure`, `\caption`, `\label`), y se traen con `\input{Figures/Capitulos/...}` desde la sección.
+  Se dibujan con TikZ, no se importan como imagen: así se editan con el documento y escalan con la
+  fuente. Los estilos comunes —recuadros, flechas, agrupaciones— están en
+  `Configurations/13-Figuras.sty` y se usan tal cual (`figentrada`, `figtarea`, `figsalida`,
+  `figgrupo`, `figflecha`); si hace falta un estilo nuevo, se agrega ahí y no en el diagrama. Todo
+  en escala de grises: el documento tiene que seguir siendo legible impreso en blanco y negro.
 - **Código** con `minted` (requiere `-shell-escape`). Fragmentos cortos, solo si aportan.
 - **Compilación:** `latexmk -xelatex -shell-escape tesina.tex` desde `Docs/TFG/`.
 

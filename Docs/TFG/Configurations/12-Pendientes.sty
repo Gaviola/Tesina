@@ -1,0 +1,45 @@
+%%% Marcadores de contenido pendiente %%%
+%
+% \pendiente{texto}            recuadro "Pendiente"; en la lista figura con el título de la sección actual.
+% \pendiente[resumen]{texto}   ídem, con un resumen propio para la lista.
+% \listadependientes           lista de todos los pendientes, con página y enlace.
+%
+% Con docstage=working se muestran los recuadros y la lista. Con docstage=final no se muestra nada y cada
+% pendiente que quede genera un warning en el log ("Pendiente sin resolver").
+
+\ProvidesPackage{Configurations/12-Pendientes}
+
+\newcounter{pendiente}
+
+\newtcolorbox{pendientebox}{
+    enhanced, breakable,
+    colback=orange!6, colframe=orange!75!black,
+    boxrule=0.4pt, leftrule=3pt, arc=1pt,
+    left=6pt, right=6pt, top=3pt, bottom=4pt,
+    fonttitle=\small\bfseries, coltitle=orange!75!black, colbacktitle=orange!6,
+    attach title to upper, after title={\par\smallskip},
+    title={\faHourglassHalf\ Pendiente \thependiente},
+    fontupper=\small,
+}
+
+\newcommand*{\l@pendiente}{\@dottedtocline{1}{0em}{2.5em}}
+
+\NewDocumentCommand{\pendiente}{o +m}{%
+    \ifthenelse{\equal{\DocStageOption}{final}}{%
+        \PackageWarning{Pendientes}{Pendiente sin resolver}%
+    }{%
+        \refstepcounter{pendiente}%
+        \IfNoValueTF{#1}%
+            {\addcontentsline{pnd}{pendiente}{\protect\numberline{\thependiente}\@currentlabelname}}%
+            {\addcontentsline{pnd}{pendiente}{\protect\numberline{\thependiente}#1}}%
+        \begin{pendientebox}#2\end{pendientebox}%
+    }%
+}
+
+\newcommand{\listadependientes}{%
+    \ifthenelse{\equal{\DocStageOption}{final}}{}{%
+        \chapter*{Pendientes}%
+        \markboth{\MakeUppercase{Pendientes}}{\MakeUppercase{Pendientes}}%
+        \@starttoc{pnd}%
+    }%
+}
