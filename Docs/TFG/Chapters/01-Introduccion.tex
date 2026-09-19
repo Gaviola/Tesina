@@ -26,7 +26,7 @@ concentra prácticamente la mitad de la mortalidad. Esa asimetría entre frecuen
 sentido clínico al problema: la mayoría de las lesiones que llegan a una consulta son benignas o no
 representan un peligro real y el valor de examinarlas está en identificar la minoría que no lo es.
 
-El peso de la detección temprana descansa en que el desenlace del melanoma depende del estadio en que se lo
+El peso de la detección temprana descansa en que el desenlace del melanoma depende del momento en que se lo
 diagnostica, de modo que adelantar el momento del diagnóstico no mejora el tratamiento sino el pronóstico. La
 supervivencia relativa a cinco años —la proporción de pacientes que sobrevive una vez descontada la
 mortalidad esperada en la población general— es de 100.0\,\% cuando el melanoma se detecta localizado, baja a
@@ -47,7 +47,7 @@ no es un beneficio que venga con el instrumento: depende de la formación de qui
 sin entrenamiento específico la dermatoscopía no aporta ventaja sobre la inspección
 simple~\cite{kittler2002diagnostic}.
 
-A la dependencia de la experiencia se suma la dispersión entre observadores. Un estudio de lectores de gran
+A la dependencia de la experiencia se suma la diferencia entre observadores. Un estudio de gran
 escala enfrentó a 511 lectores humanos con 139 algoritmos sobre el mismo material dermatoscópico y encontró
 un rango amplio de desempeño entre los lectores, asociado a su nivel de
 formación~\cite{tschandl2019comparison}. Esa dispersión tiene dos consecuencias para este trabajo: fija la
@@ -116,9 +116,9 @@ la pregunta del trabajo: si un único VLM puede a la vez clasificar la lesión y
 dos tareas siguen exigiendo componentes distintos y encadenados.
 
 Queda un eje que atraviesa todo lo que sigue: el hardware. Lo que se reporta acá corre en una única GPU de
-consumo de 12--24\,GB de memoria, la clase de equipamiento que hay en un laboratorio universitario o en un
+consumo de 12--36\,GB de memoria, la clase de equipamiento que hay en un laboratorio universitario o en un
 servicio clínico, y no en un centro de cómputo con decenas de aceleradores. La restricción no es una
-limitación a disculpar sino una condición de diseño, y decide qué modelos entran en la comparación, con qué
+limitación, sino una condición de diseño, y decide qué modelos entran en la comparación, con qué
 resolución y tamaño de lote se los entrena y cuántas configuraciones se alcanzan a explorar. Lo que vuelve
 manejable el ajuste fino (\emph{fine-tuning}) en ese presupuesto es \gls{lora}, que mantiene congelados los
 pesos del modelo pre-entrenado y entrena en su lugar un conjunto reducido de matrices de bajo rango, con lo
@@ -129,16 +129,28 @@ resolver ambas y un presupuesto de cómputo acotado— se formulan las preguntas
 
 \section{Preguntas de investigación e hipótesis}
 \label{sec:intro_preguntas}
-\pendiente{Las preguntas de investigación corresponden a las dos fases de la metodología del plan de trabajo:
+A cada una de las dos tareas le corresponde una pregunta, y esa correspondencia organiza el trabajo en dos
+fases: la primera se responde comparando clasificadores sobre el mismo material, y la segunda, evaluando los
+reportes que un modelo produce. Que sean dos preguntas y no una es consecuencia de que las salidas son de
+naturaleza distinta —una categoría y un texto—, con criterios de acierto y métricas que no se traducen entre
+sí: responder afirmativamente una no adelanta nada sobre la otra.
+
 \begin{enumerate}[label=\textbf{PI\arabic*.}]
   \item ¿En qué medida un modelo visión--lenguaje aporta mejoras reales frente a modelos orientados
-  exclusivamente a visión (CNN y ViT) en el diagnóstico de lesiones de piel, en particular en la
+  exclusivamente a visión —CNN y \gls{vit}— en el diagnóstico de lesiones de piel, en particular en la
   identificación de melanoma?
   \item ¿Qué tan precisos, completos y clínicamente relevantes resultan los reportes generados
   automáticamente por un VLM ajustado a partir de la imagen?
 \end{enumerate}
 
-Dos hipótesis de partida están implícitas en el plan de trabajo, formulado antes de la experimentación:
+Las hipótesis que siguen no están todas en el mismo plano. Dos son de partida: estaban implícitas en el plan
+de trabajo, se formularon antes de tener un solo resultado y son las que el diseño experimental original se
+proponía poner a prueba. Las otras cuatro son emergentes: se formularon durante la experimentación, cada una
+como respuesta a un resultado que contradijo lo esperado. La distinción importa porque el estatus de unas y
+otras no es el mismo: las de partida se contrastan contra un diseño que las precedía, mientras que las
+emergentes son explicaciones propuestas para un resultado ya observado.
+
+Las dos hipótesis de partida son:
 \begin{enumerate}[label=\textbf{H\arabic*.}]
   \item Un VLM, al integrar información visual y textual, alcanza en el diagnóstico de lesiones de piel un
   desempeño comparable o superior al de una CNN y un ViT entrenados sobre los mismos datos
@@ -147,9 +159,7 @@ Dos hipótesis de partida están implícitas en el plan de trabajo, formulado an
   imagen (Capítulo~\ref{cp:res_gen}).
 \end{enumerate}
 
-Varios resultados contradijeron esas hipótesis y reorientaron el trabajo. Las hipótesis siguientes se
-formularon durante la experimentación y se presentan en el orden en que surgieron, indicando qué resultado
-motivó cada una, para no presentarlas como previstas desde el inicio:
+Las emergentes se presentan en el orden en que surgieron, cada una junto al resultado que la motivó:
 \begin{enumerate}[label=\textbf{H\arabic*.}, start=3]
   \item El bajo desempeño de los VLMs generales en clasificación se explica por el desbalance de clases.
   Surge tras refutarse H1.
@@ -160,11 +170,27 @@ motivó cada una, para no presentarlas como previstas desde el inicio:
   cumple solo parcialmente: los reportes son ricos pero diagnósticamente poco fieles.
   \item Incorporar la incertidumbre del clasificador (afirmar, ofrecer un diferencial o derivar) mejora la
   fidelidad diagnóstica sobre los casos no derivados. Surge del análisis de errores de la cascada.
-\end{enumerate}}
+\end{enumerate}
+
+De las seis, H1 y H3 quedaron refutadas, y cada refutación reorientó el trabajo: la primera desplazó la
+comparación hacia un modelo visión--lenguaje especializado en el dominio, y la segunda descartó el desbalance
+de clases como explicación de ese resultado y obligó a buscarla en otra parte. Lo que se siguió de ambas se
+desarrolla en el Capítulo~\ref{cp:res_clasif}, y lo que la tarea de generación heredó de ese recorrido, en el
+Capítulo~\ref{cp:res_gen}.
+
+Enunciarlas en el orden en que surgieron, con las refutadas incluidas, es una decisión deliberada.
+Reescribir esta sección dejando solo las hipótesis que se sostuvieron daría un capítulo más prolijo y una
+lectura falsa: los resultados aparecerían confirmando lo previsto, cuando buena parte de ellos consistió
+justamente en descartarlo. Una hipótesis que se cae acota el espacio de explicaciones posibles igual que una
+que se sostiene, y las cuatro hipótesis emergentes son el registro de ese recorrido. Los objetivos, en
+cambio, son los mismos desde el principio.
 
 \section{Objetivos}
 \label{sec:intro_objetivos}
-\pendiente{El objetivo general es desarrollar y evaluar un modelo de visión--lenguaje capaz de asistir en el
+Los objetivos son los que fija el plan de trabajo aprobado, y se enuncian en sus términos, sin reescribirlos
+para acomodarlos a lo que el trabajo terminó haciendo.
+
+El objetivo general es desarrollar y evaluar un modelo de visión--lenguaje capaz de asistir en el
 diagnóstico de lesiones cutáneas y en la generación automática de reportes clínicos estructurados a partir de
 imágenes dermatológicas, con el fin de mejorar la precisión diagnóstica y optimizar el flujo de trabajo en el
 estudio de lesiones de piel.
@@ -177,7 +203,15 @@ Los objetivos específicos son:
   producir diagnósticos preliminares y reportes automáticos de lesiones cutáneas.
   \item Evaluar el desempeño del modelo en diferentes escenarios clínicos, analizando su precisión
   diagnóstica, coherencia textual y utilidad práctica para el flujo de trabajo en dermatología.
-\end{enumerate}}
+\end{enumerate}
+
+Dos de esas formulaciones no coinciden con lo que el trabajo terminó haciendo. «Diseñar y entrenar un modelo
+visión--lenguaje», en OE2, se concretó como el ajuste de modelos ya pre-entrenados y no como un entrenamiento
+desde cero; y la «precisión diagnóstica» del objetivo general se mide acá como fidelidad diagnóstica del
+reporte, que es una noción más acotada. Las dos cosas se siguen del alcance que fija la
+Sección~\ref{sec:intro_alcance}, donde se explican el límite de cómputo que descarta el pre-entrenamiento y
+el significado del término. El balance de qué se cumplió y en qué términos se hace en la
+Sección~\ref{sec:concl_objetivos}.
 
 \section{Alcance y delimitación}
 \label{sec:intro_alcance}

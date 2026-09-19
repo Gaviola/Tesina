@@ -7,30 +7,43 @@ en este archivo y no sección por sección.
 
 ## 1. Circuito de trabajo
 
-Cada sección del documento pasa por cuatro etapas. No se saltea ninguna.
+Cada sección del documento pasa por tres etapas. No se saltea ninguna.
 
 | Etapa | Qué se produce | Quién decide |
 |---|---|---|
 | 1. Ficha | `fichas/<capitulo>.md`: mensaje central, esqueleto de párrafos, claves de cita, figuras y extensión | El autor aprueba antes de que se escriba prosa |
-| 2. Borrador | `borradores/<label>.tex`: la sección redactada, como archivo aparte | Quien redacta; no toca el capítulo |
-| 3. Integración | El borrador se empalma en `Chapters/`, se borra el `\pendiente` y se compila | Revisión por diff |
-| 4. Cierre | Un commit por sección en la rama del capítulo | El autor |
+| 2. Redacción | La prosa se escribe **en el `.tex` del capítulo**, reemplazando el `\pendiente` de la sección, y se compila | Quien redacta |
+| 3. Cierre | Un commit por sección en la rama del capítulo | El autor, sobre el diff |
 
 Sin ficha aprobada no se redacta. La ficha es el punto de control real: es más rápido corregir un
 esqueleto de una página que treinta páginas de prosa ajena.
 
+**No hay borradores en archivos aparte.** El circuito tuvo una etapa intermedia que escribía la
+sección en `borradores/<label>.tex` antes de tocar el capítulo, y se eliminó: apenas la sección
+quedaba integrada existían dos copias del mismo texto, y la copia vieja empezaba a divergir en
+cuanto el autor corregía el capítulo. El capítulo es la única fuente de verdad. Lo que la etapa
+intermedia protegía se consigue igual: el capítulo nunca queda roto porque la sección sin escribir
+tiene su `\pendiente` y compila, y la revisión se hace sobre el diff del commit, que además muestra
+las dos versiones juntas.
+
 ## 2. Reglas para quien redacta
 
 1. **La ficha es el alcance.** No se agregan secciones, subsecciones ni temas que la ficha no
-   incluya. Lo que parezca faltar se anota al final del borrador como pregunta abierta.
+   incluya. Lo que parezca faltar se anota como pregunta abierta al entregar la sección; no se
+   escribe en el `.tex`.
 2. **No se inventa evidencia.** Ningún número, resultado, porcentaje o afirmación empírica puede
    aparecer si no está en las fuentes indicadas en la ficha. Si falta un dato, se deja la marca
    `\pendiente{}` con lo que haría falta medir.
 3. **No se inventan referencias.** Solo se citan claves que ya existen en
    `Bibliography/Bibliography.bib` (ver sección 6).
-4. **El borrador no toca otros archivos.** Ni `tesina.tex`, ni otros capítulos, ni el `.bib`.
-5. **Toda decisión se reporta.** Al terminar, el borrador se entrega con: claves citadas,
-   afirmaciones sin respaldo, decisiones tomadas por cuenta propia y preguntas abiertas.
+4. **Se toca el capítulo y nada más.** La redacción de una sección modifica el `.tex` de su
+   capítulo y, si la ficha pide una figura, el archivo de esa figura en `Figures/Capitulos/`. Ni
+   `tesina.tex`, ni otros capítulos, ni el `.bib`. Si hiciera falta tocar un archivo compartido, se
+   reporta aparte y se justifica.
+5. **Toda decisión se reporta.** Al terminar, la sección se entrega con: claves citadas,
+   afirmaciones sin respaldo, decisiones tomadas por cuenta propia y preguntas abiertas. Las que
+   condicionan lo que se escriba después se anotan en «Decisiones tomadas» de la ficha, que es lo
+   que sobrevive a la conversación.
 
 ## 3. Voz y estilo
 
@@ -153,8 +166,9 @@ El encuadre de cada referencia anterior a 2020 que ya está en el `.bib` queda r
 - **Referencias cruzadas:** `Capítulo~\ref{cp:marco}`, `Sección~\ref{sec:met_particiones}`,
   `Tabla~\ref{tab:...}`, con tilde para evitar el corte de línea. Nunca «ver arriba» o «más
   adelante» sin `\ref`.
-- **Marcas de estado:** `\pendiente{...}` para contenido no escrito. Se elimina al redactar la
-  sección. La lista se imprime con `\listadependientes` y solo existe con `docstage=working`.
+- **Marcas de estado:** `\pendiente{...}` para contenido no escrito. Es el lugar donde después se
+  escribe la sección: la prosa lo reemplaza en el mismo archivo. La lista se imprime con
+  `\listadependientes` y solo existe con `docstage=working`.
 - **Figuras** en `Figures/`, formato vectorial cuando sea posible, con `\caption` que se entienda
   sin leer el cuerpo del texto y `\label`. Las tablas llevan `\caption` arriba.
 - **Diagramas.** Uno por archivo en `Figures/Capitulos/`, con el flotante completo adentro
@@ -173,7 +187,8 @@ Un capítulo, una rama: `doc/cap01-introduccion`, `doc/cap02-marco-teorico`, y a
 desde `master` actualizado y se integra cuando el capítulo está cerrado.
 
 - Un commit por sección redactada, con el asunto en imperativo y en español.
-- El `.tex` del capítulo y el borrador correspondiente van en el mismo commit.
+- En ese commit van el `.tex` del capítulo, las figuras que la sección haya incorporado y la ficha
+  si se actualizó.
 - **Se compila en la rama en la que se está trabajando**, tantas veces como haga falta: es la única
   forma de ver cómo queda el documento. `tesina.pdf` está versionado y se commitea también ahí.
 - El PDF es un artefacto generado, así que su conflicto de merge no se resuelve a mano.

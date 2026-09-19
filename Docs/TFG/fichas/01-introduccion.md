@@ -2,7 +2,7 @@
 
 Contrato de contenido del capítulo. Cada sección declara su mensaje central, el esqueleto de
 párrafos, las claves de cita que se usan y su extensión. Lo que no está acá no se escribe; lo que
-falte se anota como pregunta abierta al final del borrador.
+falte se anota como pregunta abierta al entregar la sección.
 
 **Extensión total: 8–10 páginas.** El comentario del `.tex` decía 10–12 y la guía 6–8: ninguna de
 las dos valía, porque el capítulo absorbió el antiguo capítulo de hipótesis y objetivos. Se fija
@@ -79,6 +79,13 @@ una. Lo que falta es el envoltorio:
 
 **Citas:** ninguna. Es contenido propio.
 
+**Escrita.** Los tres envoltorios están redactados y el contenido sustantivo se conservó textual, con una
+sola excepción de puntuación: en PI1 los paréntesis que encerraban «CNN y ViT» pasaron a rayas, porque ahí
+va la primera aparición de `\gls{vit}` en el capítulo y la expansión del acrónimo habría dejado un paréntesis
+dentro de otro. Las palabras son las mismas. Las dos frases de enlace que precedían a cada lista —«Dos
+hipótesis de partida están implícitas…» y «Varios resultados contradijeron esas hipótesis…»— se recortaron a
+una línea cada una, porque el párrafo puente ya dice lo que ellas decían.
+
 ---
 
 ## 1.3 Objetivos — `sec:intro_objetivos`
@@ -97,6 +104,11 @@ fidelidad diagnóstica del reporte. Acá no se resuelve: §1.4 ¶4 explica por q
 modelo desde cero, y el balance de lo cumplido se hace en `sec:concl_objetivos`.
 
 **Citas:** ninguna.
+
+**Escrita.** Objetivo general y OE1--OE3 textuales. La tensión quedó planteada en un párrafo de cierre que
+nombra las dos formulaciones que no coinciden —«diseñar y entrenar» y «precisión diagnóstica»— y remite a
+`sec:intro_alcance` por el porqué y a `sec:concl_objetivos` por el balance, sin resolver ninguna de las dos
+acá.
 
 ---
 
@@ -166,8 +178,8 @@ capítulos ya no se muevan.
 
 ## Decisiones tomadas
 
-0. **§1.1 ¶1 afirmaba algo falso y quedó corregido.** El borrador decía que el melanoma «concentra la
-   mayor parte de la mortalidad» por cáncer de piel. Con las cifras a la vista no se sostiene:
+0. **§1.1 ¶1 afirmaba algo falso y quedó corregido.** La primera redacción decía que el melanoma
+   «concentra la mayor parte de la mortalidad» por cáncer de piel. Con las cifras a la vista no se sostiene:
    GLOBOCAN 2024 da 58 398 muertes por melanoma y 58 721 por el resto de los cánceres de piel, casi
    por partes iguales. La afirmación correcta, que es igual de fuerte y además verificable, es que el
    melanoma es menos de una cuarta parte de los casos y prácticamente la mitad de las muertes.

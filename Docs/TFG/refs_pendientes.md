@@ -55,7 +55,7 @@ citado. Si aparece una afirmación que necesite específicamente las estimacione
 por estadio y es de acceso abierto; la alternativa arbitrada equivalente no existe con esa granularidad y
 actualización. Lleva `urldate`, que es el único caso del archivo en el que ese campo hace falta.
 
-**Corrección que produjo `sung2026global`.** El primer borrador de §1.1 afirmaba que el melanoma
+**Corrección que produjo `sung2026global`.** La primera redacción de §1.1 afirmaba que el melanoma
 «concentra la mayor parte de la mortalidad» por cáncer de piel. Es falso: GLOBOCAN 2024 da 58 398 muertes
 por melanoma y 58 721 por el resto de los cánceres de piel, es decir casi por partes iguales. Lo que sí es
 cierto, y es la afirmación que quedó en el texto, es que el melanoma es menos de una cuarta parte de los
