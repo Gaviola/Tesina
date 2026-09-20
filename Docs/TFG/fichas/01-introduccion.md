@@ -31,7 +31,7 @@ modelo; este trabajo pone esa promesa a prueba con hardware accesible.
 | 4 | Qué resolvió el aprendizaje profundo y qué no: desempeño comparable al de especialistas en condiciones controladas, pero la salida es una etiqueta y no un informe, y el desempeño cae en fototipos poco representados en los conjuntos públicos —motivo por el cual la validación externa se hace sobre HIBA, de población argentina | El estado actual deja dos huecos concretos: la forma de la salida y la generalización | `esteva2017dermatologistlevel`, `tschandl2019comparison`, `magalhaes2024systematic`, `kreouzi2024learning`, `jones2022intelligence`, `daneshjou2022disparities`, `groh2021neural`, `riccilara2023dataset` |
 | 5 | Precisión del problema: las dos tareas (clasificar y describir), qué significa «detección» acá —tarea binaria de melanoma derivada de la clasificación, no localización ni segmentación— y por qué un reporte correcto exige a la vez diagnóstico acertado y descripción fiel de la imagen | Delimitación propia; es la definición que gobierna todo el documento | sin citas |
 | 6 | La promesa de los modelos visión–lenguaje: el espacio común imagen–texto y los generativos multimodales, con los modelos dermatológicos que ya existen. Cierra enunciando por qué *parecen* resolver ambas tareas de una vez | Hay una razón técnica concreta para esperar que funcione | `radford2021learning`, `liu2023visual`, `li2023llavamed`, `zhou2023skingpt4`, `yan2025derm1m` |
-| 7 | El eje transversal: hardware accesible. Qué significa una GPU de consumo de 12–24 GB, por qué eso decide qué modelos entran en el trabajo y qué hace viable el ajuste con LoRA | La restricción de cómputo es una decisión de diseño, no una limitación a disculpar | `hu2021lora`, `yilmaz2025resourceefficient` |
+| 7 | El eje transversal: hardware accesible. Qué significa una GPU de consumo de 12–36 GB, por qué eso decide qué modelos entran en el trabajo y qué hace viable el ajuste con LoRA | La restricción de cómputo es una decisión de diseño, no una limitación a disculpar | `hu2021lora`, `yilmaz2025resourceefficient` |
 
 **Figura: hecha.** `fig:intro_dos_tareas`, en `Figures/Capitulos/01-planteo-problema.tex`, después del
 párrafo 5. Muestra las dos tareas, qué entra y qué sale de cada una, que la detección de melanoma se
@@ -132,7 +132,7 @@ estiraba a 2 páginas metiéndole material que corresponde a otros capítulos.
 | 1 | Dominio y datos | HAM10000 dermatoscópico como conjunto principal, SkinCaRe como fuente de pares imagen--texto y HIBA para validación externa. Quedan fuera la histopatología y la fotografía clínica como dominio principal |
 | 2 | Qué significa cada término acá | «Detección» es clasificación —la tarea binaria de melanoma se deriva de ella—, no localización ni segmentación. «Fidelidad diagnóstica» es la consistencia entre el diagnóstico que redacta el reporte y la etiqueta de referencia, medida sin texto de referencia |
 | 3 | Qué establece y qué no | Las métricas automáticas establecen fidelidad diagnóstica; establecer validez clínica requiere que especialistas lean los reportes. Cierra con lo que el trabajo no es: no se desarrolla un producto de uso clínico ni se valida con pacientes |
-| 4 | La restricción de cómputo como decisión de alcance | Solo entran modelos que corren en GPUs de consumo de 12--24 GB. De ahí se sigue que no se pre-entrena un modelo visión--lenguaje desde cero: el pre-entrenamiento exige cómputo y volumen de datos de otro orden, fuera del alcance de una tesina y del hardware disponible. Se ajustan modelos existentes con LoRA, que es lo que vuelve viable el ajuste en ese hardware |
+| 4 | La restricción de cómputo como decisión de alcance | Solo entran modelos que corren en GPUs de consumo de 12--36 GB. De ahí se sigue que no se pre-entrena un modelo visión--lenguaje desde cero: el pre-entrenamiento exige cómputo y volumen de datos de otro orden, fuera del alcance de una tesina y del hardware disponible. Se ajustan modelos existentes con LoRA, que es lo que vuelve viable el ajuste en ese hardware |
 
 **Redacción condicionada de ¶3.** La evaluación por especialistas está pendiente y puede concretarse
 (la sección `sec:res_gen_especialistas` y el apéndice de la rúbrica están comentados, esperando).
@@ -156,6 +156,12 @@ va donde ocurre:
 
 **Citas:** `tschandl2018ham10000`, `shen2025skincare`, `riccilara2023dataset`, `hu2021lora`.
 
+**Escrita.** Cuatro párrafos, uno por fila de la tabla. ¶3 quedó redactado como afirmación metodológica,
+según lo previsto. Dos ajustes respecto de lo que decía esta ficha: la definición de «detección» no se
+repite, porque ya está en §1.1 y la guía prohíbe recapitular —el párrafo la recuerda en media línea y remite
+con `\ref`—, y la remisión final va a `sec:disc_limitaciones` en lugar de al capítulo entero, que es más
+preciso.
+
 ---
 
 ## 1.5 Organización del documento — `sec:intro_organizacion`
@@ -167,6 +173,12 @@ con `\ref` a cada uno. Sin estimaciones de extensión en el cuerpo.
 
 **Citas:** ninguna.
 
+**Escrita.** Son tres párrafos y no uno solo: veinte renglones seguidos violan la regla de 4 a 8 líneas de
+la guía, que manda sobre esta ficha. Se agruparon por función —qué hay que saber y cómo se hizo; los dos
+capítulos de resultados; el cierre más los apéndices y el anexo—, que es prosa corrida igual, no una lista.
+El Capítulo 1 no se describe a sí mismo. El apéndice de la rúbrica clínica no se menciona, porque sigue
+comentado en `tesina.tex`.
+
 ---
 
 ## Orden de redacción sugerido
@@ -176,9 +188,20 @@ que argumenta y conviene escribirla con la cabeza fresca; §1.2 y §1.3 son casi
 sobre texto que ya existe; §1.5 se escribe al final, cuando los títulos definitivos de los
 capítulos ya no se muevan.
 
+## Preguntas abiertas
+
+1. **El `\pendiente` de apertura del capítulo sigue en pie.** Con §1.1 a §1.5 escritas, lo único que queda
+   sin redactar en el Capítulo 1 es el párrafo que va entre el título y §1.1. Esta ficha no lo contempla, y
+   todos los capítulos del documento tienen uno igual, así que decidir si los capítulos llevan párrafo de
+   apertura o abren directo en su primera sección es una decisión de documento y no de este capítulo.
+
 ## Decisiones tomadas
 
-0. **§1.1 ¶1 afirmaba algo falso y quedó corregido.** La primera redacción decía que el melanoma
+1. **El presupuesto de memoria de GPU es 12--36 GB, no 12--24.** El autor corrigió la cifra al revisar §1.1
+   y esta ficha decía todavía 12--24 en dos lugares (§1.1 ¶7 y §1.4 ¶4); se actualizaron los dos, y §1.4 se
+   redactó con 12--36 para que las dos secciones digan lo mismo.
+
+2. **§1.1 ¶1 afirmaba algo falso y quedó corregido.** La primera redacción decía que el melanoma
    «concentra la mayor parte de la mortalidad» por cáncer de piel. Con las cifras a la vista no se sostiene:
    GLOBOCAN 2024 da 58 398 muertes por melanoma y 58 721 por el resto de los cánceres de piel, casi
    por partes iguales. La afirmación correcta, que es igual de fuerte y además verificable, es que el
@@ -186,7 +209,7 @@ capítulos ya no se muevan.
    También cambió la fuente: `bray2024global` es GLOBOCAN 2022 y quedó superado por
    `sung2026global` (GLOBOCAN 2024, publicado el 08/07/2026). Detalle en `refs_pendientes.md`.
 
-1. **Variabilidad interobservador (§1.1 ¶2): se sostiene con lo que ya está en el `.bib`.** Kittler
+3. **Variabilidad interobservador (§1.1 ¶2): se sostiene con lo que ya está en el `.bib`.** Kittler
    establece que la exactitud depende de la experiencia del examinador y Tschandl 2019 muestra la
    dispersión entre 511 lectores. No se agrega un estudio dedicado de concordancia, así que el
    párrafo **no puede afirmar una cifra de concordancia entre observadores**: se limita a que el
