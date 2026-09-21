@@ -190,10 +190,7 @@ capítulos ya no se muevan.
 
 ## Preguntas abiertas
 
-1. **El `\pendiente` de apertura del capítulo sigue en pie.** Con §1.1 a §1.5 escritas, lo único que queda
-   sin redactar en el Capítulo 1 es el párrafo que va entre el título y §1.1. Esta ficha no lo contempla, y
-   todos los capítulos del documento tienen uno igual, así que decidir si los capítulos llevan párrafo de
-   apertura o abren directo en su primera sección es una decisión de documento y no de este capítulo.
+Ninguna. La del párrafo de apertura se resolvió el 21/09/2026 (ver «Decisiones tomadas»).
 
 ## Decisiones tomadas
 
@@ -212,6 +209,31 @@ capítulos ya no se muevan.
 3. **Variabilidad interobservador (§1.1 ¶2): se sostiene con lo que ya está en el `.bib`.** Kittler
    establece que la exactitud depende de la experiencia del examinador y Tschandl 2019 muestra la
    dispersión entre 511 lectores. No se agrega un estudio dedicado de concordancia, así que el
-   párrafo **no puede afirmar una cifra de concordancia entre observadores**: se limita a que el
+   párrafo **   no puede afirmar una cifra de concordancia entre observadores**: se limita a que el
    desempeño depende de la experiencia y varía entre lectores, que es exactamente lo que esas dos
    referencias sostienen.
+
+4. **Los capítulos llevan párrafo de apertura** (21/09/2026). El de este capítulo se escribió entre el
+   título y §1.1: establece el terreno sin mapa —el mapa del documento queda en §1.5— y cierra instalando
+   el arranque de §1.1. Los demás capítulos decidirán lo mismo cuando se redacten; por ahora conservan su
+   `\pendiente`.
+
+5. **El margen de mejora se focaliza en el 15\,\% de diagnósticos no localizados** (21/09/2026). Se
+   descarta el «último sexto» de la primera redacción: las cifras de la serie son 77/10/5 y el sexto no
+   correspondía a ningún agregado (el 5\,\% es 1/20; 10+5=15\,\% ≈ 1/6.7). La frase quedó «el margen de
+   mejora se concentra en ese 15\,\% de diagnósticos no localizados», con la concordancia corregida
+   («se diagnostican localizados»).
+
+6. **La guía incorpora el checklist de patrones de escritura automatizada** (21/09/2026), al final de §3,
+   como recomendaciones blandas dependientes de contexto. Se aplicó una pasada general sobre el capítulo
+   entero y el caption de la figura con este criterio: voz impersonal intacta; contrastes funcionales
+   (definición de «detección», delimitaciones de §1.4) intactos; solo cayeron los retóricos «no es X, sino
+   Y», los clefts de relleno, las rayas de acotación y los adverbios dispensables. Se conservaron el guion
+   doble de «visión--lenguaje» y la metonimia «el trabajo».
+
+7. **«acá» se reemplazó por «en este trabajo» o se reestructuró la frase** (21/09/2026): el deíctico sonaba
+   informal para el registro del documento.
+
+8. **El «quinto tumor más frecuente» de §1.1 ¶1 se verificó y se sostiene** (21/09/2026): la fact sheet de
+   GLOBOCAN 2024 para NMSC (IARC) lo ubica 5.º en incidencia con 1\,138\,314 casos, y las demás cifras del
+   párrafo cuadran contra la misma fuente. Sin edición.

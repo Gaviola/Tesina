@@ -70,6 +70,28 @@ las dos versiones juntas.
 - **Las siglas se usan libremente una vez introducidas.** La primera aparición en cada capítulo va
   con `\gls{}`, que expande la forma completa; de ahí en más, la sigla sola (VLM, LoRA, RAG, ECE).
 
+### Patrones de escritura automatizada
+
+Recomendaciones para no caer en el tono predecible de la escritura generada por modelos de IA.
+Se aplican según el contexto y **no son requisitos duros**: las convenciones de esta guía —voz
+impersonal, terminología, tipografía— prevalecen sobre ellas, y la pasada se hace al revisar la
+prosa, no como regla de cierre. «Guion largo» es la raya `—`; no aplica al guion doble de los
+compuestos como «visión--lenguaje».
+
+Elimina los patrones de escritura predecibles de la IA de la prosa.
+
+¿Hay algún adverbio? Elimínalo.
+¿Hay alguna voz pasiva? Encuentra al agente y conviértelo en sujeto.
+¿Hay algún objeto inanimado que realice un verbo propio de una persona («la decisión surge»)? Nombra a la persona.
+¿Alguna frase de relleno del tipo «esto es lo que/esto/aquello»? Ve al grano.
+¿Algún contraste del tipo «no es X, es Y»? Expresa Y directamente.
+¿Tres frases consecutivas tienen la misma longitud? Rompe una.
+¿El párrafo termina con una frase concisa e impactante? Varía el estilo.
+¿Hay algún guion largo en alguna parte? Elimínalo.
+¿Hay alguna afirmación vaga («Las implicaciones son significativas»)? Nombra la implicación específica.
+¿Hay un narrador distante («Nadie diseñó esto»)? Sitúa al lector en la escena.
+¿Hay conectores metatextuales («El resto de este ensayo...»)? Elimínalos. Deja que el ensayo fluya.
+
 ## 4. Terminología fijada
 
 La tabla fija decisiones de consistencia, no prohibiciones generales: cuando dos términos son

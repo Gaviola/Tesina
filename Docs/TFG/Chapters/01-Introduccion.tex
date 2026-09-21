@@ -11,29 +11,34 @@
 % eliminan las secciones "Contribuciones" (propia de tesis de maestría o doctorado) y "Evolución respecto
 % del plan de trabajo" (se menciona en el texto donde corresponde).
 
-\pendiente{Este capítulo presenta el problema, explica por qué importa, enuncia las preguntas, las hipótesis
-y los objetivos del trabajo, y delimita su alcance.}
+El diagnóstico de una lesión de piel combina dos aciertos: la categoría clínica y la
+descripción de la imagen. Los modelos visión--lenguaje prometen atenderlos con un solo
+modelo. Este trabajo los somete a esa exigencia sobre imágenes dermatoscópicas, contra
+clasificadores entrenados sobre el mismo material y dentro del presupuesto de una GPU de
+consumo. El peso clínico del problema da la medida de lo que está en juego: cuántos casos
+nuevos aparecen cada año, cuántas muertes deja cada tipo de lesión y qué parte del
+diagnóstico sigue atada a un especialista escaso.
 
 \section{Contexto y motivación}
 \label{sec:intro_contexto}
 
 El cáncer de piel es uno de los tipos de cáncer más frecuentes del mundo: las estimaciones de GLOBOCAN para
 2024 le atribuyen 1\,138\,314 casos nuevos de cáncer de piel no melanoma, el quinto tumor más frecuente del
-planeta, y otros 337\,969 casos de melanoma~\cite{sung2026global}. El melanoma es así menos de una cuarta
+planeta, y otros 337\,969 casos de melanoma~\cite{sung2026global}. El melanoma es menos de una cuarta
 parte de los diagnósticos, pero las muertes se reparten casi por partes iguales entre los dos grupos, 58\,398
 por melanoma y 58\,721 por el resto de los cánceres de piel, de modo que esa fracción menor de los casos
-concentra prácticamente la mitad de la mortalidad. Esa asimetría entre frecuencia y letalidad es la que da
-sentido clínico al problema: la mayoría de las lesiones que llegan a una consulta son benignas o no
-representan un peligro real y el valor de examinarlas está en identificar la minoría que no lo es.
+concentra la mitad de la mortalidad. Esa asimetría entre frecuencia y letalidad da sentido clínico al
+problema. La mayoría de las lesiones que llegan a una consulta son benignas o no representan un peligro real:
+el valor de examinarlas está en identificar la minoría que no lo es.
 
-El peso de la detección temprana descansa en que el desenlace del melanoma depende del momento en que se lo
-diagnostica, de modo que adelantar el momento del diagnóstico no mejora el tratamiento sino el pronóstico. La
-supervivencia relativa a cinco años —la proporción de pacientes que sobrevive una vez descontada la
-mortalidad esperada en la población general— es de 100.0\,\% cuando el melanoma se detecta localizado, baja a
+El peso de la detección temprana está en que el desenlace del melanoma depende del momento en que se lo
+diagnostica: adelantar el diagnóstico mejora el pronóstico sin cambiar el tratamiento. La supervivencia
+relativa a cinco años (la proporción de pacientes que sobrevive una vez descontada la mortalidad esperada en
+la población general) es de 100.0\,\% cuando el melanoma se detecta localizado, baja a
 76.0\,\% cuando ya alcanzó los ganglios regionales y a 34.0\,\% cuando hay metástasis a
-distancia~\cite{nci2026melanoma}. En esa misma serie, 77\,\% de los casos se diagnostica localizado, 10\,\%
-con extensión regional y 5\,\% con metástasis a distancia: el margen de mejora está en ese último sexto de
-los diagnósticos, y no en la mayoría que ya se detecta a tiempo.
+distancia~\cite{nci2026melanoma}. En esa misma serie, 77\,\% de los casos se diagnostican localizados, 10\,\%
+con extensión regional y 5\,\% con metástasis a distancia: el margen de mejora se concentra en ese 15\,\% de
+diagnósticos no localizados.
 
 En Argentina, el Registro Argentino de Melanoma Cutáneo reunió 10\,199 casos entre 2002 y 2018 y documentó
 diferencias regionales en las características de la enfermedad~\cite{loria2020cutaneous}; es la fuente
@@ -42,9 +47,9 @@ afirmación local.
 
 La vía humana para ese diagnóstico no está resuelta. La dermatoscopía, que examina la lesión con aumento e
 iluminación controlada, mejora la exactitud diagnóstica respecto de la inspección a ojo desnudo, y la mejora
-se verifica en la práctica clínica y no solo en condiciones de estudio~\cite{vestergaard2008dermoscopy}. Pero
-no es un beneficio que venga con el instrumento: depende de la formación de quien lo usa, y en examinadores
-sin entrenamiento específico la dermatoscopía no aporta ventaja sobre la inspección
+se verifica en la práctica clínica y no solo en condiciones de estudio~\cite{vestergaard2008dermoscopy}. La
+mejora depende de la formación de quien lo usa: en examinadores sin entrenamiento específico la
+dermatoscopía no aporta ventaja sobre la inspección
 simple~\cite{kittler2002diagnostic}.
 
 A la dependencia de la experiencia se suma la diferencia entre observadores. Un estudio de gran
@@ -57,28 +62,31 @@ referencia contra la cual se mide cualquier sistema automático, y advierte que 
 El tercer factor es de escala y no de dificultad. Un relevamiento de la densidad de dermatólogos en 158
 países estimó una media de 2.66 especialistas por cada 100\,000 habitantes, con un rango que va de 0.37 en
 los países de ingreso bajo a 5.05 en los de ingreso alto~\cite{freeman2026global}. Donde el especialista es
-escaso, la primera lectura de una lesión queda a cargo de quien no tiene formación dermatoscópica, que es
-justamente el caso en el que el instrumento no aporta ventaja. A la escasez se agrega el costo de tiempo de
-la documentación: la medición directa del uso del tiempo médico en la práctica ambulatoria atribuye
-49.2\,\% de la jornada de consultorio a tareas de registro y trabajo de escritorio, más entre una y dos horas
-fuera del horario de atención~\cite{sinsky2016allocation}. Redactar el informe de una lesión es parte de esa
-carga, y es una tarea distinta de la de emitir el diagnóstico.
+escaso, la primera lectura de una lesión queda a cargo de quien no tiene formación dermatoscópica, el caso
+en que el instrumento no aporta ventaja.
+
+A la escasez se agrega el costo de tiempo de la documentación: la medición directa del uso del tiempo médico
+en la práctica ambulatoria atribuye 49.2\,\% de la jornada de consultorio a tareas de registro y trabajo de
+escritorio, más entre una y dos horas fuera del horario de atención~\cite{sinsky2016allocation}. Redactar el
+reporte de una lesión es parte de esa carga y una tarea distinta de la de emitir el diagnóstico.
 
 Sobre ese cuadro se instaló el aprendizaje profundo. Ya en 2017 se mostró que una \gls{cnn} entrenada sobre
 un conjunto grande de imágenes de lesiones cutáneas alcanzaba un desempeño comparable al de dermatólogos
 certificados~\cite{esteva2017dermatologistlevel}, y en 2019 el estudio de lectores ya citado encontró que los
 mejores algoritmos superaban a los expertos humanos sobre el mismo tipo de
 material~\cite{tschandl2019comparison}. Ambos resultados son anteriores a la adopción de los
-\emph{transformers} en visión por computadora y se toman acá como punto de partida, no como el desempeño
-alcanzable hoy. Las revisiones sistemáticas posteriores registran exactitudes altas en condiciones
+\emph{transformers} en visión por computadora y se toman como punto de partida de este trabajo.
+
+Las revisiones sistemáticas posteriores registran exactitudes altas en condiciones
 controladas~\cite{magalhaes2024systematic,kreouzi2024learning}, mientras los trabajos que examinan el uso de
 estos sistemas en atención primaria y comunitaria plantean una pregunta distinta: si ese desempeño se
 conserva fuera de las condiciones de lectura especializada~\cite{jones2022intelligence}.
 
 Ese estado actual deja dos huecos concretos. El primero es la forma de la salida. Un clasificador entrega una
 categoría, o una distribución sobre categorías, y no un texto que describa la lesión y sostenga esa
-categoría; la parte del trabajo clínico que consume tiempo queda sin asistencia. El segundo es la
-generalización. La evaluación de sistemas de \gls{ia} dermatológica sobre conjuntos de imágenes curados para
+categoría; la parte del trabajo clínico que consume tiempo queda sin asistencia.
+
+El segundo es la generalización. La evaluación de sistemas de \gls{ia} dermatológica sobre conjuntos de imágenes curados para
 cubrir el rango de fototipos muestra caídas de desempeño en los tonos de piel menos representados en los
 datos de entrenamiento, que son los que dominan los conjuntos
 públicos~\cite{daneshjou2022disparities,groh2021neural}. Por eso la validación externa de este trabajo se
@@ -87,13 +95,14 @@ explícito de evaluar herramientas de \gls{ia} en esa población~\cite{riccilara
 
 Con ese encuadre, el problema que aborda el trabajo se puede precisar. El diagnóstico dermatológico asistido
 involucra dos tareas y no una (Figura~\ref{fig:intro_dos_tareas}): asignar a la imagen una categoría
-diagnóstica, y redactar un texto que describa la lesión y sostenga esa categoría. \emph{Detección} designa acá la tarea binaria de decidir si una
-lesión es un melanoma, derivada de la clasificación multiclase agrupando sus categorías; no designa la
-localización de la lesión dentro de la imagen ni su segmentación, que son problemas distintos y quedan fuera
-del trabajo. Un reporte correcto exige entonces dos condiciones simultáneas: que el diagnóstico que afirma
-sea el acertado, y que la descripción corresponda a la imagen que se está mirando. Las dos condiciones son
-independientes entre sí, y esa independencia es lo que obliga a evaluarlas por separado: un texto fluido y
-bien estructurado puede sostener un diagnóstico equivocado, y un diagnóstico acertado puede ir acompañado de
+diagnóstica y redactar un texto que describa la lesión y sostenga esa categoría. \emph{Detección} designa en
+este trabajo la tarea binaria de decidir si una lesión es un melanoma, derivada de la clasificación multiclase
+agrupando sus categorías; no designa la localización de la lesión dentro de la imagen ni su segmentación, que
+son problemas distintos y quedan fuera del trabajo.
+
+Un reporte correcto exige dos condiciones simultáneas: que el diagnóstico que afirma sea el acertado y que la
+descripción corresponda a la imagen que se está mirando. Las dos condiciones son independientes entre sí, y
+esa independencia obliga a evaluarlas por separado: un texto fluido y bien estructurado puede sostener un diagnóstico equivocado, y un diagnóstico acertado puede ir acompañado de
 una descripción que no se corresponde con la lesión.
 
 \input{Figures/Capitulos/01-planteo-problema}
@@ -111,33 +120,34 @@ En dermatología esos modelos ya existen. Un sistema diagnóstico interactivo ac
 visual a imágenes de lesiones cutáneas para sostener un intercambio en lenguaje
 natural~\cite{zhou2023skingpt4}, y trabajos más recientes construyeron conjuntos de pares imagen--texto de
 escala millonaria alineados con la ontología clínica del área, sobre los que se entrenaron modelos de
-representación conjunta específicos del dominio~\cite{yan2025derm1m}. Que existan es lo que vuelve razonable
+representación conjunta específicos del dominio~\cite{yan2025derm1m}. Su existencia vuelve razonable
 la pregunta del trabajo: si un único VLM puede a la vez clasificar la lesión y redactar su reporte, o si las
 dos tareas siguen exigiendo componentes distintos y encadenados.
 
-Queda un eje que atraviesa todo lo que sigue: el hardware. Lo que se reporta acá corre en una única GPU de
+Un eje atraviesa el trabajo: el hardware. Los experimentos corren en una única GPU de
 consumo de 12--36\,GB de memoria, la clase de equipamiento que hay en un laboratorio universitario o en un
-servicio clínico, y no en un centro de cómputo con decenas de aceleradores. La restricción no es una
-limitación, sino una condición de diseño, y decide qué modelos entran en la comparación, con qué
-resolución y tamaño de lote se los entrena y cuántas configuraciones se alcanzan a explorar. Lo que vuelve
-manejable el ajuste fino (\emph{fine-tuning}) en ese presupuesto es \gls{lora}, que mantiene congelados los
+servicio clínico, y no en un centro de cómputo con decenas de aceleradores. La restricción opera como
+condición de diseño y decide qué modelos entran en la comparación, con qué resolución y tamaño de lote se los
+entrena y cuántas configuraciones se alcanzan a explorar.
+
+\gls{lora} vuelve manejable el ajuste fino (\emph{fine-tuning}) en ese presupuesto: mantiene congelados los
 pesos del modelo pre-entrenado y entrena en su lugar un conjunto reducido de matrices de bajo rango, con lo
-que la memoria requerida deja de escalar con el tamaño total del modelo~\cite{hu2021lora}; hay trabajos que
+que la memoria requerida deja de escalar con el tamaño total del modelo~\cite{hu2021lora}. Hay trabajos que
 obtienen por esa vía un modelo visión--lenguaje dermatológico con recursos de ese
-orden~\cite{yilmaz2025resourceefficient}. Sobre este encuadre —dos tareas, un tipo de modelo que promete
-resolver ambas y un presupuesto de cómputo acotado— se formulan las preguntas que el trabajo responde.
+orden~\cite{yilmaz2025resourceefficient}. Dos tareas, un tipo de modelo que promete resolver ambas y un
+presupuesto de cómputo acotado: sobre ese encuadre se formulan las preguntas que el trabajo responde.
 
 \section{Preguntas de investigación e hipótesis}
 \label{sec:intro_preguntas}
 A cada una de las dos tareas le corresponde una pregunta, y esa correspondencia organiza el trabajo en dos
 fases: la primera se responde comparando clasificadores sobre el mismo material, y la segunda, evaluando los
 reportes que un modelo produce. Que sean dos preguntas y no una es consecuencia de que las salidas son de
-naturaleza distinta —una categoría y un texto—, con criterios de acierto y métricas que no se traducen entre
+naturaleza distinta (una categoría y un texto), con criterios de acierto y métricas que no se traducen entre
 sí: responder afirmativamente una no adelanta nada sobre la otra.
 
 \begin{enumerate}[label=\textbf{PI\arabic*.}]
   \item ¿En qué medida un modelo visión--lenguaje aporta mejoras reales frente a modelos orientados
-  exclusivamente a visión —CNN y \gls{vit}— en el diagnóstico de lesiones de piel, en particular en la
+  exclusivamente a visión (CNN y \gls{vit}) en el diagnóstico de lesiones de piel, en particular en la
   identificación de melanoma?
   \item ¿Qué tan precisos, completos y clínicamente relevantes resultan los reportes generados
   automáticamente por un VLM ajustado a partir de la imagen?
@@ -159,35 +169,36 @@ Las dos hipótesis de partida son:
   imagen (Capítulo~\ref{cp:res_gen}).
 \end{enumerate}
 
-Las emergentes se presentan en el orden en que surgieron, cada una junto al resultado que la motivó:
+Las emergentes se presentan en el orden en que se formularon, cada una junto al resultado que la motivó:
 \begin{enumerate}[label=\textbf{H\arabic*.}, start=3]
   \item El bajo desempeño de los VLMs generales en clasificación se explica por el desbalance de clases.
-  Surge tras refutarse H1.
+  Se plantea tras refutarse H1.
   \item La especialización de dominio del modelo visión--lenguaje recupera la capacidad de discriminar entre
-  clases. Surge tras refutarse H3, al observarse el colapso también en \emph{zero-shot}.
+  clases. Se plantea tras refutarse H3, al observarse el colapso también en \emph{zero-shot}.
   \item Anclar el generador al diagnóstico de un clasificador especializado (ensamble en cascada) mejora la
-  fidelidad diagnóstica de los reportes respecto de la generación directa. Surge al observar que H2 se
+  fidelidad diagnóstica de los reportes respecto de la generación directa. Se plantea al observarse que H2 se
   cumple solo parcialmente: los reportes son ricos pero diagnósticamente poco fieles.
   \item Incorporar la incertidumbre del clasificador (afirmar, ofrecer un diferencial o derivar) mejora la
-  fidelidad diagnóstica sobre los casos no derivados. Surge del análisis de errores de la cascada.
+  fidelidad diagnóstica sobre los casos no derivados. Se plantea a partir del análisis de errores de la
+  cascada.
 \end{enumerate}
 
-De las seis, H1 y H3 quedaron refutadas, y cada refutación reorientó el trabajo: la primera desplazó la
-comparación hacia un modelo visión--lenguaje especializado en el dominio, y la segunda descartó el desbalance
-de clases como explicación de ese resultado y obligó a buscarla en otra parte. Lo que se siguió de ambas se
-desarrolla en el Capítulo~\ref{cp:res_clasif}, y lo que la tarea de generación heredó de ese recorrido, en el
+De las seis, H1 y H3 quedaron refutadas, y cada refutación reorientó el trabajo: con H1, la comparación se
+desplazó hacia un modelo visión--lenguaje especializado en el dominio; con H3, el desbalance de clases dejó de
+explicar ese resultado y hubo que buscar la explicación en otra parte. Las consecuencias de ambas se
+desarrollan en el Capítulo~\ref{cp:res_clasif}, y lo heredado por la tarea de generación, en el
 Capítulo~\ref{cp:res_gen}.
 
-Enunciarlas en el orden en que surgieron, con las refutadas incluidas, es una decisión deliberada.
+Enunciarlas en el orden en que se formularon, con las refutadas incluidas, es una decisión deliberada.
 Reescribir esta sección dejando solo las hipótesis que se sostuvieron daría un capítulo más prolijo y una
 lectura falsa: los resultados aparecerían confirmando lo previsto, cuando buena parte de ellos consistió
-justamente en descartarlo. Una hipótesis que se cae acota el espacio de explicaciones posibles igual que una
+en descartarlo. Una hipótesis que se cae acota el espacio de explicaciones posibles igual que una
 que se sostiene, y las cuatro hipótesis emergentes son el registro de ese recorrido. Los objetivos, en
 cambio, son los mismos desde el principio.
 
 \section{Objetivos}
 \label{sec:intro_objetivos}
-Los objetivos son los que fija el plan de trabajo aprobado, y se enuncian en sus términos, sin reescribirlos
+El plan de trabajo aprobado fija los objetivos, que se enuncian en sus términos, sin reescribirlos
 para acomodarlos a lo que el trabajo terminó haciendo.
 
 El objetivo general es desarrollar y evaluar un modelo de visión--lenguaje capaz de asistir en el
@@ -207,8 +218,8 @@ Los objetivos específicos son:
 
 Dos de esas formulaciones no coinciden con lo que el trabajo terminó haciendo. «Diseñar y entrenar un modelo
 visión--lenguaje», en OE2, se concretó como el ajuste de modelos ya pre-entrenados y no como un entrenamiento
-desde cero; y la «precisión diagnóstica» del objetivo general se mide acá como fidelidad diagnóstica del
-reporte, que es una noción más acotada. Las dos cosas se siguen del alcance que fija la
+desde cero; y la «precisión diagnóstica» del objetivo general se mide en este trabajo como fidelidad
+diagnóstica del reporte, que es una noción más acotada. Las dos cosas se siguen del alcance que fija la
 Sección~\ref{sec:intro_alcance}, donde se explican el límite de cómputo que descarta el pre-entrenamiento y
 el significado del término. El balance de qué se cumplió y en qué términos se hace en la
 Sección~\ref{sec:concl_objetivos}.
@@ -217,26 +228,26 @@ Sección~\ref{sec:concl_objetivos}.
 \label{sec:intro_alcance}
 El material sobre el que se pronuncia el trabajo son imágenes dermatoscópicas. El conjunto principal es
 HAM10000, que reúne imágenes de lesiones pigmentadas etiquetadas en siete categorías diagnósticas con
-confirmación histopatológica o por seguimiento~\cite{tschandl2018ham10000}, y es sobre él que se entrenan y
+confirmación histopatológica o por seguimiento~\cite{tschandl2018ham10000}, y sobre él se entrenan y
 se comparan los clasificadores. Los pares imagen--texto que exige el entrenamiento del generador provienen
 de SkinCaRe~\cite{shen2025skincare}, y HIBA es el conjunto con el que se evalúa la generalización a otra
 población~\cite{riccilara2023dataset}. La histopatología y la fotografía clínica quedan fuera como dominio
-principal: nada de lo que se establece acá se traslada a esas dos modalidades sin volver a medirlo.
+principal: nada de lo que se establece en este trabajo se traslada a esas dos modalidades sin volver a
+medirlo.
 
-De los términos que el trabajo emplea, dos tienen acá un sentido más estrecho que el corriente. El de
+De los términos que emplea el trabajo, dos se usan en un sentido más estrecho que el corriente. El de
 «detección» quedó fijado en la Sección~\ref{sec:intro_contexto}: es la tarea binaria de melanoma derivada de
 la clasificación, y no la localización de la lesión ni su segmentación. El segundo es «fidelidad
 diagnóstica», que es la magnitud que se mide sobre los reportes: la consistencia entre el diagnóstico que el
-reporte afirma y la etiqueta de referencia de la imagen. Se establece sin disponer de un texto de referencia
-contra el cual comparar, de modo que es una propiedad del contenido del reporte y no de su parecido con un
-texto ajeno.
+reporte afirma y la etiqueta de referencia de la imagen. Se mide sin disponer de un texto de referencia
+contra el cual comparar: es una propiedad del contenido del reporte.
 
-Lo que las métricas automáticas establecen es fidelidad diagnóstica, y eso no es lo mismo que validez
+Las métricas automáticas establecen fidelidad diagnóstica, magnitud distinta de la validez
 clínica: afirmar que un reporte sirve en la consulta exige que especialistas lo lean y se pronuncien sobre
 él, y esa evidencia es de otra naturaleza que la que produce una métrica calculada contra etiquetas. El
 trabajo se pronuncia sobre la primera magnitud y sobre ese material, y no desarrolla un producto de uso
-clínico ni lo valida con pacientes. El análisis de las limitaciones y de las amenazas a la validez tampoco
-va acá, sino en la Sección~\ref{sec:disc_limitaciones}.
+clínico ni lo valida con pacientes. El análisis de las limitaciones y de las amenazas a la validez
+corresponde a la Sección~\ref{sec:disc_limitaciones}.
 
 La restricción de cómputo es también una decisión de alcance. Solo entran modelos que corren en una única
 GPU de consumo de 12--36\,GB, lo que deja fuera de la comparación a los que exigen varios aceleradores para
@@ -248,7 +259,7 @@ con qué configuración se los ajusta es materia del Capítulo~\ref{cp:metodos}.
 
 \section{Organización del documento}
 \label{sec:intro_organizacion}
-El Capítulo~\ref{cp:marco} reúne lo que hace falta para leer el resto: las categorías diagnósticas y el
+El Capítulo~\ref{cp:marco} reúne lo necesario para leer el resto: las categorías diagnósticas y el
 reporte dermatológico como objeto clínico, las arquitecturas de visión y de lenguaje sobre las que se
 construyen los modelos, las técnicas de adaptación y de recuperación que el trabajo emplea, y las métricas
 con las que se juzgan tanto una clasificación como un texto. Cierra con el estado del arte, que ubica este
@@ -265,6 +276,6 @@ y compara las configuraciones del pipeline integrado, con el costo de cómputo d
 El Capítulo~\ref{cp:discusion} interpreta los dos conjuntos de resultados juntos, responde las preguntas con
 la evidencia acumulada y expone las limitaciones y las amenazas a la validez. El
 Capítulo~\ref{cp:conclusiones} cierra con los hallazgos, el balance de los objetivos y las líneas de
-continuación. Los apéndices reúnen el material propio que no entra en el cuerpo —hiperparámetros,
-\emph{prompts}, resultados complementarios y lo necesario para reproducir los experimentos— y el anexo, las
-fichas de los conjuntos de datos y de los modelos externos que el trabajo utiliza.
+continuación. Los apéndices reúnen el material propio que no entra en el cuerpo: hiperparámetros,
+\emph{prompts}, resultados complementarios y lo necesario para reproducir los experimentos. El anexo reúne
+las fichas de los conjuntos de datos y de los modelos externos que el trabajo utiliza.
