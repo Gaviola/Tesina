@@ -18,6 +18,10 @@ Docs/**/*
 !Docs/TFG/Bibliography/*.py
 !Docs/**/imagenes/
 !Docs/**/imagenes/**
+# Plantilla UMU (referencia, no forma parte del documento vivo).
+# Tiene que ir después de las negaciones: si va antes, !Docs/**/ la re-incluye.
+Docs/TFG/Tesis_Universidad_de_Murcia__UMU_/
+
 # VS Code LaTeX Workshop output folders
 Docs/**/${workspaceFolder}/
 
