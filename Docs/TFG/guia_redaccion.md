@@ -69,6 +69,9 @@ las dos versiones juntas.
   ruido tipográfico.
 - **Las siglas se usan libremente una vez introducidas.** La primera aparición en cada capítulo va
   con `\gls{}`, que expande la forma completa; de ahí en más, la sigla sola (VLM, LoRA, RAG, ECE).
+- **Los dos puntos, con moderación.** Anuncian lo que viene después: una enumeración, una definición,
+  un nombre, un ejemplo. No son un conector entre oraciones: si lo que sigue es una explicación o una
+  continuación del pensamiento, va punto y seguido, coma o subordinación.
 
 ### Patrones de escritura automatizada
 
