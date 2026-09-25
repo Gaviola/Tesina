@@ -116,6 +116,7 @@ los capítulos.
 | conjunto de datos | *dataset* | |
 | reporte | informe | Consistencia con el título de la tesina. **«Reporte» designa únicamente el informe clínico**: no se lo usa en el sentido de «lo que se reporta». Para eso se dice «métrica de selección» (con qué se elige el modelo, en validación) y «resultado principal» (qué número se presenta, en test) |
 | fidelidad diagnóstica | precisión diagnóstica | Es la métrica sin referencia, no una *precision* |
+| *embedding* | embebido, incrustación, vector latente | Cursiva la primera vez de cada capítulo, como el resto de los términos en inglés. Vale también para los compuestos: «*embedding* de posición», «kNN sobre embeddings» |
 
 **Prohibido:** la palabra «caveat» en cualquier contexto.
 

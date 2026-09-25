@@ -62,11 +62,83 @@ cierto, y es la afirmación que quedó en el texto, es que el melanoma es menos 
 casos y prácticamente la mitad de las muertes. La subregistración conocida del cáncer de piel no melanoma
 solo refuerza esa asimetría, porque infla el denominador de la incidencia y no el de la mortalidad.
 
+### Marco teórico del Capítulo 2 — incorporado el 22/09/2026
+
+El esqueleto de `Chapters/02-Marco-Teorico.tex` exige referencias que no estaban en el `.bib`: la
+clínica, la calibración, la inferencia estadística, las métricas de generación modernas y dos
+arquitecturas. Se incorporaron **26 entradas**, cada una verificada contra el editor o el
+repositorio oficial. El `.bib` pasó de 82 a **108 entradas**. Las claves siguen el patrón
+`<apellido><año><palabra>` y quedan fijadas por esta tabla: la redacción las usa con estos
+nombres. Las entradas se agregaron al final del archivo, no en orden alfabético, porque biblatex
+imprime en orden de aparición.
+
+| Clave | Referencia | Sostiene | Sección |
+|---|---|---|---|
+| `lecun1998gradient` | LeCun et al., *Proceedings of the IEEE* 86(11):2278–2324, 1998 | Operación de convolución y conectividad local | 2.2.1 |
+| `russakovsky2015imagenet` | Russakovsky et al., *IJCV* 115(3):211–252, 2015 (ILSVRC) | Pre-entrenamiento en ImageNet | 2.2.4 |
+| `lin2017focal` | Lin et al., *ICCV* 2999–3007, 2017 | Pérdida focal | 2.2.4 |
+| `argenziano1998checklist` | Argenziano et al., *Arch Dermatol* 134(12):1563–1570, 1998 | Lista de 7 puntos | 2.1.3 |
+| `carrera2016validity` | Carrera et al., *JAMA Dermatol* 152(7):798–806, 2016 | Concordancia entre observadores por criterio dermatoscópico | 2.1.3 |
+| `kittler2016standardization` | Kittler et al., *JAAD* 74(6):1093–1106, 2016 | Terminología dermatoscópica estandarizada | 2.1.3 |
+| `liu2022convnet` | Liu et al., *CVPR* 11976–11986, 2022 | ConvNeXt | 2.2.1 |
+| `ren2020balanced` | Ren et al., *NeurIPS* 33:4175–4186, 2020 | *Balanced softmax* | 2.2.4 |
+| `holtzman2020curious` | Holtzman et al., *ICLR*, 2020 | Muestreo de núcleo y degeneración textual | 2.3.1 |
+| `khandelwal2020generalization` | Khandelwal et al., *ICLR*, 2020 | kNN-LM, base del RAG por vecinos | 2.4.4 |
+| `jing2018automatic` | Jing, Xie y Xing, *ACL* 2577–2586, 2018 | Origen del *image captioning* médico | 2.4.3 |
+| `chen2020generating` | Chen et al., *EMNLP* 1439–1449, 2020 | R2Gen, reportes de radiología | 2.4.3 |
+| `gu2024medvh` | Gu et al., 2024, `arXiv:2407.02730` | Alucinación en VLMs médicos | 2.4.3 |
+| `sun2025factaware` | Sun et al., *NAACL*, 2025 | FactMM-RAG, RAG multimodal para reportes | 2.4.4 |
+| `guo2017calibration` | Guo et al., *ICML* (PMLR 70):1321–1330, 2017 | ECE, *temperature scaling*, *vector scaling* | 2.5.2 |
+| `brier1950verification` | Brier, *Mon Weather Rev* 78(1):1–3, 1950 | Puntaje de Brier | 2.5.2 |
+| `banerjee2005meteor` | Banerjee y Lavie, *ACL Workshop* 65–72, 2005 | METEOR | 2.5.3 |
+| `vedantam2015cider` | Vedantam, Zitnick y Parikh, *CVPR* 4566–4575, 2015 | CIDEr | 2.5.3 |
+| `zhang2020bertscore` | Zhang et al., *ICLR*, 2020 | BERTScore | 2.5.3 |
+| `mcnemar1947note` | McNemar, *Psychometrika* 12(2):153–157, 1947 | Prueba de McNemar | 2.5.4 |
+| `wilcoxon1945individual` | Wilcoxon, *Biometrics Bull* 1(6):80–83, 1945 | Prueba de Wilcoxon | 2.5.4 |
+| `efron1979bootstrap` | Efron, *Ann Statist* 7(1):1–26, 1979 | *Bootstrap* | 2.5.4 |
+| `selvaraju2017gradcam` | Selvaraju et al., *ICCV* 618–626, 2017 | Grad-CAM | 2.5.5 |
+| `codella2019skin` | Codella et al., 2019, `arXiv:1902.03368` | Archivo y retos ISIC | 2.6 |
+| `mendonca2013ph2` | Mendonça et al., *EMBC* 5437–5440, 2013 | Conjunto PH2 | 2.6 |
+| `abdin2024phi3` | Abdin et al., 2024, `arXiv:2404.14219` | Phi-3.5-Vision | 2.7.2 |
+
+**Qué quedó incompleto.** `kittler2016standardization` quedó sin DOI: se verificó el PMID
+(26896294) y se registró la URL de PubMed en lugar de arriesgar un DOI equivocado. Las listas de
+autores de `abdin2024phi3`, `carrera2016validity`, `codella2019skin`, `kittler2016standardization`
+y `russakovsky2015imagenet` van truncadas con `and others`: el estilo imprime «Autor et al.» igual,
+porque está con `maxnames=1`.
+
+**Cómo se citan las de antes de 2020.** Todas cumplen una de las excepciones de la guía, sección 6:
+fundacionales (`lecun1998gradient`, `lin2017focal`, `guo2017calibration`, `brier1950verification`,
+`banerjee2005meteor`, `vedantam2015cider`, `mcnemar1947note`, `wilcoxon1945individual`,
+`efron1979bootstrap`, `selvaraju2017gradcam`), recursos originales del trabajo
+(`mendonca2013ph2`) o información clínica difícil de obtener (`argenziano1998checklist`,
+`carrera2016validity`, `kittler2016standardization`). Se citan donde se define el concepto y nunca
+como desempeño alcanzable hoy.
+
 ### Por incorporar
 
 | Título | Autores | Año | DOI / URL | Sección que la necesita |
 |---|---|---|---|---|
-| *(vacío)* | | | | |
+| Una referencia clínica sobre la **estructura del informe dermatológico** (descripción, impresión diagnóstica, diagnóstico diferencial, recomendación de manejo). Candidatos: las guías de documentación de la AAD o un manual de dermatología clínica | por definir | — | — | §3.4 ¶1 (antes §2.1.3 ¶1; movido el 25/09/2026) |
+| WILDS: A Benchmark of in-the-Wild Distribution Shifts (*Proceedings of the 38th ICML*, PMLR 139) | Koh, Sagawa, Marklund et al. | 2021 | https://proceedings.mlr.press/v139/koh21a.html — verificar antes de incorporar | §2.6 ¶1, definición del cambio de distribución. Clave sugerida: `koh2021wilds` |
+
+**Por qué falta esta.** §2.1.3 ¶1 enunciaba las cuatro partes del informe citando
+`kittler2016standardization`, pero ese trabajo es el consenso de la ISD sobre **terminología
+dermatoscópica** y no dice nada sobre el formato del informe. Ninguna entrada del `.bib` lo cubre.
+El párrafo se reescribió para enunciar solo las dos partes de las que el trabajo se ocupa
+—descripción e impresión diagnóstica—, que sí se sostienen con `shen2025skincare`, y para dejar el
+diferencial y la recomendación como lo que queda fuera del alcance. Si aparece una fuente clínica
+adecuada, se puede recuperar la enumeración completa; mientras tanto el párrafo no afirma nada que
+no tenga respaldo.
+
+**`kittler2016standardization` se sigue usando, con su alcance real.** Queda en §2.1.3 ¶2, que es
+la afirmación que sí sostiene: el vocabulario dermatoscópico estandarizado por consenso.
+
+**Falta una referencia de LSTM.** §2.3.1 ¶1 mencionaba las redes de memoria a corto y largo plazo
+citando `elman1990finding`, que es de 1990 y describe la red recurrente simple. Hochreiter y
+Schmidhuber 1997 no está en el `.bib`. Como la ficha del Capítulo 2 ya había decidido dejar LSTM en
+una mención mínima, **se eliminó la cláusula** en lugar de proponer la referencia. Si el marco
+teórico llegara a necesitar LSTM con desarrollo, hay que incorporarla primero.
 
 ## 2. Consolidación del 17/09/2026
 
@@ -146,14 +218,29 @@ directamente al `.bib`: en total son 15 referencias que solo existen en el docum
 
 **Conviene recuperar de la papelera las 36 entradas antes de vaciarla**, porque son referencias que
 el documento usa y ahí están sus PDF y sus metadatos. Mientras esa diferencia exista, una
-exportación de Zotero sobre `Bibliography.bib` borraría 51 de las 82 referencias.
+exportación de Zotero sobre `Bibliography.bib` borraría 77 de las 108 referencias: las 36 de la
+papelera, las 15 que solo existen en el documento y las 26 de la tanda del 22/09/2026, que tampoco
+están en Zotero.
 
-## 6. Auditoría por año (17/09/2026)
+## 6. Auditoría por año
 
-La ventana de referencia fijada en la guía es 2020–2026. De las 82 entradas del `.bib`, **59 están
-dentro de la ventana y 23 son anteriores**. Las 23 cumplen alguna de las excepciones, así que
-ninguna se descarta, pero conviene tener escrito por qué está cada una: la razón determina *cómo*
-se la cita.
+**Recuento vigente (22/09/2026): de las 108 entradas del `.bib`, 68 están dentro de la ventana
+2020–2026 y 40 son anteriores.** La tanda del 22/09 sumó 26 entradas, de las cuales 17 son
+anteriores a 2020 —casi todas definiciones de métricas y de pruebas estadísticas, que son
+fundacionales por naturaleza—, y por eso la proporción se movió tanto.
+
+El recuento anterior (17/09/2026) era de 82 entradas, 59 dentro de la ventana y 23 anteriores. La
+tabla que sigue es de esa fecha y **no incluye las 17 anteriores a 2020 que entraron después**:
+`wilcoxon1945individual`, `mcnemar1947note`, `brier1950verification`, `efron1979bootstrap`,
+`argenziano1998checklist`, `lecun1998gradient`, `kittler2002diagnostic`, `banerjee2005meteor`,
+`fawcett2006introduction`, `mendonca2013ph2`, `russakovsky2015imagenet`, `vedantam2015cider`,
+`carrera2016validity`, `kittler2016standardization`, `guo2017calibration`, `lin2017focal`,
+`selvaraju2017gradcam`. Todas entran por la excepción 1 —definen una métrica, una prueba, una
+arquitectura o un criterio clínico— y ninguna se usa para sostener una afirmación sobre el
+desempeño alcanzable hoy. **Falta completar la tabla con ellas.**
+
+Las 23 originales cumplen alguna de las excepciones, así que ninguna se descarta, pero conviene
+tener escrito por qué está cada una: la razón determina *cómo* se la cita.
 
 ### Fundacionales: se citan por lo que definen, no como estado del arte
 
