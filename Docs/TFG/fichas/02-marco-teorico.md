@@ -268,6 +268,152 @@ diagrama del *pipeline* ya previsto.
 
 ---
 
+## Bloque B — §2.5 Modelos visión--lenguaje y §2.6 Evaluación (propuesta del 25/09/2026, sin aprobar)
+
+Numeración nueva (decisión 14). Cada sección abre situándose en el *pipeline* y cierra con lo que deja
+abierto, como pide el hilo conductor.
+
+### Acrónimos que pide este bloque
+
+| Sigla | Expansión | Sección |
+|---|---|---|
+| `mce` | Error de calibración máximo (*Maximum Calibration Error*) | 2.6.2 |
+
+Ya declarados que se usan: `vlm`, `clip`, `llm`, `rag`, `knn`, `ece`, `auc`, `lora`, `mel`, `nv`.
+Los nombres de métricas de texto (BLEU, ROUGE-L, METEOR, CIDEr, BERTScore) y Grad-CAM **no** se
+declaran como acrónimo: se usan como nombres propios, igual que en la literatura.
+
+---
+
+## 2.5 Modelos visión--lenguaje — `sec:marco_vlm`
+
+**Mensaje central.** Hay dos maneras de unir imagen y texto: alinearlos en un espacio común
+(contrastivo, sirve para clasificar y recuperar) o inyectar la imagen en un LLM (generativo, sirve para
+redactar). El *pipeline* usa las dos, y la generación médica tiene fallas propias que la evaluación
+tiene que poder ver.
+
+**Extensión: 4–4,5 páginas.**
+
+**Apertura (1 párrafo).** El LLM de §2.4 solo recibe texto; esta sección presenta las dos formas de
+conectarlo con la imagen y qué papel cumple cada una en el *pipeline* (DermLIP para clasificar y
+recuperar vecinos, el generador para redactar).
+
+### 2.5.1 Alineación contrastiva: CLIP
+
+| # | Párrafo | Afirmación que sostiene | Citas |
+|---|---|---|---|
+| 1 | Dos codificadores, uno de imagen y uno de texto, proyectan a un espacio común; el entrenamiento contrastivo sobre pares imagen--texto acerca los *embeddings* de cada par y aleja los de pares distintos dentro del lote | La alineación produce un espacio donde la similitud entre imagen y texto es medible | `radford2021learning` |
+| 2 | Clasificación *zero-shot*: cada clase se escribe como texto («una imagen dermatoscópica de un melanoma»), y la imagen se asigna a la clase cuyo *embedding* de texto está más cerca; el resultado depende de cómo se redacta el *prompt* | Un modelo contrastivo clasifica sin ajuste, y la redacción del *prompt* es parte del clasificador | `radford2021learning` |
+| 3 | *Linear probe* y vecinos: congelando el codificador de imagen, un clasificador lineal o un kNN sobre los *embeddings* aprovechan la representación con pocas etiquetas | Instala los modos de uso de DermLIP del Cap. 3 y la búsqueda de vecinos de §2.5.4 | `radford2021learning` |
+| 4 | Pre-entrenamiento de dominio: el mismo esquema sobre pares dermatológicos (Derm1M) da DermLIP; un modelo entrenado sobre imágenes generales no conoce el vocabulario clínico | Justifica usar un modelo contrastivo especializado y no el CLIP original | `yan2025derm1m` |
+
+**Figura:** matriz de similitud imagen--texto del lote, con la diagonal de pares correctos resaltada
+(`fig:marco_clip`, adaptada de `radford2021learning`, TikZ).
+
+### 2.5.2 Modelos multimodales generativos
+
+| # | Párrafo | Afirmación que sostiene | Citas |
+|---|---|---|---|
+| 1 | Esquema LLaVA: un codificador visual tipo CLIP, un proyector (perceptrón, §2.1.1) que lleva los rasgos visuales a la dimensión de los *embeddings* del LLM, y un LLM de solo decodificador que recibe los tokens visuales como prefijo del texto | Un VLM generativo es un LLM con una entrada visual adicional, no un codificador--decodificador | `liu2023visual` |
+| 2 | Alternativa con consultas aprendidas (Q-Former de BLIP-2), que resume la imagen en un número fijo de tokens; se nombra para mostrar que el puente entre las dos partes es una decisión de diseño | El proyector no es único; condiciona cuánta información visual llega al LLM | `li2023blip2` |
+| 3 | *Visual instruction tuning* en dos etapas: primero se entrena solo el proyector sobre pares imagen--leyenda, después el conjunto sobre instrucciones visuales | Así se obtiene un VLM que responde instrucciones sobre una imagen | `liu2023visual` |
+| 4 | Adaptación al dominio médico: LLaVA-Med repite la receta con figuras y leyendas de artículos biomédicos; modelos pequeños como Phi-3.5-Vision permiten ajustar con LoRA en hardware de consumo; SkinVL aplica la receta a dermatología con texto de libros de referencia | Instala los tres generadores del trabajo como variantes de un mismo esquema | `li2023llavamed`, `abdin2024phi3`, `zeng2025mmskin` |
+
+**Figura:** arquitectura tipo LLaVA — imagen → codificador visual → proyector → tokens visuales +
+tokens de la instrucción → LLM → texto (`fig:marco_llava`, adaptada de `liu2023visual`, TikZ).
+
+### 2.5.3 Generación de texto a partir de imágenes médicas
+
+| # | Párrafo | Afirmación que sostiene | Citas |
+|---|---|---|---|
+| 1 | De *image captioning* a la redacción de reportes: la tarea nace en radiología, donde el reporte es largo, estructurado y mayormente normal; requiere pares imagen--texto clínico | La generación de reportes es una tarea con datos y formato propios | `jing2018automatic`, `chen2020generating` |
+| 2 | En dermatología los pares son escasos y recientes (SkinCaRe, MM-Skin, Derm1M), y el texto combina descripción e impresión diagnóstica | Sitúa los datos que el trabajo usa para ajustar | `shen2025skincare`, `zeng2025mmskin`, `yan2025derm1m` |
+| 3 | Alucinación: el modelo describe hallazgos que la imagen no tiene, con la misma fluidez que los reales | Primera falla característica; un texto fluido no es un texto fiel | `gu2024medvh` |
+| 4 | *Hedging*: descripciones genéricas, compatibles con cualquier lesión, que evitan comprometer un diagnóstico | Segunda falla; un texto sin errores puede no decir nada | ver pregunta abierta 4 |
+| 5 | Dos condiciones de un reporte correcto, retomando `fig:intro_dos_tareas`: fidelidad diagnóstica (la categoría es la acertada) y calidad del texto (la descripción corresponde a la imagen). Pueden fallar por separado, y la evaluación de §2.6.3 mide las dos | Instala la distinción sobre la que se apoya el Cap. de resultados de generación | — |
+
+### 2.5.4 Generación aumentada por recuperación
+
+| # | Párrafo | Afirmación que sostiene | Citas |
+|---|---|---|---|
+| 1 | RAG: el generador recibe, además de la entrada, documentos recuperados de una base externa, y condiciona el texto en ellos; separa lo que el modelo sabe de lo que se le muestra | La recuperación aporta evidencia sin reentrenar | `lewis2020retrievalaugmented` |
+| 2 | Recuperación por vecinos: la búsqueda se hace por similitud de *embeddings*; los k vecinos más cercanos de la entrada aportan casos parecidos cuya información se usa en la predicción | kNN sobre *embeddings* como mecanismo de recuperación | `khandelwal2020generalization` |
+| 3 | Variante multimodal en generación de reportes médicos: se recuperan imágenes parecidas y sus textos para anclar el reporte en hechos | Precedente directo del *grounding* por recuperación del *pipeline* | `sun2025factaware` |
+| 4 | Cierre: el *pipeline* recupera los vecinos visuales con DermLIP (§2.5.1) y el acuerdo entre vecinos y clasificador informa la incertidumbre; el detalle va en Cap. 3. Queda abierto cómo juzgar la salida → §2.6 | Instala el uso de kNN del *pipeline* | — |
+
+**Qué no va.** Ni resultados propios, ni prompts, ni la cascada (Cap. 3, `sec:met_pipeline`), ni la
+clasificación con VLMs generativos (Cap. 3, `sec:met_clasif_vlm`). Ni la revisión de modelos
+dermatológicos concretos más allá de nombrarlos: eso es el estado del arte.
+
+---
+
+## 2.6 Evaluación de modelos — `sec:marco_evaluacion`
+
+**Mensaje central.** Cada salida del *pipeline* se juzga con una familia de métricas distinta —la
+etiqueta, la probabilidad y el texto—, cada métrica ve una parte y no otra, y una diferencia entre dos
+modelos solo cuenta si supera la variación del conjunto de test.
+
+**Extensión: 4,5–5 páginas.**
+
+**Apertura (1 párrafo).** Qué se evalúa de cada componente: la clase (§2.6.1), la probabilidad que la
+acompaña (§2.6.2), el texto (§2.6.3); cómo se decide si dos modelos difieren (§2.6.4) y qué miró el
+modelo (§2.6.5).
+
+### 2.6.1 Métricas de clasificación
+
+| # | Párrafo | Afirmación que sostiene | Citas |
+|---|---|---|---|
+| 1 | Matriz de confusión; sensibilidad y especificidad para la tarea binaria (melanoma frente al resto) | Definiciones base | `fawcett2006introduction` |
+| 2 | Exactitud engañosa: con NV en torno a dos tercios de HAM10000, predecir siempre NV da exactitud alta y sensibilidad nula en MEL | La exactitud no sirve con clases desbalanceadas (retoma §2.3.4) | `tschandl2018ham10000` |
+| 3 | F1 por clase; promedio macro (todas las clases pesan igual) frente a ponderado (pesa por soporte); sensibilidad macro | Qué promedio refleja las clases minoritarias | — (definiciones) |
+| 4 | Curva ROC y AUC: desempeño a lo largo de todos los umbrales, independiente del umbral elegido; uno contra el resto en el caso multiclase | Métrica que no depende de fijar un umbral | `fawcett2006introduction` |
+
+Ecuaciones: F1 y promedio macro (`eq:marco_f1`).
+
+### 2.6.2 Calibración de probabilidades
+
+| # | Párrafo | Afirmación que sostiene | Citas |
+|---|---|---|---|
+| 1 | Un modelo está calibrado cuando, entre las predicciones con confianza 0.8, acierta el 80 %; las redes profundas modernas tienden a ser sobreconfiadas | La probabilidad de salida no es una confianza confiable por defecto | `guo2017calibration` |
+| 2 | Diagrama de confiabilidad; ECE como brecha media ponderada entre confianza y exactitud por intervalo; MCE como la brecha máxima (`eq:marco_ece`) | Cómo se mide la calibración | `guo2017calibration` |
+| 3 | Puntaje de Brier: error cuadrático entre la probabilidad y el resultado; mezcla calibración y discriminación | Métrica complementaria, sin intervalos | `brier1950verification` |
+| 4 | Calibración post-hoc sobre validación: *temperature scaling* (un escalar que divide los *logits*) y *vector scaling* (un factor y un sesgo por clase); no cambian la clase predicha | La calibración se corrige después del entrenamiento sin tocar la exactitud; importa porque el *pipeline* usa la confianza para rutear | `guo2017calibration` |
+
+**Figura:** diagrama de confiabilidad ilustrativo, con datos sintéticos rotulados como tales
+(`fig:marco_confiabilidad`, propia, TikZ/pgfplots).
+
+### 2.6.3 Métricas de generación de texto
+
+| # | Párrafo | Afirmación que sostiene | Citas |
+|---|---|---|---|
+| 1 | Con referencia, por solapamiento de n-gramas: BLEU (precisión de n-gramas con penalización por brevedad), ROUGE-L (subsecuencia común más larga), METEOR (alineación con sinónimos y raíces), CIDEr (n-gramas ponderados por TF-IDF contra varias referencias) | Qué compara cada una | `papineni2002bleu`, `lin2004rouge`, `banerjee2005meteor`, `vedantam2015cider` |
+| 2 | Con referencia, semántica: BERTScore compara *embeddings* contextuales token a token y tolera paráfrasis | Supera la coincidencia literal, pero sigue midiendo parecido con un texto | `zhang2020bertscore` |
+| 3 | (escrito) Límite de las métricas con referencia: variabilidad entre observadores | — | `carrera2016validity` |
+| 4 | (escrito) Vocabulario finito como base de las métricas sin referencia | — | `kittler2016standardization`, `argenziano1998checklist` |
+| 5 | Métricas sin referencia del trabajo, como concepto: cobertura de entidades clínicas (cuántos términos del vocabulario menciona el reporte) y consistencia diagnóstica (si el texto nombra la categoría correcta). Qué ve cada familia: las con referencia premian el parecido de forma, las sin referencia la presencia de contenido clínico, y ninguna detecta por sí sola una alucinación. La definición operativa va en Cap. 3 | Conecta con las dos condiciones de §2.5.3 | — |
+
+### 2.6.4 Inferencia estadística para comparar modelos
+
+| # | Párrafo | Afirmación que sostiene | Citas |
+|---|---|---|---|
+| 1 | El conjunto de test es una muestra; una diferencia de métricas puede deberse a qué imágenes cayeron en él | Una diferencia sin medida de incertidumbre no es un resultado | — |
+| 2 | *Bootstrap*: se remuestrea el test con reposición para obtener la distribución de la métrica; pareado, se remuestrean las mismas imágenes para los dos modelos y se obtiene un intervalo para la diferencia | Intervalos para métricas agregadas (F1 macro, AUC) | `efron1979bootstrap` |
+| 3 | McNemar: sobre los mismos casos, cuenta solo los discordantes (uno acierta y el otro no) y prueba si están desbalanceados | Comparación de aciertos por imagen | `mcnemar1947note` |
+| 4 | Wilcoxon de rangos con signo: diferencias pareadas por clase, sin suponer normalidad; recomendado para comparar clasificadores | Comparación de la sensibilidad por clase | `wilcoxon1945individual`, `demsar2006statistical` |
+
+### 2.6.5 Interpretabilidad visual
+
+| # | Párrafo | Afirmación que sostiene | Citas |
+|---|---|---|---|
+| 1 | Grad-CAM: pondera los mapas de activación de la última capa convolucional por el gradiente de la clase y produce un mapa de calor de las regiones que más influyeron en ella | Qué regiones de la imagen usó el clasificador | `selvaraju2017gradcam` |
+| 2 | Límites: resolución de la última capa (mapas gruesos), muestra dónde miró el modelo y no por qué; no valida que la decisión sea correcta. Cierre hacia §2.7: un modelo puede atender a artefactos del conjunto | Grad-CAM sirve para detectar atajos, no para certificar el razonamiento | `selvaraju2017gradcam` (ver pregunta abierta 5) |
+
+**Qué no va.** Ni los valores obtenidos, ni la elección de la métrica de selección (Cap. 3,
+`sec:met_seleccion`), ni la rúbrica con especialistas (apéndice). Ni perplejidad ni métricas con LLM
+como juez: el trabajo no las usa.
+
+---
+
 ## Próximos bloques (esquema, sin detalle)
 
 | Bloque | Secciones | Extensión | Estado |
@@ -296,6 +442,18 @@ resultados; acá solo alimentan la comparación cualitativa.
    imprimen así en el Capítulo 1. Se arregla en una línea por acrónimo en `Matter/05-Acronyms.tex`,
    sacando el inglés entre paréntesis de la forma larga: la lista de acrónimos lo sigue mostrando.
    Afecta a capítulos ya revisados, así que lo decide el autor.
+
+4. **Cita para el *hedging* (§2.5.3 ¶4).** Ninguna clave del `.bib` define el fenómeno en
+   generación médica. Opciones: describirlo sin cita como falla observada en el trabajo (con remisión
+   al Cap. de resultados de generación) o proponer una referencia en `refs_pendientes.md`.
+
+5. **Cita para los límites de Grad-CAM (§2.6.5 ¶2).** Selvaraju sostiene la resolución gruesa; que el
+   mapa no certifica el razonamiento lo sostiene mejor Adebayo et al. 2018, *Sanity Checks for
+   Saliency Maps* (NeurIPS, abierto en arXiv 1810.03292), que no está en el `.bib`.
+
+6. **Dónde se definen las métricas sin referencia.** La ficha propone concepto aquí y definición
+   operativa (lista de entidades, sinónimos, regla de coincidencia) en el Cap. 3, porque son del
+   trabajo y no del estado del conocimiento. El `\pendiente` actual las ponía enteras aquí.
 
 ## Decisiones tomadas
 

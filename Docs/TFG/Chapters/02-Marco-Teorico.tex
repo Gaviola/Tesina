@@ -364,31 +364,140 @@ hay que conectar su entrada con un codificador visual, y de eso se ocupan los mo
 \section{Modelos visión--lenguaje}
 \label{sec:marco_vlm}
 
+Un \gls{vlm} procesa imagen y texto en un mismo modelo, y hay dos formas de construirlo. La primera
+entrena un codificador de imagen y uno de texto para que proyecten al mismo espacio, de modo que una
+imagen y su descripción queden cerca; el resultado sirve para clasificar y para buscar casos parecidos,
+pero no redacta. La segunda conecta un codificador visual a la entrada de un LLM, que entonces genera
+texto a partir de la imagen. El \emph{pipeline} usa las dos. Un modelo del primer tipo, DermLIP, clasifica
+y recupera los vecinos visuales de cada caso, y uno del segundo tipo redacta el reporte.
+
 \subsection{Alineación contrastiva: CLIP}
-\pendiente{Se explica cómo CLIP proyecta imagen y texto a un espacio común, y cómo ese espacio permite la
-clasificación \emph{zero-shot} por similitud y el \emph{linear probe}. Es la base de DermLIP.}
+\label{sec:marco_vlm_clip}
+
+\gls{clip} entrena un codificador de imagen y uno de texto sobre pares imagen--texto, cada uno con una
+proyección final a un espacio común de \emph{embeddings}. En cada lote de $N$ pares, el modelo calcula la
+similitud entre cada imagen y cada texto y aprende a distinguir los $N$ pares correctos entre las $N^2$
+combinaciones posibles, lo que acerca los \emph{embeddings} de cada par y aleja los de pares distintos
+(Figura~\ref{fig:marco_clip}). El modelo original se entrenó así sobre 400 millones de pares recogidos
+de internet, sin ninguna etiqueta de clase~\cite{radford2021learning}.
+
+\input{Figures/Capitulos/02-clip}
+
+Ese espacio compartido permite clasificar sin entrenar un clasificador. Cada clase se escribe como un
+texto, por ejemplo «una imagen dermatoscópica de un melanoma», el codificador de texto lo proyecta, y la
+imagen se asigna a la clase cuyo \emph{embedding} de texto le queda más cerca. Esta clasificación
+\emph{zero-shot} depende de cómo se redacten esos textos: cambiar la plantilla del \emph{prompt} cambia la
+exactitud, y por eso la plantilla forma parte del clasificador~\cite{radford2021learning}.
+
+Con etiquetas disponibles, el codificador de imagen se usa también como extractor de características
+congelado. Un clasificador lineal entrenado sobre los \emph{embeddings}, el \emph{linear probe}, mide
+cuánta información sobre las clases contiene la representación, y un \gls{knn} sobre el mismo espacio
+asigna a cada imagen la clase de sus vecinos más cercanos~\cite{radford2021learning}. Los dos modos
+reaparecen en el trabajo, y el segundo es además el mecanismo de recuperación de la
+Sección~\ref{sec:marco_vlm_rag}.
+
+Un modelo contrastivo solo relaciona lo que vio en sus pares de entrenamiento, y los pares de internet
+casi no contienen imágenes dermatoscópicas ni su vocabulario. DermLIP aplica el mismo esquema a Derm1M,
+un conjunto de alrededor de un millón de pares imagen--texto dermatológicos, y en clasificación
+\emph{zero-shot} de enfermedades de la piel supera a los modelos biomédicos de propósito
+general~\cite{yan2025derm1m}. Por eso el \emph{pipeline} usa un modelo contrastivo especializado y no el
+CLIP original.
 
 \subsection{Modelos multimodales generativos}
 \label{sec:marco_vlm_generativos}
-\pendiente{Se describe la proyección de características visuales al espacio de un LLM (LLaVA) y el
-\emph{visual instruction tuning}, base de LLaVA-Med, Mini-VLM y SkinVL. Se aclara que estos modelos no
-reutilizan el esquema codificador--decodificador del transformer original: los tokens visuales proyectados
-entran como prefijo a un LLM de solo decodificador.}
+
+Los VLM generativos que usa el trabajo siguen el esquema de LLaVA. Un codificador visual del
+tipo de CLIP extrae los rasgos de la imagen, y un proyector, una capa lineal como las del perceptrón de
+la Sección~\ref{sec:marco_perceptron}, los lleva a la dimensión de los \emph{embeddings} de palabra del LLM. Los tokens visuales resultantes entran como prefijo
+de la instrucción a un LLM de solo decodificador, que genera la respuesta token a token
+(Figura~\ref{fig:marco_llava}). El modelo no recupera el codificador--decodificador del transformer
+original, porque la imagen llega como una parte más de la secuencia de entrada~\cite{liu2023visual}.
+
+\input{Figures/Capitulos/02-llava}
+
+El proyector no es la única forma de unir las dos partes. BLIP-2 interpone un módulo con un número fijo
+de consultas aprendidas, el Q-Former, que atiende a los rasgos de la imagen y le entrega al LLM solo
+esas consultas, con lo que la imagen ocupa siempre la misma cantidad de tokens~\cite{li2023blip2}. La
+elección del puente determina cuánta información visual llega al modelo de lenguaje y cuánto cuesta
+procesarla.
+
+LLaVA se entrena en dos etapas. En la primera, con el codificador visual y el LLM congelados, solo se
+ajusta el proyector sobre pares imagen--leyenda, para que los tokens visuales caigan en una región del
+espacio que el LLM interprete. En la segunda, el \emph{visual instruction tuning}, se ajustan el
+proyector y el LLM sobre conversaciones en las que se pide describir, razonar o responder preguntas
+sobre una imagen. De ahí sale un modelo que sigue instrucciones visuales como el LLM de la
+Sección~\ref{sec:marco_llm_grandes} sigue instrucciones de texto~\cite{liu2023visual}.
+
+La misma receta se ha llevado al dominio médico cambiando los datos. LLaVA-Med la repite con figuras y
+leyendas de artículos biomédicos~\cite{li2023llavamed}, y SkinVL con conjuntos dermatológicos
+públicos a los que suma MM-Skin, un conjunto de pares construido a partir de libros de texto de la
+especialidad~\cite{zeng2025mmskin}. La familia Phi-3 incluye una variante con entrada visual que sigue
+el mismo esquema con un LLM de pocos miles de millones de parámetros~\cite{abdin2024phi3}. A ese tamaño,
+el ajuste con LoRA de la Sección~\ref{sec:marco_llm_lora} cabe en una GPU de consumo. Los generadores que compara el trabajo son variantes de este mismo
+diseño.
 
 \subsection{Generación de texto a partir de imágenes médicas}
 \label{sec:marco_vlm_generacion}
-\pendiente{Se presenta la tarea central del trabajo: producir texto clínico a partir de una imagen. Se
-describen el esquema \emph{image captioning} aplicado al dominio médico y su evolución hacia la redacción de
-informes (radiología primero, dermatología después), qué datos requiere (pares imagen--texto clínico), y los
-dos problemas característicos de estos modelos: la alucinación de hallazgos y el \emph{hedging}, es decir, la
-tendencia a redactar descripciones genéricas y sin compromiso diagnóstico. También se distingue entre la
-fidelidad diagnóstica del reporte y su calidad como texto, que retoma las dos condiciones de la
-Figura~\ref{fig:intro_dos_tareas} (categoría acertada y descripción fiel a la imagen); sobre esa distinción
-se apoya toda la evaluación del Capítulo~\ref{cp:res_gen}.}
+
+La tarea central del trabajo es producir texto clínico a partir de una imagen. Su antecedente es el
+\emph{image captioning}, que describe una imagen natural en una oración, pero el reporte médico es más
+largo, sigue una estructura y usa un vocabulario técnico. La generación de reportes se desarrolló
+primero en radiología, con modelos que predicen etiquetas de hallazgos y redactan el reporte oración por
+oración, y con arquitecturas que recuerdan patrones de redacción entre reportes
+parecidos~\cite{jing2018automatic,chen2020generating}. En todos los casos el entrenamiento requiere
+pares de imagen y texto clínico.
+
+En dermatología esos pares son escasos y recientes. SkinCaRe anota imágenes clínicas con una descripción
+y un razonamiento diagnóstico, MM-Skin reúne pares extraídos de libros de texto y Derm1M agrega
+alrededor de un millón de pares de fuentes diversas~\cite{shen2025skincare,zeng2025mmskin,yan2025derm1m}.
+El texto que acompaña a cada imagen combina lo que se ve en la lesión con una impresión diagnóstica, que
+son las dos partes del reporte de las que se ocupa el trabajo.
+
+El primer problema característico de estos modelos es la alucinación. El modelo describe hallazgos que
+la imagen no contiene, con la misma fluidez con que describe los que sí están, de modo que el lector no
+tiene cómo separarlos leyendo solo el texto. Un estudio sistemático sobre VLM médicos encontró que los
+modelos ajustados al dominio son más propensos a alucinar que los de propósito general, aun cuando
+rinden mejor en las tareas médicas estándar~\cite{gu2024medvh}.
+
+El segundo problema apareció durante la experimentación de este trabajo, y se lo llama aquí
+\emph{hedging}. El modelo redacta descripciones genéricas, compatibles con casi cualquier lesión, y evita
+comprometer un diagnóstico, por ejemplo enumerando varias categorías posibles sin inclinarse por
+ninguna. Ese texto no contiene errores visibles y tampoco informa nada sobre la lesión concreta. El
+Capítulo~\ref{cp:res_gen} documenta con qué frecuencia ocurre en cada generador.
+
+Las dos fallas muestran que un reporte correcto exige dos condiciones independientes, las de la
+Figura~\ref{fig:intro_dos_tareas}. La fidelidad diagnóstica pide que la categoría que el texto nombra
+sea la acertada, y la calidad del texto pide que la descripción corresponda a lo que muestra la imagen.
+Un reporte con descripción fiel puede cerrar en un diagnóstico equivocado, y uno con el diagnóstico
+correcto puede venir acompañado de hallazgos inventados. La evaluación de la
+Sección~\ref{sec:marco_eval_texto} mide cada condición por separado.
 
 \subsection{Generación aumentada por recuperación}
-\pendiente{Se explica RAG en general y su variante basada en vecinos visuales (kNN sobre
-embeddings).}
+\label{sec:marco_vlm_rag}
+
+La \gls{rag} agrega al generador un paso de búsqueda. Antes de producir la salida, un recuperador
+selecciona documentos de una base externa según su parecido con la entrada, y el generador condiciona el
+texto en ellos además de en la entrada. Lo que el modelo aprendió en su entrenamiento queda separado de la
+evidencia que se le muestra en cada consulta, y la base se puede cambiar sin reentrenar el
+modelo~\cite{lewis2020retrievalaugmented}.
+
+La recuperación se resuelve casi siempre por vecindad en un espacio de \emph{embeddings}. Se codifica la
+entrada, se buscan los $k$ elementos de la base cuyos \emph{embeddings} están más cerca y se usa la
+información asociada a ellos. Aplicada a un modelo de lenguaje, la búsqueda de vecinos mejora la
+predicción sin ningún entrenamiento adicional, sobre todo en los patrones poco frecuentes, porque el
+modelo accede en el momento de predecir a casos concretos que no tiene que memorizar~\cite{khandelwal2020generalization}.
+
+En la generación de reportes radiológicos, la recuperación multimodal parte de la imagen. A partir de
+ella se recuperan reportes de casos parecidos de la base de entrenamiento, que se entregan al generador
+como referencia. Entrenar el recuperador para que prefiera reportes con los mismos hallazgos clínicos mejora la
+completitud y la corrección de lo generado~\cite{sun2025factaware}. Es el antecedente directo del
+\emph{grounding} por recuperación que usa el trabajo.
+
+El \emph{pipeline} recupera los vecinos visuales de cada imagen con los \emph{embeddings} de DermLIP de la
+Sección~\ref{sec:marco_vlm_clip}, y el acuerdo entre esos vecinos y el clasificador informa cuánta
+confianza merece el caso; el procedimiento completo se describe en la Sección~\ref{sec:met_pipeline}. Con
+eso quedan presentados todos los componentes del \emph{pipeline}. Falta decidir cómo se juzga lo que
+producen.
 
 \section{Evaluación de modelos}
 \label{sec:marco_evaluacion}
