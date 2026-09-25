@@ -670,6 +670,6 @@ resultados; acá solo alimentan la comparación cualitativa.
     - DDI se cita sin cifras de AUC: el PDF da los intervalos por fototipo y no un valor único claro.
     - Las revisiones de Jones y Magalhães se citan por lo que dicen textualmente («muchos» estudios, no
       «la mayoría»; variabilidad metodológica, no métricas).
-    - Pregunta abierta: `babel` imprime «Cuadro 2.1» y la guía pide «Tabla~ef{}» en el texto.
-      Se unifica con `enewcommand{\spanishtablename}{Tabla}` (o la opción `es-tabla` de babel) en
+    - Pregunta abierta: `babel` imprime «Cuadro 2.1» y la guía pide «Tabla~\ref{}» en el texto.
+      Se unifica con `\renewcommand{\spanishtablename}{Tabla}` (o la opción `es-tabla` de babel) en
       la configuración compartida; lo decide el autor.
