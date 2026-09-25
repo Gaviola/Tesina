@@ -140,12 +140,13 @@ respuesta a una no adelanta la de la otra.
   automáticamente por un VLM ajustado a partir de la imagen?
 \end{enumerate}
 
-Las hipótesis que siguen no están todas en el mismo plano. Dos son de partida. Estaban implícitas en el plan
-de trabajo, se formularon antes de tener un solo resultado y son las que el diseño experimental original se
-proponía poner a prueba. Las otras cuatro son emergentes. Se formularon durante la experimentación, cada una
-como respuesta a un resultado que contradijo lo esperado. La distinción importa porque el estatus de unas y
-otras no es el mismo. Las de partida se contrastan contra un diseño que las precedía, mientras que las
-emergentes son explicaciones propuestas para un resultado ya observado.
+Las hipótesis que siguen no tienen todas el mismo estatus. Dos son de partida: se derivan de las
+preguntas del plan de trabajo, son anteriores a cualquier resultado y son las que el diseño experimental
+original se proponía poner a prueba. Las otras cuatro son exploratorias. Se formularon durante la
+experimentación, cada una a partir de un resultado que contradijo lo esperado, y se contrastan con evidencia
+que incluye los mismos datos que las motivaron. Su respaldo es por eso más débil que el de una hipótesis de
+partida, y la Sección~\ref{sec:disc_limitaciones} indica, para cada una, si hubo evidencia independiente de
+esos datos.
 
 Las dos hipótesis de partida son:
 \begin{enumerate}[label=\textbf{H\arabic*.}]
@@ -156,29 +157,23 @@ Las dos hipótesis de partida son:
   el diagnóstico correcto (Capítulo~\ref{cp:res_gen}).
 \end{enumerate}
 
-Las emergentes se presentan en el orden en que se formularon, cada una junto al resultado que la motivó:
+Las exploratorias se presentan en el orden en que se formularon, cada una junto al resultado que la motivó:
 \begin{enumerate}[label=\textbf{H\arabic*.}, start=3]
-  \item El bajo desempeño de los VLMs generales en clasificación se explica por el desbalance de clases.
-  Se plantea tras refutarse H1.
+  \item El bajo desempeño de los VLMs generales en clasificación se explica por el desbalance de clases
+  (Capítulo~\ref{cp:res_clasif}). Se plantea tras refutarse H1.
   \item La especialización de dominio del modelo visión--lenguaje recupera la capacidad de discriminar entre
-  clases. Se plantea tras refutarse H3, al observarse el colapso también en \emph{zero-shot}.
+  clases (Capítulo~\ref{cp:res_clasif}). Se plantea tras refutarse H3, al observarse el colapso también en
+  \emph{zero-shot}.
   \item Anclar el generador al diagnóstico de un clasificador especializado (ensamble en cascada) mejora la
-  fidelidad diagnóstica de los reportes respecto de la generación directa. Se plantea al observarse que H2 se
-  cumple solo parcialmente. Los reportes son ricos pero diagnósticamente poco fieles.
+  fidelidad diagnóstica de los reportes respecto de la generación directa (Capítulo~\ref{cp:res_gen}). Se
+  plantea al observarse que H2 se cumple solo parcialmente.
   \item Incorporar la incertidumbre del clasificador (afirmar, ofrecer un diferencial o derivar) mejora la
-  fidelidad diagnóstica sobre los casos no derivados. Se plantea a partir del análisis de errores de la
-  cascada.
+  fidelidad diagnóstica sobre los casos no derivados (Capítulo~\ref{cp:res_gen}). Se plantea a partir del
+  análisis de errores de la cascada.
 \end{enumerate}
 
-De las seis, H1 y H3 quedaron refutadas, y cada refutación reorientó el trabajo. Con H1, la comparación se
-desplazó hacia un modelo visión--lenguaje especializado en el dominio; con H3, el desbalance de clases dejó de
-explicar ese resultado y hubo que buscar la explicación en otra parte. Las consecuencias de ambas se
-desarrollan en el Capítulo~\ref{cp:res_clasif}, y lo heredado por la tarea de generación, en el
-Capítulo~\ref{cp:res_gen}.
-
-Las hipótesis se presentan en el orden en que se formularon, con las refutadas incluidas, porque cada
-refutación acotó las explicaciones posibles del resultado que la motivó y dio origen a la hipótesis
-siguiente. Los objetivos, en cambio, son los mismos desde el principio.
+El orden de formulación se conserva, con las refutadas incluidas, porque cada refutación acotó las
+explicaciones posibles del resultado que la motivó y dio origen a la hipótesis siguiente. Los objetivos, en cambio, son los mismos desde el principio.
 
 \section{Objetivos}
 \label{sec:intro_objetivos}
