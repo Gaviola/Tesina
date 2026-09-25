@@ -120,7 +120,64 @@ como desempeño alcanzable hoy.
 | Título | Autores | Año | DOI / URL | Sección que la necesita |
 |---|---|---|---|---|
 | Una referencia clínica sobre la **estructura del informe dermatológico** (descripción, impresión diagnóstica, diagnóstico diferencial, recomendación de manejo). Candidatos: las guías de documentación de la AAD o un manual de dermatología clínica | por definir | — | — | §3.4 ¶1 (antes §2.1.3 ¶1; movido el 25/09/2026) |
+| Deep Learning (MIT Press) | Goodfellow, Bengio, Courville | 2016 | https://www.deeplearningbook.org/ | §2.1 fundamentos (propuesta). Clave sugerida: `goodfellow2016deep` |
+| Adam: A Method for Stochastic Optimization (ICLR 2015) | Kingma, Ba | 2015 | https://arxiv.org/abs/1412.6980 | §2.1 ¶3 y LoRA. Clave sugerida: `kingma2015adam` |
+| Dropout: A Simple Way to Prevent Neural Networks from Overfitting (*JMLR* 15:1929–1958) | Srivastava, Hinton, Krizhevsky, Sutskever, Salakhutdinov | 2014 | https://jmlr.org/papers/v15/srivastava14a.html | §2.1 ¶4. Clave sugerida: `srivastava2014dropout` |
+| Long Short-Term Memory (*Neural Computation* 9(8):1735–1780) | Hochreiter, Schmidhuber | 1997 | https://doi.org/10.1162/neco.1997.9.8.1735 | §2.1 ¶5. Clave sugerida: `hochreiter1997long` |
 | WILDS: A Benchmark of in-the-Wild Distribution Shifts (*Proceedings of the 38th ICML*, PMLR 139) | Koh, Sagawa, Marklund et al. | 2021 | https://proceedings.mlr.press/v139/koh21a.html — verificar antes de incorporar | §2.6 ¶1, definición del cambio de distribución. Clave sugerida: `koh2021wilds` |
+
+**Entradas listas para copiar al `.bib`** (fundamentos, §2.1, redactada el 25/09/2026). Ya se citan en el
+capítulo con estas claves y figuran como indefinidas hasta que se incorporen. Conviene verificarlas contra
+la página del editor antes de pegarlas.
+
+```bibtex
+@book{goodfellow2016deep,
+  author    = {Goodfellow, Ian and Bengio, Yoshua and Courville, Aaron},
+  title     = {Deep Learning},
+  publisher = {MIT Press},
+  year      = {2016},
+  url       = {https://www.deeplearningbook.org/},
+  langid    = {english}
+}
+
+@inproceedings{kingma2015adam,
+  author    = {Kingma, Diederik P. and Ba, Jimmy},
+  title     = {{Adam}: A Method for Stochastic Optimization},
+  booktitle = {Proceedings of the 3rd International Conference on Learning Representations (ICLR)},
+  year      = {2015},
+  eprint    = {1412.6980},
+  eprinttype = {arXiv},
+  langid    = {english}
+}
+
+@article{srivastava2014dropout,
+  author    = {Srivastava, Nitish and Hinton, Geoffrey and Krizhevsky, Alex and Sutskever, Ilya and Salakhutdinov, Ruslan},
+  title     = {Dropout: A Simple Way to Prevent Neural Networks from Overfitting},
+  journal   = {Journal of Machine Learning Research},
+  volume    = {15},
+  number    = {56},
+  pages     = {1929--1958},
+  year      = {2014},
+  url       = {https://jmlr.org/papers/v15/srivastava14a.html},
+  langid    = {english}
+}
+
+@article{hochreiter1997long,
+  author    = {Hochreiter, Sepp and Schmidhuber, J{\"u}rgen},
+  title     = {Long Short-Term Memory},
+  journal   = {Neural Computation},
+  volume    = {9},
+  number    = {8},
+  pages     = {1735--1780},
+  year      = {1997},
+  doi       = {10.1162/neco.1997.9.8.1735},
+  langid    = {english}
+}
+```
+
+`goodfellow2016deep`, `srivastava2014dropout` y `hochreiter1997long` son anteriores a 2020: entran por
+la condición 1 de la guía (fundacionales, definen el concepto). `rumelhart1986learning` ya estaba en el
+`.bib` con el mismo encuadre.
 
 **Por qué falta esta.** §2.1.3 ¶1 enunciaba las cuatro partes del informe citando
 `kittler2016standardization`, pero ese trabajo es el consenso de la ISD sobre **terminología
@@ -290,3 +347,86 @@ incorporadas para el Capítulo 1, se verificó texto completo libre en `loria202
 `sinsky2016allocation` (PDF público). Las de revistas clínicas —*Lancet Oncology*, *British Journal
 of Dermatology*, *JAMA Dermatology*, *Nature*— habría que revisarlas una por una; en esos casos
 suele no haber alternativa abierta equivalente y la excepción de la guía aplica.
+
+## 6. PDFs en `Papers/` y referencias por conseguir (relevamiento del 25/09/2026)
+
+Cruce de las 108 entradas del `.bib` y las cinco propuestas (cuatro de fundamentos y WILDS) contra los
+77 PDFs de `Papers/`. El acceso se consultó en OpenAlex y se corrigió a mano donde OpenAlex marca
+«cerrado» un trabajo que tiene versión abierta en arXiv o en el Open Access de CVF. ★ = ya se cita en el
+documento.
+
+**Ya en `Papers/`: 69 de las 108 entradas del `.bib`.** Todas las de `Fundacionales/` y `derma/` tienen su entrada, salvo los
+PDFs que no están en el `.bib` (ver al final). `yan2025vision` (PanDerm) está como preprint («A
+General-Purpose Multimodal Foundation Model for Dermatology»); conviene bajar la versión publicada en
+*Nature Medicine*.
+
+### Por conseguir, con acceso libre (34)
+
+| Clave | Dónde |
+|---|---|
+| ★ `esteva2017dermatologistlevel` | PMC 8382232 (versión del autor) |
+| ★ `freeman2026global` | JAMA Dermatology, acceso abierto |
+| ★ `liu2021swin` | arXiv 2103.14030 / CVF Open Access |
+| ★ `loria2020cutaneous` | ecancer.org (gold) |
+| ★ `sinsky2016allocation` | PDF público (verificado el 17/09) |
+| ★ `sung2026global` | *CA: A Cancer Journal for Clinicians*, gratuita (OpenAlex aún no la indexa) |
+| ★ `tschandl2019comparison` | PMC 8237239 (versión del autor) |
+| ★ `carrera2016validity` | JAMA Dermatology, lectura libre |
+| ★ `holtzman2020curious` | arXiv 1904.09751 |
+| ★ `kittler2016standardization` | PMC 5551974 |
+| ★ `lecun1998gradient` | HAL hal-03926082 |
+| ★ `lin2017focal` | arXiv 1708.02002 / CVF Open Access |
+| ★ `liu2022convnet` | arXiv 2201.03545 / CVF Open Access |
+| ★ `ren2020balanced` | arXiv 2007.10740 |
+| ★ `russakovsky2015imagenet` | arXiv 1409.0575 |
+| ★ `goodfellow2016deep` | deeplearningbook.org (lectura en línea, sin PDF) |
+| ★ `kingma2015adam` | arXiv 1412.6980 |
+| ★ `srivastava2014dropout` | JMLR, siempre abierta |
+| ★ `nci2026melanoma` | página web de SEER |
+| `bray2024global` | Wiley, gold (no se cita; reemplazada por `sung2026global`) |
+| `abdin2024phi3` | arXiv 2404.14219 |
+| `banerjee2005meteor` | ACL Anthology W05-0909 |
+| `chen2020generating` | ACL Anthology |
+| `codella2019skin` | arXiv 1902.03368 |
+| `efron1979bootstrap` | Project Euclid, lectura libre |
+| `gu2024medvh` | arXiv 2407.02730 |
+| `guo2017calibration` | arXiv 1706.04599 |
+| `jing2018automatic` | ACL Anthology |
+| `khandelwal2020generalization` | arXiv 1911.00172 |
+| `selvaraju2017gradcam` | arXiv 1610.02391 / CVF Open Access |
+| `sun2025factaware` | ACL Anthology |
+| `vedantam2015cider` | arXiv 1411.5726 / CVF Open Access |
+| `zhang2020bertscore` | arXiv 1904.09675 |
+| `koh2021wilds` (propuesta) | arXiv 2012.07421 |
+
+### Por conseguir, sin acceso libre (10)
+
+| Clave | Editorial | Cómo conseguirla |
+|---|---|---|
+| ★ `kittler2002diagnostic` | *Lancet Oncology* (Elsevier) | biblioteca UNCuyo / ScienceDirect institucional |
+| ★ `vestergaard2008dermoscopy` | *British Journal of Dermatology* (Wiley / OUP) | biblioteca UNCuyo |
+| ★ `argenziano1998checklist` | *Archives of Dermatology* (JAMA Network) | biblioteca UNCuyo |
+| ★ `hochreiter1997long` | *Neural Computation* (MIT Press) | copia del autor en el sitio del JKU Linz, o biblioteca |
+| `brier1950verification` | *Monthly Weather Review* (AMS) | revisar journals.ametsoc.org: el archivo antiguo de la AMS suele estar libre |
+| `mcnemar1947note` | *Psychometrika* (Springer) | biblioteca |
+| `wilcoxon1945individual` | *Biometrics Bulletin* (JSTOR) | JSTOR institucional |
+| `mendonca2013ph2` | IEEE EMBC | IEEE Xplore institucional |
+| `atkinsonabutridy2025language` | libro, CRC Press | compra o biblioteca (no se cita) |
+| `nvidia2023beginners` | *ebook* de NVIDIA, con registro | no se cita; decisión 6 de la ficha del Cap. 2 |
+
+Las tres estadísticas clásicas (McNemar, Wilcoxon, Brier) son fundacionales y se citan por la definición;
+no hace falta leerlas enteras, pero conviene tener el PDF para verificar la notación.
+
+### PDFs en `Papers/` sin entrada en el `.bib`
+
+- *Chain-of-Visual-Thought: Teaching VLMs to See and Think Better with Continuous Visual Tokens*
+- *Multimodal Foundation Models: From Specialists to General-Purpose Assistants*
+- *Vision-Language Models for Vision Tasks: A Survey*
+- *Deep Learning Algorithms in the Diagnosis of Basal Cell Carcinoma Using Dermatoscopy* (Liu et al.
+  2025, citado en el plan de trabajo)
+- *Vision-language models for medical report generation and visual question answering: a review*
+  (Hartsock y Rasool 2024, citado en el plan de trabajo)
+- *Quilt-1M: One Million Image-Text Pairs for Histopathology*
+
+Las dos del plan son candidatas naturales para el estado del arte (§2.8); las otras cuatro, solo si una
+sección las necesita.
