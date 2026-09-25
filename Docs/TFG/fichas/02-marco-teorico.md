@@ -414,7 +414,7 @@ como juez: el trabajo no las usa.
 
 ---
 
-## Bloque C — §2.7 Sesgo y generalización y §2.8 Estado del arte (propuesta del 25/09/2026, sin aprobar)
+## Bloque C — §2.7 Sesgo y generalización y §2.8 Estado del arte (aprobado y redactado el 25/09/2026)
 
 Numeración nueva (decisión 14). Todo número que aparezca en la prosa o en las tablas se verifica
 contra el PDF del trabajo citado al redactar; `Docs/estado_del_arte/resumen_papers.tex` y
@@ -657,3 +657,19 @@ resultados; acá solo alimentan la comparación cualitativa.
       *temperature scaling*, no para el *vector scaling*, que puede cambiarla; el texto lo distingue.
     - «LLaVA fijó el esquema que sigue la mayoría de los VLM abiertos» no tenía respaldo y quedó como
       «los VLM generativos que usa el trabajo siguen el esquema de LLaVA».
+16. **Bloque C (25/09/2026).**
+    - `koh2021wilds` se agregó al `.bib` (autor).
+    - Las tablas de §2.8 dicen qué evalúa cada trabajo y con qué hardware, no los valores que obtuvo;
+      las cifras del estado del arte se comparan en los capítulos de resultados (autor).
+    - PH² sale de la tabla de conjuntos (autor). `mendonca2013ph2` queda en el `.bib` sin citar.
+    - DermaSynth son **textos** sintéticos redactados sobre 82 379 imágenes reales públicas, no imágenes
+      generadas por difusión, como decía `Docs/estado_del_arte/resumen_papers.tex`. El resumen tiene
+      errores: no sirve de fuente.
+    - El cierre reconoce dos excepciones a la brecha: el ensamble de Khan et al. ya deriva los casos
+      discordantes, y Chakrabarti et al. miden corrección diagnóstica además de métricas con referencia.
+    - DDI se cita sin cifras de AUC: el PDF da los intervalos por fototipo y no un valor único claro.
+    - Las revisiones de Jones y Magalhães se citan por lo que dicen textualmente («muchos» estudios, no
+      «la mayoría»; variabilidad metodológica, no métricas).
+    - Pregunta abierta: `babel` imprime «Cuadro 2.1» y la guía pide «Tabla~ef{}» en el texto.
+      Se unifica con `enewcommand{\spanishtablename}{Tabla}` (o la opción `es-tabla` de babel) en
+      la configuración compartida; lo decide el autor.

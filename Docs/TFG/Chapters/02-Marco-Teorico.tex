@@ -746,30 +746,173 @@ perturbaciones de adquisición; los dos análisis se describen en la Sección~\r
 
 \section{Estado del arte}
 \label{sec:estado_arte}
-\pendiente{Esta sección revisa los trabajos directamente relacionados con la tesina: diagnóstico automático
-de lesiones de piel, modelos visión--lenguaje en dermatología y generación de reportes dermatológicos. Cada
-bloque cierra indicando qué toma este trabajo de esa línea o en qué se diferencia.}
+
+Con los conceptos de las secciones anteriores ya presentados, esta sección revisa los trabajos más
+cercanos a la tesina en tres líneas que siguen el orden del \emph{pipeline}: el diagnóstico automático de
+lesiones, los modelos visión--lenguaje entrenados para dermatología y la generación de reportes
+dermatológicos. Cada línea cierra con lo que el trabajo toma de ella o con aquello en que se aparta. Los
+trabajos anteriores a 2020 aparecen como hitos, con su fecha, y no como estado del arte, porque sus
+arquitecturas son previas a los transformers.
 
 \subsection{Diagnóstico automático de lesiones de piel}
-\pendiente{Un cuadro compara los conjuntos públicos del área (ISIC, PH2, Fitzpatrick17k, SkinCon, Derm1M y
-los que usa el trabajo) en modalidad, tamaño, etiquetas, disponibilidad de texto y población; la descripción
-detallada de los conjuntos usados está en la Sección~\ref{sec:met_datasets}. Se recorre la evolución desde las CNNs clásicas hacia los transformers, con los resultados de
-referencia sobre ISIC y HAM10000 con los que se compara el Capítulo~\ref{cp:res_clasif}, y los problemas
-recurrentes del área: desbalance, generalización y sesgo por fototipo.}
+\label{sec:estado_arte_diagnostico}
+
+La línea tiene dos hitos anteriores a los transformers. En 2017 una CNN entrenada sobre un conjunto
+grande de imágenes clínicas y dermatoscópicas alcanzó un desempeño comparable al de dermatólogos
+certificados en la distinción entre lesiones benignas y malignas~\cite{esteva2017dermatologistlevel}. En
+2019, un estudio abierto sobre imágenes de HAM10000 comparó 511 lectores humanos con 139 algoritmos, y
+los mejores algoritmos superaron en promedio a los lectores, incluidos los
+expertos~\cite{tschandl2019comparison}. Los dos resultados fijaron la clasificación de lesiones como una
+tarea en la que el aprendizaje profundo compite con el especialista.
+
+Esa tarea se apoya en conjuntos públicos que difieren en modalidad, tamaño, etiquetas y población
+(Tabla~\ref{tab:marco_conjuntos}). Los conjuntos dermatoscópicos con diagnóstico confirmado, como
+HAM10000 y los del desafío ISIC, provienen sobre todo de centros de Europa, Estados Unidos y Australia. Los
+conjuntos clínicos más recientes buscan diversidad de fototipos o de enfermedades, y los que asocian un
+texto a cada imagen aparecieron recién en los últimos dos años. El trabajo usa cuatro de ellos, que se
+describen en la Sección~\ref{sec:met_datasets}.
+
+\begin{table}[htbp]
+    \centering
+    \caption[Conjuntos públicos de imágenes dermatológicas]{Conjuntos públicos de imágenes dermatológicas.
+    «Texto» indica si cada imagen tiene una descripción en lenguaje natural. Las cifras son las que
+    informa cada trabajo.}
+    \label{tab:marco_conjuntos}
+    \small
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{2.6cm}
+        >{\raggedright\arraybackslash}p{2.2cm} >{\raggedright\arraybackslash}p{2cm}
+        >{\raggedright\arraybackslash}X c@{}}
+        \toprule
+        Conjunto & Modalidad & Tamaño & Etiquetas y población & Texto \\
+        \midrule
+        HAM10000~\cite{tschandl2018ham10000} & dermatoscópica & 10\,015 imágenes & 7 categorías; Austria y Australia & no \\
+        ISIC 2018~\cite{codella2019skin} & dermatoscópica & más de 12\,500 & segmentación, atributos y 7 categorías & no \\
+        Fitzpatrick17k~\cite{groh2021neural} & clínica & 16\,577 & 114 enfermedades y fototipo; atlas en línea & no \\
+        DDI~\cite{daneshjou2022disparities} & clínica & 656 & confirmación histopatológica; fototipos diversos & no \\
+        SkinCon~\cite{daneshjou2022skincon} & clínica & 3\,230 + 656 & 48 conceptos clínicos sobre Fitzpatrick17k y DDI & no \\
+        SCIN~\cite{ward2024empirical} & fotografía propia & 10\,408 & enfermedades sobre todo inflamatorias; Estados Unidos & no \\
+        HIBA~\cite{riccilara2023dataset} & dermatoscópica y clínica & 1\,616 & 1\,246 lesiones de 623 pacientes; Argentina & no \\
+        SkinCaRe~\cite{shen2025skincare} & clínica & 4\,000 + 3\,041 & descripciones y razonamiento diagnóstico; Fitzpatrick17k y DDI & sí \\
+        MM-Skin~\cite{zeng2025mmskin} & clínica, dermatoscópica y patológica & casi 10\,000 pares & 15 libros de texto de dermatología & sí \\
+        Derm1M~\cite{yan2025derm1m} & varias & 1\,029\,761 pares & más de 390 enfermedades en una ontología; recursos educativos & sí \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+Sobre esos conjuntos, la clasificación actual combina arquitecturas convolucionales y transformers con
+pre-entrenamiento en ImageNet. Una revisión sistemática de la detección de cáncer de piel con aprendizaje
+profundo señala que la variabilidad de los métodos, incluido el preprocesamiento, dificulta comparar los
+resultados entre estudios~\cite{magalhaes2024systematic}. Los trabajos recientes sobre HAM10000 y conjuntos
+afines reportan exactitudes altas con ensambles de EfficientNet, con Swin o con redes convolucionales
+comparadas entre sí, y en varios de ellos la cifra principal es la exactitud o el F1
+ponderado~\cite{aboulmira2024skinhealthmate,khan2025ensemble,kreouzi2024learning}. Como se vio en la
+Sección~\ref{sec:marco_eval_clasif}, esas dos métricas pueden ser altas aunque el modelo falle en las
+clases minoritarias. SkinSavvy2, que usa Swin sobre una versión balanceada de HAM10000, reporta en cambio
+F1 promedio y exactitud balanceada~\cite{kim2025skinsavvy2}.
+
+Los problemas recurrentes de la línea son los de la Sección~\ref{sec:marco_generalizacion}: desbalance de
+clases, poca validación externa y desempeño desigual según el fototipo. El trabajo toma de esta línea las
+arquitecturas y el pre-entrenamiento, y se aparta en el protocolo: compara cuatro arquitecturas de las dos
+familias bajo la misma partición disjunta por lesión, selecciona por F1 macro y evalúa también fuera de
+distribución.
 
 \subsection{Modelos visión--lenguaje en dermatología}
-\pendiente{Se presentan los modelos pre-entrenados a gran escala con texto clínico (PanDerm, MONET, Derm1M y
-DermLIP, MAKE) y su desempeño \emph{zero-shot}, revisión que justifica la elección de DermLIP. Se incluyen
-también los VLMs médicos generales efectivamente evaluados en este trabajo o comparables con él (LLaVA-Med y
-Phi-3.5-Vision) y la evidencia disponible sobre su desempeño en dermatología.}
+\label{sec:estado_arte_vlm}
+
+Los primeros espacios imagen--texto con vocabulario médico vinieron de la literatura. MONET entrenó un
+modelo contrastivo con más de cien mil pares de imágenes y texto extraídos de artículos de PubMed y de
+libros de texto médicos, y lo usó para anotar conceptos clínicos en imágenes dermatológicas y para auditar
+conjuntos y modelos~\cite{kim2024transparent}. MedImageInsight entrenó un modelo de \emph{embeddings}
+sobre imágenes de muchos dominios médicos, entre ellos la dermatoscopía, y lo usa para clasificar, para
+buscar imágenes parecidas y para ajustar a tareas nuevas~\cite{codella2024medimageinsight}.
+
+Los modelos entrenados solo con material dermatológico dieron el paso siguiente. Derm1M reúne algo más
+de un millón de pares organizados según una ontología clínica, y los modelos DermLIP entrenados sobre él
+superan a los modelos biomédicos de propósito general en clasificación
+\emph{zero-shot}~\cite{yan2025derm1m}. MAKE entrena sobre Derm1M descomponiendo cada texto clínico en
+aspectos y conceptos que alinea con regiones de la imagen~\cite{yan2025make}. PanDerm, en cambio, es un
+modelo fundacional pre-entrenado de forma auto-supervisada sobre más de dos millones de imágenes de 11
+instituciones y cuatro modalidades, y se ajusta después a cada tarea~\cite{yan2025vision}.
+
+El trabajo usa DermLIP. Es contrastivo, de modo que el mismo espacio sirve para clasificar
+\emph{zero-shot}, para entrenar un clasificador lineal y para recuperar los vecinos visuales de la
+Sección~\ref{sec:marco_vlm_rag}; está especializado en dermatología, y la variante con codificador ViT-B/16
+que usa el trabajo se ejecuta en una GPU de consumo~\cite{yan2025derm1m}.
+
+Los VLM médicos generales se construyeron para otro material. LLaVA-Med, Med-Flamingo, PeFoMed y
+LLaVA-Tri, el modelo que acompaña a MedTrinity-25M, se evalúan sobre todo en respuesta a preguntas
+visuales sobre radiología y patología~\cite{li2023llavamed,moor2023medflamingo,he2025pefomed,xie2025medtrinity25m}.
+En dermatología la evidencia es escasa: SkinVL, construido sobre LLaVA-Med, lo supera en las tareas
+dermatológicas en que se comparan~\cite{zeng2025mmskin}, y los VLM ajustados a un dominio médico tienden
+a alucinar más que los generales (Sección~\ref{sec:marco_vlm_generacion}). Para Phi-3.5-Vision, un modelo
+general de pocos miles de millones de parámetros~\cite{abdin2024phi3}, no se encontraron mediciones
+publicadas en dermatología. El trabajo mide LLaVA-Med y Phi-3.5-Vision como clasificadores dermatológicos bajo el mismo
+protocolo que los clasificadores supervisados y que DermLIP.
 
 \subsection{Generación de reportes dermatológicos}
-\pendiente{Se revisan SkinGPT-4, SkinVL (MM-Skin), DermatoLlama/SCALEMED, la destilación de conocimiento de
-Chakrabarti et al., Skin-R1, SkinGEN y los ensambles con LLM, junto con la forma en que cada uno evalúa
-(métricas con referencia, evaluación por especialistas) y el hardware que requiere. Una tabla comparativa
-resume modelo, tarea, datos, métricas y hardware.
+\label{sec:estado_arte_reportes}
 
-La sección cierra con la brecha que aborda esta tesina, que es triple: faltan comparaciones bajo un mismo
-protocolo entre clasificadores supervisados, VLMs generales y modelos visión--lenguaje dermatológicos; la
-mayoría de los generadores se evalúa por similitud textual y no por fidelidad diagnóstica; y pocos trabajos
-consideran la incertidumbre del diagnóstico o el hardware accesible.}
+Un primer grupo de trabajos genera el texto con un único VLM ajustado a dermatología
+(Tabla~\ref{tab:marco_generadores}). SkinGPT-4 ajusta un VLM de la familia de MiniGPT-4 con Llama-2 sobre
+más de cincuenta mil imágenes, y lo evalúa con dermatólogos que juzgan sus diagnósticos sobre casos
+reales~\cite{zhou2023skingpt4,zhou2024pretrained}. SkinVL ajusta LLaVA-Med con LoRA sobre MM-Skin y otros
+conjuntos públicos~\cite{zeng2025mmskin}. DermatoLlama, dentro del marco SCALEMED, ajusta con LoRA un modelo
+de Llama~3.2 sobre DermaSynth, un conjunto de más de un millón de textos sintéticos que modelos más
+grandes redactaron sobre imágenes dermatológicas públicas, con el objetivo de obtener un modelo que se
+ejecute localmente~\cite{yilmaz2025resourceefficient}. Skin-R1 entrena el
+razonamiento diagnóstico de Qwen2.5-VL primero con ajuste supervisado sobre trayectorias de razonamiento y
+después con aprendizaje por refuerzo~\cite{liu2025skinr1}.
+
+Un segundo grupo separa el diagnóstico de la redacción, como hace este trabajo. Khan et al.\ combinan un
+ensamble de redes convolucionales con Llama-3 de 70 mil millones de parámetros, consultado por API, que
+convierte la predicción en un reporte estructurado; el ensamble además marca para revisión de un
+especialista los casos en que sus miembros no coinciden~\cite{khan2025ensemble}. SkinSavvy2 clasifica con
+Swin o EfficientNet y redacta con GPT-4 una recomendación que incorpora datos del
+paciente~\cite{kim2025skinsavvy2}. Chakrabarti et al.\ destilan en LLaVA-1.5 los reportes que GPT-4V
+redacta sobre imágenes dermatoscópicas, estructurados según la lista de 7 puntos, y comparan esa
+destilación con un enfoque de recuperación~\cite{chakrabarti2025skin}.
+
+Otros trabajos extienden la generación en direcciones que este no sigue. SkinGEN acompaña el diagnóstico
+de SkinGPT-4 con imágenes de referencia generadas por difusión, como explicación
+visual~\cite{lin2025skingen}, y MpoxVLM combina la imagen con datos clínicos del paciente para una única
+enfermedad~\cite{cao2024mpoxvlm}.
+
+\begin{table}[htbp]
+    \centering
+    \caption[Trabajos de generación de texto dermatológico]{Trabajos de generación de texto
+    dermatológico: modelo de lenguaje, evaluación del texto y hardware de entrenamiento informado. «Métricas
+    con referencia» agrupa BLEU, ROUGE y BERTScore; «---», que el trabajo no lo informa o no entrena.}
+    \label{tab:marco_generadores}
+    \small
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{2.8cm}
+        >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X l@{}}
+        \toprule
+        Trabajo & Modelo que redacta & Evaluación del texto & Hardware \\
+        \midrule
+        SkinGPT-4~\cite{zhou2024pretrained} & MiniGPT-4 con Llama-2-13B & dermatólogos sobre 150 casos reales & 8 A100 \\
+        SkinVL~\cite{zeng2025mmskin} & LLaVA-Med con LoRA & métricas con referencia & 8 RTX 3090 \\
+        DermatoLlama~\cite{yilmaz2025resourceefficient} & Llama 3.2 11B con LoRA & métricas con referencia & 4 RTX 4090 \\
+        Skin-R1~\cite{liu2025skinr1} & Qwen2.5-VL-7B & exactitud del diagnóstico & 2 A100 \\
+        Khan et al.~\cite{khan2025ensemble} & Llama-3 70B por API & --- & --- \\
+        SkinSavvy2~\cite{kim2025skinsavvy2} & GPT-4 & estudio con usuarios & 4 RTX A6000 \\
+        Chakrabarti et al.~\cite{chakrabarti2025skin} & LLaVA-1.5-13B destilado de GPT-4V & métricas con referencia, corrección diagnóstica y revisión clínica & --- \\
+        MpoxVLM~\cite{cao2024mpoxvlm} & Llama-2-7B con LoRA & exactitud del diagnóstico & 2 RTX 4090 \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+Los trabajos evalúan el texto de maneras muy distintas. Varios usan métricas con referencia, que miden el
+parecido con un texto particular y no la corrección clínica (Sección~\ref{sec:marco_eval_texto}); otros
+miden solo si el diagnóstico es correcto, sin juzgar la descripción, y pocos combinan las dos cosas con la
+revisión de un especialista. El hardware va de dos GPU de consumo a ocho A100, y dos de los tres sistemas que separan
+diagnóstico y redacción redactan con un modelo grande consultado por API.
+
+De esta revisión sale la brecha que aborda la tesina, que tiene tres partes. No hay comparaciones bajo un
+mismo protocolo entre clasificadores supervisados, VLM médicos generales y modelos visión--lenguaje
+dermatológicos; el trabajo las hace sobre la misma partición de HAM10000 y en HIBA. La mayoría de los
+generadores se evalúa por parecido textual y no por fidelidad diagnóstica; el trabajo mide las dos
+condiciones de la Sección~\ref{sec:marco_vlm_generacion} por separado. Y pocos trabajos tratan la
+incertidumbre del diagnóstico o se limitan a hardware accesible: el ensamble de Khan et al.\ deriva los
+casos discordantes, pero redacta con un modelo de 70 mil millones de parámetros por API. El trabajo usa el
+acuerdo entre el clasificador y los vecinos de DermLIP para decidir cómo redactar cada caso, y ejecuta todo
+el \emph{pipeline} en GPU de consumo.
