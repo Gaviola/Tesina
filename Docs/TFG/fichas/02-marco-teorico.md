@@ -1,0 +1,330 @@
+# Ficha del Capítulo 2 — Marco teórico
+
+Contrato de contenido del capítulo. Cada sección declara su mensaje central, el esqueleto de
+párrafos, las claves de cita que se usan y su extensión. Lo que no está acá no se escribe; lo que
+falte se anota como pregunta abierta al entregar la sección.
+
+**Extensión total: a revisar.** El reparto original era: apertura 0,5 · §2.1 2,5 · §2.2 5–5,5 ·
+§2.3 2,5–3 · §2.4 4 · §2.5 4,5 · §2.6 3 · §2.7 5–5,5, con un total de 27–30 páginas.
+
+**Lo escrito desmiente ese reparto (22/09/2026).** Con el bloque A terminado, §2.1 ocupa 2 páginas
+contra las 2,5 previstas, §2.2 ocupa **3 contra 5–5,5** y §2.3 ocupa 2 contra 2,5–3: 7 páginas donde
+el reparto decía 10–11. No falta ningún párrafo —los dieciséis de §2.2 están escritos—, así que el
+error está en la estimación y no en el contenido: el plan de párrafos de esta ficha, redactado con
+párrafos de 6 líneas, no da para 5 páginas en §2.2. El reparto corregido del bloque A es **§2.1 2 ·
+§2.2 3–3,5 · §2.3 2–2,5**.
+
+**Consecuencia, que hay que decidir.** Si los bloques B y C se desvían en la misma proporción, el
+capítulo cierra en 20–22 páginas y no en las 25–30 que pide la guía. Estirar la prosa escrita no es
+una opción: la guía prohíbe el relleno y el texto actual no tiene grasa. Las dos salidas reales son
+ampliar el plan de contenido de B y C —más subsecciones o más profundidad, decididas en la ficha de
+cada bloque— o bajar el objetivo del capítulo en la guía. **Se decide al detallar el bloque B.**
+
+**Estado de la bibliografía: resuelto (22/09/2026).** El `.bib` no cubría la clínica, la
+calibración, la inferencia estadística ni las métricas de generación modernas; se incorporaron las
+**26 referencias** de la auditoría de `refs_pendientes.md`, verificadas contra el editor o el
+repositorio oficial, y el archivo pasó de 82 a 108 entradas. Las claves que esa tanda agregó se
+marcan con `(p)` en las tablas de esta ficha para distinguirlas de las que ya estaban. Todas son
+citable de inmediato.
+
+**La ficha se completa por bloques**, uno por vez, y el autor aprueba cada bloque antes de que se
+redacte prosa. Los bloques restantes figuran al final como esquema, sin detalle.
+
+---
+
+## Bloque A — §2.1 a §2.3
+
+Orden de redacción del bloque: §2.2 → §2.3 → **§2.1 al final**, cuando el autor haya incorporado
+las referencias clínicas. Las tres secciones quedan en orden de documento dentro del `.tex`.
+
+### Acrónimos que pide este bloque
+
+| Sigla | Expansión | Sección |
+|---|---|---|
+| `rlhf` | Aprendizaje por refuerzo a partir de retroalimentación humana (*Reinforcement Learning from Human Feedback*) | 2.3.1 |
+
+Los ya declarados que se usan: `cnn`, `vit`, `llm`, `vlm`, `lora`, `peft`, `mel`, `nv`, `bcc`,
+`akiec`, `bkl`, `df`, `vasc`. RNN y LSTM **no** se usan como sigla: el recorte de la fuente los
+reduce a una mención y se escriben en palabras.
+
+---
+
+## 2.1 Fundamentos clínicos — `sec:marco_clinico`
+
+**Mensaje central.** El diagnóstico dermatológico asigna la lesión a una categoría de un inventario
+cerrado con costos de confusión asimétricos, sobre dos modalidades de imagen que no son
+intercambiables, y deja un reporte con partes funcionales y un vocabulario finito: eso es lo que
+después miden los modelos.
+
+**Extensión: 2 páginas** (tres subsecciones).
+
+**Alcance clínico fijado (22/09/2026).** Es la sección de dominio del trabajo y no un curso de
+dermatología: el lector modelo es de Ciencias de la Computación. Cada subsección existe por lo que
+aporta a la tarea y a la evaluación, y nada más. §2.1.1 define el espacio de etiquetas del
+clasificador —sin saber qué es MEL y qué es AKIEC, las confusiones del Capítulo~\ref{cp:res_clasif}
+no significan nada—; §2.1.2 define la diferencia de dominio entre conjuntos —sin ella no se
+entiende la comparación entre HAM10000 y SkinCaRe—; §2.1.3 define el formato del texto que se
+genera —sin él, las métricas de entidades clínicas de §2.5.3 aparecen de la nada—. Nada de
+morfología clínica detallada ni de algoritmos diagnósticos más allá de nombrarlos.
+
+### 2.1.1 Lesiones cutáneas y categorías diagnósticas
+
+| # | Párrafo | Afirmación que sostiene | Citas |
+|---|---|---|---|
+| 1 | El objeto clínico: la lesión de piel como alteración visible de la piel; el diagnóstico asigna una categoría, y esa asignación es lo que el trabajo modela como clasificación | La tarea de clasificación tiene objeto y espacio de salidas definidos por la clínica, no por el modelo | — |
+| 2 | Las siete categorías de HAM10000, con lo que designa cada sigla —MEL melanoma, NV nevo melanocítico, BCC carcinoma basocelular, AKIEC queratosis actínica / carcinoma intraepitelial, BKL lesión queratósica benigna, DF dermatofibroma, VASC lesión vascular— y su orden según la gravedad: benignas, premalignas y malignas | El espacio de etiquetas del trabajo es el de HAM10000 y su gravedad no se reduce a un bit | `tschandl2018ham10000` |
+| 3 | Costos asimétricos de la confusión: confundir MEL con NV retrasa la extirpación de una lesión cuya letalidad depende del estadio; confundir NV con MEL lleva a extirpar una lesión benigna sin necesidad; las confusiones entre clases benignas pesan menos | No todas las confusiones del clasificador cuestan lo mismo; sostiene las métricas por clase del Capítulo~\ref{cp:res_clasif} | `tschandl2018ham10000`, `nci2026melanoma` |
+
+**Qué no va.** Epidemiología ni cifras de incidencia: ya están en §1.1 y la guía prohíbe
+recapitular. Tampoco la descripción de las imágenes: eso es §2.1.2. Ni sintomatología ni criterios
+clínicos de diagnóstico: fuera del alcance del trabajo.
+
+### 2.1.2 Dermatoscopía y fotografía clínica
+
+| # | Párrafo | Afirmación que sostiene | Citas |
+|---|---|---|---|
+| 1 | Dos modalidades de la misma lesión: la fotografía clínica la registra tal como se ve a simple vista; la dermatoscopía la examina con aumento e iluminación controladas | Son dos observaciones distintas, con resolución y contenido distintos | `kittler2002diagnostic`, `vestergaard2008dermoscopy` |
+| 2 | Qué añade la dermatoscopía y por qué la mejora depende de la formación de quien examina: sin entrenamiento específico no aventaja a la inspección simple | La modalidad no basta; el criterio interpretativo se entrena | `kittler2002diagnostic`, `vestergaard2008dermoscopy` |
+| 3 | Consecuencia para el aprendizaje automático: las dos modalidades no son intercambiables como material de entrenamiento porque la distribución de los rasgos cambia entre ellas; HAM10000 es dermatoscópico y SkinCaRe es de fotografía clínica | Prepara el análisis de conjuntos de `sec:marco_datos_sesgo` y cualquier transferencia entre conjuntos del Capítulo~\ref{cp:metodos} | `tschandl2018ham10000`, `shen2025skincare` |
+
+**Qué no va.** La modalidad del resto de los conjuntos —HIBA, MM-Skin, Derm1M— se declara en
+§2.6, en el cuadro comparativo. Acá solo HAM10000 y SkinCaRe, que es el par que el esqueleto fija.
+Ni física óptica ni técnica de adquisición.
+
+### 2.1.3 El reporte dermatológico
+
+| # | Párrafo | Afirmación que sostiene | Citas |
+|---|---|---|---|
+| 1 | Las dos partes del reporte de las que se ocupa el trabajo —descripción e impresión diagnóstica—, que son las que anotan los conjuntos de pares imagen--texto; el diferencial y la recomendación de manejo quedan fuera | El reporte es un texto con partes funcionales identificables y el trabajo se pronuncia sobre dos de ellas | `shen2025skincare` |
+| 2 | Vocabulario del reporte: un inventario finito de términos para color, patrón, forma y distribución, estandarizado por consenso; dentro de él, la lista de 7 puntos convierte hallazgos visuales en peso diagnóstico | El vocabulario clínico es finito, condición para medir la riqueza clínica de un texto generado | `kittler2016standardization` (p), `argenziano1998checklist` (p) |
+| 3 | Los criterios nombrados no son estables entre observadores: la concordancia sobre los criterios dermatoscópicos va de pobre a moderada. Cierre hacia la evaluación: un reporte correcto exige diagnóstico acertado y descripción fiel, las dos condiciones de la Figura~\ref{fig:intro_dos_tareas}, y las métricas de riqueza clínica del Capítulo~\ref{cp:metodos} se definen sobre este vocabulario | El puente entre imagen y diagnóstico pasa por criterios que varían entre observadores; instala la distinción entre fidelidad diagnóstica y calidad del texto | `carrera2016validity` (p) |
+
+**Qué no va.** Ni ejemplos de reportes escritos por el trabajo (eso es Capítulo~\ref{cp:res_gen})
+ni la rúbrica de evaluación con especialistas (apéndice, pendiente). Ni un glosario morfológico
+completo: solo los términos que después aparecen en las métricas.
+
+---
+
+## 2.2 Aprendizaje profundo para visión — `sec:marco_vision`
+
+**Mensaje central.** Dos familias de arquitectura conviven en el comparativo —convolucionales
+modernas y *transformers* visuales— y todas parten de representaciones pre-entrenadas; el desbalance
+del conjunto se ataca en la pérdida, no en la métrica.
+
+**Extensión: 3–3,5 páginas** (la estimación original decía 5–5,5; ver el encabezado de la ficha).
+
+**Recorte de la fuente.** De `Docs/marco_teorico/Documento_LLMs_VLLMs.tex` se toma solo
+convolución, jerarquía de características, atención y ViT. MLP y aproximación universal, VGG,
+ResNet, EfficientNet, RNN, LSTM, one-hot y NLP general quedan fuera; VGG y ResNet entran como
+hito nombrado en §2.2.1 ¶2, sin desarrollo.
+
+### 2.2.1 Redes convolucionales
+
+| # | Párrafo | Afirmación que sostiene | Citas |
+|---|---|---|---|
+| 1 | La operación de convolución: el kernel se desliza sobre la entrada, con conectividad local y pesos compartidos; la red entera es una composición de esas operaciones | La convolución codifica el supuesto de estructura local estacionaria en la imagen | `lecun1998gradient` (p) |
+| 2 | Jerarquía de características: con la profundidad, la red compone bordes en texturas, texturas en partes y partes en objetos; VGG y ResNet fijaron el repertorio de bloques que las arquitecturas actuales refinan | La profundidad compone rasgos locales en rasgos semánticos | `simonyan2015very`, `he2015residual` |
+| 3 | DenseNet: conexiones densas entre capas, cada capa recibe las características de todas las anteriores; la reutilización reduce parámetros sin perder capacidad, y con conjuntos del orden de las decenas de miles de imágenes esa economía importa | DenseNet es una de las dos arquitecturas convolucionales del comparativo | `huang2018densely`, `he2015residual` |
+| 4 | ConvNeXt: una ResNet modernizada con las decisiones de diseño del *transformer* —kernels de mayor tamaño, menos no-linealidades, normalización por capa— que iguala al Swin manteniendo el molde convolucional | El contraste CNN–*transformer* del Capítulo~\ref{cp:res_clasif} enfrenta arquitecturas contemporáneas, no una CNN obsoleta | `liu2022convnet` (p) |
+
+### 2.2.2 Transformers y mecanismo de atención
+
+| # | Párrafo | Afirmación que sostiene | Citas |
+|---|---|---|---|
+| 1 | La atención como direccionamiento por contenido: cada posición pondera los valores de todas las demás según la compatibilidad entre consulta y clave, sin recurrencia ni convolución | La atención sustituye la secuencialidad por comparación global entre posiciones | `vaswani2017attention` |
+| 2 | Atención escalada por producto punto: proyecciones de consulta, clave y valor, y $\mathrm{softmax}(QK^{\top}/\sqrt{d})V$ (`eq:marco_atencion`); el escalado por la raíz de la dimensión evita que el producto punto sature la softmax | Definición formal que usan todas las arquitecturas siguientes | `vaswani2017attention` |
+| 3 | Atención multi-cabeza: proyecciones a subespacios más pequeños, atención por cabeza y concatenación; cada cabeza captura relaciones de distinto tipo | La composición de cabezas amplía la representación sin aumentar la dimensión total | `vaswani2017attention` |
+| 4 | Arquitectura codificador–decodificador: el codificador contextualiza la entrada y el decodificador genera la salida token a token; en este trabajo el codificador procesa la imagen y el decodificador, el texto | Instala el esquema que reutilizan los modelos multimodales de §2.4 | `vaswani2017attention` |
+
+### 2.2.3 Vision Transformer y Swin Transformer
+
+| # | Párrafo | Afirmación que sostiene | Citas |
+|---|---|---|---|
+| 1 | ViT: la imagen se divide en parches, cada parche se aplana y proyecta a un token, y la secuencia pasa por un codificador *transformer* con embebidos de posición | En el ViT la imagen es una secuencia y no hay operación convolucional | `dosovitskiy2021image`, `vaswani2017attention` |
+| 2 | Sesgo inductivo: el ViT no incorpora localidad ni equivariancia de escala; con datos de pre-entrenamiento amplios supera a las CNN, y con datos escasos la relación se invierte | Condiciones bajo las cuales el ViT es preferible, decisivas con conjuntos médicos | `dosovitskiy2021image` |
+| 3 | Swin: atención por ventanas, con costo lineal en el número de parches; ventanas desplazadas entre capas para conectar regiones; representación jerárquica tipo pirámide, con el mapa de características reduciéndose por etapas | El Swin devuelve mapas multiescala y no una única resolución, y por eso sirve de backbone más allá de la clasificación | `liu2021swin` |
+| 4 | Cierre: DenseNet y ConvNeXt del lado convolucional, ViT y Swin del lado *transformer*, son las cuatro estrategias que se enfrentan en el Capítulo~\ref{cp:res_clasif} sobre el mismo material | Instala el eje del comparativo de clasificación | — |
+
+**Figura: aprobada (22/09/2026).** `fig:marco_vit_patches` en `Figures/Capitulos/02-vit-patches.tex`,
+TikZ, con los estilos de `13-Figuras.sty`: imagen → rejilla de parches → secuencia de tokens con
+embebido de posición. Va después de ¶1, con el flotante completo en el archivo.
+
+### 2.2.4 Transferencia de aprendizaje y desbalance de clases
+
+| # | Párrafo | Afirmación que sostiene | Citas |
+|---|---|---|---|
+| 1 | Transferencia de aprendizaje: representaciones aprendidas sobre un corpus grande de imágenes se reutilizan para la tarea de destino; la extracción de características congela el backbone y el ajuste fino lo actualiza | Justifica no entrenar desde cero con un conjunto de decenas de miles de imágenes | `pan2010survey` |
+| 2 | El pre-entrenamiento en ImageNet es la inicialización estándar de los backbones visuales, y todos los clasificadores del trabajo parten de ahí | El punto de partida común hace comparables las arquitecturas | `russakovsky2015imagenet` (p), `he2015residual` |
+| 3 | Aumento de datos: rotaciones, recortes, desplazamientos y cambios de color como regularizador; amplía la cobertura del espacio de imágenes pero no la de las clases raras | El aumento regulariza y no corrige el desbalance | `shorten2019survey` |
+| 4 | Desbalance: la distribución de clases de HAM10000 es muy asimétrica y la exactitud sobre la mayoría esconde el desempeño sobre las minorías; tres respuestas en la función de pérdida —pesos por clase, pérdida focal, *balanced softmax*— se enfrentan en el Capítulo~\ref{cp:res_clasif} | Instala las estrategias evaluadas y el porqué de evaluarlas | `tschandl2018ham10000`, `lin2017focal` (p), `ren2020balanced` (p) |
+
+**Qué no va.** Ni resultados propios ni la tabla de arquitecturas comparadas: son
+Capítulo~\ref{cp:res_clasif}. Ni perplejidad ni métricas de generación: §2.5.
+
+---
+
+## 2.3 Modelos de lenguaje — `sec:marco_llm`
+
+**Mensaje central.** Un gran modelo de lenguaje es un predictor del siguiente token pre-entrenado
+en corpus grandes, y el ajuste con LoRA lo hace asequible en hardware de consumo sin cambiar su
+inferencia.
+
+**Extensión: 2–2,5 páginas.**
+
+### 2.3.1 Grandes modelos de lenguaje
+
+| # | Párrafo | Afirmación que sostiene | Citas |
+|---|---|---|---|
+| 1 | Mención breve de la etapa previa: redes recurrentes y redes de memoria a corto y largo plazo procesaban la secuencia paso a paso, y la atención las superó en alcance y paralelismo | Marco histórico mínimo, sin desarrollar arquitecturas que el trabajo no usa | `elman1990finding` |
+| 2 | Modelado de lenguaje como predicción del siguiente token; el pre-entrenamiento es auto-supervisado sobre corpus de miles de millones de palabras | Define la tarea con la que se obtienen los LLMs actuales | `brown2020language`, `touvron2023llama` |
+| 3 | Familias arquitectónicas: solo-codificador para representación, solo-decodificador para generación; el componente de lenguaje del trabajo pertenece a la segunda | Delimita qué LLM entra en el *pipeline* | `devlin2019bert`, `brown2020language`, `touvron2023llama` |
+| 4 | Ciclo de vida: pre-entrenamiento, ajuste fino supervisado y alineación con retroalimentación humana; cada etapa cambia el comportamiento del modelo sin cambiar su arquitectura | Los tres estados en que se puede usar un LLM | `ouyang2022training` |
+| 5 | Decodificación: búsqueda codiciosa y búsqueda por haz (*beam search*) frente a muestreo; temperatura, *top-k* y muestreo de núcleo; el muestreo evita la degeneración textual pero introduce varianza entre corridas | La estrategia de decodificación es un hiperparámetro del generador y afecta a todo lo que se mida sobre él | `holtzman2020curious` (p) |
+
+### 2.3.2 Ajuste eficiente de parámetros: LoRA
+
+| # | Párrafo | Afirmación que sostiene | Citas |
+|---|---|---|---|
+| 1 | Costo del ajuste fino completo: gradientes y estados del optimizador para todos los parámetros; para modelos de miles de millones eso excede la memoria de una GPU de consumo | El cuello de botella del ajuste es de memoria | `hu2021lora` |
+| 2 | Formulación de LoRA: sobre los pesos congelados $W$ se añade un incremento de bajo rango $BA$, con $B\in\mathbb{R}^{d\times r}$, $A\in\mathbb{R}^{r\times k}$ y $r\ll\min(d,k)$; solo $A$ y $B$ se entrenan (`eq:marco_lora`) | Definición formal de la técnica que hace viable todo el trabajo | `hu2021lora` |
+| 3 | Efecto sobre la huella de memoria: los parámetros entrenables y sus estados del optimizador caen órdenes de magnitud, y al terminar el ajuste los adaptadores se fusionan en $W$ sin costo de inferencia | Es lo que permite ajustar en el presupuesto de 12–36 GB que fija §1.4 | `hu2021lora`, `yilmaz2025resourceefficient` |
+| 4 | Cierre: los modelos adaptados del trabajo se ajustan con LoRA, y la configuración concreta de rango, módulos y objetivo va en el Capítulo~\ref{cp:metodos} | Instala la restricción de cómputo como decisión de diseño y no como limitación | — |
+
+**Qué no va.** Ni destilación de conocimiento —no es eje del trabajo; se menciona donde aparece en
+el estado del arte, §2.7.3— ni RAG —va en §2.4.4— ni leyes de escalado.
+
+---
+
+## Próximos bloques (esquema, sin detalle)
+
+| Bloque | Secciones | Extensión | Estado |
+|---|---|---|---|
+| **B** | §2.4 Modelos visión--lenguaje (CLIP; multimodales generativos; generación de texto a partir de imágenes médicas; RAG) · §2.5 Evaluación de modelos (clasificación; calibración; generación de texto; inferencia estadística; interpretabilidad) | 8,5–9 páginas | Se detalla al aprobarse este bloque |
+| **C** | §2.6 Conjuntos de datos, sesgo y generalización · §2.7 Estado del arte (diagnóstico automático; VLMs en dermatología; generación de reportes) · párrafo de apertura del capítulo | 8–9 páginas | Se detalla después del bloque B |
+
+El bloque C lleva además la tabla comparativa de §2.7.3 —modelo, tarea, datos, métricas y
+hardware— y el cierre con la brecha triple que enuncia el `.tex`. Las tablas de resultados de
+`Docs/tabla_resultados_sota/` **no** se copian al capítulo: son material de los capítulos de
+resultados; acá solo alimentan la comparación cualitativa.
+
+---
+## Preguntas abiertas
+
+1. **Acrónimos de los bloques B y C** (BLEU, ROUGE, METEOR, CIDEr, BERTScore, MCE, Grad-CAM y los
+   que surjan): se piden en la ficha de cada bloque, no ahora.
+
+2. **Cómo se cierra la brecha de extensión del capítulo.** El bloque A cerró en 7 páginas contra
+   las 10–11 estimadas, y al ritmo actual el capítulo termina en 20–22 y no en 25–30. Hay que
+   decidir, al detallar el bloque B, si se amplía el plan de contenido o si se baja el objetivo de
+   la guía. Ver el encabezado de esta ficha.
+
+3. **La expansión de los acrónimos deja paréntesis anidados.** `\gls{llm}` imprime «Gran Modelo de
+   Lenguaje (Large Language Model) (LLM)», y lo mismo pasa con `cnn`, `vlm` y `ood`, que ya se
+   imprimen así en el Capítulo 1. Se arregla en una línea por acrónimo en `Matter/05-Acronyms.tex`,
+   sacando el inglés entre paréntesis de la forma larga: la lista de acrónimos lo sigue mostrando.
+   Afecta a capítulos ya revisados, así que lo decide el autor.
+
+## Decisiones tomadas
+
+1. **Las claves propuestas se nombran ahora, no al citar.** La auditoría de `refs_pendientes.md`
+   ya fija el nombre de cada clave para que la incorporación al `.bib` y la redacción usen el mismo
+   identificador y no haya que reescribir citas.
+
+2. **Las páginas estimadas usan coma decimal** (`3–3,5`), como en la ficha de la introducción: la
+   regla del punto decimal de la guía se aplica a los resultados del documento, no a las estimaciones
+   de esta ficha.
+
+3. **RNN y LSTM no se acortan a sigla.** La mención histórica de §2.3.1 queda más breve escrita
+   en palabras, y evita dos entradas de acrónimo para material que el recorte deja en una oración.
+
+4. **§2.1 se queda como sección de dominio, adelgazada** (22/09/2026). La duda del autor era si
+   corresponde un marco teórico clínico en una tesina de Ciencias de la Computación. Se resuelve así:
+   la sección existe porque define lo que el trabajo mide —las etiquetas del clasificador, la
+   diferencia de dominio entre conjuntos y el formato del texto generado— y se limita a eso. Baja de
+   3 a 2,5 páginas, §2.1.1 pasa de cuatro párrafos a tres (la gravedad de las clases se funde con la
+   taxonomía), §2.1.2 de cuatro a tres y §2.1.3 de cuatro a tres (los criterios estructurados se
+   funden con el vocabulario). Se aclara en la sección que no es un curso de dermatología.
+
+5. **Vocabulario sin palabras rebuscadas** (22/09/2026). «Exéresis» se reemplazó por «extirpar una
+   lesión benigna sin necesidad», «glosa» por «lo que designa cada sigla», «etiológica» por
+   «diagnóstica», «escala macroscópica» por «tal como se ve a simple vista» y «superficie cutánea»
+   por «la piel». Se aplica al resto del capítulo en la pasada de estilo de cada sección.
+
+6. **`nvidia2023beginners` no se cita** (22/09/2026). Con `holtzman2020curious` para decodificación,
+   el *ebook* de NVIDIA queda sin uso en el capítulo. La entrada se conserva en el `.bib` sin usar;
+   retirarla es decisión del autor.
+
+7. **La figura de §2.2.3 se dibuja** (22/09/2026). `fig:marco_vit_patches`, TikZ en escala de
+   grises, después de ¶1 de §2.2.3.
+
+8. **§2.1.3 ¶1 ya no enuncia las cuatro partes del reporte** (22/09/2026). La ficha pedía
+   descripción, impresión diagnóstica, diagnóstico diferencial y recomendación de manejo, con
+   `kittler2016standardization` de respaldo, pero ese trabajo es el consenso de la ISD sobre
+   **terminología dermatoscópica** y no dice nada sobre el formato del informe; el `.bib` no tiene
+   ninguna referencia que lo diga. El párrafo pasa a enunciar las dos partes de las que el trabajo
+   se ocupa —descripción e impresión diagnóstica—, que son las que anotan los conjuntos de pares
+   imagen--texto y se sostienen con `shen2025skincare`, y deja el diferencial y la recomendación
+   como lo que queda fuera del alcance. `kittler2016standardization` se conserva en ¶2, que es
+   donde sí corresponde: el vocabulario estandarizado por consenso. En `refs_pendientes.md` quedó
+   propuesta una referencia clínica sobre estructura del informe, por si se quiere recuperar la
+   enumeración completa.
+
+9. **LSTM sale de §2.3.1 ¶1** (22/09/2026). La mención «las redes de memoria a corto y largo plazo
+   alargaron esa memoria» no tenía fuente: Hochreiter y Schmidhuber 1997 no está en el `.bib` y
+   `elman1990finding` es siete años anterior. Como la decisión 3 ya dejaba LSTM en una mención
+   mínima, se elimina la cláusula y el párrafo queda con las redes recurrentes, que Elman sí
+   sostiene.
+
+10. **«Embedding» es el término, no «embebido»** (22/09/2026). Convivían los dos en el mismo
+    capítulo. Se elige el inglés por el criterio que la guía ya aplica a *pipeline* o *prompt*, y
+    la decisión quedó registrada en la tabla de terminología de la guía §4.
+
+11. **Se corrige «invariancia» por «equivariancia» a traslaciones en §2.2.3 ¶2** (22/09/2026). La
+    convolución es equivariante a traslaciones; la invariancia la aporta el *pooling*. Es lo que
+    dice Dosovitskiy y lo que decía esta ficha.
+
+12. **AKIEC no es solo premaligna** (22/09/2026). La clase agrupa queratosis actínica y carcinoma
+    intraepitelial, que ya es un carcinoma in situ; por eso HAM10000 las junta. §2.1.1 ¶2 pasa a
+    decir «reúne lesiones premalignas y carcinomas in situ».
+13. **Reorganización tras la revisión del 25/09/2026.**
+    - **La atención pasa a sección propia** (`sec:marco_atencion`), entre §2.1 y visión, porque la
+      usan visión y lenguaje. La mención de las redes recurrentes (antes §2.3.1 ¶1) abre esa
+      sección, donde motiva la atención en lugar de aparecer después de ella. Las secciones
+      siguientes corren un número: visión es §2.3, lenguaje §2.4, VLM §2.5, evaluación §2.6, datos
+      §2.7 y estado del arte §2.8. Las tablas de esta ficha conservan la numeración vieja.
+    - **El párrafo codificador–decodificador se corrige.** Decía que el trabajo procesa la imagen con
+      el codificador y el texto con el decodificador, lo que contradecía §2.3.1 ¶3 (LLM de solo
+      decodificador) y no describe a LLaVA. Ahora dice que el ViT conserva el codificador y los LLM
+      generativos el decodificador; cómo se unen en un VLM queda en el `\pendiente` de §2.4.2.
+    - **§2.2.3 ¶2 (ViT) se corrige.** La inversión ViT/CNN de Dosovitskiy depende de la escala del
+      pre-entrenamiento (ImageNet frente a 14–300 millones de imágenes), no del tamaño del conjunto
+      médico. §2.2.3 ¶4 se elimina por repetir §2.2.4 ¶2.
+    - **La distinción fidelidad diagnóstica / calidad del texto se instala solo en §2.4.3**, que
+      además retoma `fig:intro_dos_tareas`. §2.1.3 ¶3 pasa a extraer de la variabilidad entre
+      observadores la consecuencia para las métricas con referencia (`sec:marco_eval_texto`).
+    - **La exactitud engañosa se explica solo en §2.5.1** (`sec:marco_eval_clasif`); §2.1.1 ¶3 y
+      §2.2.4 ¶4 remiten a ella.
+    - Se eliminaron la apertura defensiva de §2.1, las frases de traspaso al final de §2.2 y §2.3 y
+      la mención de Swin para tareas de localización, y se hizo una pasada sobre los cierres
+      sentenciosos y el contraste «no X, sino Y».
+
+14. **El capítulo queda solo con conceptos de computación** (25/09/2026). Se anula la decisión 4. La
+    duda del autor volvió a plantearse revisando la estructura completa: cada pieza de §2.1 tenía un
+    lugar donde se usa, y en varios casos ese lugar ya existía y la duplicaba. El reparto:
+    - §2.1.1 ¶2 (siete categorías y gravedad) → Materiales y métodos, `sec:met_ham`. ¶1 se descarta
+      (la definición de lesión era casi tautológica). ¶3 (costos asimétricos) → `sec:met_seleccion`,
+      donde justifica las métricas por clase.
+    - §2.1.2 ¶1-2 (qué es la dermatoscopía, dependencia de la formación) se eliminan: ya están en
+      §1.1 con las mismas citas. ¶3 (modalidades como dominios distintos) → nueva sección «Sesgo y
+      generalización» (`sec:marco_generalizacion`), que reemplaza a «Conjuntos de datos, sesgo y
+      generalización».
+    - §2.1.3 ¶1 (partes del reporte) → `sec:met_generacion`. ¶2 (vocabulario finito) y ¶3
+      (variabilidad entre observadores) → `sec:marco_eval_texto`, como base de las métricas sin
+      referencia y límite de las con referencia.
+    - Conjuntos concretos: los usados ya estaban en `sec:met_datasets` (incluida la falta de
+      identificador de paciente de HAM10000, que es `sec:met_particiones`); el repaso de los no usados
+      pasa a un cuadro en el estado del arte. Se respeta el criterio del tutor del 14/09: el sesgo y la
+      generalización, que son conceptos, se quedan en este capítulo.
+    - La extensión del capítulo baja; las páginas son estimativas y no bloquean (autor, 25/09/2026).
+    - Numeración resultante: §2.1 atención, §2.2 visión, §2.3 lenguaje, §2.4 VLM, §2.5 evaluación,
+      §2.6 sesgo y generalización, §2.7 estado del arte.

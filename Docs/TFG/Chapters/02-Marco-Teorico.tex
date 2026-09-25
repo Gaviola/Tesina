@@ -1,6 +1,7 @@
 \chapter[Marco teórico]{Marco teórico}
 \label{cp:marco}
-% Extensión estimada: 25--30 páginas.
+% Extensión estimada: a revisar. El reparto de la ficha daba 27--30 páginas, pero el bloque A cerró en 7
+% contra las 10--11 previstas. Ver el encabezado de fichas/02-marco-teorico.md.
 % Fuentes: Docs/marco_teorico/Documento_LLMs_VLLMs.tex (recortar NLP general, one-hot, RNN/LSTM a una
 % mención breve), Docs/estado_del_arte/resumen_papers.tex (fichas de ~40 trabajos) y
 % Docs/tabla_resultados_sota. Los fundamentos clínicos, de calibración y de estadística no están en esos
@@ -11,57 +12,206 @@
 % estado del arte, son conceptos y por eso van aquí. Se agrega una subsección sobre generación de texto a
 % partir de imágenes médicas, que faltaba pese a ser el objeto central del trabajo. La subsección "Uso de un
 % VLM generativo como clasificador" se traslada a Materiales y métodos por tratarse del enfoque propio.
+%
+% Revisión 25/09/2026: la atención pasa a sección propia, antes de visión y lenguaje, porque la usan los
+% dos (ficha, decisión 13). El capítulo queda solo con conceptos de computación: los fundamentos clínicos
+% se reparten entre Materiales y métodos y las métricas de texto, y los conjuntos concretos pasan a
+% Materiales y métodos; aquí quedan el sesgo y la generalización como conceptos (ficha, decisión 14).
 
-\pendiente{Este capítulo presenta los conceptos teóricos necesarios para seguir el resto del trabajo:
-fundamentos clínicos de las lesiones de piel, arquitecturas de aprendizaje profundo para visión, modelos de
-lenguaje, modelos visión--lenguaje, herramientas de evaluación y los conjuntos de datos del área. La última
-sección revisa el estado del arte con esos conceptos ya disponibles.}
+\pendiente{Este capítulo presenta los conceptos teóricos necesarios para seguir el resto del trabajo: la
+arquitectura transformer, arquitecturas de aprendizaje profundo para visión, modelos de lenguaje, modelos
+visión--lenguaje, herramientas de evaluación, y el sesgo y la generalización fuera de la distribución de
+entrenamiento. La última sección revisa el estado del arte con esos conceptos ya disponibles.}
 
-\section{Fundamentos clínicos}
-\label{sec:marco_clinico}
+\section{Transformers y mecanismo de atención}
+\label{sec:marco_atencion}
 
-\subsection{Lesiones cutáneas y categorías diagnósticas}
-\pendiente{Se describen las siete categorías de HAM10000 (MEL, NV, BCC, AKIEC, BKL, DF, VASC), cuáles son
-malignas o premalignas y por qué confundir unas con otras tiene costos clínicos distintos.}
+Antes de la atención, las redes recurrentes procesaban una secuencia paso a paso y condicionaban cada
+token al estado anterior, de modo que el acceso a una posición lejana dependía de la longitud de la
+cadena~\cite{elman1990finding}. La atención reemplaza ese recorrido por una comparación directa, en
+la que cada posición de la salida pondera los valores de todas las posiciones de la entrada según la
+compatibilidad entre una consulta y una clave. La arquitectura \emph{transformer} se construye sobre
+esa operación, y de ella derivan tanto los modelos visuales de la Sección~\ref{sec:marco_vision} como
+los modelos de lenguaje de la Sección~\ref{sec:marco_llm}~\cite{vaswani2017attention}.
 
-\subsection{Dermatoscopía y fotografía clínica}
-\pendiente{Se comparan ambas modalidades de imagen y se explica por qué sus diferencias importan al transferir
-modelos entre conjuntos de datos (HAM10000 es dermatoscópico; SkinCaRe, clínico).}
+La atención escalada por producto punto proyecta la entrada en tres espacios, consulta $Q$, clave
+$K$ y valor $V$, y devuelve una combinación de valores pesada por la compatibilidad entre consulta
+y clave:
+\begin{equation}
+    \mathrm{Attention}(Q, K, V) = \mathrm{softmax}\!\left(\frac{QK^{\top}}{\sqrt{d_k}}\right) V,
+    \label{eq:marco_atencion}
+\end{equation}
+donde $d_k$ es la dimensión de la clave. La división por su raíz evita que el producto punto crezca
+con la dimensión y sature la \emph{softmax}, que dejaría de discriminar entre
+posiciones~\cite{vaswani2017attention}.
 
-\subsection{El reporte dermatológico}
-\pendiente{Se presenta la estructura típica de un reporte (descripción morfológica, diagnóstico, diferencial,
-recomendación) y el vocabulario clínico asociado, que sirve de base para las métricas de riqueza clínica del
-Capítulo~\ref{cp:metodos}.}
+La atención multi-cabeza proyecta $Q$, $K$ y $V$ en varios subespacios de menor dimensión, aplica
+la Ecuación~\ref{eq:marco_atencion} en cada uno por separado y concatena los resultados. Cada cabeza
+aprende a capturar relaciones de distinto tipo entre posiciones, y el conjunto amplía la capacidad
+de representación sin aumentar la dimensión total del modelo~\cite{vaswani2017attention}.
+
+El transformer original, planteado para traducción automática, combina dos módulos. El codificador
+contextualiza la entrada completa, y el decodificador genera la salida token a token atendiendo a lo
+codificado y a lo ya generado. Las arquitecturas que usa este trabajo conservan uno solo de los dos:
+el ViT de la Sección~\ref{sec:marco_vit} usa el codificador, y los modelos de lenguaje generativos de
+la Sección~\ref{sec:marco_llm_grandes}, el
+decodificador~\cite{vaswani2017attention,dosovitskiy2021image,brown2020language}.
 
 \section{Aprendizaje profundo para visión}
 \label{sec:marco_vision}
 
-\subsection{Redes convolucionales}
-\pendiente{Se explican la operación de convolución, la jerarquía de características y las arquitecturas
-DenseNet y ConvNeXt, utilizadas en el trabajo.}
+El trabajo enfrenta dos familias de arquitectura de visión. Las redes convolucionales componen
+filtros locales apilados y extraen una jerarquía de características. Los transformers visuales
+tratan la imagen como una secuencia de tokens y la procesan con la atención de la
+Sección~\ref{sec:marco_atencion}. DenseNet y ConvNeXt pertenecen a la primera familia y \gls{vit} y
+Swin a la segunda, y las cuatro se comparan en el Capítulo~\ref{cp:res_clasif}.
 
-\subsection{Transformers y mecanismo de atención}
-\pendiente{Se describen la atención escalada por producto punto, la atención multi-cabeza y la arquitectura
-codificador--decodificador.}
+\subsection{Redes convolucionales}
+\label{sec:marco_cnn}
+
+La operación de convolución desliza un filtro de pequeño tamaño sobre la entrada y calcula en cada
+posición el producto punto entre el filtro y la ventana que cubre. La conectividad local y el uso de
+un mismo filtro en toda la imagen son las dos decisiones de diseño del operador. La primera supone
+que la información relevante se agrupa en regiones pequeñas, y la segunda, que un mismo patrón puede
+aparecer en cualquier parte. Una \gls{cnn} apila esas operaciones con no-linealidades y
+reducciones de resolución intermedias~\cite{lecun1998gradient}.
+
+La profundidad compone esos rasgos locales en rasgos de mayor alcance: los bordes producen texturas,
+las texturas producen partes de objetos y las partes producen objetos completos. VGG y ResNet
+fijaron el repertorio de bloques que las arquitecturas posteriores refinan, con convoluciones
+pequeñas apiladas en el primer caso y conexiones residuales en el segundo, y ese repertorio es el
+punto de partida de las redes convolucionales
+contemporáneas~\cite{simonyan2015very,he2015residual}.
+
+En DenseNet cada capa recibe las características de todas las anteriores, además de las de la
+inmediata, y aporta las suyas a todas las posteriores. Esa reutilización alcanza una capacidad
+comparable con menos parámetros que las arquitecturas de conectividad simple, y con conjuntos del
+orden de diez mil imágenes, como HAM10000, la economía de parámetros reduce el
+sobreajuste~\cite{huang2018densely,he2015residual}.
+
+ConvNeXt moderniza una ResNet adoptando decisiones de diseño de los transformers: convoluciones de
+mayor tamaño en lugar de bloques pequeños apilados, menos no-linealidades y normalización por capa.
+Con esas modificaciones, una red puramente convolucional iguala al Swin Transformer en exactitud y
+escalabilidad. En el comparativo, ConvNeXt representa a las redes convolucionales de la misma época
+que el ViT, de modo que el contraste entre familias enfrenta arquitecturas
+contemporáneas~\cite{liu2022convnet}.
 
 \subsection{Vision Transformer y Swin Transformer}
-\pendiente{Se presentan el ViT, que trata \emph{patches} de la imagen como tokens, y el Swin Transformer, que
-introduce atención por ventanas desplazadas y una representación jerárquica.}
+\label{sec:marco_vit}
+
+El ViT divide la imagen en una rejilla de parches cuadrados, aplana cada parche y lo proyecta
+a un token, y suma a cada token un \emph{embedding} de posición. Sobre esa secuencia aplica un
+codificador transformer sin ninguna operación convolucional, y decide la categoría a partir de un
+token de clase que se agrega al inicio de la secuencia~\cite{dosovitskiy2021image,vaswani2017attention}.
+
+\input{Figures/Capitulos/02-vit-patches}
+
+El ViT no incorpora las dos suposiciones que la convolución da por sentadas, la localidad y la
+equivariancia a traslaciones, y tiene que aprenderlas de los datos. Pre-entrenado solo sobre
+ImageNet, rinde por debajo de redes convolucionales de tamaño comparable; pre-entrenado sobre
+corpus de entre 14 y 300 millones de imágenes, las supera. La variable que decide entre una familia
+y otra es la escala del pre-entrenamiento, y por eso importa con qué pesos parte cada arquitectura
+antes del ajuste sobre el conjunto médico~\cite{dosovitskiy2021image}.
+
+El Swin Transformer atiende solo dentro de ventanas locales, con costo lineal en el número de
+parches en lugar de cuadrático, y desplaza las ventanas entre capas para que la información cruce
+de una a otra. Además reduce la resolución por etapas y devuelve una pirámide de mapas de
+características, con la estructura jerárquica de una red convolucional y la operación de atención de
+un transformer~\cite{liu2021swin}.
 
 \subsection{Transferencia de aprendizaje y desbalance de clases}
-\pendiente{Se explican el pre-entrenamiento en ImageNet y el ajuste fino, el aumento de datos y las
-estrategias frente al desbalance (pesos por clase, pérdida focal, \emph{balanced softmax}) evaluadas en el
-Capítulo~\ref{cp:res_clasif}.}
+\label{sec:marco_transferencia}
+
+Entrenar desde cero una de esas arquitecturas exige más imágenes de las que tiene un conjunto
+médico típico. La transferencia de aprendizaje resuelve la escasez aprendiendo primero
+representaciones sobre un corpus grande de imágenes naturales y reutilizándolas después para la
+tarea de destino. La extracción de características congela el \emph{backbone} y solo entrena la
+cabeza de clasificación; el ajuste fino actualiza también los pesos de la red, con una tasa de
+aprendizaje menor~\cite{pan2010survey}.
+
+Todas las arquitecturas del trabajo parten de pesos pre-entrenados sobre ImageNet, el corpus de
+referencia del reconocimiento visual~\cite{russakovsky2015imagenet}. Con ese punto de partida común,
+las diferencias que se miden entre ellas en el Capítulo~\ref{cp:res_clasif} se pueden atribuir a la
+arquitectura.
+
+El aumento de datos amplía el corpus de entrenamiento con transformaciones geométricas y
+fotométricas de las imágenes disponibles: rotaciones, recortes, desplazamientos y cambios de color.
+Funciona como regularizador y reduce el sobreajuste, pero, aplicado por igual a todas las clases,
+deja la proporción entre ellas donde estaba~\cite{shorten2019survey}.
+
+La distribución de clases de HAM10000 es muy asimétrica, y un modelo entrenado sin corrección
+favorece a las clases mayoritarias~\cite{tschandl2018ham10000}. El Capítulo~\ref{cp:res_clasif}
+compara tres modificaciones de la función de pérdida, que actúan durante el entrenamiento y dejan
+intacta la métrica de evaluación: ponderar la pérdida por la inversa de la frecuencia de cada clase;
+la pérdida focal, que atenúa el aporte de los ejemplos que el modelo ya clasifica con confianza; y
+el \emph{balanced softmax}, que suma a cada logit el logaritmo de la frecuencia de su clase en el
+entrenamiento~\cite{lin2017focal,ren2020balanced}.
 
 \section{Modelos de lenguaje}
 \label{sec:marco_llm}
 
+Un modelo de lenguaje predice el siguiente token del texto a partir de los anteriores, y de esa
+única tarea salen el pre-entrenamiento sobre corpus grandes, el ajuste a una tarea concreta y la
+generación de textos nuevos. El generador del \emph{pipeline} pertenece a esta familia. Para el
+trabajo interesan cómo se obtiene el modelo, cómo produce el texto y cuánto cuesta ajustarlo.
+
 \subsection{Grandes modelos de lenguaje}
-\pendiente{Se describen el pre-entrenamiento, el ajuste fino, la alineación y la decodificación en la
-generación de texto.}
+\label{sec:marco_llm_grandes}
+
+Un \gls{llm} se obtiene por pre-entrenamiento auto-supervisado: sobre corpus de miles de
+millones de palabras, el modelo aprende a predecir el siguiente token sin anotación humana. De esa
+fase sale una distribución de probabilidad sobre el vocabulario condicionada a cualquier prefijo, y
+esa distribución es la herramienta que después se reaprovecha para todo lo
+demás~\cite{brown2020language,touvron2023llama}.
+
+Dos familias se distinguen por el modo de usar el transformer. La de solo codificador entrena una
+representación bidireccional del texto y sirve para clasificar y para comparar; la de solo
+decodificador modela la secuencia en una dirección y sirve para generar. El componente de lenguaje
+del trabajo pertenece a la segunda~\cite{devlin2019bert,brown2020language,touvron2023llama}.
+
+El comportamiento del modelo se ajusta después en dos etapas. El ajuste fino supervisado lo entrena
+sobre pares instrucción--respuesta, y la alineación con \gls{rlhf} lo entrena a preferir las
+respuestas que un evaluador humano marca como mejores. Un modelo solo pre-entrenado continúa el
+texto que recibe, mientras que uno alineado responde a instrucciones, y el generador del trabajo
+recibe su tarea en forma de instrucción~\cite{ouyang2022training}.
+
+La generación recorre la distribución de salida token a token. La búsqueda codiciosa y la búsqueda
+por haz eligen las continuaciones más probables y producen textos planos y repetitivos. El muestreo
+introduce azar en esa elección, y la temperatura, el \emph{top-k} y el muestreo de núcleo deciden
+cuánto. El muestreo de núcleo recorta el vocabulario al subconjunto mínimo que acumula la masa de
+probabilidad fijada, y con eso evita la degeneración textual~\cite{holtzman2020curious}. Como la
+estrategia de decodificación cambia el texto generado y todas las métricas que se calculen sobre
+él, se fija y se documenta como un hiperparámetro más del generador.
 
 \subsection{Ajuste eficiente de parámetros: LoRA}
-\pendiente{Se presenta LoRA, su formulación y por qué permite ajustar modelos grandes en hardware de consumo.}
+\label{sec:marco_llm_lora}
+
+El ajuste fino completo de un modelo grande está limitado por la memoria más que por el tiempo de
+cómputo. Con el optimizador Adam, cada parámetro entrenado arrastra su gradiente y dos estados
+adicionales, y para un modelo de miles de millones de parámetros eso no cabe en la memoria de una
+GPU de consumo. Congelar el modelo por completo y entrenar solo una cabeza nueva evita el problema,
+pero limita lo que el ajuste puede cambiar~\cite{hu2021lora}.
+
+\gls{lora} ocupa un punto intermedio entre las dos opciones. Sobre los pesos congelados $W$ entrena
+un incremento de bajo rango,
+\begin{equation}
+    W' = W + BA, \qquad B \in \mathbb{R}^{d\times r},\quad A \in \mathbb{R}^{r\times k},\quad
+    r \ll \min(d, k),
+    \label{eq:marco_lora}
+\end{equation}
+y solo actualiza $A$ y $B$, que se inicializan de modo que el incremento valga cero al empezar. El
+rango $r$ controla la capacidad de adaptación, y valores pequeños bastan para llevar el modelo a un
+dominio concreto~\cite{hu2021lora}.
+
+Los parámetros entrenables y sus estados del optimizador pasan a ser los de $A$ y $B$, una fracción
+mínima de los de $W$, y con eso el ajuste vuelve a caber en el presupuesto de una GPU de consumo. Al
+terminar, el incremento de la Ecuación~\ref{eq:marco_lora} se suma a $W$ y el modelo resultante se
+ejecuta igual que el original, sin ramas ni latencia
+adicional~\cite{hu2021lora,yilmaz2025resourceefficient}.
+
+Los modelos generativos que el trabajo ajusta se adaptan con LoRA, y por eso esa parte de la
+comparación se hace entera en hardware de consumo. El rango, los módulos congelados y la función de
+pérdida del ajuste van en el Capítulo~\ref{cp:metodos}.
 
 \section{Modelos visión--lenguaje}
 \label{sec:marco_vlm}
@@ -71,26 +221,32 @@ generación de texto.}
 clasificación \emph{zero-shot} por similitud y el \emph{linear probe}. Es la base de DermLIP.}
 
 \subsection{Modelos multimodales generativos}
+\label{sec:marco_vlm_generativos}
 \pendiente{Se describe la proyección de características visuales al espacio de un LLM (LLaVA) y el
-\emph{visual instruction tuning}, base de LLaVA-Med, Mini-VLM y SkinVL.}
+\emph{visual instruction tuning}, base de LLaVA-Med, Mini-VLM y SkinVL. Se aclara que estos modelos no
+reutilizan el esquema codificador--decodificador del transformer original: los tokens visuales proyectados
+entran como prefijo a un LLM de solo decodificador.}
 
 \subsection{Generación de texto a partir de imágenes médicas}
+\label{sec:marco_vlm_generacion}
 \pendiente{Se presenta la tarea central del trabajo: producir texto clínico a partir de una imagen. Se
 describen el esquema \emph{image captioning} aplicado al dominio médico y su evolución hacia la redacción de
 informes (radiología primero, dermatología después), qué datos requiere (pares imagen--texto clínico), y los
 dos problemas característicos de estos modelos: la alucinación de hallazgos y el \emph{hedging}, es decir, la
 tendencia a redactar descripciones genéricas y sin compromiso diagnóstico. También se distingue entre la
-fidelidad diagnóstica del reporte y su calidad como texto, distinción sobre la que se apoya toda la
-evaluación del Capítulo~\ref{cp:res_gen}.}
+fidelidad diagnóstica del reporte y su calidad como texto, que retoma las dos condiciones de la
+Figura~\ref{fig:intro_dos_tareas} (categoría acertada y descripción fiel a la imagen); sobre esa distinción
+se apoya toda la evaluación del Capítulo~\ref{cp:res_gen}.}
 
 \subsection{Generación aumentada por recuperación}
 \pendiente{Se explica RAG en general y su variante basada en vecinos visuales (kNN sobre
-\emph{embeddings}).}
+embeddings).}
 
 \section{Evaluación de modelos}
 \label{sec:marco_evaluacion}
 
 \subsection{Métricas de clasificación}
+\label{sec:marco_eval_clasif}
 \pendiente{Se definen exactitud, F1 ponderado y macro, sensibilidad macro, AUC, y sensibilidad y
 especificidad para la tarea binaria, y se muestra por qué la exactitud es engañosa con clases
 desbalanceadas.}
@@ -100,8 +256,28 @@ desbalanceadas.}
 \emph{temperature scaling} y \emph{vector scaling}.}
 
 \subsection{Métricas de generación de texto}
-\pendiente{Se describen las métricas con referencia (BLEU, ROUGE-L, METEOR, CIDEr, BERTScore) y sin
-referencia (entidades clínicas y consistencia diagnóstica), y qué mide y qué no mide cada familia.}
+\label{sec:marco_eval_texto}
+\pendiente{Se describen las métricas con referencia (BLEU, ROUGE-L, METEOR, CIDEr, BERTScore): qué
+comparan entre el texto generado y el de referencia, y qué miden y qué no.}
+
+Las métricas con referencia suponen que el texto de referencia es la descripción correcta de la imagen,
+y en dermatología ese supuesto es débil. Cuando varios dermatólogos marcan por separado los mismos
+criterios dermatoscópicos sobre las mismas imágenes, la concordancia va de pobre a
+moderada~\cite{carrera2016validity}. El texto de referencia de un par imagen--texto recoge entonces una
+lectura de la lesión entre varias posibles, y una descripción generada puede apartarse de él sin estar
+equivocada. Una métrica que compara contra ese único texto la penaliza igual que a una descripción
+errónea.
+
+Las métricas sin referencia se apoyan en otra propiedad del dominio. La descripción de una lesión se
+escribe con un vocabulario cerrado de términos para color, patrón, forma y distribución, que la
+comunidad dermatoscópica estandarizó por consenso. Dentro de ese vocabulario, algoritmos como la lista
+de 7 puntos convierten la presencia de ciertos hallazgos en peso diagnóstico, de modo que el camino
+entre la imagen y la etiqueta pasa por entidades con
+nombre~\cite{kittler2016standardization,argenziano1998checklist}. Con un inventario finito de
+entidades se puede contar cuántas de ellas menciona un texto generado sin compararlo con otro texto.
+
+\pendiente{Se definen las dos métricas sin referencia que usa el trabajo, la cobertura de entidades
+clínicas y la consistencia diagnóstica, y qué mide y qué no mide cada familia.}
 
 \subsection{Inferencia estadística para comparar modelos}
 \pendiente{Se presentan los intervalos por \emph{bootstrap} pareado, la prueba de McNemar y la prueba de
@@ -110,14 +286,27 @@ Wilcoxon, y qué pregunta responde cada una.}
 \subsection{Interpretabilidad visual}
 \pendiente{Se describen los mapas de activación (Grad-CAM) y sus limitaciones.}
 
-\section{Conjuntos de datos, sesgo y generalización en dermatología}
-\label{sec:marco_datos_sesgo}
-\pendiente{Se comparan los conjuntos públicos del área (HAM10000, ISIC, PH2, SkinCaRe, MM-Skin, Derm1M, HIBA,
-Fitzpatrick17k y SkinCon) en modalidad, tamaño, etiquetas, disponibilidad de texto y limitaciones conocidas,
-incluida la ausencia de identificador de paciente en HAM10000 y la presencia de varias imágenes de una misma
-lesión, que es la condición que hace posible la fuga entre particiones analizada en el
-Capítulo~\ref{cp:metodos}. Se presentan luego las disparidades de desempeño por tono de piel y la cuestión de
-la generalización a poblaciones distintas de la de entrenamiento, que motiva la evaluación en HIBA.}
+\section{Sesgo y generalización}
+\label{sec:marco_generalizacion}
+
+\pendiente{Se define el cambio de distribución (\emph{distribution shift}): un modelo aprende la
+distribución de su conjunto de entrenamiento, y su desempeño medido sobre una partición de ese mismo
+conjunto no garantiza el desempeño sobre imágenes de otra procedencia. Falta la cita del concepto
+general (propuesta en refs\_pendientes.md).}
+
+En dermatología el cambio de distribución más visible es el de modalidad. La fotografía clínica
+registra la lesión tal como se ve a simple vista, con la piel que la rodea, y la dermatoscopía la
+examina con aumento e iluminación controladas, con lo que muestra estructuras que la fotografía no
+resuelve, como la red pigmentaria y los patrones
+vasculares~\cite{kittler2002diagnostic,vestergaard2008dermoscopy}. Los rasgos visuales tienen
+distribuciones distintas en uno y otro registro, y un modelo entrenado sobre una modalidad no se
+traslada a la otra sin volver a medirlo. HAM10000 es dermatoscópico y SkinCaRe es de fotografía
+clínica, de modo que toda comparación entre los dos conjuntos arrastra esa diferencia de
+dominio~\cite{tschandl2018ham10000,shen2025skincare}.
+
+\pendiente{Se presentan las disparidades de desempeño por tono de piel en los conjuntos públicos y la
+cuestión de la generalización a poblaciones distintas de la de entrenamiento, que motiva la evaluación
+en HIBA (Sección~\ref{sec:met_datasets}).}
 
 \section{Estado del arte}
 \label{sec:estado_arte}
@@ -126,7 +315,9 @@ de lesiones de piel, modelos visión--lenguaje en dermatología y generación de
 bloque cierra indicando qué toma este trabajo de esa línea o en qué se diferencia.}
 
 \subsection{Diagnóstico automático de lesiones de piel}
-\pendiente{Se recorre la evolución desde las CNNs clásicas hacia los transformers, con los resultados de
+\pendiente{Un cuadro compara los conjuntos públicos del área (ISIC, PH2, Fitzpatrick17k, SkinCon, Derm1M y
+los que usa el trabajo) en modalidad, tamaño, etiquetas, disponibilidad de texto y población; la descripción
+detallada de los conjuntos usados está en la Sección~\ref{sec:met_datasets}. Se recorre la evolución desde las CNNs clásicas hacia los transformers, con los resultados de
 referencia sobre ISIC y HAM10000 con los que se compara el Capítulo~\ref{cp:res_clasif}, y los problemas
 recurrentes del área: desbalance, generalización y sesgo por fototipo.}
 

@@ -17,6 +17,10 @@
 %    arquitectura completa: clasificador, kNN y generador encadenados.
 %  - Se incorpora aquí "Uso de un VLM generativo como clasificador", que estaba en el marco teórico pese a
 %    ser parte del enfoque propio.
+%
+% Revisión 25/09/2026: recibe del marco teórico la prosa ya escrita sobre las categorías de HAM10000
+% (§HAM10000), los costos asimétricos de confusión (§selección de métricas) y las partes del reporte
+% (§generación de reportes). Ver fichas/02-marco-teorico.md, decisión 14.
 
 \pendiente{Este capítulo describe todo lo necesario para reproducir los experimentos: datos, particiones,
 modelos, \emph{pipeline} y protocolo de evaluación. Los resultados se presentan en los capítulos
@@ -35,6 +39,15 @@ generación de reportes y ensamble en cascada, y análisis de rigor y robustez.}
 \label{sec:met_datasets}
 
 \subsection{HAM10000}
+\label{sec:met_ham}
+
+El clasificador asigna cada imagen a una etiqueta de un inventario cerrado, y ese inventario es el de
+HAM10000, con siete categorías: \gls{mel}, \gls{nv}, \gls{bcc}, \gls{akiec}, \gls{bkl}, \gls{df} y
+\gls{vasc}. Según su gravedad, NV, BKL, DF y VASC son benignas, AKIEC reúne lesiones premalignas y
+carcinomas in situ, y MEL y BCC son malignas~\cite{tschandl2018ham10000}. Esa gradación determina
+cuánto cuesta cada confusión del clasificador, y con ello qué métricas se usan para juzgarlo
+(Sección~\ref{sec:met_seleccion}).
+
 \pendiente{Se presentan la composición del conjunto, la distribución de clases y su desbalance.}
 
 \subsection{Partición disjunta por lesión}
@@ -52,7 +65,9 @@ recalcularon sobre ella.}
 
 \subsection{SkinCaRe, MM-Skin y HIBA}
 \pendiente{Se describe el rol de cada conjunto: entrenamiento de la generación (SkinCAP y SkinCoT),
-evaluación con referencia (MM-Skin) y evaluación fuera de distribución (HIBA, solo test).}
+evaluación con referencia (MM-Skin) y evaluación fuera de distribución (HIBA, solo test). Se indica la
+modalidad de cada uno, en particular que SkinCaRe es de fotografía clínica y HAM10000 dermatoscópico, con
+remisión a la Sección~\ref{sec:marco_generalizacion}.}
 
 \subsection{Preprocesamiento y aumento de datos}
 \pendiente{Se detallan la resolución, la normalización, los aumentos de entrenamiento y el TTA.}
@@ -84,8 +99,15 @@ y ajuste fino con LoRA— junto con los prompts, el parseo de respuestas y la co
 
 \section{Generación de reportes}
 \label{sec:met_generacion}
-\pendiente{Se describen el ajuste fino del generador sobre SkinCaRe con LoRA, el formato del reporte y la
-configuración de decodificación.}
+
+El reporte dermatológico deja por escrito la lectura de la lesión, y de sus partes el trabajo se ocupa
+de dos: la descripción de lo que se ve y la impresión diagnóstica. Son las que corresponden a las dos
+tareas del problema, y las que los conjuntos de pares imagen--texto del área anotan junto a cada
+imagen~\cite{shen2025skincare}. El diagnóstico diferencial y la recomendación de manejo, que un reporte
+clínico completo también lleva, quedan fuera del alcance.
+
+\pendiente{Se describen el ajuste fino del generador sobre SkinCaRe con LoRA, el formato concreto del
+reporte generado y la configuración de decodificación.}
 
 \section{Pipeline propuesto: ensamble en cascada consciente de la incertidumbre}
 \label{sec:met_pipeline}
@@ -107,6 +129,14 @@ diferencial o abstención con derivación) y se presentan las plantillas de cada
 \label{sec:met_protocolo}
 
 \subsection{Selección de modelos, métricas y criterio de decisión}
+\label{sec:met_seleccion}
+
+Las confusiones entre categorías no tienen el mismo costo clínico. Confundir MEL con NV retrasa la
+extirpación de una lesión cuya letalidad depende del estadio en que se diagnostica; confundir NV con MEL
+lleva a extirpar una lesión benigna sin necesidad; las confusiones entre las clases benignas tienen menor
+consecuencia~\cite{tschandl2018ham10000,nci2026melanoma}. Esa asimetría obliga a medir el desempeño clase
+por clase, además de en conjunto, y a dar a las clases minoritarias el mismo peso que a la mayoritaria.
+
 \pendiente{El Capítulo~\ref{cp:marco} define qué mide cada métrica; esta subsección indica cuáles se usan
 para decidir y por qué. Se justifican la sensibilidad macro como métrica principal de clasificación y el F1
 macro como complemento, el umbral de especificidad $\geq 0.85$ fijado en validación para la detección de

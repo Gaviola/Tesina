@@ -1,0 +1,40 @@
+% Figura 2.1. Del parche al token en el Vision Transformer.
+% Se usa en sec:marco_vision, subsección "Vision Transformer y Swin Transformer", después del
+% párrafo que define el ViT.
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[x=1mm, y=1mm]
+
+        % Imagen dividida en una rejilla de parches.
+        \draw[figtrazo, thick, fill=figrelleno] (-26, -12) rectangle (0, 12);
+        \foreach \x in {-19.5, -13, -6.5} { \draw[figtrazo] (\x, -12) -- (\x, 12); }
+        \foreach \y in {-6, 0, 6} { \draw[figtrazo] (-26, \y) -- (0, \y); }
+        \node[font=\small, text=figtrazo, align=center] at (-13, -18) {Imagen dividida\\en parches};
+
+        % Operación de proyección.
+        \node[figtarea, text width=30mm] (proj) at (24, 0)
+            {Proyectar cada parche\\a un token};
+
+        % Secuencia de tokens.
+        \foreach \i in {0, 1, 2, 3, 4} {
+            \node[figsalida, minimum width=6mm, minimum height=6mm, inner sep=1pt]
+                (t\i) at (52 + \i*9, 6) {\footnotesize $x_{\i}$};
+            \node[font=\footnotesize, text=figtrazo] at (52 + \i*9, -3) {$+$};
+            \node[font=\footnotesize, text=figtrazo] at (52 + \i*9, -9) {$p_{\i}$};
+        }
+        \node[font=\small, text=figtrazo, align=center] at (70, -18)
+            {Secuencia de tokens con\\embedding de posición por parche};
+
+        % Flechas.
+        \draw[figflecha] (0, 0) -- (proj.west);
+        \draw[figflecha] (proj.east) -- (46, 0) |- (t0.west);
+
+    \end{tikzpicture}
+    \caption[Del parche al token en el Vision Transformer]{Del parche al token en el Vision
+    Transformer. La imagen se divide en una rejilla de parches cuadrados y cada parche se aplana y
+    proyecta a un token. A cada token se le suma un embedding de posición, porque la operación de
+    atención por sí sola no distingue el orden, y la secuencia entra al codificador
+    \emph{transformer} sin volver a la retícula de píxeles.}
+    \label{fig:marco_vit_patches}
+\end{figure}
