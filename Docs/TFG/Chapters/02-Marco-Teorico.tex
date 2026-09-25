@@ -690,10 +690,14 @@ atajos lleva a la pregunta de la sección siguiente.
 \section{Sesgo y generalización}
 \label{sec:marco_generalizacion}
 
-\pendiente{Se define el cambio de distribución (\emph{distribution shift}): un modelo aprende la
-distribución de su conjunto de entrenamiento, y su desempeño medido sobre una partición de ese mismo
-conjunto no garantiza el desempeño sobre imágenes de otra procedencia. Falta la cita del concepto
-general (propuesta en refs\_pendientes.md).}
+Todas las métricas de la Sección~\ref{sec:marco_evaluacion} se calculan sobre un conjunto de test que
+proviene de la misma fuente que el de entrenamiento, y por eso describen el desempeño del modelo sobre esa
+distribución. En uso real, las imágenes llegan de otros equipos, otros centros y otros pacientes. Ese
+cambio de distribución (\emph{distribution shift}) reduce el desempeño de forma sustancial en problemas
+de todo tipo, y la caída persiste aun con los métodos diseñados para mitigarla. Se distinguen dos casos:
+el cambio de dominio, cuando las imágenes provienen de una fuente que el entrenamiento no vio, y el cambio
+de subpoblación, cuando la fuente es la misma pero los grupos aparecen en otras
+proporciones~\cite{koh2021wilds}.
 
 En dermatología el cambio de distribución más visible es el de modalidad. La fotografía clínica
 registra la lesión tal como se ve a simple vista, con la piel que la rodea, y la dermatoscopía la
@@ -705,9 +709,40 @@ traslada a la otra sin volver a medirlo. HAM10000 es dermatoscópico y SkinCaRe 
 clínica, de modo que toda comparación entre los dos conjuntos arrastra esa diferencia de
 dominio~\cite{tschandl2018ham10000,shen2025skincare}.
 
-\pendiente{Se presentan las disparidades de desempeño por tono de piel en los conjuntos públicos y la
-cuestión de la generalización a poblaciones distintas de la de entrenamiento, que motiva la evaluación
-en HIBA (Sección~\ref{sec:met_datasets}).}
+Un conjunto puede contener además rasgos que acompañan a una clase sin formar parte de la lesión. En las
+imágenes dermatológicas son frecuentes las marcas de tinta violeta con que se señala una lesión antes de
+biopsiarla, las etiquetas adhesivas y los bordes del dermatoscopio. Como esas marcas aparecen sobre todo
+en ciertos tipos de imagen, un modelo puede aprender a asociar la tinta con la malignidad y alcanzar una
+exactitud alta apoyado en ella. MONET, un modelo contrastivo entrenado con imágenes y texto de la
+literatura médica, recupera esos artefactos a partir de su nombre y permite auditar un conjunto antes de
+entrenar sobre él~\cite{kim2024transparent}. Un mapa de Grad-CAM que marca la tinta y no la lesión es el
+síntoma visible de ese atajo, y un atajo así no sobrevive fuera del conjunto que lo contiene.
+
+El tono de piel es un caso de cambio de subpoblación. En Fitzpatrick17k, un conjunto de imágenes
+clínicas anotadas con el fototipo de Fitzpatrick, las pieles claras están mucho más representadas que
+las oscuras, y un modelo clasifica mejor los fototipos parecidos a los que vio en el
+entrenamiento~\cite{groh2021neural}. DDI, un conjunto con confirmación histopatológica y fototipos
+diversos, mostró que algoritmos dermatológicos del estado del arte rinden bastante peor que en sus
+conjuntos de origen, sobre todo en pieles oscuras y en enfermedades poco comunes. Los dermatólogos que
+suelen etiquetar estos conjuntos también aciertan menos en esas imágenes, y el ajuste fino con imágenes de
+DDI cierra la brecha entre tonos claros y oscuros~\cite{daneshjou2022disparities}.
+
+La disparidad no desaparece cuando el modelo asiste a un médico en lugar de decidir solo. En un
+experimento con 389 dermatólogos y 459 médicos de atención primaria, el apoyo de un sistema de
+aprendizaje profundo mejoró en más de un tercio la exactitud de los dos grupos, pero en los médicos de
+atención primaria amplió la diferencia de exactitud entre pieles claras y oscuras. Mejorar la exactitud
+promedio no garantiza reducir el sesgo~\cite{groh2024learningaided}.
+
+La población de destino tampoco es la de los conjuntos de entrenamiento. Una revisión sistemática de 272
+estudios sobre detección de cáncer de piel con aprendizaje automático encontró que muchos usaron
+conjuntos de Europa y Estados Unidos con fototipos mayormente claros, y que solo dos usaron datos de
+poblaciones no derivadas, con la baja prevalencia propia de la atención primaria; por eso los autores no
+recomiendan todavía adoptar estos algoritmos en ese ámbito~\cite{jones2022intelligence}. El conjunto del
+Hospital Italiano de Buenos Aires (HIBA), el primero público de imágenes dermatoscópicas y clínicas
+recolectado en Argentina, se creó para evaluar herramientas de este tipo en la población
+local~\cite{riccilara2023dataset}. El trabajo lo usa solo como test, sin entrenar sobre él, para medir
+cuánto de lo aprendido en HAM10000 se sostiene en otra población, y mide además la robustez frente a
+perturbaciones de adquisición; los dos análisis se describen en la Sección~\ref{sec:met_protocolo}.
 
 \section{Estado del arte}
 \label{sec:estado_arte}

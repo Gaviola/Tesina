@@ -414,6 +414,101 @@ como juez: el trabajo no las usa.
 
 ---
 
+## Bloque C — §2.7 Sesgo y generalización y §2.8 Estado del arte (propuesta del 25/09/2026, sin aprobar)
+
+Numeración nueva (decisión 14). Todo número que aparezca en la prosa o en las tablas se verifica
+contra el PDF del trabajo citado al redactar; `Docs/estado_del_arte/resumen_papers.tex` y
+`Docs/tabla_resultados_sota/` sirven de guía, no de fuente.
+
+### Referencias nuevas que pide este bloque
+
+| Clave | Trabajo | Uso |
+|---|---|---|
+| `koh2021wilds` | Koh et al., *WILDS: A Benchmark of in-the-Wild Distribution Shifts*, ICML 2021 (PDF ya en `Papers/`) | Definición de cambio de distribución, §2.7 ¶1. Se agrega al `.bib` al aprobarse el bloque |
+
+---
+
+## 2.7 Sesgo y generalización — `sec:marco_generalizacion`
+
+**Mensaje central.** Lo medido en una partición del conjunto de entrenamiento vale para esa
+distribución; en dermatología la distribución cambia con la modalidad, con el tono de piel y con la
+población, y un modelo puede además apoyarse en artefactos del conjunto. Por eso el trabajo evalúa
+fuera de distribución.
+
+**Extensión: 2–2,5 páginas.**
+
+| # | Párrafo | Afirmación que sostiene | Citas |
+|---|---|---|---|
+| 1 | Cambio de distribución: el modelo aprende la distribución de entrenamiento; en uso real las imágenes vienen de otra, y el desempeño medido en test no se transfiere. Dos casos: cambio de dominio (otra fuente de datos) y cambio de subpoblación (otras proporciones de grupos) | Una métrica de test es condicional a la distribución del test | `koh2021wilds` |
+| 2 | (escrito) Cambio de modalidad: dermatoscopía frente a fotografía clínica; HAM10000 frente a SkinCaRe | — | `dinnes2018dermoscopy`, `kittler2016standardization`, `tschandl2018ham10000`, `shen2025skincare` |
+| 3 | Atajos: un modelo puede asociar la clase a artefactos que acompañan a ciertas lesiones en el conjunto, como marcas de tinta o reglas; auditando conjuntos dermatológicos con un modelo contrastivo se encontraron marcas de tinta asociadas a malignidad. Retoma el cierre de Grad-CAM (§2.6.5) | Una exactitud alta puede apoyarse en rasgos que no existen fuera del conjunto | `kim2024transparent` |
+| 4 | Tono de piel: en Fitzpatrick17k, los modelos entrenados con pieles claras rinden peor en pieles oscuras; en DDI, algoritmos con AUC alto en sus conjuntos de origen caen mucho y muestran diferencias entre tonos claros y oscuros; el ajuste con datos diversos reduce la brecha | La subrepresentación de un grupo produce disparidades medibles | `groh2021neural`, `daneshjou2022disparities` |
+| 5 | La disparidad también afecta la colaboración con el médico: con apoyo de IA mejora la exactitud general de dermatólogos y médicos de atención primaria, pero en los segundos la brecha entre tonos se amplía | Mejorar el promedio no reduce el sesgo | `groh2024learningaided` |
+| 6 | Población: la mayoría de los algoritmos no se valida en poblaciones de baja prevalencia ni en atención primaria; el conjunto del Hospital Italiano de Buenos Aires (HIBA) se creó para evaluar herramientas de IA en población argentina. Cierre: el trabajo evalúa en HIBA sin entrenar sobre él y bajo perturbaciones de adquisición (Cap. 3) | Motiva la evaluación fuera de distribución del trabajo | `jones2022intelligence`, `riccilara2023dataset` |
+
+**Qué no va.** Ni resultados propios en HIBA, ni la descripción de los conjuntos usados (Cap. 3,
+`sec:met_datasets`), ni métodos de mitigación del sesgo que el trabajo no aplica.
+
+---
+
+## 2.8 Estado del arte — `sec:estado_arte`
+
+**Mensaje central.** El diagnóstico automático de lesiones está maduro en clasificación pero se
+evalúa con métricas y conjuntos que ocultan el desempeño en las clases y poblaciones que importan; los
+VLM dermatológicos contrastivos ya superan a los generales; y los generadores de reportes se evalúan
+casi siempre por parecido textual y con hardware fuera del alcance de este trabajo. De ahí la brecha
+triple que cierra la sección.
+
+**Extensión: 5–6 páginas** (dos tablas).
+
+**Apertura (1 párrafo).** Tres líneas de trabajo, en el orden del *pipeline*; cada subsección cierra
+con qué toma el trabajo de esa línea o en qué se diferencia. Los trabajos anteriores a 2020 aparecen
+como hitos fechados (guía §6).
+
+### 2.8.1 Diagnóstico automático de lesiones de piel
+
+| # | Párrafo | Afirmación que sostiene | Citas |
+|---|---|---|---|
+| 1 | Hitos: en 2017 una CNN alcanzó desempeño comparable a dermatólogos; en 2019, sobre HAM10000, los mejores algoritmos superaron a los lectores humanos. Son anteriores a los *transformers* y se citan como punto de partida | Marco histórico fechado | `esteva2017dermatologistlevel`, `tschandl2019comparison` |
+| 2 | Conjuntos públicos (Tabla `tab:marco_conjuntos`): el área se apoya en conjuntos dermatoscópicos de pieles mayormente claras y en conjuntos clínicos más diversos pero sin texto; los pares imagen--texto son recientes | Qué datos existen y qué les falta | ver tabla |
+| 3 | Clasificación actual: las revisiones sistemáticas muestran el predominio de CNN y la falta de estandarización en métricas y validación externa; trabajos recientes sobre HAM10000 con EfficientNet, Swin y ensambles reportan exactitudes altas, a menudo con exactitud o F1 ponderado como métrica principal (retoma §2.6.1) | La cifra que se reporta suele ser la que esconde las clases minoritarias | `magalhaes2024systematic`, `kim2025skinsavvy2`, `aboulmira2024skinhealthmate`, `khan2025ensemble`, `kreouzi2024learning` |
+| 4 | Problemas recurrentes: desbalance, generalización y sesgo por tono (remite a §2.7). Cierre: el trabajo compara cuatro arquitecturas bajo un mismo protocolo, con F1 macro y partición por lesión | Qué toma y en qué se diferencia | — |
+
+**Tabla `tab:marco_conjuntos`** — columnas: conjunto, modalidad, tamaño, etiquetas, texto asociado,
+población. Filas: HAM10000, ISIC 2018, PH² (si llega el PDF; si no, sin fila), Fitzpatrick17k, DDI,
+SkinCon, SCIN, HIBA, SkinCaRe, MM-Skin, Derm1M.
+Citas: `tschandl2018ham10000`, `codella2019skin`, `mendonca2013ph2`, `groh2021neural`,
+`daneshjou2022disparities`, `daneshjou2022skincon`, `ward2024empirical`, `riccilara2023dataset`,
+`shen2025skincare`, `zeng2025mmskin`, `yan2025derm1m`.
+
+### 2.8.2 Modelos visión--lenguaje en dermatología
+
+| # | Párrafo | Afirmación que sostiene | Citas |
+|---|---|---|---|
+| 1 | Modelos contrastivos con texto médico: MONET (literatura médica, anotación de conceptos), MedImageInsight (general, varios dominios, incluye kNN) | Primeros espacios imagen--texto con vocabulario clínico | `kim2024transparent`, `codella2024medimageinsight` |
+| 2 | Modelos dermatológicos a gran escala: Derm1M/DermLIP (ontología clínica, *zero-shot*), MAKE (texto descompuesto en aspectos sobre Derm1M), PanDerm (fundacional multimodal, cuatro modalidades) | El pre-entrenamiento dermatológico supera al biomédico general | `yan2025derm1m`, `yan2025make`, `yan2025vision` |
+| 3 | Por qué DermLIP: pesos abiertos, contrastivo (sirve para clasificar y para recuperar vecinos), especializado y ejecutable en el hardware del trabajo | Justifica la elección | `yan2025derm1m` |
+| 4 | VLM médicos generales: LLaVA-Med, Med-Flamingo, PeFoMed, MedTrinity; evaluados sobre todo en VQA radiológica y patológica; en dermatología la evidencia es escasa y los modelos ajustados al dominio tienden a alucinar más (retoma §2.5.3). Cierre: el trabajo mide LLaVA-Med y Phi-3.5-Vision en dermatología bajo el mismo protocolo que los clasificadores | Hueco de evidencia que el trabajo cubre | `li2023llavamed`, `moor2023medflamingo`, `he2025pefomed`, `xie2025medtrinity25m`, `gu2024medvh`, `abdin2024phi3` |
+
+### 2.8.3 Generación de reportes dermatológicos
+
+| # | Párrafo | Afirmación que sostiene | Citas |
+|---|---|---|---|
+| 1 | Generadores de extremo a extremo: SkinGPT-4 (MiniGPT-4 ajustado, evaluación con dermatólogos), SkinVL (LLaVA-Med ajustado con MM-Skin), DermatoLlama/SCALEMED (datos sintéticos), Skin-R1 (razonamiento con aprendizaje por refuerzo) | Estado de la generación directa | `zhou2023skingpt4`, `zhou2024pretrained`, `zeng2025mmskin`, `yilmaz2025resourceefficient`, `liu2025skinr1` |
+| 2 | Clasificador más LLM: ensambles de CNN cuya predicción redacta un LLM, y sistemas con GPT-4; la destilación de reportes estructurados (7 puntos) desde un modelo maestro, que se compara con RAG | Precedentes del *grounding* por clasificación del trabajo | `khan2025ensemble`, `kim2025skinsavvy2`, `chakrabarti2025skin` |
+| 3 | Otras direcciones: explicación visual generativa (SkinGEN), VLM para una enfermedad concreta (MpoxVLM) | Delimita el campo | `lin2025skingen`, `cao2024mpoxvlm` |
+| 4 | Cómo se evalúa: la mayoría con métricas con referencia (BLEU, ROUGE, BERTScore) y pocos con especialistas o con fidelidad diagnóstica; el hardware va de una GPU de consumo a ocho A100 | Instala la comparación de la tabla | los anteriores |
+| 5 | Cierre: la brecha triple ya enunciada en el `\pendiente` (comparación bajo un mismo protocolo; evaluación por fidelidad diagnóstica; incertidumbre y hardware accesible), con lo que el trabajo aporta en cada punto | Motiva la tesina desde la literatura | — |
+
+**Tabla `tab:marco_generadores`** — columnas: trabajo, modelo base, tarea, datos, métricas, hardware.
+Filas: los trabajos de ¶1–¶3.
+
+**Qué no va.** Ni resultados propios ni la tabla de posicionamiento contra el SOTA (capítulos de
+resultados). Ni Med-PaLM 2, que es de preguntas y respuestas sin imagen, ni los trabajos sin relación
+con lesiones de piel del `.bib` (difusión, flujos normalizantes, leyes de escalado).
+
+---
+
 ## Próximos bloques (esquema, sin detalle)
 
 | Bloque | Secciones | Extensión | Estado |
