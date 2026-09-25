@@ -195,6 +195,79 @@ el estado del arte, §2.7.3— ni RAG —va en §2.4.4— ni leyes de escalado.
 
 ---
 
+## Propuesta del 25/09/2026 — fundamentos e hilo conductor (aprobada y redactada el 25/09/2026)
+
+**Estado.** §2.1 redactada; apertura del capítulo con `fig:marco_mapa`; aperturas y cierres de visión y lenguaje reescritos. Figuras hechas: mapa, perceptrón, convolución, atención, Swin y LoRA. Quedan para cuando se redacten sus secciones (bloques B y C): CLIP, LLaVA, diagrama de confiabilidad y dermatoscopía frente a fotografía clínica. Las cuatro referencias nuevas figuran como indefinidas hasta que se incorporen al `.bib` (entradas listas en `refs_pendientes.md`).
+
+Responde dos observaciones del autor: el capítulo arranca en la atención sin haber presentado qué es
+una red neuronal ni cómo se entrena, y las secciones se leen como conceptos sueltos, sin un hilo que
+las una. **Nada de esto se redacta hasta que el autor lo apruebe.**
+
+### Nueva §2.1 Fundamentos del aprendizaje profundo — `sec:marco_fundamentos`
+
+**Mensaje central.** Una red neuronal es una composición de transformaciones con parámetros que se
+ajustan minimizando una pérdida por descenso del gradiente; lo que se aprende sobre entrenamiento
+solo vale si se sostiene en datos que el modelo no vio. Solo entra lo que el resto del documento usa.
+
+**Extensión: 3–3,5 páginas.** No es un curso: cada concepto figura porque un capítulo posterior lo
+nombra.
+
+| # | Subsección / párrafo | Por qué hace falta (dónde se usa después) | Citas |
+|---|---|---|---|
+| 1 | Neurona artificial y perceptrón multicapa: suma ponderada, activación no lineal, capas apiladas | Base de todas las arquitecturas; la cabeza de clasificación y el proyector de LLaVA son perceptrones | `rumelhart1986learning`, `goodfellow2016deep` (p) |
+| 2 | Clasificación: *logits*, softmax, probabilidad por clase, entropía cruzada como pérdida | Balanced softmax (§2.3.4), calibración y *temperature scaling* (§2.6.2), *likelihood scoring* (Cap. 3) | `goodfellow2016deep` (p) |
+| 3 | Entrenamiento: descenso del gradiente estocástico, retropropagación, lotes, épocas, tasa de aprendizaje, Adam | LoRA (§2.4.2) razona en términos de gradientes y estados de Adam; hiperparámetros del Cap. 3 | `rumelhart1986learning`, `kingma2015adam` (p) |
+| 4 | Generalización: sobreajuste, partición entrenamiento/validación/test, regularización (decaimiento de pesos, *dropout*, aumento de datos) y selección del *checkpoint* en validación | Criterio de selección del Cap. 3, fuga entre particiones, §2.7 | `goodfellow2016deep` (p), `srivastava2014dropout` (p) |
+| 5 | Familias según la estructura de la entrada: perceptrón para vectores, convolucionales para grillas (se desarrollan en §2.3), recurrentes para secuencias. Las recurrentes con su límite (dependencias largas), que motiva la atención | Hace de puente a §2.2; recupera la mención de RNN/LSTM que hoy abre la sección de atención | `elman1990finding`, `hochreiter1997long` (p) |
+
+**Figura propuesta:** perceptrón multicapa con el paso hacia adelante y la retropropagación del
+gradiente en sentido inverso (TikZ, en color).
+
+### Hilo conductor del capítulo
+
+**Diagnóstico.** Las secciones se presentan como conceptos independientes. En la revisión del
+25/09 se quitaron las frases de traspaso por vacías («falta el mecanismo que le hace llegar la
+imagen»), y no se reemplazaron por nada: el problema no eran los traspasos sino que no dijeran nada
+concreto.
+
+**Propuesta.** El capítulo recorre el *pipeline* en el orden en que lo atraviesa un caso: la imagen
+se representa (visión), la representación se vuelve texto (lenguaje), las dos modalidades se unen
+(VLM), la salida se juzga (evaluación) y se pregunta cuándo deja de valer lo medido (generalización).
+
+1. **Apertura del capítulo** (reemplaza el `\pendiente` inicial, que era del bloque C): presenta ese
+   recorrido con una **figura mapa**, el *pipeline* simplificado (imagen → clasificador y kNN →
+   generador → reporte → evaluación) con cada componente rotulado con la sección que lo explica.
+2. **Cada sección abre situándose en el mapa** con una o dos oraciones («El primer componente del
+   *pipeline* recibe la imagen…») y **cierra con el problema concreto que deja abierto** y que la
+   siguiente resuelve. Ejemplo para el cierre de visión: un clasificador entrega una distribución
+   sobre siete categorías y ningún texto; producir el reporte exige un modelo que genere secuencias.
+3. Orden resultante: §2.1 Fundamentos · §2.2 Transformers y atención · §2.3 Visión · §2.4 Lenguaje
+   · §2.5 Modelos visión--lenguaje · §2.6 Evaluación · §2.7 Sesgo y generalización · §2.8 Estado
+   del arte.
+
+### Figuras propuestas para el capítulo
+
+TikZ propio salvo indicación. «Adaptada de» = redibujada a partir de la figura del trabajo citado.
+
+| Figura | Sección | Origen |
+|---|---|---|
+| Mapa del capítulo sobre el *pipeline* | apertura | propia |
+| Perceptrón multicapa y retropropagación | §2.1 | propia |
+| Convolución: filtro que recorre la imagen y mapa de activación | §2.3.1 | propia |
+| Atención: $Q$, $K$, $V$, matriz de pesos y salida | §2.2 | propia, o tomada de `vaswani2017attention` (Google autoriza reproducir sus figuras en trabajos académicos con atribución) |
+| Ventanas desplazadas del Swin | §2.3.2 | adaptada de `liu2021swin` |
+| LoRA: $W$ congelada en paralelo con $B A$ | §2.4.2 | adaptada de `hu2021lora` |
+| CLIP: matriz de similitud imagen--texto del entrenamiento contrastivo | §2.5.1 | adaptada de `radford2021learning` |
+| Arquitectura tipo LLaVA: codificador visual, proyector y LLM | §2.5.2 | adaptada de `liu2023visual` |
+| Diagrama de confiabilidad ilustrativo | §2.6.2 | propia, con datos sintéticos rotulados como tales |
+| Misma lesión en dermatoscopía y en fotografía clínica | §2.7 | imágenes de los conjuntos, con su licencia |
+
+Para el Capítulo 3 quedan anotadas: mosaico de las siete clases de HAM10000 (licencia CC BY-NC 4.0,
+compatible con atribución), distribución de clases, esquema de la fuga entre particiones y el
+diagrama del *pipeline* ya previsto.
+
+---
+
 ## Próximos bloques (esquema, sin detalle)
 
 | Bloque | Secciones | Extensión | Estado |

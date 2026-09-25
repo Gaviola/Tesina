@@ -1,0 +1,40 @@
+% Figura: la operación de convolución.
+% Se usa en sec:marco_cnn, después del primer párrafo.
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[x=1mm, y=1mm]
+
+        % Entrada 6x6 con la ventana de 3x3 resaltada.
+        \fill[fignaranja!30] (5, 10) rectangle (20, 25);
+        \draw[figtrazo!50] (0, 0) grid[step=5] (30, 30);
+        \draw[figtrazo, thick] (0, 0) rectangle (30, 30);
+        \draw[fignaranja!70!black, very thick] (5, 10) rectangle (20, 25);
+        \node[font=\footnotesize, text=figtrazo] at (15, -5) {entrada $6\times 6$};
+
+        % Filtro 3x3.
+        \fill[fignaranja!30] (45, 7.5) rectangle (60, 22.5);
+        \draw[fignaranja!70!black, shift={(45, 7.5)}] (0, 0) grid[step=5] (15, 15);
+        \draw[fignaranja!70!black, very thick] (45, 7.5) rectangle (60, 22.5);
+        \node[font=\footnotesize, text=figtrazo, align=center] at (52.5, -5) {filtro $3\times 3$\\(pesos compartidos)};
+        \node[font=\large, text=figtrazo] at (37.5, 15) {$\ast$};
+
+        % Salida 4x4 con la celda resultante.
+        \fill[figverde!35] (80, 10) rectangle (85, 15);
+        \draw[figtrazo!50] (75, 0) grid[step=5] (95, 20);
+        \draw[figtrazo, thick] (75, 0) rectangle (95, 20);
+        \draw[figverde!70!black, very thick] (80, 10) rectangle (85, 15);
+        \node[font=\footnotesize, text=figtrazo, align=center] at (85, -5) {mapa de activación $4\times 4$};
+        \node[font=\large, text=figtrazo] at (67.5, 15) {$=$};
+
+        % De la ventana a la celda.
+        \draw[figflecha, fignaranja!70!black, bend left=25] (20, 25) to
+            node[figetiqueta, above] {producto punto} (80, 15);
+
+    \end{tikzpicture}
+    \caption[La operación de convolución]{La operación de convolución. El filtro recorre la entrada y, en
+    cada posición, el producto punto entre sus pesos y la ventana que cubre produce una celda del mapa de
+    activación. El mismo filtro se aplica en todas las posiciones, de modo que un patrón se detecta
+    dondequiera que aparezca.}
+    \label{fig:marco_convolucion}
+\end{figure}

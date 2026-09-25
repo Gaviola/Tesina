@@ -17,20 +17,149 @@
 % dos (ficha, decisión 13). El capítulo queda solo con conceptos de computación: los fundamentos clínicos
 % se reparten entre Materiales y métodos y las métricas de texto, y los conjuntos concretos pasan a
 % Materiales y métodos; aquí quedan el sesgo y la generalización como conceptos (ficha, decisión 14).
+% Se agregan los fundamentos del aprendizaje profundo como §2.1 y el capítulo sigue el recorrido del
+% pipeline (ficha, «Propuesta del 25/09/2026», aprobada).
 
-\pendiente{Este capítulo presenta los conceptos teóricos necesarios para seguir el resto del trabajo: la
-arquitectura transformer, arquitecturas de aprendizaje profundo para visión, modelos de lenguaje, modelos
-visión--lenguaje, herramientas de evaluación, y el sesgo y la generalización fuera de la distribución de
-entrenamiento. La última sección revisa el estado del arte con esos conceptos ya disponibles.}
+Este capítulo reúne los conceptos que usa el resto del trabajo, en el orden en que los atraviesa un caso
+dentro del \emph{pipeline} (Figura~\ref{fig:marco_mapa}). Una imagen dermatoscópica llega a un
+clasificador, que le asigna una categoría, y a un codificador visual, que recupera casos parecidos; con
+esa información, un modelo de lenguaje redacta el reporte. La salida se juzga después con métricas de
+clasificación y de texto, y queda por saber si lo medido se sostiene fuera de los datos de entrenamiento.
+Los tres componentes son redes neuronales entrenadas con el mismo procedimiento, y casi todos se
+construyen sobre la operación de atención; por eso el capítulo empieza por ahí. La última sección revisa
+el estado del arte con esos conceptos ya disponibles.
+
+\input{Figures/Capitulos/02-mapa-capitulo}
+
+\section{Fundamentos del aprendizaje profundo}
+\label{sec:marco_fundamentos}
+
+Esta sección presenta cómo una red neuronal produce una probabilidad por clase, cómo se ajustan sus
+parámetros y cómo se comprueba que lo aprendido sirve fuera de los datos de entrenamiento. Solo incluye
+lo que los capítulos siguientes usan sin volver a definirlo.
+
+\subsection{Neurona artificial y perceptrón multicapa}
+\label{sec:marco_perceptron}
+
+Una neurona artificial calcula una suma ponderada de sus entradas, le suma un sesgo y aplica a ese
+resultado una función no lineal, llamada activación. Una capa reúne varias neuronas que reciben la misma
+entrada, y un perceptrón multicapa apila capas de modo que la salida de cada una es la entrada de la
+siguiente. La capa $l$ transforma el vector $\mathbf{h}^{(l-1)}$ que recibe en
+\begin{equation}
+    \mathbf{h}^{(l)} = \phi\!\left(W^{(l)} \mathbf{h}^{(l-1)} + \mathbf{b}^{(l)}\right),
+    \label{eq:marco_capa}
+\end{equation}
+donde $W^{(l)}$ es la matriz de pesos, $\mathbf{b}^{(l)}$ el vector de sesgos y $\phi$ la activación,
+aplicada elemento a elemento. Sin la activación, la composición de capas se reduciría a una única
+transformación lineal; con ella, la red representa funciones no lineales de la
+entrada~\cite{rumelhart1986learning,goodfellow2016deep}.
+
+Los pesos y los sesgos de todas las capas son los parámetros de la red, que se agrupan en $\theta$, y
+entrenarla consiste en elegir sus valores. El perceptrón reaparece dentro de arquitecturas más complejas:
+la cabeza de clasificación que convierte las características extraídas por una red visual en un puntaje
+por clase es una capa de la forma de la Ecuación~\ref{eq:marco_capa}.
+
+\subsection{Clasificación: softmax y entropía cruzada}
+\label{sec:marco_softmax}
+
+En un problema de $C$ clases, la última capa devuelve un vector de $C$ puntajes reales sin restricción,
+los \emph{logits} $\mathbf{z}$. La función \emph{softmax} los convierte en una distribución de probabilidad,
+\begin{equation}
+    p_c = \frac{\exp(z_c)}{\sum_{j=1}^{C} \exp(z_j)}, \qquad c = 1, \dots, C,
+    \label{eq:marco_softmax}
+\end{equation}
+con valores positivos que suman uno, y la clase predicha es la de mayor probabilidad. La pérdida de
+entropía cruzada mide la probabilidad que el modelo asignó a la clase correcta $y$,
+$\mathcal{L} = -\log p_y$. Vale cero cuando toda la probabilidad está en la clase correcta y crece sin
+límite a medida que esa probabilidad se acerca a cero~\cite{goodfellow2016deep}.
+
+Varias piezas del trabajo operan sobre estas cantidades. Las modificaciones de la pérdida para el
+desbalance de clases (Sección~\ref{sec:marco_transferencia}) cambian la entropía cruzada o los logits
+antes de la softmax. La calibración (Sección~\ref{sec:marco_eval_calib}) pregunta si las probabilidades
+$p_c$ coinciden con las frecuencias de acierto observadas. Y una de las formas de obtener una categoría de
+un modelo generativo, descrita en la Sección~\ref{sec:met_clasif_vlm}, compara las probabilidades que ese
+modelo asigna al nombre de cada clase.
+
+\subsection{Entrenamiento por descenso del gradiente}
+\label{sec:marco_entrenamiento}
+
+Entrenar la red es buscar los parámetros $\theta$ que minimizan la pérdida promedio sobre el conjunto de
+entrenamiento. El descenso del gradiente lo hace de forma iterativa. Calcula el gradiente de la pérdida
+respecto de los parámetros y los mueve un paso en la dirección opuesta,
+\begin{equation}
+    \theta \leftarrow \theta - \eta \, \nabla_{\theta} \mathcal{L},
+    \label{eq:marco_gradiente}
+\end{equation}
+donde $\eta$ es la tasa de aprendizaje. En la variante estocástica, cada paso usa el gradiente estimado
+sobre un lote de ejemplos en lugar del conjunto completo, y una época es una pasada por todos los
+lotes~\cite{goodfellow2016deep}.
+
+La retropropagación calcula ese gradiente para todos los parámetros a la vez
+(Figura~\ref{fig:marco_perceptron}). La pasada hacia adelante evalúa la red capa por capa y guarda los
+valores intermedios; la pasada hacia atrás aplica la regla de la cadena desde la pérdida hacia la entrada
+y obtiene el gradiente de cada capa a partir del de la capa siguiente. Su costo es del mismo orden que el
+de la pasada hacia adelante, y eso hace posible entrenar redes con millones de
+parámetros~\cite{rumelhart1986learning,goodfellow2016deep}. A cambio, los valores intermedios y los
+gradientes ocupan memoria durante el entrenamiento.
+
+\input{Figures/Capitulos/02-perceptron}
+
+La tasa de aprendizaje única de la Ecuación~\ref{eq:marco_gradiente} trata igual a todos los
+parámetros. Adam adapta el paso a cada uno: mantiene dos promedios móviles por parámetro, uno del
+gradiente y otro de su cuadrado, y divide el primero por la raíz del segundo, de modo que los parámetros
+con gradientes grandes o ruidosos avanzan con pasos más cortos~\cite{kingma2015adam}. Esos dos estados por
+parámetro, sumados al gradiente, son el costo de memoria del ajuste fino que la
+Sección~\ref{sec:marco_llm_lora} busca reducir.
+
+\subsection{Generalización y regularización}
+\label{sec:marco_regularizacion}
+
+La pérdida de entrenamiento es un medio. Lo que interesa es el desempeño sobre casos que el modelo no
+vio, y una red con suficientes parámetros puede memorizar el conjunto de entrenamiento: su pérdida sigue
+bajando mientras el error sobre datos nuevos sube. Ese fenómeno se llama
+sobreajuste~\cite{goodfellow2016deep}.
+
+Para medirlo, los datos se dividen en tres particiones disjuntas. La de entrenamiento ajusta los
+parámetros; la de validación elige entre configuraciones, hiperparámetros y épocas; y la de test se usa
+una sola vez, al final, para estimar el desempeño sobre datos nuevos. Una decisión tomada mirando el test
+lo convierte en parte del ajuste y vuelve optimista su estimación~\cite{goodfellow2016deep}. Por la misma
+razón ningún caso puede aparecer en dos particiones, condición que HAM10000 no cumple en su partición
+original (Sección~\ref{sec:met_particiones}).
+
+Las técnicas de regularización reducen el sobreajuste restringiendo lo que la red puede aprender. El
+decaimiento de pesos penaliza los parámetros grandes~\cite{goodfellow2016deep}. El \emph{dropout} apaga al
+azar una fracción de las neuronas en cada paso de entrenamiento e impide que la red dependa de
+combinaciones particulares de ellas~\cite{srivastava2014dropout}. El aumento de datos, que se detalla en
+la Sección~\ref{sec:marco_transferencia}, amplía el conjunto con variaciones de las imágenes disponibles.
+Conservar los parámetros de la época con mejor desempeño en validación, en lugar de los de la última,
+cumple una función parecida~\cite{goodfellow2016deep}.
+
+\subsection{Familias de redes según la estructura de la entrada}
+\label{sec:marco_familias}
+
+El perceptrón multicapa trata su entrada como un vector sin estructura: cada neurona se conecta con todas
+las entradas y no distingue cuáles son vecinas. Las arquitecturas especializadas incorporan la estructura
+de los datos. Las redes neuronales convolucionales (\gls{cnn}) aprovechan que en una imagen los píxeles
+cercanos están relacionados y aplican los mismos filtros en toda la imagen~\cite{lecun1998gradient}; se
+desarrollan en la Sección~\ref{sec:marco_cnn}. Las redes recurrentes procesan secuencias, como un texto,
+un elemento por vez~\cite{elman1990finding}.
+
+Una red recurrente mantiene un estado que resume lo visto hasta el momento y lo actualiza con cada nuevo
+elemento, de modo que cada salida depende de toda la secuencia anterior~\cite{elman1990finding}. Para
+entrenarla, el gradiente se propaga hacia atrás a lo largo de la secuencia, y en secuencias largas tiende
+a desvanecerse, lo que dificulta aprender relaciones entre elementos lejanos. Las redes de memoria a corto
+y largo plazo agregan compuertas que controlan qué se conserva en el estado y atenúan ese
+problema~\cite{hochreiter1997long}. Aun así, el acceso a una posición lejana sigue pasando por todas las
+intermedias, y el cálculo de un paso espera al del anterior, lo que impide paralelizar a lo largo de la
+secuencia~\cite{vaswani2017attention}.
 
 \section{Transformers y mecanismo de atención}
 \label{sec:marco_atencion}
 
-Antes de la atención, las redes recurrentes procesaban una secuencia paso a paso y condicionaban cada
-token al estado anterior, de modo que el acceso a una posición lejana dependía de la longitud de la
-cadena~\cite{elman1990finding}. La atención reemplaza ese recorrido por una comparación directa, en
+La atención reemplaza el recorrido paso a paso de las redes recurrentes por una comparación directa, en
 la que cada posición de la salida pondera los valores de todas las posiciones de la entrada según la
-compatibilidad entre una consulta y una clave. La arquitectura \emph{transformer} se construye sobre
+compatibilidad entre una consulta y una clave. Como todas las posiciones se comparan a la vez, el cálculo
+se paraleliza a lo largo de la secuencia. La arquitectura \emph{transformer} se construye sobre
 esa operación, y de ella derivan tanto los modelos visuales de la Sección~\ref{sec:marco_vision} como
 los modelos de lenguaje de la Sección~\ref{sec:marco_llm}~\cite{vaswani2017attention}.
 
@@ -42,8 +171,11 @@ y clave:
     \label{eq:marco_atencion}
 \end{equation}
 donde $d_k$ es la dimensión de la clave. La división por su raíz evita que el producto punto crezca
-con la dimensión y sature la \emph{softmax}, que dejaría de discriminar entre
-posiciones~\cite{vaswani2017attention}.
+con la dimensión y sature la softmax, que dejaría de discriminar entre
+posiciones~\cite{vaswani2017attention}. La Figura~\ref{fig:marco_atencion} muestra la matriz de pesos
+que resulta para una secuencia corta.
+
+\input{Figures/Capitulos/02-atencion}
 
 La atención multi-cabeza proyecta $Q$, $K$ y $V$ en varios subespacios de menor dimensión, aplica
 la Ecuación~\ref{eq:marco_atencion} en cada uno por separado y concatena los resultados. Cada cabeza
@@ -60,7 +192,9 @@ decodificador~\cite{vaswani2017attention,dosovitskiy2021image,brown2020language}
 \section{Aprendizaje profundo para visión}
 \label{sec:marco_vision}
 
-El trabajo enfrenta dos familias de arquitectura de visión. Las redes convolucionales componen
+El primer componente del \emph{pipeline} recibe la imagen dermatoscópica y devuelve una probabilidad
+para cada una de las siete categorías. Para esa tarea el trabajo enfrenta dos familias de arquitectura
+de visión. Las redes convolucionales componen
 filtros locales apilados y extraen una jerarquía de características. Los transformers visuales
 tratan la imagen como una secuencia de tokens y la procesan con la atención de la
 Sección~\ref{sec:marco_atencion}. DenseNet y ConvNeXt pertenecen a la primera familia y \gls{vit} y
@@ -73,8 +207,10 @@ La operación de convolución desliza un filtro de pequeño tamaño sobre la ent
 posición el producto punto entre el filtro y la ventana que cubre. La conectividad local y el uso de
 un mismo filtro en toda la imagen son las dos decisiones de diseño del operador. La primera supone
 que la información relevante se agrupa en regiones pequeñas, y la segunda, que un mismo patrón puede
-aparecer en cualquier parte. Una \gls{cnn} apila esas operaciones con no-linealidades y
-reducciones de resolución intermedias~\cite{lecun1998gradient}.
+aparecer en cualquier parte (Figura~\ref{fig:marco_convolucion}). Una CNN apila esas operaciones con
+activaciones no lineales y reducciones de resolución intermedias~\cite{lecun1998gradient}.
+
+\input{Figures/Capitulos/02-convolucion}
 
 La profundidad compone esos rasgos locales en rasgos de mayor alcance: los bordes producen texturas,
 las texturas producen partes de objetos y las partes producen objetos completos. VGG y ResNet
@@ -117,7 +253,10 @@ El Swin Transformer atiende solo dentro de ventanas locales, con costo lineal en
 parches en lugar de cuadrático, y desplaza las ventanas entre capas para que la información cruce
 de una a otra. Además reduce la resolución por etapas y devuelve una pirámide de mapas de
 características, con la estructura jerárquica de una red convolucional y la operación de atención de
-un transformer~\cite{liu2021swin}.
+un transformer~\cite{liu2021swin}. La Figura~\ref{fig:marco_swin} muestra el desplazamiento de las
+ventanas entre dos capas.
+
+\input{Figures/Capitulos/02-swin-ventanas}
 
 \subsection{Transferencia de aprendizaje y desbalance de clases}
 \label{sec:marco_transferencia}
@@ -146,6 +285,10 @@ intacta la métrica de evaluación: ponderar la pérdida por la inversa de la fr
 la pérdida focal, que atenúa el aporte de los ejemplos que el modelo ya clasifica con confianza; y
 el \emph{balanced softmax}, que suma a cada logit el logaritmo de la frecuencia de su clase en el
 entrenamiento~\cite{lin2017focal,ren2020balanced}.
+
+Con esto el clasificador queda completo. Recibe la imagen y devuelve siete probabilidades, ninguna de
+las cuales es un texto; el reporte exige un modelo que genere secuencias de palabras, que es el tema de
+la sección siguiente.
 
 \section{Modelos de lenguaje}
 \label{sec:marco_llm}
@@ -199,9 +342,11 @@ un incremento de bajo rango,
     r \ll \min(d, k),
     \label{eq:marco_lora}
 \end{equation}
-y solo actualiza $A$ y $B$, que se inicializan de modo que el incremento valga cero al empezar. El
-rango $r$ controla la capacidad de adaptación, y valores pequeños bastan para llevar el modelo a un
-dominio concreto~\cite{hu2021lora}.
+y solo actualiza $A$ y $B$, que se inicializan de modo que el incremento valga cero al empezar
+(Figura~\ref{fig:marco_lora}). El rango $r$ controla la capacidad de adaptación, y valores pequeños
+bastan para llevar el modelo a un dominio concreto~\cite{hu2021lora}.
+
+\input{Figures/Capitulos/02-lora}
 
 Los parámetros entrenables y sus estados del optimizador pasan a ser los de $A$ y $B$, una fracción
 mínima de los de $W$, y con eso el ajuste vuelve a caber en el presupuesto de una GPU de consumo. Al
@@ -212,6 +357,9 @@ adicional~\cite{hu2021lora,yilmaz2025resourceefficient}.
 Los modelos generativos que el trabajo ajusta se adaptan con LoRA, y por eso esa parte de la
 comparación se hace entera en hardware de consumo. El rango, los módulos congelados y la función de
 pérdida del ajuste van en el Capítulo~\ref{cp:metodos}.
+
+Un modelo de lenguaje, sin embargo, solo recibe texto. Para que redacte el reporte a partir de la imagen
+hay que conectar su entrada con un codificador visual, y de eso se ocupan los modelos visión--lenguaje.
 
 \section{Modelos visión--lenguaje}
 \label{sec:marco_vlm}
@@ -252,6 +400,7 @@ especificidad para la tarea binaria, y se muestra por qué la exactitud es enga�
 desbalanceadas.}
 
 \subsection{Calibración de probabilidades}
+\label{sec:marco_eval_calib}
 \pendiente{Se presentan el diagrama de confiabilidad, ECE, MCE y Brier, y los métodos de calibración post-hoc
 \emph{temperature scaling} y \emph{vector scaling}.}
 

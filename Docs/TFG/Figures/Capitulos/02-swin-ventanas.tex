@@ -1,0 +1,40 @@
+% Figura: ventanas y ventanas desplazadas del Swin Transformer. Adaptada de liu2021swin (Figura 2).
+% Se usa en sec:marco_vit, en el párrafo del Swin.
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[x=1mm, y=1mm]
+
+        % Capa l: cuatro ventanas de 4x4 parches.
+        \foreach \c/\x/\y in {figazul/0/16, fignaranja/16/16, figverde/0/0, figpurpura/16/0} {
+            \fill[\c!22] (\x, \y) rectangle (\x + 16, \y + 16);
+        }
+        \draw[figtrazo!40] (0, 0) grid[step=4] (32, 32);
+        \draw[figtrazo, very thick] (0, 0) rectangle (32, 32);
+        \draw[figtrazo, very thick] (16, 0) -- (16, 32) (0, 16) -- (32, 16);
+        \node[font=\footnotesize, text=figtrazo] at (16, -5) {capa $l$: ventanas regulares};
+
+        % Capa l+1: ventanas desplazadas dos parches.
+        \begin{scope}[xshift=50mm]
+            \foreach \c/\x/\y/\w/\h in {
+                figazul/0/24/8/8, fignaranja/8/24/16/8, figverde/24/24/8/8,
+                figpurpura/0/8/8/16, figceleste/8/8/16/16, figbermellon/24/8/8/16,
+                figazul/0/0/8/8, fignaranja/8/0/16/8, figverde/24/0/8/8} {
+                \fill[\c!22] (\x, \y) rectangle (\x + \w, \y + \h);
+            }
+            \draw[figtrazo!40] (0, 0) grid[step=4] (32, 32);
+            \draw[figtrazo, very thick] (0, 0) rectangle (32, 32);
+            \draw[figtrazo, very thick] (8, 0) -- (8, 32) (24, 0) -- (24, 32) (0, 8) -- (32, 8) (0, 24) -- (32, 24);
+            \node[font=\footnotesize, text=figtrazo] at (16, -5) {capa $l+1$: ventanas desplazadas};
+        \end{scope}
+
+        \draw[figflecha] (36, 16) -- (46, 16);
+
+    \end{tikzpicture}
+    \caption[Ventanas y ventanas desplazadas del Swin Transformer]{Ventanas y ventanas desplazadas del Swin
+    Transformer. Cada cuadrado pequeño es un parche y la atención se calcula solo dentro de cada ventana
+    (trazo grueso). En la capa siguiente las ventanas se desplazan medio tamaño de ventana, de modo que
+    parches que estaban en ventanas distintas pasan a compartir una y la información cruza entre regiones.
+    Adaptada de \textcite{liu2021swin}.}
+    \label{fig:marco_swin}
+\end{figure}

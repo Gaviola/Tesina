@@ -1,0 +1,45 @@
+% Figura: mapa del capítulo sobre el pipeline.
+% Se usa en la apertura del Capítulo 2. Cada componente lleva la sección que lo explica. Es la versión
+% simplificada del diagrama del pipeline de sec:met_pipeline: si uno cambia, revisar el otro.
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[x=1mm, y=1mm]
+
+        \node[figentrada, text width=26mm] (img) at (-4, 0) {Imagen\\dermatoscópica};
+
+        \node[figtarea, text width=30mm] (clf) at (40, 13)
+            {Clasificador\\{\footnotesize visión, §\ref{sec:marco_vision}}};
+        \node[figtarea, text width=30mm] (knn) at (40, -13)
+            {Codificador visual y kNN\\{\footnotesize §\ref{sec:marco_vlm}}};
+
+        \node[figtarea, text width=36mm] (gen) at (86, 0)
+            {Generador\\{\footnotesize lenguaje, §\ref{sec:marco_llm};\\visión--lenguaje, §\ref{sec:marco_vlm}}};
+
+        \node[figsalida, text width=18mm] (rep) at (126, 0) {Reporte};
+
+        \node[fignodo, text width=30mm, draw=figpurpura!70!black, fill=figpurpura!12] (eval)
+            at (126, -24) {Evaluación, §\ref{sec:marco_evaluacion}\\{\footnotesize generalización,
+            §\ref{sec:marco_generalizacion}}};
+
+        \draw[figflecha] (img.east) -- ++(5, 0) |- (clf.west);
+        \draw[figflecha] (img.east) -- ++(5, 0) |- (knn.west);
+        \draw[figflecha] (clf.east) -- node[figetiqueta, above] {categoría} ++(12, 0) |- ([yshift=3mm]gen.west);
+        \draw[figflecha] (knn.east) -- node[figetiqueta, below, align=center] {casos\\parecidos} ++(12, 0) |- ([yshift=-3mm]gen.west);
+        \draw[figflecha] (gen.east) -- (rep.west);
+        \draw[figflecha] (rep.south) -- (eval.north);
+
+        \begin{scope}[on background layer]
+            \node[figgrupo={todos los componentes: fundamentos, §\ref{sec:marco_fundamentos};
+                  atención, §\ref{sec:marco_atencion}}, fit=(clf) (knn) (gen)] {};
+        \end{scope}
+
+    \end{tikzpicture}
+    \caption[El capítulo recorrido sobre el \emph{pipeline}]{El capítulo recorrido sobre el
+    \emph{pipeline}. Cada componente lleva la sección que presenta los conceptos que usa. El clasificador
+    asigna una categoría a la imagen, un codificador visual recupera casos parecidos y el generador redacta
+    el reporte con esa información; después la salida se evalúa y se examina si lo medido se sostiene
+    fuera de los datos de entrenamiento. Los fundamentos del entrenamiento y la operación de atención son
+    comunes a los tres componentes.}
+    \label{fig:marco_mapa}
+\end{figure}
