@@ -202,8 +202,17 @@ El encuadre de cada referencia anterior a 2020 que ya está en el `.bib` queda r
   Se dibujan con TikZ, no se importan como imagen: así se editan con el documento y escalan con la
   fuente. Los estilos comunes —recuadros, flechas, agrupaciones— están en
   `Configurations/13-Figuras.sty` y se usan tal cual (`figentrada`, `figtarea`, `figsalida`,
-  `figgrupo`, `figflecha`); si hace falta un estilo nuevo, se agrega ahí y no en el diagrama. Todo
-  en escala de grises: el documento tiene que seguir siendo legible impreso en blanco y negro.
+  `figgrupo`, `figflecha`); si hace falta un estilo nuevo, se agrega ahí y no en el diagrama.
+  **Color con la paleta de Okabe e Ito** definida en ese archivo (`figazul`, `fignaranja`,
+  `figverde`, `figbermellon`, `figceleste`, `figpurpura`), que distinguen las personas con
+  daltonismo. El color nunca es la única señal: cada rol conserva además su forma de trazo y los
+  rellenos son claros, de modo que el diagrama sigue siendo legible impreso en blanco y negro. No se
+  usan colores fuera de la paleta.
+- **Figuras de otros trabajos.** Se pueden reproducir con la cita en el `\caption`: «Tomada de
+  \cite{clave}» si se reproduce tal cual, «Adaptada de \cite{clave}» si se redibuja o modifica.
+  Antes de incluirla se revisa la licencia del trabajo (CC BY permite reproducir con atribución;
+  la licencia por defecto de arXiv no, y en ese caso se redibuja en TikZ y se pone «Adaptada de»).
+  El archivo va en `Figures/Externas/`, en el formato original si es vectorial.
 - **Código** con `minted` (requiere `-shell-escape`). Fragmentos cortos, solo si aportan.
 - **Compilación:** `latexmk -xelatex -shell-escape tesina.tex` desde `Docs/TFG/`.
 

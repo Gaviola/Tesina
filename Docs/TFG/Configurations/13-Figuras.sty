@@ -8,8 +8,15 @@
 
 \usetikzlibrary{arrows.meta, positioning, fit, calc, backgrounds}
 
-% Gris de los recuadros y de las flechas. Todo el esquema es en escala de grises: los diagramas tienen que
-% seguir siendo legibles impresos en blanco y negro.
+% Paleta de Okabe e Ito, distinguible con las formas habituales de daltonismo. Cada rol del diagrama
+% tiene un color, y además una forma de trazo propia (lleno, grueso, discontinuo): el diagrama sigue
+% siendo legible impreso en blanco y negro, porque los rellenos son claros y difieren en luminancia.
+\definecolor{figazul}{HTML}{0072B2}
+\definecolor{fignaranja}{HTML}{E69F00}
+\definecolor{figverde}{HTML}{009E73}
+\definecolor{figbermellon}{HTML}{D55E00}
+\definecolor{figceleste}{HTML}{56B4E9}
+\definecolor{figpurpura}{HTML}{CC79A7}
 \colorlet{figtrazo}{black!70}
 \colorlet{figrelleno}{black!5}
 
@@ -20,11 +27,11 @@
         inner sep=4pt, minimum height=10mm,
     },
     % Lo que entra al sistema.
-    figentrada/.style = {fignodo, fill=figrelleno},
+    figentrada/.style = {fignodo, draw=figazul!80!black, fill=figazul!12},
     % Una tarea o un componente que transforma.
-    figtarea/.style = {fignodo, fill=white, thick},
+    figtarea/.style = {fignodo, draw=fignaranja!70!black, fill=fignaranja!18, thick},
     % Lo que sale.
-    figsalida/.style = {fignodo, fill=none, densely dashed},
+    figsalida/.style = {fignodo, draw=figverde!70!black, fill=figverde!10, densely dashed},
     % Agrupación de componentes; se rotula con label.
     figgrupo/.style = {
         draw=figtrazo, densely dotted, rounded corners=3pt, inner sep=5mm,
