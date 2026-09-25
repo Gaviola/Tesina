@@ -430,7 +430,8 @@ clínicas y la consistencia diagnóstica, y qué mide y qué no mide cada famili
 
 \subsection{Inferencia estadística para comparar modelos}
 \pendiente{Se presentan los intervalos por \emph{bootstrap} pareado, la prueba de McNemar y la prueba de
-Wilcoxon, y qué pregunta responde cada una.}
+Wilcoxon, y qué pregunta responde cada una. Para Wilcoxon se cita, junto al original, demsar2006statistical,
+que justifica su uso para comparar clasificadores.}
 
 \subsection{Interpretabilidad visual}
 \pendiente{Se describen los mapas de activación (Grad-CAM) y sus limitaciones.}
@@ -447,7 +448,7 @@ En dermatología el cambio de distribución más visible es el de modalidad. La 
 registra la lesión tal como se ve a simple vista, con la piel que la rodea, y la dermatoscopía la
 examina con aumento e iluminación controladas, con lo que muestra estructuras que la fotografía no
 resuelve, como la red pigmentaria y los patrones
-vasculares~\cite{kittler2002diagnostic,vestergaard2008dermoscopy}. Los rasgos visuales tienen
+vasculares~\cite{dinnes2018dermoscopy,kittler2016standardization}. Los rasgos visuales tienen
 distribuciones distintas en uno y otro registro, y un modelo entrenado sobre una modalidad no se
 traslada a la otra sin volver a medirlo. HAM10000 es dermatoscópico y SkinCaRe es de fotografía
 clínica, de modo que toda comparación entre los dos conjuntos arrastra esa diferencia de

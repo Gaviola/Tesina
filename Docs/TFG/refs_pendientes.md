@@ -24,7 +24,7 @@ incorporaron ocho, cada una verificada contra la página del editor.
 | `esteva2017dermatologistlevel` | Esteva et al., *Nature* 542(7639):115–118, 2017 | Desempeño a nivel de dermatólogo con redes profundas |
 | `tschandl2019comparison` | Tschandl et al., *The Lancet Oncology* 20(7):938–947, 2019 — 511 lectores humanos frente a 139 algoritmos | Los clasificadores superan a los expertos, y la dispersión entre lectores |
 | `freeman2026global` | Freeman et al., *JAMA Dermatology*, en línea el 26/08/2026 — 158 países | Densidad media de 2.66 dermatólogos por 100 000 habitantes, de 0.37 en países de ingreso bajo a 5.05 en los de ingreso alto |
-| `sinsky2016allocation` | Sinsky et al., *Annals of Internal Medicine*, 2016 | 49.2 % del tiempo de consultorio en registros y escritorio, más 1 a 2 horas fuera de horario |
+| ~~`sinsky2016allocation`~~ | Sinsky et al., *Annals of Internal Medicine*, 2016 | **Reemplazada** por `arndt2017tethered` (25/09) |
 
 **Qué quedó incompleto en esas entradas.** Nada que impida citarlas, pero conviene completarlo:
 
@@ -173,7 +173,57 @@ la página del editor antes de pegarlas.
   doi       = {10.1162/neco.1997.9.8.1735},
   langid    = {english}
 }
+
+@article{dinnes2018dermoscopy,
+  author    = {Dinnes, Jacqueline and Deeks, Jonathan J. and Chuchu, Naomi and Ferrante di Ruffano, Lavinia and Matin, Rubeta N. and Thomson, David R. and Wong, Kai Yuen and Aldridge, Roger Benjamin and Abbott, Rachel and Fawzy, Monica and Bayliss, Susan E. and Grainge, Matthew J. and Takwoingi, Yemisi and Davenport, Clare and Godfrey, Kathie and Walter, Fiona M. and Williams, Hywel C.},
+  title     = {Dermoscopy, with and without visual inspection, for diagnosing melanoma in adults},
+  journal   = {Cochrane Database of Systematic Reviews},
+  number    = {12},
+  pages     = {CD011902},
+  year      = {2018},
+  doi       = {10.1002/14651858.CD011902.pub2},
+  langid    = {english}
+}
+
+@article{demsar2006statistical,
+  author    = {Dem{\v{s}}ar, Janez},
+  title     = {Statistical Comparisons of Classifiers over Multiple Data Sets},
+  journal   = {Journal of Machine Learning Research},
+  volume    = {7},
+  pages     = {1--30},
+  year      = {2006},
+  url       = {https://jmlr.org/papers/v7/demsar06a.html},
+  langid    = {english}
+}
+
+@article{arndt2017tethered,
+  author    = {Arndt, Brian G. and Beasley, John W. and Watkinson, Michelle D. and Temte, Jonathan L. and Tuan, Wen-Jan and Sinsky, Christine A. and Gilchrist, Valerie J.},
+  title     = {Tethered to the {EHR}: Primary Care Physician Workload Assessment Using {EHR} Event Log Data and Time-Motion Observations},
+  journal   = {Annals of Family Medicine},
+  volume    = {15},
+  number    = {5},
+  pages     = {419--426},
+  year      = {2017},
+  doi       = {10.1370/afm.2121},
+  langid    = {english}
+}
 ```
+
+**Reemplazo de Sinsky (25/09/2026).** `sinsky2016allocation` resultó cerrada y solo aportaba un dato de
+contexto en §1.1. La reemplaza `arndt2017tethered` (*Annals of Family Medicine*, acceso abierto), que mide
+lo mismo en atención primaria con registros de uso de la historia clínica electrónica validados por
+observación directa: 5.9 horas de una jornada de 11.4, 1.4 fuera de horario, 44.2 % en tareas
+administrativas y de registro. La entrada vieja queda en el `.bib` sin citar.
+
+**Reemplazos por fuentes abiertas (25/09/2026).** `dinnes2018dermoscopy` (revisión Cochrane, libre en
+PMC 6517096) reemplaza a `kittler2002diagnostic` y `vestergaard2008dermoscopy`, que eran cerradas. Dinnes
+no afirma que sin entrenamiento la dermatoscopía no aporte ventaja, como decía Kittler: concluye que la
+mejora se da sobre todo en usuarios experimentados y que faltan datos en atención primaria. La
+introducción (§1.1) se reescribió con esa formulación. En §2.7 se le suma `kittler2016standardization`
+para las estructuras que muestra la dermatoscopía. `demsar2006statistical` (JMLR, abierta) se usará junto
+a `wilcoxon1945individual` en §2.6.4 para justificar Wilcoxon en la comparación de clasificadores.
+Las dos entradas viejas quedan en el `.bib` sin citar; retirarlas es decisión del autor, igual que
+`atkinsonabutridy2025language` y `nvidia2023beginners`, que tampoco se citan.
 
 `goodfellow2016deep`, `srivastava2014dropout` y `hochreiter1997long` son anteriores a 2020: entran por
 la condición 1 de la guía (fundacionales, definen el concepto). `rumelhart1986learning` ya estaba en el
@@ -368,7 +418,7 @@ General-Purpose Multimodal Foundation Model for Dermatology»); conviene bajar l
 | ★ `freeman2026global` | JAMA Dermatology, acceso abierto |
 | ★ `liu2021swin` | arXiv 2103.14030 / CVF Open Access |
 | ★ `loria2020cutaneous` | ecancer.org (gold) |
-| ★ `sinsky2016allocation` | PDF público (verificado el 17/09) |
+| ~~`sinsky2016allocation`~~ | Era cerrada (la verificación del 17/09 fue errónea); **reemplazada** por `arndt2017tethered`, libre en PMC 5593724 |
 | ★ `sung2026global` | *CA: A Cancer Journal for Clinicians*, gratuita (OpenAlex aún no la indexa) |
 | ★ `tschandl2019comparison` | PMC 8237239 (versión del autor) |
 | ★ `carrera2016validity` | JAMA Dermatology, lectura libre |
@@ -403,8 +453,8 @@ General-Purpose Multimodal Foundation Model for Dermatology»); conviene bajar l
 
 | Clave | Editorial | Cómo conseguirla |
 |---|---|---|
-| ★ `kittler2002diagnostic` | *Lancet Oncology* (Elsevier) | biblioteca UNCuyo / ScienceDirect institucional |
-| ★ `vestergaard2008dermoscopy` | *British Journal of Dermatology* (Wiley / OUP) | biblioteca UNCuyo |
+| ~~`kittler2002diagnostic`~~ | *Lancet Oncology* (Elsevier) | **reemplazada** por `dinnes2018dermoscopy` (25/09) |
+| ~~`vestergaard2008dermoscopy`~~ | *British Journal of Dermatology* (Wiley / OUP) | **reemplazada** por `dinnes2018dermoscopy` (25/09) |
 | ★ `argenziano1998checklist` | *Archives of Dermatology* (JAMA Network) | biblioteca UNCuyo |
 | ★ `hochreiter1997long` | *Neural Computation* (MIT Press) | copia del autor en el sitio del JKU Linz, o biblioteca |
 | `brier1950verification` | *Monthly Weather Review* (AMS) | revisar journals.ametsoc.org: el archivo antiguo de la AMS suele estar libre |
