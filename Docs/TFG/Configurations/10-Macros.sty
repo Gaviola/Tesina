@@ -83,6 +83,10 @@
 \addto\extrasenglish{\def\tableautorefname{Table}}
 \addto\extrasenglish{\def\partautorefname{Part}}
 \addto\extrasenglish{\def\appendixautorefname{Appendix}}
+% babel-spanish acentúa los operadores (\min pasa a «mín») y la fuente matemática no tiene la tilde:
+% se imprime un glifo suelto encima del operador. Se usan los operadores sin acento, como en la
+% literatura del área.
+\addto\extrasspanish{\unaccentedoperators}
 \addto\extrasspanish{\def\figureautorefname{Figura}}
 \addto\extrasspanish{\def\chapterautorefname{Capítulo}}
 \addto\extrasspanish{\def\sectionautorefname{Sección}}
