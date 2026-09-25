@@ -11,11 +11,16 @@
 % eliminan las secciones "Contribuciones" (propia de tesis de maestría o doctorado) y "Evolución respecto
 % del plan de trabajo" (se menciona en el texto donde corresponde).
 
-El diagnóstico de una lesión de piel combina dos aciertos: la categoría clínica y la
-descripción de la imagen. Los modelos visión--lenguaje prometen atenderlos con un solo
-modelo. Este trabajo los somete a esa exigencia sobre imágenes dermatoscópicas, contra
-clasificadores entrenados sobre el mismo material y dentro del presupuesto de una GPU de
-consumo.
+Este trabajo estudia si los modelos visión--lenguaje pueden asistir el diagnóstico de lesiones de piel
+en sus dos partes: identificar la categoría de la lesión, con atención especial a la detección del
+melanoma, y redactar el reporte que la describe. Un modelo de este tipo combina un codificador visual,
+que extrae los rasgos de la imagen, con un gran modelo de lenguaje, que los convierte en texto, y por
+eso promete cubrir las dos partes con un solo modelo. Esa promesa importa donde el especialista es
+escaso y el tiempo de consulta se reparte entre examinar la lesión y documentarla. El trabajo la pone a
+prueba en dos fases. La primera compara un modelo visión--lenguaje con redes convolucionales y
+transformers visuales entrenados sobre el mismo conjunto de imágenes dermatoscópicas; la segunda ajusta
+un modelo visión--lenguaje para generar reportes y evalúa si el diagnóstico que afirman es el correcto.
+Las dos fases se desarrollan dentro del presupuesto de una GPU de consumo.
 
 \section{Contexto y motivación}
 \label{sec:intro_contexto}
@@ -241,23 +246,29 @@ con qué configuración se los ajusta es materia del Capítulo~\ref{cp:metodos}.
 
 \section{Organización del documento}
 \label{sec:intro_organizacion}
-El Capítulo~\ref{cp:marco} reúne los conceptos necesarios para leer el resto: las arquitecturas de visión
-y de lenguaje sobre las que se construyen los modelos, las técnicas de adaptación y de recuperación que el
-trabajo emplea, las métricas con las que se juzgan tanto una clasificación como un texto, y el sesgo y la
-generalización fuera de los datos de entrenamiento. Cierra con el estado del arte, que ubica este trabajo
-entre los que ya existen. El Capítulo~\ref{cp:metodos} describe el material y el procedimiento: los
-conjuntos de datos con sus categorías diagnósticas y su partición por lesión, los modelos que se comparan,
-el formato del reporte, el \emph{pipeline} que los encadena y el protocolo con el que se los evalúa.
+El documento sigue el orden de las dos fases. Después de esta introducción, cada capítulo cubre lo
+siguiente:
 
-Los dos capítulos de resultados se reparten las preguntas. El Capítulo~\ref{cp:res_clasif} responde la PI1:
-compara las estrategias de clasificación sobre el mismo material, examina qué explica las diferencias entre
-ellas y evalúa qué queda de ese desempeño fuera del conjunto con el que se entrenó. El
-Capítulo~\ref{cp:res_gen} responde la PI2: mide la calidad de los reportes generados, analiza en qué fallan
-y compara las configuraciones del pipeline integrado, con el costo de cómputo de cada una.
+\begin{description}
+  \item[Capítulo~\ref{cp:marco}, Marco teórico.] Los conceptos necesarios para leer el resto: cómo se
+  entrena una red neuronal, las arquitecturas de visión y de lenguaje sobre las que se construyen los modelos, las técnicas de adaptación
+  y de recuperación, las métricas que juzgan una clasificación y un texto, y el sesgo y la generalización
+  fuera de los datos de entrenamiento. Cierra con el estado del arte.
+  \item[Capítulo~\ref{cp:metodos}, Materiales y métodos.] Los conjuntos de datos con sus categorías
+  diagnósticas y su partición por lesión, los modelos que se comparan, el formato del reporte, el
+  \emph{pipeline} que los encadena y el protocolo de evaluación.
+  \item[Capítulo~\ref{cp:res_clasif}, Resultados de clasificación.] Responde la PI1. Compara las
+  estrategias de clasificación sobre el mismo material, examina qué explica las diferencias entre ellas y
+  evalúa cuánto se sostiene el desempeño fuera del conjunto de entrenamiento.
+  \item[Capítulo~\ref{cp:res_gen}, Resultados de generación.] Responde la PI2. Mide la calidad de los
+  reportes generados, analiza en qué fallan y compara las configuraciones del pipeline, con el costo de
+  cómputo de cada una.
+  \item[Capítulo~\ref{cp:discusion}, Discusión.] Interpreta los dos conjuntos de resultados juntos,
+  responde las preguntas y expone las limitaciones y las amenazas a la validez.
+  \item[Capítulo~\ref{cp:conclusiones}, Conclusiones.] Los hallazgos principales, el balance de los
+  objetivos y las líneas de continuación.
+\end{description}
 
-El Capítulo~\ref{cp:discusion} interpreta los dos conjuntos de resultados juntos, responde las preguntas con
-la evidencia acumulada y expone las limitaciones y las amenazas a la validez. El
-Capítulo~\ref{cp:conclusiones} cierra con los hallazgos, el balance de los objetivos y las líneas de
-continuación. Los apéndices reúnen el material propio que no entra en el cuerpo: hiperparámetros,
-\emph{prompts}, resultados complementarios y lo necesario para reproducir los experimentos. El anexo reúne
-las fichas de los conjuntos de datos y de los modelos externos que el trabajo utiliza.
+Los apéndices reúnen el material propio que no entra en el cuerpo (hiperparámetros, \emph{prompts},
+resultados complementarios y lo necesario para reproducir los experimentos), y el anexo, las fichas de
+los conjuntos de datos y de los modelos externos que el trabajo utiliza.
