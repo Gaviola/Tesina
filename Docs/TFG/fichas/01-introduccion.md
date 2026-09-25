@@ -237,3 +237,12 @@ Ninguna. La del párrafo de apertura se resolvió el 21/09/2026 (ver «Decisione
 8. **El «quinto tumor más frecuente» de §1.1 ¶1 se verificó y se sostiene** (21/09/2026): la fact sheet de
    GLOBOCAN 2024 para NMSC (IARC) lo ubica 5.º en incidencia con 1\,138\,314 casos, y las demás cifras del
    párrafo cuadran contra la misma fuente. Sin edición.
+
+## Revisión del 25/09/2026
+
+- **LoRA sale de §1.1 ¶7** y queda solo en §1.4 ¶4, con una cláusula sobre qué hace. §1.1 ¶7 conserva el hardware como eje y `yilmaz2025resourceefficient`. §1.4 ¶4 remite a §1.1 en lugar de repetir los 12--36 GB.
+- **El párrafo de Argentina (§1.1 ¶1) se funde con el de generalización (¶4)**: `loria2020cutaneous` sostiene ahora que la población local no es homogénea, lo que motiva HIBA.
+- **§1.4 ¶1 aclara el papel de SkinCaRe**: es de fotografía clínica y entra solo como fuente de pares imagen--texto; la fidelidad diagnóstica se mide sobre HAM10000.
+- Se eliminó «Adelantar el diagnóstico mejora el pronóstico sin cambiar el tratamiento» (incorrecto y sin respaldo en `nci2026melanoma`).
+- H2 deja de decir «precisos», término reservado para *precision*. Las PI y los objetivos, que se citan textuales, lo conservan.
+- Pasada de estilo: conectores aditivos en cadena, frases de anuncio y de recapitulación, metatexto de §1.2 ¶5 y «dos tareas y no una».
