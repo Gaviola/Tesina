@@ -480,3 +480,8 @@ no hace falta leerlas enteras, pero conviene tener el PDF para verificar la nota
 
 Las dos del plan son candidatas naturales para el estado del arte (§2.8); las otras cuatro, solo si una
 sección las necesita.
+
+**Limpieza del `.bib` (25/09/2026).** Se eliminaron las entradas sin citar `mendonca2013ph2`,
+`sinsky2016allocation`, `kittler2002diagnostic`, `vestergaard2008dermoscopy`,
+`atkinsonabutridy2025language` y `nvidia2023beginners` (autor). Las menciones anteriores a esas claves
+en este archivo quedan como registro histórico.
