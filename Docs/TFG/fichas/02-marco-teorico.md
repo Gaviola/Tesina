@@ -268,7 +268,7 @@ diagrama del *pipeline* ya previsto.
 
 ---
 
-## Bloque B — §2.5 Modelos visión--lenguaje y §2.6 Evaluación (propuesta del 25/09/2026, sin aprobar)
+## Bloque B — §2.5 Modelos visión--lenguaje y §2.6 Evaluación (aprobado y redactado el 25/09/2026)
 
 Numeración nueva (decisión 14). Cada sección abre situándose en el *pipeline* y cierra con lo que deja
 abierto, como pide el hilo conductor.
@@ -443,18 +443,6 @@ resultados; acá solo alimentan la comparación cualitativa.
    sacando el inglés entre paréntesis de la forma larga: la lista de acrónimos lo sigue mostrando.
    Afecta a capítulos ya revisados, así que lo decide el autor.
 
-4. **Cita para el *hedging* (§2.5.3 ¶4).** Ninguna clave del `.bib` define el fenómeno en
-   generación médica. Opciones: describirlo sin cita como falla observada en el trabajo (con remisión
-   al Cap. de resultados de generación) o proponer una referencia en `refs_pendientes.md`.
-
-5. **Cita para los límites de Grad-CAM (§2.6.5 ¶2).** Selvaraju sostiene la resolución gruesa; que el
-   mapa no certifica el razonamiento lo sostiene mejor Adebayo et al. 2018, *Sanity Checks for
-   Saliency Maps* (NeurIPS, abierto en arXiv 1810.03292), que no está en el `.bib`.
-
-6. **Dónde se definen las métricas sin referencia.** La ficha propone concepto aquí y definición
-   operativa (lista de entidades, sinónimos, regla de coincidencia) en el Cap. 3, porque son del
-   trabajo y no del estado del conocimiento. El `\pendiente` actual las ponía enteras aquí.
-
 ## Decisiones tomadas
 
 1. **Las claves propuestas se nombran ahora, no al citar.** La auditoría de `refs_pendientes.md`
@@ -559,3 +547,18 @@ resultados; acá solo alimentan la comparación cualitativa.
     - La extensión del capítulo baja; las páginas son estimativas y no bloquean (autor, 25/09/2026).
     - Numeración resultante: §2.1 atención, §2.2 visión, §2.3 lenguaje, §2.4 VLM, §2.5 evaluación,
       §2.6 sesgo y generalización, §2.7 estado del arte.
+15. **Bloque B (25/09/2026).**
+    - El *hedging* se presenta sin cita, como falla observada durante la experimentación del trabajo,
+      con remisión al Capítulo de resultados de generación (autor).
+    - Los límites de Grad-CAM se citan con `adebayo2018sanity`, agregado al `.bib`. Adebayo muestra que
+      Grad-CAM **supera** sus pruebas de aleatorización; el texto lo dice así y usa el trabajo para
+      sostener que la inspección visual sola no valida un método, no para descalificar a Grad-CAM.
+    - Las métricas sin referencia se presentan como concepto en §2.6.3; la lista de términos y las
+      reglas de coincidencia van en Materiales y métodos (`sec:met_protocolo`), cuyo `\pendiente`
+      todavía no lo menciona.
+    - MCE se escribe en línea («error de calibración máximo (MCE)») y no se declara como acrónimo,
+      para no tocar `Matter/05-Acronyms.tex`.
+    - La ficha decía que la calibración post-hoc no cambia la clase predicha. Vale para el
+      *temperature scaling*, no para el *vector scaling*, que puede cambiarla; el texto lo distingue.
+    - «LLaVA fijó el esquema que sigue la mayoría de los VLM abiertos» no tenía respaldo y quedó como
+      «los VLM generativos que usa el trabajo siguen el esquema de LLaVA».
