@@ -81,19 +81,18 @@ impersonal, terminología, tipografía— prevalecen sobre ellas, y la pasada se
 prosa, no como regla de cierre. «Guion largo» es la raya `—`; no aplica al guion doble de los
 compuestos como «visión--lenguaje».
 
-Elimina los patrones de escritura predecibles de la IA de la prosa.
+Al revisar la prosa se buscan estos tics y se corrigen cuando aparecen sin motivo:
 
-¿Hay algún adverbio? Elimínalo.
-¿Hay alguna voz pasiva? Encuentra al agente y conviértelo en sujeto.
-¿Hay algún objeto inanimado que realice un verbo propio de una persona («la decisión surge»)? Nombra a la persona.
-¿Alguna frase de relleno del tipo «esto es lo que/esto/aquello»? Ve al grano.
-¿Algún contraste del tipo «no es X, es Y»? Expresa Y directamente.
-¿Tres frases consecutivas tienen la misma longitud? Rompe una.
-¿El párrafo termina con una frase concisa e impactante? Varía el estilo.
-¿Hay algún guion largo en alguna parte? Elimínalo.
-¿Hay alguna afirmación vaga («Las implicaciones son significativas»)? Nombra la implicación específica.
-¿Hay un narrador distante («Nadie diseñó esto»)? Sitúa al lector en la escena.
-¿Hay conectores metatextuales («El resto de este ensayo...»)? Elimínalos. Deja que el ensayo fluya.
+- adverbios de énfasis o de relleno que no agregan información;
+- objetos inanimados con verbos de persona («la decisión surge») cuando hay un agente que nombrar;
+- frases de relleno del tipo «esto es lo que…»;
+- contrastes «no es X, es Y» donde alcanza con decir Y;
+- tres oraciones seguidas de la misma longitud, o párrafos que cierran siempre con una frase corta y rotunda;
+- rayas (—) en la prosa;
+- afirmaciones vagas («las implicaciones son significativas») en lugar de la implicación concreta;
+- conectores metatextuales («el resto de este capítulo…»).
+
+La pasiva refleja impersonal («se evalúan») es la voz del documento (sección 3) y no entra en esta lista.
 
 ## 4. Terminología fijada
 
@@ -142,7 +141,7 @@ Las estimaciones de extensión y las fuentes de cada capítulo van como **coment
 
 ## 6. Citas y bibliografía
 
-`Bibliography/Bibliography.bib` es el archivo único y canónico: 82 entradas, claves normalizadas
+`Bibliography/Bibliography.bib` es el archivo único y canónico, con claves normalizadas
 como `<apellido><año><palabra>` (`vaswani2017attention`, `tschandl2018ham10000`,
 `yan2025derm1m`).
 
