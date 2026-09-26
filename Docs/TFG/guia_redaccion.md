@@ -60,18 +60,61 @@ las dos versiones juntas.
 - **Español neutro formal.** Documentación y documento en español; el código y los nombres de
   variables, en inglés.
 - **Los términos en inglés se usan cuando son los corrientes en el área.** *Pipeline*, *array*,
-  *prompt*, *zero-shot*, *linear probe*, *grounding*, *hedging*, *bootstrap*, *trade-off* o
-  *image captioning* no tienen equivalente castellano instalado; traducirlos dificulta la lectura
-  en lugar de facilitarla, así que se usan tal cual. Se prefiere el castellano cuando ya es de uso
+  *prompt*, *zero-shot*, *linear probe*, *grounding*, *hedging*, *bootstrap*, *trade-off*,
+  *image captioning*, *kernel*, *greedy decoding*, *beam search*, *sampling*, *top-k*, *top-p* o
+  *nucleus sampling* no tienen equivalente castellano instalado; traducirlos («búsqueda codiciosa»,
+  «muestreo de núcleo») dificulta la lectura en lugar de facilitarla, así que se usan tal cual. Lo
+  mismo vale para calcos de expresiones: «la masa de probabilidad acumulada» se reformula como «la
+  probabilidad acumulada». Se prefiere el castellano cuando ya es de uso
   corriente («ajuste fino», «conjunto de datos», «aprendizaje profundo», «atención multi-cabeza»).
 - **Cursiva la primera vez en cada capítulo** con `\emph{}`; después, redonda. En títulos de
   sección y en los índices, siempre redonda. Un término que aparece cincuenta veces en cursiva es
   ruido tipográfico.
 - **Las siglas se usan libremente una vez introducidas.** La primera aparición en cada capítulo va
   con `\gls{}`, que expande la forma completa; de ahí en más, la sigla sola (VLM, LoRA, RAG, ECE).
-- **Los dos puntos, con moderación.** Anuncian lo que viene después: una enumeración, una definición,
-  un nombre, un ejemplo. No son un conector entre oraciones: si lo que sigue es una explicación o una
-  continuación del pensamiento, va punto y seguido, coma o subordinación.
+- **Los dos puntos y el punto y coma, con moderación.** Los dos puntos anuncian lo que viene después:
+  una enumeración, una definición, un nombre, un ejemplo. No son un conector entre oraciones: si lo que
+  sigue es una explicación o una continuación del pensamiento, va punto y seguido, coma o
+  subordinación. El punto y coma tampoco encadena oraciones completas; en ese caso se prefiere el punto
+  y seguido.
+- **Verbos literales.** Para las operaciones técnicas se usa el verbo que las nombra, no uno figurado:
+  una métrica se «evalúa» (no se «juzga»), dos valores «se separan» (no «se apartan»), un modelo
+  «acierta» las imágenes de una clase (no las «encuentra»).
+- **Sin elipsis nominales.** «Los modelos de solo decodificador», no «la de solo decodificador»: se
+  repite el sustantivo o se reestructura la oración en lugar de dejarlo implícito.
+- **Sin gerundio de consecuencia.** «El cálculo se paraleliza y aprovecha mejor el hardware», no «se
+  paraleliza permitiendo un cálculo más eficiente».
+- **Afirmaciones medidas.** No se escribe «el primero», «la prueba recomendada» o «el supuesto es
+  débil» si la fuente no lo dice así. Cuando la afirmación es de los autores del trabajo citado, se les
+  atribuye («que sus autores presentan como el primer conjunto público…»).
+- **Las decisiones se explican desde los objetivos.** «Como uno de los objetivos es ejecutar todo en una
+  GPU de consumo, los modelos se adaptan con LoRA», no «se adaptan con LoRA, y por eso se ejecutan en una
+  GPU de consumo». La causalidad sigue el orden en que se tomó la decisión.
+- **Alternativas paralelas en lista.** Cuando un párrafo enumera opciones que se comparan (estrategias de
+  pérdida, variantes de un método), van en `enumerate`, no numeradas a mano dentro del texto.
+
+### Conceptos, fórmulas y notación
+
+El documento es explicativo: el lector tiene que poder reconstruir cómo se calcula cada cosa que el
+trabajo usa sin ir a la fuente.
+
+- **Cada método o métrica que el trabajo usa se define con su fórmula**, además de con palabras: cómo
+  se calcula, no solo qué mide. Vale para las métricas de clasificación, calibración y texto, las
+  pruebas estadísticas y los métodos (Adam, Grad-CAM, RAG).
+- **La fórmula sigue la notación del trabajo original** (la de Guo para el ECE, la de Selvaraju para
+  Grad-CAM) salvo que choque con un símbolo ya usado en el capítulo; en ese caso se cambia el símbolo y
+  no el concepto. Convenciones fijas del documento: $C$ clases, $n$ imágenes, $p_c$ probabilidad de la
+  clase $c$, $\mathbf{z}$ logits, $\theta$ parámetros, $\eta$ tasa de aprendizaje, $\mathcal{L}$
+  pérdida; vectores en negrita minúscula y matrices en mayúscula.
+- **Símbolo o término original entre paréntesis en la primera mención**: «una consulta ($Q$)», «un
+  filtro de pequeño tamaño (*kernel*)», «detención temprana (*early stopping*)».
+- **Negrita en el nombre de una métrica, prueba o método en el lugar donde se define** (**F1**,
+  **BLEU**, **prueba de McNemar**, **Grad-CAM**), para que se encuentren al hojear. Solo en la
+  definición; las menciones posteriores van en redonda.
+- **Un término técnico se define en la primera aparición del capítulo**, en el cuerpo del texto
+  (*token*, *embedding*). El glosario no se imprime, así que no reemplaza esa definición.
+- **Sin meta-texto sobre el alcance** («solo incluye lo que los capítulos siguientes usan»): la sección
+  abre diciendo qué presenta, no qué deja afuera.
 
 ### Patrones de escritura automatizada
 
@@ -115,6 +158,8 @@ los capítulos.
 | conjunto de datos | *dataset* | |
 | reporte | informe | Consistencia con el título de la tesina. **«Reporte» designa únicamente el informe clínico**: no se lo usa en el sentido de «lo que se reporta». Para eso se dice «métrica de selección» (con qué se elige el modelo, en validación) y «resultado principal» (qué número se presenta, en test) |
 | fidelidad diagnóstica | precisión diagnóstica | Es la métrica sin referencia, no una *precision* |
+| participantes, evaluadores (en estudios de lectura) | lectores (*readers*) | Calco del inglés. «Observadores» queda para los estudios de concordancia entre especialistas |
+| clasificadores, modelos | algoritmos (para un modelo entrenado) | «Algoritmo» queda para el procedimiento (la lista de 7 puntos, el descenso del gradiente) |
 | *embedding* | embebido, incrustación, vector latente | Cursiva la primera vez de cada capítulo, como el resto de los términos en inglés. Vale también para los compuestos: «*embedding* de posición», «kNN sobre embeddings» |
 
 **Prohibido:** la palabra «caveat» en cualquier contexto.
@@ -123,9 +168,9 @@ los capítulos.
 y la norma general del español es la coma, pero en el área los resultados se reportan con punto y
 el material de experimentación propio ya lo usa en sus 267 valores, sin una sola coma; cambiar de
 criterio obligaría a reescribir todas las tablas. Tres decimales en métricas, dos en porcentajes,
-desviación con `$\pm$`. No hace falta configurar nada: `babel` con la opción `spanish` solo trata
-la coma como separador decimal en modo matemático, y el punto funciona igual dentro y fuera de
-`$...$`.
+desviación con `$\pm$`. `babel` con la opción `spanish` convierte el punto en coma dentro de las
+fórmulas (`$0.5$` se imprimía «0,5»); `Configurations/10-Macros.sty` lo desactiva con
+`\decimalpoint`, así que el punto se escribe igual dentro y fuera de `$...$`.
 
 **Acrónimos.** Se declaran en `Matter/05-Acronyms.tex` y se invocan con `\gls{}` en la primera
 aparición de cada capítulo. No se redefine un acrónimo ya declarado.
@@ -150,10 +195,9 @@ como `<apellido><año><palabra>` (`vaswani2017attention`, `tschandl2018ham10000`
 - **Ventana de referencia: 2020–2026.** Se prefieren trabajos de los últimos seis años. Ahí están
   las fuentes actualizadas y ahí se concentra la literatura efectivamente comparable con este
   trabajo.
-- **El corte no es arbitrario: separa el análisis de imágenes anterior a los *transformers* del
-  posterior.** El cambio de paradigma es radical, de modo que un resultado obtenido con
-  arquitecturas previas no es comparable con los números actuales y no puede presentarse como
-  estado del arte. El estado del arte del Capítulo~2 se construye con trabajos de la ventana; los
+- **El corte es un criterio práctico para acotar la búsqueda**, no una frontera técnica: entre 2017
+  y 2020 ya hay trabajos con *transformers*, así que en el documento no se lo justifica por la
+  arquitectura. El estado del arte del Capítulo~2 se construye con trabajos de la ventana; los
   anteriores entran como hitos y se los presenta como tales, fechados.
 - **Un trabajo anterior a 2020 se cita si cumple al menos una de estas condiciones:**
   1. es fundacional y ampliamente aceptado, de manera que lo que aporta no quedó superado sino
@@ -207,6 +251,14 @@ El encuadre de cada referencia anterior a 2020 que ya está en el `.bib` queda r
   daltonismo. El color nunca es la única señal: cada rol conserva además su forma de trazo y los
   rellenos son claros, de modo que el diagrama sigue siendo legible impreso en blanco y negro. No se
   usan colores fuera de la paleta.
+- **Posición de las figuras.** Por defecto `[htbp]`. Si al compilar la figura salta a la página
+  siguiente y corta un párrafo que viene después de ella, se usa `[H]` (paquete `float`, cargado en
+  `13-Figuras.sty`) para fijarla donde se la trae con `\input`. Las etiquetas de un diagrama no se
+  superponen con recuadros ni con flechas, y las flechas llegan al borde de un nodo, no al hueco entre
+  dos.
+- **Tablas.** `tabularx` con `booktabs` y `\caption` arriba. Cuando las celdas ocupan varias líneas,
+  las filas de datos se separan con `\filasep` (regla fina gris, en `08-Tables.sty`) para seguir cada
+  fila a simple vista. Las columnas se dimensionan para que los nombres propios no se corten con guion.
 - **Figuras de otros trabajos.** Se pueden reproducir con la cita en el `\caption`: «Tomada de
   \cite{clave}» si se reproduce tal cual, «Adaptada de \cite{clave}» si se redibuja o modifica.
   Antes de incluirla se revisa la licencia del trabajo (CC BY permite reproducir con atribución;
