@@ -4,6 +4,11 @@
 \AtBeginEnvironment{tabularx}{\customtableformatting} % Apply to tabularx.
 \preto\longtable{\customtableformatting} % Apply to longtable.
 
+% Separador fino y gris entre filas de datos, para seguir cada fila en tablas con celdas de varias
+% líneas. Las reglas de booktabs (\toprule, \midrule, \bottomrule) siguen en negro.
+\RequirePackage{colortbl}
+\newcommand{\filasep}{\arrayrulecolor{black!25}\specialrule{0.3pt}{2pt}{2pt}\arrayrulecolor{black}}
+
 
 %%% Captions %%%
 \captionsetup{skip=6pt} % Whitespace between figures/tables and the caption.

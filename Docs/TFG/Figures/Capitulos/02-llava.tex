@@ -1,7 +1,8 @@
 % Figura: arquitectura de un VLM generativo tipo LLaVA. Adaptada de liu2023visual (Figura 1).
 % Se usa en sec:marco_vlm_generativos, después del párrafo que presenta el esquema.
+% [H]: como flotante saltaba a la página siguiente y cortaba el párrafo que venía después.
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \begin{tikzpicture}[x=1mm, y=1mm]
 
@@ -17,30 +18,31 @@
         \node[fignodo, text width=22mm, fill=figrelleno] (tok) at (40, 16) {tokenizador y\\\emph{embeddings}};
         \draw[figflecha] (instr) -- (tok);
 
-        % Secuencia de entrada al LLM: tokens visuales como prefijo.
+        % Secuencia de entrada al LLM: cada grupo de tokens queda encima de la rama que lo produce, y un
+        % marco agrupa sus casillas para que la flecha llegue al grupo y no a una casilla suelta.
         \foreach \k in {0,...,3} {
-            \node[draw=figazul!80!black, fill=figazul!12, minimum width=5mm, minimum height=5mm]
-                (v\k) at (4+\k*6, 46) {};
+            \node[draw=figazul!80!black, fill=figazul!12, minimum width=4.5mm, minimum height=4.5mm]
+                (v\k) at (-8.25+\k*5.5, 47) {};
+            \node[draw=figtrazo, fill=figrelleno, minimum width=4.5mm, minimum height=4.5mm]
+                (t\k) at (31.75+\k*5.5, 47) {};
         }
-        \foreach \k in {0,...,3} {
-            \node[draw=figtrazo, fill=figrelleno, minimum width=5mm, minimum height=5mm]
-                (t\k) at (32+\k*6, 46) {};
-        }
-        \node[figetiqueta, anchor=south] at (13, 49.5) {tokens visuales};
-        \node[figetiqueta, anchor=south] at (41, 49.5) {tokens de texto};
-        \draw[figflecha] (proj.north) -- ++(0, 5) -| (13, 43.5);
-        \draw[figflecha] (tok.north) -- ++(0, 21.5) -| (41, 43.5);
+        \node[draw=figtrazo, densely dotted, rounded corners=1pt, inner sep=1.2mm, fit=(v0) (v3)] (vis) {};
+        \node[draw=figtrazo, densely dotted, rounded corners=1pt, inner sep=1.2mm, fit=(t0) (t3)] (txt) {};
+        \node[figetiqueta, anchor=east, align=right] at (vis.west) {tokens\\visuales};
+        \node[figetiqueta, anchor=west, align=left] at (txt.east) {tokens\\de texto};
+        \draw[figflecha] (proj.north) -- (vis.south);
+        \draw[figflecha] (tok.north) -- (txt.south);
 
-        % LLM y salida.
-        \node[figtarea, minimum width=58mm] (llm) at (27, 64)
-            {LLM de solo decodificador};
-        \draw[figflecha] (27, 51) -- (llm.south);
-        \node[figsalida, text width=30mm] (out) at (27, 80) {texto generado};
+        % LLM y salida: los dos grupos entran como una sola secuencia.
+        \node[figtarea, minimum width=66mm] (llm) at (20, 64) {LLM de solo decodificador};
+        \draw[figflecha] (vis.north) -- (vis.north |- llm.south);
+        \draw[figflecha] (txt.north) -- (txt.north |- llm.south);
+        \node[figsalida, text width=30mm] (out) at (20, 80) {texto generado};
         \draw[figflecha] (llm) -- (out);
 
-        \node[figetiqueta, text=fignaranja!70!black, align=left, anchor=west] at (58, 32)
+        \node[figetiqueta, text=fignaranja!70!black, align=left, anchor=west] at (62, 32)
             {etapa 1: se entrena\\solo el proyector};
-        \node[figetiqueta, text=fignaranja!70!black, align=left, anchor=west] at (58, 64)
+        \node[figetiqueta, text=fignaranja!70!black, align=left, anchor=west] at (62, 64)
             {etapa 2: proyector\\y LLM};
 
     \end{tikzpicture}

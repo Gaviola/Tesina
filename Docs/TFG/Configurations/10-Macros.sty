@@ -113,6 +113,11 @@
 % run after babel's layout hook, hence \AtBeginDocument.
 \ifthenelse{\equal{\LanguageOption}{spanish}}{\AtBeginDocument{\spanishlcroman}}{}
 
+% babel-spanish convierte el punto decimal en coma dentro de las fórmulas ($0.5$ se imprime «0,5»),
+% mientras que el texto queda con punto. La guía de redacción fija el punto decimal en todo el
+% documento, y \decimalpoint desactiva esa conversión.
+\ifthenelse{\equal{\LanguageOption}{spanish}}{\AtBeginDocument{\decimalpoint}}{}
+
 % Command to overwrite the color of a given command.
 \newcommand{\overwritecolor}[2]{%
     \textcolor{#1}{%

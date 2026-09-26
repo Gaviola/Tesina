@@ -20,12 +20,12 @@
 % Se agregan los fundamentos del aprendizaje profundo como §2.1 y el capítulo sigue el recorrido del
 % pipeline (ficha, «Propuesta del 25/09/2026», aprobada).
 
-Este capítulo reúne los conceptos que usa el resto del trabajo, en el orden en que los atraviesa un caso
+Este capítulo reúne los conceptos que usa el resto del trabajo, en el orden en que los atraviesa un ejemplo
 dentro del \emph{pipeline} (Figura~\ref{fig:marco_mapa}). Una imagen dermatoscópica llega a un
 clasificador, que le asigna una categoría, y a un codificador visual, que recupera casos parecidos; con
-esa información, un modelo de lenguaje redacta el reporte. La salida se juzga después con métricas de
-clasificación y de texto, y queda por saber si lo medido se sostiene fuera de los datos de entrenamiento.
-Los tres componentes son redes neuronales entrenadas con el mismo procedimiento, y casi todos se
+esa información, un modelo de lenguaje escribe el reporte. La salida se evalúa después con métricas de
+clasificación y de texto, y se analiza si el desempeño medido se mantiene con imágenes de otras fuentes y
+de otras poblaciones. Los tres componentes son redes neuronales entrenadas con el mismo procedimiento, y casi todos se
 construyen sobre la operación de atención; por eso el capítulo empieza por ahí. La última sección revisa
 el estado del arte con esos conceptos ya disponibles.
 
@@ -35,21 +35,20 @@ el estado del arte con esos conceptos ya disponibles.
 \label{sec:marco_fundamentos}
 
 Esta sección presenta cómo una red neuronal produce una probabilidad por clase, cómo se ajustan sus
-parámetros y cómo se comprueba que lo aprendido sirve fuera de los datos de entrenamiento. Solo incluye
-lo que los capítulos siguientes usan sin volver a definirlo.
+parámetros y cómo se comprueba que lo aprendido sirve fuera de los datos de entrenamiento.
 
 \subsection{Neurona artificial y perceptrón multicapa}
 \label{sec:marco_perceptron}
 
 Una neurona artificial calcula una suma ponderada de sus entradas, le suma un sesgo y aplica a ese
-resultado una función no lineal, llamada activación. Una capa reúne varias neuronas que reciben la misma
+resultado una función no lineal, llamada función de activación. Una capa reúne varias neuronas que reciben la misma
 entrada, y un perceptrón multicapa apila capas de modo que la salida de cada una es la entrada de la
 siguiente. La capa $l$ transforma el vector $\mathbf{h}^{(l-1)}$ que recibe en
 \begin{equation}
     \mathbf{h}^{(l)} = \phi\!\left(W^{(l)} \mathbf{h}^{(l-1)} + \mathbf{b}^{(l)}\right),
     \label{eq:marco_capa}
 \end{equation}
-donde $W^{(l)}$ es la matriz de pesos, $\mathbf{b}^{(l)}$ el vector de sesgos y $\phi$ la activación,
+donde $W^{(l)}$ es la matriz de pesos, $\mathbf{b}^{(l)}$ el vector de sesgos y $\phi$ la función de activación,
 aplicada elemento a elemento. Sin la activación, la composición de capas se reduciría a una única
 transformación lineal; con ella, la red representa funciones no lineales de la
 entrada~\cite{rumelhart1986learning,goodfellow2016deep}.
@@ -57,7 +56,8 @@ entrada~\cite{rumelhart1986learning,goodfellow2016deep}.
 Los pesos y los sesgos de todas las capas son los parámetros de la red, que se agrupan en $\theta$, y
 entrenarla consiste en elegir sus valores. El perceptrón reaparece dentro de arquitecturas más complejas:
 la cabeza de clasificación que convierte las características extraídas por una red visual en un puntaje
-por clase es una capa de la forma de la Ecuación~\ref{eq:marco_capa}.
+por clase es una capa de la forma de la Ecuación~\ref{eq:marco_capa}, y la Sección~\ref{sec:marco_softmax} muestra
+cómo esos puntajes se convierten en probabilidades.
 
 \subsection{Clasificación: softmax y entropía cruzada}
 \label{sec:marco_softmax}
@@ -104,62 +104,111 @@ gradientes ocupan memoria durante el entrenamiento.
 
 \input{Figures/Capitulos/02-perceptron}
 
-La tasa de aprendizaje única de la Ecuación~\ref{eq:marco_gradiente} trata igual a todos los
-parámetros. Adam adapta el paso a cada uno: mantiene dos promedios móviles por parámetro, uno del
-gradiente y otro de su cuadrado, y divide el primero por la raíz del segundo, de modo que los parámetros
-con gradientes grandes o ruidosos avanzan con pasos más cortos~\cite{kingma2015adam}. Esos dos estados por
-parámetro, sumados al gradiente, son el costo de memoria del ajuste fino que la
-Sección~\ref{sec:marco_llm_lora} busca reducir.
+La tasa de aprendizaje de la Ecuación~\ref{eq:marco_gradiente} trata igual a todos los
+parámetros. Adam, cuyo nombre viene de \emph{adaptive moment estimation}, adapta el paso a cada uno.
+Con $\mathbf{g}_t$ el gradiente en el paso $t$, mantiene dos promedios móviles por parámetro, uno del
+gradiente y otro de su cuadrado,
+\begin{equation}
+    \mathbf{m}_t = \beta_1 \mathbf{m}_{t-1} + (1-\beta_1)\,\mathbf{g}_t, \qquad
+    \mathbf{v}_t = \beta_2 \mathbf{v}_{t-1} + (1-\beta_2)\,\mathbf{g}_t^{2}, \qquad
+    \theta_t = \theta_{t-1} - \eta\,\frac{\hat{\mathbf{m}}_t}{\sqrt{\hat{\mathbf{v}}_t} + \epsilon},
+    \label{eq:marco_adam}
+\end{equation}
+donde las operaciones son elemento a elemento, $\hat{\mathbf{m}}_t$ y $\hat{\mathbf{v}}_t$ son los
+promedios corregidos por el sesgo que introduce inicializarlos en cero, y $\beta_1 = 0.9$,
+$\beta_2 = 0.999$ y $\epsilon = 10^{-8}$ son los valores habituales. Al dividir por la raíz del segundo
+promedio, los parámetros con gradientes grandes o ruidosos avanzan con pasos más
+cortos~\cite{kingma2015adam}. Los dos promedios de cada parámetro, sumados a su gradiente, son el costo
+de memoria del ajuste fino que la Sección~\ref{sec:marco_llm_lora} busca reducir.
 
 \subsection{Generalización y regularización}
 \label{sec:marco_regularizacion}
 
-La pérdida de entrenamiento es un medio. Lo que interesa es el desempeño sobre casos que el modelo no
-vio, y una red con suficientes parámetros puede memorizar el conjunto de entrenamiento: su pérdida sigue
-bajando mientras el error sobre datos nuevos sube. Ese fenómeno se llama
-sobreajuste~\cite{goodfellow2016deep}.
+La pérdida de entrenamiento es solo el objetivo que se optimiza. Lo que de verdad interesa es el
+desempeño sobre casos que el modelo no vio, y una red con suficientes parámetros puede memorizar el
+conjunto de entrenamiento. Cuando eso ocurre, la pérdida de entrenamiento sigue bajando mientras el error
+sobre datos nuevos sube. Ese fenómeno se llama sobreajuste~\cite{goodfellow2016deep}.
 
 Para medirlo, los datos se dividen en tres particiones disjuntas. La de entrenamiento ajusta los
-parámetros; la de validación elige entre configuraciones, hiperparámetros y épocas; y la de test se usa
-una sola vez, al final, para estimar el desempeño sobre datos nuevos. Una decisión tomada mirando el test
+parámetros, la de validación elige entre configuraciones, hiperparámetros y épocas, y la de test se usa
+una sola vez al final para estimar el desempeño sobre datos nuevos. Una decisión tomada mirando el test
 lo convierte en parte del ajuste y vuelve optimista su estimación~\cite{goodfellow2016deep}. Por la misma
 razón ningún caso puede aparecer en dos particiones, condición que HAM10000 no cumple en su partición
 original (Sección~\ref{sec:met_particiones}).
 
-Las técnicas de regularización reducen el sobreajuste restringiendo lo que la red puede aprender. El
-decaimiento de pesos penaliza los parámetros grandes~\cite{goodfellow2016deep}. El \emph{dropout} apaga al
-azar una fracción de las neuronas en cada paso de entrenamiento e impide que la red dependa de
-combinaciones particulares de ellas~\cite{srivastava2014dropout}. El aumento de datos, que se detalla en
-la Sección~\ref{sec:marco_transferencia}, amplía el conjunto con variaciones de las imágenes disponibles.
-Conservar los parámetros de la época con mejor desempeño en validación, en lugar de los de la última,
-cumple una función parecida~\cite{goodfellow2016deep}.
+Las técnicas de regularización reducen el sobreajuste, ya sea restringiendo lo que la red puede aprender o
+ampliando la variedad de lo que ve durante el entrenamiento. El decaimiento de pesos (\emph{weight decay})
+agrega a la pérdida una penalización proporcional al cuadrado de la norma de los parámetros,
+\begin{equation}
+    \tilde{\mathcal{L}}(\theta) = \mathcal{L}(\theta) + \frac{\lambda}{2}\,\lVert \theta \rVert_2^2,
+    \label{eq:marco_weight_decay}
+\end{equation}
+de modo que cada paso del gradiente encoge los parámetros hacia cero. Solo conservan un valor grande los
+que reducen de forma apreciable la pérdida, y el coeficiente $\lambda$ fija cuánto pesa la penalización
+frente al ajuste a los datos~\cite{goodfellow2016deep}.
+
+El \emph{dropout} apaga cada neurona al azar, con una probabilidad fija, en cada paso de entrenamiento.
+Cada lote entrena así una subred distinta, y ninguna neurona puede depender de que otras estén presentes.
+En inferencia se usan todas las neuronas con los pesos escalados según esa probabilidad, lo que aproxima el
+promedio de las predicciones de todas las subredes~\cite{srivastava2014dropout}.
+
+El aumento de datos actúa sobre los datos y no sobre el modelo. Cada vez que una imagen entra en un lote se
+le aplica una transformación aleatoria, de modo que en cada época la red ve una versión distinta de ella.
+Las transformaciones geométricas, como volteos, rotaciones, recortes y desplazamientos, enseñan a la red
+que la posición y la orientación no cambian la clase. Las fotométricas, como los cambios de brillo,
+contraste y color, simulan las diferencias de iluminación entre equipos de adquisición. La condición es
+que la transformación preserve la etiqueta, y eso depende del dominio: una rotación no cambia la clase de
+una foto de un gato, pero sí la de un dígito, donde un 6 rotado pasa a ser un 9. Del mismo modo, cuando el
+color es un rasgo que distingue las clases, una transformación de color fuerte puede borrar la información
+que define la etiqueta~\cite{shorten2019survey}. En dermatoscopía el color es uno de los criterios
+diagnósticos~\cite{kittler2016standardization}, y por eso las transformaciones de color se mantienen
+suaves.
+
+Por último, se conservan los parámetros de la época con mejor desempeño en validación, en lugar de los de
+la última. Esta forma de detención temprana (\emph{early stopping}) equivale a quedarse con el modelo del punto
+en que el error de validación deja de bajar~\cite{goodfellow2016deep}.
 
 \subsection{Familias de redes según la estructura de la entrada}
 \label{sec:marco_familias}
 
-El perceptrón multicapa trata su entrada como un vector sin estructura: cada neurona se conecta con todas
-las entradas y no distingue cuáles son vecinas. Las arquitecturas especializadas incorporan la estructura
-de los datos. Las redes neuronales convolucionales (\gls{cnn}) aprovechan que en una imagen los píxeles
-cercanos están relacionados y aplican los mismos filtros en toda la imagen~\cite{lecun1998gradient}; se
-desarrollan en la Sección~\ref{sec:marco_cnn}. Las redes recurrentes procesan secuencias, como un texto,
+El perceptrón multicapa trata su entrada como un vector sin estructura, en el que cada neurona se conecta
+con todas las entradas y no distingue cuáles son vecinas. Las arquitecturas especializadas incorporan la
+estructura de los datos. Las redes neuronales convolucionales (\gls{cnn}) aprovechan que en una imagen los
+píxeles cercanos están relacionados y aplican los mismos filtros en toda la imagen~\cite{lecun1998gradient};
+se desarrollan en la Sección~\ref{sec:marco_cnn}. Las redes recurrentes procesan secuencias, como un texto,
 un elemento por vez~\cite{elman1990finding}.
+
+Las dos familias, y en general cualquier red con muchas capas, comparten una dificultad de entrenamiento.
+Por la regla de la cadena, el gradiente que llega a una capa temprana es un producto con un factor por
+cada capa que la separa de la pérdida. Si esos factores son en general menores que uno, el producto se
+achica exponencialmente con la profundidad y el gradiente se desvanece: las primeras capas casi no reciben
+señal y dejan de aprender. Si son mayores que uno, el producto crece exponencialmente y el gradiente
+explota, con pasos de actualización tan grandes que el entrenamiento diverge~\cite{goodfellow2016deep}.
+Las funciones de activación que se saturan, como la sigmoide, cuya derivada no supera 0.25, favorecen el
+desvanecimiento~\cite{hochreiter1997long}. En redes profundas el problema se atenúa con inicializaciones
+que conservan la escala de las activaciones y con capas de normalización intermedias, y las conexiones
+residuales de la Sección~\ref{sec:marco_cnn} permiten entrenar redes de más de cien
+capas~\cite{he2015residual}.
 
 Una red recurrente mantiene un estado que resume lo visto hasta el momento y lo actualiza con cada nuevo
 elemento, de modo que cada salida depende de toda la secuencia anterior~\cite{elman1990finding}. Para
-entrenarla, el gradiente se propaga hacia atrás a lo largo de la secuencia, y en secuencias largas tiende
-a desvanecerse, lo que dificulta aprender relaciones entre elementos lejanos. Las redes de memoria a corto
-y largo plazo agregan compuertas que controlan qué se conserva en el estado y atenúan ese
-problema~\cite{hochreiter1997long}. Aun así, el acceso a una posición lejana sigue pasando por todas las
-intermedias, y el cálculo de un paso espera al del anterior, lo que impide paralelizar a lo largo de la
-secuencia~\cite{vaswani2017attention}.
+entrenarla, el gradiente se propaga hacia atrás a lo largo de la secuencia, y el producto anterior tiene
+entonces un factor por cada elemento. En secuencias largas el gradiente se desvanece o explota, lo que
+dificulta aprender relaciones entre elementos lejanos. Las redes de memoria a corto y largo plazo
+(\emph{long short-term memory}) agregan compuertas que controlan qué se conserva en el estado y mantienen
+constante el flujo del gradiente a través de él~\cite{hochreiter1997long}. Aun así, el acceso a una
+posición lejana sigue pasando por todas las intermedias, y el cálculo de un paso espera al del anterior, lo
+que impide paralelizar a lo largo de la secuencia~\cite{vaswani2017attention}.
 
 \section{Transformers y mecanismo de atención}
 \label{sec:marco_atencion}
 
 La atención reemplaza el recorrido paso a paso de las redes recurrentes por una comparación directa, en
 la que cada posición de la salida pondera los valores de todas las posiciones de la entrada según la
-compatibilidad entre una consulta y una clave. Como todas las posiciones se comparan a la vez, el cálculo
-se paraleliza a lo largo de la secuencia. La arquitectura \emph{transformer} se construye sobre
+compatibilidad entre una consulta ($Q$) y una clave ($K$). Los elementos de la secuencia se llaman
+\emph{tokens}: son fragmentos de palabra en un texto o parches en una imagen. Como todas las posiciones se
+comparan a la vez, el cálculo se paraleliza a lo largo de la secuencia y aprovecha mejor el hardware que
+el recorrido secuencial de una red recurrente. La arquitectura \emph{transformer} se construye sobre
 esa operación, y de ella derivan tanto los modelos visuales de la Sección~\ref{sec:marco_vision} como
 los modelos de lenguaje de la Sección~\ref{sec:marco_llm}~\cite{vaswani2017attention}.
 
@@ -195,15 +244,15 @@ decodificador~\cite{vaswani2017attention,dosovitskiy2021image,brown2020language}
 El primer componente del \emph{pipeline} recibe la imagen dermatoscópica y devuelve una probabilidad
 para cada una de las siete categorías. Para esa tarea el trabajo enfrenta dos familias de arquitectura
 de visión. Las redes convolucionales componen
-filtros locales apilados y extraen una jerarquía de características. Los transformers visuales
-tratan la imagen como una secuencia de tokens y la procesan con la atención de la
+filtros locales apilados y extraen una jerarquía de características, mientras que los transformers
+visuales tratan la imagen como una secuencia de tokens y la procesan con la atención de la
 Sección~\ref{sec:marco_atencion}. DenseNet y ConvNeXt pertenecen a la primera familia y \gls{vit} y
 Swin a la segunda, y las cuatro se comparan en el Capítulo~\ref{cp:res_clasif}.
 
 \subsection{Redes convolucionales}
 \label{sec:marco_cnn}
 
-La operación de convolución desliza un filtro de pequeño tamaño sobre la entrada y calcula en cada
+La operación de convolución desliza un filtro de pequeño tamaño (\emph{kernel}) sobre la entrada y calcula en cada
 posición el producto punto entre el filtro y la ventana que cubre. La conectividad local y el uso de
 un mismo filtro en toda la imagen son las dos decisiones de diseño del operador. La primera supone
 que la información relevante se agrupa en regiones pequeñas, y la segunda, que un mismo patrón puede
@@ -212,10 +261,10 @@ activaciones no lineales y reducciones de resolución intermedias~\cite{lecun199
 
 \input{Figures/Capitulos/02-convolucion}
 
-La profundidad compone esos rasgos locales en rasgos de mayor alcance: los bordes producen texturas,
-las texturas producen partes de objetos y las partes producen objetos completos. VGG y ResNet
-fijaron el repertorio de bloques que las arquitecturas posteriores refinan, con convoluciones
-pequeñas apiladas en el primer caso y conexiones residuales en el segundo, y ese repertorio es el
+La profundidad compone esos rasgos locales en rasgos de mayor alcance. Los bordes se combinan en
+texturas, las texturas en partes de objetos y las partes en objetos completos. VGG y ResNet
+fijaron los bloques que las arquitecturas posteriores refinan, con convoluciones
+pequeñas apiladas en el primer caso y conexiones residuales en el segundo, y esas decisiones de diseño son el
 punto de partida de las redes convolucionales
 contemporáneas~\cite{simonyan2015very,he2015residual}.
 
@@ -235,8 +284,11 @@ contemporáneas~\cite{liu2022convnet}.
 \subsection{Vision Transformer y Swin Transformer}
 \label{sec:marco_vit}
 
-El ViT divide la imagen en una rejilla de parches cuadrados, aplana cada parche y lo proyecta
-a un token, y suma a cada token un \emph{embedding} de posición. Sobre esa secuencia aplica un
+El ViT divide la imagen en una rejilla de parches cuadrados, aplana cada parche y lo proyecta a un
+vector de dimensión fija, su \emph{embedding}. En general, un embedding es un vector aprendido que
+representa un elemento, sea un parche, una palabra o una imagen completa, de modo que elementos parecidos
+quedan cerca en ese espacio. A cada parche se le suma además un embedding de posición, que indica en qué
+lugar de la rejilla estaba. Sobre esa secuencia de tokens aplica un
 codificador transformer sin ninguna operación convolucional, y decide la categoría a partir de un
 token de clase que se agrega al inicio de la secuencia~\cite{dosovitskiy2021image,vaswani2017attention}.
 
@@ -261,7 +313,7 @@ ventanas entre dos capas.
 \subsection{Transferencia de aprendizaje y desbalance de clases}
 \label{sec:marco_transferencia}
 
-Entrenar desde cero una de esas arquitecturas exige más imágenes de las que tiene un conjunto
+Entrenar desde cero una de estas arquitecturas exige más imágenes de las que tiene un conjunto
 médico típico. La transferencia de aprendizaje resuelve la escasez aprendiendo primero
 representaciones sobre un corpus grande de imágenes naturales y reutilizándolas después para la
 tarea de destino. La extracción de características congela el \emph{backbone} y solo entrena la
@@ -273,18 +325,19 @@ referencia del reconocimiento visual~\cite{russakovsky2015imagenet}. Con ese pun
 las diferencias que se miden entre ellas en el Capítulo~\ref{cp:res_clasif} se pueden atribuir a la
 arquitectura.
 
-El aumento de datos amplía el corpus de entrenamiento con transformaciones geométricas y
-fotométricas de las imágenes disponibles: rotaciones, recortes, desplazamientos y cambios de color.
-Funciona como regularizador y reduce el sobreajuste, pero, aplicado por igual a todas las clases,
-deja la proporción entre ellas donde estaba~\cite{shorten2019survey}.
-
 La distribución de clases de HAM10000 es muy asimétrica, y un modelo entrenado sin corrección
-favorece a las clases mayoritarias~\cite{tschandl2018ham10000}. El Capítulo~\ref{cp:res_clasif}
-compara tres modificaciones de la función de pérdida, que actúan durante el entrenamiento y dejan
-intacta la métrica de evaluación: ponderar la pérdida por la inversa de la frecuencia de cada clase;
-la pérdida focal, que atenúa el aporte de los ejemplos que el modelo ya clasifica con confianza; y
-el \emph{balanced softmax}, que suma a cada logit el logaritmo de la frecuencia de su clase en el
-entrenamiento~\cite{lin2017focal,ren2020balanced}.
+favorece a las clases mayoritarias~\cite{tschandl2018ham10000}. El aumento de datos de la
+Sección~\ref{sec:marco_regularizacion} no corrige esa asimetría, porque, aplicado por igual a todas las
+clases, deja la proporción entre ellas donde estaba~\cite{shorten2019survey}. El
+Capítulo~\ref{cp:res_clasif} compara en cambio tres modificaciones de la función de pérdida, que actúan
+durante el entrenamiento y dejan intacta la métrica de evaluación:
+\begin{enumerate}
+    \item ponderar la pérdida de cada ejemplo por la inversa de la frecuencia de su clase;
+    \item la pérdida focal, que atenúa el aporte de los ejemplos que el modelo ya clasifica con
+    confianza~\cite{lin2017focal};
+    \item el \emph{balanced softmax}, que suma a cada logit el logaritmo de la frecuencia de su clase en
+    el entrenamiento~\cite{ren2020balanced}.
+\end{enumerate}
 
 Con esto el clasificador queda completo. Recibe la imagen y devuelve siete probabilidades, ninguna de
 las cuales es un texto; el reporte exige un modelo que genere secuencias de palabras, que es el tema de
@@ -293,24 +346,34 @@ la sección siguiente.
 \section{Modelos de lenguaje}
 \label{sec:marco_llm}
 
-Un modelo de lenguaje predice el siguiente token del texto a partir de los anteriores, y de esa
-única tarea salen el pre-entrenamiento sobre corpus grandes, el ajuste a una tarea concreta y la
-generación de textos nuevos. El generador del \emph{pipeline} pertenece a esta familia. Para el
-trabajo interesan cómo se obtiene el modelo, cómo produce el texto y cuánto cuesta ajustarlo.
+Un modelo de lenguaje asigna una probabilidad a cada continuación posible de un texto: dado lo escrito
+hasta el momento, predice el token siguiente. El generador de reportes del \emph{pipeline} es un modelo de
+este tipo, y para el trabajo interesan tres aspectos: cómo se obtiene un modelo grande, pre-entrenándolo
+sobre corpus de texto y ajustándolo para seguir instrucciones; cómo produce un texto nuevo a partir de sus
+probabilidades (Sección~\ref{sec:marco_llm_grandes}); y cómo se adapta un modelo de ese tamaño a una tarea
+concreta con la memoria de una GPU de consumo (Sección~\ref{sec:marco_llm_lora}).
 
 \subsection{Grandes modelos de lenguaje}
 \label{sec:marco_llm_grandes}
 
-Un \gls{llm} se obtiene por pre-entrenamiento auto-supervisado: sobre corpus de miles de
-millones de palabras, el modelo aprende a predecir el siguiente token sin anotación humana. De esa
-fase sale una distribución de probabilidad sobre el vocabulario condicionada a cualquier prefijo, y
-esa distribución es la herramienta que después se reaprovecha para todo lo
+Un \gls{llm} se obtiene por pre-entrenamiento auto-supervisado sobre corpus de miles de millones de
+palabras. La tarea es predecir el token siguiente, y la supervisión sale del propio texto, sin etiquetas
+manuales. El modelo aprende así la probabilidad de una secuencia como el producto de las probabilidades de
+cada token dados los anteriores,
+\begin{equation}
+    p(x_1, \dots, x_T) = \prod_{t=1}^{T} p(x_t \mid x_1, \dots, x_{t-1}),
+    \label{eq:marco_lm}
+\end{equation}
+y de esa fase sale una distribución de probabilidad sobre el vocabulario condicionada a cualquier prefijo.
+Esa distribución es la herramienta que después se reaprovecha para todo lo
 demás~\cite{brown2020language,touvron2023llama}.
 
-Dos familias se distinguen por el modo de usar el transformer. La de solo codificador entrena una
-representación bidireccional del texto y sirve para clasificar y para comparar; la de solo
-decodificador modela la secuencia en una dirección y sirve para generar. El componente de lenguaje
-del trabajo pertenece a la segunda~\cite{devlin2019bert,brown2020language,touvron2023llama}.
+Según qué parte del transformer conserven, se distinguen dos familias. Los modelos de solo codificador,
+como BERT, construyen una representación bidireccional del texto, en la que cada token ve a los
+anteriores y a los posteriores, y sirven para clasificar y para comparar textos. Los de solo decodificador
+ven únicamente los tokens anteriores, modelan la secuencia en una dirección y sirven para generar texto.
+En este trabajo se usan modelos de la segunda familia, por su capacidad de
+generación~\cite{devlin2019bert,brown2020language,touvron2023llama}.
 
 El comportamiento del modelo se ajusta después en dos etapas. El ajuste fino supervisado lo entrena
 sobre pares instrucción--respuesta, y la alineación con \gls{rlhf} lo entrena a preferir las
@@ -318,13 +381,29 @@ respuestas que un evaluador humano marca como mejores. Un modelo solo pre-entren
 texto que recibe, mientras que uno alineado responde a instrucciones, y el generador del trabajo
 recibe su tarea en forma de instrucción~\cite{ouyang2022training}.
 
-La generación recorre la distribución de salida token a token. La búsqueda codiciosa y la búsqueda
-por haz eligen las continuaciones más probables y producen textos planos y repetitivos. El muestreo
-introduce azar en esa elección, y la temperatura, el \emph{top-k} y el muestreo de núcleo deciden
-cuánto. El muestreo de núcleo recorta el vocabulario al subconjunto mínimo que acumula la masa de
-probabilidad fijada, y con eso evita la degeneración textual~\cite{holtzman2020curious}. Como la
-estrategia de decodificación cambia el texto generado y todas las métricas que se calculen sobre
-él, se fija y se documenta como un hiperparámetro más del generador.
+El texto se genera token a token. En cada paso el modelo devuelve una distribución sobre el vocabulario,
+se elige un token, se lo agrega al prefijo y se repite, y la regla con que se elige es la estrategia de
+decodificación. El \emph{greedy decoding} toma siempre el token más probable, y el \emph{beam search}
+mantiene en paralelo las $b$ secuencias parciales más probables y al final se queda con la de mayor
+probabilidad total. Las dos buscan el texto más probable, y en la generación abierta ese texto resulta
+genérico y repetitivo. En las tareas en que la entrada acota mucho la salida, como la traducción, el
+problema es menor y el \emph{beam search} es la opción habitual~\cite{holtzman2020curious}.
+
+Los métodos de \emph{sampling} sortean el token siguiente según la distribución del modelo. La temperatura
+$T$ divide los logits antes de la softmax,
+\begin{equation}
+    p_i = \frac{\exp(z_i / T)}{\sum_{j} \exp(z_j / T)},
+    \label{eq:marco_temperatura}
+\end{equation}
+de modo que con $T<1$ la probabilidad se concentra en los tokens más probables y con $T>1$ se reparte; es
+la misma operación que la Sección~\ref{sec:marco_eval_calib} usa para calibrar un clasificador. El
+\emph{top-k sampling} sortea solo entre los $k$ tokens más probables. El \emph{top-p}, o \emph{nucleus
+sampling}, sortea entre el conjunto más chico de tokens cuya probabilidad acumulada alcanza un umbral $p$,
+de modo que la cantidad de candidatos crece cuando el modelo duda y se achica cuando está seguro. Con eso
+evita tanto la repetición de los métodos que buscan el texto más probable como la incoherencia de
+muestrear de la distribución completa~\cite{holtzman2020curious}. Como la estrategia de decodificación
+cambia el texto generado y todas las métricas que se calculen sobre él, se fija y se documenta como un
+hiperparámetro más del generador.
 
 \subsection{Ajuste eficiente de parámetros: LoRA}
 \label{sec:marco_llm_lora}
@@ -354,8 +433,8 @@ terminar, el incremento de la Ecuación~\ref{eq:marco_lora} se suma a $W$ y el m
 ejecuta igual que el original, sin ramas ni latencia
 adicional~\cite{hu2021lora,yilmaz2025resourceefficient}.
 
-Los modelos generativos que el trabajo ajusta se adaptan con LoRA, y por eso esa parte de la
-comparación se hace entera en hardware de consumo. El rango, los módulos congelados y la función de
+Uno de los objetivos del trabajo es que todo el \emph{pipeline} se entrene y se ejecute en una GPU de
+consumo, y por eso los modelos generativos se adaptan con LoRA. El rango, los módulos congelados y la función de
 pérdida del ajuste van en el Capítulo~\ref{cp:metodos}.
 
 Un modelo de lenguaje, sin embargo, solo recibe texto. Para que redacte el reporte a partir de la imagen
@@ -447,11 +526,15 @@ oración, y con arquitecturas que recuerdan patrones de redacción entre reporte
 parecidos~\cite{jing2018automatic,chen2020generating}. En todos los casos el entrenamiento requiere
 pares de imagen y texto clínico.
 
-En dermatología esos pares son escasos y recientes. SkinCaRe anota imágenes clínicas con una descripción
-y un razonamiento diagnóstico, MM-Skin reúne pares extraídos de libros de texto y Derm1M agrega
-alrededor de un millón de pares de fuentes diversas~\cite{shen2025skincare,zeng2025mmskin,yan2025derm1m}.
-El texto que acompaña a cada imagen combina lo que se ve en la lesión con una impresión diagnóstica, que
-son las dos partes del reporte de las que se ocupa el trabajo.
+En dermatología esos pares son escasos y recientes, y el origen del texto cambia de un conjunto a otro. En
+SkinCaRe, las descripciones de la parte SkinCAP las escribieron dermatólogos, y cada una pasó por la revisión
+de al menos dos especialistas, mientras que los razonamientos diagnósticos de la parte SkinCoT los redactó un LLM
+a partir de la etiqueta y los certificaron dermatólogos. MM-Skin toma sus textos de libros de la
+especialidad, y Derm1M reúne alrededor de un millón de pares de fuentes educativas, foros y videos, cuyo
+texto se depuró con un LLM~\cite{shen2025skincare,zeng2025mmskin,yan2025derm1m}. El texto que acompaña a
+cada imagen combina lo que se ve en la lesión con una impresión diagnóstica, que son las dos partes del
+reporte de las que se ocupa el trabajo. Su origen importa además para la evaluación, porque ese texto es la
+referencia contra la que se comparan las descripciones generadas (Sección~\ref{sec:marco_eval_texto}).
 
 El primer problema característico de estos modelos es la alucinación. El modelo describe hallazgos que
 la imagen no contiene, con la misma fluidez con que describe los que sí están, de modo que el lector no
@@ -475,17 +558,34 @@ Sección~\ref{sec:marco_eval_texto} mide cada condición por separado.
 \subsection{Generación aumentada por recuperación}
 \label{sec:marco_vlm_rag}
 
-La \gls{rag} agrega al generador un paso de búsqueda. Antes de producir la salida, un recuperador
-selecciona documentos de una base externa según su parecido con la entrada, y el generador condiciona el
-texto en ellos además de en la entrada. Lo que el modelo aprendió en su entrenamiento queda separado de la
-evidencia que se le muestra en cada consulta, y la base se puede cambiar sin reentrenar el
-modelo~\cite{lewis2020retrievalaugmented}.
+La \gls{rag} agrega al generador un paso de búsqueda en una base externa. El sistema tiene tres partes: una
+base de documentos, un recuperador que selecciona los más relevantes para cada entrada y un generador que
+produce la salida condicionado en la entrada y en lo recuperado. Lo que el modelo aprendió en su
+entrenamiento, su memoria paramétrica, queda separado de la evidencia que se le muestra en cada consulta,
+y esa base se puede cambiar o ampliar sin reentrenar el modelo~\cite{lewis2020retrievalaugmented}.
 
-La recuperación se resuelve casi siempre por vecindad en un espacio de \emph{embeddings}. Se codifica la
+En la formulación original, un codificador proyecta cada documento $z$ de la base a un \emph{embedding}
+$\mathbf{d}(z)$ una sola vez y lo guarda en un índice. Para cada consulta $x$, otro codificador calcula
+$\mathbf{q}(x)$, y el recuperador asigna a cada documento una probabilidad
+$p_\eta(z \mid x) \propto \exp\!\left(\mathbf{d}(z)^{\top}\mathbf{q}(x)\right)$. Los $K$ documentos con
+mayor producto interno se encuentran con una búsqueda aproximada, cuyo costo crece menos que el tamaño de
+la base. El generador produce la salida $y$ con cada uno de esos documentos y combina los resultados
+pesándolos por la probabilidad del documento,
+\begin{equation}
+    p(y \mid x) \approx \sum_{z \in \text{top-}K} p_\eta(z \mid x)\, p_\theta(y \mid x, z),
+    \label{eq:marco_rag}
+\end{equation}
+de modo que un documento más parecido a la consulta influye más en el texto
+generado~\cite{lewis2020retrievalaugmented}.
+
+El recuperador es, en el fondo, una búsqueda de vecinos en un espacio de \emph{embeddings}: se codifica la
 entrada, se buscan los $k$ elementos de la base cuyos \emph{embeddings} están más cerca y se usa la
-información asociada a ellos. Aplicada a un modelo de lenguaje, la búsqueda de vecinos mejora la
-predicción sin ningún entrenamiento adicional, sobre todo en los patrones poco frecuentes, porque el
-modelo accede en el momento de predecir a casos concretos que no tiene que memorizar~\cite{khandelwal2020generalization}.
+información asociada a ellos. Con \emph{embeddings} normalizados a norma uno, el producto interno coincide
+con la similitud coseno, $\cos(\mathbf{u}, \mathbf{v}) = \mathbf{u}^{\top}\mathbf{v} /
+(\lVert\mathbf{u}\rVert\,\lVert\mathbf{v}\rVert)$, que es la medida que usa el \emph{pipeline}. Aplicada a
+un modelo de lenguaje, la búsqueda de vecinos mejora la predicción sin ningún entrenamiento adicional, sobre
+todo en los patrones poco frecuentes, porque el modelo accede en el momento de predecir a casos concretos
+que no tiene que memorizar~\cite{khandelwal2020generalization}.
 
 En la generación de reportes radiológicos, la recuperación multimodal parte de la imagen. A partir de
 ella se recuperan reportes de casos parecidos de la base de entrenamiento, que se entregan al generador
@@ -496,13 +596,13 @@ completitud y la corrección de lo generado~\cite{sun2025factaware}. Es el antec
 El \emph{pipeline} recupera los vecinos visuales de cada imagen con los \emph{embeddings} de DermLIP de la
 Sección~\ref{sec:marco_vlm_clip}, y el acuerdo entre esos vecinos y el clasificador informa cuánta
 confianza merece el caso; el procedimiento completo se describe en la Sección~\ref{sec:met_pipeline}. Con
-eso quedan presentados todos los componentes del \emph{pipeline}. Falta decidir cómo se juzga lo que
+eso quedan presentados todos los componentes del \emph{pipeline}. Falta decidir cómo se evalúa lo que
 producen.
 
 \section{Evaluación de modelos}
 \label{sec:marco_evaluacion}
 
-Cada componente del \emph{pipeline} entrega una salida distinta, y cada salida se juzga con su propia
+Cada componente del \emph{pipeline} entrega una salida distinta, y cada salida se evalúa con su propia
 familia de métricas. Del clasificador se evalúa la categoría que asigna y también la probabilidad que la
 acompaña, porque el \emph{pipeline} usa esa probabilidad para decidir cómo tratar cada caso. Del
 generador se evalúa el texto. Una diferencia entre dos modelos, además, solo se puede afirmar si supera
@@ -525,7 +625,7 @@ una exactitud cercana a 0.67 sin detectar un solo melanoma. Por eso el trabajo n
 exactitud y usa métricas que dan peso a las clases minoritarias.
 
 Para cada clase $c$, la precisión $P_c$ es la fracción de las predicciones de $c$ que son correctas, la
-sensibilidad $R_c$ es la fracción de las imágenes de $c$ que el modelo encuentra, y el F1 es su media
+sensibilidad $R_c$ es la fracción de las imágenes de $c$ que el modelo acierta, y el \textbf{F1} es su media
 armónica. El promedio de los F1 por clase se puede hacer de dos maneras,
 \begin{equation}
     F1_c = \frac{2\,P_c R_c}{P_c + R_c}, \qquad
@@ -538,12 +638,32 @@ su tamaño y queda dominado por NV; el F1 macro da a las siete clases el mismo p
 clasificada lo baja tanto como una frecuente. La sensibilidad macro promedia del mismo modo los $R_c$ y
 responde a cuántas lesiones de cada tipo encuentra el modelo.
 
-Las métricas anteriores dependen de un umbral de decisión. La curva ROC lo recorre entero y dibuja, para
-cada valor, la tasa de verdaderos positivos contra la de falsos positivos; el \gls{auc} resume la curva en
-un número entre 0.5, el de un clasificador al azar, y 1. Equivale a la probabilidad de que el modelo
-asigne más puntaje a un positivo elegido al azar que a un negativo elegido al azar. En el caso multiclase
-se calcula una curva por clase, esa clase contra el resto, y se promedian las
-áreas~\cite{fawcett2006introduction}.
+Las métricas anteriores dependen de un umbral de decisión. En la tarea binaria, el modelo asigna a cada
+imagen un puntaje $s$, por ejemplo la probabilidad de melanoma, y la declara positiva si $s$ supera un
+umbral $\tau$. Cada umbral produce una tasa de verdaderos positivos y una de falsos positivos,
+\begin{equation}
+    \mathrm{TPR}(\tau) = \frac{\mathrm{TP}}{\mathrm{TP} + \mathrm{FN}}, \qquad
+    \mathrm{FPR}(\tau) = \frac{\mathrm{FP}}{\mathrm{FP} + \mathrm{TN}},
+    \label{eq:marco_tpr_fpr}
+\end{equation}
+donde TP, FN, FP y TN cuentan los verdaderos positivos, falsos negativos, falsos positivos y verdaderos
+negativos. La TPR es la sensibilidad, y la FPR es uno menos la especificidad. La curva ROC recorre todos
+los umbrales y dibuja la TPR contra la FPR, y el \textbf{\gls{auc}} es el área bajo esa curva. Vale 0.5 para un
+clasificador al azar, cuya curva es la diagonal, y 1 para uno que separa perfectamente las dos clases. El
+área tiene además una lectura directa: es la probabilidad de que el modelo asigne más puntaje a un
+positivo elegido al azar que a un negativo elegido al azar,
+\begin{equation}
+    \mathrm{AUC} = P\!\left(s(x^{+}) > s(x^{-})\right),
+    \label{eq:marco_auc}
+\end{equation}
+y por eso no depende de ningún umbral en particular. En la práctica se calcula sobre los puntos de la
+curva con la regla del trapecio~\cite{fawcett2006introduction}.
+
+En el caso multiclase se construye una curva por clase, que trata esa clase como positiva y al resto como
+negativa, y se combinan las $C$ áreas. Una opción las pondera por la prevalencia de cada
+clase~\cite{fawcett2006introduction}; el trabajo usa el promedio simple,
+$\mathrm{AUC}_{\text{macro}} = \frac{1}{C}\sum_{c} \mathrm{AUC}_c$, por la misma razón por la que prefiere
+el F1 macro al ponderado.
 
 \subsection{Calibración de probabilidades}
 \label{sec:marco_eval_calib}
@@ -557,9 +677,9 @@ redes más chicas y antiguas aun cuando clasifican mejor~\cite{guo2017calibratio
 
 El diagrama de confiabilidad hace visible la diferencia (Figura~\ref{fig:marco_confiabilidad}). Las
 predicciones se agrupan en $M$ intervalos según su confianza, y para cada intervalo $B_m$ se compara la
-exactitud $\mathrm{acc}(B_m)$ con la confianza media $\mathrm{conf}(B_m)$. El \gls{ece} promedia esa
-brecha pesando cada intervalo por su cantidad de predicciones, y el error de calibración máximo (MCE)
-toma la peor,
+exactitud $\mathrm{acc}(B_m)$ con la confianza media $\mathrm{conf}(B_m)$. El \textbf{\gls{ece}} promedia
+esa brecha pesando cada intervalo por su cantidad de predicciones, y el \textbf{error de calibración
+máximo} (MCE) toma la peor,
 \begin{equation}
     \mathrm{ECE} = \sum_{m=1}^{M} \frac{|B_m|}{n}\,\bigl|\mathrm{acc}(B_m) - \mathrm{conf}(B_m)\bigr|,
     \qquad
@@ -571,16 +691,21 @@ intervalo concreto tiene consecuencias graves~\cite{guo2017calibration}.
 
 \input{Figures/Capitulos/02-confiabilidad}
 
-El puntaje de Brier mide la calibración sin agrupar en intervalos. Es el error cuadrático medio entre el
-vector de probabilidades y la codificación de la clase real, con un 1 en la clase correcta y 0 en las
-demás. Se propuso para evaluar pronósticos meteorológicos expresados como
-probabilidades~\cite{brier1950verification}. Como es un error cuadrático, baja tanto cuando las
-probabilidades se acercan a las frecuencias reales como cuando el modelo concentra más probabilidad en la
-clase correcta, y por eso no mide solo la calibración.
+El \textbf{puntaje de Brier} mide la calibración sin agrupar en intervalos. Es el error cuadrático medio
+entre el vector de probabilidades y la codificación de la clase real,
+\begin{equation}
+    \mathrm{BS} = \frac{1}{n}\sum_{i=1}^{n}\sum_{c=1}^{C} \left(p_{ic} - y_{ic}\right)^2,
+    \label{eq:marco_brier}
+\end{equation}
+donde $p_{ic}$ es la probabilidad que el modelo asigna a la clase $c$ en la imagen $i$, e $y_{ic}$ vale 1
+si $c$ es la clase real de esa imagen y 0 si no. Se propuso para evaluar pronósticos meteorológicos
+expresados como probabilidades~\cite{brier1950verification}. Como es un error cuadrático, baja tanto
+cuando las probabilidades se acercan a las frecuencias reales como cuando el modelo concentra más
+probabilidad en la clase correcta, y por eso no mide solo la calibración.
 
 La calibración se puede corregir después del entrenamiento con un conjunto de validación. El
-\emph{temperature scaling} divide todos los logits por un único escalar $T>0$ antes de la softmax y ajusta
-$T$ para minimizar la entropía cruzada en validación; con $T>1$ las probabilidades se suavizan. Como
+\emph{temperature scaling} divide todos los logits por un único escalar $T>0$ antes de la softmax, como en
+la Ecuación~\ref{eq:marco_temperatura}, y ajusta $T$ para minimizar la entropía cruzada en validación; con $T>1$ las probabilidades se suavizan. Como
 divide todos los logits por el mismo número, no cambia su orden, y la clase predicha y la exactitud
 quedan iguales. El \emph{vector scaling} aprende en cambio un factor y un sesgo para cada clase; tiene más
 capacidad de corrección, pero puede cambiar la clase predicha en algunas imágenes y con ello la
@@ -590,24 +715,80 @@ sobreestimada llevaría a tratar como seguros casos que no lo son.
 \subsection{Métricas de generación de texto}
 \label{sec:marco_eval_texto}
 
-Las métricas con referencia comparan el texto generado con un texto escrito por una persona para la misma
-imagen. Las más usadas cuentan coincidencias de $n$-gramas, secuencias de $n$ palabras consecutivas. BLEU
-calcula la precisión de los $n$-gramas del texto generado, hasta $n=4$, y aplica una penalización cuando
-el texto es más corto que la referencia~\cite{papineni2002bleu}. ROUGE-L mide la subsecuencia común más
-larga entre los dos textos, que admite palabras intercaladas~\cite{lin2004rouge}. METEOR alinea palabras
-que coinciden exactamente, que comparten la raíz o que son sinónimos, y penaliza que las coincidencias
-estén fragmentadas~\cite{banerjee2005meteor}. CIDEr pondera cada $n$-grama según lo informativo que es
-para la imagen, con un esquema TF-IDF que resta peso a las expresiones que aparecen en las descripciones de
-todas las imágenes~\cite{vedantam2015cider}.
+Las métricas con referencia comparan el texto generado $g$ con un texto de referencia $r$ escrito para la
+misma imagen, y las más usadas cuentan coincidencias de $n$-gramas, secuencias de $n$ palabras
+consecutivas. \textbf{BLEU} calcula, para cada $n$ entre 1 y 4, la precisión $p_n$ de los $n$-gramas de $g$:
+la fracción que también aparece en $r$, sin contar un $n$-grama más veces de las que figura en la
+referencia. Combina las cuatro precisiones con una media geométrica y multiplica el resultado por una
+penalización de brevedad, porque un texto muy corto puede tener precisión alta sin cubrir la referencia,
+\begin{equation}
+    \mathrm{BLEU} = \mathrm{BP}\cdot\exp\!\left(\sum_{n=1}^{4} \tfrac{1}{4}\log p_n\right), \qquad
+    \mathrm{BP} =
+    \begin{cases}
+        1 & \text{si } \ell_g > \ell_r,\\
+        e^{\,1 - \ell_r/\ell_g} & \text{si } \ell_g \le \ell_r,
+    \end{cases}
+    \label{eq:marco_bleu}
+\end{equation}
+donde $\ell_g$ y $\ell_r$ son las longitudes en palabras de los dos textos~\cite{papineni2002bleu}.
 
-Las cuatro premian la coincidencia literal, y una paráfrasis correcta puntúa bajo. BERTScore compara en
-cambio los \emph{embeddings} contextuales de cada token del texto generado con los de la referencia,
-empareja cada token con el más parecido del otro texto y promedia esas similitudes, con lo que tolera
-sinónimos y reformulaciones~\cite{zhang2020bertscore}. Mide mejor el parecido de significado, pero sigue
-midiendo parecido con un texto particular.
+\textbf{ROUGE-L} se basa en la subsecuencia común más larga, $\mathrm{LCS}(g, r)$: la secuencia más larga
+de palabras que aparece en los dos textos en el mismo orden, aunque con otras palabras intercaladas. Con
+ella define una sensibilidad y una precisión y las combina en una medida F,
+\begin{equation}
+    R_{\mathrm{lcs}} = \frac{\mathrm{LCS}(g, r)}{\ell_r}, \qquad
+    P_{\mathrm{lcs}} = \frac{\mathrm{LCS}(g, r)}{\ell_g}, \qquad
+    \text{ROUGE-L} = \frac{(1+\beta^2)\,R_{\mathrm{lcs}}\,P_{\mathrm{lcs}}}{R_{\mathrm{lcs}} + \beta^2 P_{\mathrm{lcs}}},
+    \label{eq:marco_rouge}
+\end{equation}
+donde $\beta$ fija cuánto pesa la sensibilidad frente a la precisión; con $\beta = 1$, la versión habitual,
+queda la media armónica de las dos~\cite{lin2004rouge}.
+
+\textbf{METEOR} alinea las palabras de los dos textos: primero las idénticas, después las que comparten la
+raíz y por último los sinónimos. Sobre las $m$ palabras alineadas calcula la precisión $P$ y la
+sensibilidad $R$ y las combina dando más peso a la segunda. Después agrupa las palabras alineadas en la
+menor cantidad posible de tramos contiguos, $ch$, y penaliza que las coincidencias estén fragmentadas,
+\begin{equation}
+    F_{\text{mean}} = \frac{10\,P R}{R + 9P}, \qquad
+    \mathrm{Pen} = 0.5\left(\frac{ch}{m}\right)^{3}, \qquad
+    \mathrm{METEOR} = F_{\text{mean}}\,(1 - \mathrm{Pen}).
+    \label{eq:marco_meteor}
+\end{equation}
+Si todas las coincidencias forman un único tramo, la penalización es casi nula; si ninguna palabra
+alineada es contigua a otra, reduce el puntaje hasta la mitad~\cite{banerjee2005meteor}.
+
+\textbf{CIDEr} se diseñó para describir imágenes con varias referencias por imagen. Representa cada texto
+con un vector $\mathbf{t}^n(\cdot)$ con un peso TF-IDF por $n$-grama, que crece con la frecuencia del
+$n$-grama en ese texto y decrece con la cantidad de imágenes en cuyas descripciones aparece. Así, las
+expresiones que se repiten en las descripciones de todas las imágenes pesan poco, y las específicas de una
+imagen pesan mucho. Para cada $n$ promedia la similitud coseno con las $J$ referencias, y después promedia
+sobre $n$~\cite{vedantam2015cider},
+\begin{equation}
+    \mathrm{CIDEr}_n = \frac{1}{J}\sum_{j=1}^{J}
+    \frac{\mathbf{t}^n(g)^{\top}\mathbf{t}^n(r_j)}{\lVert\mathbf{t}^n(g)\rVert\,\lVert\mathbf{t}^n(r_j)\rVert},
+    \qquad
+    \mathrm{CIDEr} = \sum_{n=1}^{4} \tfrac{1}{4}\,\mathrm{CIDEr}_n
+    \label{eq:marco_cider}
+\end{equation}
+donde $r_1, \dots, r_J$ son las referencias de la imagen.
+
+Las cuatro premian la coincidencia literal, y una paráfrasis correcta puntúa bajo. \textbf{BERTScore}
+compara en cambio los \emph{embeddings} contextuales de cada token, obtenidos con un modelo como BERT. Cada
+token de un texto se empareja con el token más parecido del otro, con la similitud coseno como medida, y
+las similitudes se promedian,
+\begin{equation}
+    R_{\mathrm{BERT}} = \frac{1}{|r|}\sum_{r_i \in r}\,\max_{g_j \in g}\, \mathbf{r}_i^{\top}\mathbf{g}_j,
+    \qquad
+    P_{\mathrm{BERT}} = \frac{1}{|g|}\sum_{g_j \in g}\,\max_{r_i \in r}\, \mathbf{r}_i^{\top}\mathbf{g}_j,
+    \label{eq:marco_bertscore}
+\end{equation}
+donde los \emph{embeddings} $\mathbf{r}_i$ y $\mathbf{g}_j$ están normalizados, y el puntaje final
+$F_{\mathrm{BERT}}$ es la media armónica de los dos, como el F1 de la Ecuación~\ref{eq:marco_f1}. Como dos sinónimos tienen
+\emph{embeddings} cercanos, la métrica tolera reformulaciones~\cite{zhang2020bertscore}. Mide mejor el
+parecido de significado, pero sigue midiendo parecido con un texto particular.
 
 Las métricas con referencia suponen que el texto de referencia es la descripción correcta de la imagen,
-y en dermatología ese supuesto es débil. Cuando varios dermatólogos marcan por separado los mismos
+y en dermatología ese supuesto no está garantizado. Cuando varios dermatólogos marcan por separado los mismos
 criterios dermatoscópicos sobre las mismas imágenes, la concordancia va de pobre a
 moderada~\cite{carrera2016validity}. El texto de referencia de un par imagen--texto recoge entonces una
 lectura de la lesión entre varias posibles, y una descripción generada puede apartarse de él sin estar
@@ -622,18 +803,18 @@ entre la imagen y la etiqueta pasa por entidades con
 nombre~\cite{kittler2016standardization,argenziano1998checklist}. Con un inventario finito de
 entidades se puede contar cuántas de ellas menciona un texto generado sin compararlo con otro texto.
 
-El trabajo usa dos métricas de este tipo. La cobertura de entidades clínicas cuenta qué fracción de las
+El trabajo usa dos métricas de este tipo. La 	extbf{cobertura de entidades clínicas} cuenta qué proporción de las
 categorías del vocabulario dermatoscópico, como color, patrón o estructura, menciona el reporte generado,
-y mide cuánto contenido clínico describe. La consistencia diagnóstica verifica si el reporte nombra la
+y mide cuánto contenido clínico describe. La 	extbf{consistencia diagnóstica} verifica si el reporte nombra la
 categoría real de la imagen, o un sinónimo reconocido, y mide la fidelidad diagnóstica de la
-Sección~\ref{sec:marco_vlm_generacion}. Ninguna de las dos necesita un texto de referencia; la segunda usa
+Sección~\ref{sec:marco_vlm_generacion}. Ninguna de las dos necesita un texto de referencia. La segunda usa
 solo la etiqueta de la imagen. La lista de términos y las reglas de coincidencia se detallan en la
 Sección~\ref{sec:met_protocolo}.
 
 Cada familia ve una parte del reporte. Las métricas con referencia premian que el texto se parezca a una
 descripción particular, y las sin referencia, que contenga vocabulario clínico y el diagnóstico correcto.
-Ninguna comprueba que lo descrito esté en la imagen: un reporte que menciona muchos términos puede
-mencionar hallazgos que la lesión no tiene. Por eso la alucinación de la
+Ninguna comprueba que lo descrito esté en la imagen, de modo que un reporte que menciona muchos términos
+puede incluir hallazgos que la lesión no tiene. Por eso la alucinación de la
 Sección~\ref{sec:marco_vlm_generacion} requiere, además de estas métricas, revisar el reporte contra la
 imagen.
 
@@ -645,7 +826,7 @@ valores algo distintos para todas las métricas. Cuando dos modelos difieren en 
 macro, esa diferencia puede deberse a qué imágenes cayeron en el test y no a los modelos. Para afirmar que
 un modelo es mejor que otro hace falta estimar cuánto variaría la diferencia de una muestra a otra.
 
-El \emph{bootstrap} estima esa variación con los datos disponibles. Se construyen muchas muestras del
+El \textbf{\emph{bootstrap}} estima esa variación con los datos disponibles. Se construyen muchas muestras del
 mismo tamaño que el test tomando imágenes al azar con reposición, se calcula la métrica en cada una, y la
 dispersión de los valores obtenidos aproxima la que tendría la métrica entre muestras
 independientes~\cite{efron1979bootstrap}. En la versión pareada, cada remuestreo toma las mismas imágenes
@@ -653,30 +834,58 @@ para los dos modelos y registra la diferencia entre ellos. Los percentiles de es
 intervalo, y si no contiene el cero, la diferencia no se explica por la composición del test. Sirve para
 cualquier métrica agregada, como el F1 macro o el AUC.
 
-La prueba de McNemar compara los aciertos de dos clasificadores sobre las mismas imágenes. Las imágenes
-en las que los dos aciertan o los dos fallan no dicen nada sobre cuál es mejor, y la prueba solo usa los
-casos discordantes: $b$, los que el primero acierta y el segundo falla, y $c$, los del caso inverso. Si
-los dos modelos fueran equivalentes, $b$ y $c$ deberían ser parecidos, y el estadístico
-$\chi^2 = (b-c)^2/(b+c)$ mide cuánto se apartan~\cite{mcnemar1947note}.
+La \textbf{prueba de McNemar} compara los aciertos de dos clasificadores sobre las mismas imágenes. Las
+imágenes en las que los dos aciertan o los dos fallan no dicen nada sobre cuál es mejor, y la prueba solo
+usa los casos discordantes: $b$, los que el primero acierta y el segundo falla, y $c$, los del caso
+inverso. Si los dos modelos fueran equivalentes, $b$ y $c$ deberían ser parecidos, y el estadístico
+\begin{equation}
+    \chi^2 = \frac{(b-c)^2}{b+c}
+    \label{eq:marco_mcnemar}
+\end{equation}
+mide cuánto se separan; bajo la hipótesis de equivalencia sigue aproximadamente una distribución $\chi^2$
+con un grado de libertad~\cite{mcnemar1947note}. La aproximación exige una cantidad razonable de casos
+discordantes. Cuando son pocos se usa la versión exacta: si los modelos son equivalentes, cada caso
+discordante tiene la misma probabilidad de caer en $b$ que en $c$, de modo que $b$ sigue una distribución
+binomial con $b+c$ ensayos y probabilidad $1/2$, y el valor $p$ se calcula directamente de ella. El
+trabajo usa la versión exacta.
 
-La prueba de Wilcoxon de rangos con signo compara dos series de valores pareados sin suponer que las
-diferencias sigan una distribución normal. Ordena las diferencias por su valor absoluto, suma los rangos
-de las positivas y de las negativas por separado, y evalúa si una de las dos sumas es mayor de lo que el
-azar explicaría~\cite{wilcoxon1945individual}. Para comparar dos clasificadores sobre varios conjuntos de
-datos es la prueba recomendada, porque no supone normalidad y los valores atípicos pesan
-menos~\cite{demsar2006statistical}. El trabajo la aplica con las siete clases en el lugar de los
-conjuntos, emparejando la sensibilidad de cada clase en los dos modelos.
+La \textbf{prueba de Wilcoxon} de rangos con signo compara dos series de $N$ valores pareados sin suponer
+que las diferencias sigan una distribución normal. Calcula las diferencias $d_i$ entre los dos modelos,
+las ordena por su valor absoluto y asigna a cada una su rango, de 1 para la menor a $N$ para la mayor. Suma
+por separado los rangos de las diferencias positivas y de las negativas, y toma la menor de las dos
+sumas,
+\begin{equation}
+    R^{+} = \sum_{d_i > 0} \mathrm{rango}(d_i), \qquad
+    R^{-} = \sum_{d_i < 0} \mathrm{rango}(d_i), \qquad
+    T = \min\left(R^{+}, R^{-}\right).
+    \label{eq:marco_wilcoxon}
+\end{equation}
+Si los modelos fueran equivalentes, las dos sumas serían parecidas, y un $T$ pequeño indica que las
+diferencias favorecen de forma consistente a uno de ellos. Para $N$ de hasta 25, $T$ se compara con
+valores críticos tabulados~\cite{wilcoxon1945individual,demsar2006statistical}. Para comparar dos
+clasificadores sobre varios conjuntos de datos es una prueba robusta, porque no supone normalidad y los
+valores atípicos pesan menos~\cite{demsar2006statistical}. El trabajo la aplica con las siete clases en el
+lugar de los conjuntos, emparejando la sensibilidad de cada clase en los dos modelos.
 
 \subsection{Interpretabilidad visual}
 \label{sec:marco_eval_gradcam}
 
-Las métricas anteriores dicen cuánto acierta un clasificador pero no en qué se basa. Grad-CAM produce un
-mapa de calor de las regiones de la imagen que más influyeron en la predicción de una clase. Calcula el
-gradiente del puntaje de esa clase respecto de los mapas de características de la última capa
-convolucional, promedia cada gradiente sobre la imagen para obtener un peso por mapa, y suma los mapas con
-esos pesos, conservando solo los valores positivos~\cite{selvaraju2017gradcam}. En el Swin, cuya última
-etapa también devuelve un mapa con disposición espacial (Sección~\ref{sec:marco_vit}), el cálculo es el
-mismo.
+Las métricas anteriores dicen cuánto acierta un clasificador pero no en qué se basa. \textbf{Grad-CAM}
+(\emph{gradient-weighted class activation mapping}) produce un mapa de calor de las regiones de la imagen
+que más influyeron en la predicción de una clase. Parte de los mapas de características $A^k$ de la última
+capa convolucional, cada uno con una disposición espacial de $i \times j$ posiciones, y del puntaje $y^c$
+de la clase $c$ antes de la softmax. Primero mide cuánto importa cada mapa para esa clase, promediando
+sobre todas las posiciones el gradiente del puntaje respecto del mapa. Después suma los mapas pesados por
+esa importancia y conserva solo los valores positivos,
+\begin{equation}
+    \alpha_k^c = \frac{1}{Z}\sum_{i}\sum_{j} \frac{\partial y^c}{\partial A^k_{ij}}, \qquad
+    L^c_{\text{Grad-CAM}} = \mathrm{ReLU}\!\left(\sum_k \alpha_k^c A^k\right),
+    \label{eq:marco_gradcam}
+\end{equation}
+donde $Z$ es la cantidad de posiciones del mapa. La ReLU descarta las regiones que bajan el puntaje de la
+clase, que suelen corresponder a otras clases~\cite{selvaraju2017gradcam}. El mapa resultante se
+reescala al tamaño de la imagen y se superpone a ella. En el Swin, cuya última etapa también devuelve un
+mapa con disposición espacial (Sección~\ref{sec:marco_vit}), el cálculo es el mismo.
 
 El mapa tiene la resolución de la última capa, mucho menor que la de la imagen, y por eso marca regiones
 gruesas y no estructuras finas~\cite{selvaraju2017gradcam}. Tampoco basta con que el mapa se vea
@@ -722,7 +931,7 @@ El tono de piel es un caso de cambio de subpoblación. En Fitzpatrick17k, un con
 clínicas anotadas con el fototipo de Fitzpatrick, las pieles claras están mucho más representadas que
 las oscuras, y un modelo clasifica mejor los fototipos parecidos a los que vio en el
 entrenamiento~\cite{groh2021neural}. DDI, un conjunto con confirmación histopatológica y fototipos
-diversos, mostró que algoritmos dermatológicos del estado del arte rinden bastante peor que en sus
+diversos, mostró que modelos dermatológicos del estado del arte rinden bastante peor que en sus
 conjuntos de origen, sobre todo en pieles oscuras y en enfermedades poco comunes. Los dermatólogos que
 suelen etiquetar estos conjuntos también aciertan menos en esas imágenes, y el ajuste fino con imágenes de
 DDI cierra la brecha entre tonos claros y oscuros~\cite{daneshjou2022disparities}.
@@ -737,10 +946,10 @@ La población de destino tampoco es la de los conjuntos de entrenamiento. Una re
 estudios sobre detección de cáncer de piel con aprendizaje automático encontró que muchos usaron
 conjuntos de Europa y Estados Unidos con fototipos mayormente claros, y que solo dos usaron datos de
 poblaciones no derivadas, con la baja prevalencia propia de la atención primaria; por eso los autores no
-recomiendan todavía adoptar estos algoritmos en ese ámbito~\cite{jones2022intelligence}. El conjunto del
-Hospital Italiano de Buenos Aires (HIBA), el primero público de imágenes dermatoscópicas y clínicas
-recolectado en Argentina, se creó para evaluar herramientas de este tipo en la población
-local~\cite{riccilara2023dataset}. El trabajo lo usa solo como test, sin entrenar sobre él, para medir
+recomiendan todavía adoptar estos modelos en ese ámbito~\cite{jones2022intelligence}. El conjunto del
+Hospital Italiano de Buenos Aires (HIBA), que sus autores presentan como el primer conjunto público de
+imágenes dermatoscópicas y clínicas recolectado en Argentina, se creó para evaluar herramientas de este
+tipo en la población local~\cite{riccilara2023dataset}. El trabajo lo usa solo como test, sin entrenar sobre él, para medir
 cuánto de lo aprendido en HAM10000 se sostiene en otra población, y mide además la robustez frente a
 perturbaciones de adquisición; los dos análisis se describen en la Sección~\ref{sec:met_protocolo}.
 
@@ -750,19 +959,20 @@ perturbaciones de adquisición; los dos análisis se describen en la Sección~\r
 Con los conceptos de las secciones anteriores ya presentados, esta sección revisa los trabajos más
 cercanos a la tesina en tres líneas que siguen el orden del \emph{pipeline}: el diagnóstico automático de
 lesiones, los modelos visión--lenguaje entrenados para dermatología y la generación de reportes
-dermatológicos. Cada línea cierra con lo que el trabajo toma de ella o con aquello en que se aparta. Los
-trabajos anteriores a 2020 aparecen como hitos, con su fecha, y no como estado del arte, porque sus
-arquitecturas son previas a los transformers.
+dermatológicos. Cada línea cierra con lo que el trabajo toma de ella o con aquello en que se aparta. Para
+acotar la búsqueda, la revisión se limita a trabajos publicados desde 2020, y los anteriores aparecen
+solo como hitos, con su fecha.
 
 \subsection{Diagnóstico automático de lesiones de piel}
 \label{sec:estado_arte_diagnostico}
 
-La línea tiene dos hitos anteriores a los transformers. En 2017 una CNN entrenada sobre un conjunto
+La línea tiene dos hitos anteriores a 2020. En 2017 una CNN entrenada sobre un conjunto
 grande de imágenes clínicas y dermatoscópicas alcanzó un desempeño comparable al de dermatólogos
 certificados en la distinción entre lesiones benignas y malignas~\cite{esteva2017dermatologistlevel}. En
-2019, un estudio abierto sobre imágenes de HAM10000 comparó 511 lectores humanos con 139 algoritmos, y
-los mejores algoritmos superaron en promedio a los lectores, incluidos los
-expertos~\cite{tschandl2019comparison}. Los dos resultados fijaron la clasificación de lesiones como una
+2019, un estudio abierto sobre imágenes de HAM10000 comparó el diagnóstico de 511 participantes humanos,
+la mayoría dermatólogos, con el de 139 clasificadores automáticos presentados al desafío ISIC 2018. En
+promedio, los clasificadores acertaron más que los participantes, y los tres mejores superaron también
+a los expertos con más de diez años de experiencia~\cite{tschandl2019comparison}. Los dos resultados fijaron la clasificación de lesiones como una
 tarea en la que el aprendizaje profundo compite con el especialista.
 
 Esa tarea se apoya en conjuntos públicos que difieren en modalidad, tamaño, etiquetas y población
@@ -779,21 +989,30 @@ describen en la Sección~\ref{sec:met_datasets}.
     informa cada trabajo.}
     \label{tab:marco_conjuntos}
     \small
-    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{2.6cm}
-        >{\raggedright\arraybackslash}p{2.2cm} >{\raggedright\arraybackslash}p{2cm}
-        >{\raggedright\arraybackslash}X c@{}}
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{3cm}
+        >{\raggedright\arraybackslash\hspace{0pt}}p{2.6cm} >{\raggedright\arraybackslash\hspace{0pt}}p{2cm}
+        >{\raggedright\arraybackslash\hspace{0pt}}X c@{}}
         \toprule
         Conjunto & Modalidad & Tamaño & Etiquetas y población & Texto \\
         \midrule
         HAM10000~\cite{tschandl2018ham10000} & dermatoscópica & 10\,015 imágenes & 7 categorías; Austria y Australia & no \\
+        \filasep
         ISIC 2018~\cite{codella2019skin} & dermatoscópica & más de 12\,500 & segmentación, atributos y 7 categorías & no \\
+        \filasep
         Fitzpatrick17k~\cite{groh2021neural} & clínica & 16\,577 & 114 enfermedades y fototipo; atlas en línea & no \\
+        \filasep
         DDI~\cite{daneshjou2022disparities} & clínica & 656 & confirmación histopatológica; fototipos diversos & no \\
+        \filasep
         SkinCon~\cite{daneshjou2022skincon} & clínica & 3\,230 + 656 & 48 conceptos clínicos sobre Fitzpatrick17k y DDI & no \\
+        \filasep
         SCIN~\cite{ward2024empirical} & fotografía propia & 10\,408 & enfermedades sobre todo inflamatorias; Estados Unidos & no \\
+        \filasep
         HIBA~\cite{riccilara2023dataset} & dermatoscópica y clínica & 1\,616 & 1\,246 lesiones de 623 pacientes; Argentina & no \\
+        \filasep
         SkinCaRe~\cite{shen2025skincare} & clínica & 4\,000 + 3\,041 & descripciones y razonamiento diagnóstico; Fitzpatrick17k y DDI & sí \\
+        \filasep
         MM-Skin~\cite{zeng2025mmskin} & clínica, dermatoscópica y patológica & casi 10\,000 pares & 15 libros de texto de dermatología & sí \\
+        \filasep
         Derm1M~\cite{yan2025derm1m} & varias & 1\,029\,761 pares & más de 390 enfermedades en una ontología; recursos educativos & sí \\
         \bottomrule
     \end{tabularx}
@@ -884,18 +1103,25 @@ enfermedad~\cite{cao2024mpoxvlm}.
     con referencia» agrupa BLEU, ROUGE y BERTScore; «---», que el trabajo no lo informa o no entrena.}
     \label{tab:marco_generadores}
     \small
-    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{2.8cm}
-        >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X l@{}}
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{3.2cm}
+        >{\raggedright\arraybackslash\hspace{0pt}}X >{\raggedright\arraybackslash\hspace{0pt}}X l@{}}
         \toprule
         Trabajo & Modelo que redacta & Evaluación del texto & Hardware \\
         \midrule
         SkinGPT-4~\cite{zhou2024pretrained} & MiniGPT-4 con Llama-2-13B & dermatólogos sobre 150 casos reales & 8 A100 \\
+        \filasep
         SkinVL~\cite{zeng2025mmskin} & LLaVA-Med con LoRA & métricas con referencia & 8 RTX 3090 \\
+        \filasep
         DermatoLlama~\cite{yilmaz2025resourceefficient} & Llama 3.2 11B con LoRA & métricas con referencia & 4 RTX 4090 \\
+        \filasep
         Skin-R1~\cite{liu2025skinr1} & Qwen2.5-VL-7B & exactitud del diagnóstico & 2 A100 \\
+        \filasep
         Khan et al.~\cite{khan2025ensemble} & Llama-3 70B por API & --- & --- \\
+        \filasep
         SkinSavvy2~\cite{kim2025skinsavvy2} & GPT-4 & estudio con usuarios & 4 RTX A6000 \\
+        \filasep
         Chakrabarti et al.~\cite{chakrabarti2025skin} & LLaVA-1.5-13B destilado de GPT-4V & métricas con referencia, corrección diagnóstica y revisión clínica & --- \\
+        \filasep
         MpoxVLM~\cite{cao2024mpoxvlm} & Llama-2-7B con LoRA & exactitud del diagnóstico & 2 RTX 4090 \\
         \bottomrule
     \end{tabularx}

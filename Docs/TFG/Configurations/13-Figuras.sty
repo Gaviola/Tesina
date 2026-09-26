@@ -8,6 +8,10 @@
 
 \usetikzlibrary{arrows.meta, positioning, fit, calc, backgrounds}
 
+% Especificador [H] para las figuras que tienen que quedar exactamente donde se las trae con \input. Un
+% flotante que salta al principio de la página siguiente corta el párrafo que viene a continuación.
+\RequirePackage{float}
+
 % Paleta de Okabe e Ito, distinguible con las formas habituales de daltonismo. Cada rol del diagrama
 % tiene un color, y además una forma de trazo propia (lleno, grueso, discontinuo): el diagrama sigue
 % siendo legible impreso en blanco y negro, porque los rellenos son claros y difieren en luminancia.

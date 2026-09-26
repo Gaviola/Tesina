@@ -672,4 +672,23 @@ resultados; acá solo alimentan la comparación cualitativa.
       «la mayoría»; variabilidad metodológica, no métricas).
     - Pregunta abierta: `babel` imprime «Cuadro 2.1» y la guía pide «Tabla~\ref{}» en el texto.
       Se unifica con `\renewcommand{\spanishtablename}{Tabla}` (o la opción `es-tabla` de babel) en
-      la configuración compartida; lo decide el autor.
+      la configuración compartida; lo decide el autor. (Resuelta: `10-Macros.sty` redefine `\tablename`.)
+17. **Revisión del autor sobre el capítulo completo (26/09/2026).** Amplía el alcance de la ficha a pedido
+    del autor:
+    - Cada métrica y método que el trabajo usa se presenta con su fórmula: Adam, decaimiento de pesos,
+      probabilidad de un modelo de lenguaje, temperatura de decodificación, RAG (formulación de Lewis),
+      TPR/FPR y AUC, Brier, BLEU, ROUGE-L, METEOR, CIDEr, BERTScore, McNemar, Wilcoxon y Grad-CAM. Las
+      fórmulas se verificaron contra los PDF originales.
+    - Se agregan el desvanecimiento y la explosión del gradiente (§2.1.5), el aumento de datos se mueve a
+      la regularización (§2.1.4) y se detalla, y se definen *token* y *embedding* en su primera aparición.
+    - La decodificación usa los términos en inglés (*greedy decoding*, *beam search*, *top-p*), y aclara
+      que el *beam search* sigue siendo la opción habitual en generación dirigida (Holtzman).
+    - El origen del texto de SkinCaRe, MM-Skin y Derm1M entra en §2.5.3 porque condiciona la validez de la
+      referencia: SkinCAP lo escribieron dermatólogos; SkinCoT lo redactó un LLM y lo certificaron
+      dermatólogos.
+    - El código aplica McNemar exacto (binomial sobre los discordantes), no la aproximación $\chi^2$; el
+      texto presenta las dos y dice que el trabajo usa la exacta.
+    - El corte de 2020 del estado del arte se presenta como criterio para acotar la búsqueda, no como
+      frontera de arquitectura. HIBA: «primer conjunto público» se atribuye a sus autores.
+    - Notación: $C$ clases en todo el capítulo (la softmax había pasado a $N$, que choca con los $N$ pares
+      de CLIP); CIDEr usa $J$ referencias para no chocar con los $M$ intervalos del ECE.
