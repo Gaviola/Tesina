@@ -4,8 +4,14 @@ Grad-CAM sobre Swin-Tiny (clasificador supervisado) + saliencia por gradiente so
 (VL classifier), superpuestos sobre la imagen. No busca mejorar resultados sino mostrar que
 los modelos atienden regiones clínicamente relevantes (la lesión, no el fondo).
 
+Por defecto usa el Swin ganador del split disjunto por lesión con el preprocesamiento de la receta
+modern (Resize(256)+CenterCrop(224)), y superpone cada mapa sobre el recorte que vio ese modelo. La
+versión anterior (modern_v3, Resize cuadrado y superposición sobre la imagen sin recortar) queda en
+``outputs/results/interpretability/``.
+
 Local (RTX 4070). Uso:
     python scripts/interpretability.py
+    python scripts/interpretability.py --swin_ckpt outputs/checkpoints/swin_tiny_modern_v3/best_model.pt         --output_dir outputs/results/interpretability_v3
 """
 
 import argparse
@@ -71,6 +77,16 @@ def _dermlip_saliency(dermlip, pil, gt_idx):
     return sal.detach().cpu().numpy()
 
 
+def _view(pil, tf):
+    """Aplica solo las transformaciones geométricas de ``tf`` (las previas a ToTensor)."""
+    from torchvision import transforms as T
+    for op in tf.transforms:
+        if isinstance(op, T.ToTensor):
+            break
+        pil = op(pil)
+    return pil
+
+
 def _overlay(ax, pil, heat, title):
     img = np.asarray(pil.resize((224, 224))).astype(float) / 255.0
     h = np.asarray(plt.cm.jet(heat)[:, :, :3])
@@ -84,9 +100,12 @@ def _overlay(ax, pil, heat, title):
 def main():
     parser = argparse.ArgumentParser(description="P2.5 Interpretabilidad")
     parser.add_argument("--data_dir", type=str, default="data")
-    parser.add_argument("--swin_ckpt", type=str, default="outputs/checkpoints/swin_tiny_modern_v3/best_model.pt")
+    parser.add_argument("--swin_ckpt", type=str, default="outputs/checkpoints/swin_tiny_sweep_t06_les_cwnone/best_model.pt")
+    parser.add_argument("--no-center-crop", action="store_false", dest="center_crop",
+                        help="Preprocesamiento legacy (Resize cuadrado). El default, center_crop, es el "
+                             "de la receta modern con la que se entrenaron Swin v3 y los del split por lesión.")
     parser.add_argument("--n_per_class", type=int, default=1, help="Imágenes por clase a mostrar.")
-    parser.add_argument("--output_dir", type=str, default="outputs/results/interpretability")
+    parser.add_argument("--output_dir", type=str, default="outputs/results/interpretability_les")
     args = parser.parse_args()
 
     set_seed(42)
@@ -96,11 +115,11 @@ def main():
     # Modelos
     swin = SwinTinyClassifier(num_classes=7, pretrained=False, freeze_backbone=False).to(device).eval()
     ck = torch.load(args.swin_ckpt, map_location=device, weights_only=False)
-    swin.load_state_dict(ck.get("model_state_dict", ck), strict=False)
+    swin.load_state_dict(ck.get("model_state_dict", ck), strict=True)
     from src.models.dermlip import DermLIPClassifier
     dermlip = DermLIPClassifier(checkpoint="vit-b-16", device=device)
 
-    tf = get_val_transforms(size=224, center_crop=False)
+    tf = get_val_transforms(size=224, center_crop=args.center_crop)
     ds = HAM10000Dataset(root_dir=str(Path(args.data_dir) / "processed" / "HAM10000"),
                          split="test", splits_file=str(Path(args.data_dir) / "splits" / "ham10000_splits.json"),
                          return_pil=True)
@@ -131,10 +150,11 @@ def main():
         x = tf(pil).unsqueeze(0).to(device)
         cam, pred = _swin_gradcam(swin, x)
         sal = _dermlip_saliency(dermlip, pil, lbl)
-        axes[r][cb].imshow(pil.resize((224, 224))); axes[r][cb].axis("off")
+        swin_view, dermlip_view = _view(pil, tf), _view(pil, dermlip.preprocess)
+        axes[r][cb].imshow(swin_view.resize((224, 224))); axes[r][cb].axis("off")
         axes[r][cb].set_title(f"{HAM10000_CLASSES[lbl]}", fontsize=9)
-        _overlay(axes[r][cb + 1], pil, cam, f"Swin Grad-CAM (pred {HAM10000_CLASSES[pred]})")
-        _overlay(axes[r][cb + 2], pil, sal, "DermLIP saliencia")
+        _overlay(axes[r][cb + 1], swin_view, cam, f"Swin Grad-CAM (pred {HAM10000_CLASSES[pred]})")
+        _overlay(axes[r][cb + 2], dermlip_view, sal, "DermLIP saliencia")
     fig.suptitle("¿El modelo mira la lesión? Grad-CAM (Swin) y saliencia (DermLIP)", fontsize=13)
     fig.tight_layout(rect=[0, 0, 1, 0.97])
     png = out_dir / "interpretability.png"

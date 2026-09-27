@@ -4,9 +4,15 @@ Reusa `paired_bootstrap_diff_flags` (statistical_tests.py) y
 `diagnostic_consistency_flags` (clinical_ner.py) sobre los reportes ya
 generados en outputs/generated_reports/mini_vlm/{full_*}. 100% local, CPU.
 
+Con ``--anchor les`` usa los brazos re-anclados al Swin del split disjunto por lesión
+(``full_swin_les``, ``full_differential_les``, ``uncertainty_3tier_les.csv``), agrega la comparación
+anclaje viejo vs nuevo y guarda en ``ensemble_bootstrap[_<modelo>]_les.json``. SkinVL no tiene brazo
+diferencial: para él solo se calcula la parte de tab:ensamble.
+
 Uso:
     python scripts/ensemble_bootstrap.py                    # Mini-VLM (default)
     python scripts/ensemble_bootstrap.py --model llava_med  # 2do generador
+    python scripts/ensemble_bootstrap.py --model skinvl --anchor les
 """
 
 import argparse
@@ -69,25 +75,36 @@ def flags_for(cond: dict, label_map: dict, ids: list) -> list:
 def main():
     global REPORTS_DIR, OUTPUT
     parser = argparse.ArgumentParser(description="IC bootstrap pareado (ensamble + pipeline avanzado)")
-    parser.add_argument("--model", default="mini_vlm", choices=["mini_vlm", "llava_med"])
+    parser.add_argument("--model", default="mini_vlm", choices=["mini_vlm", "llava_med", "skinvl"])
+    parser.add_argument("--anchor", default="v3", choices=["v3", "les"],
+                        help="Clasificador que ancla la cascada: v3 (partición aleatoria) o les "
+                             "(split disjunto por lesión).")
     args = parser.parse_args()
     REPORTS_DIR = Path("outputs/generated_reports") / args.model
-    if args.model != "mini_vlm":
-        OUTPUT = OUTPUT.with_name(f"ensemble_bootstrap_{args.model}.json")
-    logger.info("Generador: %s", args.model)
+    stem = "ensemble_bootstrap" if args.model == "mini_vlm" else f"ensemble_bootstrap_{args.model}"
+    suffix = "_les" if args.anchor == "les" else ""
+    OUTPUT = OUTPUT.with_name(f"{stem}{suffix}.json")
+    swin_cond, diff_cond = f"full_swin{suffix}", f"full_differential{suffix}"
+    tier_csv = UNCERTAINTY_DIR / f"uncertainty_3tier{suffix}.csv"
+    logger.info("Generador: %s | anclaje: %s", args.model, args.anchor)
 
     label_map = build_label_map()
     conds = {name: load_condition(name) for name in
-              ["full_baseline", "full_dermlip", "full_swin", "full_oracle"]}
+              ["full_baseline", "full_dermlip", swin_cond, "full_oracle"]}
     common_ids = sorted(set.intersection(*(set(c) for c in conds.values())))
     common_ids = [i for i in common_ids if i in label_map]
     logger.info("tab:ensamble — n=%d imágenes con las 4 condiciones + gt_label", len(common_ids))
 
-    result = {"tab_ensamble": {}, "tab_incertidumbre_e2e": {}}
+    result = {"anchor": args.anchor, "n": len(common_ids), "consistencia": {},
+              "tab_ensamble": {}, "tab_incertidumbre_e2e": {}}
 
+    if args.anchor == "les" and (REPORTS_DIR / "full_swin").exists():
+        conds["full_swin"] = load_condition("full_swin")  # anclaje v3, para medir el cambio
     flags = {name: flags_for(c, label_map, common_ids) for name, c in conds.items()}
-    pairs = [("full_swin", "full_oracle"), ("full_dermlip", "full_swin"),
-             ("full_baseline", "full_swin")]
+    pairs = [(swin_cond, "full_oracle"), ("full_dermlip", swin_cond),
+             ("full_baseline", swin_cond)]
+    if args.anchor == "les" and "full_swin" in conds:
+        pairs.append((swin_cond, "full_swin"))
     print("\n=== tab:ensamble — bootstrap pareado (%s, n=%d, n_boot=2000) ===" % (args.model, len(common_ids)))
     for a, b in pairs:
         d, lo, hi, p = paired_bootstrap_diff_flags(flags[a], flags[b], n_boot=2000, seed=42)
@@ -96,17 +113,25 @@ def main():
     for name in conds:
         pt = sum(flags[name]) / len(flags[name])
         boot_ci = paired_bootstrap_diff_flags(flags[name], [0] * len(flags[name]), n_boot=2000, seed=42)
+        result["consistencia"][name] = pt
         print(f"  point {name:<14} consistency={pt:.3f}")
 
+    if not (REPORTS_DIR / diff_cond).exists():
+        logger.warning("Sin brazo %s: se omite tab:incertidumbre_e2e", diff_cond)
+        OUTPUT.parent.mkdir(parents=True, exist_ok=True)
+        OUTPUT.write_text(json.dumps(result, indent=2, ensure_ascii=False), encoding="utf-8")
+        logger.info("Guardado en %s", OUTPUT)
+        return
+
     # --- tab:incertidumbre_e2e: pipeline avanzado vs grounding simple, n=1445 no-abstenidos ---
-    tier = pd.read_csv(UNCERTAINTY_DIR / "uncertainty_3tier.csv")
+    tier = pd.read_csv(tier_csv)
     affirmative_ids = set(tier[tier.tier == "affirmative"].image_id)
     differential_ids = set(tier[tier.tier == "differential"].image_id)
     non_abstained = affirmative_ids | differential_ids
     logger.info("no-abstenidos (afirmativo+diferencial) = %d", len(non_abstained))
 
-    swin_reports = load_condition("full_swin")
-    diff_reports = load_condition("full_differential")
+    swin_reports = load_condition(swin_cond)
+    diff_reports = load_condition(diff_cond)
 
     ids_e2e = sorted(i for i in non_abstained if i in label_map
                       and i in swin_reports)

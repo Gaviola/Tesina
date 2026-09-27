@@ -13,6 +13,7 @@ clases mencionadas, y `dx_incorrecto` si no lo está.
 Uso:
     python scripts/uncertainty_analysis.py                    # Mini-VLM (default)
     python scripts/uncertainty_analysis.py --model llava_med  # 2do generador
+    python scripts/uncertainty_analysis.py --anchor les       # cascada re-anclada (split por lesión)
 """
 
 import argparse
@@ -90,16 +91,20 @@ def main():
     global REPORTS, OUT
     parser = argparse.ArgumentParser(description="Taxonomía consciente del nivel + ruteo por clase")
     parser.add_argument("--model", default="mini_vlm", choices=["mini_vlm", "llava_med"])
+    parser.add_argument("--anchor", default="v3", choices=["v3", "les"],
+                        help="v3 (partición aleatoria) o les: brazos *_les + uncertainty_3tier_les.csv")
     args = parser.parse_args()
     REPORTS = Path("outputs/generated_reports") / args.model
-    if args.model != "mini_vlm":
-        OUT = OUT.with_name(f"uncertainty_analysis_{args.model}.json")
-    logger.info("Generador: %s", args.model)
+    suffix = "_les" if args.anchor == "les" else ""
+    stem = "uncertainty_analysis" if args.model == "mini_vlm" else f"uncertainty_analysis_{args.model}"
+    OUT = OUT.with_name(f"{stem}{suffix}.json")
+    tier_csv = TIER_CSV.with_name(f"uncertainty_3tier{suffix}.csv")
+    logger.info("Generador: %s | anclaje: %s", args.model, args.anchor)
 
     labels = build_label_map()
-    tiers = {r["image_id"]: r["tier"] for r in csv.DictReader(open(TIER_CSV))}
-    swin = load_reports("full_swin")
-    diff = load_reports("full_differential")
+    tiers = {r["image_id"]: r["tier"] for r in csv.DictReader(open(tier_csv))}
+    swin = load_reports(f"full_swin{suffix}")
+    diff = load_reports(f"full_differential{suffix}")
     logger.info("tiers=%d  full_swin=%d  full_differential=%d", len(tiers), len(swin), len(diff))
 
     res = {}
