@@ -4,6 +4,30 @@ Ayuda-memoria cronológico de experimentos enviados a cluster, ordenado de más 
 
 ---
 
+## 2026-09-27
+
+### Re-anclaje: Mini-VLM terminado y evaluado — Mendieta 1177953
+Terminó el 2026-09-27 02:26 (8 h 08 min, exit 0, `.err` sin errores): `full_swin_les` 1503/1503 y
+`full_differential_les` 248/248. Bajado y evaluado localmente (`ensemble_bootstrap.py --anchor les`,
+`uncertainty_analysis.py --anchor les`, `error_taxonomy.py` → `error_taxonomy_les/mini_vlm/`).
+**LLaVA-Med 1178901 sigue en cola** (prioridad; inicio estimado por SLURM: 2026-09-29 12:18).
+
+- **Grounding con el Swin nuevo:** consistencia diagnóstica 0.812 → **0.864**, Δ +0.052 [+0.033, +0.071]
+  (el ancla pasó de 0.795 a 0.847). Frente a oracle: −0.135 [−0.152, −0.117] (antes −0.187).
+- **Pipeline avanzado vs grounding simple (n = 1452 no derivadas):** 0.916 vs 0.873, Δ **+0.043**
+  [+0.031, +0.054]. Sigue siendo significativo, pero la ganancia es un tercio de la anterior (+0.118):
+  con un ancla mejor calibrada hay menos casos inciertos (248 diferenciales en vez de 334) y el grounding
+  simple ya acierta más.
+- **Subconjunto diferencial (n = 248):** 0.855 vs 0.605 forzado, Δ +0.250 [+0.190, +0.310] (antes +0.509).
+- **Taxonomía consciente del nivel:** dx incorrecto 13.6 % → 9.0 %; la repetición sigue amplificándose en
+  el nivel diferencial con Mini-VLM (0.5 % → 3.3 %), como en la versión anterior. Derivar evita 20 dx
+  incorrectos de las 51 abstenciones.
+- **Taxonomía report-only:** dx incorrecto 0.20 → 0.15; ok 0.38 → 0.40.
+- **Entorno local:** el `python` del PATH pasó a ser 3.14 (sin pandas); todo el análisis corre con
+  `C:\Python313\python.exe`, el mismo de las corridas anteriores.
+
+**Resul:** pendiente de LLaVA-Med (se escribe con los dos generadores).
+
 ## 2026-09-26
 
 ### Análisis locales migrados al split por lesión + resul — **Sin jobs SLURM** (local)
