@@ -35,6 +35,9 @@ veredicto **CUMPLE**, con Swin fuera del criterio de estabilidad: sd sens. macro
 - **Los reportes `_les` no traen `gt_label`**: los `reanchor_*.sh` no pasan `--label_csv`. No afecta la
   generación; `error_taxonomy.py` ahora lo toma de la metadata de HAM cuando falta (antes daba 100 %
   `dx_incorrecto`). `ensemble_bootstrap.py` y `uncertainty_analysis.py` ya usaban la metadata.
+- **Tabla SOTA v33** (`Docs/tabla_resultados_sota/tablas_comparativas_sota_v33.tex`): filas propias de
+  clasificación (media ± sd de 3 semillas + ensamble), melanoma y HIBA con la partición por lesión; nota de
+  comparabilidad con el efecto medido de la fuga. Tablas de generación sin cambios hasta el re-anclaje.
 - **Preparado para Mini-VLM y LLaVA-Med:** `ensemble_bootstrap.py` y `uncertainty_analysis.py` aceptan
   `--anchor les` (brazos `*_les`, `uncertainty_3tier_les.csv`, salida con sufijo `_les`); el modo v3
   reproduce exactamente sus JSON anteriores.
