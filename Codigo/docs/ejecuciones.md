@@ -21,6 +21,14 @@ veredicto **CUMPLE**, con Swin fuera del criterio de estabilidad: sd sens. macro
   (`--no-center-crop` para el modo legacy; carga con `strict=True`); default al Swin `t06_les`, salida en
   `interpretability_les/`. La saliencia de DermLIP es un artefacto de grilla de parches en ambas versiones.
 - **Melanoma:** ya estaba migrado dentro de `lesion_split_report.json`; no se rehízo.
+- **Embeddings congelados + clásicos (DermLIP vs Swin-ImageNet):** `embeddings_classical.py --splits_file`
+  (antes fijo a la partición aleatoria; agrega F1 macro) → `embeddings/embeddings_classical_les.json`.
+  Sens. macro DermLIP vs ImageNet: SVM 0.673 vs 0.466, LogReg 0.689 vs 0.538, RF 0.515 vs 0.162 (antes
+  SVM 0.788 vs 0.579). El SVM de DermLIP reproduce el 0.673 de `dermlip_split_eval.json`. H4 se sostiene.
+- **Ejemplos de perturbaciones:** `robustness_examples.py` tenía fijo el Swin v3 y la tendencia v3 (ruido y
+  JPEG fallan primero). Con el Swin nuevo la tendencia es ruido y desenfoque primero, JPEG y resolución
+  toleradas hasta sev4–5; checkpoint y tendencia pasan a argumentos. Salida `robustness_examples_les.png`
+  (ISIC_0025567, ISIC_0032013; todas las fallas caen en NV).
 - **SkinVL `full_swin_les` (1177955) bajado y evaluado:** consistencia diagnóstica 0.802 → **0.847**
   (= exactitud del ancla), Δ +0.045 [+0.025, +0.064]; taxonomía: ok 0.79 → 0.85, dx incorrecto 0.20 → 0.15.
   `outputs/results/ensemble_bootstrap_skinvl_les.json`, `error_taxonomy_les/skinvl/`.

@@ -11,7 +11,8 @@ versión anterior (modern_v3, Resize cuadrado y superposición sobre la imagen s
 
 Local (RTX 4070). Uso:
     python scripts/interpretability.py
-    python scripts/interpretability.py --swin_ckpt outputs/checkpoints/swin_tiny_modern_v3/best_model.pt         --output_dir outputs/results/interpretability_v3
+    python scripts/interpretability.py --swin_ckpt outputs/checkpoints/swin_tiny_modern_v3/best_model.pt \
+        --output_dir outputs/results/interpretability_v3
 """
 
 import argparse

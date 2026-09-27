@@ -3,14 +3,21 @@
 Muestra VARIOS ejemplos (no una sola imagen) degradados en los 5 niveles de cada perturbación
 (JPEG, ruido, blur, resolución), con la predicción de Swin-Tiny por panel. Las imágenes se eligen
 de forma que el patrón de fallo (primera severidad en la que la predicción se vuelve incorrecta)
-sea representativo de la tendencia agregada de `fig:robustez`: Ruido y JPEG fallan antes
-que Desenfoque y Resolución. Solo se aceptan ejemplos que efectivamente exhiben esa tendencia
-(ruido o JPEG fallan dentro de sev1-5, y antes que desenfoque/resolución). Local (CPU si no hay GPU).
+sea representativo de la tendencia agregada de `fig:robustez`. Solo se aceptan ejemplos en los que
+TODAS las perturbaciones «rápidas» fallan dentro de sev1-5 y antes que cualquiera de las «lentas».
+
+La tendencia depende del modelo, así que es un argumento (``--fast`` / ``--slow``):
+  - Swin del split por lesión (default): ruido y desenfoque fallan antes; JPEG y resolución se
+    toleran hasta severidades altas (`robustness_summary.json` del 2026-09-17).
+  - Swin modern_v3 (figura anterior): ``--fast noise jpeg --slow blur resolution``.
+Local (CPU si no hay GPU).
 
 Uso:
     python scripts/robustness_examples.py                    # elige N imágenes automáticamente
     python scripts/robustness_examples.py --image_ids ISIC_0034524 ISIC_0031234
     python scripts/robustness_examples.py --n_examples 3
+    python scripts/robustness_examples.py --checkpoint outputs/checkpoints/swin_tiny_modern_v3/best_model.pt \
+        --fast noise jpeg --slow blur resolution --output outputs/results/robustness/robustness_examples_v3.png
 """
 
 import argparse
@@ -43,8 +50,10 @@ PERTURBS = [
     ("blur", "Desenfoque (radio)", BLUR_R),
     ("resolution", "Resolución (factor)", RES_F),
 ]
-FAST_KINDS = {"noise", "jpeg"}  # tendencia agregada (fig:robustez): fallan antes
-SLOW_KINDS = {"resolution", "blur"}  # más tolerados
+KIND_LABELS = {"jpeg": "JPEG", "noise": "Ruido", "blur": "Desenfoque", "resolution": "Resolución"}
+# Tendencia agregada del modelo evaluado (fig:robustez); se sobreescriben con --fast / --slow.
+FAST_KINDS = {"noise", "blur"}       # fallan antes
+SLOW_KINDS = {"jpeg", "resolution"}  # más tolerados
 
 
 @torch.no_grad()
@@ -73,9 +82,9 @@ def _trend_score(first_fail: dict) -> float:
 
 
 def _exhibits_trend(first_fail: dict) -> bool:
-    """True si el ejemplo cumple el caption por-ejemplo: TANTO ruido como JPEG fallan dentro de
-    sev1-5 y ambos antes que desenfoque y resolucion (la primera falla de cualquier `fast`
-    ocurre a severidad menor que la primera falla de cualquier `slow`)."""
+    """True si el ejemplo cumple el caption por-ejemplo: TODAS las `fast` fallan dentro de sev1-5
+    y antes que cualquiera de las `slow` (la última primera-falla de las `fast` ocurre a severidad
+    menor que la primera falla de cualquier `slow`)."""
     def val(kind):
         v = first_fail.get(kind)
         return v if v is not None else 6
@@ -86,7 +95,7 @@ def _exhibits_trend(first_fail: dict) -> bool:
 
 def _select_examples(ds, model, tf, device, rng, n_examples, explicit_ids=None, max_scan=400):
     """Elige n_examples imágenes correctamente clasificadas cuyo patrón de fallo por-perturbación
-    exhibe la tendencia agregada (ruido/JPEG fallan antes que desenfoque/resolución). Para el modo
+    exhibe la tendencia agregada (las `fast` fallan antes que las `slow`). Para el modo
     automático se descartan las que no la exhiben; para --image_ids se muestran las pedidas tal cual."""
     candidates = []
     scanned = 0
@@ -132,8 +141,14 @@ def main():
     parser.add_argument("--image_ids", type=str, nargs="*", default=None)
     parser.add_argument("--n_examples", type=int, default=2)
     parser.add_argument("--data-dir", type=str, default="data")
-    parser.add_argument("--output", type=str, default="outputs/results/robustness/robustness_examples.png")
+    parser.add_argument("--checkpoint", type=str,
+                        default="outputs/checkpoints/swin_tiny_sweep_t06_les_cwnone/best_model.pt")
+    parser.add_argument("--fast", nargs="+", choices=list(KIND_LABELS), default=sorted(FAST_KINDS))
+    parser.add_argument("--slow", nargs="+", choices=list(KIND_LABELS), default=sorted(SLOW_KINDS))
+    parser.add_argument("--output", type=str, default="outputs/results/robustness/robustness_examples_les.png")
     args = parser.parse_args()
+    FAST_KINDS.clear(); FAST_KINDS.update(args.fast)
+    SLOW_KINDS.clear(); SLOW_KINDS.update(args.slow)
 
     set_seed(42)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -142,7 +157,7 @@ def main():
     ds = HAM10000Dataset(root_dir=str(Path(args.data_dir) / "processed" / "HAM10000"),
                          split="test", splits_file=str(Path(args.data_dir) / "splits" / "ham10000_splits.json"),
                          return_pil=True)
-    model = _load_model(SwinTinyClassifier, "outputs/checkpoints/swin_tiny_modern_v3/best_model.pt", device)
+    model = _load_model(SwinTinyClassifier, args.checkpoint, device)
 
     explicit_ids = set(args.image_ids) if args.image_ids else None
     picked = _select_examples(ds, model, tf, device, rng, args.n_examples, explicit_ids)
@@ -171,10 +186,12 @@ def main():
                             transform=axes[r][0].transAxes, rotation=90,
                             va="center", ha="center", fontsize=9, fontweight="bold")
 
+    fast_txt = " y ".join(KIND_LABELS[k] for k in args.fast)
+    slow_txt = " y ".join(KIND_LABELS[k] for k in args.slow)
     fig.suptitle("Impacto de las perturbaciones en " + str(len(picked)) + " ejemplos "
                  "(Swin-Tiny). Verde = predicción correcta, rojo = incorrecta. Consistente con la "
-                 "tendencia agregada: Ruido y JPEG degradan la predicción antes que "
-                 "Desenfoque y Resolución.", fontsize=10)
+                 f"tendencia agregada: {fast_txt} degradan la predicción antes que {slow_txt}.",
+                 fontsize=10)
     fig.tight_layout(rect=[0.02, 0, 1, 0.96])
     out = Path(args.output); out.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(out, dpi=150, bbox_inches="tight")

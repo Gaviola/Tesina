@@ -96,6 +96,10 @@ sensibilidad macro; ninguna gana en F1 macro a la CE. Legacy: DenseNet121 0.812 
 - **Métodos ajustados sobre embeddings DermLIP** (split aleatorio → por lesión): kNN 0.666 → 0.568,
   SVM-RBF 0.788 → 0.673, linear-probe 0.747 → 0.729. La inflación escala con la capacidad de memorizar
   vecinos: los métodos locales caen, el lineal casi no.
+- **Experimento controlado DermLIP vs Swin-ImageNet congelado** (`embeddings/embeddings_classical_les.json`),
+  sens. macro con la misma cabeza: SVM-RBF 0.673 vs 0.466, regresión logística 0.689 vs 0.538, Random
+  Forest 0.515 vs 0.162. La representación especializada gana con todas las cabezas: H4 se sostiene con
+  la partición por lesión.
 
 ## 7. Melanoma, calibración, ruteo, HIBA, perturbaciones e interpretabilidad
 
@@ -114,6 +118,8 @@ sensibilidad macro; ninguna gana en F1 macro a la CE. Legacy: DenseNet121 0.812 
   0.455 y 0.435, la clase prioritaria es la que peor generaliza.
 - **Perturbaciones** (bug de preprocesamiento corregido el 17/09): ruido gaussiano la más dañina,
   resolución la más benigna; ConvNeXt aguanta mejor la degradación espacial (blur sev3 0.487 vs 0.286).
+  Ejemplos regenerados (`robustness_examples_les.png`): en Swin fallan primero ruido y desenfoque, y JPEG
+  y resolución se toleran hasta sev4–5 (antes: ruido y JPEG primero).
 - **Grad-CAM** (`interpretability_les/`, mismo bug de preprocesamiento corregido hoy, más la
   superposición sobre el recorte que ve el modelo): el Swin nuevo concentra la activación sobre la
   lesión en 6 de 7 ejemplos; el VASC de la figura ahora se predice NV, con mapa difuso. La
@@ -127,7 +133,7 @@ sensibilidad macro; ninguna gana en F1 macro a la CE. Legacy: DenseNet121 0.812 
   consistencia 0.802 → **0.847**, Δ +0.045 [+0.025, +0.064]). Resultado en su propio documento.
 - **RAG y `full_uncertainty`**: fuera del re-anclaje por decisión del 17/09 (brazos complementarios, 400
   casos cada uno). Se declaran como análisis con el anclaje anterior.
-- **Métricas por clase, taxonomía de errores de v3, embeddings clásicos, ablaciones de receta
+- **Métricas por clase, taxonomía de errores de v3, ablaciones de receta
   (sin mixup, sin TTA, etc.):** sobre la partición anterior. Son análisis de mecanismo, no de magnitud;
   se declaran como tales o se omiten.
 
