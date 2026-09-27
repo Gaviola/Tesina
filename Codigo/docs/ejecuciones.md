@@ -35,6 +35,9 @@ veredicto **CUMPLE**, con Swin fuera del criterio de estabilidad: sd sens. macro
 - **Los reportes `_les` no traen `gt_label`**: los `reanchor_*.sh` no pasan `--label_csv`. No afecta la
   generación; `error_taxonomy.py` ahora lo toma de la metadata de HAM cuando falta (antes daba 100 %
   `dx_incorrecto`). `ensemble_bootstrap.py` y `uncertainty_analysis.py` ya usaban la metadata.
+- **Melanoma por semilla:** `lesion_split_report.py` agrega `melanoma_semillas` (el resto del JSON queda
+  idéntico). Esp ≥ 0.85 en val: sens Swin 0.796 ± 0.036, ConvNeXt 0.794 ± 0.012, ensamble 0.828 ± 0.007;
+  AUC 0.921 / 0.909 / 0.926. Con *argmax*, Swin 0.623 ± 0.071: el umbral en val también estabiliza.
 - **Tabla SOTA v33** (`Docs/tabla_resultados_sota/tablas_comparativas_sota_v33.tex`): filas propias de
   clasificación (media ± sd de 3 semillas + ensamble), melanoma y HIBA con la partición por lesión; nota de
   comparabilidad con el efecto medido de la fuga. Tablas de generación sin cambios hasta el re-anclaje.

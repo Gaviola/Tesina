@@ -141,6 +141,49 @@ def main():
                                "maligno": _task_report("ensamble", yt, pt, [0, 2, 3], yv, pv)}
         report["melanoma"] = mel
 
+        # 4b. Melanoma por semilla (media ± sd): el recall de MEL es la métrica más inestable entre
+        # semillas, así que el punto de operación de una sola corrida no alcanza. Umbrales en val.
+        by_seed = {}
+        for model, w in winners.items():
+            for run_name, (vf, tf) in w["files"].items():
+                seed = runs[run_name]["seed"]
+                yv, _, pv, _ = load(vf); yt, _, pt, _ = load(tf)
+                by_seed.setdefault(seed, {})[model] = (yv, pv, yt, pt)
+        per_seed = {}
+        for seed, models in sorted(by_seed.items()):
+            per_seed[seed] = {}
+            for model, (yv, pv, yt, pt) in models.items():
+                per_seed[seed][model] = {"melanoma": _task_report(f"{model}_s{seed}", yt, pt, [0], yv, pv),
+                                         "maligno": _task_report(f"{model}_s{seed}", yt, pt, [0, 2, 3], yv, pv)}
+            if len(models) == 2:
+                (yv, pv1, yt, pt1), (_, pv2, _, pt2) = models["swin_tiny"], models["convnext_tiny"]
+                pv, pt = (pv1 + pv2) / 2, (pt1 + pt2) / 2
+                per_seed[seed]["ensamble"] = {"melanoma": _task_report(f"ensamble_s{seed}", yt, pt, [0], yv, pv),
+                                              "maligno": _task_report(f"ensamble_s{seed}", yt, pt, [0, 2, 3], yv, pv)}
+
+        def _agg(vals):
+            return {"mean": float(np.mean(vals)), "std": float(np.std(vals, ddof=1)) if len(vals) > 1 else 0.0}
+
+        summary = {}
+        for model in per_seed[min(per_seed)]:
+            summary[model] = {}
+            for task in ("melanoma", "maligno"):
+                reps = [per_seed[sd][model][task] for sd in per_seed if model in per_seed[sd]]
+                t = {"n_semillas": len(reps), "auc_roc": _agg([r["auc_roc"] for r in reps]),
+                     "pr_auc": _agg([r["pr_auc"] for r in reps])}
+                for op in ("op_argmax", "op_spec85"):
+                    t[op] = {k: _agg([r[op][k] for r in reps]) for k in ("sens", "spec", "npv", "fn_rate")}
+                summary[model][task] = t
+        report["melanoma_semillas"] = {"por_semilla": per_seed, "media_std": summary}
+        print("\n=== Melanoma-vs-resto por semilla (media ± sd; umbral esp>=0.85 fijado en val) ===")
+        for model, t in summary.items():
+            m = t["melanoma"]
+            print(f"{model:14s} n={m['n_semillas']} AUC={m['auc_roc']['mean']:.3f}±{m['auc_roc']['std']:.3f}  "
+                  f"argmax sens={m['op_argmax']['sens']['mean']:.3f}±{m['op_argmax']['sens']['std']:.3f}  "
+                  f"esp85 sens={m['op_spec85']['sens']['mean']:.3f}±{m['op_spec85']['sens']['std']:.3f} "
+                  f"esp={m['op_spec85']['spec']['mean']:.3f}±{m['op_spec85']['spec']['std']:.3f} "
+                  f"VPN={m['op_spec85']['npv']['mean']:.3f}")
+
     # ---------- 5. Calibración ----------
     if winners:
         cal = {}

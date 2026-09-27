@@ -103,10 +103,13 @@ sensibilidad macro; ninguna gana en F1 macro a la CE. Legacy: DenseNet121 0.812 
 
 ## 7. Melanoma, calibración, ruteo, HIBA, perturbaciones e interpretabilidad
 
-- **Melanoma vs resto (seed 42, umbral de esp ≥ 0.85 fijado en val):** AUC Swin 0.919 (antes 0.931),
-  ConvNeXt 0.905, ensamble 0.923. En el punto de operación: Swin sens 0.778 / esp 0.862; ensamble
-  0.832 / 0.854. Antes (con fuga) Swin daba 0.862 / 0.858. **Maligno vs benigno:** AUC 0.919 / 0.927 /
-  0.937.
+- **Melanoma vs resto (media ± sd de 3 semillas, umbral de esp ≥ 0.85 fijado en val;
+  `lesion_split_report.json` → `melanoma_semillas`):** AUC Swin 0.921 ± 0.005 (antes 0.931), ConvNeXt
+  0.909 ± 0.004, ensamble 0.926 ± 0.003. En el punto de operación: Swin sens 0.796 ± 0.036 / esp 0.862,
+  ConvNeXt 0.794 ± 0.012 / 0.854, ensamble **0.828 ± 0.007** / 0.852, VPN 0.97–0.98. Con *argmax* la
+  sensibilidad es 0.623 ± 0.071 (Swin): fijar el umbral en validación no solo sube la sensibilidad, también
+  reduce su varianza entre semillas a la mitad (Swin) o a una décima parte (ensamble). Antes (con fuga,
+  una semilla) Swin daba 0.862 / 0.858. **Maligno vs benigno** (seed 42): AUC 0.919 / 0.927 / 0.937.
 - **Calibración:** sin pesos por clase el modelo ya está calibrado (ECE Swin 0.040 → TS 0.027 → VS
   0.014; T = 0.85). Antes: ECE 0.394, venía de los pesos por clase y de ajustar T sobre un val
   solapado con train.
