@@ -112,7 +112,10 @@ sensibilidad macro; ninguna gana en F1 macro a la CE. Legacy: DenseNet121 0.812 
   una semilla) Swin daba 0.862 / 0.858. **Maligno vs benigno** (seed 42): AUC 0.919 / 0.927 / 0.937.
 - **Calibración:** sin pesos por clase el modelo ya está calibrado (ECE Swin 0.040 → TS 0.027 → VS
   0.014; T = 0.85). Antes: ECE 0.394, venía de los pesos por clase y de ajustar T sobre un val
-  solapado con train.
+  solapado con train. **Mecanismo verificado con la partición por lesión** (`calibration_les/`): el mismo
+  trial entrenado con pesos por clase da ECE 0.376 (Swin) y 0.211 (ConvNeXt) contra 0.040 sin pesos; el
+  76–79 % de sus predicciones tiene confianza < 0.5 con exactitud 0.775 / 0.599, es decir, quedan
+  subconfiados. El diagrama incluye el histograma de confianza, que es lo que explica el ECE.
 - **Ruteo de 3 niveles (Swin nuevo + kNN DermLIP por lesión):** afirmativo 80.1 % (cobertura 0.915),
   diferencial 16.5 % (0.847), abstención 3.4 %; cobertura de lo presentado **0.904** (antes 0.934).
   Por clase, melanoma: 62 % afirmativo, 32 % diferencial, 6 % abstención.

@@ -106,6 +106,9 @@ def main():
                         help="Preprocesamiento legacy (Resize cuadrado). El default, center_crop, es el "
                              "de la receta modern con la que se entrenaron Swin v3 y los del split por lesión.")
     parser.add_argument("--n_per_class", type=int, default=1, help="Imágenes por clase a mostrar.")
+    parser.add_argument("--no-dermlip", action="store_false", dest="dermlip",
+                        help="Solo Grad-CAM de Swin. La saliencia por gradiente de DermLIP sale como una "
+                             "grilla alineada con los parches del ViT (artefacto), no como atención a la lesión.")
     parser.add_argument("--output_dir", type=str, default="outputs/results/interpretability_les")
     args = parser.parse_args()
 
@@ -117,8 +120,10 @@ def main():
     swin = SwinTinyClassifier(num_classes=7, pretrained=False, freeze_backbone=False).to(device).eval()
     ck = torch.load(args.swin_ckpt, map_location=device, weights_only=False)
     swin.load_state_dict(ck.get("model_state_dict", ck), strict=True)
-    from src.models.dermlip import DermLIPClassifier
-    dermlip = DermLIPClassifier(checkpoint="vit-b-16", device=device)
+    dermlip = None
+    if args.dermlip:
+        from src.models.dermlip import DermLIPClassifier
+        dermlip = DermLIPClassifier(checkpoint="vit-b-16", device=device)
 
     tf = get_val_transforms(size=224, center_crop=args.center_crop)
     ds = HAM10000Dataset(root_dir=str(Path(args.data_dir) / "processed" / "HAM10000"),
@@ -140,25 +145,28 @@ def main():
     # Evita la figura vertical demasiado alta que se salía de la página.
     per_row = 2
     n_rows = (len(picks) + per_row - 1) // per_row
-    n_cols = per_row * 3
+    panels = 3 if dermlip else 2
+    n_cols = per_row * panels
     fig, axes = plt.subplots(n_rows, n_cols, figsize=(2.15 * n_cols, 2.35 * n_rows), squeeze=False)
     for ax_row in axes:
         for ax in ax_row:
             ax.axis("off")
     for idx, (pil, lbl) in enumerate(picks):
         r = idx // per_row
-        cb = (idx % per_row) * 3
+        cb = (idx % per_row) * panels
         x = tf(pil).unsqueeze(0).to(device)
         cam, pred = _swin_gradcam(swin, x)
-        sal = _dermlip_saliency(dermlip, pil, lbl)
-        swin_view, dermlip_view = _view(pil, tf), _view(pil, dermlip.preprocess)
+        swin_view = _view(pil, tf)
         axes[r][cb].imshow(swin_view.resize((224, 224))); axes[r][cb].axis("off")
         axes[r][cb].set_title(f"{HAM10000_CLASSES[lbl]}", fontsize=9)
         _overlay(axes[r][cb + 1], swin_view, cam, f"Swin Grad-CAM (pred {HAM10000_CLASSES[pred]})")
-        _overlay(axes[r][cb + 2], dermlip_view, sal, "DermLIP saliencia")
-    fig.suptitle("¿El modelo mira la lesión? Grad-CAM (Swin) y saliencia (DermLIP)", fontsize=13)
+        if dermlip:
+            sal = _dermlip_saliency(dermlip, pil, lbl)
+            _overlay(axes[r][cb + 2], _view(pil, dermlip.preprocess), sal, "DermLIP saliencia")
+    fig.suptitle("¿El modelo mira la lesión? Grad-CAM (Swin)" + (" y saliencia (DermLIP)" if dermlip else ""),
+                 fontsize=13)
     fig.tight_layout(rect=[0, 0, 1, 0.97])
-    png = out_dir / "interpretability.png"
+    png = out_dir / ("interpretability.png" if dermlip else "interpretability_swin.png")
     fig.savefig(png, dpi=150, bbox_inches="tight")
     logger.info("Figura: %s", png)
 
