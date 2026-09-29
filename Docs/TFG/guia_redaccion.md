@@ -53,8 +53,10 @@ las dos versiones juntas.
   («este capítulo fue elaborado a partir de…», «material no desarrollado por el autor»).
 - **Párrafos de 4 a 8 líneas**, uno por idea, encadenados. Se evitan las listas de viñetas en el
   cuerpo salvo cuando enumeran elementos realmente paralelos (clases, métricas, configuraciones).
-- **Cada sección abre diciendo qué establece** y cierra con lo que deja instalado para la
-  siguiente. No se anuncia lo que se va a hacer («en esta sección se describirá…»): se hace.
+- **Cada sección abre directamente con su contenido** y cierra con lo que deja instalado para la
+  siguiente. No se anuncia lo que se va a hacer («en esta sección se describirá…», «esta sección
+  presenta cómo…»): se hace. La excepción es la introducción de cada capítulo, que sí describe qué
+  contiene el capítulo y cómo se organiza (ver «Estructura y progresión»).
 - **Nada de relleno.** Sin frases de transición vacías, sin recapitulaciones de lo ya dicho, sin
   adjetivos de énfasis («notablemente», «sumamente»).
 - **Español neutro formal.** Documentación y documento en español; el código y los nombres de
@@ -70,8 +72,12 @@ las dos versiones juntas.
 - **Cursiva la primera vez en cada capítulo** con `\emph{}`; después, redonda. En títulos de
   sección y en los índices, siempre redonda. Un término que aparece cincuenta veces en cursiva es
   ruido tipográfico.
-- **Las siglas se usan libremente una vez introducidas.** La primera aparición en cada capítulo va
-  con `\gls{}`, que expande la forma completa; de ahí en más, la sigla sola (VLM, LoRA, RAG, ECE).
+- **Las siglas se definen una sola vez en el documento.** La primera aparición va con `\gls{}`, que
+  escribe el nombre en español, y entre paréntesis el nombre en inglés en cursiva y la sigla en
+  redonda, separados por coma: «red neuronal convolucional (*Convolutional Neural Network*, CNN)».
+  De ahí en más va la sigla sola (VLM, LoRA, RAG, ECE), sin repetir su significado. El formato lo
+  arma `Configurations/06-Glossary.sty` y las entradas se declaran con `\acronimo` (sección 4,
+  «Acrónimos»); no se escribe a mano.
 - **Los dos puntos y el punto y coma, con moderación.** Los dos puntos anuncian lo que viene después:
   una enumeración, una definición, un nombre, un ejemplo. No son un conector entre oraciones: si lo que
   sigue es una explicación o una continuación del pensamiento, va punto y seguido, coma o
@@ -115,6 +121,37 @@ trabajo usa sin ir a la fuente.
   (*token*, *embedding*). El glosario no se imprime, así que no reemplaza esa definición.
 - **Sin meta-texto sobre el alcance** («solo incluye lo que los capítulos siguientes usan»): la sección
   abre diciendo qué presenta, no qué deja afuera.
+
+### Estructura y progresión
+
+Reglas que surgen de la revisión del tutor de los capítulos 1 y 2 (2026-09-28). Para dudas de
+estructura o de convención que esta guía no resuelve, la referencia es una tesina terminada de la
+misma carrera que pasó el tutor (`Docs/tesinamaglione_ejemplo.pdf`, no versionada).
+
+- **Cada capítulo habla de lo suyo.** La introducción no adelanta metodología, conjuntos de datos
+  ni algoritmos; el marco teórico no habla de particiones, de la distribución de un conjunto ni de
+  decisiones propias («no hables de cosas prácticas»). Eso va en el Capítulo 3.
+- **Ningún término se usa antes de haberlo presentado.** Si un concepto aparece, se explica en ese
+  lugar o ya se explicó antes; no se escribe «esto se verá después».
+- **La introducción de un capítulo dice qué contiene y cómo se organiza**, sin detalle técnico y
+  sin figuras, salvo que la figura sea imprescindible para entender la organización.
+- **En la organización del documento cada capítulo se describe por su contenido**: «Este capítulo
+  presenta la comparación de estrategias de clasificación…», no «Responde la PI1».
+- **Hilo conductor.** Cada párrafo retoma algo del anterior y lleva al siguiente; la sección no es
+  una sucesión de datos sueltos. Una frase como «El diagnóstico humano tampoco está resuelto» que
+  abre un tema sin conectarlo con lo anterior es la señal de que falta la transición.
+- **El marco teórico se escribe para un lector general.** La pregunta para cada concepto es por qué
+  el lector lo necesita para entender lo que se hizo o el resultado. El lector puede ser un
+  informático, que ya conoce las redes neuronales, o un dermatólogo, que no las conoce.
+- **El marco teórico no se ordena según el *pipeline*.** Presenta los conceptos que después
+  justifican el *pipeline*, de modo que el diseño del Capítulo 3 aparezca como consecuencia del
+  marco y del estado del arte, y no al revés.
+- **Transición entre secciones.** Cada sección del marco cierra con un párrafo que relaciona sus
+  arquitecturas o conceptos con los de la sección siguiente.
+- **El estado del arte cierra cada eje con una síntesis**: qué aporta la línea, cómo la atacan las
+  distintas familias de trabajos y qué queda sin resolver. Por cada trabajo se dice objetivo,
+  método, datos, métricas, contra qué se comparó, resultados, si hubo evaluación con expertos y
+  qué limitaciones reconocen los autores.
 
 ### Patrones de escritura automatizada
 
@@ -172,8 +209,13 @@ desviación con `$\pm$`. `babel` con la opción `spanish` convierte el punto en 
 fórmulas (`$0.5$` se imprimía «0,5»); `Configurations/10-Macros.sty` lo desactiva con
 `\decimalpoint`, así que el punto se escribe igual dentro y fuera de `$...$`.
 
-**Acrónimos.** Se declaran en `Matter/05-Acronyms.tex` y se invocan con `\gls{}` en la primera
-aparición de cada capítulo. No se redefine un acrónimo ya declarado.
+**Acrónimos.** Se declaran en `Matter/05-Acronyms.tex` con
+`\acronimo[opciones]{etiqueta}{SIGLA}{nombre en español}{nombre en inglés}`: el español en
+minúscula (se inserta dentro de una oración; al comienzo de oración se usa `\Gls{}`) y el inglés
+vacío si la sigla no lo tiene (IA, las categorías de HAM10000). Si la sigla se usa en plural, se
+declara `longplural`. Las siglas no llevan marca de plural («las CNN»). Se invocan con `\gls{}` en
+la primera aparición del documento; la lista de acrónimos toma de la misma entrada el español y el
+inglés, así que las denominaciones coinciden. No se redefine un acrónimo ya declarado.
 
 ## 5. Extensión
 
@@ -264,6 +306,10 @@ El encuadre de cada referencia anterior a 2020 que ya está en el `.bib` queda r
   Antes de incluirla se revisa la licencia del trabajo (CC BY permite reproducir con atribución;
   la licencia por defecto de arXiv no, y en ese caso se redibuja en TikZ y se pone «Adaptada de»).
   El archivo va en `Figures/Externas/`, en el formato original si es vectorial.
+- **Viudas, huérfanas y huecos.** Al compilar se revisa que ningún párrafo termine con una o dos
+  palabras solas en la última línea ni deje una línea aislada al pie o al comienzo de una página, y
+  que no queden espacios en blanco grandes antes de un título o de una figura. Se corrigen
+  reformulando la frase o sacando alguna palabra, no con espaciado manual.
 - **Código** con `minted` (requiere `-shell-escape`). Fragmentos cortos, solo si aportan.
 - **Compilación:** `latexmk -xelatex -shell-escape tesina.tex` desde `Docs/TFG/`.
 

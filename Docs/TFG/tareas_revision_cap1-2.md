@@ -26,13 +26,13 @@ Estado: `[ ]` pendiente · `[~]` en curso · `[x]` hecha · `[?]` requiere decis
 
 ## 1. Transversales (guía, siglas, formato)
 
-- [ ] **T1. Formato de siglas (M2.4–M2.7).** La primera aparición pasa a ser `Modelos visión–lenguaje (*Vision–Language Models*, VLM)`:
+- [x] **T1. Formato de siglas (M2.4–M2.7).** La primera aparición pasa a ser `Modelos visión–lenguaje (*Vision–Language Models*, VLM)`:
   - español primero;
   - inglés en cursiva;
   - la sigla en letra normal, dentro del mismo paréntesis y separada por coma.
 
   Hoy sale «Modelo Visión–Lenguaje (*Vision–Language Model*) (VLM)». Hay que cambiar el estilo de `\newacronym` en `06-Glossary.sty` o `10-Macros.sty` y reescribir `Matter/05-Acronyms.tex` para separar el español del inglés. Las entradas que hoy solo tienen inglés (CLIP, LoRA, PEFT, RAG, kNN, CoT, TTA, ECE) necesitan su nombre en español. Después de definida, la sigla se usa sola, sin repetir el significado. La lista de acrónimos tiene que usar exactamente las mismas denominaciones.
-- [ ] **T2. Guía de redacción: reglas nuevas.** Hay que agregar a `guia_redaccion.md`:
+- [x] **T2. Guía de redacción: reglas nuevas.** Hay que agregar a `guia_redaccion.md`:
   - La intro de capítulo dice de qué trata el capítulo y cómo se organiza, sin detalle técnico y sin figuras, salvo que la figura sea imprescindible (p27, p35).
   - En la organización del documento, cada capítulo se describe con «Este capítulo presenta…» y no con «Responde la PI1» (p33).
   - Cada párrafo retoma el anterior y lleva al siguiente; no se enumera información suelta (A3, A7).
