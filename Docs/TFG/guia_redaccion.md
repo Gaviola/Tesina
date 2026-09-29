@@ -183,13 +183,13 @@ los capítulos.
 
 | Se usa | No se usa | Nota |
 |---|---|---|
-| fuga de información entre particiones (*data leakage*) | fuga de datos, contaminación | Se define en la primera aparición (Materiales y métodos); después alcanza «fuga de información» |
+| fuga de información entre particiones (*data leakage*) | fuga de datos, contaminación | Se define como concepto general en el marco teórico (generalización, §2.1.4); después alcanza «fuga de información» |
 | entorno real | producción | |
 | partición, subconjunto | *split* | «partición disjunta por lesión» es el nombre del procedimiento |
 | modelo visión--lenguaje (VLM) | modelo de lenguaje visual, modelo multimodal (a secas) | El guion es `--` (semirraya) |
 | *pipeline* | sistema propuesto, tubería, canal | Nombra la arquitectura completa: clasificador, kNN y generador encadenados. «Sistema» queda para usos genéricos («sistema de apoyo al diagnóstico») |
 | exactitud | precisión | «precisión» queda reservada para *precision* |
-| sensibilidad macro | *recall* macro, exhaustividad | |
+| sensibilidad macro | *recall* macro, exhaustividad, exactitud balanceada (como nombre propio) | Es el mismo número que la exactitud balanceada; la definición lo menciona una vez como sinónimo |
 | F1 ponderado, F1 macro | F1-score, puntaje F1 | |
 | ajuste fino | *fine-tuning* | El anglicismo solo en la definición inicial |
 | conjunto de datos | *dataset* | |
@@ -219,9 +219,9 @@ inglés, así que las denominaciones coinciden. No se redefine un acrónimo ya d
 
 ## 5. Extensión
 
-La ficha fija la extensión de cada sección. Como referencia, el documento apunta a 90–110 páginas:
-introducción 8–10, marco teórico 25–30, materiales y métodos 20–25, cada capítulo de resultados
-25–30, discusión 8–12, conclusiones 4–6.
+**No hay límite de extensión.** Cada capítulo tiene la extensión que necesite para cubrir su
+contenido (decisión del autor, 2026-09-28). La ficha estima la extensión de cada sección solo como
+orientación para planificar.
 
 Las estimaciones de extensión y las fuentes de cada capítulo van como **comentarios LaTeX**
 (`% Extensión estimada:`, `% Fuentes:`) al inicio del archivo, nunca en el cuerpo del texto.
