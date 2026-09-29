@@ -7,3 +7,42 @@
 \renewcommand{\glsnamefont}[1]{\textbf{#1}} % Notation in bold.
 \renewcommand{\glossaryentrynumbers}[1]%
 {\textit{(p. \textcolor{maincolor}{#1})}} % Page number customisation.
+
+%%% Formato de las siglas %%%
+% La primera aparición de una sigla en el documento se escribe con el nombre en español, y entre
+% paréntesis el nombre en inglés en cursiva y la sigla en redonda, separados por coma:
+%   «red neuronal convolucional (Convolutional Neural Network, CNN)».
+% Si la sigla no tiene nombre en inglés (IA, las categorías de HAM10000), queda «español (SIGLA)».
+% De ahí en más, \gls{} escribe solo la sigla. Las entradas se declaran con \acronimo (abajo), que
+% guarda el inglés en el campo user1 y arma la descripción de la lista de acrónimos con el mismo
+% texto que la primera aparición.
+
+% Nombre en inglés seguido de coma, si la entrada lo tiene.
+\newcommand*{\glsinglescoma}[1]{%
+    \ifglshasfield{useri}{#1}{\emph{\glsentryuseri{#1}}, }{}}
+
+\newacronymstyle{espanol-ingles-sigla}{%
+    \GlsUseAcrEntryDispStyle{long-short}%
+}{%
+    \GlsUseAcrStyleDefs{long-short}%
+    \renewcommand*{\genacrfullformat}[2]{%
+        \glsentrylong{##1}##2\space(\glsinglescoma{##1}\firstacronymfont{\glsentryshort{##1}})}%
+    \renewcommand*{\Genacrfullformat}[2]{%
+        \Glsentrylong{##1}##2\space(\glsinglescoma{##1}\firstacronymfont{\glsentryshort{##1}})}%
+    \renewcommand*{\genplacrfullformat}[2]{%
+        \glsentrylongpl{##1}##2\space(\glsinglescoma{##1}\firstacronymfont{\glsentryshort{##1}})}%
+    \renewcommand*{\Genplacrfullformat}[2]{%
+        \Glsentrylongpl{##1}##2\space(\glsinglescoma{##1}\firstacronymfont{\glsentryshort{##1}})}%
+}
+\setacronymstyle{espanol-ingles-sigla}
+
+% En español las siglas no llevan marca de plural («las CNN», no «las CNNs»).
+\renewcommand*{\acrpluralsuffix}{}
+
+% \acronimo[opciones]{etiqueta}{SIGLA}{nombre en español}{nombre en inglés}
+% El cuarto argumento puede quedar vacío. Las opciones pasan a \newacronym (por ejemplo, longplural).
+\newcommand{\acronimo}[5][]{%
+    \ifstrempty{#5}%
+        {\newacronym[description={#4},#1]{#2}{#3}{#4}}%
+        {\newacronym[description={#4 (\emph{#5})},user1={#5},#1]{#2}{#3}{#4}}%
+}
