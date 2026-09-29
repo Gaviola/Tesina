@@ -179,3 +179,159 @@ Alternativas: GREEN (3.7) o CARES (3.6) para ampliar evaluación y confiabilidad
 - Cassidy et al. 2022, *Medical Image Analysis* (duplicados en ISIC): 403 en ScienceDirect y en el repositorio MMU; acceso no confirmado.
 - Daneshjou et al. 2021, *JAMA Dermatology*: no encontré texto completo libre.
 - SkinCAP (arXiv:2405.18004): ya está citado como SkinCaRe.
+
+
+---
+
+## Papers ya descargados en Papers/ y no citados
+
+Inventario del 2026-09-28 sobre `Papers/` y subcarpetas: **114 PDFs**. La comparación con `Bibliography.bib` fue por título normalizado
+(más revisión manual de los de baja coincidencia). **108 archivos corresponden a entradas del `.bib`** (son 105 obras distintas: hay tres duplicados,
+`Dermatologist-level classification…` dos veces, `Learning Transferable Visual Models…` en `Papers/` y en `Fundacionales/`, y `A General-Purpose
+Multimodal Foundation Model for Dermatology`, que es el preprint arXiv:2410.15038 de `yan2025vision`, ya citado en su versión de *Nature Medicine*).
+Los **6 restantes no están en el `.bib`**; los seis ya figuran en `refs_pendientes.md` (sección 6, «PDFs en `Papers/` sin entrada en el `.bib`») como pendientes de decidir.
+
+| Archivo | Título | Año | Eje | Relevancia (clase) |
+|---|---|---|---|---|
+| `derma/Vision-language models for medical report generation and visual question answering a review.pdf` | Vision-language models for medical report generation and visual question answering: a review (Hartsock y Rasool) | 2024 (*Front. Artif. Intell.*) | 3 | (b) Revisión abierta de VLM para reportes y VQA médicos; ordena arquitecturas, datos y métricas. Buen ancla para la línea de reportes. |
+| `derma/Deep Learning Algorithms in the Diagnosis of Basal Cell Carcinoma Using Dermatoscopy Systematic Review and Meta-Analysis.pdf` | Deep Learning Algorithms in the Diagnosis of Basal Cell Carcinoma Using Dermatoscopy: Systematic Review and Meta-Analysis (Liu et al.) | 2025 (*JMIR*) | 1 | (b) Meta-análisis de 15 estudios con validación interna y externa; útil para la afirmación de que hay poca validación externa. Alcance acotado a carcinoma basocelular. |
+| `derma/Quilt-1M One Million Image-Text Pairs for Histopathology.pdf` | Quilt-1M: One Million Image-Text Pairs for Histopathology (Ikezogwo et al.) | 2023 (NeurIPS D&B) | 2 | (b, débil) Antecedente directo de MONET/Derm1M como corpus imagen–texto extraído de videos y literatura; es de patología, solo como contexto. |
+| `Multimodal Foundation Models From Specialists to General-Purpose Assistants (119).pdf` | Multimodal Foundation Models: From Specialists to General-Purpose Assistants (Li et al.) | 2023 (arXiv:2309.10020) | 2 (general) | (c) Encuesta general de modelos multimodales; sirve de fundamento del marco teórico, no del estado del arte dermatológico. |
+| `Vision-Language Models for Vision Tasks A Survey (24p).pdf` | Vision-Language Models for Vision Tasks: A Survey (Zhang et al.) | 2023 (arXiv:2304.00685; v2 2024) | 2 (general) | (c) Encuesta de VLM para tareas de visión; fundamento del marco teórico. |
+| `Chain-of-Visual-Thought Teaching VLMs to See and Think Better with Continuous Visual Tokens.pdf` | Chain-of-Visual-Thought: Teaching VLMs to See and Think Better with Continuous Visual Tokens (Qin et al.) | 2025 (arXiv:2511.19418) | 2 (general) | (c) VLM general con tokens visuales continuos; sin relación con dermatología ni con medicina. |
+| `derma/A General-Purpose Multimodal Foundation Model for Dermatology.pdf` | (Preprint de PanDerm) | 2024 (arXiv:2410.15038) | 2 | (a, duplicado) Es el mismo trabajo que `yan2025vision`; ya citado. Recomendable reemplazar por la versión de *Nature Medicine*. |
+
+Resumen: 108 archivos citados (a, incluido el duplicado de PanDerm), 2 relevantes no citados (b: Hartsock 2024 y Liu 2025), 1 relevante débil (Quilt-1M), 3 no relevantes para el estado del arte (c).
+
+---
+
+## Candidatos por bola de nieve
+
+Método: extraje las listas de referencias (`pdftotext`) de los trabajos del estado del arte que tienen PDF en `Papers/` (Skin-R1, SkinCaRe, MM-Skin,
+Derm1M, MAKE, PanDerm, MONET, MedImageInsight, DermaSynth, SkinGEN, SkinGPT-4, Chakrabarti, Khan, SkinSavvy2, MpoxVLM, revisión de Hartsock y otros) y contabilicé qué obras
+externas aparecen en varios de ellos o en sus tablas comparativas. «Aparece en» indica mención en el texto o en las referencias del PDF, que es lo que pude verificar automáticamente; no confirmé cada cita una por una.
+Todos los candidatos son de 2020–2026 y no están en el `.bib`, en `refs_pendientes.md` ni en las secciones anteriores de este archivo.
+Existencia y acceso se verificaron el 2026-09-28: arXiv (página abs y API), PMC/Nature, ACL Anthology, CVF. **[no verificado]** marca lo que no pude confirmar.
+
+Advertencias de calidad de las fuentes: en el PDF de Chakrabarti et al. hay una referencia claramente errónea (`Hohloch, «Homoclinic Floer homology…», arXiv:2402.12345`) y el identificador de XrayGPT
+que da (arXiv:2306.00923) corresponde en realidad a otro trabajo (Sonicverse); el correcto es arXiv:2306.07971. Las referencias del PDF de Khan et al. incluyen títulos que no pude ubicar (por ejemplo «SkinIO», «DermHelper»); no tomé nada de ahí.
+
+### Eje 1. Clasificación / diagnóstico de lesiones de piel
+
+#### S1.1 PAD-UFES-20: a skin lesion dataset composed of patient data and clinical images collected from smartphones
+- **Autores:** Pacheco, A. G. C. et al. — **Año:** 2020 — **Venue:** *Data in Brief* 32:106221 (arXiv:2007.00478).
+- **PDF:** https://arxiv.org/pdf/2007.00478 (abs verificada; editor: https://www.sciencedirect.com/science/article/pii/S235234092031115X) — **Acceso:** abierto en arXiv.
+- **Aparece en:** Derm1M, MAKE, MM-Skin, PanDerm (`yan2025vision`), MedImageInsight, DermaSynth (`yilmaz2025resourceefficient`), Skin-R1, SkinCaRe.
+- **Qué hace:** 2 298 imágenes clínicas de 1 641 lesiones de 1 373 pacientes en Brasil, con seis diagnósticos (tres cánceres y tres enfermedades) y hasta 22 variables clínicas; 58.4 % confirmado por biopsia, 100 % de los cánceres.
+- **Por qué entra:** es el conjunto clínico de teléfono más usado como prueba externa en los VLM dermatológicos (ocho de nuestros papers); da un contrapunto latinoamericano a HAM10000 y a HIBA.
+
+#### S1.2 BCN20000: Dermoscopic Lesions in the Wild
+- **Autores:** Hernández-Pérez, C., Combalia, M. et al. — **Año:** 2024 (preprint 2019, arXiv:1908.02288) — **Venue:** *Scientific Data* 11:641.
+- **PDF:** https://pmc.ncbi.nlm.nih.gov/articles/PMC11183228/ (Nature: https://www.nature.com/articles/s41597-024-03387-w; preprint https://arxiv.org/pdf/1908.02288) — **Acceso:** abierto (PMC; página de Nature cargó con código 200).
+- **Aparece en:** PanDerm, MM-Skin, MedImageInsight, DermaSynth, Skin-R1, SkinCaRe, MONET.
+- **Qué hace:** 18 946 imágenes dermatoscópicas de 5 583 lesiones del Hospital Clínic de Barcelona, ocho categorías diagnósticas más una clase fuera de distribución en el test; incluye lesiones difíciles (uñas, mucosas, grandes, hipopigmentadas).
+- **Por qué entra:** junto con HAM10000 formó el entrenamiento de ISIC 2019; es el otro gran conjunto dermatoscópico de referencia y una fuente natural de prueba externa europea.
+
+#### S1.3 A patient-centric dataset of images and metadata for identifying melanomas using clinical context (SIIM-ISIC 2020)
+- **Autores:** Rotemberg, V. et al. — **Año:** 2021 — **Venue:** *Scientific Data* 8:34.
+- **PDF:** https://www.nature.com/articles/s41597-021-00815-z — **Acceso:** página cargó con código 200 (revista de acceso abierto); licencia CC BY **[no verificado]**.
+- **Aparece en:** Chandna et al. 2024 (`chandna2024skin`, ya citado).
+- **Qué hace:** dataset del desafío SIIM-ISIC 2020 con 2 056 pacientes de tres continentes (20.8 % con al menos un melanoma) e identificadores de paciente que permiten mapear lesiones del mismo individuo.
+- **Por qué entra:** ilustra que los identificadores de paciente/lesión permiten particiones sin fuga, la misma preocupación que motiva la partición por lesión de la tesina.
+
+#### S1.4 Towards Trustable Skin Cancer Diagnosis via Rewriting Model's Decision
+- **Autores:** Yan, S. et al. — **Año:** 2023 — **Venue:** CVPR 2023 (arXiv:2303.00885).
+- **PDF:** https://arxiv.org/pdf/2303.00885 (también CVF: https://openaccess.thecvf.com/content/CVPR2023/papers/Yan_Towards_Trustable_Skin_Cancer_Diagnosis_via_Rewriting_Models_Decision_CVPR_2023_paper.pdf, código 200) — **Acceso:** abierto.
+- **Aparece en:** Derm1M.
+- **Qué hace:** detecta sesgos espurios (confusores) en clasificadores de cáncer de piel y reescribe la decisión del modelo con anotaciones de conceptos, reduciendo la dependencia de artefactos. Datasets y métricas: **[no verificado]** más allá del resumen.
+- **Por qué entra:** conecta el clasificador con conceptos clínicos y con la robustez frente a artefactos, un punto de la sección de generalización.
+
+Nota: Cassidy et al. 2022, «Analysis of the ISIC image datasets» (*Medical Image Analysis* 75:102305), sigue sin acceso verificado: ScienceDirect no respondió, el repositorio MMU (https://e-space.mmu.ac.uk/631025/) redirige y no encontré versión en arXiv **[no verificado]**. Lo mencionan Chandna 2024 y Badhon 2025 (ambos ya en el `.bib`) y MONET. Confirmar acceso antes de proponerlo.
+
+### Eje 2. Modelos visión–lenguaje en dermatología / médicos
+
+#### S2.1 Qwen2.5-VL Technical Report
+- **Autores:** Bai, S. et al. (Qwen) — **Año:** 2025 — **Venue:** arXiv:2502.13923 (informe técnico).
+- **PDF:** https://arxiv.org/pdf/2502.13923 — **Acceso:** arXiv abierto.
+- **Aparece en:** Skin-R1 (base del modelo y baseline de 7B y 32B), MM-Skin.
+- **Qué hace:** VLM general abierto con codificador visual de resolución nativa y buen desempeño documental y de agente.
+- **Por qué entra:** es el backbone de Skin-R1 y el VLM general abierto más usado como línea base; sirve para justificar la elección de VLM generales pequeños.
+
+#### S2.2 HuatuoGPT-Vision: Towards Injecting Medical Visual Knowledge into Multimodal LLMs at Scale
+- **Autores:** Chen, J. et al. — **Año:** 2024 — **Venue:** arXiv:2406.19280 (v4); venue de conferencia **[no verificado]**.
+- **PDF:** https://arxiv.org/pdf/2406.19280 — **Acceso:** arXiv abierto.
+- **Aparece en:** Skin-R1 (baseline médico junto a LLaVA-Med y MedGemma).
+- **Qué hace:** inyecta conocimiento visual médico en un MLLM con un conjunto grande de VQA médico; VLM médico abierto de 7B. Detalle del corpus y cifras: **[no verificado]**.
+- **Por qué entra:** tercer VLM médico de referencia (con LLaVA-Med y MedGemma) en la comparación de Skin-R1, que como la tesina mide VLM médicos en clasificación dermatológica.
+
+#### S2.3 MedVLM-R1: Incentivizing Medical Reasoning Capability of Vision-Language Models (VLMs) via Reinforcement Learning
+- **Autores:** Pan, J. et al. — **Año:** 2025 — **Venue:** arXiv:2502.19634 (v2); venue **[no verificado]**.
+- **PDF:** https://arxiv.org/pdf/2502.19634 — **Acceso:** arXiv abierto.
+- **Aparece en:** Skin-R1.
+- **Qué hace:** entrena un VLM médico con aprendizaje por refuerzo (GRPO) para razonar sin supervisión explícita de la cadena de pensamiento; mejora la generalización fuera de distribución (según Skin-R1).
+- **Por qué entra:** contexto para el bloque «razonamiento con RL» (Skin-R1, DermoGPT).
+
+#### S2.4 Med-R1: Reinforcement Learning for Generalizable Medical Reasoning in Vision-Language Models
+- **Autores:** Lai, Y. et al. — **Año:** 2025 — **Venue:** arXiv:2503.13939 (v5); venue **[no verificado]**.
+- **PDF:** https://arxiv.org/pdf/2503.13939 — **Acceso:** arXiv abierto.
+- **Aparece en:** Skin-R1.
+- **Qué hace:** RL sobre VLM médicos en varias modalidades y tareas; según Skin-R1, muestra que el ajuste supervisado puede memorizar atajos y que el RL generaliza mejor.
+- **Por qué entra:** par de S2.3; ambos son la referencia de RL médico contra la que Skin-R1 se define.
+
+#### S2.5 MedCLIP: Contrastive Learning from Unpaired Medical Images and Text
+- **Autores:** Wang, Z. et al. — **Año:** 2022 — **Venue:** EMNLP 2022 (main).
+- **PDF:** https://aclanthology.org/2022.emnlp-main.256.pdf (título verificado en el PDF) — **Acceso:** abierto (ACL Anthology).
+- **Aparece en:** PanDerm, Derm1M, MAKE, MM-Skin, LLaVA-Med, Med-Flamingo, MedImageInsight, MedTrinity-25M, Skin-R1, SkinGEN, MONET, Chakrabarti y Hartsock.
+- **Qué hace:** preentrenamiento contrastivo imagen–texto médico con imágenes y textos no emparejados, usando conocimiento clínico para el emparejamiento; clasificación zero-shot y recuperación (sobre todo radiografías).
+- **Por qué entra:** es el VL médico contrastivo más citado (13 de nuestros papers); antecede a los modelos dermatológicos (MONET, DermLIP) y respalda la comparación general vs. especializado.
+
+#### S2.6 A generalist vision–language foundation model for diverse biomedical tasks (BiomedGPT)
+- **Autores:** Zhang, K. et al. — **Año:** 2023 (arXiv:2305.17100); versión de *Nature Medicine* 2024 (https://www.nature.com/articles/s41591-024-03185-2; el título de la página coincide) — **Venue:** *Nature Medicine* (volumen y páginas: **[no verificado]**).
+- **PDF:** https://arxiv.org/pdf/2305.17100 — **Acceso:** arXiv abierto; acceso libre del editor **[no verificado]**.
+- **Aparece en:** PanDerm, Derm1M, MedImageInsight, PeFoMed, Skin-R1.
+- **Qué hace:** transformador generalista unificado que resuelve tareas de visión, lenguaje y multimodales biomédicas (VQA, captioning, clasificación) con un solo modelo.
+- **Por qué entra:** referencia de generalista médico que los trabajos dermatológicos usan como comparación; refuerza la tesis de que lo general médico no alcanza en piel.
+
+#### S2.7 Assessing the Utility of Multimodal LLMs (GPT-4 Vision and LLaVA) in Identifying Melanoma Across Different Skin Tones
+- **Autores:** Cirone, K. et al. — **Año:** 2024 — **Venue:** *JMIR Dermatology* (doi 10.2196/55508).
+- **PDF:** https://derma.jmir.org/2024/1/e55508 — **Acceso:** abierto (JMIR, página cargó con código 202); licencia **[no verificado]**.
+- **Aparece en:** DermaSynth (`yilmaz2025resourceefficient`), SkinGEN.
+- **Qué hace:** evalúa GPT-4V y LLaVA para distinguir melanoma de lesiones benignas en distintos fototipos; concluyen que pueden diferenciar benignas de melanoma. Tamaño de la muestra y cifras: **[no verificado]**.
+- **Por qué entra:** una de las pocas mediciones publicadas de VLM generales sobre melanoma; contrasta con el colapso de VLM generales que halla la tesina.
+
+Alternativa no incluida: PMC-CLIP (arXiv:2303.07240, existencia verificada; aparece en 5 de nuestros papers).
+
+### Eje 3. Generación de reportes dermatológicos / médicos
+
+#### S3.1 XrayGPT: Chest Radiographs Summarization using Medical Vision-Language Models
+- **Autores:** Thawakar, O. et al. — **Año:** 2023 — **Venue:** arXiv:2306.07971 (v2); venue (BioNLP en ACL 2024) **[no verificado]**.
+- **PDF:** https://arxiv.org/pdf/2306.07971 — **Acceso:** arXiv abierto.
+- **Aparece en:** Chakrabarti, MM-Skin, Skin-R1, SkinGEN, Hartsock.
+- **Qué hace:** alinea un codificador visual médico con un LLM para resumir radiografías de tórax y responder preguntas. Detalles de datos: **[no verificado]**.
+- **Por qué entra:** es el VLM de reportes médicos más citado por los trabajos de reportes dermatológicos (cinco de nuestros papers); contexto del enfoque «un VLM redacta el reporte».
+
+#### S3.2 RaDialog: A Large Vision-Language Model for Radiology Report Generation and Conversational Assistance
+- **Autores:** Pellegrini, C. et al. — **Año:** 2023 (v3) — **Venue:** arXiv:2311.18681; venue **[no verificado]**.
+- **PDF:** https://arxiv.org/pdf/2311.18681 — **Acceso:** arXiv abierto.
+- **Aparece en:** Chakrabarti.
+- **Qué hace:** VLM que combina hallazgos estructurados de un clasificador de imagen con un LLM para generar el reporte y sostener diálogo. Cifras: **[no verificado]**.
+- **Por qué entra:** contraparte radiológica de la cascada clasificador→generador de la tesina (hallazgos del clasificador como insumo del texto).
+
+#### S3.3 Customizing General-Purpose Foundation Models for Medical Report Generation
+- **Autores:** Yang, B. et al. — **Año:** 2023 — **Venue:** arXiv:2306.05642 (preprint).
+- **PDF:** https://arxiv.org/pdf/2306.05642 — **Acceso:** arXiv abierto.
+- **Aparece en:** Chakrabarti.
+- **Qué hace:** adapta modelos fundacionales generales al reporte médico con pocos parámetros entrenables. Datasets y resultados: **[no verificado]**.
+- **Por qué entra:** respalda la adaptación ligera de modelos generales a reportes, como hace la tesina con SkinVL y LoRA.
+
+#### S3.4 AGNet: Automatic generation network for skin imaging reports
+- **Autores:** Wu, F. et al. — **Año:** 2022 — **Venue:** *Computers in Biology and Medicine* 141:105037.
+- **PDF:** no encontré versión libre; solo el resumen en https://pubmed.ncbi.nlm.nih.gov/34809964/ y la página de ScienceDirect — **Acceso:** cerrado o **[no verificado]**.
+- **Aparece en:** Chakrabarti.
+- **Qué hace:** marco de captioning con clasificador de imagen, modelo de lenguaje y módulo de atención para generar reportes de imágenes de piel (existencia y descripción del resumen confirmadas por PubMed).
+- **Por qué entra:** antecedente más directo de reportes de piel previo a los VLM; entra solo si se consigue el texto completo.
+
+### Recomendación de la bola de nieve
+- **Eje 1:** PAD-UFES-20 (S1.1) y BCN20000 (S1.2) por acceso abierto verificado y uso en 7–8 de nuestros papers; Rotemberg 2021 (S1.3) para la partición por paciente/lesión.
+- **Eje 2:** MedCLIP (S2.5) y Qwen2.5-VL (S2.1) como los más citados y de acceso pleno; HuatuoGPT-Vision (S2.2) para completar los VLM médicos medidos; Cirone 2024 (S2.7) por el eje melanoma con VLM generales.
+- **Eje 3:** XrayGPT (S3.1) y RaDialog (S3.2); AGNet (S3.4) solo si se logra el PDF.
