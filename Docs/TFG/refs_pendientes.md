@@ -445,6 +445,18 @@ se versiona. Ninguna clave choca con las del `.bib`.
 }
 ```
 
+### Transferencia y desbalance de §2.1 — incorporado el 29/09/2026
+
+| Clave | Referencia | Sostiene |
+|---|---|---|
+| `yosinski2014transferable` | Yosinski et al., NeurIPS 27, 2014 | Rasgos generales en las primeras capas y caída de la transferencia con la distancia entre tareas (§2.1.5) |
+| `raghu2019transfusion` | Raghu et al., NeurIPS 32, 2019 | Límites de la transferencia desde ImageNet a imágenes médicas; parte de la ventaja viene del tamaño del modelo (§2.1.5) |
+| `buda2018systematic` | Buda, Maki y Mazurowski, *Neural Networks* 106:249–259, 2018 | Efecto del desbalance en CNN, que crece con su grado, y el ajuste de umbral por la proporción de clases (§2.1.6) |
+
+Se descartó Elkan (2001), que proponía la tanda de §2.1 para el ajuste de umbral: Buda et al. estudian ese
+mismo método (*thresholding* por las probabilidades a priori) y basta con una cita. Metadatos verificados
+contra Crossref (Buda) y arXiv (Yosinski, Raghu).
+
 ## 2. Consolidación del 17/09/2026
 
 El `.bib` se armó fusionando cuatro archivos dispersos: `estado_del_arte/referencias.bib` (37),

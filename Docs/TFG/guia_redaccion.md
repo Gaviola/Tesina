@@ -185,6 +185,7 @@ los capítulos.
 |---|---|---|
 | fuga de información entre particiones (*data leakage*) | fuga de datos, contaminación | Se define como concepto general en el marco teórico (generalización, §2.1.4); después alcanza «fuga de información» |
 | entorno real | producción | |
+| preentrenamiento, preentrenado | pre-entrenamiento, pre-entrenado | El prefijo *pre-* va soldado (RAE) |
 | partición, subconjunto | *split* | «partición disjunta por lesión» es el nombre del procedimiento |
 | modelo visión--lenguaje (VLM) | modelo de lenguaje visual, modelo multimodal (a secas) | El guion es `--` (semirraya) |
 | *pipeline* | sistema propuesto, tubería, canal | Nombra la arquitectura completa: clasificador, kNN y generador encadenados. «Sistema» queda para usos genéricos («sistema de apoyo al diagnóstico») |

@@ -211,19 +211,15 @@ Lo que se transfiere son las representaciones que la red construyó. En una red 
 aprenden rasgos generales, como bordes y texturas, que sirven para casi cualquier imagen, y las últimas
 aprenden rasgos cada vez más específicos de la tarea de origen. Por eso los rasgos de las primeras capas se
 reutilizan mejor, y la transferencia rinde menos cuando la tarea de origen y la de destino son muy
-distintas. Como la red de destino no tiene que aprender esos rasgos generales desde cero, los pocos datos
+distintas~\cite{yosinski2014transferable}. Como la red de destino no tiene que aprender esos rasgos generales desde cero, los pocos datos
 disponibles alcanzan para ajustar lo que sí es específico de su tarea.
 El corpus de preentrenamiento de referencia en reconocimiento visual es ImageNet, un conjunto de datos de
 imágenes naturales etiquetadas~\cite{russakovsky2015imagenet}.
-\pendiente{Citar a Yosinski et al. (2014), «How transferable are features in deep neural networks?»
-(\texttt{yosinski2014transferable}), para las afirmaciones sobre rasgos generales y específicos, y a
-Raghu et al. (2019), «Transfusion» (\texttt{raghu2019transfusion}), para lo siguiente. Ninguna está en el
-\texttt{.bib}; se proponen en \texttt{refs\_pendientes.md}.}
 
 La transferencia no está exenta de límites en imágenes médicas. Entre una imagen natural y una imagen
 clínica hay una distancia de dominio grande, y el beneficio del preentrenamiento sobre imágenes naturales
 puede ser menor que el esperado. Parte de la ventaja observada proviene del tamaño del modelo
-preentrenado y no de los rasgos que transfiere.
+preentrenado y no de los rasgos que transfiere~\cite{raghu2019transfusion}.
 
 Una red que clasifica se puede dividir en dos partes. El \emph{backbone} es la parte que convierte la
 imagen en un vector de características, y la cabeza de clasificación (\emph{head}) es la capa final, de la
@@ -266,10 +262,7 @@ clase más común que la más rara. Cuando $\rho$ es grande, minimizar la entrop
 frecuentes, porque sus ejemplos dominan la suma de la pérdida. Con una clase que reúne dos tercios de los
 casos, por ejemplo, un modelo que siempre la predice ya acierta dos de cada tres y reduce la pérdida sin
 aprender nada sobre las demás. El efecto perjudica el desempeño de las redes convolucionales y crece con el
-grado de desbalance.
-\pendiente{Citar a Buda, Maki y Mazurowski (2018), «A systematic study of the class imbalance problem in
-convolutional neural networks» (\texttt{buda2018systematic}), para el efecto del desbalance en redes
-convolucionales. No está en el \texttt{.bib}; se propone en \texttt{refs\_pendientes.md}.}
+grado de desbalance~\cite{buda2018systematic}.
 
 El aumento de datos de la Sección~\ref{sec:marco_regularizacion} no corrige esa asimetría, porque, aplicado
 por igual a todas las clases, deja la proporción entre ellas donde estaba~\cite{shorten2019survey}. Las
@@ -309,11 +302,8 @@ correcciones actúan en tres puntos distintos del procedimiento:
     \item \textbf{A nivel de decisión (ajuste de umbral).} El clasificador se entrena sin corrección y después
     se ajusta la regla de decisión. Una opción reescala las probabilidades por el inverso de la proporción de
     cada clase, $\tilde{p}_c \propto p_c/\pi_c$, y otra elige en validación el umbral de probabilidad que
-    define cuándo se predice cada clase.
+    define cuándo se predice cada clase~\cite{buda2018systematic}.
 \end{enumerate}
-\pendiente{Citar a Elkan (2001), «The Foundations of Cost-Sensitive Learning» (\texttt{elkan2001foundations}),
-para el ajuste de umbral. No está en el \texttt{.bib}; se propone en \texttt{refs\_pendientes.md} y falta
-verificar los datos.}
 
 La exactitud global engaña cuando las clases están desbalanceadas, y las métricas que promedian por clase,
 como el F1 macro y la sensibilidad macro, no tienen ese defecto. La Sección~\ref{sec:marco_eval_clasif} las
@@ -489,7 +479,7 @@ la sección siguiente.
 
 Un modelo de lenguaje asigna una probabilidad a cada continuación posible de un texto: dado lo escrito
 hasta el momento, predice el token siguiente. El generador de reportes del \emph{pipeline} es un modelo de
-este tipo, y para el trabajo interesan tres aspectos: cómo se obtiene un modelo grande, pre-entrenándolo
+este tipo, y para el trabajo interesan tres aspectos: cómo se obtiene un modelo grande, preentrenándolo
 sobre corpus de texto y ajustándolo para seguir instrucciones; cómo produce un texto nuevo a partir de sus
 probabilidades (Sección~\ref{sec:marco_llm_grandes}); y cómo se adapta un modelo de ese tamaño a una tarea
 concreta con la memoria de una GPU de consumo (Sección~\ref{sec:marco_llm_lora}).
@@ -497,7 +487,7 @@ concreta con la memoria de una GPU de consumo (Sección~\ref{sec:marco_llm_lora}
 \subsection{Grandes modelos de lenguaje}
 \label{sec:marco_llm_grandes}
 
-Un \gls{llm} se obtiene por pre-entrenamiento auto-supervisado sobre corpus de miles de millones de
+Un \gls{llm} se obtiene por preentrenamiento auto-supervisado sobre corpus de miles de millones de
 palabras. La tarea es predecir el token siguiente, y la supervisión sale del propio texto, sin etiquetas
 manuales. El modelo aprende así la probabilidad de una secuencia como el producto de las probabilidades de
 cada token dados los anteriores,
@@ -518,7 +508,7 @@ generación~\cite{devlin2019bert,brown2020language,touvron2023llama}.
 
 El comportamiento del modelo se ajusta después en dos etapas. El ajuste fino supervisado lo entrena
 sobre pares instrucción--respuesta, y la alineación con \gls{rlhf} lo entrena a preferir las
-respuestas que un evaluador humano marca como mejores. Un modelo solo pre-entrenado continúa el
+respuestas que un evaluador humano marca como mejores. Un modelo solo preentrenado continúa el
 texto que recibe, mientras que uno alineado responde a instrucciones, y el generador del trabajo
 recibe su tarea en forma de instrucción~\cite{ouyang2022training}.
 
@@ -1160,7 +1150,7 @@ describen en la Sección~\ref{sec:met_datasets}.
 \end{table}
 
 Sobre esos conjuntos, la clasificación actual combina arquitecturas convolucionales y transformers con
-pre-entrenamiento en ImageNet. Una revisión sistemática de la detección de cáncer de piel con aprendizaje
+preentrenamiento en ImageNet. Una revisión sistemática de la detección de cáncer de piel con aprendizaje
 profundo señala que la variabilidad de los métodos, incluido el preprocesamiento, dificulta comparar los
 resultados entre estudios~\cite{magalhaes2024systematic}. Los trabajos recientes sobre HAM10000 y conjuntos
 afines reportan exactitudes altas con ensambles de EfficientNet, con Swin o con redes convolucionales
@@ -1172,7 +1162,7 @@ F1 promedio y exactitud balanceada~\cite{kim2025skinsavvy2}.
 
 Los problemas recurrentes de la línea son los de la Sección~\ref{sec:marco_generalizacion}: desbalance de
 clases, poca validación externa y desempeño desigual según el fototipo. El trabajo toma de esta línea las
-arquitecturas y el pre-entrenamiento, y se aparta en el protocolo: compara cuatro arquitecturas de las dos
+arquitecturas y el preentrenamiento, y se aparta en el protocolo: compara cuatro arquitecturas de las dos
 familias bajo la misma partición disjunta por lesión, selecciona por F1 macro y evalúa también fuera de
 distribución.
 
@@ -1191,7 +1181,7 @@ de un millón de pares organizados según una ontología clínica, y los modelos
 superan a los modelos biomédicos de propósito general en clasificación
 \emph{zero-shot}~\cite{yan2025derm1m}. MAKE entrena sobre Derm1M descomponiendo cada texto clínico en
 aspectos y conceptos que alinea con regiones de la imagen~\cite{yan2025make}. PanDerm, en cambio, es un
-modelo fundacional pre-entrenado de forma auto-supervisada sobre más de dos millones de imágenes de 11
+modelo fundacional preentrenado de forma auto-supervisada sobre más de dos millones de imágenes de 11
 instituciones y cuatro modalidades, y se ajusta después a cada tarea~\cite{yan2025vision}.
 
 El trabajo usa DermLIP. Es contrastivo, de modo que el mismo espacio sirve para clasificar
