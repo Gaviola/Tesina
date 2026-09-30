@@ -247,6 +247,204 @@ Schmidhuber 1997 no está en el `.bib`. Como la ficha del Capítulo 2 ya había 
 una mención mínima, **se eliminó la cláusula** en lugar de proponer la referencia. Si el marco
 teórico llegara a necesitar LSTM con desarrollo, hay que incorporarla primero.
 
+### Estado del arte de §2.10 — propuesto el 29/09/2026
+
+Surgen de la revisión del tutor, que pidió ampliar el estado del arte con trabajos de 2020 a 2026. Cada
+trabajo se leyó completo y se verificó contra el PDF. Las fichas de lectura, con las cifras citables y
+la página de cada una, quedan en `lecturas_estado_arte_eje{1,2,3}.md`, que es un documento temporal y no
+se versiona. Ninguna clave choca con las del `.bib`.
+
+| Clave | Referencia | Eje / sección | Reserva |
+|---|---|---|---|
+| `liu2020deep` | Liu et al., *Nature Medicine* 26(6):900–908, 2020 | Eje 1, clasificadores | — |
+| `gessert2020skin` | Gessert et al., *MethodsX* 7:100864, 2020 | Eje 1 | Es el método ganador de ISIC 2019; no hay artículo arbitrado principal |
+| `yao2022single` | Yao et al., *IEEE TMI* 41(5):1242–1254, 2022 | Eje 1 | Desbalance con modelo único |
+| `marchetti2023prospective` | Marchetti et al., *npj Digital Medicine* 6:127, 2023 (PROVE-AI) | Eje 1 | — |
+| `yan2023towards` | Yan et al., CVPR 2023, pp. 11568–11577 | Sesgo y generalización, no eje 1 | Trata de artefactos y robustez |
+| `yan2026dermfmzero` | Yan et al., arXiv 2602.10624, 2026 (DermFM-Zero) | Eje 2, VLM | Preimpresión; mismo grupo que Derm1M |
+| `shen2025skingptr1` | Shen et al., arXiv 2511.15242, 2025 (SkinGPT-R1) | Eje 2 | Preimpresión; el 82.5 % es solo Derm12345 |
+| `ru2026dermogpt` | Ru et al., arXiv 2601.01868, 2026 (DermoGPT) | Eje 2 | Preimpresión; evaluación con expertos acotada |
+| `jiang2026multimodal` | Jiang et al., arXiv 2605.04098, 2026 | Eje 2 | Preimpresión; grupo independiente del de Monash |
+| `shen2025dermbench` | Shen et al., arXiv 2511.09195, 2025 (DermBench) | Eje 3, reportes | Póster en ECCV 2026; pasar a `@inproceedings` cuando salgan las actas |
+| `xia2025mmedrag` | Xia et al., ICLR 2025 (MMed-RAG) | Eje 3, RAG | Citar junto con RULE |
+| `xia2024rule` | Xia et al., EMNLP 2024, pp. 1081–1093 (RULE) | Eje 3, RAG | Citar junto con MMed-RAG |
+| `hartsock2024vision` | Hartsock y Rasool, *Frontiers in AI* 7:1430984, 2024 | Marco teórico, §2.6 | Revisión, no estado del arte |
+
+**Verificaciones hechas el 29/09/2026.**
+
+- Todos los DOI resuelven. La URL de `yao2022single` que se había deducido del DOI estaba mal: el DOI
+  redirige al documento 9656127 de IEEE Xplore, no al 9663087. Ya está corregida abajo.
+- La URL de `gessert2020skin` coincide con la redirección del DOI.
+- En `yan2023towards`, Crossref y el PDF dan «Peter Soyer», y así queda. En `yan2026dermfmzero`
+  figura «H. Peter Soyer» porque así lo lista arXiv. Es la misma persona; la bibliografía imprime
+  solo el primer autor, así que la diferencia no se ve.
+- Las cuatro preimpresiones de arXiv siguen la convención de `liu2025skinr1`, con `@misc`,
+  `eprint = {id [cs]}` y `eprinttype = {arxiv}`. DermBench también, en lugar del `@online` que
+  proponía la ficha.
+- MedCLIP (`wang2022medclip`) quedó afuera: trata solo radiografía de tórax.
+
+```bibtex
+@article{liu2020deep,
+  author = {Liu, Yuan and Jain, Ayush and Eng, Clara and Way, David H. and Lee, Kang and Bui, Peggy and Kanada, Kimberly and de Oliveira Marinho, Guilherme and Gallegos, Jessica and Gabriele, Sara and Gupta, Vishakha and Singh, Nalini and Natarajan, Vivek and Hofmann-Wellenhof, Rainer and Corrado, Greg S. and Peng, Lily H. and Webster, Dale R. and Ai, Dennis and Huang, Susan and Liu, Yun and Dunn, R. Carter and Coz, David},
+  title = {A deep learning system for differential diagnosis of skin diseases},
+  date = {2020-06},
+  journaltitle = {Nature Medicine},
+  volume = {26},
+  number = {6},
+  pages = {900--908},
+  doi = {10.1038/s41591-020-0842-3},
+  url = {https://www.nature.com/articles/s41591-020-0842-3},
+  langid = {english},
+}
+
+@article{gessert2020skin,
+  author = {Gessert, Nils and Nielsen, Maximilian and Shaikh, Mohsin and Werner, Ren{\'e} and Schlaefer, Alexander},
+  title = {Skin lesion classification using ensembles of multi-resolution {EfficientNets} with meta data},
+  date = {2020},
+  journaltitle = {MethodsX},
+  volume = {7},
+  pages = {100864},
+  doi = {10.1016/j.mex.2020.100864},
+  url = {https://linkinghub.elsevier.com/retrieve/pii/S2215016120300832},
+  langid = {english},
+}
+
+@article{yao2022single,
+  author = {Yao, Peng and Shen, Shuwei and Xu, Mengjuan and Liu, Peng and Zhang, Fan and Xing, Jinyu and Shao, Pengfei and Kaffenberger, Benjamin and Xu, Ronald X.},
+  title = {Single Model Deep Learning on Imbalanced Small Datasets for Skin Lesion Classification},
+  date = {2022-05},
+  journaltitle = {{IEEE} Transactions on Medical Imaging},
+  volume = {41},
+  number = {5},
+  pages = {1242--1254},
+  doi = {10.1109/TMI.2021.3136682},
+  url = {https://ieeexplore.ieee.org/document/9656127},
+  langid = {english},
+}
+
+@article{marchetti2023prospective,
+  author = {Marchetti, Michael A. and Cowen, Emily A. and Kurtansky, Nicholas R. and Weber, Jochen and Dauscher, Megan and DeFazio, Jennifer and Deng, Liang and Dusza, Stephen W. and Haliasos, Helen and Halpern, Allan C. and Hosein, Sharif and Nazir, Zaeem H. and Marghoob, Ashfaq A. and Quigley, Elizabeth A. and Salvador, Trina and Rotemberg, Veronica M.},
+  title = {Prospective validation of dermoscopy-based open-source artificial intelligence for melanoma diagnosis ({PROVE-AI} study)},
+  date = {2023-07-12},
+  journaltitle = {npj Digital Medicine},
+  volume = {6},
+  number = {1},
+  pages = {127},
+  doi = {10.1038/s41746-023-00872-1},
+  url = {https://www.nature.com/articles/s41746-023-00872-1},
+  langid = {english},
+}
+
+@inproceedings{yan2023towards,
+  author = {Yan, Siyuan and Yu, Zhen and Zhang, Xuelin and Mahapatra, Dwarikanath and Chandra, Shekhar S. and Janda, Monika and Soyer, Peter and Ge, Zongyuan},
+  title = {Towards Trustable Skin Cancer Diagnosis via Rewriting Model's Decision},
+  date = {2023-06},
+  booktitle = {Proceedings of the {IEEE}/{CVF} Conference on Computer Vision and Pattern Recognition ({CVPR})},
+  pages = {11568--11577},
+  doi = {10.1109/CVPR52729.2023.01113},
+  url = {https://openaccess.thecvf.com/content/CVPR2023/papers/Yan_Towards_Trustable_Skin_Cancer_Diagnosis_via_Rewriting_Models_Decision_CVPR_2023_paper.pdf},
+  langid = {english},
+}
+
+@misc{yan2026dermfmzero,
+  author = {Yan, Siyuan and Li, Xieji and Mo, Dan and Tschandl, Philipp and Jiang, Yiwen and Wang, Zhonghua and Hu, Ming and Ju, Lie and Vico-Alonso, Cristina and Zheng, Yizhen and Liu, Jiahe and Zhou, Juexiao and Chello, Camilla and Cheung, Jen G. and Anriot, Julien and Thomas, Luc and Primiero, Clare and Tan, Gin and Ng, Aik Beng and See, Simon and Tang, Xiaoying and Ip, Albert and Liao, Xiaoyang and Bowling, Adrian and Haskett, Martin and Zhao, Shuang and Janda, Monika and Soyer, H. Peter and Mar, Victoria and Kittler, Harald and Ge, Zongyuan},
+  title = {A Vision-Language Foundation Model for Zero-shot Clinical Collaboration and Automated Concept Discovery in Dermatology},
+  shorttitle = {{DermFM-Zero}},
+  date = {2026-02-11},
+  doi = {10.48550/arXiv.2602.10624},
+  url = {http://arxiv.org/abs/2602.10624},
+  eprint = {2602.10624 [cs]},
+  eprinttype = {arxiv},
+  langid = {english},
+}
+
+@misc{shen2025skingptr1,
+  author = {Shen, Yuhao and Chen, Zhangtianyi and He, Yuanhao and Xu, Yan and Zhang, Shuping and Sun, Liyuan and Wang, Zijian and Zhu, Yinghao and Yang, Yuyuan and Qian, Jiahe and Wang, Ziwen and Zhang, Xinyuan and Liu, Wenbin and Ge, Zongyuan and Lu, Tao and Yan, Siyuan and Zhou, Juexiao},
+  title = {Trustworthy and Fair {SkinGPT-R1} for Democratizing Dermatological Reasoning across Diverse Ethnicities},
+  shorttitle = {{SkinGPT-R1}},
+  date = {2025-11-19},
+  doi = {10.48550/arXiv.2511.15242},
+  url = {http://arxiv.org/abs/2511.15242},
+  eprint = {2511.15242 [cs]},
+  eprinttype = {arxiv},
+  note = {Versión 2 del 18 de febrero de 2026. La versión 1 se tituló «SkinGPT-R1: Adapter-Only Dual Distillation for Efficient Dermatology Reasoning».},
+  langid = {english},
+}
+
+@misc{ru2026dermogpt,
+  author = {Ru, Jinghan and Yan, Siyuan and Yin, Yuguo and Zou, Yuexian and Ge, Zongyuan},
+  title = {{DermoGPT}: Open Weights and Open Data for Morphology-Grounded Dermatological Reasoning {MLLMs}},
+  shorttitle = {{DermoGPT}},
+  date = {2026-01-05},
+  doi = {10.48550/arXiv.2601.01868},
+  url = {http://arxiv.org/abs/2601.01868},
+  eprint = {2601.01868 [cs]},
+  eprinttype = {arxiv},
+  langid = {english},
+}
+
+@misc{jiang2026multimodal,
+  author = {Jiang, Roy and Kim, Hyunjae and Qin, Zhenyue and Lee, Morten and MacGibeny, Margaret and Hanly, Ailish and Sadlowski, Angela and Chowdhury, Shanin and Ai, Xuguang and Gehlhausen, Jeffrey and Chen, Qingyu},
+  title = {Are Multimodal {LLMs} Ready for Clinical Dermatology? A Real-World Evaluation in Dermatology},
+  shorttitle = {Are Multimodal {LLMs} Ready for Clinical Dermatology?},
+  date = {2026-05-01},
+  doi = {10.48550/arXiv.2605.04098},
+  url = {http://arxiv.org/abs/2605.04098},
+  eprint = {2605.04098 [cs]},
+  eprinttype = {arxiv},
+  langid = {english},
+}
+
+@misc{shen2025dermbench,
+  author = {Shen, Yuhao and Qian, Jiahe and Zhang, Shuping and Chen, Zhangtianyi and Lu, Tao and Zhou, Juexiao},
+  title = {Towards Trustworthy Dermatology {MLLMs}: A Benchmark and Multimodal Evaluator for Diagnostic Narratives},
+  shorttitle = {{DermBench}},
+  date = {2025-11-12},
+  doi = {10.48550/arXiv.2511.09195},
+  url = {http://arxiv.org/abs/2511.09195},
+  eprint = {2511.09195 [cs]},
+  eprinttype = {arxiv},
+  note = {Versión 2 del 12 de enero de 2026. Póster en ECCV 2026.},
+  langid = {english},
+}
+
+@inproceedings{xia2025mmedrag,
+  author = {Xia, Peng and Zhu, Kangyu and Li, Haoran and Wang, Tianze and Shi, Weijia and Wang, Sheng and Zhang, Linjun and Zou, James and Yao, Huaxiu},
+  title = {{MMed-RAG}: Versatile Multimodal {RAG} System for Medical Vision Language Models},
+  booktitle = {International Conference on Learning Representations ({ICLR})},
+  date = {2025},
+  doi = {10.48550/arXiv.2410.13085},
+  url = {http://arxiv.org/abs/2410.13085},
+  eprint = {2410.13085 [cs]},
+  eprinttype = {arxiv},
+  langid = {english},
+}
+
+@inproceedings{xia2024rule,
+  author = {Xia, Peng and Zhu, Kangyu and Li, Haoran and Zhu, Hongtu and Li, Yun and Li, Gang and Zhang, Linjun and Yao, Huaxiu},
+  title = {{RULE}: Reliable Multimodal {RAG} for Factuality in Medical Vision Language Models},
+  booktitle = {Proceedings of the 2024 Conference on Empirical Methods in Natural Language Processing},
+  date = {2024-11},
+  pages = {1081--1093},
+  publisher = {Association for Computational Linguistics},
+  doi = {10.18653/v1/2024.emnlp-main.62},
+  url = {https://aclanthology.org/2024.emnlp-main.62/},
+  langid = {english},
+}
+
+@article{hartsock2024vision,
+  author = {Hartsock, Iryna and Rasool, Ghulam},
+  title = {Vision-language models for medical report generation and visual question answering: a review},
+  date = {2024-11-19},
+  journaltitle = {Frontiers in Artificial Intelligence},
+  volume = {7},
+  pages = {1430984},
+  doi = {10.3389/frai.2024.1430984},
+  url = {https://www.frontiersin.org/journals/artificial-intelligence/articles/10.3389/frai.2024.1430984/full},
+  langid = {english},
+}
+```
+
 ## 2. Consolidación del 17/09/2026
 
 El `.bib` se armó fusionando cuatro archivos dispersos: `estado_del_arte/referencias.bib` (37),
