@@ -1996,6 +1996,13 @@ los generativos los expertos son cinco evaluadores de las salidas del propio mod
 \subsection{Generación de reportes dermatológicos}
 \label{sec:estado_arte_reportes}
 
+Un reporte dermatológico reúne la descripción de lo que se ve, un diagnóstico y, cuando corresponde, una
+recomendación. Los trabajos difieren en cómo lo producen, con un único VLM o con un clasificador que precede a
+un redactor; en qué evidencia usan, solo la imagen o también un contexto recuperado; y en cómo lo evalúan, por
+parecido con una referencia, por corrección del diagnóstico, con un juez automático o con especialistas.
+Esos criterios miden cosas distintas (Secciones~\ref{sec:marco_rep_ejes} y~\ref{sec:marco_eval_texto}), y por eso
+importa qué mide cada trabajo y con qué hardware lo entrena.
+
 Un primer grupo de trabajos genera el texto con un único VLM ajustado a dermatología
 (Tabla~\ref{tab:marco_generadores}). SkinGPT-4 ajusta un VLM de la familia de MiniGPT-4 con Llama-2 sobre
 más de cincuenta mil imágenes, y lo evalúa con dermatólogos que juzgan sus diagnósticos sobre casos
@@ -2005,9 +2012,10 @@ de Llama~3.2 sobre DermaSynth, un conjunto de más de un millón de textos sint�
 grandes redactaron sobre imágenes dermatológicas públicas, con el objetivo de obtener un modelo que se
 ejecute localmente~\cite{yilmaz2025resourceefficient}. Skin-R1 entrena el
 razonamiento diagnóstico de Qwen2.5-VL primero con ajuste supervisado sobre trayectorias de razonamiento y
-después con aprendizaje por refuerzo~\cite{liu2025skinr1}.
+después con aprendizaje por refuerzo~\cite{liu2025skinr1}. SkinGPT-R1 (Sección~\ref{sec:estado_arte_vlm})
+también pertenece a este grupo.
 
-Un segundo grupo separa el diagnóstico de la redacción, como hace este trabajo. Khan et al.\ combinan un
+Un segundo grupo separa el diagnóstico de la redacción. Khan et al.\ combinan un
 ensamble de redes convolucionales con Llama-3 de 70 mil millones de parámetros, consultado por API, que
 convierte la predicción en un reporte estructurado; el ensamble además marca para revisión de un
 especialista los casos en que sus miembros no coinciden~\cite{khan2025ensemble}. SkinSavvy2 clasifica con
@@ -2016,7 +2024,7 @@ paciente~\cite{kim2025skinsavvy2}. Chakrabarti et al.\ destilan en LLaVA-1.5 los
 redacta sobre imágenes dermatoscópicas, estructurados según la lista de 7 puntos, y comparan esa
 destilación con un enfoque de recuperación~\cite{chakrabarti2025skin}.
 
-Otros trabajos extienden la generación en direcciones que este no sigue. SkinGEN acompaña el diagnóstico
+Otros trabajos extienden la generación en otras direcciones. SkinGEN acompaña el diagnóstico
 de SkinGPT-4 con imágenes de referencia generadas por difusión, como explicación
 visual~\cite{lin2025skingen}, y MpoxVLM combina la imagen con datos clínicos del paciente para una única
 enfermedad~\cite{cao2024mpoxvlm}.
@@ -2041,6 +2049,8 @@ enfermedad~\cite{cao2024mpoxvlm}.
         \filasep
         Skin-R1~\cite{liu2025skinr1} & Qwen2.5-VL-7B & exactitud del diagnóstico & 2 A100 \\
         \filasep
+        SkinGPT-R1~\cite{shen2025skingptr1} & Vision-R1-7B congelado con adaptadores & puntajes de un juez automático y de 5 dermatólogos & 8 RTX 4090 \\
+        \filasep
         Khan et al.~\cite{khan2025ensemble} & Llama-3 70B por API & --- & --- \\
         \filasep
         SkinSavvy2~\cite{kim2025skinsavvy2} & GPT-4 & estudio con usuarios & 4 RTX A6000 \\
@@ -2052,18 +2062,95 @@ enfermedad~\cite{cao2024mpoxvlm}.
     \end{tabularx}
 \end{table}
 
+Tres trabajos recientes ocupan un lugar aparte, uno por lo que evalúa y dos por cómo condicionan la
+generación. \textcite{shen2025dermbench} abordan cómo evaluar las narrativas diagnósticas dermatológicas más allá
+de las etiquetas y de las métricas de similitud textual, que según los autores correlacionan poco con la utilidad
+clínica porque ignoran la evidencia visual y la consistencia entre los signos y la conclusión. DermBench tiene una
+narrativa de referencia para cada una de 4\,000 imágenes de DermNet, que modelos de lenguaje redactan a partir de la
+etiqueta diagnóstica verdadera y que dermatólogos corrigen hasta que las seis dimensiones valen 5. Un juez
+automático, DeepSeek-R1, recibe solo texto y no la imagen, compara el candidato con la referencia y lo puntúa de
+0 a 5 en exactitud, seguridad, fundamentación médica, cobertura clínica, coherencia del razonamiento y
+precisión de la descripción. DermEval es un evaluador sin referencia: un LLaVA v1.5 de 7 mil millones de
+parámetros con LoRA que recibe la imagen y la narrativa, escribe una crítica estructurada y las seis puntuaciones, y
+se entrena en una etapa supervisada y otra de aprendizaje por refuerzo, con una recompensa igual al opuesto del
+error cuadrático contra los puntajes de médicos. La métrica es el error absoluto medio entre el puntaje del
+evaluador y el de los médicos. Sobre 500 imágenes y nueve modelos generales o médicos, 4\,500 narrativas en total,
+el error promedio de las seis dimensiones es 0.363 para DermBench y 0.178 para DermEval. En exactitud,
+LLaVA-Med-7B obtiene el puntaje más bajo, 1.207, contra 3.143 de Gemini 2.5 Flash; ningún modelo dermatológico
+entra en la comparación. Dos dermatólogos, coautores del trabajo, puntuaron todo y curaron las referencias, sin
+cuantificar el acuerdo entre ellos. Los autores reconocen que DermNet limita la diversidad, que las referencias se
+redactan con modelos y se corrigen después, lo que puede introducir sesgo, y que el puntaje médico puede ser
+ruidoso. El trabajo figura como póster de ECCV 2026, todavía sin actas, y aquí se lo cita como preimpresión.
+
+MMed-RAG~\cite{xia2025mmedrag} y RULE~\cite{xia2024rule}, del mismo grupo, son los antecedentes de la recuperación
+para VLM médicos. Buscan mejorar la factualidad de LLaVA-Med-1.5 con contexto recuperado y evitar dos riesgos: que
+el modelo copie el contexto e ignore la imagen, y que un contexto equivocado degrade respuestas que el modelo daba
+bien. En los dos la consulta es la imagen y lo recuperado son reportes de texto del conjunto de entrenamiento, con
+un recuperador entrenado con una pérdida contrastiva entre imagen y texto; los reportes se concatenan en el
+\emph{prompt} sin marginalizar. Ninguno de los dos recupera imágenes ni se abstiene. Difieren en cuántos reportes
+recuperan. RULE calibra $k$ sobre el conjunto de validación con un control estadístico del riesgo, definido como la
+exactitud de las preguntas, mientras que MMed-RAG corta la lista donde la similitud cae de forma brusca. Los dos
+ajustan además el generador con optimización directa de preferencias, para que use el contexto solo cuando
+ayuda, y MMed-RAG elige el recuperador según el dominio de la imagen. Los datos son IU-Xray, MIMIC-CXR y Harvard-FairVLMed en ambos,
+de radiología y oftalmología, y en MMed-RAG además dos conjuntos de patología; no hay dermatología. Las
+preguntas de sí o no las genera GPT-4 a partir de los reportes. Las métricas son la exactitud, el F1 y el AUROC en
+las preguntas, y BLEU, ROUGE-L y METEOR en los reportes. Ambos se comparan con métodos de decodificación y con otros
+VLM médicos, y MMed-RAG también con RULE. En IU-Xray la exactitud de las preguntas sube de 75.47 a 87.84 con RULE y a 89.54 con
+MMed-RAG, y el BLEU de los reportes pasa de 9.64 a 27.53 y a 31.38. MMed-RAG declara una mejora relativa media de
+18.5\,\% en las preguntas y de 69.1\,\% en los reportes sobre el modelo base, que en los reportes se mide con métricas
+léxicas. En la ablación de RULE, el contexto recuperado sin más empeora MIMIC-CXR, de 75.79 a 67.35, porque, según los
+autores, sus reportes son muy largos y confunden al modelo. Ninguno de los dos incluye evaluación con expertos.
+RULE reconoce solo que deja para el futuro la seguridad, la equidad, la robustez y la privacidad, y MMed-RAG
+señala que sus experimentos son \emph{zero-shot} y que una modalidad nueva puede exigir reentrenar el recuperador.
+
+\begin{table}[htbp]
+    \centering
+    \caption[Evaluación de narrativas y recuperación en modelos visión--lenguaje médicos]{Trabajos recientes
+    sobre la evaluación de narrativas dermatológicas y sobre la recuperación de contexto para modelos
+    visión--lenguaje médicos. Las cifras son las que informa cada trabajo, en su alcance. BLEU se informa en
+    IU-Xray. DermBench es una preimpresión; MMed-RAG y RULE son artículos de conferencia.}
+    \label{tab:marco_sota_reportes}
+    \footnotesize
+    \setlength{\tabcolsep}{3.5pt}
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{1.9cm}
+        c
+        >{\raggedright\arraybackslash\hspace{0pt}}X >{\raggedright\arraybackslash\hspace{0pt}}X
+        >{\raggedright\arraybackslash\hspace{0pt}}p{2.2cm} >{\raggedright\arraybackslash\hspace{0pt}}X
+        >{\raggedright\arraybackslash\hspace{0pt}}p{1.9cm}@{}}
+        \toprule
+        Trabajo & Año & Arquitectura & Datos & Métricas & Resultado principal & Expertos \\
+        \midrule
+        \textcite{shen2025dermbench} & 2025 & Juez automático contra una referencia y evaluador LLaVA v1.5 7B
+            con LoRA y aprendizaje por refuerzo
+            & 4\,000 imágenes de DermNet con referencia; 500 imágenes y nueve modelos
+            & Error absoluto medio contra puntajes de médicos, seis dimensiones
+            & Error medio 0.363 (DermBench) y 0.178 (DermEval); LLaVA-Med-7B, el más bajo
+            & 2 dermatólogos, coautores, sin acuerdo entre ellos \\
+        \filasep
+        \textcite{xia2025mmedrag} & 2025 & LLaVA-Med-1.5 con recuperación de reportes por dominio, $k$ adaptativo y
+            optimización de preferencias
+            & IU-Xray, MIMIC-CXR, Harvard-FairVLMed, PMC-OA, Quilt-1M
+            & Exactitud, F1, AUROC; BLEU, ROUGE-L, METEOR
+            & Exactitud en IU-Xray 75.47 a 89.54; BLEU 9.64 a 31.38
+            & No \\
+        \filasep
+        \textcite{xia2024rule} & 2024 & LLaVA-Med-1.5 con recuperación de reportes, $k$ calibrado con control de
+            riesgo y optimización de preferencias
+            & IU-Xray, MIMIC-CXR, Harvard-FairVLMed
+            & Exactitud, F1; BLEU, ROUGE-L, METEOR
+            & Exactitud en IU-Xray 75.47 a 87.84; BLEU 9.64 a 27.53
+            & No \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
 Los trabajos evalúan el texto de maneras muy distintas. Varios usan métricas con referencia, que miden el
 parecido con un texto particular y no la corrección clínica (Sección~\ref{sec:marco_eval_texto}); otros
 miden solo si el diagnóstico es correcto, sin juzgar la descripción, y pocos combinan las dos cosas con la
-revisión de un especialista. El hardware va de dos GPU de consumo a ocho A100, y dos de los tres sistemas que separan
-diagnóstico y redacción redactan con un modelo grande consultado por API.
+revisión de un especialista. DermBench pasa de esa medida de parecido a dimensiones clínicas, pero sus referencias
+se redactan con la etiqueta a la vista, su juez no ve la imagen y solo se aplicó a modelos generales. MMed-RAG y RULE
+muestran que el contexto recuperado puede mejorar la factualidad y también degradarla, aunque solo miden los reportes
+con métricas léxicas, en radiología y oftalmología, y recuperan textos y no casos.
+El hardware va de dos GPU de consumo a ocho A100, y dos de los tres sistemas que separan diagnóstico y redacción redactan con
+un modelo grande consultado por API.
 
-De esta revisión sale la brecha que aborda la tesina, que tiene tres partes. No hay comparaciones bajo un
-mismo protocolo entre clasificadores supervisados, VLM médicos generales y modelos visión--lenguaje
-dermatológicos; el trabajo las hace sobre la misma partición de HAM10000 y en HIBA. La mayoría de los
-generadores se evalúa por parecido textual y no por fidelidad diagnóstica; el trabajo mide las dos
-condiciones de la Sección~\ref{sec:marco_rep_ejes} por separado. Y pocos trabajos tratan la
-incertidumbre del diagnóstico o se limitan a hardware accesible: el ensamble de Khan et al.\ deriva los
-casos discordantes, pero redacta con un modelo de 70 mil millones de parámetros por API. El trabajo usa el
-acuerdo entre el clasificador y los vecinos de DermLIP para decidir cómo redactar cada caso, y ejecuta todo
-el \emph{pipeline} en GPU de consumo.
