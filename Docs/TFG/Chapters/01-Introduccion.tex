@@ -60,8 +60,7 @@ lesión y el de su documentación. De ahí surgen dos tareas computacionales dis
 lesión y redactar su reporte.
 
 Para reducir esos retrasos se aplicaron métodos computacionales, entre ellos las redes neuronales. Con el
-aprendizaje profundo, las redes neuronales convolucionales (\gls{cnn}) y los \emph{transformers} visuales
-(\gls{vit}) entrenados de forma supervisada sobre imágenes etiquetadas se aplicaron a la clasificación de
+aprendizaje profundo, las \glspl{cnn} y los \glspl{vit} entrenados de forma supervisada sobre imágenes etiquetadas se aplicaron a la clasificación de
 lesiones~\cite{dosovitskiy2021image,liu2021swin}. Ya en 2017 una red convolucional alcanzó un desempeño
 comparable al de dermatólogos certificados~\cite{esteva2017dermatologistlevel}, y en 2019 el estudio de
 observadores ya citado encontró que los mejores algoritmos superaban a los expertos humanos sobre el mismo tipo
@@ -76,7 +75,7 @@ desempeño se conserva fuera de condiciones de interpretación especializada~\ci
 Además, un clasificador produce una categoría, o una distribución sobre categorías, y no el texto que la
 describe, de modo que la segunda tarea, la documentación, queda sin asistencia.
 
-Los modelos visión--lenguaje (\gls{vlm}) responden en parte a esa limitación de la salida, porque integran
+Los \glspl{vlm} responden en parte a esa limitación de la salida, porque integran
 información visual y textual. Se entrenan con pares imagen--descripción que ubican a ambas modalidades en un
 espacio común, lo que permite clasificar una imagen comparándola con frases sin fijar de antemano las
 categorías posibles~\cite{radford2021learning}. Los modelos generativos multimodales agregan un modelo de
@@ -116,7 +115,7 @@ que no se traducen entre sí, de modo que la respuesta a una no adelanta la de l
   \item ¿Cómo se compara el desempeño de modelos visión--lenguaje generales y especializados con el de
   clasificadores visuales supervisados en la clasificación de lesiones de piel y en la detección de melanoma?
   \item ¿Qué fidelidad diagnóstica y qué calidad descriptiva alcanzan, por separado, los reportes que genera un
-  VLM ajustado a partir de la imagen?
+  \gls{vlm} ajustado a partir de la imagen?
 \end{enumerate}
 
 La primera pregunta se responde en el Capítulo~\ref{cp:res_clasif} y la segunda en el
@@ -159,11 +158,11 @@ responder y con los capítulos donde se lo describe y se lo evalúa.
     \toprule
     Objetivo específico & Pregunta & Se diseña y describe en & Se evalúa y responde en \\
     \midrule
-    OE1. Clasificadores de lesiones y de melanoma (CNN, ViT, VLM) & PI1 &
+    OE1. Clasificadores de lesiones y de melanoma (\gls{cnn}, \gls{vit}, \gls{vlm}) & PI1 &
       Capítulo~\ref{cp:metodos}, Materiales y métodos &
       Capítulo~\ref{cp:res_clasif}, Resultados de clasificación \\
     \filasep
-    OE2. VLM para generar reportes & PI2 &
+    OE2. \gls{vlm} para generar reportes & PI2 &
       Capítulo~\ref{cp:metodos}, Materiales y métodos &
       Capítulo~\ref{cp:res_gen}, Resultados de generación \\
     \filasep
