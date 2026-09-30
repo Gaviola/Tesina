@@ -1639,84 +1639,177 @@ ese protocolo permite afirmar que el resultado se sostiene fuera de su conjunto 
 \section{Estado del arte}
 \label{sec:estado_arte}
 
-Con los conceptos de las secciones anteriores ya presentados, esta sección revisa los trabajos más
-cercanos a la tesina en tres líneas que siguen el orden del \emph{pipeline}: el diagnóstico automático de
-lesiones, los modelos visión--lenguaje entrenados para dermatología y la generación de reportes
-dermatológicos. Cada línea cierra con lo que el trabajo toma de ella o con aquello en que se aparta. Para
-acotar la búsqueda, la revisión se limita a trabajos publicados desde 2020, y los anteriores aparecen
-solo como hitos, con su fecha.
+Los trabajos más cercanos a esta tesina se agrupan según el problema que abordan: la clasificación de lesiones
+de piel, los modelos visión--lenguaje construidos o evaluados para dermatología y la generación de reportes
+dermatológicos. De cada trabajo se dice qué se propuso, con qué método, con qué datos y métricas, contra qué
+sistemas se comparó, qué resultados obtuvo, si participaron expertos y qué limitaciones reconocen sus autores.
+Los que se ubican más cerca de lo que evalúa el resto del documento se describen con ese detalle, y los demás
+en pocas líneas y en las tablas comparativas. Para acotar la búsqueda, la revisión se limita a trabajos
+publicados desde 2020, y los anteriores aparecen solo como hitos, con su fecha. Varios trabajos de 2025 y 2026
+son preimpresiones de arXiv que aún no pasaron por revisión de pares, y en cada caso se lo indica.
 
 \subsection{Diagnóstico automático de lesiones de piel}
 \label{sec:estado_arte_diagnostico}
 
-La línea tiene dos hitos anteriores a 2020. En 2017 una CNN entrenada sobre un conjunto
-grande de imágenes clínicas y dermatoscópicas alcanzó un desempeño comparable al de dermatólogos
-certificados en la distinción entre lesiones benignas y malignas~\cite{esteva2017dermatologistlevel}. En
-2019, un estudio abierto sobre imágenes de HAM10000 comparó el diagnóstico de 511 participantes humanos,
-la mayoría dermatólogos, con el de 139 clasificadores automáticos presentados al desafío ISIC 2018. En
-promedio, los clasificadores acertaron más que los participantes, y los tres mejores superaron también
-a los expertos con más de diez años de experiencia~\cite{tschandl2019comparison}. Los dos resultados fijaron la clasificación de lesiones como una
+La clasificación de lesiones asigna a una imagen una entre varias categorías diagnósticas. Se evalúa sobre
+conjuntos públicos de imágenes dermatoscópicas, como el conjunto de datos HAM10000 y los de los desafíos ISIC,
+o de fotografías clínicas, con métricas de clasificación. Para leer un trabajo de esta
+línea importa cómo trata el desbalance de clases, con qué métrica elige el modelo, si mantiene las imágenes de
+una misma lesión dentro de una partición, si valida fuera de la fuente de los datos y si compara contra
+clínicos. Los conjuntos se detallan en la Sección~\ref{sec:met_datasets}.
+
+En 2017 una CNN entrenada sobre un conjunto grande de imágenes clínicas y dermatoscópicas alcanzó un
+desempeño comparable al de dermatólogos certificados en la distinción entre lesiones benignas y
+malignas~\cite{esteva2017dermatologistlevel}. En 2019, un estudio abierto sobre imágenes del conjunto de datos
+HAM10000 comparó el diagnóstico de 511 participantes humanos, la mayoría dermatólogos, con el de 139
+clasificadores automáticos presentados al desafío ISIC 2018. En promedio, los clasificadores acertaron más que
+los participantes, y los tres mejores superaron también a los expertos con más de diez años de
+experiencia~\cite{tschandl2019comparison}. Los dos resultados fijaron la clasificación de lesiones como una
 tarea en la que el aprendizaje profundo compite con el especialista.
 
-Esa tarea se apoya en conjuntos públicos que difieren en modalidad, tamaño, etiquetas y población
-(Tabla~\ref{tab:marco_conjuntos}). Los conjuntos dermatoscópicos con diagnóstico confirmado, como
-HAM10000 y los del desafío ISIC, provienen sobre todo de centros de Europa, Estados Unidos y Australia. Los
-conjuntos clínicos más recientes buscan diversidad de fototipos o de enfermedades, y los que asocian un
-texto a cada imagen aparecieron recién en los últimos dos años. El trabajo usa cuatro de ellos, que se
-describen en la Sección~\ref{sec:met_datasets}.
+\textcite{liu2020deep} extendieron la tarea de la lesión aislada a las 26 condiciones de piel más frecuentes
+en atención primaria, a partir de fotografías clínicas y de la historia del paciente, y compararon el sistema
+con clínicos. Procesan de una a seis imágenes por caso con módulos Inception-v4 de pesos compartidos,
+incorporan 45 variables de metadatos con una red superficial y fusionan ambas ramas en una capa tardía. El
+entrenamiento usa etiquetas blandas, construidas con los votos de un panel de dermatólogos, y una pérdida
+ponderada según la frecuencia de cada clase, y el resultado es el promedio de seis redes. Los datos son casos de
+una práctica de teledermatología de 17 sitios de Estados Unidos, con una partición temporal y sin pacientes en
+común: 14\,021 casos para el desarrollo y 3\,756 para la validación. La referencia es el diagnóstico de tres
+dermatólogos por caso, sin confirmación patológica. Las métricas son la exactitud y la sensibilidad promedio
+entre las condiciones, calculadas sobre el primer diagnóstico y sobre los tres primeros; se promedia entre
+condiciones para no favorecer a las más comunes. En la validación completa la exactitud del primer diagnóstico
+es 0.71. En un subconjunto de 963 casos enriquecido con condiciones poco frecuentes, el sistema se comparó con
+18 clínicos, seis dermatólogos, seis médicos de atención primaria y seis enfermeros especializados, y
+alcanzó una exactitud de 0.67 contra 0.63, 0.45 y 0.41; resultó no inferior a los dermatólogos con un margen
+de 5\,\%. Entre los tumores malignos (83 casos), en cambio, la sensibilidad del primer diagnóstico fue 0.57 contra 0.71
+de los dermatólogos, y solo con los tres primeros diagnósticos se igualan (0.88 y 0.89). El melanoma es apenas
+el 0.6\,\% de los casos. Los autores reconocen que la partición temporal no reemplaza a un conjunto
+externo, que la referencia carece de confirmación patológica, que se excluyeron los casos con varias condiciones
+y que falta evaluar la generalización a otros sitios, países y dispositivos.
+
+Otros dos trabajos de la línea se plantean el desbalance y el costo del melanoma dentro de los desafíos ISIC.
+\textcite{gessert2020skin} describen la participación con que ganaron las dos tareas del desafío ISIC 2019,
+clasificar imágenes dermatoscópicas sin y con metadatos del paciente, que combinaba una clase desconocida en la
+prueba, un desbalance severo y resoluciones muy dispares. Preprocesan las imágenes, combinan EfficientNet, SENet154
+y ResNeXt en un ensamble cuyo subconjunto óptimo eligen por búsqueda exhaustiva en validación cruzada, ponderan la
+entropía cruzada por la frecuencia inversa de cada clase (la pérdida focal no mejoró), agregan una novena clase
+con imágenes externas para la clase desconocida e incorporan los metadatos con una rama densa. Entrenan con las
+25\,331 imágenes del desafío, que incluyen las del conjunto HAM10000, en cinco particiones que mantienen todas las
+imágenes de una misma lesión juntas. La métrica es la sensibilidad macro, que este trabajo y el siguiente llaman
+sensibilidad media o exactitud balanceada, junto con el AUC y la sensibilidad y la especificidad por clase. No se
+comparan con otros métodos, y la evidencia es el primer puesto del ranking oficial. En validación cruzada el
+ensamble llega a 72.5\,\% y a 74.2\,\% con metadatos, pero en la prueba oficial obtiene 63.6\,\% y 63.4\,\%, una brecha
+de 9 a 11 puntos que los autores atribuyen en parte a la clase desconocida, en la que la sensibilidad es de
+0.3\,\% y 0.0\,\%. No hubo evaluación con expertos. Los autores presentan el método como una combinación de técnicas
+establecidas y reconocen que predecir la clase desconocida y usar bien los metadatos siguen siendo problemas
+difíciles.
+
+\textcite{yao2022single} proponen en cambio un modelo único, de bajo costo, para conjuntos pequeños y
+desbalanceados. Comparan 41 CNN de seis familias, eligen la mejor para cada conjunto (una RegNetY) y le
+agregan DropBlock y Dropout, una versión modificada de RandAugment, una pérdida que combina la ponderación por
+número efectivo de muestras, la pérdida focal, un coeficiente por clase, mayor para el melanoma, y un umbral que
+limita el aporte de las muestras atípicas, y una estrategia de aprendizaje acumulativo que pasa gradualmente del
+entrenamiento convencional al rebalanceo. Usan cuatro conjuntos dermatoscópicos: ISIC 2017, ISIC 2018, que
+corresponde a HAM10000, ISIC 2019 y 7-point. La métrica principal es la sensibilidad macro, y la sensibilidad de
+melanoma se informa aparte. Se comparan con los ganadores de los desafíos de 2017 a 2019, entre ellos el trabajo
+de Gessert et al., y con otras pérdidas para el desbalance. En ISIC 2018 alcanzan una sensibilidad macro de 0.875 y una
+sensibilidad de melanoma de 0.819, y en ISIC 2019, 0.645 contra 0.636 del ganador. Muestran además un
+compromiso entre las dos: al subir el coeficiente del melanoma de 1.0 a 2.0, su sensibilidad pasa de 0.772 a
+0.871 y la sensibilidad macro baja de 0.864 a 0.848. Una inferencia lleva 0.05 s, frente a 13.9 s de un ensamble de
+90 redes. No hubo evaluación con expertos. Los autores reconocen que la estrategia acumulativa funciona mal en los
+conjuntos más pequeños y que los ensambles rinden en general mejor que un modelo único. El artículo no describe una
+partición de validación separada: la arquitectura y los hiperparámetros se eligen con la sensibilidad macro sobre la
+prueba de ISIC 2018, evaluada en el servidor del desafío, y todas las arquitecturas consideradas son convolucionales.
+
+\textcite{marchetti2023prospective} llevaron un algoritmo de la línea anterior fuera del banco de pruebas. Validan
+de forma prospectiva, con biopsia como referencia, el ganador del desafío SIIM-ISIC 2020, y evalúan su efecto sobre
+las decisiones de dermatólogos. Es un ensamble de 18 modelos, 16 EfficientNet y 2 ResNet, con 90 archivos de
+pesos, entrenado solo con imágenes dermatoscópicas públicas; su base incluye el trabajo de Gessert et al. El
+umbral se fijó antes del estudio, con el conjunto de prueba del desafío, en el valor que da una sensibilidad de
+95\,\%. El estudio es observacional y de un solo brazo, en clínicas de Nueva York y Nueva Jersey, con patólogos
+que desconocen el puntaje. Incluye 435 participantes y 603 lesiones biopsiadas, 95 de ellas melanomas. En el
+umbral prefijado la sensibilidad fue 96.8\,\% y la especificidad 37.4\,\%. El AUC fue 0.857, similar a 0.854 en la prueba del
+desafío y superior al de la probabilidad que los dermatólogos estimaron sin ayuda (0.780), al del diámetro máximo
+de la lesión y al de la edad. Con acceso al puntaje, el AUC de 11 dermatólogos subió de 0.7798 a 0.8161, pero el
+efecto sobre la confianza, la calibración y la conducta fue heterogéneo entre ellos, y el impacto es teórico
+porque no se modificó la atención de ningún paciente. Los autores reconocen que fue un estudio de un solo centro,
+con pocos dermatólogos y una muestra pequeña, sobre todo para los subtipos raros de melanoma; que ningún participante
+era de fototipo V o VI (el 96\,\% eran de raza blanca); que puede haber sesgo de reclutamiento; y que se evaluaron
+solo lesiones ya destinadas a biopsia.
+
+Los trabajos recientes sobre el conjunto de datos HAM10000 y sobre conjuntos afines muestran otra cara de la
+línea. Una revisión sistemática de la detección de cáncer de piel con aprendizaje profundo señala que la
+variabilidad de los métodos, incluido el preprocesamiento, dificulta comparar los resultados entre
+estudios~\cite{magalhaes2024systematic}. Varios trabajos informan exactitudes altas con ensambles de EfficientNet,
+con Swin o con redes convolucionales comparadas entre sí, y en varios de ellos la cifra principal es la
+exactitud o el F1 ponderado~\cite{aboulmira2024skinhealthmate,khan2025ensemble,kreouzi2024learning}. Como se vio
+en la Sección~\ref{sec:marco_eval_clasif}, esas dos métricas pueden ser altas aunque el modelo falle en las
+clases minoritarias. SkinSavvy2, que usa Swin sobre una versión balanceada del conjunto de datos HAM10000,
+informa en cambio F1 promedio y sensibilidad macro~\cite{kim2025skinsavvy2}.
 
 \begin{table}[htbp]
     \centering
-    \caption[Conjuntos públicos de imágenes dermatológicas]{Conjuntos públicos de imágenes dermatológicas.
-    «Texto» indica si cada imagen tiene una descripción en lenguaje natural. Las cifras son las que
-    informa cada trabajo.}
-    \label{tab:marco_conjuntos}
-    \small
-    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{3cm}
-        >{\raggedright\arraybackslash\hspace{0pt}}p{2.6cm} >{\raggedright\arraybackslash\hspace{0pt}}p{2cm}
-        >{\raggedright\arraybackslash\hspace{0pt}}X c@{}}
+    \caption[Trabajos de clasificación de lesiones de piel]{Trabajos recientes de clasificación de lesiones de
+    piel. Las cifras son las que informa cada trabajo, en su alcance. «Sensibilidad macro» agrupa la
+    sensibilidad media y la exactitud balanceada que usan los trabajos. PCP: médicos de atención primaria; NP:
+    enfermeros especializados.}
+    \label{tab:marco_sota_clasificacion}
+    \footnotesize
+    \setlength{\tabcolsep}{3.5pt}
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{1.9cm}
+        c
+        >{\raggedright\arraybackslash\hspace{0pt}}X >{\raggedright\arraybackslash\hspace{0pt}}X
+        >{\raggedright\arraybackslash\hspace{0pt}}p{2.2cm} >{\raggedright\arraybackslash\hspace{0pt}}X
+        >{\raggedright\arraybackslash\hspace{0pt}}p{1.9cm}@{}}
         \toprule
-        Conjunto & Modalidad & Tamaño & Etiquetas y población & Texto \\
+        Trabajo & Año & Arquitectura & Datos & Métricas & Resultado principal & Expertos \\
         \midrule
-        HAM10000~\cite{tschandl2018ham10000} & dermatoscópica & 10\,015 imágenes & 7 categorías; Austria y Australia & no \\
+        \textcite{liu2020deep} & 2020 & Inception-v4 por imagen y red de metadatos; ensamble de 6
+            & 14\,021 casos de desarrollo y 3\,756 de validación, clínicos, de 17 sitios; 26 condiciones
+            & Exactitud y sensibilidad promedio, primer diagnóstico y tres primeros
+            & Exactitud 0.71 (validación); 0.67 contra 0.63 (dermatólogos), 0.45 (PCP) y 0.41 (NP)
+            & 18 clínicos; referencia de 3 dermatólogos \\
         \filasep
-        ISIC 2018~\cite{codella2019skin} & dermatoscópica & más de 12\,500 & segmentación, atributos y 7 categorías & no \\
+        \textcite{gessert2020skin} & 2020 & Ensamble de EfficientNet, SENet154 y ResNeXt con rama de metadatos
+            & ISIC 2019, 25\,331 imágenes dermatoscópicas, 8 clases; 5 particiones por lesión
+            & Sensibilidad macro, AUC
+            & Validación cruzada 72.5\,\%, prueba oficial 63.6\,\%; primer puesto
+            & No \\
         \filasep
-        Fitzpatrick17k~\cite{groh2021neural} & clínica & 16\,577 & 114 enfermedades y fototipo; atlas en línea & no \\
+        \textcite{yao2022single} & 2022 & Una RegNetY con DropBlock, RandAugment modificado y pérdida propia
+            & ISIC 2017, 2018, 2019 y 7-point, dermatoscópicas
+            & Sensibilidad macro y de melanoma, AUC
+            & ISIC 2018: 0.875 y 0.819; ISIC 2019: 0.645; 0.05\,s por inferencia
+            & No \\
         \filasep
-        DDI~\cite{daneshjou2022disparities} & clínica & 656 & confirmación histopatológica; fototipos diversos & no \\
-        \filasep
-        SkinCon~\cite{daneshjou2022skincon} & clínica & 3\,230 + 656 & 48 conceptos clínicos sobre Fitzpatrick17k y DDI & no \\
-        \filasep
-        SCIN~\cite{ward2024empirical} & fotografía propia & 10\,408 & enfermedades sobre todo inflamatorias; Estados Unidos & no \\
-        \filasep
-        HIBA~\cite{riccilara2023dataset} & dermatoscópica y clínica & 1\,616 & 1\,246 lesiones de 623 pacientes; Argentina & no \\
-        \filasep
-        SkinCaRe~\cite{shen2025skincare} & clínica & 4\,000 + 3\,041 & descripciones y razonamiento diagnóstico; Fitzpatrick17k y DDI & sí \\
-        \filasep
-        MM-Skin~\cite{zeng2025mmskin} & clínica, dermatoscópica y patológica & casi 10\,000 pares & 15 libros de texto de dermatología & sí \\
-        \filasep
-        Derm1M~\cite{yan2025derm1m} & varias & 1\,029\,761 pares & más de 390 enfermedades en una ontología; recursos educativos & sí \\
+        \textcite{marchetti2023prospective} & 2023 & Ensamble de 18 modelos, 90 archivos de pesos
+            & 603 lesiones dermatoscópicas biopsiadas de 435 participantes; 95 melanomas
+            & Sensibilidad y especificidad en umbral de 95\,\%, AUC
+            & Sensibilidad 96.8\,\%, especificidad 37.4\,\%; AUC 0.857
+            & 11 dermatólogos, en la práctica; impacto teórico \\
         \bottomrule
     \end{tabularx}
 \end{table}
 
-Sobre esos conjuntos, la clasificación actual combina arquitecturas convolucionales y transformers con
-preentrenamiento en ImageNet. Una revisión sistemática de la detección de cáncer de piel con aprendizaje
-profundo señala que la variabilidad de los métodos, incluido el preprocesamiento, dificulta comparar los
-resultados entre estudios~\cite{magalhaes2024systematic}. Los trabajos recientes sobre HAM10000 y conjuntos
-afines reportan exactitudes altas con ensambles de EfficientNet, con Swin o con redes convolucionales
-comparadas entre sí, y en varios de ellos la cifra principal es la exactitud o el F1
-ponderado~\cite{aboulmira2024skinhealthmate,khan2025ensemble,kreouzi2024learning}. Como se vio en la
-Sección~\ref{sec:marco_eval_clasif}, esas dos métricas pueden ser altas aunque el modelo falle en las
-clases minoritarias. SkinSavvy2, que usa Swin sobre una versión balanceada de HAM10000, reporta en cambio
-F1 promedio y exactitud balanceada~\cite{kim2025skinsavvy2}.
+Los trabajos de la línea ampliaron la tarea, trataron el desbalance dentro de los desafíos y llevaron el modelo
+fuera del banco de pruebas. \textcite{liu2020deep} pasan de la lesión aislada a 26 condiciones y muestran que un
+promedio global oculta la debilidad en los tumores malignos. \textcite{gessert2020skin} y \textcite{yao2022single}
+atienden el desbalance y el melanoma dentro de ISIC, uno con pérdida ponderada, particiones por lesión y ensambles, el otro con un
+modelo único y un coeficiente propio para el melanoma. En ambos la métrica de selección es un promedio por clase y el melanoma tiene su
+propia sensibilidad, pero la evidencia descansa sobre la prueba de un desafío, con una brecha de 9 a 11 puntos entre validación
+cruzada y prueba en el primero y una selección de hiperparámetros sobre la prueba en el segundo.
+\textcite{marchetti2023prospective} validan de forma prospectiva un ensamble heredero de esos métodos: el AUC se
+mantiene, la especificidad es de 37.4\,\% y la mejora sobre los dermatólogos, en las decisiones, es modesta.
 
-Los problemas recurrentes de la línea son los de la Sección~\ref{sec:marco_generalizacion}: desbalance de
-clases, poca validación externa y desempeño desigual según el fototipo. El trabajo toma de esta línea las
-arquitecturas y el preentrenamiento, y se aparta en el protocolo: compara cuatro arquitecturas de las dos
-familias bajo la misma partición disjunta por lesión, selecciona por F1 macro y evalúa también fuera de
-distribución.
+Cuatro cuestiones quedan abiertas. Los cuatro trabajos usan redes convolucionales, y ninguno compara CNN y
+transformers visuales bajo un mismo protocolo. Solo \textcite{gessert2020skin} describen particiones que
+mantienen juntas las imágenes de una misma lesión, y \textcite{yao2022single} no informan cómo se
+controla la fuga de información entre particiones. La validación fuera de la fuente es temporal en
+\textcite{liu2020deep} y prospectiva, en un solo centro y sin fototipos V y VI, en
+\textcite{marchetti2023prospective}, y ninguno de los cuatro incluye una población latinoamericana. Por último, el
+ganador del desafío ISIC 2019 y el algoritmo validado de forma prospectiva son ensambles de varios modelos, este
+último de 90 archivos de pesos, y ninguno de los cuatro trabajos acompaña el diagnóstico de un reporte ni decide
+cuándo abstenerse.
 
 \subsection{Modelos visión--lenguaje en dermatología}
 \label{sec:estado_arte_vlm}
