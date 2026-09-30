@@ -2067,8 +2067,8 @@ clínica porque ignoran la evidencia visual y la consistencia entre los signos y
 narrativa de referencia para cada una de 4\,000 imágenes de DermNet, que modelos de lenguaje redactan a partir de la
 etiqueta diagnóstica verdadera y que dermatólogos corrigen hasta que las seis dimensiones valen 5. Un juez
 automático, DeepSeek-R1, recibe solo texto y no la imagen, compara el candidato con la referencia y lo puntúa de
-0 a 5 en exactitud, seguridad, fundamentación médica, cobertura clínica, coherencia del razonamiento y
-precisión de la descripción. DermEval es un evaluador sin referencia: un LLaVA v1.5 de 7 mil millones de
+0 a 5 en seis dimensiones, que el trabajo llama exactitud, seguridad, fundamentación médica, cobertura
+clínica, coherencia del razonamiento y «precisión de la descripción». DermEval es un evaluador sin referencia: un LLaVA v1.5 de 7 mil millones de
 parámetros con LoRA que recibe la imagen y la narrativa, escribe una crítica estructurada y las seis puntuaciones, y
 se entrena en una etapa supervisada y otra de aprendizaje por refuerzo, con una recompensa igual al opuesto del
 error cuadrático contra los puntajes de médicos. La métrica es el error absoluto medio entre el puntaje del
