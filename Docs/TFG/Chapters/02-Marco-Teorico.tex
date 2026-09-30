@@ -1004,12 +1004,7 @@ dónde viene la incertidumbre de un modelo.
 La incertidumbre de una predicción tiene dos fuentes. La incertidumbre aleatoria proviene de los datos: una
 imagen desenfocada, o una lesión cuyo aspecto es compatible con varias categorías, deja la respuesta
 indeterminada aunque el modelo sea bueno, y reunir más datos no la reduce. La incertidumbre epistémica
-proviene del modelo, que no vio suficientes ejemplos de cierto tipo de lesión, y disminuye con más datos.
-
-\pendiente[Cita de incertidumbre aleatoria y epistémica]{Citar la distinción entre incertidumbre aleatoria y
-epistémica. Referencia propuesta: Kendall, A. y Gal, Y., «What Uncertainties Do We Need in Bayesian Deep
-Learning for Computer Vision?», NeurIPS 2017, arXiv:1703.04977 (clave sugerida
-\texttt{kendall2017uncertainties}; no está en el \texttt{.bib}).}
+proviene del modelo, que no vio suficientes ejemplos de cierto tipo de lesión, y disminuye con más datos~\cite{kendall2017uncertainties}.
 
 Una tercera fuente es el cambio de distribución (Sección~\ref{sec:marco_generalizacion}). Cuando la imagen
 proviene de un equipo, un centro o una población que el entrenamiento no cubrió, lo que el modelo aprendió puede
@@ -1042,13 +1037,7 @@ el modelo acepta, y el riesgo selectivo es la tasa de error medida solo sobre la
 \end{equation}
 donde $y$ es la categoría real y se usa la pérdida que vale 1 si la predicción es errónea y 0 si es correcta.
 Sobre $n$ imágenes, la cobertura es la proporción de imágenes con $g(x_i) = 1$ y el riesgo, la proporción de
-errores entre ellas.
-
-\pendiente[Cita de clasificación selectiva]{Citar la formulación de clasificación con rechazo, con cobertura y
-riesgo selectivo. Referencias propuestas: Geifman, Y. y El-Yaniv, R., «Selective Classification for Deep Neural
-Networks», NeurIPS 2017, arXiv:1705.08500 (clave sugerida \texttt{geifman2017selective}); El-Yaniv, R. y Wiener,
-Y., «On the Foundations of Noise-free Selective Classification», \emph{Journal of Machine Learning Research}
-11:1605--1641, 2010 (clave sugerida \texttt{elyaniv2010foundations}). Ninguna está en el \texttt{.bib}.}
+errores entre ellas~\cite{elyaniv2010foundations,geifman2017selective}.
 
 Una forma habitual de construir $g$ es partir de una señal de confianza $\kappa(x)$, un número que crece con la
 seguridad del modelo, y de un umbral $\tau$,
@@ -1065,12 +1054,7 @@ nivel del error global. La curva evalúa así la señal con independencia del um
 
 La señal más simple es la máxima probabilidad de la softmax, $\kappa(x) = \max_c p_c$: el modelo se abstiene
 cuando ninguna clase supera un umbral de probabilidad. Esa señal sirve de línea base para detectar predicciones
-erróneas.
-
-\pendiente[Cita de la señal de máxima probabilidad]{Citar la máxima probabilidad de la softmax como línea base
-para detectar ejemplos mal clasificados. Referencia propuesta: Hendrycks, D. y Gimpel, K., «A Baseline for
-Detecting Misclassified and Out-of-Distribution Examples in Neural Networks», ICLR 2017, arXiv:1610.02136
-(clave sugerida \texttt{hendrycks2017baseline}; no está en el \texttt{.bib}).}
+erróneas~\cite{hendrycks2017baseline}.
 
 Qué tan buena es esa señal, y qué otras existen, depende de si las probabilidades del modelo significan lo que
 dicen.
@@ -1241,15 +1225,9 @@ macro} es ese promedio,
     \text{sensibilidad macro} = \frac{1}{C}\sum_{c=1}^{C} R_c,
     \label{eq:marco_acc_bal}
 \end{equation}
-y en la literatura se la llama también exactitud balanceada. Una clase rara mal clasificada la baja tanto
+y en la literatura se la llama también exactitud
+balanceada~\cite{brodersen2010balanced,sokolova2009systematic}. Una clase rara mal clasificada la baja tanto
 como una frecuente.
-
-\pendiente[Cita de la exactitud balanceada]{Citar la definición de exactitud balanceada y de los promedios
-macro y ponderado. Referencias propuestas, ambas sin verificar: Brodersen, K. H. et al., «The balanced accuracy
-and its posterior distribution», ICPR 2010, DOI 10.1109/ICPR.2010.764 (clave sugerida
-\texttt{brodersen2010balanced}); Sokolova, M. y Lapalme, G., «A systematic analysis of performance measures for
-classification tasks», \emph{Information Processing \& Management} 45(4), 2009, DOI
-10.1016/j.ipm.2009.03.002 (clave sugerida \texttt{sokolova2009systematic}). Ninguna está en el \texttt{.bib}.}
 
 La sensibilidad no dice cuántas de las predicciones de una clase son correctas. Esa es la precisión
 (\emph{precision}) de la clase $c$, $P_c$, y el \textbf{F1} la combina con la sensibilidad mediante su media
@@ -1560,12 +1538,7 @@ de maneras controladas y se mide cuánto cae el desempeño. Tiene dos límites. 
 reproducen solo una parte de la variación real entre equipos y centros, de modo que una caída pequeña no
 garantiza robustez ante un cambio de dominio. Además, esta robustez no es la adversarial, que estudia la
 resistencia a perturbaciones diseñadas para inducir un error. Las perturbaciones consideradas son las que
-ocurren en la adquisición común.
-
-\pendiente[Cita de robustez ante perturbaciones]{Citar la evaluación de la robustez con perturbaciones
-comunes. Referencia propuesta: Hendrycks, D. y Dietterich, T., «Benchmarking Neural Network Robustness to Common
-Corruptions and Perturbations», ICLR 2019, arXiv:1903.12261 (clave sugerida
-\texttt{hendrycks2019benchmarking}; no está en el \texttt{.bib}).}
+ocurren en la adquisición común~\cite{hendrycks2019benchmarking}.
 
 \subsubsection{Interpretabilidad visual}
 \label{sec:marco_eval_gradcam}
@@ -1622,11 +1595,7 @@ iluminación, la distancia a la lesión, la resolución del sensor y la compresi
 la imagen. Un modelo puede apoyarse en rasgos que esas variaciones alteran, como la textura fina o el color
 exacto, y perder desempeño ante imágenes de contenido clínico idéntico. Esa fragilidad se estima perturbando las
 imágenes de test de manera controlada (Sección~\ref{sec:marco_eval_robustez}), lo que permite medir la caída de
-desempeño sin recolectar otro conjunto de datos.
-
-\pendiente[Cita de robustez ante perturbaciones]{Citar la robustez ante variaciones de adquisición con la referencia
-propuesta en la Sección~\ref{sec:marco_eval_robustez} (clave sugerida \texttt{hendrycks2019benchmarking}; no
-está en el \texttt{.bib}).}
+desempeño sin recolectar otro conjunto de datos~\cite{hendrycks2019benchmarking}.
 
 Un conjunto puede contener además rasgos que acompañan a una clase sin formar parte de la lesión. En las
 imágenes dermatológicas son frecuentes las marcas de tinta violeta con que se señala una lesión antes de

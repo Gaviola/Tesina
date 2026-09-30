@@ -473,6 +473,20 @@ Metadatos verificados contra arXiv y Crossref. `ji2023survey` sigue la lista de 
 publicada en ACM. Las páginas de `rohrbach2018object` y `ramos2023smallcap` se verificaron en Crossref. `kalai2025hallucinate` es un informe técnico sin versión arbitrada conocida al
 29/09/2026.
 
+### Incertidumbre, métricas y robustez de §2.7–2.9 — incorporado el 29/09/2026
+
+| Clave | Referencia | Sostiene |
+|---|---|---|
+| `kendall2017uncertainties` | Kendall y Gal, NeurIPS 30, 2017 | Incertidumbre aleatoria y epistémica (§2.7.1) |
+| `elyaniv2010foundations` | El-Yaniv y Wiener, *JMLR* 11:1605–1641, 2010 | Clasificación selectiva: cobertura y riesgo selectivo (§2.7.2) |
+| `geifman2017selective` | Geifman y El-Yaniv, NeurIPS 30, 2017 | Clasificación selectiva en redes profundas (§2.7.2) |
+| `hendrycks2017baseline` | Hendrycks y Gimpel, ICLR 2017 | La máxima probabilidad softmax como línea base para detectar errores (§2.7.2) |
+| `brodersen2010balanced` | Brodersen et al., ICPR 2010, pp. 3121–3124 | Exactitud balanceada (§2.8.1) |
+| `sokolova2009systematic` | Sokolova y Lapalme, *Inf. Process. Manag.* 45(4):427–437, 2009 | Promedios macro y ponderado de las métricas de clasificación (§2.8.1) |
+| `hendrycks2019benchmarking` | Hendrycks y Dietterich, ICLR 2019 | Robustez ante perturbaciones comunes (§2.8.3 y §2.9) |
+
+Metadatos verificados contra arXiv, Crossref y la página de JMLR.
+
 ## 2. Consolidación del 17/09/2026
 
 El `.bib` se armó fusionando cuatro archivos dispersos: `estado_del_arte/referencias.bib` (37),
