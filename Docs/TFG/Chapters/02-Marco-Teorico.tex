@@ -474,20 +474,19 @@ Estos clasificadores entregan una probabilidad por clase y ningún texto. Produc
 genere secuencias de palabras, y el mismo transformer, usado como decodificador, lo hace. Ese es el tema de
 la sección siguiente.
 
-\section{Modelos de lenguaje}
+\section{Modelos de lenguaje y adaptación eficiente}
 \label{sec:marco_llm}
 
 Un modelo de lenguaje asigna una probabilidad a cada continuación posible de un texto: dado lo escrito
-hasta el momento, predice el token siguiente. El generador de reportes del \emph{pipeline} es un modelo de
-este tipo, y para el trabajo interesan tres aspectos: cómo se obtiene un modelo grande, preentrenándolo
-sobre corpus de texto y ajustándolo para seguir instrucciones; cómo produce un texto nuevo a partir de sus
-probabilidades (Sección~\ref{sec:marco_llm_grandes}); y cómo se adapta un modelo de ese tamaño a una tarea
-concreta con la memoria de una GPU de consumo (Sección~\ref{sec:marco_llm_lora}).
+hasta el momento, predice el token siguiente. Esa capacidad, obtenida a la escala de miles de millones de
+parámetros, es la base de los generadores de texto actuales, y plantea dos problemas prácticos. Hay que
+dirigir su salida hacia lo que se necesita, y hay que adaptarlo a una tarea cuando reentrenarlo por completo
+excede la memoria disponible.
 
 \subsection{Grandes modelos de lenguaje}
 \label{sec:marco_llm_grandes}
 
-Un \gls{llm} se obtiene por preentrenamiento auto-supervisado sobre corpus de miles de millones de
+Un \gls{llm} se obtiene por preentrenamiento autosupervisado sobre corpus de miles de millones de
 palabras. La tarea es predecir el token siguiente, y la supervisión sale del propio texto, sin etiquetas
 manuales. El modelo aprende así la probabilidad de una secuencia como el producto de las probabilidades de
 cada token dados los anteriores,
@@ -503,21 +502,29 @@ Según qué parte del transformer conserven, se distinguen dos familias. Los mod
 como BERT, construyen una representación bidireccional del texto, en la que cada token ve a los
 anteriores y a los posteriores, y sirven para clasificar y para comparar textos. Los de solo decodificador
 ven únicamente los tokens anteriores, modelan la secuencia en una dirección y sirven para generar texto.
-En este trabajo se usan modelos de la segunda familia, por su capacidad de
-generación~\cite{devlin2019bert,brown2020language,touvron2023llama}.
+Los grandes modelos de lenguaje generativos, como GPT-3 y LLaMA, pertenecen a la segunda
+familia~\cite{devlin2019bert,brown2020language,touvron2023llama}.
 
 El comportamiento del modelo se ajusta después en dos etapas. El ajuste fino supervisado lo entrena
 sobre pares instrucción--respuesta, y la alineación con \gls{rlhf} lo entrena a preferir las
 respuestas que un evaluador humano marca como mejores. Un modelo solo preentrenado continúa el
-texto que recibe, mientras que uno alineado responde a instrucciones, y el generador del trabajo
-recibe su tarea en forma de instrucción~\cite{ouyang2022training}.
+texto que recibe, mientras que uno alineado responde a instrucciones, de modo que se le puede pedir una
+tarea escribiéndola en lenguaje natural~\cite{ouyang2022training}.
 
-El texto se genera token a token. En cada paso el modelo devuelve una distribución sobre el vocabulario,
-se elige un token, se lo agrega al prefijo y se repite, y la regla con que se elige es la estrategia de
-decodificación. El \emph{greedy decoding} toma siempre el token más probable, y el \emph{beam search}
-mantiene en paralelo las $b$ secuencias parciales más probables y al final se queda con la de mayor
-probabilidad total. Las dos buscan el texto más probable, y en la generación abierta ese texto resulta
-genérico y repetitivo. En las tareas en que la entrada acota mucho la salida, como la traducción, el
+Todo el texto que el modelo recibe antes de generar, la instrucción y cualquier información adicional,
+forma su contexto y se llama \emph{prompt}. Como la probabilidad de la Ecuación~\ref{eq:marco_lm} está
+condicionada en ese prefijo, cambiar el \emph{prompt} cambia la distribución de lo que el modelo genera sin
+modificar sus pesos. Los modelos grandes aprovechan además los ejemplos de la tarea que se incluyen en el
+\emph{prompt}, sin ningún paso de entrenamiento, lo que se conoce como aprendizaje en contexto
+(\emph{in-context learning})~\cite{brown2020language}. Agregar información al contexto es entonces una
+forma de condicionar la generación. El modelo conserva sus pesos y cambia lo que ve.
+
+Dado un \emph{prompt}, el texto se genera token a token. En cada paso el modelo devuelve una distribución
+sobre el vocabulario, se elige un token, se lo agrega al prefijo y se repite, y la regla con que se elige es
+la estrategia de decodificación. El \emph{greedy decoding} toma siempre el token más probable, y el
+\emph{beam search} mantiene en paralelo las $b$ secuencias parciales más probables y al final se queda con
+la de mayor probabilidad total. Las dos buscan el texto más probable, y en la generación abierta ese texto
+resulta genérico y repetitivo. En las tareas en que la entrada acota mucho la salida, como la traducción, el
 problema es menor y el \emph{beam search} es la opción habitual~\cite{holtzman2020curious}.
 
 Los métodos de \emph{sampling} sortean el token siguiente según la distribución del modelo. La temperatura
@@ -533,17 +540,19 @@ sampling}, sortea entre el conjunto más chico de tokens cuya probabilidad acumu
 de modo que la cantidad de candidatos crece cuando el modelo duda y se achica cuando está seguro. Con eso
 evita tanto la repetición de los métodos que buscan el texto más probable como la incoherencia de
 muestrear de la distribución completa~\cite{holtzman2020curious}. Como la estrategia de decodificación
-cambia el texto generado y todas las métricas que se calculen sobre él, se fija y se documenta como un
-hiperparámetro más del generador.
+cambia el texto generado y todas las métricas que se calculen sobre él, forma parte de la configuración de
+un generador y hay que declararla al comparar modelos.
 
 \subsection{Ajuste eficiente de parámetros: LoRA}
 \label{sec:marco_llm_lora}
 
-El ajuste fino completo de un modelo grande está limitado por la memoria más que por el tiempo de
-cómputo. Con el optimizador Adam, cada parámetro entrenado arrastra su gradiente y dos estados
-adicionales, y para un modelo de miles de millones de parámetros eso no cabe en la memoria de una
-GPU de consumo. Congelar el modelo por completo y entrenar solo una cabeza nueva evita el problema,
-pero limita lo que el ajuste puede cambiar~\cite{hu2021lora}.
+El ajuste fino completo de la Sección~\ref{sec:marco_transferencia} actualiza todos los parámetros del modelo, y
+en un modelo de lenguaje grande el límite es la memoria más que el tiempo de cómputo. Con el optimizador Adam,
+cada parámetro entrenado arrastra su gradiente y dos estados adicionales, y para un modelo de miles de
+millones de parámetros eso puede superar la memoria de una GPU. Los métodos de \gls{peft} congelan el modelo
+preentrenado y entrenan solo un conjunto pequeño de parámetros, y así reducen la memoria que el ajuste
+necesita~\cite{hu2021lora}. El caso extremo es la extracción de características, que congela todo el modelo y
+entrena solo una cabeza nueva, y con ello limita lo que el ajuste puede cambiar~\cite{hu2021lora}.
 
 \gls{lora} ocupa un punto intermedio entre las dos opciones. Sobre los pesos congelados $W$ entrena
 un incremento de bajo rango,
@@ -559,17 +568,14 @@ bastan para llevar el modelo a un dominio concreto~\cite{hu2021lora}.
 \input{Figures/Capitulos/02-lora}
 
 Los parámetros entrenables y sus estados del optimizador pasan a ser los de $A$ y $B$, una fracción
-mínima de los de $W$, y con eso el ajuste vuelve a caber en el presupuesto de una GPU de consumo. Al
+mínima de los de $W$, y el ajuste necesita mucha menos memoria que el completo. Al
 terminar, el incremento de la Ecuación~\ref{eq:marco_lora} se suma a $W$ y el modelo resultante se
-ejecuta igual que el original, sin ramas ni latencia
-adicional~\cite{hu2021lora,yilmaz2025resourceefficient}.
+ejecuta igual que el original, sin ramas ni latencia adicional~\cite{hu2021lora}.
 
-Uno de los objetivos del trabajo es que todo el \emph{pipeline} se entrene y se ejecute en una GPU de
-consumo, y por eso los modelos generativos se adaptan con LoRA. El rango, los módulos congelados y la función de
-pérdida del ajuste van en el Capítulo~\ref{cp:metodos}.
-
-Un modelo de lenguaje, sin embargo, solo recibe texto. Para que redacte el reporte a partir de la imagen
-hay que conectar su entrada con un codificador visual, y de eso se ocupan los modelos visión--lenguaje.
+Hasta acá el modelo de lenguaje procesa texto y los clasificadores de la Sección~\ref{sec:marco_vision}
+procesan imágenes, sin que ninguno de los dos conozca al otro. Unirlos exige llevar los rasgos de la imagen
+al espacio de tokens de un modelo de lenguaje, o bien alinear imagen y texto en un espacio común. Esos son los
+dos esquemas de los modelos visión--lenguaje.
 
 \section{Modelos visión--lenguaje}
 \label{sec:marco_vlm}
