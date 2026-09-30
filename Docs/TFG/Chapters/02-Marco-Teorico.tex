@@ -22,9 +22,6 @@ en él la posición de este trabajo.
 \section{Fundamentos del aprendizaje profundo}
 \label{sec:marco_fundamentos}
 
-Esta sección presenta cómo una red neuronal produce una probabilidad por clase, cómo se ajustan sus
-parámetros y cómo se comprueba que lo aprendido sirve fuera de los datos de entrenamiento.
-
 \subsection{Neurona artificial y perceptrón multicapa}
 \label{sec:marco_perceptron}
 
@@ -42,10 +39,11 @@ transformación lineal; con ella, la red representa funciones no lineales de la
 entrada~\cite{rumelhart1986learning,goodfellow2016deep}.
 
 Los pesos y los sesgos de todas las capas son los parámetros de la red, que se agrupan en $\theta$, y
-entrenarla consiste en elegir sus valores. El perceptrón reaparece dentro de arquitecturas más complejas:
-la cabeza de clasificación que convierte las características extraídas por una red visual en un puntaje
-por clase es una capa de la forma de la Ecuación~\ref{eq:marco_capa}, y la Sección~\ref{sec:marco_softmax} muestra
-cómo esos puntajes se convierten en probabilidades.
+entrenarla consiste en elegir sus valores. Cuando la red apila muchas capas se la llama profunda, y el
+aprendizaje profundo es el entrenamiento de redes de ese tipo~\cite{goodfellow2016deep}. Cada capa
+opera sobre la representación que produjo la anterior, y la última capa de una red que clasifica devuelve un
+vector con un puntaje por clase. Las capas de la forma de la Ecuación~\ref{eq:marco_capa} reaparecen dentro
+de arquitecturas más complejas, donde transforman los vectores intermedios que produce el resto de la red.
 
 \subsection{Clasificación: softmax y entropía cruzada}
 \label{sec:marco_softmax}
@@ -56,17 +54,17 @@ los \emph{logits} $\mathbf{z}$. La función \emph{softmax} los convierte en una 
     p_c = \frac{\exp(z_c)}{\sum_{j=1}^{C} \exp(z_j)}, \qquad c = 1, \dots, C,
     \label{eq:marco_softmax}
 \end{equation}
-con valores positivos que suman uno, y la clase predicha es la de mayor probabilidad. La pérdida de
-entropía cruzada mide la probabilidad que el modelo asignó a la clase correcta $y$,
+con valores positivos que suman uno, y la clase predicha es la de mayor probabilidad. La función de pérdida
+cuantifica cuánto se equivoca el modelo en un ejemplo, y en clasificación es la entropía cruzada, que mide
+la probabilidad que el modelo asignó a la clase correcta $y$,
 $\mathcal{L} = -\log p_y$. Vale cero cuando toda la probabilidad está en la clase correcta y crece sin
 límite a medida que esa probabilidad se acerca a cero~\cite{goodfellow2016deep}.
 
-Varias piezas del trabajo operan sobre estas cantidades. Las modificaciones de la pérdida para el
-desbalance de clases (Sección~\ref{sec:marco_transferencia}) cambian la entropía cruzada o los logits
-antes de la softmax. La calibración (Sección~\ref{sec:marco_eval_calib}) pregunta si las probabilidades
-$p_c$ coinciden con las frecuencias de acierto observadas. Y una de las formas de obtener una categoría de
-un modelo generativo, descrita en la Sección~\ref{sec:met_clasif_vlm}, compara las probabilidades que ese
-modelo asigna al nombre de cada clase.
+Las probabilidades $p_c$ son la cantidad sobre la que operan varias piezas de este capítulo. Las
+correcciones para el desbalance de clases (Sección~\ref{sec:marco_desbalance}) modifican la entropía cruzada
+o los logits antes de la softmax, y la calibración (Sección~\ref{sec:marco_eval_calib}) pregunta si las
+probabilidades coinciden con las frecuencias de acierto observadas. Las dos dependen de cómo
+se entrena el modelo, y la sección siguiente describe cómo se obtienen sus parámetros.
 
 \subsection{Entrenamiento por descenso del gradiente}
 \label{sec:marco_entrenamiento}
@@ -106,8 +104,20 @@ donde las operaciones son elemento a elemento, $\hat{\mathbf{m}}_t$ y $\hat{\mat
 promedios corregidos por el sesgo que introduce inicializarlos en cero, y $\beta_1 = 0.9$,
 $\beta_2 = 0.999$ y $\epsilon = 10^{-8}$ son los valores habituales. Al dividir por la raíz del segundo
 promedio, los parámetros con gradientes grandes o ruidosos avanzan con pasos más
-cortos~\cite{kingma2015adam}. Los dos promedios de cada parámetro, sumados a su gradiente, son el costo
-de memoria del ajuste fino que la Sección~\ref{sec:marco_llm_lora} busca reducir.
+cortos~\cite{kingma2015adam}. Los dos promedios de cada parámetro, sumados a su gradiente, son memoria
+adicional que el entrenamiento necesita durante todo el proceso, y crece con el número de parámetros que se
+entrenan.
+
+Entrenar redes con muchas capas tiene una dificultad propia. Por la regla de la cadena, el gradiente que
+llega a una capa temprana es un producto con un factor por cada capa que la separa de la pérdida. Si esos
+factores son en general menores que uno, el producto se achica exponencialmente con la profundidad y el
+gradiente se desvanece, de modo que las primeras capas casi no reciben señal y dejan de aprender. Si son mayores que
+uno, el producto crece exponencialmente y el gradiente explota, con pasos de actualización tan grandes que
+el entrenamiento diverge~\cite{goodfellow2016deep}. El problema se atenúa con inicializaciones que
+conservan la escala de las activaciones y con capas de normalización intermedias. Las conexiones
+residuales, que suman la entrada de un bloque a su salida (Sección~\ref{sec:marco_cnn}), dan además al
+gradiente un camino directo hacia las capas anteriores y permiten entrenar redes de más de cien
+capas~\cite{he2015residual}.
 
 \subsection{Generalización y regularización}
 \label{sec:marco_regularizacion}
@@ -117,12 +127,46 @@ desempeño sobre casos que el modelo no vio, y una red con suficientes parámetr
 conjunto de entrenamiento. Cuando eso ocurre, la pérdida de entrenamiento sigue bajando mientras el error
 sobre datos nuevos sube. Ese fenómeno se llama sobreajuste~\cite{goodfellow2016deep}.
 
-Para medirlo, los datos se dividen en tres particiones disjuntas. La de entrenamiento ajusta los
+La diferencia entre ambos errores se formaliza con dos cantidades. El riesgo esperado es la pérdida que el
+modelo tendría, en promedio, sobre datos nuevos que siguen la distribución $\mathcal{D}$ de la que provienen
+los ejemplos, y el riesgo empírico es la pérdida promedio sobre los $n$ ejemplos de entrenamiento que
+minimiza el descenso del gradiente,
+\begin{equation}
+    R(\theta) = \mathbb{E}_{(x,y)\sim\mathcal{D}}\!\left[\mathcal{L}(\theta; x, y)\right], \qquad
+    \hat{R}(\theta) = \frac{1}{n}\sum_{i=1}^{n} \mathcal{L}(\theta; x_i, y_i).
+    \label{eq:marco_riesgo}
+\end{equation}
+El entrenamiento reduce $\hat{R}$, pero el objetivo es reducir $R$, que no se puede calcular porque
+$\mathcal{D}$ es desconocida. La brecha $R(\theta)-\hat{R}(\theta)$ es lo que crece con el
+sobreajuste~\cite{goodfellow2016deep}.
+
+La capacidad del modelo, que depende de su número de parámetros y de la flexibilidad de la función que
+representa, decide de qué lado se ubica el error. Un modelo de poca capacidad no ajusta ni siquiera los
+datos de entrenamiento y comete errores sistemáticos (sesgo alto), lo que se llama subajuste. Uno de mucha
+capacidad ajusta esos datos con tanto detalle que su resultado cambia mucho según los ejemplos con que se
+entrenó (varianza alta), y ese es el sobreajuste. Reducir uno de los dos errores tiende a aumentar el otro, y
+la regularización busca un equilibrio entre ambos~\cite{goodfellow2016deep}.
+
+Como $R$ no se puede calcular, se lo estima sobre ejemplos que el modelo no usó para ajustarse. Para eso los
+datos se dividen en tres particiones disjuntas. La de entrenamiento ajusta los
 parámetros, la de validación elige entre configuraciones, hiperparámetros y épocas, y la de test se usa
 una sola vez al final para estimar el desempeño sobre datos nuevos. Una decisión tomada mirando el test
-lo convierte en parte del ajuste y vuelve optimista su estimación~\cite{goodfellow2016deep}. Por la misma
-razón ningún caso puede aparecer en dos particiones, condición que HAM10000 no cumple en su partición
-original (Sección~\ref{sec:met_particiones}).
+lo convierte en parte del ajuste y vuelve optimista su estimación~\cite{goodfellow2016deep}.
+
+La estimación exige además que la partición de test sea independiente de la de entrenamiento. Las
+observaciones de una misma fuente, como un mismo paciente, una misma lesión o una misma sesión de
+adquisición, están correlacionadas. Si algunas caen en el entrenamiento y otras en el test, el modelo puede
+acertar estas últimas por haber visto las primeras, y no porque generalice. Este fenómeno se llama fuga de
+información entre particiones (\emph{data leakage}): información de la partición de evaluación llega al
+ajuste del modelo, ya sea porque el mismo caso aparece en dos particiones o porque una decisión se tomó
+mirando el test, y la estimación resulta más favorable que el desempeño real sobre casos nuevos. La
+condición para evitarla es que ningún caso, ni sus repeticiones, aparezca en más de una partición.
+
+Una sola división de los datos da una estimación con variabilidad propia: otra división habría dado otro
+valor. La validación cruzada repite el procedimiento con varias divisiones, entrena y evalúa una vez por
+cada una y promedia los resultados, de modo que ninguna división favorable o desfavorable decide la
+estimación~\cite{goodfellow2016deep}. La Sección~\ref{sec:marco_eval_estadistica} retoma cómo se cuantifica
+esa variabilidad.
 
 Las técnicas de regularización reducen el sobreajuste, ya sea restringiendo lo que la red puede aprender o
 ampliando la variedad de lo que ve durante el entrenamiento. El decaimiento de pesos (\emph{weight decay})
@@ -147,46 +191,151 @@ que la posición y la orientación no cambian la clase. Las fotométricas, como 
 contraste y color, simulan las diferencias de iluminación entre equipos de adquisición. La condición es
 que la transformación preserve la etiqueta, y eso depende del dominio: una rotación no cambia la clase de
 una foto de un gato, pero sí la de un dígito, donde un 6 rotado pasa a ser un 9. Del mismo modo, cuando el
-color es un rasgo que distingue las clases, una transformación de color fuerte puede borrar la información
-que define la etiqueta~\cite{shorten2019survey}. En dermatoscopía el color es uno de los criterios
-diagnósticos~\cite{kittler2016standardization}, y por eso las transformaciones de color se mantienen
-suaves.
+color es un rasgo que distingue las clases, como ocurre en dermatoscopía~\cite{kittler2016standardization},
+una transformación de color fuerte puede borrar la información que define la etiqueta~\cite{shorten2019survey}.
 
 Por último, se conservan los parámetros de la época con mejor desempeño en validación, en lugar de los de
 la última. Esta forma de detención temprana (\emph{early stopping}) equivale a quedarse con el modelo del punto
 en que el error de validación deja de bajar~\cite{goodfellow2016deep}.
 
-\subsection{Familias de redes según la estructura de la entrada}
-\label{sec:marco_familias}
+\subsection{Transferencia de aprendizaje y ajuste fino}
+\label{sec:marco_transferencia}
 
-El perceptrón multicapa trata su entrada como un vector sin estructura, en el que cada neurona se conecta
-con todas las entradas y no distingue cuáles son vecinas. Las arquitecturas especializadas incorporan la
-estructura de los datos. Las redes neuronales convolucionales (\gls{cnn}) aprovechan que en una imagen los
-píxeles cercanos están relacionados y aplican los mismos filtros en toda la imagen~\cite{lecun1998gradient};
-se desarrollan en la Sección~\ref{sec:marco_cnn}. Las redes recurrentes procesan secuencias, como un texto,
-un elemento por vez~\cite{elman1990finding}.
+Con pocos ejemplos etiquetados, como ocurre en la mayoría de los conjuntos de datos médicos, entrenar una red
+desde cero lleva al sobreajuste de la sección anterior, porque hay más parámetros que información para fijarlos. La
+transferencia de aprendizaje evita el problema reutilizando lo aprendido en otra tarea con más datos. Se
+define a partir de dos pares de dominio y tarea, el de origen y el de destino, y consiste en usar el
+conocimiento del primero para mejorar el aprendizaje en el segundo~\cite{pan2010survey}.
 
-Las dos familias, y en general cualquier red con muchas capas, comparten una dificultad de entrenamiento.
-Por la regla de la cadena, el gradiente que llega a una capa temprana es un producto con un factor por
-cada capa que la separa de la pérdida. Si esos factores son en general menores que uno, el producto se
-achica exponencialmente con la profundidad y el gradiente se desvanece: las primeras capas casi no reciben
-señal y dejan de aprender. Si son mayores que uno, el producto crece exponencialmente y el gradiente
-explota, con pasos de actualización tan grandes que el entrenamiento diverge~\cite{goodfellow2016deep}.
-Las funciones de activación que se saturan, como la sigmoide, cuya derivada no supera 0.25, favorecen el
-desvanecimiento~\cite{hochreiter1997long}. En redes profundas el problema se atenúa con inicializaciones
-que conservan la escala de las activaciones y con capas de normalización intermedias, y las conexiones
-residuales de la Sección~\ref{sec:marco_cnn} permiten entrenar redes de más de cien
-capas~\cite{he2015residual}.
+Lo que se transfiere son las representaciones que la red construyó. En una red visual, las primeras capas
+aprenden rasgos generales, como bordes y texturas, que sirven para casi cualquier imagen, y las últimas
+aprenden rasgos cada vez más específicos de la tarea de origen. Por eso los rasgos de las primeras capas se
+reutilizan mejor, y la transferencia rinde menos cuando la tarea de origen y la de destino son muy
+distintas. Como la red de destino no tiene que aprender esos rasgos generales desde cero, los pocos datos
+disponibles alcanzan para ajustar lo que sí es específico de su tarea.
+El corpus de preentrenamiento de referencia en reconocimiento visual es ImageNet, un conjunto de datos de
+imágenes naturales etiquetadas~\cite{russakovsky2015imagenet}.
+\pendiente{Citar a Yosinski et al. (2014), «How transferable are features in deep neural networks?»
+(\texttt{yosinski2014transferable}), para las afirmaciones sobre rasgos generales y específicos, y a
+Raghu et al. (2019), «Transfusion» (\texttt{raghu2019transfusion}), para lo siguiente. Ninguna está en el
+\texttt{.bib}; se proponen en \texttt{refs\_pendientes.md}.}
 
-Una red recurrente mantiene un estado que resume lo visto hasta el momento y lo actualiza con cada nuevo
-elemento, de modo que cada salida depende de toda la secuencia anterior~\cite{elman1990finding}. Para
-entrenarla, el gradiente se propaga hacia atrás a lo largo de la secuencia, y el producto anterior tiene
-entonces un factor por cada elemento. En secuencias largas el gradiente se desvanece o explota, lo que
-dificulta aprender relaciones entre elementos lejanos. Las redes de memoria a corto y largo plazo
-(\emph{long short-term memory}) agregan compuertas que controlan qué se conserva en el estado y mantienen
-constante el flujo del gradiente a través de él~\cite{hochreiter1997long}. Aun así, el acceso a una
-posición lejana sigue pasando por todas las intermedias, y el cálculo de un paso espera al del anterior, lo
-que impide paralelizar a lo largo de la secuencia~\cite{vaswani2017attention}.
+La transferencia no está exenta de límites en imágenes médicas. Entre una imagen natural y una imagen
+clínica hay una distancia de dominio grande, y el beneficio del preentrenamiento sobre imágenes naturales
+puede ser menor que el esperado. Parte de la ventaja observada proviene del tamaño del modelo
+preentrenado y no de los rasgos que transfiere.
+
+Una red que clasifica se puede dividir en dos partes. El \emph{backbone} es la parte que convierte la
+imagen en un vector de características, y la cabeza de clasificación (\emph{head}) es la capa final, de la
+forma de la Ecuación~\ref{eq:marco_capa}, que convierte ese vector en los logits. Con $\theta=(\theta_b,\theta_h)$, donde $\theta_b$
+son los parámetros del \emph{backbone} y $\theta_h$ los de la cabeza, y con $\theta_b$ inicializado en los
+valores $\theta_b^{\text{pre}}$ que dejó el preentrenamiento, hay dos formas de usar lo transferido. La
+\textbf{extracción de características} congela el \emph{backbone} y entrena solo la cabeza, y el
+\textbf{ajuste fino} actualiza los dos. En ambos casos cada parte se actualiza con la regla del descenso del gradiente
+de la Ecuación~\ref{eq:marco_gradiente}, con su propia tasa de aprendizaje,
+\begin{equation}
+    \theta_h \leftarrow \theta_h - \eta_h \nabla_{\theta_h}\mathcal{L}, \qquad
+    \theta_b \leftarrow \theta_b - \eta_b \nabla_{\theta_b}\mathcal{L},
+    \label{eq:marco_transfer_act}
+\end{equation}
+donde $\eta_b=0$ en la extracción de características y $\eta_b<\eta_h$ en la variante habitual del ajuste
+fino. La cabeza parte de valores aleatorios y necesita pasos grandes, mientras que el \emph{backbone} ya
+contiene información útil que un paso grande destruiría~\cite{pan2010survey}.
+
+El ajuste fino admite variantes según cuántos parámetros se actualizan. El ajuste completo entrena todo el
+\emph{backbone}, y el parcial descongela solo sus últimas capas, que son las más específicas de la tarea de
+origen, y deja fijas las primeras. Entrenar más parámetros da más libertad para adaptarse a la tarea
+nueva, y también más riesgo de sobreajuste con pocos datos. Otro riesgo es el olvido catastrófico: al ajustarse a la
+tarea nueva, el modelo pierde parte de lo que había aprendido antes, y con eso el beneficio del
+preentrenamiento. La tasa de aprendizaje menor del \emph{backbone} de la Ecuación~\ref{eq:marco_transfer_act}
+limita cuánto se aleja de los valores preentrenados.
+
+El ajuste fino completo tiene además un costo de memoria. Cada parámetro que se entrena arrastra su
+gradiente y los dos promedios de Adam (Sección~\ref{sec:marco_entrenamiento}), y en un modelo de miles de
+millones de parámetros ese conjunto puede superar la memoria de una GPU. La
+Sección~\ref{sec:marco_llm_lora} presenta una alternativa que entrena solo una fracción mínima de esos
+parámetros. Antes, la sección siguiente trata un problema que el preentrenamiento no resuelve: qué ocurre
+cuando las clases de la tarea de destino no tienen la misma cantidad de ejemplos.
+
+\subsection{Desbalance de clases}
+\label{sec:marco_desbalance}
+
+En un conjunto de datos con $C$ clases, la proporción de la clase $c$ es $\pi_c = n_c/n$, donde $n_c$ es su
+número de ejemplos, y la razón de desbalance $\rho=\max_c n_c/\min_c n_c$ mide cuánto más frecuente es la
+clase más común que la más rara. Cuando $\rho$ es grande, minimizar la entropía cruzada promedio favorece a las clases
+frecuentes, porque sus ejemplos dominan la suma de la pérdida. Con una clase que reúne dos tercios de los
+casos, por ejemplo, un modelo que siempre la predice ya acierta dos de cada tres y reduce la pérdida sin
+aprender nada sobre las demás. El efecto perjudica el desempeño de las redes convolucionales y crece con el
+grado de desbalance.
+\pendiente{Citar a Buda, Maki y Mazurowski (2018), «A systematic study of the class imbalance problem in
+convolutional neural networks» (\texttt{buda2018systematic}), para el efecto del desbalance en redes
+convolucionales. No está en el \texttt{.bib}; se propone en \texttt{refs\_pendientes.md}.}
+
+El aumento de datos de la Sección~\ref{sec:marco_regularizacion} no corrige esa asimetría, porque, aplicado
+por igual a todas las clases, deja la proporción entre ellas donde estaba~\cite{shorten2019survey}. Las
+correcciones actúan en tres puntos distintos del procedimiento:
+\begin{enumerate}
+    \item \textbf{A nivel de datos (remuestreo).} Se sobremuestrean las clases minoritarias o se submuestrean
+    las mayoritarias, de modo que la probabilidad de elegir un ejemplo de la clase $c$ en cada lote es
+    proporcional a $n_c^{\,q}$. Con $q=1$ se recupera el muestreo natural y con $q=0$ el muestreo balanceado
+    por clase, en el que todas aparecen con la misma frecuencia.
+    \item \textbf{A nivel de pérdida.} Se cambia la función que se minimiza para que las clases raras pesen más.
+    Hay tres variantes:
+    \begin{enumerate}
+        \item la \textbf{pérdida ponderada} multiplica la de cada ejemplo por un peso $w_y$ que depende de su
+        clase, con $w_c \propto 1/n_c$,
+        \begin{equation}
+            \mathcal{L}_{\text{pond}} = -\,w_y \log p_y, \qquad w_c = \frac{n}{C\,n_c},
+            \label{eq:marco_ponderada}
+        \end{equation}
+        de modo que cada clase aporta el mismo peso total, $w_c n_c = n/C$;
+        \item la \textbf{pérdida focal} atenúa el aporte de los ejemplos que el modelo ya clasifica con
+        confianza, mediante un factor que se anula cuando $p_y$ se acerca a uno,
+        \begin{equation}
+            \mathcal{L}_{\text{focal}} = -(1-p_y)^{\gamma} \log p_y, \qquad \gamma \ge 0,
+            \label{eq:marco_focal}
+        \end{equation}
+        donde $\gamma=0$ es la entropía cruzada y valores mayores concentran el entrenamiento en los ejemplos
+        difíciles~\cite{lin2017focal};
+        \item el \textbf{\emph{balanced softmax}} incorpora la frecuencia de cada clase en la propia
+        softmax,
+        \begin{equation}
+            p_c = \frac{n_c \exp(z_c)}{\sum_{j=1}^{C} n_j \exp(z_j)},
+            \label{eq:marco_balanced_softmax}
+        \end{equation}
+        lo que equivale a sumar $\log n_c$ al logit de la clase $c$ antes de la softmax de la
+        Ecuación~\ref{eq:marco_softmax}~\cite{ren2020balanced}.
+    \end{enumerate}
+    \item \textbf{A nivel de decisión (ajuste de umbral).} El clasificador se entrena sin corrección y después
+    se ajusta la regla de decisión. Una opción reescala las probabilidades por el inverso de la proporción de
+    cada clase, $\tilde{p}_c \propto p_c/\pi_c$, y otra elige en validación el umbral de probabilidad que
+    define cuándo se predice cada clase.
+\end{enumerate}
+\pendiente{Citar a Elkan (2001), «The Foundations of Cost-Sensitive Learning» (\texttt{elkan2001foundations}),
+para el ajuste de umbral. No está en el \texttt{.bib}; se propone en \texttt{refs\_pendientes.md} y falta
+verificar los datos.}
+
+La exactitud global engaña cuando las clases están desbalanceadas, y las métricas que promedian por clase,
+como el F1 macro y la sensibilidad macro, no tienen ese defecto. La Sección~\ref{sec:marco_eval_clasif} las
+define.
+
+Ninguna de las tres correcciones agrega información sobre las clases raras. Solo cambian cuánto pesan en el
+entrenamiento o en la decisión, y con pocas muestras de una clase hay un límite en cuánto se puede aprender de
+ella. Ese límite es el mismo de la generalización de la sección anterior: un modelo generaliza tanto como los
+datos que vio lo permiten.
+
+Apilar capas produce representaciones cada vez más abstractas de la entrada, y eso es el aprendizaje
+profundo. Un perceptrón multicapa trata su entrada como un vector sin estructura, en el que cada neurona se
+conecta con todas las entradas, y con el tiempo se desarrollaron arquitecturas que incorporan la estructura del
+dato. Las \glspl{cnn} lo hacen para las imágenes, porque aprovechan que los píxeles cercanos están relacionados y aplican
+los mismos filtros en toda la imagen~\cite{lecun1998gradient}. Para las secuencias, como un texto, las
+primeras arquitecturas especializadas avanzaban un elemento por vez, con dos límites: el acceso a un elemento lejano pasa
+por todos los intermedios, y el cálculo de un paso espera al del anterior, lo que impide paralelizarlo a lo
+largo de la secuencia~\cite{vaswani2017attention}. Ese problema motiva la atención de la
+Sección~\ref{sec:marco_atencion}, que compara directamente todas las posiciones, y sobre ella se construyen
+tanto los modelos visuales de la Sección~\ref{sec:marco_vision} como los modelos de lenguaje de la
+Sección~\ref{sec:marco_llm}, que a su vez conducen a los modelos visión--lenguaje de la
+Sección~\ref{sec:marco_vlm}.
 
 \section{Transformers y mecanismo de atención}
 \label{sec:marco_atencion}
