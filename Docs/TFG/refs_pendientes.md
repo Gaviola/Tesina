@@ -247,7 +247,7 @@ Schmidhuber 1997 no está en el `.bib`. Como la ficha del Capítulo 2 ya había 
 una mención mínima, **se eliminó la cláusula** en lugar de proponer la referencia. Si el marco
 teórico llegara a necesitar LSTM con desarrollo, hay que incorporarla primero.
 
-### Estado del arte de §2.10 — propuesto el 29/09/2026
+### Estado del arte de §2.10 — incorporado el 29/09/2026
 
 Surgen de la revisión del tutor, que pidió ampliar el estado del arte con trabajos de 2020 a 2026. Cada
 trabajo se leyó completo y se verificó contra el PDF. Las fichas de lectura, con las cifras citables y
