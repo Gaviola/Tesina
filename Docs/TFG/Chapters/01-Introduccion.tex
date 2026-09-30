@@ -124,31 +124,59 @@ Capítulo~\ref{cp:res_gen}, y ambas se discuten en conjunto en el Capítulo~\ref
 
 \section{Objetivos}
 \label{sec:intro_objetivos}
-Los objetivos se enuncian tal como fueron formulados, sin reescribirlos para acomodarlos a lo que el
-trabajo terminó haciendo.
+A partir del problema y de las preguntas se plantean un objetivo general y tres objetivos específicos.
 
-El objetivo general es desarrollar y evaluar un modelo de visión--lenguaje capaz de asistir en el
-diagnóstico de lesiones cutáneas y en la generación automática de reportes clínicos estructurados a partir de
-imágenes dermatológicas, con el fin de mejorar la precisión diagnóstica y optimizar el flujo de trabajo en el
-estudio de lesiones de piel.
+El objetivo general es diseñar, implementar y evaluar un enfoque de aprendizaje profundo y de modelos
+visión--lenguaje, adaptados a partir de modelos pre-entrenados, para clasificar lesiones cutáneas y generar
+reportes dermatológicos a partir de imágenes, y analizar su desempeño diagnóstico, la fidelidad diagnóstica de
+los reportes y su viabilidad computacional con recursos de hardware limitados.
 
 Los objetivos específicos son:
 \begin{enumerate}[label=\textbf{OE\arabic*.}]
-  \item Diseñar, implementar y evaluar modelos de detección, entre ellos de \emph{deep learning} y VLM, para
-  identificar posibles melanomas malignos.
-  \item Diseñar y entrenar un modelo visión--lenguaje capaz de integrar información visual y textual para
-  producir diagnósticos preliminares y reportes automáticos de lesiones cutáneas.
-  \item Evaluar el desempeño del modelo en diferentes escenarios clínicos, analizando su precisión
-  diagnóstica, coherencia textual y utilidad práctica para el flujo de trabajo en dermatología.
+  \item Diseñar, implementar y evaluar, adaptando modelos pre-entrenados, clasificadores de lesiones
+  cutáneas basados en redes convolucionales, transformers visuales y modelos visión--lenguaje, para
+  identificar posibles melanomas. Se comparan modelos visión--lenguaje generales y especializados con
+  clasificadores visuales supervisados sobre el mismo material, y se mide su desempeño en la clasificación y en
+  la identificación de melanoma.
+  \item Diseñar, implementar y evaluar, adaptando modelos pre-entrenados, un modelo visión--lenguaje que
+  integre información visual y textual para producir un diagnóstico preliminar y reportes de lesiones
+  cutáneas. Incluye estrategias para que el texto afirme solo el diagnóstico que la evidencia respalda, y se
+  evalúan por separado la fidelidad diagnóstica y la calidad descriptiva de los reportes.
+  \item Evaluar el desempeño de los modelos desarrollados en distintas condiciones, analizando su desempeño
+  diagnóstico, la calidad del texto generado y su costo computacional. Incluye la generalización a otra
+  población, la calibración de la confianza de las predicciones y el tratamiento de la incertidumbre.
 \end{enumerate}
 
-Dos de esas formulaciones no coinciden con lo que el trabajo terminó haciendo. «Diseñar y entrenar un modelo
-visión--lenguaje», el segundo objetivo específico, se concretó como el ajuste de modelos ya pre-entrenados y
-no como un entrenamiento desde cero; y la «precisión diagnóstica» del objetivo general se mide en este trabajo como fidelidad
-diagnóstica del reporte, que es una noción más acotada. Las dos cosas se siguen del alcance que fija la
-Sección~\ref{sec:intro_alcance}, donde se explican el límite de cómputo que descarta el pre-entrenamiento y
-el significado del término. El balance de qué se cumplió y en qué términos se hace en la
-Sección~\ref{sec:concl_objetivos}.
+La Tabla~\ref{tab:intro_objetivos_preguntas} relaciona cada objetivo específico con la pregunta que contribuye a
+responder y con los capítulos donde se lo describe y se lo evalúa.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Relación entre los objetivos específicos, las preguntas de investigación y los capítulos.}
+  \label{tab:intro_objetivos_preguntas}
+  \small
+  \begin{tabularx}{\textwidth}{@{}p{0.29\textwidth}p{0.10\textwidth}XX@{}}
+    \toprule
+    Objetivo específico & Pregunta & Se diseña y describe en & Se evalúa y responde en \\
+    \midrule
+    OE1. Clasificadores de lesiones y de melanoma (CNN, ViT, VLM) & PI1 &
+      Capítulo~\ref{cp:metodos}, Materiales y métodos &
+      Capítulo~\ref{cp:res_clasif}, Resultados de clasificación \\
+    \filasep
+    OE2. VLM para generar reportes & PI2 &
+      Capítulo~\ref{cp:metodos}, Materiales y métodos &
+      Capítulo~\ref{cp:res_gen}, Resultados de generación \\
+    \filasep
+    OE3. Evaluación en distintas condiciones & PI1 y PI2 &
+      Capítulo~\ref{cp:metodos} (protocolo de evaluación) &
+      Capítulos~\ref{cp:res_clasif} y~\ref{cp:res_gen} (resultados) y Capítulo~\ref{cp:discusion} (discusión y
+      limitaciones) \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+El marco conceptual de todos los objetivos está en el Capítulo~\ref{cp:marco}, y el balance de su cumplimiento,
+en el Capítulo~\ref{cp:conclusiones}.
 
 \section{Alcance y delimitación}
 \label{sec:intro_alcance}
