@@ -337,21 +337,22 @@ tanto los modelos visuales de la Sección~\ref{sec:marco_vision} como los modelo
 Sección~\ref{sec:marco_llm}, que a su vez conducen a los modelos visión--lenguaje de la
 Sección~\ref{sec:marco_vlm}.
 
-\section{Transformers y mecanismo de atención}
+\section{Transformers y mecanismos de atención}
 \label{sec:marco_atencion}
 
-La atención reemplaza el recorrido paso a paso de las redes recurrentes por una comparación directa, en
-la que cada posición de la salida pondera los valores de todas las posiciones de la entrada según la
-compatibilidad entre una consulta ($Q$) y una clave ($K$). Los elementos de la secuencia se llaman
-\emph{tokens}: son fragmentos de palabra en un texto o parches en una imagen. Como todas las posiciones se
-comparan a la vez, el cálculo se paraleliza a lo largo de la secuencia y aprovecha mejor el hardware que
-el recorrido secuencial de una red recurrente. La arquitectura \emph{transformer} se construye sobre
-esa operación, y de ella derivan tanto los modelos visuales de la Sección~\ref{sec:marco_vision} como
-los modelos de lenguaje de la Sección~\ref{sec:marco_llm}~\cite{vaswani2017attention}.
+Frente al procesamiento de un elemento por vez de la Sección~\ref{sec:marco_fundamentos}, la atención
+compara directamente todas las posiciones: cada posición de la salida pondera los valores de todas las
+posiciones de la entrada según la compatibilidad entre una consulta ($Q$) y una clave ($K$). Los elementos de
+la secuencia se llaman \emph{tokens}, y son fragmentos de palabra en un texto o parches en una imagen. Cada
+\emph{token} se representa con un \emph{embedding}, un vector aprendido que representa un elemento, sea un
+fragmento de palabra, un parche o una imagen completa, de modo que elementos parecidos quedan cerca en ese
+espacio. Como todas las posiciones se comparan a la vez, el cálculo se paraleliza a lo largo de la secuencia
+y aprovecha mejor el hardware que el recorrido secuencial. La arquitectura \emph{transformer} se construye
+sobre esa operación~\cite{vaswani2017attention}.
 
-La atención escalada por producto punto proyecta la entrada en tres espacios, consulta $Q$, clave
-$K$ y valor $V$, y devuelve una combinación de valores pesada por la compatibilidad entre consulta
-y clave:
+La atención escalada por producto punto proyecta el embedding de cada token en tres espacios,
+consulta $Q$, clave $K$ y valor $V$, y devuelve una combinación de valores pesada por la compatibilidad entre
+consulta y clave:
 \begin{equation}
     \mathrm{Attention}(Q, K, V) = \mathrm{softmax}\!\left(\frac{QK^{\top}}{\sqrt{d_k}}\right) V,
     \label{eq:marco_atencion}
@@ -368,12 +369,22 @@ la Ecuación~\ref{eq:marco_atencion} en cada uno por separado y concatena los re
 aprende a capturar relaciones de distinto tipo entre posiciones, y el conjunto amplía la capacidad
 de representación sin aumentar la dimensión total del modelo~\cite{vaswani2017attention}.
 
+La atención, además, no distingue el orden de los tokens, porque compara cada uno con todos los demás sin
+importar en qué lugar de la secuencia estén. Para que el orden cuente, se suma al embedding de cada
+token un embedding de posición, que indica el lugar que ocupa~\cite{vaswani2017attention}.
+
 El transformer original, planteado para traducción automática, combina dos módulos. El codificador
 contextualiza la entrada completa, y el decodificador genera la salida token a token atendiendo a lo
-codificado y a lo ya generado. Las arquitecturas que usa este trabajo conservan uno solo de los dos:
-el ViT de la Sección~\ref{sec:marco_vit} usa el codificador, y los modelos de lenguaje generativos de
-la Sección~\ref{sec:marco_llm_grandes}, el
+codificado y a lo ya generado. Las arquitecturas que se presentan a continuación conservan uno solo de los
+dos: los transformers visuales de la Sección~\ref{sec:marco_vit} usan el codificador, y los modelos de
+lenguaje generativos de la Sección~\ref{sec:marco_llm_grandes}, el
 decodificador~\cite{vaswani2017attention,dosovitskiy2021image,brown2020language}.
+
+La atención opera sobre secuencias de tokens, y qué familia de modelos resulta depende de dos
+decisiones: qué módulo del transformer se conserva y qué se convierte en token. Con parches de imagen y
+el codificador se obtienen los modelos de clasificación visual, y con palabras y el decodificador, los
+modelos de lenguaje. La siguiente sección parte de las imágenes, donde los transformers conviven con las
+redes convolucionales.
 
 \section{Aprendizaje profundo para visión}
 \label{sec:marco_vision}
