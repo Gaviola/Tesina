@@ -386,16 +386,16 @@ el codificador se obtienen los modelos de clasificación visual, y con palabras 
 modelos de lenguaje. La siguiente sección parte de las imágenes, donde los transformers conviven con las
 redes convolucionales.
 
-\section{Aprendizaje profundo para visión}
+\section{Aprendizaje profundo para clasificación visual}
 \label{sec:marco_vision}
 
-El primer componente del \emph{pipeline} recibe la imagen dermatoscópica y devuelve una probabilidad
-para cada una de las siete categorías. Para esa tarea el trabajo enfrenta dos familias de arquitectura
-de visión. Las redes convolucionales componen
-filtros locales apilados y extraen una jerarquía de características, mientras que los transformers
+Clasificar una imagen consiste en asignarla a una de $C$ categorías: la entrada es la imagen y la salida, el
+vector de probabilidades $p_c$ de la Ecuación~\ref{eq:marco_softmax}. Una arquitectura que resuelva la tarea
+tiene que convertir una matriz de píxeles, de dimensión muy alta, en un vector de características que la cabeza de
+clasificación pueda separar por clase. Dos familias lo hacen de maneras distintas. Las redes convolucionales
+componen filtros locales apilados y extraen una jerarquía de características, mientras que los transformers
 visuales tratan la imagen como una secuencia de tokens y la procesan con la atención de la
-Sección~\ref{sec:marco_atencion}. DenseNet y ConvNeXt pertenecen a la primera familia y \gls{vit} y
-Swin a la segunda, y las cuatro se comparan en el Capítulo~\ref{cp:res_clasif}.
+Sección~\ref{sec:marco_atencion}.
 
 \subsection{Redes convolucionales}
 \label{sec:marco_cnn}
@@ -404,50 +404,48 @@ La operación de convolución desliza un filtro de pequeño tamaño (\emph{kerne
 posición el producto punto entre el filtro y la ventana que cubre. La conectividad local y el uso de
 un mismo filtro en toda la imagen son las dos decisiones de diseño del operador. La primera supone
 que la información relevante se agrupa en regiones pequeñas, y la segunda, que un mismo patrón puede
-aparecer en cualquier parte (Figura~\ref{fig:marco_convolucion}). Una CNN apila esas operaciones con
+aparecer en cualquier parte (Figura~\ref{fig:marco_convolucion}). Una \gls{cnn} apila esas operaciones con
 activaciones no lineales y reducciones de resolución intermedias~\cite{lecun1998gradient}.
 
 \input{Figures/Capitulos/02-convolucion}
 
 La profundidad compone esos rasgos locales en rasgos de mayor alcance. Los bordes se combinan en
 texturas, las texturas en partes de objetos y las partes en objetos completos. VGG y ResNet
-fijaron los bloques que las arquitecturas posteriores refinan, con convoluciones
-pequeñas apiladas en el primer caso y conexiones residuales en el segundo, y esas decisiones de diseño son el
+fijaron los bloques que las arquitecturas posteriores refinan. VGG usa convoluciones pequeñas apiladas, y
+ResNet agrega conexiones residuales: la salida de un bloque es su entrada más una corrección que el bloque
+aprende, de modo que el gradiente de la Sección~\ref{sec:marco_entrenamiento} tiene un camino directo hacia
+las capas anteriores y se pueden entrenar redes de más de cien capas. Esas decisiones de diseño son el
 punto de partida de las redes convolucionales
 contemporáneas~\cite{simonyan2015very,he2015residual}.
 
 En DenseNet cada capa recibe las características de todas las anteriores, además de las de la
 inmediata, y aporta las suyas a todas las posteriores. Esa reutilización alcanza una capacidad
-comparable con menos parámetros que las arquitecturas de conectividad simple, y con conjuntos del
-orden de diez mil imágenes, como HAM10000, la economía de parámetros reduce el
+comparable con menos parámetros que las arquitecturas de conectividad simple, y en conjuntos de datos
+de pocas imágenes la economía de parámetros reduce el
 sobreajuste~\cite{huang2018densely,he2015residual}.
 
 ConvNeXt moderniza una ResNet adoptando decisiones de diseño de los transformers: convoluciones de
 mayor tamaño en lugar de bloques pequeños apilados, menos no-linealidades y normalización por capa.
 Con esas modificaciones, una red puramente convolucional iguala al Swin Transformer en exactitud y
-escalabilidad. En el comparativo, ConvNeXt representa a las redes convolucionales de la misma época
-que el ViT, de modo que el contraste entre familias enfrenta arquitecturas
-contemporáneas~\cite{liu2022convnet}.
+escalabilidad~\cite{liu2022convnet}.
 
 \subsection{Vision Transformer y Swin Transformer}
 \label{sec:marco_vit}
 
-El ViT divide la imagen en una rejilla de parches cuadrados, aplana cada parche y lo proyecta a un
-vector de dimensión fija, su \emph{embedding}. En general, un embedding es un vector aprendido que
-representa un elemento, sea un parche, una palabra o una imagen completa, de modo que elementos parecidos
-quedan cerca en ese espacio. A cada parche se le suma además un embedding de posición, que indica en qué
-lugar de la rejilla estaba. Sobre esa secuencia de tokens aplica un
+El \gls{vit} divide la imagen en una rejilla de parches cuadrados, aplana cada parche y lo proyecta a un
+vector de dimensión fija, su embedding. A cada parche se le suma además un embedding de posición, que indica
+en qué lugar de la rejilla estaba. Sobre esa secuencia de tokens aplica un
 codificador transformer sin ninguna operación convolucional, y decide la categoría a partir de un
 token de clase que se agrega al inicio de la secuencia~\cite{dosovitskiy2021image,vaswani2017attention}.
 
 \input{Figures/Capitulos/02-vit-patches}
 
 El ViT no incorpora las dos suposiciones que la convolución da por sentadas, la localidad y la
-equivariancia a traslaciones, y tiene que aprenderlas de los datos. Pre-entrenado solo sobre
-ImageNet, rinde por debajo de redes convolucionales de tamaño comparable; pre-entrenado sobre
+equivariancia a traslaciones, y tiene que aprenderlas de los datos. Preentrenado solo sobre
+ImageNet, rinde por debajo de redes convolucionales de tamaño comparable; preentrenado sobre
 corpus de entre 14 y 300 millones de imágenes, las supera. La variable que decide entre una familia
-y otra es la escala del pre-entrenamiento, y por eso importa con qué pesos parte cada arquitectura
-antes del ajuste sobre el conjunto médico~\cite{dosovitskiy2021image}.
+y otra es la escala del preentrenamiento, y por eso importa con qué pesos parte cada arquitectura
+antes del ajuste fino a la tarea de destino (Sección~\ref{sec:marco_transferencia})~\cite{dosovitskiy2021image}.
 
 El Swin Transformer atiende solo dentro de ventanas locales, con costo lineal en el número de
 parches en lugar de cuadrático, y desplaza las ventanas entre capas para que la información cruce
@@ -458,37 +456,32 @@ ventanas entre dos capas.
 
 \input{Figures/Capitulos/02-swin-ventanas}
 
-\subsection{Transferencia de aprendizaje y desbalance de clases}
-\label{sec:marco_transferencia}
+\subsection{Redes convolucionales y transformers como línea base}
+\label{sec:marco_baseline_visual}
 
-Entrenar desde cero una de estas arquitecturas exige más imágenes de las que tiene un conjunto
-médico típico. La transferencia de aprendizaje resuelve la escasez aprendiendo primero
-representaciones sobre un corpus grande de imágenes naturales y reutilizándolas después para la
-tarea de destino. La extracción de características congela el \emph{backbone} y solo entrena la
-cabeza de clasificación; el ajuste fino actualiza también los pesos de la red, con una tasa de
-aprendizaje menor~\cite{pan2010survey}.
+Una línea base (\emph{baseline}) es una arquitectura de referencia, entrenada con un protocolo fijo, contra la
+que se mide el desempeño de otra. Sin ella un resultado aislado no dice nada, porque una exactitud es alta o
+baja según lo que logre la referencia sobre los mismos datos.
 
-Todas las arquitecturas del trabajo parten de pesos pre-entrenados sobre ImageNet, el corpus de
-referencia del reconocimiento visual~\cite{russakovsky2015imagenet}. Con ese punto de partida común,
-las diferencias que se miden entre ellas en el Capítulo~\ref{cp:res_clasif} se pueden atribuir a la
-arquitectura.
+Las redes convolucionales y los transformers visuales cumplen ese papel para los modelos que combinan
+imagen y texto (\glspl{vlm}, Sección~\ref{sec:marco_vlm}). Son las arquitecturas establecidas para clasificar
+imágenes, con recetas de entrenamiento maduras y con supervisión completa, es decir, con las etiquetas de la
+tarea de destino. Un modelo de otra familia justifica su costo si iguala o supera a esas referencias, o si
+ofrece algo que ellas no pueden dar, como producir texto o clasificar sin entrenar sobre la tarea. Además, en
+muchos \glspl{vlm} el codificador de imagen es a su vez un
+ViT~\cite{radford2021learning,liu2023visual}, y por eso las dos familias se presentan antes que los modelos que
+las incorporan.
 
-La distribución de clases de HAM10000 es muy asimétrica, y un modelo entrenado sin corrección
-favorece a las clases mayoritarias~\cite{tschandl2018ham10000}. El aumento de datos de la
-Sección~\ref{sec:marco_regularizacion} no corrige esa asimetría, porque, aplicado por igual a todas las
-clases, deja la proporción entre ellas donde estaba~\cite{shorten2019survey}. El
-Capítulo~\ref{cp:res_clasif} compara en cambio tres modificaciones de la función de pérdida, que actúan
-durante el entrenamiento y dejan intacta la métrica de evaluación:
-\begin{enumerate}
-    \item ponderar la pérdida de cada ejemplo por la inversa de la frecuencia de su clase;
-    \item la pérdida focal, que atenúa el aporte de los ejemplos que el modelo ya clasifica con
-    confianza~\cite{lin2017focal};
-    \item el \emph{balanced softmax}, que suma a cada logit el logaritmo de la frecuencia de su clase en
-    el entrenamiento~\cite{ren2020balanced}.
-\end{enumerate}
+Una comparación solo es válida si las dos partes usan los mismos datos, las mismas particiones y las mismas
+métricas. Conviene distinguir dos comparaciones. La primera enfrenta arquitecturas de la misma familia de
+modelos, como una red convolucional y un transformer visual entrenados ambos con supervisión. ConvNeXt es una
+red convolucional de la misma época que el ViT, y esa comparación enfrenta arquitecturas
+contemporáneas~\cite{dosovitskiy2021image,liu2022convnet}. La segunda enfrenta
+familias de modelos, clasificadores supervisados frente a modelos visión--lenguaje, y es la que dice si la
+incorporación del lenguaje aporta algo a la clasificación.
 
-Con esto el clasificador queda completo. Recibe la imagen y devuelve siete probabilidades, ninguna de
-las cuales es un texto; el reporte exige un modelo que genere secuencias de palabras, que es el tema de
+Estos clasificadores entregan una probabilidad por clase y ningún texto. Producir un texto exige un modelo que
+genere secuencias de palabras, y el mismo transformer, usado como decodificador, lo hace. Ese es el tema de
 la sección siguiente.
 
 \section{Modelos de lenguaje}
