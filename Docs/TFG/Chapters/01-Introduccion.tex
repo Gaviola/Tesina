@@ -178,42 +178,6 @@ responder y con los capítulos donde se lo describe y se lo evalúa.
 El marco conceptual de todos los objetivos está en el Capítulo~\ref{cp:marco}, y el balance de su cumplimiento,
 en el Capítulo~\ref{cp:conclusiones}.
 
-\section{Alcance y delimitación}
-\label{sec:intro_alcance}
-El material sobre el que se pronuncia el trabajo son imágenes dermatoscópicas. El conjunto principal es
-HAM10000, que reúne imágenes de lesiones pigmentadas etiquetadas en siete categorías diagnósticas con
-confirmación histopatológica o por seguimiento~\cite{tschandl2018ham10000}, y sobre él se entrenan y
-se comparan los clasificadores. Los pares imagen--texto necesarios para ajustar el generador provienen
-de SkinCaRe~\cite{shen2025skincare}, cuyas imágenes son de fotografía clínica. La fotografía clínica entra
-al trabajo solo como fuente de esos pares, y la fidelidad diagnóstica de los reportes se mide sobre las
-imágenes dermatoscópicas de HAM10000. HIBA es el conjunto con el que se evalúa la generalización a otra
-población~\cite{riccilara2023dataset}. La histopatología queda fuera, y nada de lo que se establece en este
-trabajo se traslada a ella ni a la fotografía clínica sin volver a medirlo.
-
-De los términos que emplea el trabajo, dos se usan en un sentido más estrecho que el corriente. El de
-«detección» quedó fijado en la Sección~\ref{sec:intro_contexto}, donde designa la tarea binaria de melanoma
-derivada de la clasificación, y no la localización de la lesión ni su segmentación. El segundo es «fidelidad
-diagnóstica», la consistencia entre el diagnóstico que el reporte afirma y la etiqueta de referencia de la
-imagen. Se mide sin disponer de un texto de referencia contra el cual comparar. Es una propiedad del
-contenido del reporte.
-
-Las métricas automáticas establecen fidelidad diagnóstica, magnitud distinta de la validez
-clínica. Afirmar que un reporte sirve en la consulta exige que especialistas lo lean y se pronuncien sobre
-él, y esa evidencia es de otra naturaleza que la que produce una métrica calculada contra etiquetas. El
-trabajo se pronuncia sobre la primera magnitud y sobre ese material, y no desarrolla un producto de uso
-clínico ni lo valida con pacientes. El análisis de las limitaciones y de las amenazas a la validez
-corresponde a la Sección~\ref{sec:disc_limitaciones}.
-
-La restricción de cómputo descrita en la Sección~\ref{sec:intro_contexto} es también una decisión de
-alcance, porque deja fuera de la comparación a los modelos que exigen mucha capacidad de cómputo para entrenarse o
-para responder. Modelos de mayor tamaño podrían rendir mejor, pero evaluarlos queda fuera del
-objetivo de este trabajo. De ahí se sigue la decisión de diseño más consecuente del trabajo: no se
-pre-entrena un modelo visión--lenguaje desde cero. El pre-entrenamiento exige cómputo y volumen de datos de
-un orden que excede el alcance de una tesina y el equipamiento disponible, de modo que se parte de modelos
-ya pre-entrenados y se los adapta con \gls{lora}, que deja congelados los pesos originales y entrena solo
-un conjunto reducido de parámetros adicionales~\cite{hu2021lora}. Qué modelos entran por ese criterio y
-con qué configuración se los ajusta es materia del Capítulo~\ref{cp:metodos}.
-
 \section{Organización del documento}
 \label{sec:intro_organizacion}
 El documento sigue el orden de las dos fases. Después de esta introducción, cada capítulo cubre lo
