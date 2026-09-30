@@ -34,7 +34,7 @@ siguiente. La capa $l$ transforma el vector $\mathbf{h}^{(l-1)}$ que recibe en
     \label{eq:marco_capa}
 \end{equation}
 donde $W^{(l)}$ es la matriz de pesos, $\mathbf{b}^{(l)}$ el vector de sesgos y $\phi$ la función de activación,
-aplicada elemento a elemento. Sin la activación, la composición de capas se reduciría a una única
+aplicada por elemento. Sin la activación, las capas se reducirían a una sola
 transformación lineal; con ella, la red representa funciones no lineales de la
 entrada~\cite{rumelhart1986learning,goodfellow2016deep}.
 
@@ -194,8 +194,8 @@ una foto de un gato, pero sí la de un dígito, donde un 6 rotado pasa a ser un 
 color es un rasgo que distingue las clases, como ocurre en dermatoscopía~\cite{kittler2016standardization},
 una transformación de color fuerte puede borrar la información que define la etiqueta~\cite{shorten2019survey}.
 
-Por último, se conservan los parámetros de la época con mejor desempeño en validación, en lugar de los de
-la última. Esta forma de detención temprana (\emph{early stopping}) equivale a quedarse con el modelo del punto
+\looseness=-1 Por último, se conservan los parámetros de la época con mejor desempeño en validación, y no los de
+la última. Esta forma de detención temprana (\emph{early stopping}) equivale al modelo del punto
 en que el error de validación deja de bajar~\cite{goodfellow2016deep}.
 
 \subsection{Transferencia de aprendizaje y ajuste fino}
@@ -216,9 +216,9 @@ disponibles alcanzan para ajustar lo que sí es específico de su tarea.
 El corpus de preentrenamiento de referencia en reconocimiento visual es ImageNet, un conjunto de datos de
 imágenes naturales etiquetadas~\cite{russakovsky2015imagenet}.
 
-La transferencia no está exenta de límites en imágenes médicas. Entre una imagen natural y una imagen
+\looseness=-1 La transferencia tiene límites en imágenes médicas. Entre una imagen natural y una imagen
 clínica hay una distancia de dominio grande, y el beneficio del preentrenamiento sobre imágenes naturales
-puede ser menor que el esperado. Parte de la ventaja observada proviene del tamaño del modelo
+puede ser menor al esperado. Parte de la ventaja proviene del tamaño del modelo
 preentrenado y no de los rasgos que transfiere~\cite{raghu2019transfusion}.
 
 Una red que clasifica se puede dividir en dos partes. El \emph{backbone} es la parte que convierte la
@@ -296,8 +296,8 @@ correcciones actúan en tres puntos distintos del procedimiento:
             p_c = \frac{n_c \exp(z_c)}{\sum_{j=1}^{C} n_j \exp(z_j)},
             \label{eq:marco_balanced_softmax}
         \end{equation}
-        lo que equivale a sumar $\log n_c$ al logit de la clase $c$ antes de la softmax de la
-        Ecuación~\ref{eq:marco_softmax}~\cite{ren2020balanced}.
+        lo que equivale a sumar $\log n_c$ al logit de $c$ antes de la softmax
+        (Ecuación~\ref{eq:marco_softmax})~\cite{ren2020balanced}.
     \end{enumerate}
     \item \textbf{A nivel de decisión (ajuste de umbral).} El clasificador se entrena sin corrección y después
     se ajusta la regla de decisión. Una opción reescala las probabilidades por el inverso de la proporción de
@@ -312,7 +312,7 @@ define.
 Ninguna de las tres correcciones agrega información sobre las clases raras. Solo cambian cuánto pesan en el
 entrenamiento o en la decisión, y con pocas muestras de una clase hay un límite en cuánto se puede aprender de
 ella. Ese límite es el mismo de la generalización de la sección anterior: un modelo generaliza tanto como los
-datos que vio lo permiten.
+datos que vio lo permiten, y no más.
 
 Apilar capas produce representaciones cada vez más abstractas de la entrada, y eso es el aprendizaje
 profundo. Un perceptrón multicapa trata su entrada como un vector sin estructura, en el que cada neurona se
@@ -334,9 +334,9 @@ Frente al procesamiento de un elemento por vez de la Sección~\ref{sec:marco_fun
 compara directamente todas las posiciones: cada posición de la salida pondera los valores de todas las
 posiciones de la entrada según la compatibilidad entre una consulta ($Q$) y una clave ($K$). Los elementos de
 la secuencia se llaman \emph{tokens}, y son fragmentos de palabra en un texto o parches en una imagen. Cada
-\emph{token} se representa con un \emph{embedding}, un vector aprendido que representa un elemento, sea un
-fragmento de palabra, un parche o una imagen completa, de modo que elementos parecidos quedan cerca en ese
-espacio. Como todas las posiciones se comparan a la vez, el cálculo se paraleliza a lo largo de la secuencia
+\emph{token} se representa con un \emph{embedding}, un vector aprendido del elemento, sea un
+fragmento de palabra, un parche o una imagen completa, de modo que los parecidos quedan cerca en ese
+espacio. Como todas se comparan a la vez, el cálculo se paraleliza en la secuencia
 y aprovecha mejor el hardware que el recorrido secuencial. La arquitectura \emph{transformer} se construye
 sobre esa operación~\cite{vaswani2017attention}.
 
@@ -364,8 +364,8 @@ importar en qué lugar de la secuencia estén. Para que el orden cuente, se suma
 token un embedding de posición, que indica el lugar que ocupa~\cite{vaswani2017attention}.
 
 El transformer original, planteado para traducción automática, combina dos módulos. El codificador
-contextualiza la entrada completa, y el decodificador genera la salida token a token atendiendo a lo
-codificado y a lo ya generado. Las arquitecturas que se presentan a continuación conservan uno solo de los
+contextualiza la entrada, y el decodificador genera la salida token a token atendiendo a lo
+codificado y a lo ya generado. Las siguientes conservan uno solo de los
 dos: los transformers visuales de la Sección~\ref{sec:marco_vit} usan el codificador, y los modelos de
 lenguaje generativos de la Sección~\ref{sec:marco_llm_grandes}, el
 decodificador~\cite{vaswani2017attention,dosovitskiy2021image,brown2020language}.
@@ -408,9 +408,9 @@ las capas anteriores y se pueden entrenar redes de más de cien capas. Esas deci
 punto de partida de las redes convolucionales
 contemporáneas~\cite{simonyan2015very,he2015residual}.
 
-En DenseNet cada capa recibe las características de todas las anteriores, además de las de la
-inmediata, y aporta las suyas a todas las posteriores. Esa reutilización alcanza una capacidad
-comparable con menos parámetros que las arquitecturas de conectividad simple, y en conjuntos de datos
+\looseness=-1 En DenseNet cada capa recibe las características de todas las anteriores, además de la
+inmediata, y aporta las suyas a todas las posteriores. Esa reutilización alcanza capacidad
+comparable con menos parámetros que las arquitecturas de conectividad simple, y en conjuntos
 de pocas imágenes la economía de parámetros reduce el
 sobreajuste~\cite{huang2018densely,he2015residual}.
 
@@ -423,9 +423,9 @@ escalabilidad~\cite{liu2022convnet}.
 \label{sec:marco_vit}
 
 El \gls{vit} divide la imagen en una rejilla de parches cuadrados, aplana cada parche y lo proyecta a un
-vector de dimensión fija, su embedding. A cada parche se le suma además un embedding de posición, que indica
-en qué lugar de la rejilla estaba. Sobre esa secuencia de tokens aplica un
-codificador transformer sin ninguna operación convolucional, y decide la categoría a partir de un
+vector de dimensión fija, su embedding. A cada parche se le suma un embedding de posición, que indica
+su lugar en la rejilla. Sobre esa secuencia de tokens aplica un
+codificador transformer sin operaciones convolucionales, y decide la categoría a partir de un
 token de clase que se agrega al inicio de la secuencia~\cite{dosovitskiy2021image,vaswani2017attention}.
 
 \input{Figures/Capitulos/02-vit-patches}
@@ -449,8 +449,8 @@ ventanas entre dos capas.
 \subsection{Redes convolucionales y transformers como línea base}
 \label{sec:marco_baseline_visual}
 
-Una línea base (\emph{baseline}) es una arquitectura de referencia, entrenada con un protocolo fijo, contra la
-que se mide el desempeño de otra. Sin ella un resultado aislado no dice nada, porque una exactitud es alta o
+Una línea base (\emph{baseline}) es una arquitectura de referencia, entrenada con protocolo fijo, contra la
+que se compara otra. Sin ella un resultado aislado no dice nada, porque una exactitud es alta o
 baja según lo que logre la referencia sobre los mismos datos.
 
 Las redes convolucionales y los transformers visuales cumplen ese papel para los modelos que combinan
@@ -477,11 +477,11 @@ la sección siguiente.
 \section{Modelos de lenguaje y adaptación eficiente}
 \label{sec:marco_llm}
 
-Un modelo de lenguaje asigna una probabilidad a cada continuación posible de un texto: dado lo escrito
-hasta el momento, predice el token siguiente. Esa capacidad, obtenida a la escala de miles de millones de
-parámetros, es la base de los generadores de texto actuales, y plantea dos problemas prácticos. Hay que
+\looseness=-1 Un modelo de lenguaje asigna una probabilidad a cada continuación posible de un texto: dado lo escrito
+hasta el momento, predice el token siguiente. Esa capacidad, obtenida a escala de miles de millones de
+parámetros, es la base de los generadores de texto, y plantea dos problemas prácticos. Hay que
 dirigir su salida hacia lo que se necesita, y hay que adaptarlo a una tarea cuando reentrenarlo por completo
-excede la memoria disponible.
+excede la memoria.
 
 \subsection{Grandes modelos de lenguaje}
 \label{sec:marco_llm_grandes}
@@ -502,7 +502,7 @@ Según qué parte del transformer conserven, se distinguen dos familias. Los mod
 como BERT, construyen una representación bidireccional del texto, en la que cada token ve a los
 anteriores y a los posteriores, y sirven para clasificar y para comparar textos. Los de solo decodificador
 ven únicamente los tokens anteriores, modelan la secuencia en una dirección y sirven para generar texto.
-Los grandes modelos de lenguaje generativos, como GPT-3 y LLaMA, pertenecen a la segunda
+Los grandes modelos de lenguaje generativos, como GPT-3 y LLaMA, son de la segunda
 familia~\cite{devlin2019bert,brown2020language,touvron2023llama}.
 
 El comportamiento del modelo se ajusta después en dos etapas. El ajuste fino supervisado lo entrena
@@ -554,7 +554,7 @@ preentrenado y entrenan solo un conjunto pequeño de parámetros, y así reducen
 necesita~\cite{hu2021lora}. El caso extremo es la extracción de características, que congela todo el modelo y
 entrena solo una cabeza nueva, y con ello limita lo que el ajuste puede cambiar~\cite{hu2021lora}.
 
-\gls{lora} ocupa un punto intermedio entre las dos opciones. Sobre los pesos congelados $W$ entrena
+\Gls{lora} ocupa un punto intermedio entre las dos opciones. Sobre los pesos congelados $W$ entrena
 un incremento de bajo rango,
 \begin{equation}
     W' = W + BA, \qquad B \in \mathbb{R}^{d\times r},\quad A \in \mathbb{R}^{r\times k},\quad
@@ -591,7 +591,7 @@ Sección~\ref{sec:marco_vit}, y el generador es un modelo de lenguaje (Sección~
 \subsection{Alineación contrastiva: CLIP}
 \label{sec:marco_vlm_clip}
 
-\gls{clip} entrena un codificador de imagen y uno de texto sobre pares imagen--texto, cada uno con una
+\Gls{clip} entrena un codificador de imagen y uno de texto sobre pares imagen--texto, cada uno con una
 proyección final a un espacio común de embeddings. La similitud entre el embedding de una imagen ($\mathbf{u}$)
 y el de un texto ($\mathbf{v}$) es el coseno del ángulo que forman,
 \begin{equation}
@@ -619,8 +619,8 @@ congelado. Un clasificador lineal entrenado sobre los embeddings, el \emph{linea
 cuánta información sobre las clases contiene la representación~\cite{radford2021learning}. El método de los
 \gls{knn} usa el mismo espacio de otra manera. Los $k$ vecinos de una imagen son las $k$ imágenes de
 referencia cuyo embedding tiene mayor similitud coseno con el suyo, y la clase asignada es la que predomina
-entre ellos. Como no entrena ningún parámetro, el espacio contrastivo funciona también como un índice de
-casos: dada una imagen, permite recuperar las más parecidas
+entre ellos. Como no entrena ningún parámetro, el espacio contrastivo sirve también de índice de
+casos: dada una imagen, recupera las más parecidas
 (Sección~\ref{sec:marco_recuperacion_imagenes}).
 
 Un modelo contrastivo solo relaciona lo que vio en sus pares de entrenamiento, y los pares de internet
@@ -657,15 +657,15 @@ ajusta el proyector sobre pares imagen--leyenda, para que los tokens visuales ca
 espacio que el LLM interprete. En la segunda, el \emph{visual instruction tuning}, se ajustan el
 proyector y el LLM sobre conversaciones en las que se pide describir, razonar o responder preguntas
 sobre una imagen. De ahí sale un modelo que sigue instrucciones visuales como el LLM de la
-Sección~\ref{sec:marco_llm_grandes} sigue instrucciones de texto~\cite{liu2023visual}.
+Sección~\ref{sec:marco_llm_grandes} sigue las de texto~\cite{liu2023visual}.
 
 La misma receta se ha llevado al dominio médico cambiando los datos. LLaVA-Med la repite con figuras y
 leyendas de artículos biomédicos~\cite{li2023llavamed}, y SkinVL con conjuntos dermatológicos
 públicos a los que suma MM-Skin, un conjunto de pares construido a partir de libros de texto de la
 especialidad~\cite{zeng2025mmskin}. La familia Phi-3 incluye una variante con entrada visual que sigue
 el mismo esquema con un LLM de pocos miles de millones de parámetros~\cite{abdin2024phi3}. Como el LLM
-concentra la mayor parte de los parámetros de estos modelos, los métodos de la
-Sección~\ref{sec:marco_llm_lora} se pueden aplicar a él para adaptarlos a un dominio.
+concentra la mayoría de los parámetros de estos modelos, los métodos de la
+Sección~\ref{sec:marco_llm_lora} se aplican a él para adaptarlos a un dominio.
 
 Un VLM generativo produce texto, pero no cualquier texto sirve como reporte clínico. Qué se espera de un
 reporte, de qué maneras puede fallar un modelo al redactarlo y qué información adicional se le puede dar para
@@ -697,10 +697,10 @@ conjunto. En SkinCaRe, dermatólogos redactaron las descripciones de la parte Sk
 revisión de al menos dos especialistas, mientras que un LLM redactó los razonamientos diagnósticos de la parte
 SkinCoT a partir de la etiqueta y dermatólogos los certificaron. MM-Skin toma sus textos de libros de la
 especialidad, y Derm1M reúne alrededor de un millón de pares de fuentes educativas, foros y videos, con un
-texto depurado por un LLM~\cite{shen2025skincare,zeng2025mmskin,yan2025derm1m}. Un texto escrito por
-especialistas, uno generado por un LLM y luego certificado y uno extraído de la web tienen distinto grado de
+texto depurado por un LLM~\cite{shen2025skincare,zeng2025mmskin,yan2025derm1m}. Esos tres orígenes
+tienen distinto grado de
 curaduría, y ese grado limita cuánto se puede confiar en el texto como referencia. Los conjuntos se
-describen en la Sección~\ref{sec:met_datasets}, y la forma en que la referencia entra en la evaluación, en la
+describen en la Sección~\ref{sec:met_datasets}, y su uso como referencia en la evaluación, en la
 Sección~\ref{sec:marco_eval_texto}.
 
 Que exista un texto de referencia no dice qué se le exige a un reporte generado, y parecerse a esa referencia
@@ -710,8 +710,8 @@ resuelve a la vez.
 \subsection{Tres ejes de la generación de reportes}
 \label{sec:marco_rep_ejes}
 
-El primer problema es describir lo que se ve. El texto tiene que reflejar los rasgos visuales de la lesión,
-como el color, el patrón, la distribución y las estructuras que contiene. La descripción de una lesión se
+\looseness=-1 El primer problema es describir lo que se ve. El texto tiene que reflejar los rasgos visuales de la lesión,
+como el color, el patrón, la distribución y las estructuras. La descripción de una lesión se
 escribe con un vocabulario cerrado de términos, que la comunidad dermatoscópica estandarizó por consenso, y
 algoritmos como la lista de 7 puntos convierten la presencia de ciertos hallazgos en peso diagnóstico, de
 modo que el camino entre la imagen y la etiqueta pasa por entidades con
@@ -834,9 +834,9 @@ pesándolos por la probabilidad del documento,
     p(y \mid x) \approx \sum_{z \in \text{top-}K} p_\eta(z \mid x)\, p_\theta(y \mid x, z),
     \label{eq:marco_rag}
 \end{equation}
-de modo que un documento más parecido a la consulta influye más en el texto
+así un documento más parecido a la consulta influye más en el texto
 generado~\cite{lewis2020retrievalaugmented}. Esta formulación combina un recuperador entrenado y un
-generador, y marginaliza sobre los documentos recuperados. El codificador de la consulta se ajusta junto con
+generador, y marginaliza sobre los documentos. El codificador de la consulta se ajusta junto con
 el generador, mientras que el de documentos y el índice quedan fijos, y los documentos son textos.
 
 La idea que sobrevive a esa formulación es que el generador condiciona su salida en información recuperada.
@@ -862,13 +862,13 @@ La variante que se usa en este trabajo es la segunda y no la formulación de Lew
 describe en el Capítulo~\ref{cp:metodos}.
 
 En la generación de reportes radiológicos, la recuperación multimodal parte de la imagen. A partir de
-ella se recuperan reportes de casos parecidos de la base de entrenamiento, que se entregan al generador
+ella se recuperan reportes de casos parecidos de la base de entrenamiento, que se dan al generador
 como referencia. Entrenar el recuperador para que prefiera reportes con los mismos hallazgos clínicos mejora la
-completitud y la corrección de lo generado~\cite{sun2025factaware}. Es un caso de RAG en que la consulta es
-una imagen y los documentos son reportes.
+completitud y corrección de lo generado~\cite{sun2025factaware}. Es RAG, con imagen como consulta y
+reportes como documentos.
 
-Los documentos, sin embargo, son una de las formas posibles de la evidencia. En un dominio con una base de
-casos etiquetados, lo disponible son imágenes, y recuperarlas es un mecanismo distinto.
+Los documentos son una de las formas posibles de la evidencia. Con una base de casos etiquetados, lo
+disponible son imágenes, y recuperarlas es otro mecanismo.
 
 \subsection{Recuperar imágenes similares}
 \label{sec:marco_recuperacion_imagenes}
@@ -881,8 +881,8 @@ visual, con la similitud coseno de la Ecuación~\ref{eq:marco_cos},
     \cos\bigl(f(x),\, f(x_j)\bigr),
     \label{eq:marco_vecinos}
 \end{equation}
-donde $x_j$ es la imagen del caso $j$. La información asociada a esos casos, como su diagnóstico o su
-localización, es \textbf{evidencia visual}: dice qué se ha visto que se parezca a la consulta.
+donde $x_j$ es la imagen del caso $j$. La información de esos casos, como su diagnóstico o su
+localización, es \textbf{evidencia visual}: dice qué se vio que se parezca a la consulta.
 
 El uso más simple de los vecinos es clasificar. La proporción de vecinos de la clase $c$ estima su
 probabilidad local,
@@ -891,8 +891,8 @@ probabilidad local,
     \label{eq:marco_knn}
 \end{equation}
 donde $y_j$ es la etiqueta del caso $j$, y la predicción es la clase de mayor proporción, el voto
-mayoritario~\cite{cover1967nearest}. Aplicada a un modelo de lenguaje, la búsqueda de vecinos mejora la predicción sin ningún
-entrenamiento adicional, sobre todo en los patrones poco frecuentes, porque el modelo accede en el momento de
+mayoritario~\cite{cover1967nearest}. Aplicada a un modelo de lenguaje, la búsqueda de vecinos mejora la predicción sin
+entrenamiento adicional, sobre todo en los patrones poco frecuentes, porque el modelo accede al
 predecir a casos concretos que no tiene que memorizar~\cite{khandelwal2020generalization}.
 
 Este mecanismo se distingue del anterior en tres puntos. No hay documentos ni recuperador entrenado, porque
@@ -918,7 +918,7 @@ tercer mecanismo, que no recupera nada y compara.
 
 Dos predictores con sesgos distintos, por ejemplo un clasificador supervisado y uno basado en vecinos sobre
 una representación aprendida de otra forma, pueden coincidir o no sobre la misma imagen. La concordancia
-entre sus predicciones $\hat{y}_1(x)$ y $\hat{y}_2(x)$ es
+entre sus predicciones $\hat{y}_1(x)$ y $\hat{y}_2(x)$ sobre la imagen $x$ es
 \begin{equation}
     a(x) = \mathbf{1}\bigl[\hat{y}_1(x) = \hat{y}_2(x)\bigr].
     \label{eq:marco_concordancia}
@@ -941,10 +941,23 @@ tres mecanismos.
 \subsection{Qué aportaría integrar los tres mecanismos}
 \label{sec:marco_integracion}
 
-Cada mecanismo resuelve una parte del problema y deja otras sin resolver
-(Tabla~\ref{tab:marco_mecanismos}).
+Cada mecanismo resuelve una parte del problema y deja otras abiertas (Tabla~\ref{tab:marco_mecanismos}).
 
-\begin{table}[htbp]
+La evidencia recuperada puede condicionar el texto, y con ello atiende el segundo problema de la
+Sección~\ref{sec:marco_rep_ejes}. La concordancia entre predictores puede decidir cuánta afirmación permite esa
+evidencia, y con ello atiende el tercero. Combinados, el texto generado quedaría condicionado por la
+evidencia y por el nivel de acuerdo, de modo que afirmaría cuando las señales coinciden y matizaría cuando no.
+Esa es una propiedad deseable de un generador de reportes y no un diseño.
+
+Queda abierto si la evidencia recuperada mejora la fidelidad diagnóstica y si el acuerdo entre predictores
+separa los casos confiables de los que no lo son. Las dos preguntas se responden con experimentos, cuyo
+protocolo se define en el Capítulo~\ref{cp:metodos}.
+
+Para que la integración funcione hay que decidir, para cada imagen, cuánta afirmación justifica la evidencia.
+Esa decisión es un problema con teoría propia, la predicción selectiva, que trata cuándo un modelo debe
+abstenerse de responder.
+
+\begin{table}[!t]
     \centering
     \caption[Mecanismos de recuperación y de decisión]{Los tres mecanismos de la generación de reportes:
     qué recuperan o calculan, sobre qué modalidad operan, qué parte del problema ayudan a resolver y qué
@@ -975,20 +988,6 @@ Cada mecanismo resuelve una parte del problema y deja otras sin resolver
     \end{tabularx}
 \end{table}
 
-La evidencia recuperada puede condicionar el texto, y con ello atiende el segundo problema de la
-Sección~\ref{sec:marco_rep_ejes}. La concordancia entre predictores puede decidir cuánta afirmación permite esa
-evidencia, y con ello atiende el tercero. Combinados, el texto generado quedaría condicionado por la
-evidencia y por el nivel de acuerdo, de modo que afirmaría cuando las señales coinciden y matizaría cuando no.
-Esa es una propiedad deseable de un generador de reportes y no un diseño.
-
-Queda abierto si la evidencia recuperada mejora la fidelidad diagnóstica y si el acuerdo entre predictores
-separa los casos confiables de los que no lo son. Las dos preguntas se responden con experimentos, cuyo
-protocolo se define en el Capítulo~\ref{cp:metodos}.
-
-Para que la integración funcione hay que decidir, para cada imagen, cuánta afirmación justifica la evidencia.
-Esa decisión es un problema con teoría propia, la predicción selectiva, que trata cuándo un modelo debe
-abstenerse de responder.
-
 \section{Incertidumbre y predicción selectiva}
 \label{sec:marco_incertidumbre}
 
@@ -1007,21 +1006,21 @@ indeterminada aunque el modelo sea bueno, y reunir más datos no la reduce. La i
 proviene del modelo, que no vio suficientes ejemplos de cierto tipo de lesión, y disminuye con más datos~\cite{kendall2017uncertainties}.
 
 Una tercera fuente es el cambio de distribución (Sección~\ref{sec:marco_generalizacion}). Cuando la imagen
-proviene de un equipo, un centro o una población que el entrenamiento no cubrió, lo que el modelo aprendió puede
-no aplicarse. La softmax de la Ecuación~\ref{eq:marco_softmax} normaliza los logits para que las probabilidades
+proviene de un equipo, centro o población que el entrenamiento no cubrió, lo aprendido puede
+no aplicarse. La softmax de la Ecuación~\ref{eq:marco_softmax} hace que las probabilidades
 sumen uno, de modo que no existe una salida que exprese «este caso no lo conozco». La incertidumbre existe en
-el modelo, pero la probabilidad que entrega no la refleja necesariamente.
+el modelo, pero su probabilidad no la refleja necesariamente.
 
-El costo de ignorarla depende del uso. En el diagnóstico dermatológico los errores no cuestan lo mismo: no
+\looseness=-1 El costo de ignorarla depende del uso. En dermatología los errores no cuestan lo mismo: no
 detectar una lesión maligna tiene consecuencias distintas de derivar una benigna. Además, la decisión final la
 toma una persona, y lo que el sistema comunica influye en ella. En un experimento con dermatólogos y médicos de
 atención primaria, el apoyo de un sistema de aprendizaje profundo mejoró la exactitud de los dos
-grupos~\cite{groh2024learningaided}, de modo que la salida del sistema es un insumo de la decisión clínica y no
-la decisión misma. Un sistema que reconoce su límite y deriva el caso puede ser preferible a uno que siempre
+grupos~\cite{groh2024learningaided}, de modo que su salida es un insumo de la decisión clínica y no
+la decisión misma. Uno que reconoce su límite y deriva puede ser preferible a uno que siempre
 responde.
 
 Si se acepta que algunos casos son inciertos, queda por decidir qué hacer con ellos. La respuesta más simple es
-no decidir, y formalizarla permite medir cuánto se gana al hacerlo.
+no decidir, y formalizarla permite medir cuánto se gana.
 
 \subsection{Predicción selectiva y abstención}
 \label{sec:marco_pred_selectiva}
@@ -1084,7 +1083,7 @@ Hay tres señales de confianza que pueden ocupar el lugar de $\kappa(x)$.
     \item La concordancia entre predictores (Sección~\ref{sec:marco_concordancia}) toma $\kappa(x) = a(x)$, y el
           desacuerdo entre modelos aproxima la incertidumbre, como en los
           ensambles~\cite{lakshminarayanan2017simple}. Requiere dos predictores con errores distintos, y no
-          informa cuando ambos comparten el mismo error.
+          informa cuando ambos comparten error.
     \item El consenso entre los vecinos recuperados (Sección~\ref{sec:marco_recuperacion_imagenes}) mide qué
           tan unánime es el voto, $\kappa(x) = \max_c \hat{p}_{\text{kNN}}(c \mid x)$, con
           $\hat{p}_{\text{kNN}}$ de la Ecuación~\ref{eq:marco_knn}. Vale 1 cuando los $k$ vecinos coinciden.
@@ -1104,11 +1103,11 @@ Con señales de confianza disponibles, la decisión deja de ser binaria.
 \subsection{Tres salidas: afirmar, ofrecer diferenciales o derivar}
 \label{sec:marco_tres_salidas}
 
-En la práctica clínica derivar no es la única alternativa a afirmar. Un clínico que duda entre dos o tres
+\begingroup En la práctica clínica derivar no es la única alternativa a afirmar. Un clínico que duda entre dos o tres
 diagnósticos los enuncia como diagnóstico diferencial. Un sistema puede entonces tener tres salidas
 (Tabla~\ref{tab:marco_salidas}): afirmar un diagnóstico, ofrecer diferenciales, es decir un conjunto de
 candidatos, o derivar el caso cuando no se alcanza la confianza necesaria. Con dos umbrales
-$\tau_1 > \tau_2$ sobre la señal, la política es
+$\tau_1 > \tau_2$ sobre la señal, la política es\displaywidowpenalty=10000
 \begin{equation}
     \pi(x) =
     \begin{cases}
@@ -1117,7 +1116,7 @@ $\tau_1 > \tau_2$ sobre la señal, la política es
         \text{derivar} & \text{si } \kappa(x) < \tau_2.
     \end{cases}
     \label{eq:marco_politica}
-\end{equation}
+\end{equation}\endgroup
 
 \begin{table}[htbp]
     \centering
@@ -1148,10 +1147,9 @@ construirla es ordenar las clases por probabilidad y tomar las primeras hasta qu
 alcance un umbral, de modo análogo al muestreo de núcleo de la Sección~\ref{sec:marco_llm_grandes}. Cuando
 $|S(x)| = 1$, la salida coincide con afirmar, y cuanto más dudoso es el caso, más grande resulta el conjunto.
 
-Cada salida tiene un costo distinto. Afirmar arriesga un error, ofrecer diferenciales informa menos pero cubre
-más casos, y derivar no produce diagnóstico. La política que conviene depende de cuánto pesa cada costo. Si un
-error de afirmación cuesta $c_e$, derivar cuesta $c_d < c_e$ y la confianza es una probabilidad calibrada de
-acertar, el costo esperado de afirmar es $c_e (1 - \kappa(x))$ y conviene afirmar cuando
+\looseness=-1 Cada salida cuesta distinto. Afirmar arriesga un error, ofrecer diferenciales informa menos
+y cubre más casos, y derivar no produce diagnóstico. La política depende de cuánto pesa cada costo. Si un
+error de afirmación cuesta $c_e$, derivar cuesta $c_d < c_e$ y la confianza está calibrada, el costo esperado de afirmar es $c_e (1 - \kappa(x))$ y conviene afirmar cuando
 \begin{equation}
     c_e \bigl(1 - \kappa(x)\bigr) < c_d
     \quad\Longleftrightarrow\quad
@@ -1161,18 +1159,18 @@ acertar, el costo esperado de afirmar es $c_e (1 - \kappa(x))$ y conviene afirma
 Cuanto más caro es un error frente a derivar, más alto es el umbral de afirmación, y la fórmula solo es válida
 si la confianza está calibrada.
 
-Cada salida corresponde a un tipo de reporte. Afirmar da un reporte con diagnóstico y descripción, ofrecer
-diferenciales da uno que enumera candidatos, y derivar no da diagnóstico. Enumerar candidatos por una señal que
-lo justifica es lo opuesto al \emph{hedging} de la Sección~\ref{sec:marco_rep_fallas}, que es indiscriminado, y
-así la política de la Ecuación~\ref{eq:marco_politica} formaliza el comportamiento deseable de esa sección:
+\looseness=-1 Cada salida es un tipo de reporte. Afirmar da un reporte con diagnóstico y descripción,
+ofrecer diferenciales da uno que enumera candidatos, y derivar no da diagnóstico. Enumerar candidatos por una señal
+que lo justifica es opuesto al \emph{hedging} indiscriminado de la Sección~\ref{sec:marco_rep_fallas}, y
+así la Ecuación~\ref{eq:marco_politica} formaliza el comportamiento deseable de esa sección:
 expresar incertidumbre cuando corresponde y solo cuando corresponde.
 
-De aquí sale una estructura en cascada. Qué se escribe depende de la salida, de modo que la decisión precede a la
+\looseness=-1 De aquí sale una estructura en cascada. Qué se escribe depende de la salida, de modo que la decisión precede a la
 redacción. La decisión requiere señales de confianza, que los mecanismos de las
 Secciones~\ref{sec:marco_recuperacion_imagenes} y~\ref{sec:marco_concordancia} proveen, y sus umbrales se fijan
 según los costos de la Ecuación~\ref{eq:marco_costos}. Un sistema que primero estima la confianza y después
-redacta según el resultado se sigue así del problema y no de una elección arbitraria. Queda abierto si las
-señales separan de hecho los casos confiables de los que no lo son, y eso se responde midiendo.
+redacta según el resultado se sigue del problema y no de una elección arbitraria. Queda abierto si las
+señales separan los casos confiables de los que no lo son, y eso se mide.
 
 Medir bien es lo que permite decidir con confianza, comparar modelos y detectar fallas. Qué métricas evalúan la
 clasificación, cuáles la generación y cuáles el comportamiento de ambas de forma transversal es el tema de la
@@ -1201,9 +1199,9 @@ como otra se ve en la matriz y ningún número aislado lo muestra. En la tarea b
 falsos negativos ($\mathrm{FN}$), los falsos positivos ($\mathrm{FP}$) y los verdaderos negativos
 ($\mathrm{TN}$).
 
-De la matriz salen las medidas por clase. La sensibilidad de la clase $c$, $R_c$, es la fracción de sus
+\begingroup De la matriz salen las medidas por clase. La sensibilidad de la clase $c$, $R_c$, es la fracción de sus
 imágenes que el modelo acierta, y la especificidad es la fracción de las imágenes de las otras clases que el
-modelo no predice como $c$,
+modelo no predice como $c$,\clubpenalty=10000 \displaywidowpenalty=10000
 \begin{equation}
     R_c = \frac{M_{cc}}{\sum_{j} M_{cj}}, \qquad
     \mathrm{Esp}_c = \frac{\sum_{i \neq c}\sum_{j \neq c} M_{ij}}{\sum_{i \neq c}\sum_{j} M_{ij}}.
@@ -1214,7 +1212,7 @@ detectan, y la especificidad, la fracción de los que no la tienen que se descar
 sentidos opuestos cuando cambia el umbral de decisión~\cite{fawcett2006introduction}. Cuando interesa una sola
 condición, la salida multiclase se colapsa en una binaria: la clase de interés frente al resto, o un grupo de
 clases, por ejemplo las malignas, frente a las demás. El puntaje de esa tarea es la probabilidad de la clase o
-la suma de las probabilidades del grupo, y a esta tarea binaria derivada se la llama detección.
+la suma de las probabilidades del grupo, y a esta tarea binaria derivada se la llama detección.\par\endgroup
 
 La exactitud es la fracción de imágenes bien clasificadas, $\sum_c M_{cc} / n$, y es engañosa cuando las clases
 están desbalanceadas (Sección~\ref{sec:marco_desbalance}). Si una clase reúne dos tercios de las imágenes, un
@@ -1260,8 +1258,7 @@ azar,
     \mathrm{AUC} = P\!\left(s(x^{+}) > s(x^{-})\right),
     \label{eq:marco_auc}
 \end{equation}
-y por eso no depende de ningún umbral en particular. En la práctica se calcula sobre los puntos de la curva
-con la regla del trapecio~\cite{fawcett2006introduction}.
+y no depende de ningún umbral. En la práctica se calcula con la regla del trapecio~\cite{fawcett2006introduction}.
 
 En el caso multiclase se construye una curva por clase, que trata esa clase como positiva y al resto como
 negativa, y se combinan las $C$ áreas. Una opción las pondera por la prevalencia de cada
@@ -1299,9 +1296,9 @@ muy corto puede tener precisión alta sin cubrir la referencia,
 \end{equation}
 donde $\ell_g$ y $\ell_r$ son las longitudes en palabras de los dos textos~\cite{papineni2002bleu}.
 
-\textbf{ROUGE-L} se basa en la subsecuencia común más larga, $\mathrm{LCS}(g, r)$: la secuencia más larga de
-palabras que aparece en los dos textos en el mismo orden, aunque con otras palabras intercaladas. Con ella
-define una sensibilidad y una precisión y las combina en una medida F,
+\looseness=-1 \textbf{ROUGE-L} se basa en la subsecuencia común más larga, $\mathrm{LCS}(g, r)$: la secuencia más larga de
+palabras que aparece en ambos textos en el mismo orden, aunque con palabras intercaladas. Con ella
+define sensibilidad y precisión y las combina en una medida F,
 \begin{equation}
     R_{\mathrm{lcs}} = \frac{\mathrm{LCS}(g, r)}{\ell_r}, \qquad
     P_{\mathrm{lcs}} = \frac{\mathrm{LCS}(g, r)}{\ell_g}, \qquad
@@ -1384,7 +1381,7 @@ donde $V_k$ es el conjunto de términos de la categoría $k$ y $K$ el número de
 clínico describe el texto y no si lo que describe es cierto. La lista de términos y las reglas de coincidencia
 se definen en la Sección~\ref{sec:met_protocolo}.
 
-\begin{table}[htbp]
+\begin{table}[!t]
     \centering
     \caption[Familias de métricas de generación]{Las tres familias de métricas de generación de reportes, con
     lo que comparan, lo que miden y lo que no ven.}
@@ -1487,10 +1484,10 @@ los dos modelos y registra la diferencia entre ellos. Los percentiles de esas di
 no contiene el cero, la diferencia no se explica por la composición del test. Sirve para cualquier métrica
 agregada, como el F1 macro o el AUC.
 
-La \textbf{prueba de McNemar} compara los aciertos de dos clasificadores sobre las mismas imágenes. Las
+\begingroup La \textbf{prueba de McNemar} compara los aciertos de dos clasificadores sobre las mismas imágenes. Las
 imágenes en las que los dos aciertan o los dos fallan no dicen nada sobre cuál es mejor, y la prueba solo usa
 los casos discordantes: $b$, los que el primero acierta y el segundo falla, y $c$, los del caso inverso. Si los
-dos modelos fueran equivalentes, $b$ y $c$ deberían ser parecidos, y el estadístico
+dos modelos fueran equivalentes, $b$ y $c$ deberían ser parecidos, y el estadístico\displaywidowpenalty=10000
 \begin{equation}
     \chi^2 = \frac{(b-c)^2}{b+c}
     \label{eq:marco_mcnemar}
@@ -1499,7 +1496,7 @@ mide cuánto se separan; bajo la hipótesis de equivalencia sigue aproximadament
 un grado de libertad~\cite{mcnemar1947note}. La aproximación exige una cantidad razonable de casos discordantes.
 Cuando son pocos se usa la versión exacta: si los modelos son equivalentes, cada caso discordante tiene la misma
 probabilidad de caer en $b$ que en $c$, de modo que $b$ sigue una distribución binomial con $b+c$ ensayos y
-probabilidad $1/2$, y el valor $p$ se calcula directamente de ella.
+probabilidad $1/2$, y el valor $p$ se calcula directamente de ella.\par\endgroup
 
 La \textbf{prueba de Wilcoxon} de rangos con signo compara dos series de $N$ valores pareados sin suponer que
 las diferencias sigan una distribución normal. Calcula las diferencias $d_i$ entre los dos modelos, las ordena
@@ -1521,16 +1518,16 @@ clases, y se empareja la sensibilidad de cada clase en los dos modelos.
 \subsubsection{Robustez}
 \label{sec:marco_eval_robustez}
 
-La robustez es cuánto cambia una métrica cuando la entrada se perturba de una manera que no altera su
+\begingroup La robustez es cuánto cambia una métrica cuando la entrada se perturba de una manera que no altera su
 contenido clínico, como el desenfoque, los cambios de brillo o de contraste, la compresión o el ruido. Sea $m$
 una métrica calculada sobre el conjunto de test original y $m_s$ la misma métrica sobre el conjunto perturbado
-con una perturbación de severidad $s$. La caída de desempeño, en valor absoluto o relativa a $m$,
+con una perturbación de severidad $s$. La caída de desempeño, en valor absoluto o relativa a $m$,\displaywidowpenalty=10000
 \begin{equation}
     \Delta m_s = m - m_s, \qquad
     \Delta m_s^{\text{rel}} = \frac{m - m_s}{m},
     \label{eq:marco_robustez}
 \end{equation}
-mide la sensibilidad del modelo a esa perturbación, y un modelo es más robusto cuanto menor es.
+mide la sensibilidad a esa perturbación, y un modelo es más robusto cuanto menor es.\par\endgroup
 
 Sirve para anticipar el comportamiento ante las variaciones de adquisición de la
 Sección~\ref{sec:marco_generalizacion} sin recurrir a otro conjunto de datos: se degradan las imágenes del test
@@ -1559,7 +1556,7 @@ conserva solo los valores positivos,
 donde $Z$ es la cantidad de posiciones del mapa. La ReLU descarta las regiones que bajan el puntaje de la
 clase, que suelen corresponder a otras clases~\cite{selvaraju2017gradcam}. El mapa resultante se reescala al
 tamaño de la imagen y se superpone a ella. En el Swin, cuya última etapa también devuelve un mapa con
-disposición espacial (Sección~\ref{sec:marco_vit}), el cálculo es el mismo.
+disposición espacial (Sección~\ref{sec:marco_vit}), el cálculo es igual.
 
 El mapa tiene la resolución de la última capa, mucho menor que la de la imagen, y por eso marca regiones
 gruesas y no estructuras finas~\cite{selvaraju2017gradcam}. Tampoco basta con que el mapa se vea razonable.
@@ -1577,7 +1574,7 @@ a la pregunta de hasta dónde valen fuera de ella.
 
 Las métricas de la Sección~\ref{sec:marco_evaluacion} suelen calcularse sobre un conjunto de test que proviene
 de la misma fuente que el de entrenamiento, y por eso describen el desempeño del modelo sobre esa distribución.
-En uso real, las imágenes llegan de otros equipos, otros centros y otros pacientes. Ese cambio de distribución
+En uso real, las imágenes llegan de otros equipos, centros y pacientes. Ese cambio de distribución
 (\emph{distribution shift}) reduce el desempeño de forma sustancial en problemas de todo tipo, y la caída
 persiste aun con los métodos diseñados para mitigarla. Se distinguen dos casos: el cambio de dominio, cuando las
 imágenes provienen de una fuente que el entrenamiento no vio, y el cambio de subpoblación, cuando la fuente es
@@ -1617,11 +1614,11 @@ arte rinden bastante peor que en sus conjuntos de origen, sobre todo en pieles o
 comunes. Los dermatólogos que suelen etiquetar estos conjuntos también aciertan menos en esas imágenes, y el
 ajuste fino con imágenes de DDI cierra la brecha entre tonos claros y oscuros~\cite{daneshjou2022disparities}.
 
-La disparidad no desaparece cuando el modelo asiste a un médico en lugar de decidir solo. En un experimento con
+\begingroup La disparidad no desaparece cuando el modelo asiste a un médico en lugar de decidir solo. En un experimento con
 389 dermatólogos y 459 médicos de atención primaria, el apoyo de un sistema de aprendizaje profundo mejoró en
 más de un tercio la exactitud de los dos grupos, pero en los médicos de atención primaria amplió la diferencia de
 exactitud entre pieles claras y oscuras. Mejorar la exactitud promedio no garantiza reducir el
-sesgo~\cite{groh2024learningaided}.
+sesgo entre pieles~\cite{groh2024learningaided}.\clubpenalty=10000 \par\endgroup
 
 La población de destino tampoco es la de los conjuntos de entrenamiento. Una revisión sistemática de 272
 estudios sobre detección de cáncer de piel con aprendizaje automático encontró que muchos usaron conjuntos de
