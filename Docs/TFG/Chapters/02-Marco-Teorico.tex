@@ -1814,6 +1814,14 @@ cuándo abstenerse.
 \subsection{Modelos visión--lenguaje en dermatología}
 \label{sec:estado_arte_vlm}
 
+Los modelos visión--lenguaje llegan a la dermatología por las dos vías de la Sección~\ref{sec:marco_vlm}: la
+alineación contrastiva, que da un espacio común de imágenes y textos y permite clasificar sin ajuste, recuperar
+casos y entrenar clasificadores livianos, y la unión de un codificador visual con un modelo de lenguaje que
+genera texto. Se evalúan con clasificación \emph{zero-shot}, con sondeo lineal, con recuperación entre imagen y
+texto, con respuesta a preguntas y, cada vez más, con estudios que miden el efecto sobre los clínicos. Como
+muchos de ellos se construyeron para otro material médico, importa qué datos usaron para preentrenar, contra qué
+modelos se comparan, si se midieron en piel y si participaron expertos.
+
 Los primeros espacios imagen--texto con vocabulario médico vinieron de la literatura. MONET entrenó un
 modelo contrastivo con más de cien mil pares de imágenes y texto extraídos de artículos de PubMed y de
 libros de texto médicos, y lo usó para anotar conceptos clínicos en imágenes dermatológicas y para auditar
@@ -1829,10 +1837,26 @@ aspectos y conceptos que alinea con regiones de la imagen~\cite{yan2025make}. Pa
 modelo fundacional preentrenado de forma auto-supervisada sobre más de dos millones de imágenes de 11
 instituciones y cuatro modalidades, y se ajusta después a cada tarea~\cite{yan2025vision}.
 
-El trabajo usa DermLIP. Es contrastivo, de modo que el mismo espacio sirve para clasificar
-\emph{zero-shot}, para entrenar un clasificador lineal y para recuperar los vecinos visuales de la
-Sección~\ref{sec:marco_recuperacion_imagenes}; está especializado en dermatología, y la variante con codificador ViT-B/16
-que usa el trabajo se ejecuta en una GPU de consumo~\cite{yan2025derm1m}.
+DermFM-Zero, una preimpresión de 2026 del grupo de Derm1M y de PanDerm, busca mostrar que un modelo fundacional
+visión--lenguaje puede apoyar la decisión clínica sin ajuste fino por tarea, y evaluarlo con clínicos y no solo
+con conjuntos de referencia~\cite{yan2026dermfmzero}. Es un ViT-Large preentrenado en dos etapas. La primera es
+auto-supervisada, con modelado latente enmascarado y un profesor CLIP congelado, sobre más de tres millones de
+imágenes sin etiquetas. La segunda es contrastiva, sobre 1\,014\,085 pares imagen--texto de Derm1M, de recursos
+educativos y de 574\,239 imágenes de una base privada de Australia y Nueva Zelanda, con un codificador de texto
+PubMedBERT y una ventana ampliada a 256 \emph{tokens}. Agrega autoencoders esparsos sobre las características
+visuales, que nombran conceptos de forma automática y permiten suprimir las neuronas asociadas a artefactos como
+reglas, marcas de lapicera y pelo. No es generativo. Se evalúa \emph{zero-shot} en siete conjuntos de clasificación,
+y además en recuperación, sondeo lineal y respuesta a preguntas, y se compara con CLIP, DINOv3, BiomedCLIP, MONET,
+DermLIP, MAKE y PanDerm. Con F1 ponderado, AUROC, sensibilidad macro y \emph{Recall@K}, el promedio
+\emph{zero-shot} es 73.3\,\% contra 56.1\,\% del segundo, DermLIP. En el conjunto de datos HAM10000, con una partición propia
+estratificada por clase, la sensibilidad macro \emph{zero-shot} es 0.744 contra 0.512 de DermLIP. Tres estudios
+incluyen clínicos. En uno, con 30 médicos generales y 150 casos, la ayuda del modelo llevó la exactitud de los tres primeros
+diagnósticos de 0.266 a 0.482. En otro, 1\,090 clínicos diagnostican sin ayuda casos que el modelo también resuelve,
+y el modelo alcanza 0.717 contra 0.663 de promedio de los clínicos. El tercero, con 34 clínicos, mide el efecto de
+la ayuda sobre casos de otro conjunto. Los autores reconocen que los estudios son retrospectivos y simulados, que el
+preentrenamiento cubre más de 400 de las más de 2\,000 entidades dermatológicas, que no se evaluó la equidad por tono
+de piel en la interacción entre el clínico y el modelo y que la interpretabilidad no se integró en el flujo de los
+clínicos.
 
 Los VLM médicos generales se construyeron para otro material. LLaVA-Med, Med-Flamingo, PeFoMed y
 LLaVA-Tri, el modelo que acompaña a MedTrinity-25M, se evalúan sobre todo en respuesta a preguntas
@@ -1841,8 +1865,133 @@ En dermatología la evidencia es escasa: SkinVL, construido sobre LLaVA-Med, lo 
 dermatológicas en que se comparan~\cite{zeng2025mmskin}, y los VLM ajustados a un dominio médico tienden
 a alucinar más que los generales (Sección~\ref{sec:marco_rep_fallas}). Para Phi-3.5-Vision, un modelo
 general de pocos miles de millones de parámetros~\cite{abdin2024phi3}, no se encontraron mediciones
-publicadas en dermatología. El trabajo mide LLaVA-Med y Phi-3.5-Vision como clasificadores dermatológicos bajo el mismo
-protocolo que los clasificadores supervisados y que DermLIP.
+publicadas en dermatología.
+
+Entre los modelos generativos de dermatología, SkinGPT-R1 es otra preimpresión, que busca un VLM que razone de
+forma explícita, produzca un reporte estructurado con hallazgos visuales, razonamiento diferencial y diagnóstico, y
+rinda de forma pareja entre tonos de piel~\cite{shen2025skingptr1}. Mantiene congelado Vision-R1-7B como base de
+razonamiento y entrena unos 4.6 millones de parámetros, el 0.056\,\% del total. Son un módulo que convierte la
+representación visual en un sesgo sobre los \emph{logits} del vocabulario, restringido a los \emph{tokens}
+dermatológicos; un adaptador de mezcla de expertos, con ocho expertos y dos activos, que fusiona las características
+visuales con un vector de tono de piel estimado de forma automática; y la destilación de PanDerm hacia una cabeza
+visual liviana. El entrenamiento es solo supervisado, y el «R1» del nombre viene de la base y no de un aprendizaje
+por refuerzo. Los datos son 334\,618 muestras de Derm1M, de un conjunto de piel negra y de DermNet, con cadenas de
+razonamiento que tres modelos de lenguaje sintetizan y que dermatólogos verifican por muestreo; el borrador de
+razonamiento se redacta con el diagnóstico verdadero a la vista. Se mide la exactitud en siete conjuntos externos,
+puntajes de 0 a 5 en seis dimensiones con un juez automático (Sección~\ref{sec:estado_arte_reportes}) y el
+desempeño del peor grupo por tono de piel, y se compara con cinco sistemas, entre ellos GPT-4o mini, Qwen2.5-VL y LLaVA-Med.
+La exactitud es 82.50\,\% en Derm12345, un conjunto de 40 subclases, y entre 42.40\,\% y 69.30\,\% en otros tres de los
+conjuntos externos. Cinco dermatólogos certificados calificaron 1\,000 casos de Fitzpatrick17k con la misma rúbrica
+de seis dimensiones, con una media de 3.6 sobre 5, pero solo sobre las salidas de este modelo. Los autores reconocen
+que la evaluación es retrospectiva sobre cohortes curadas, que se confunde lo benigno con lo maligno cuando las
+lesiones se parecen, que el razonamiento cae a veces en bucles de autovalidación con incertidumbre alta y que la
+latencia impide ejecutarlo en dispositivos de borde. Se entrenó con ocho RTX 4090, y los pesos completos no son
+públicos.
+
+DermoGPT, otra preimpresión, propone un VLM que siga el orden clínico de morfología, razonamiento y diagnóstico,
+con datos, \emph{benchmark} y modelo abiertos~\cite{ru2026dermogpt}. Reúne DermoInstruct, con 211\,243 imágenes de 14
+conjuntos públicos y 772\,675 instrucciones de cinco formatos de tarea, cuyo razonamiento un modelo de lenguaje
+sintetiza según un esquema de atributos morfológicos, y DermoBench, con 33\,999 preguntas en 11 subtareas. Ajusta
+Qwen3-VL-8B con LoRA y después con aprendizaje por refuerzo, con una recompensa que combina la exactitud, la
+similitud jerárquica dentro de la ontología diagnóstica, la coincidencia de atributos morfológicos y la validez
+del formato; en inferencia agrega varias muestras ponderadas por confianza y consistencia. Las métricas son la
+exactitud en opción múltiple, un juez automático (Gemini-2.5-Pro) en las respuestas abiertas y la equidad,
+definida como el cociente entre la exactitud del peor grupo por tono de piel y la del mejor. Compara 16
+modelos, 11 generales y cinco médicos o dermatológicos, entre ellos LLaVA-Med v1.5 y SkinVL-PubMM, y no compara con
+Skin-R1 ni con SkinGPT-R1. En diagnóstico alcanza 78.04\,\% dentro de la distribución y 66.48\,\% fuera de ella,
+contra 63.37\,\% y 61.21\,\% de Gemini-2.5-Flash, el mejor modelo comercial, y 41.78\,\% y 37.21\,\% de LLaVA-Med v1.5. El
+modelo general Qwen3-VL-8B, sin adaptar, supera a LLaVA-Med y a SkinVL-PubMM en todos los promedios agregados. La
+participación de expertos es acotada: dos dermatólogos revisaron un núcleo de 900 casos y la ontología, la
+referencia humana proviene de dos clínicos con 100 casos por tarea y el juez se validó con 20 casos. Los autores
+reconocen que la brecha con la referencia humana persiste, que el \emph{benchmark} no captura la historia
+longitudinal del paciente, que las cadenas de razonamiento siguen siendo ruidosas en los casos ambiguos y que el
+cómputo limitó probar modelos mayores. Los datos y los pesos se publicarían una vez aceptado el trabajo.
+
+\textcite{jiang2026multimodal}, también en una preimpresión y de un grupo independiente de los anteriores, miden
+qué tan lejos están los VLM de servir en la consulta real, la brecha entre el \emph{benchmark} y el paciente.
+Evalúan sin ajuste cinco modelos, InternVL-Chat v1.5, LLaVA-Med v1.5, SkinGPT-4, MedGemma-4B y GPT-4.1, en dos
+tareas, el diagnóstico diferencial libre, con los tres primeros diagnósticos, y el triaje por gravedad, con la
+imagen sola y con las notas del médico que deriva. Los datos son tres conjuntos públicos de fotografía clínica,
+DermNet, Fitzpatrick17k y SCIN, y una cohorte de 5\,811 casos y 46\,405 imágenes de consultas de un hospital, que no
+se distribuye. Las métricas son la exactitud de los tres primeros diagnósticos, que calcula un juez automático
+validado contra tres dermatólogos, BERTScore, la sensibilidad en los casos graves y puntajes de dermatólogos. En los
+conjuntos públicos, MedGemma-4B, el mejor modelo abierto, llega a entre 20.00\,\% y 39.50\,\%, y GPT-4.1 a entre 32.35\,\% y
+48.60\,\%. En las consultas reales, con la imagen sola, los modelos abiertos obtienen entre 1.50\,\% y 13.35\,\%, y GPT-4.1
+24.65\,\%. Con la imagen sola, ningún modelo supera 0.50 de sensibilidad de triaje, ni en los conjuntos públicos ni en las
+consultas. Agregar el contexto empeora el resultado en 84.2\,\% de los casos de SkinGPT-4 y en 74.7\,\% de los de InternVL,
+en la condición sin señales orientadoras, y GPT-4.1 es el más robusto, entre 23.0\,\% y 32.8\,\%. La revisión de tres
+dermatólogos muestra que lo que separa las respuestas correctas de las incorrectas es la especificidad de la
+descripción visual, y los autores concluyen que el cuello de botella es la extracción visual y la integración del
+contexto, no el razonamiento posterior. Reconocen que las imágenes son de un servicio con internación, muchas tomadas
+por el equipo de dermatología y probablemente de mayor calidad que las de una derivación real, que solo se evalúan
+dos tareas, que falta la historia clínica electrónica completa y que son cinco modelos de una tecnología que cambia
+con rapidez.
+
+\begin{table}[htbp]
+    \centering
+    \caption[Modelos visión--lenguaje en dermatología]{Trabajos recientes sobre modelos visión--lenguaje en
+    dermatología. Las cifras son las que informa cada trabajo, en su alcance. Todos son preimpresiones de arXiv.
+    «Sensibilidad macro» agrupa la exactitud balanceada. MG: médicos generales; ID: dentro de la distribución;
+    OOD: fuera de la distribución.}
+    \label{tab:marco_sota_vlm}
+    \footnotesize
+    \setlength{\tabcolsep}{3.5pt}
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{1.9cm}
+        c
+        >{\raggedright\arraybackslash\hspace{0pt}}X >{\raggedright\arraybackslash\hspace{0pt}}X
+        >{\raggedright\arraybackslash\hspace{0pt}}p{2.2cm} >{\raggedright\arraybackslash\hspace{0pt}}X
+        >{\raggedright\arraybackslash\hspace{0pt}}p{1.9cm}@{}}
+        \toprule
+        Trabajo & Año & Arquitectura & Datos & Métricas & Resultado principal & Expertos \\
+        \midrule
+        \textcite{yan2026dermfmzero} & 2026 & ViT-Large auto-supervisado y alineación contrastiva con
+            PubMedBERT; no generativo
+            & Más de 3 millones de imágenes y 1\,014\,085 pares imagen--texto
+            & F1 ponderado, AUROC, sensibilidad macro, \emph{Recall@K}
+            & \emph{Zero-shot} 73.3\,\% contra 56.1\,\% (DermLIP); HAM10000, 0.744 contra 0.512; MG con ayuda, de 0.266 a 0.482
+            & Tres estudios, con 30, 1\,090 y 34 clínicos \\
+        \filasep
+        \textcite{shen2025skingptr1} & 2025 & Vision-R1-7B congelado, sesgo de \emph{logits}, mezcla de expertos
+            y destilación de PanDerm
+            & 334\,618 muestras con razonamiento sintético
+            & Exactitud, puntajes de 0 a 5, peor grupo
+            & 82.50\,\% en Derm12345; media de 3.6 sobre 5 con dermatólogos
+            & 5 dermatólogos, 1\,000 casos \\
+        \filasep
+        \textcite{ru2026dermogpt} & 2026 & Qwen3-VL-8B con LoRA y aprendizaje por refuerzo con recompensa
+            morfológica
+            & 211\,243 imágenes y 772\,675 instrucciones; 33\,999 preguntas de evaluación
+            & Exactitud, juez automático, cociente de equidad
+            & ID 78.04\,\% y OOD 66.48\,\% (Gemini-2.5-Flash: 63.37\,\% y 61.21\,\%; LLaVA-Med v1.5: 41.78\,\% y 37.21\,\%)
+            & 2 dermatólogos revisan; referencia humana de 2 clínicos \\
+        \filasep
+        \textcite{jiang2026multimodal} & 2026 & Evaluación sin ajuste de cinco modelos
+            & DermNet, Fitzpatrick17k, SCIN y 5\,811 casos de consultas de un hospital
+            & Exactitud de los tres primeros diagnósticos, BERTScore, sensibilidad de triaje
+            & Consulta real con la imagen sola: 1.50\,\% a 13.35\,\% (abiertos) y 24.65\,\% (GPT-4.1)
+            & 3 dermatólogos \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+Los trabajos siguen tres estrategias. La primera es el espacio contrastivo especializado: MONET y MedImageInsight
+desde la literatura y las imágenes médicas, Derm1M y MAKE desde un corpus dermatológico con ontología y PanDerm
+desde la auto-supervisión. DermFM-Zero combina las dos últimas ideas a mayor escala y la valida con
+clínicos. La segunda es el VLM generativo ajustado a la piel, con SkinGPT-R1, que entrena pocos parámetros sobre
+una base congelada, y con DermoGPT, que ajusta con LoRA y refuerza el aprendizaje con una recompensa morfológica.
+La tercera es la evaluación crítica: DermoGPT compara 16 modelos y Jiang et al.\ llevan la medición a consultas
+reales, y los dos muestran que los VLM médicos generales rinden poco en piel. En el segundo la exactitud pasa de
+entre 20\,\% y 40\,\% en los conjuntos públicos a entre 1.5\,\% y 13\,\% con la imagen sola en la consulta real. Tres de los
+cuatro trabajos de 2025 y 2026 comparten autores, Yan y Ge, con Derm1M, MAKE y PanDerm, de modo que parte de esa
+convergencia es una sola línea de trabajo; el de Jiang et al.\ es independiente.
+
+Quedan abiertas varias cuestiones. Los trabajos descritos no combinan un clasificador supervisado con un
+generador ni recuperan casos parecidos para anclar el texto. La incertidumbre aparece como limitación, en los
+bucles de razonamiento de SkinGPT-R1 y en el contexto engañoso de Jiang et al., y no como una decisión entre
+afirmar, ofrecer diferenciales o derivar (Sección~\ref{sec:marco_tres_salidas}). El costo de cómputo es alto:
+ocho RTX 4090 para ajustar SkinGPT-R1, cuatro H100 para preentrenar la etapa visual de DermFM-Zero y ocho GPU para DermoGPT.
+La evidencia con expertos es desigual, porque solo DermFM-Zero mide el efecto de la ayuda sobre las decisiones de clínicos, y en
+los generativos los expertos son cinco evaluadores de las salidas del propio modelo, en SkinGPT-R1, o dos clínicos, en DermoGPT.
 
 \subsection{Generación de reportes dermatológicos}
 \label{sec:estado_arte_reportes}
