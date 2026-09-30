@@ -9,7 +9,7 @@
 
         % Rama congelada.
         \node[fignodo, text width=36mm, minimum height=24mm, fill=figrelleno] (W) at (-24, 25)
-            {pesos pre-entrenados\\$W \in \mathbb{R}^{d\times k}$\\[2pt]{\footnotesize congelados}};
+            {pesos preentrenados\\$W \in \mathbb{R}^{d\times k}$\\[2pt]{\footnotesize congelados}};
 
         % Rama entrenable: A reduce a r, B vuelve a d.
         \draw[draw=fignaranja!70!black, fill=fignaranja!25, thick] (8, 16) -- (32, 16) -- (26, 22) -- (14, 22) -- cycle;
@@ -32,7 +32,7 @@
 
     \end{tikzpicture}
     \caption[Reparametrización de LoRA]{Reparametrización de LoRA. La entrada recorre dos ramas: la de los
-    pesos pre-entrenados $W$, que no se modifican, y la del incremento de bajo rango $BA$, donde $A$ reduce
+    pesos preentrenados $W$, que no se modifican, y la del incremento de bajo rango $BA$, donde $A$ reduce
     la dimensión a $r$ y $B$ la devuelve a $d$. Solo se entrenan $A$ y $B$; al terminar, $BA$ se suma a $W$ y
     la inferencia usa una única matriz. Adaptada de \textcite{hu2021lora}.}
     \label{fig:marco_lora}

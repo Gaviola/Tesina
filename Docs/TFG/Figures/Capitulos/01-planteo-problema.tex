@@ -1,6 +1,6 @@
-% Figura 1.1. Las dos tareas del diagnóstico dermatológico asistido.
-% Se usa en sec:intro_contexto. El diagrama del pipeline completo (sec:met_pipeline) es la versión
-% detallada de este mismo esquema: si uno de los dos cambia, hay que revisar el otro.
+% Las dos condiciones de un reporte clínico correcto (clasificar y describir una misma imagen).
+% Se trajo desde el Capítulo 1 a sec:marco_rep_ejes (2.6.2). El nombre del archivo y la etiqueta
+% (fig:intro_dos_tareas) se conservan.
 
 \begin{figure}[htbp]
     \centering
@@ -14,9 +14,9 @@
             {\textbf{Describir}\\redactar el texto\\de la lesión};
 
         \node[figsalida, text width=34mm] (cat) at (114, 14)
-            {Categoría diagnóstica\\[2pt]{\footnotesize de ella se deriva la\\detección de melanoma}};
+            {Categoría diagnóstica\\[2pt]{\footnotesize se evalúa con la\\fidelidad diagnóstica}};
         \node[figsalida, text width=34mm] (txt) at (114, -14)
-            {Reporte clínico\\[2pt]{\footnotesize el texto que\\describe la lesión}};
+            {Reporte clínico\\[2pt]{\footnotesize se evalúa con la\\calidad descriptiva}};
 
         \draw[figflecha] (img.east) -- ++(6, 0) |- (t1.west);
         \draw[figflecha] (img.east) -- ++(6, 0) |- (t2.west);
@@ -24,16 +24,15 @@
         \draw[figflecha] (t2.east) -- (txt.west);
 
         \begin{scope}[on background layer]
-            \node[figgrupo={lo que un modelo visión--lenguaje promete resolver con un solo modelo},
+            \node[figgrupo={las dos condiciones de un reporte correcto},
                   fit=(t1) (t2)] {};
         \end{scope}
 
     \end{tikzpicture}
-    \caption[Las dos tareas del diagnóstico dermatológico asistido]{Las dos tareas del diagnóstico
-    dermatológico asistido. De una misma imagen se espera una categoría diagnóstica y un texto que describa
-    la lesión, y la detección de melanoma es la tarea binaria que se deriva de esa clasificación. Un reporte
-    es correcto solo si se cumplen las dos condiciones a la vez: que la categoría sea la acertada y que la
-    descripción corresponda a la imagen. Las dos condiciones son independientes y de ahí que se evalúen por
+    \caption[Las dos condiciones de un reporte clínico correcto]{Las dos condiciones de un reporte clínico
+    correcto. De una misma imagen se espera una categoría diagnóstica, que se evalúa con la fidelidad
+    diagnóstica, y un texto que describa la lesión, que se evalúa con la calidad descriptiva. Un reporte es
+    correcto solo si se cumplen las dos condiciones a la vez. Como son independientes, se evalúan por
     separado.}
     \label{fig:intro_dos_tareas}
 \end{figure}

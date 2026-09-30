@@ -671,48 +671,160 @@ Un VLM generativo produce texto, pero no cualquier texto sirve como reporte clí
 reporte, de qué maneras puede fallar un modelo al redactarlo y qué información adicional se le puede dar para
 que falle menos son las preguntas de la sección siguiente.
 
-\subsection{Generación de texto a partir de imágenes médicas}
-\label{sec:marco_vlm_generacion}
+\section{Generación de reportes y recuperación de información}
+\label{sec:marco_reportes}
 
-La tarea central del trabajo es producir texto clínico a partir de una imagen. Su antecedente es el
-\emph{image captioning}, que describe una imagen natural en una oración, pero el reporte médico es más
-largo, sigue una estructura y usa un vocabulario técnico. La generación de reportes se desarrolló
-primero en radiología, con modelos que predicen etiquetas de hallazgos y redactan el reporte oración por
-oración, y con arquitecturas que recuerdan patrones de redacción entre reportes
-parecidos~\cite{jing2018automatic,chen2020generating}. En todos los casos el entrenamiento requiere
-pares de imagen y texto clínico.
+Un reporte clínico dermatológico describe los hallazgos visibles de una lesión y los resume en una
+impresión diagnóstica. Generarlo a partir de una imagen es más que describirla, porque el texto tiene que
+ser correcto en lo que dice sobre la lesión y prudente en lo que afirma sobre el diagnóstico. Un modelo
+puede fallar en cualquiera de las dos cosas sin que la forma del texto lo delate, y por eso conviene separar
+los problemas que la tarea encierra y los mecanismos que pueden ayudar a resolverlos.
 
-En dermatología esos pares son escasos y recientes, y el origen del texto cambia de un conjunto a otro. En
-SkinCaRe, las descripciones de la parte SkinCAP las escribieron dermatólogos, y cada una pasó por la revisión
-de al menos dos especialistas, mientras que los razonamientos diagnósticos de la parte SkinCoT los redactó un LLM
-a partir de la etiqueta y los certificaron dermatólogos. MM-Skin toma sus textos de libros de la
-especialidad, y Derm1M reúne alrededor de un millón de pares de fuentes educativas, foros y videos, cuyo
-texto se depuró con un LLM~\cite{shen2025skincare,zeng2025mmskin,yan2025derm1m}. El texto que acompaña a
-cada imagen combina lo que se ve en la lesión con una impresión diagnóstica, que son las dos partes del
-reporte de las que se ocupa el trabajo. Su origen importa además para la evaluación, porque ese texto es la
-referencia contra la que se comparan las descripciones generadas (Sección~\ref{sec:marco_eval_texto}).
+\subsection{De la descripción de imágenes al reporte clínico}
+\label{sec:marco_rep_tarea}
 
-El primer problema característico de estos modelos es la alucinación. El modelo describe hallazgos que
-la imagen no contiene, con la misma fluidez con que describe los que sí están, de modo que el lector no
-tiene cómo separarlos leyendo solo el texto. Un estudio sistemático sobre VLM médicos encontró que los
-modelos ajustados al dominio son más propensos a alucinar que los de propósito general, aun cuando
-rinden mejor en las tareas médicas estándar~\cite{gu2024medvh}.
+El antecedente de la generación de reportes es la descripción automática de imágenes (\emph{image
+captioning}), que produce una oración sobre una imagen natural. El reporte médico es más largo, sigue una
+estructura y usa un vocabulario técnico. Su generación se desarrolló primero en radiología, con modelos que
+predicen etiquetas de hallazgos y redactan el reporte oración por oración, y con arquitecturas que recuerdan
+patrones de redacción entre reportes parecidos~\cite{jing2018automatic,chen2020generating}. Una revisión
+de los VLM aplicados a reportes médicos y a preguntas sobre imágenes sitúa esta línea y documenta que las
+métricas léxicas no capturan la corrección clínica~\cite{hartsock2024vision}. En todos los casos el
+entrenamiento requiere pares de imagen y texto clínico.
 
-El segundo problema apareció durante la experimentación de este trabajo, y se lo llama aquí
-\emph{hedging}. El modelo redacta descripciones genéricas, compatibles con casi cualquier lesión, y evita
-comprometer un diagnóstico, por ejemplo enumerando varias categorías posibles sin inclinarse por
-ninguna. Ese texto no contiene errores visibles y tampoco informa nada sobre la lesión concreta. El
-Capítulo~\ref{cp:res_gen} documenta con qué frecuencia ocurre en cada generador.
+En dermatología esos pares son escasos y recientes, y el texto de referencia tiene orígenes distintos según el
+conjunto. En SkinCaRe, dermatólogos redactaron las descripciones de la parte SkinCAP, y cada una pasó por la
+revisión de al menos dos especialistas, mientras que un LLM redactó los razonamientos diagnósticos de la parte
+SkinCoT a partir de la etiqueta y dermatólogos los certificaron. MM-Skin toma sus textos de libros de la
+especialidad, y Derm1M reúne alrededor de un millón de pares de fuentes educativas, foros y videos, con un
+texto depurado por un LLM~\cite{shen2025skincare,zeng2025mmskin,yan2025derm1m}. Un texto escrito por
+especialistas, uno generado por un LLM y luego certificado y uno extraído de la web tienen distinto grado de
+curaduría, y ese grado limita cuánto se puede confiar en el texto como referencia. Los conjuntos se
+describen en la Sección~\ref{sec:met_datasets}, y la forma en que la referencia entra en la evaluación, en la
+Sección~\ref{sec:marco_eval_texto}.
 
-Las dos fallas muestran que un reporte correcto exige dos condiciones independientes, las de la
-Figura~\ref{fig:intro_dos_tareas}. La fidelidad diagnóstica pide que la categoría que el texto nombra
-sea la acertada, y la calidad del texto pide que la descripción corresponda a lo que muestra la imagen.
-Un reporte con descripción fiel puede cerrar en un diagnóstico equivocado, y uno con el diagnóstico
-correcto puede venir acompañado de hallazgos inventados. La evaluación de la
-Sección~\ref{sec:marco_eval_texto} mide cada condición por separado.
+Que exista un texto de referencia no dice qué se le exige a un reporte generado, y parecerse a esa referencia
+no alcanza para que sea correcto. Para definir la exigencia hay que separar los problemas que el reporte
+resuelve a la vez.
 
-\subsection{Generación aumentada por recuperación}
-\label{sec:marco_vlm_rag}
+\subsection{Tres ejes de la generación de reportes}
+\label{sec:marco_rep_ejes}
+
+El primer problema es describir lo que se ve. El texto tiene que reflejar los rasgos visuales de la lesión,
+como el color, el patrón, la distribución y las estructuras que contiene. La descripción de una lesión se
+escribe con un vocabulario cerrado de términos, que la comunidad dermatoscópica estandarizó por consenso, y
+algoritmos como la lista de 7 puntos convierten la presencia de ciertos hallazgos en peso diagnóstico, de
+modo que el camino entre la imagen y la etiqueta pasa por entidades con
+nombre~\cite{kittler2016standardization,argenziano1998checklist}. Ese vocabulario define qué es una
+descripción correcta y permite medirla (Sección~\ref{sec:marco_eval_texto}). La \textbf{calidad descriptiva}
+es la correspondencia entre lo que el texto dice y lo que la imagen muestra.
+
+El segundo problema es incorporar información diagnóstica, porque el texto tiene que nombrar una categoría.
+Hay dos maneras de lograrlo. El mismo modelo generativo puede inferir el diagnóstico a partir de la imagen,
+de extremo a extremo, o se lo puede condicionar en un diagnóstico o en evidencia externos, como la
+predicción de otro modelo o los casos recuperados de una base (Secciones~\ref{sec:marco_rag}
+y~\ref{sec:marco_recuperacion_imagenes}). La \textbf{fidelidad diagnóstica} es que el diagnóstico que
+nombra el texto sea el correcto. Es independiente de la calidad descriptiva. Un texto puede describir
+fielmente la imagen y cerrar en un diagnóstico equivocado, y otro puede nombrar el diagnóstico correcto
+acompañado de hallazgos inventados. Un reporte es correcto solo si cumple las dos condiciones a la vez
+(Figura~\ref{fig:intro_dos_tareas}).
+
+\input{Figures/Capitulos/01-planteo-problema}
+
+El tercer problema es tratar las predicciones inciertas. Cuando el diagnóstico no está claro, afirmar uno
+arriesga un error que el lector no puede detectar. Las alternativas son presentar varios candidatos o no
+afirmar y derivar el caso. Decidir cuál corresponde en cada imagen es un problema con teoría propia, que se
+desarrolla en la Sección~\ref{sec:marco_incertidumbre}.
+
+Los tres problemas dependen unos de otros. El tercero decide qué se afirma y, con ello, qué diagnóstico recibe
+el texto del segundo, y el primero requiere que el modelo mire la imagen y no se apoye solo en el lenguaje.
+Ese orden de dependencia es el de lo que sigue. Primero las fallas que afectan a los dos primeros problemas
+(Sección~\ref{sec:marco_rep_fallas}), después los mecanismos que agregan información al generador
+(Secciones~\ref{sec:marco_rag} a~\ref{sec:marco_concordancia}) y por último la decisión de cuánto afirmar.
+
+\subsection{Alucinaciones y hedging}
+\label{sec:marco_rep_fallas}
+
+Una alucinación es un texto fluido cuyo contenido no está sustentado por la entrada, que en este caso es la
+imagen. El fenómeno se describió primero en la generación de lenguaje natural y en la descripción de
+imágenes, donde los modelos nombran objetos que la imagen no contiene en parte por el peso de los patrones
+del lenguaje, y se documentó después en los VLM.
+
+\pendiente{Citar el respaldo de este párrafo. Claves propuestas, sin entrada en el \texttt{.bib}:
+\texttt{ji2023survey} (Ji et~al., \emph{Survey of Hallucination in Natural Language Generation}, ACM
+Computing Surveys, 2023, arXiv 2202.03629), \texttt{rohrbach2018object} (Rohrbach et~al., \emph{Object
+Hallucination in Image Captioning}, EMNLP 2018, arXiv 1809.02156) y \texttt{bai2024hallucination} (Bai et~al.,
+\emph{Hallucination of Multimodal Large Language Models: A Survey}, 2024, arXiv 2404.18930).}
+
+En los VLM médicos, un estudio sistemático encontró que los modelos ajustados al dominio son más propensos a
+alucinar que los de propósito general, aun cuando rinden mejor en las tareas médicas
+estándar~\cite{gu2024medvh}. La alucinación es especialmente costosa en medicina. El lector no puede
+separarla del contenido correcto por la forma del texto, porque el modelo describe con la misma fluidez los
+hallazgos que la imagen contiene y los que no, y un hallazgo inventado puede cambiar una conducta clínica.
+
+La segunda falla es la contraria y se la llama aquí \emph{hedging}. El modelo redacta descripciones
+genéricas, compatibles con casi cualquier lesión, y evita comprometer un diagnóstico, por ejemplo
+enumerando varias categorías posibles sin inclinarse por ninguna. Ese texto no contiene errores visibles y
+tampoco informa nada sobre la lesión concreta. Es una falla que se observó al experimentar con generadores, y
+el Capítulo~\ref{cp:res_gen} documenta con qué frecuencia ocurre. Expresar incertidumbre no es en sí una
+falla. Se convierte en \emph{hedging} cuando es indiscriminada, es decir, cuando no depende de cuán incierto
+sea el caso. Se ha argumentado que los esquemas de evaluación que premian acertar y no penalizan adivinar
+incentivan la alucinación en lugar de la expresión de incertidumbre.
+
+\pendiente{Citar el último argumento del párrafo: \texttt{kalai2025hallucinate} (Kalai, Nachum, Vempala y
+Zhang, \emph{Why Language Models Hallucinate}, arXiv 2509.04664, 2025). Revisar el PDF antes de citar: no
+afirma nada sobre el \emph{hedging} y hay que comprobar si existe versión arbitrada.}
+
+Los tres comportamientos, afirmar con sustento, alucinar y el \emph{hedging}, se comparan en la Tabla~\ref{tab:marco_comportamientos}.
+Ninguno de los tres es deseable siempre. Afirmar sirve cuando el diagnóstico es correcto y perjudica cuando
+no lo es, y el texto no muestra la diferencia. Alucinar tiene los mismos efectos, con detalles inventados.
+El \emph{hedging} no introduce falsedades, pero no informa y tampoco deja ver si el modelo sabe o no.
+
+\begin{table}[htbp]
+    \centering
+    \caption[Comportamientos de un generador de reportes]{Comportamientos de un generador de reportes
+    ante una imagen y consecuencia de cada uno para el lector.}
+    \label{tab:marco_comportamientos}
+    \small
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{2.6cm}
+        >{\raggedright\arraybackslash\hspace{0pt}}X >{\raggedright\arraybackslash\hspace{0pt}}X
+        >{\raggedright\arraybackslash\hspace{0pt}}X@{}}
+        \toprule
+        Comportamiento & Qué hace el modelo & Ventaja & Desventaja \\
+        \midrule
+        Afirmar con sustento & Nombra un diagnóstico y describe lo que ve
+            & El reporte informa y se puede actuar sobre él si el diagnóstico es correcto
+            & Si el diagnóstico es erróneo, la fluidez del texto lo hace parecer confiable \\
+        \filasep
+        Alucinar & Agrega hallazgos que la imagen no contiene
+            & Ninguna clínica. El texto es tan fluido como uno correcto
+            & Los hallazgos inventados pueden cambiar una conducta y no se distinguen por la forma \\
+        \filasep
+        Hedging & Redacta un texto genérico y evita comprometerse
+            & No afirma nada falso
+            & No informa, no se puede actuar sobre él y oculta si el modelo sabe o no \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+El comportamiento deseable es expresar incertidumbre cuando corresponde y solo cuando corresponde, es decir,
+afirmar si la evidencia lo justifica y matizar o derivar si no. Esa condición vincula esta sección con la
+predicción selectiva de la Sección~\ref{sec:marco_incertidumbre}.
+
+No analizar estas fallas tiene consecuencias para la evaluación. Las métricas que miden el solapamiento con un
+texto de referencia (Sección~\ref{sec:marco_eval_texto}) pueden premiar un texto genérico, porque uno que
+reutiliza el vocabulario habitual de la referencia puntúa bien sin decir nada específico, y ninguna detecta
+por sí sola un hallazgo inventado. Un desempeño alto en esas métricas puede entonces coexistir con reportes
+inutilizables, y la revisión de \textcite{hartsock2024vision} documenta que las métricas léxicas no
+capturan la corrección clínica. Por eso hace falta medir la fidelidad diagnóstica y el contenido clínico
+descrito por separado, y revisar el texto contra la imagen.
+
+Las dos fallas consisten en decir demasiado o demasiado poco respecto de lo que el modelo sabe de la imagen.
+Una manera de reducirlas es darle información que no obtiene de la imagen sola, y hay tres mecanismos
+distintos para hacerlo o para decidir cuánto afirmar. El primero recupera documentos.
+
+\subsection{Recuperar documentos: RAG}
+\label{sec:marco_rag}
 
 La \gls{rag} agrega al generador un paso de búsqueda en una base externa. El sistema tiene tres partes: una
 base de documentos, un recuperador que selecciona los más relevantes para cada entrada y un generador que
@@ -720,9 +832,9 @@ produce la salida condicionado en la entrada y en lo recuperado. Lo que el model
 entrenamiento, su memoria paramétrica, queda separado de la evidencia que se le muestra en cada consulta,
 y esa base se puede cambiar o ampliar sin reentrenar el modelo~\cite{lewis2020retrievalaugmented}.
 
-En la formulación original, un codificador proyecta cada documento $z$ de la base a un \emph{embedding}
-$\mathbf{d}(z)$ una sola vez y lo guarda en un índice. Para cada consulta $x$, otro codificador calcula
-$\mathbf{q}(x)$, y el recuperador asigna a cada documento una probabilidad
+En la formulación de \textcite{lewis2020retrievalaugmented}, un codificador proyecta cada documento $z$ de la
+base a un embedding $\mathbf{d}(z)$ una sola vez y lo guarda en un índice. Para cada consulta $x$, otro
+codificador calcula $\mathbf{q}(x)$, y el recuperador asigna a cada documento una probabilidad
 $p_\eta(z \mid x) \propto \exp\!\left(\mathbf{d}(z)^{\top}\mathbf{q}(x)\right)$. Los $K$ documentos con
 mayor producto interno se encuentran con una búsqueda aproximada, cuyo costo crece menos que el tamaño de
 la base. El generador produce la salida $y$ con cada uno de esos documentos y combina los resultados
@@ -732,28 +844,179 @@ pesándolos por la probabilidad del documento,
     \label{eq:marco_rag}
 \end{equation}
 de modo que un documento más parecido a la consulta influye más en el texto
-generado~\cite{lewis2020retrievalaugmented}.
+generado~\cite{lewis2020retrievalaugmented}. Esta formulación combina un recuperador entrenado y un
+generador, y marginaliza sobre los documentos recuperados. El codificador de la consulta se ajusta junto con
+el generador, mientras que el de documentos y el índice quedan fijos, y los documentos son textos.
 
-El recuperador es, en el fondo, una búsqueda de vecinos en un espacio de \emph{embeddings}: se codifica la
-entrada, se buscan los $k$ elementos de la base cuyos \emph{embeddings} están más cerca y se usa la
-información asociada a ellos. Con \emph{embeddings} normalizados a norma uno, el producto interno coincide
-con la similitud coseno, $\cos(\mathbf{u}, \mathbf{v}) = \mathbf{u}^{\top}\mathbf{v} /
-(\lVert\mathbf{u}\rVert\,\lVert\mathbf{v}\rVert)$, que es la medida que usa el \emph{pipeline}. Aplicada a
-un modelo de lenguaje, la búsqueda de vecinos mejora la predicción sin ningún entrenamiento adicional, sobre
-todo en los patrones poco frecuentes, porque el modelo accede en el momento de predecir a casos concretos
-que no tiene que memorizar~\cite{khandelwal2020generalization}.
+La idea que sobrevive a esa formulación es que el generador condiciona su salida en información recuperada.
+Sin marginalizar, se escribe como
+\begin{equation}
+    y \sim p_\theta\bigl(\,\cdot \mid x,\ c(x)\bigr), \qquad c(x) = \psi\bigl(\mathcal{N}_k(x)\bigr),
+    \label{eq:marco_rag_ctx}
+\end{equation}
+donde $\mathcal{N}_k(x)$ son los $k$ elementos recuperados para la consulta $x$ y $\psi$ los serializa como un
+texto que se agrega al \emph{prompt} (Sección~\ref{sec:marco_llm_grandes}). Se la llama aquí
+\textbf{condicionamiento por contexto con recuperación}. Es el aprendizaje en contexto aplicado a evidencia
+recuperada, y el modelo no cambia sus pesos~\cite{brown2020language}. Difiere de la formulación de Lewis en
+tres aspectos.
+\begin{enumerate}
+    \item El recuperador no se entrena junto con el generador. Puede ser un codificador ya entrenado y
+          congelado.
+    \item No se marginaliza sobre los documentos. El generador recibe todo el contexto a la vez y produce una
+          única salida.
+    \item Lo recuperado puede no ser un documento. Puede ser cualquier información asociada a los elementos
+          recuperados, como sus etiquetas.
+\end{enumerate}
+La variante que se usa en este trabajo es la segunda y no la formulación de Lewis et~al. Su implementación se
+describe en el Capítulo~\ref{cp:metodos}.
 
 En la generación de reportes radiológicos, la recuperación multimodal parte de la imagen. A partir de
 ella se recuperan reportes de casos parecidos de la base de entrenamiento, que se entregan al generador
 como referencia. Entrenar el recuperador para que prefiera reportes con los mismos hallazgos clínicos mejora la
-completitud y la corrección de lo generado~\cite{sun2025factaware}. Es el antecedente directo del
-\emph{grounding} por recuperación que usa el trabajo.
+completitud y la corrección de lo generado~\cite{sun2025factaware}. Es un caso de RAG en que la consulta es
+una imagen y los documentos son reportes.
 
-El \emph{pipeline} recupera los vecinos visuales de cada imagen con los \emph{embeddings} de DermLIP de la
-Sección~\ref{sec:marco_vlm_clip}, y el acuerdo entre esos vecinos y el clasificador informa cuánta
-confianza merece el caso; el procedimiento completo se describe en la Sección~\ref{sec:met_pipeline}. Con
-eso quedan presentados todos los componentes del \emph{pipeline}. Falta decidir cómo se evalúa lo que
-producen.
+Los documentos, sin embargo, son una de las formas posibles de la evidencia. En un dominio con una base de
+casos etiquetados, lo disponible son imágenes, y recuperarlas es un mecanismo distinto.
+
+\subsection{Recuperar imágenes similares}
+\label{sec:marco_recuperacion_imagenes}
+
+Cuando se dispone de una base de $m$ casos etiquetados, la recuperación puede operar sobre imágenes. Para una
+imagen consulta $x$ se buscan los $k$ casos más cercanos en el espacio de embeddings $f$ de un codificador
+visual, con la similitud coseno de la Ecuación~\ref{eq:marco_cos},
+\begin{equation}
+    \mathcal{N}_k(x) = \operatorname*{arg\,max}_{S \subseteq \{1,\dots,m\},\ |S| = k}\ \sum_{j \in S}
+    \cos\bigl(f(x),\, f(x_j)\bigr),
+    \label{eq:marco_vecinos}
+\end{equation}
+donde $x_j$ es la imagen del caso $j$. La información asociada a esos casos, como su diagnóstico o su
+localización, es \textbf{evidencia visual}: dice qué se ha visto que se parezca a la consulta.
+
+El uso más simple de los vecinos es clasificar. La proporción de vecinos de la clase $c$ estima su
+probabilidad local,
+\begin{equation}
+    \hat{p}_{\text{kNN}}(c \mid x) = \frac{1}{k}\sum_{j \in \mathcal{N}_k(x)} \mathbf{1}[\,y_j = c\,],
+    \label{eq:marco_knn}
+\end{equation}
+donde $y_j$ es la etiqueta del caso $j$, y la predicción es la clase de mayor proporción, el voto
+mayoritario. Aplicada a un modelo de lenguaje, la búsqueda de vecinos mejora la predicción sin ningún
+entrenamiento adicional, sobre todo en los patrones poco frecuentes, porque el modelo accede en el momento de
+predecir a casos concretos que no tiene que memorizar~\cite{khandelwal2020generalization}.
+
+\pendiente{Citar la referencia clásica del clasificador de vecinos más cercanos: \texttt{cover1967nearest}
+(Cover y Hart, \emph{Nearest neighbor pattern classification}, IEEE Transactions on Information Theory 13(1),
+1967; DOI 10.1109/TIT.1967.1053964; sin verificar).}
+
+Este mecanismo se distingue del anterior en tres puntos. No hay documentos ni recuperador entrenado, porque
+el codificador ya existe y se usa congelado. Lo recuperado son etiquetas y atributos de imágenes, no textos.
+Y la recuperación es de la misma modalidad que la consulta, imagen contra imagen, y no de otra, como imagen
+contra documento. Para que un generador use la evidencia, la función $\psi$ de la
+Ecuación~\ref{eq:marco_rag_ctx} la serializa como texto y la agrega al \emph{prompt}. Ese procedimiento ancla el
+texto en evidencia externa y se lo conoce como \emph{grounding}. Un antecedente en descripción de imágenes
+recupera las descripciones de imágenes parecidas y las entrega como \emph{prompt} a un modelo de lenguaje, sin
+entrenar el recuperador.
+
+\pendiente{Citar el antecedente en descripción de imágenes: \texttt{ramos2023smallcap} (Ramos, Martins,
+Elliott y Kementchedjhieva, \emph{SmallCap: Lightweight Image Captioning Prompted with Retrieval
+Augmentation}, CVPR 2023, arXiv 2209.15323).}
+
+La calidad de la evidencia depende de la representación y de la cobertura de la base. Los vecinos de una
+imagen de una clase rara pueden pertenecer a otra clase, y si la base no contiene casos parecidos los $k$
+vecinos existen igual y no son informativos, porque el método devuelve $k$ casos se parezcan o no a la
+consulta. La sola existencia de vecinos no dice entonces cuánto confiar en ellos, cuestión que retoma la
+Sección~\ref{sec:marco_incertidumbre}.
+
+Los vecinos aportan evidencia y permiten, además, preguntar si predictores distintos coinciden. Ese es un
+tercer mecanismo, que no recupera nada y compara.
+
+\subsection{Concordancia entre predicciones}
+\label{sec:marco_concordancia}
+
+Dos predictores con sesgos distintos, por ejemplo un clasificador supervisado y uno basado en vecinos sobre
+una representación aprendida de otra forma, pueden coincidir o no sobre la misma imagen. La concordancia
+entre sus predicciones $\hat{y}_1(x)$ y $\hat{y}_2(x)$ es
+\begin{equation}
+    a(x) = \mathbf{1}\bigl[\hat{y}_1(x) = \hat{y}_2(x)\bigr].
+    \label{eq:marco_concordancia}
+\end{equation}
+
+El desacuerdo entre modelos aproxima la incertidumbre del sistema, un principio que explotan los ensambles.
+Que la concordancia sirva como señal es una condición que se verifica con datos,
+\begin{equation}
+    P(\text{error} \mid a = 1) < P(\text{error} \mid a = 0),
+\end{equation}
+es decir, que los casos en que los predictores coinciden se equivoquen menos que aquellos en que no. Si la
+condición no se cumple, la concordancia no informa.
+
+\pendiente{Citar el principio del ensamble: \texttt{lakshminarayanan2017simple} (Lakshminarayanan, Pritzel y
+Blundell, \emph{Simple and Scalable Predictive Uncertainty Estimation using Deep Ensembles}, NeurIPS 2017,
+arXiv 1612.01474).}
+
+La concordancia no recupera información ni condiciona el texto. Es una regla de decisión que usa predictores ya
+disponibles, y por eso se distingue de los dos mecanismos anteriores. Cómo convertirla en una política de
+decisión es un problema de la Sección~\ref{sec:marco_incertidumbre}. Queda por ver qué aportaría reunir los
+tres mecanismos.
+
+\subsection{Qué aportaría integrar los tres mecanismos}
+\label{sec:marco_integracion}
+
+Cada mecanismo resuelve una parte del problema y deja otras sin resolver
+(Tabla~\ref{tab:marco_mecanismos}).
+
+\begin{table}[htbp]
+    \centering
+    \caption[Mecanismos de recuperación y de decisión]{Los tres mecanismos de la generación de reportes:
+    qué recuperan o calculan, sobre qué modalidad operan, qué parte del problema ayudan a resolver y qué
+    dejan sin resolver.}
+    \label{tab:marco_mecanismos}
+    \small
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{2.7cm}
+        >{\raggedright\arraybackslash\hspace{0pt}}X >{\raggedright\arraybackslash\hspace{0pt}}X
+        >{\raggedright\arraybackslash\hspace{0pt}}X >{\raggedright\arraybackslash\hspace{0pt}}X@{}}
+        \toprule
+        Mecanismo & Qué recupera o calcula & Modalidad & Ayuda a resolver & No resuelve \\
+        \midrule
+        Recuperar documentos (RAG) & Textos de una base, seleccionados por un recuperador
+            & Consulta y documentos; los documentos son texto
+            & Descripción y diagnóstico con conocimiento textual
+            & Requiere una base de documentos pertinentes y no dice cuánto confiar en ellos \\
+        \filasep
+        Recuperar imágenes similares & Etiquetas y atributos de los $k$ casos más cercanos
+            & Imagen contra imagen
+            & Diagnóstico, como evidencia visual
+            & No aporta redacción, y los vecinos existen aunque no se parezcan a la consulta \\
+        \filasep
+        Concordancia entre predicciones & Si dos predictores coinciden sobre la misma imagen
+            & Predicciones
+            & Incertidumbre, es decir, cuánta afirmación se permite
+            & No agrega información al texto ni corrige un error que los dos predictores comparten \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+La evidencia recuperada puede condicionar el texto, y con ello atiende el segundo problema de la
+Sección~\ref{sec:marco_rep_ejes}. La concordancia entre predictores puede decidir cuánta afirmación permite esa
+evidencia, y con ello atiende el tercero. Combinados, el texto generado quedaría condicionado por la
+evidencia y por el nivel de acuerdo, de modo que afirmaría cuando las señales coinciden y matizaría cuando no.
+Esa es una propiedad deseable de un generador de reportes y no un diseño.
+
+Queda abierto si la evidencia recuperada mejora la fidelidad diagnóstica y si el acuerdo entre predictores
+separa los casos confiables de los que no lo son. Las dos preguntas se responden con experimentos, cuyo
+protocolo se define en el Capítulo~\ref{cp:metodos}.
+
+Para que la integración funcione hay que decidir, para cada imagen, cuánta afirmación justifica la evidencia.
+Esa decisión es un problema con teoría propia, la predicción selectiva, que trata cuándo un modelo debe
+abstenerse de responder.
+
+% Sección 2.7: pendiente de la tanda 3 de la reestructuración (ficha 02-marco-teorico.md, 2.7). El marcador
+% mantiene resueltas las referencias a sec:marco_incertidumbre y se reemplaza al escribir la sección.
+\section{Incertidumbre y predicción selectiva}
+\label{sec:marco_incertidumbre}
+
+\pendiente{Redactar la sección 2.7 según la ficha: incertidumbre en la clasificación diagnóstica, predicción
+selectiva y abstención, señales de confianza y calibración, y las tres salidas (afirmar, ofrecer diferenciales
+o derivar).}
 
 \section{Evaluación de modelos}
 \label{sec:marco_evaluacion}
@@ -963,7 +1226,7 @@ El trabajo usa dos métricas de este tipo. La \textbf{cobertura de entidades cl�
 categorías del vocabulario dermatoscópico, como color, patrón o estructura, menciona el reporte generado,
 y mide cuánto contenido clínico describe. La \textbf{consistencia diagnóstica} verifica si el reporte nombra la
 categoría real de la imagen, o un sinónimo reconocido, y mide la fidelidad diagnóstica de la
-Sección~\ref{sec:marco_vlm_generacion}. Ninguna de las dos necesita un texto de referencia. La segunda usa
+Sección~\ref{sec:marco_rep_ejes}. Ninguna de las dos necesita un texto de referencia. La segunda usa
 solo la etiqueta de la imagen. La lista de términos y las reglas de coincidencia se detallan en la
 Sección~\ref{sec:met_protocolo}.
 
@@ -971,7 +1234,7 @@ Cada familia ve una parte del reporte. Las métricas con referencia premian que 
 descripción particular, y las sin referencia, que contenga vocabulario clínico y el diagnóstico correcto.
 Ninguna comprueba que lo descrito esté en la imagen, de modo que un reporte que menciona muchos términos
 puede incluir hallazgos que la lesión no tiene. Por eso la alucinación de la
-Sección~\ref{sec:marco_vlm_generacion} requiere, además de estas métricas, revisar el reporte contra la
+Sección~\ref{sec:marco_rep_fallas} requiere, además de estas métricas, revisar el reporte contra la
 imagen.
 
 \subsection{Inferencia estadística para comparar modelos}
@@ -1211,7 +1474,7 @@ instituciones y cuatro modalidades, y se ajusta después a cada tarea~\cite{yan2
 
 El trabajo usa DermLIP. Es contrastivo, de modo que el mismo espacio sirve para clasificar
 \emph{zero-shot}, para entrenar un clasificador lineal y para recuperar los vecinos visuales de la
-Sección~\ref{sec:marco_vlm_rag}; está especializado en dermatología, y la variante con codificador ViT-B/16
+Sección~\ref{sec:marco_recuperacion_imagenes}; está especializado en dermatología, y la variante con codificador ViT-B/16
 que usa el trabajo se ejecuta en una GPU de consumo~\cite{yan2025derm1m}.
 
 Los VLM médicos generales se construyeron para otro material. LLaVA-Med, Med-Flamingo, PeFoMed y
@@ -1219,7 +1482,7 @@ LLaVA-Tri, el modelo que acompaña a MedTrinity-25M, se evalúan sobre todo en r
 visuales sobre radiología y patología~\cite{li2023llavamed,moor2023medflamingo,he2025pefomed,xie2025medtrinity25m}.
 En dermatología la evidencia es escasa: SkinVL, construido sobre LLaVA-Med, lo supera en las tareas
 dermatológicas en que se comparan~\cite{zeng2025mmskin}, y los VLM ajustados a un dominio médico tienden
-a alucinar más que los generales (Sección~\ref{sec:marco_vlm_generacion}). Para Phi-3.5-Vision, un modelo
+a alucinar más que los generales (Sección~\ref{sec:marco_rep_fallas}). Para Phi-3.5-Vision, un modelo
 general de pocos miles de millones de parámetros~\cite{abdin2024phi3}, no se encontraron mediciones
 publicadas en dermatología. El trabajo mide LLaVA-Med y Phi-3.5-Vision como clasificadores dermatológicos bajo el mismo
 protocolo que los clasificadores supervisados y que DermLIP.
@@ -1293,7 +1556,7 @@ De esta revisión sale la brecha que aborda la tesina, que tiene tres partes. No
 mismo protocolo entre clasificadores supervisados, VLM médicos generales y modelos visión--lenguaje
 dermatológicos; el trabajo las hace sobre la misma partición de HAM10000 y en HIBA. La mayoría de los
 generadores se evalúa por parecido textual y no por fidelidad diagnóstica; el trabajo mide las dos
-condiciones de la Sección~\ref{sec:marco_vlm_generacion} por separado. Y pocos trabajos tratan la
+condiciones de la Sección~\ref{sec:marco_rep_ejes} por separado. Y pocos trabajos tratan la
 incertidumbre del diagnóstico o se limitan a hardware accesible: el ensamble de Khan et al.\ deriva los
 casos discordantes, pero redacta con un modelo de 70 mil millones de parámetros por API. El trabajo usa el
 acuerdo entre el clasificador y los vecinos de DermLIP para decidir cómo redactar cada caso, y ejecuta todo
