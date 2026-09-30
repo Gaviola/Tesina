@@ -1,134 +1,110 @@
 \chapter[Introducción]{Introducción}
 \label{cp:introduccion}
-% Extensión estimada: 8--10 páginas (ver fichas/01-introduccion.md).
+% Extensión estimada: sin límite; la ficha orienta 6--7 páginas (ver fichas/01-introduccion.md y guía §5).
 % Fuentes: Plan de trabajo (Introducción y objetivos), Propuesta (secciones "Introducción y Propósito" y
-% "Marco de la Problemática"), PLAN_TFG_GAVIOLA_FACUNDO.pdf (objetivos verbatim) y el registro de ejecuciones
-% (Codigo/docs/ejecuciones.md) para fechar las hipótesis surgidas durante el trabajo.
-%
-% Feedback del tutor (14/09/2026): este capítulo absorbe lo que la versión anterior repartía en cinco
-% secciones de introducción y en un capítulo "Hipótesis y objetivos" aparte. Las preguntas van en la
-% motivación, las hipótesis entre motivación y objetivos, y los objetivos dentro de la introducción. Se
-% eliminan las secciones "Contribuciones" (propia de tesis de maestría o doctorado) y "Evolución respecto
-% del plan de trabajo" (se menciona en el texto donde corresponde).
+% "Marco de la Problemática"), PLAN_TFG_GAVIOLA_FACUNDO.pdf y la revisión del tutor del 28/09/2026
+% (tareas_revision_cap1-2.md, I1--I8). Sin hipótesis (D1): solo preguntas de investigación y objetivos.
 
-Este trabajo estudia si los modelos visión--lenguaje pueden asistir el diagnóstico de lesiones de piel
-en sus dos partes: identificar la categoría de la lesión, con atención especial a la detección del
-melanoma, y redactar el reporte que la describe. Un modelo de este tipo combina un codificador visual,
-que extrae los rasgos de la imagen, con un gran modelo de lenguaje, que los convierte en texto, y por
-eso promete cubrir las dos partes con un solo modelo. Esa promesa importa donde el especialista es
-escaso y el tiempo de consulta se reparte entre examinar la lesión y documentarla. El trabajo la pone a
-prueba en dos fases. La primera compara un modelo visión--lenguaje con redes convolucionales y
-transformers visuales entrenados sobre el mismo conjunto de imágenes dermatoscópicas; la segunda ajusta
-un modelo visión--lenguaje para generar reportes y evalúa si el diagnóstico que afirman es el correcto.
-Las dos fases se desarrollan dentro del presupuesto de una GPU de consumo.
+Este capítulo presenta el problema que motiva el trabajo, las preguntas de investigación y los objetivos que
+lo organizan, y describe cómo se estructura el resto del documento. Primero se plantea el problema clínico del
+diagnóstico de las lesiones de piel y de su documentación, y qué puede aportar la \gls{ia}. A partir de ahí se
+formulan las preguntas y se enuncian los objetivos, y el capítulo cierra con la organización de los capítulos
+siguientes.
 
 \section{Contexto y motivación}
 \label{sec:intro_contexto}
 
-El cáncer de piel es uno de los tipos de cáncer más frecuentes del mundo. Las estimaciones de GLOBOCAN para
-2024 le atribuyen 1\,138\,314 casos nuevos de cáncer de piel no melanoma, el quinto tumor más frecuente del
-planeta, y otros 337\,969 casos de melanoma~\cite{sung2026global}. El melanoma es menos de una cuarta
-parte de los diagnósticos, pero las muertes se reparten casi por partes iguales entre los dos grupos, 58\,398
-por melanoma y 58\,721 por el resto de los cánceres de piel, de modo que esa fracción menor de los casos
-concentra la mitad de la mortalidad. La mayoría de las lesiones que llegan a una consulta son benignas o no representan un peligro real,
-y el valor de examinarlas está en identificar la minoría que no lo es.
+El cáncer de piel es uno de los tipos de cáncer más frecuentes del mundo. La última estimación de GLOBOCAN,
+publicada en 2026, para el año 2024, atribuye 1\,138\,314 casos nuevos de cáncer de piel no melanoma, el
+quinto tumor más frecuente del planeta, y 337\,969 casos de melanoma~\cite{sung2026global}. El melanoma es
+menos de una cuarta parte de los diagnósticos, pero las muertes se reparten casi por partes iguales entre los
+dos grupos, 58\,398 por melanoma y 58\,721 por el resto de los cánceres de piel. Esa fracción menor de los
+casos concentra así la mitad de la mortalidad, y queda por establecer de qué depende el desenlace.
 
-El peso de la detección temprana está en que el desenlace del melanoma depende del momento en que se lo
-diagnostica. La supervivencia
-relativa a cinco años (la proporción de pacientes que sobrevive una vez descontada la mortalidad esperada en
-la población general) es de 100.0\,\% cuando el melanoma se detecta localizado, baja a
-76.0\,\% cuando ya alcanzó los ganglios regionales y a 34.0\,\% cuando hay metástasis a
-distancia~\cite{nci2026melanoma}. En esa misma serie, 77\,\% de los casos se diagnostican localizados, 10\,\%
-con extensión regional y 5\,\% con metástasis a distancia. El margen de mejora se concentra en ese 15\,\% de
-diagnósticos no localizados.
+El desenlace del melanoma depende del momento en que se lo diagnostica. La supervivencia relativa a cinco
+años (la proporción de pacientes que sobrevive una vez descontada la mortalidad esperada en la población
+general) es de 100.0\,\% cuando el melanoma se detecta localizado, baja a 76.0\,\% cuando ya alcanzó los
+ganglios regionales y a 34.0\,\% cuando hay metástasis a distancia~\cite{nci2026melanoma}. En esa misma serie,
+77\,\% de los casos se diagnostican localizados, 10\,\% con extensión regional y 5\,\% con metástasis a
+distancia, de modo que el margen de mejora se concentra en ese 15\,\% de diagnósticos no localizados. Por eso
+importan las herramientas de apoyo al diagnóstico que ayuden a detectar la enfermedad a tiempo.
 
-El diagnóstico humano tampoco está resuelto. La dermatoscopía examina la lesión con aumento e iluminación
-controlada y mejora la exactitud diagnóstica respecto de la inspección a simple vista. Una revisión
-sistemática de 104 estudios confirma esa mejora sobre todo en manos de usuarios experimentados y en
-pacientes derivados a un especialista, y encuentra pocos datos que respalden su uso en atención primaria,
-donde la recomienda solo para clínicos con formación adecuada~\cite{dinnes2018dermoscopy}.
+Dentro de la detección temprana intervienen varios factores, y el primero es la disponibilidad de
+especialistas. Un relevamiento de la densidad de dermatólogos en 158 países estimó una media de 2.66
+especialistas por cada 100\,000 habitantes, con un rango que va de 0.37 en los países de ingreso bajo a 5.05
+en los de ingreso alto~\cite{freeman2026global}. Donde el especialista es escaso, la primera valoración de
+una lesión queda muchas veces en manos de un clínico que no lo es, y ese clínico necesita un instrumento con el
+cual examinarla.
 
-Tampoco hay una lectura humana única de la misma imagen. Un estudio de gran escala enfrentó a 511 observadores humanos con 139 algoritmos sobre el mismo material dermatoscópico y
-encontró un rango amplio de desempeño entre ellos, asociado a su nivel de
-formación~\cite{tschandl2019comparison}. Esa dispersión tiene dos consecuencias: fija la
-referencia contra la cual se mide cualquier sistema automático, y advierte que una etiqueta producida por un
-único observador no constituye una referencia estable.
+Ese instrumento es la dermatoscopía, que examina la lesión con aumento e iluminación controlada y mejora la
+exactitud diagnóstica respecto de la inspección a simple vista. Una revisión sistemática de 104 estudios
+confirma esa mejora sobre todo en manos de usuarios experimentados y en pacientes derivados a un especialista,
+y encuentra pocos datos que respalden su uso en atención primaria, donde la recomienda solo para clínicos con
+formación adecuada~\cite{dinnes2018dermoscopy}. La herramienta existe, pero su beneficio depende de una
+formación que no todos los clínicos que ven lesiones de piel tienen.
 
-Un relevamiento de la densidad de dermatólogos en 158 países estimó una media de 2.66 especialistas por cada 100\,000 habitantes, con un rango que va de 0.37 en
-los países de ingreso bajo a 5.05 en los de ingreso alto~\cite{freeman2026global}. Donde el especialista es
-escaso, la primera valoración de una lesión queda a cargo de quien no tiene formación dermatoscópica, el caso
-en que la evidencia a favor del instrumento es más débil.
+Aun entre quienes cuentan con esa formación, la lectura de una misma imagen no es uniforme. Un estudio de gran
+escala enfrentó a 511 observadores humanos con 139 algoritmos sobre el mismo material dermatoscópico y encontró
+un rango amplio de desempeño entre ellos, asociado a su nivel de formación~\cite{tschandl2019comparison}. Esa
+dispersión tiene dos consecuencias. No hay una lectura humana única y, por lo tanto, la etiqueta producida por
+un único observador no constituye una referencia estable.
 
-La documentación consume, además, una parte grande del tiempo médico. En atención primaria, los registros de
-uso de la historia clínica electrónica, validados con observación directa, muestran que el médico pasa 5.9
-horas de una jornada de 11.4 frente a ella, 1.4 de las cuales caen fuera del horario de atención. Casi la mitad
-de ese tiempo (44.2\,\%) se va en tareas administrativas y de registro~\cite{arndt2017tethered}. Redactar el
-reporte de una lesión es parte de esa carga y una tarea distinta de la de emitir el diagnóstico.
+A la interpretación se suma la documentación, que también consume una parte grande del tiempo médico. En
+atención primaria general, no en dermatología, los registros de uso de la historia clínica electrónica,
+validados con observación directa, muestran que el médico pasa 5.9 horas de una jornada de 11.4 frente a
+ella, 1.4 de las cuales caen fuera del horario de atención. Casi la mitad de ese tiempo (44.2\,\%) se va en
+tareas administrativas y de registro~\cite{arndt2017tethered}. Redactar el reporte de una lesión es parte de
+esa carga y una tarea distinta de la de emitir el diagnóstico. Pocos especialistas, lecturas que varían y
+documentación que consume tiempo alargan los tiempos de atención en dos puntos, el de la interpretación de la
+lesión y el de su documentación. De ahí surgen dos tareas computacionales distintas, asignar una categoría a la
+lesión y redactar su reporte.
 
-Ya en 2017 se mostró que una \gls{cnn} entrenada sobre
-un conjunto grande de imágenes de lesiones cutáneas alcanzaba un desempeño comparable al de dermatólogos
-certificados~\cite{esteva2017dermatologistlevel}, y en 2019 el estudio de observadores ya citado encontró que
-los mejores algoritmos superaban a los expertos humanos sobre el mismo tipo de
-material~\cite{tschandl2019comparison}. Ambos resultados son anteriores a la adopción de los
-\emph{transformers} en visión por computadora y se toman como punto de partida de este trabajo.
+Para reducir esos retrasos se aplicaron métodos computacionales, entre ellos las redes neuronales. Con el
+aprendizaje profundo, las redes neuronales convolucionales (\gls{cnn}) y los \emph{transformers} visuales
+(\gls{vit}) entrenados de forma supervisada sobre imágenes etiquetadas se aplicaron a la clasificación de
+lesiones~\cite{dosovitskiy2021image,liu2021swin}. Ya en 2017 una red convolucional alcanzó un desempeño
+comparable al de dermatólogos certificados~\cite{esteva2017dermatologistlevel}, y en 2019 el estudio de
+observadores ya citado encontró que los mejores algoritmos superaban a los expertos humanos sobre el mismo tipo
+de material~\cite{tschandl2019comparison}. Ambos resultados son anteriores a la adopción de los
+\emph{transformers} en visión por computadora y se toman como muestra del alcance de estos métodos, no como el
+desempeño alcanzable hoy.
 
-Las revisiones sistemáticas posteriores registran exactitudes altas en condiciones
-controladas~\cite{magalhaes2024systematic,kreouzi2024learning}, mientras los trabajos que examinan el uso de
-estos sistemas en atención primaria y comunitaria plantean otra pregunta, la de si ese desempeño se conserva
-fuera de condiciones de interpretación especializada~\cite{jones2022intelligence}.
+Esos métodos tienen límites. Las revisiones sistemáticas posteriores registran exactitudes altas en
+condiciones controladas~\cite{magalhaes2024systematic,kreouzi2024learning}, mientras que los trabajos que
+examinan el uso de estos sistemas en atención primaria y comunitaria plantean otra pregunta, la de si ese
+desempeño se conserva fuera de condiciones de interpretación especializada~\cite{jones2022intelligence}.
+Además, un clasificador produce una categoría, o una distribución sobre categorías, y no el texto que la
+describe, de modo que la segunda tarea, la documentación, queda sin asistencia.
 
-Ese estado actual deja dos huecos concretos. El primero es la forma de la salida. Un clasificador entrega una
-categoría, o una distribución sobre categorías, y no un texto que describa la lesión y sostenga esa
-categoría; la parte del trabajo clínico que consume tiempo queda sin asistencia.
+Los modelos visión--lenguaje (\gls{vlm}) responden en parte a esa limitación de la salida, porque integran
+información visual y textual. Se entrenan con pares imagen--descripción que ubican a ambas modalidades en un
+espacio común, lo que permite clasificar una imagen comparándola con frases sin fijar de antemano las
+categorías posibles~\cite{radford2021learning}. Los modelos generativos multimodales agregan un modelo de
+lenguaje que produce texto libre condicionado a la imagen~\cite{liu2023visual}, y su adaptación al dominio
+biomédico mostró que el procedimiento se traslada a imágenes médicas~\cite{li2023llavamed}. Estos modelos
+pueden ser generales o estar especializados en un dominio, y se los ajusta a una tarea continuando su
+entrenamiento con datos de esa tarea.
 
-El segundo es la generalización. La evaluación de sistemas de \gls{ia} dermatológica sobre conjuntos de imágenes curados para
-cubrir el rango de fototipos muestra caídas de desempeño en los tonos de piel menos representados en los
-datos de entrenamiento, que son los que dominan los conjuntos
-públicos~\cite{daneshjou2022disparities,groh2021neural}. La población argentina tampoco se puede suponer
-homogénea. El Registro Argentino de Melanoma Cutáneo reunió 10\,199 casos entre 2002 y 2018 y documentó
-diferencias regionales en las características de la enfermedad~\cite{loria2020cutaneous}. Por eso la
-validación externa de este trabajo se hace sobre HIBA, un conjunto de imágenes de lesiones cutáneas recolectado en Argentina con el propósito
-explícito de evaluar herramientas de \gls{ia} en esa población~\cite{riccilara2023dataset}.
+A partir de lo anterior se identifican dos temas de trabajo aún abiertos. El primero es la generalización. La
+evaluación de sistemas de \gls{ia} dermatológica sobre conjuntos de imágenes curados para cubrir el rango de
+fototipos muestra caídas de desempeño en los tonos de piel menos representados en los datos de entrenamiento,
+que son los que dominan los conjuntos públicos~\cite{daneshjou2022disparities,groh2021neural}, y la población
+argentina tampoco se puede suponer homogénea, porque el Registro Argentino de Melanoma Cutáneo reunió 10\,199
+casos entre 2002 y 2018 y documentó diferencias regionales en las características de la
+enfermedad~\cite{loria2020cutaneous}. El segundo son los reportes diagnósticamente fieles. Un reporte generado
+tiene que describir la lesión que la imagen muestra y afirmar el diagnóstico correcto, sin sostener lo que la
+imagen no respalda. En este trabajo se denomina fidelidad diagnóstica a la coincidencia entre el diagnóstico que
+el reporte afirma y el de referencia de la imagen, y calidad descriptiva a la adecuación del texto a la lesión
+que la imagen muestra.
 
-El problema que aborda el trabajo involucra, entonces, dos tareas (Figura~\ref{fig:intro_dos_tareas}):
-asignar a la imagen una categoría
-diagnóstica y redactar un texto que describa la lesión y sostenga esa categoría. \emph{Detección} designa en
-este trabajo la tarea binaria de decidir si una lesión es un melanoma, derivada de la clasificación multiclase
-agrupando sus categorías. No designa la localización de la lesión dentro de la imagen ni su segmentación, que
-son problemas distintos y quedan fuera del trabajo.
-
-Un reporte correcto exige dos condiciones simultáneas. El diagnóstico que afirma debe ser el acertado y la
-descripción debe corresponder a la imagen que se está mirando. Las dos condiciones son independientes entre sí, y
-esa independencia obliga a evaluarlas por separado. Un texto fluido y bien estructurado puede sostener un
-diagnóstico equivocado, y un diagnóstico acertado puede ir acompañado de una descripción que no se
-corresponde con la lesión.
-
-\input{Figures/Capitulos/01-planteo-problema}
-
-La promesa de un \gls{vlm} es resolver las dos tareas con un único modelo y hay razones técnicas concretas
-para esperarlo. El punto de partida es el entrenamiento conjunto de un codificador de imágenes y un
-codificador de texto sobre pares imagen--descripción, que ubica a ambas modalidades en un espacio de
-representación común. Una imagen se puede comparar con una frase, y la clasificación se vuelve la búsqueda
-de la descripción textual que mejor le corresponde, sin que las categorías posibles se fijen durante el
-entrenamiento~\cite{radford2021learning}. Sobre esa base, los modelos generativos multimodales agregan un modelo
-de lenguaje que produce texto libre condicionado a la imagen~\cite{liu2023visual}, y su adaptación al
-dominio biomédico mostró que el procedimiento se traslada a imágenes médicas~\cite{li2023llavamed}.
-
-En dermatología esos modelos ya existen. Un sistema diagnóstico interactivo acopló un modelo de lenguaje
-visual a imágenes de lesiones cutáneas para sostener un intercambio en lenguaje
-natural~\cite{zhou2023skingpt4}, y trabajos más recientes construyeron conjuntos de pares imagen--texto de
-gran escala, alineados con la terminología clínica del área, y con ellos entrenaron modelos de representación
-conjunta del dominio~\cite{yan2025derm1m}. Su existencia vuelve razonable preguntarse si un único VLM puede
-a la vez clasificar la lesión y redactar su reporte, o si las dos tareas siguen exigiendo componentes
-distintos y encadenados.
-
-Un eje atraviesa el trabajo: el hardware. Los experimentos corren en una única GPU de
-consumo de 12--36\,GB de memoria, la clase de equipamiento que hay en un laboratorio universitario o en un
-servicio clínico, y no en un centro de cómputo con decenas de GPUs. La restricción opera como
-condición de diseño y decide qué modelos entran en la comparación, con qué resolución y tamaño de lote se los
-entrena y cuántas configuraciones se alcanzan a explorar. Un trabajo reciente obtuvo un modelo visión--lenguaje
-dermatológico con recursos de ese orden~\cite{yilmaz2025resourceefficient}, y las preguntas que siguen se
-formulan dentro del mismo presupuesto.
+Las dos tareas están conectadas, porque la salida de una es la entrada de la otra. El diagnóstico de la
+clasificación es lo que el texto debe afirmar y sostener, y por eso no basta resolverlas por separado. Un
+texto fluido puede sostener un diagnóstico equivocado, y un diagnóstico acertado puede ir acompañado de una
+descripción que no corresponde a la lesión, de modo que un modelo bueno para clasificar no garantiza un reporte
+fiel, ni un texto convincente garantiza un diagnóstico correcto. El problema de investigación que se plantea es
+entonces el estudio conjunto de la clasificación de lesiones y de la generación de reportes con modelos
+visión--lenguaje, con recursos de hardware limitados. De ese problema se derivan las preguntas de
+investigación de la sección siguiente.
 
 \section{Preguntas de investigación e hipótesis}
 \label{sec:intro_preguntas}
