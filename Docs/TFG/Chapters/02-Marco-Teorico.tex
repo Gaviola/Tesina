@@ -1747,7 +1747,7 @@ en la Sección~\ref{sec:marco_eval_clasif}, esas dos métricas pueden ser altas 
 clases minoritarias. SkinSavvy2, que usa Swin sobre una versión balanceada del conjunto de datos HAM10000,
 informa en cambio F1 promedio y sensibilidad macro~\cite{kim2025skinsavvy2}.
 
-\begin{table}[htbp]
+\begin{table}[!t]
     \centering
     \caption[Trabajos de clasificación de lesiones de piel]{Trabajos recientes de clasificación de lesiones de
     piel. Las cifras son las que informa cada trabajo, en su alcance. «Sensibilidad macro» agrupa la
@@ -1794,8 +1794,8 @@ informa en cambio F1 promedio y sensibilidad macro~\cite{kim2025skinsavvy2}.
 Los trabajos de la línea ampliaron la tarea, trataron el desbalance dentro de los desafíos y llevaron el modelo
 fuera del banco de pruebas. \textcite{liu2020deep} pasan de la lesión aislada a 26 condiciones y muestran que un
 promedio global oculta la debilidad en los tumores malignos. \textcite{gessert2020skin} y \textcite{yao2022single}
-atienden el desbalance y el melanoma dentro de ISIC, uno con pérdida ponderada, particiones por lesión y ensambles, el otro con un
-modelo único y un coeficiente propio para el melanoma. En ambos la métrica de selección es un promedio por clase y el melanoma tiene su
+atienden el desbalance y el melanoma dentro de ISIC, uno con ensambles y particiones por lesión, el otro con un
+modelo único. En ambos la métrica de selección es un promedio por clase y el melanoma tiene su
 propia sensibilidad, pero la evidencia descansa sobre la prueba de un desafío, con una brecha de 9 a 11 puntos entre validación
 cruzada y prueba en el primero y una selección de hiperparámetros sobre la prueba en el segundo.
 \textcite{marchetti2023prospective} validan de forma prospectiva un ensamble heredero de esos métodos: el AUC se
@@ -1820,7 +1820,7 @@ casos y entrenar clasificadores livianos, y la unión de un codificador visual c
 genera texto. Se evalúan con clasificación \emph{zero-shot}, con sondeo lineal, con recuperación entre imagen y
 texto, con respuesta a preguntas y, cada vez más, con estudios que miden el efecto sobre los clínicos. Como
 muchos de ellos se construyeron para otro material médico, importa qué datos usaron para preentrenar, contra qué
-modelos se comparan, si se midieron en piel y si participaron expertos.
+modelos se comparan, si se midieron en piel y si hubo una evaluación con expertos.
 
 Los primeros espacios imagen--texto con vocabulario médico vinieron de la literatura. MONET entrenó un
 modelo contrastivo con más de cien mil pares de imágenes y texto extraídos de artículos de PubMed y de
@@ -1927,7 +1927,7 @@ por el equipo de dermatología y probablemente de mayor calidad que las de una d
 dos tareas, que falta la historia clínica electrónica completa y que son cinco modelos de una tecnología que cambia
 con rapidez.
 
-\begin{table}[htbp]
+\begin{table}[!t]
     \centering
     \caption[Modelos visión--lenguaje en dermatología]{Trabajos recientes sobre modelos visión--lenguaje en
     dermatología. Las cifras son las que informa cada trabajo, en su alcance. Todos son preimpresiones de arXiv.
@@ -1975,15 +1975,15 @@ con rapidez.
 \end{table}
 
 Los trabajos siguen tres estrategias. La primera es el espacio contrastivo especializado: MONET y MedImageInsight
-desde la literatura y las imágenes médicas, Derm1M y MAKE desde un corpus dermatológico con ontología y PanDerm
-desde la auto-supervisión. DermFM-Zero combina las dos últimas ideas a mayor escala y la valida con
+desde la literatura y las imágenes médicas, Derm1M y MAKE desde un corpus dermatológico con ontología, y PanDerm
+por auto-supervisión. DermFM-Zero combina las dos últimas ideas a mayor escala y la valida con
 clínicos. La segunda es el VLM generativo ajustado a la piel, con SkinGPT-R1, que entrena pocos parámetros sobre
 una base congelada, y con DermoGPT, que ajusta con LoRA y refuerza el aprendizaje con una recompensa morfológica.
 La tercera es la evaluación crítica: DermoGPT compara 16 modelos y Jiang et al.\ llevan la medición a consultas
-reales, y los dos muestran que los VLM médicos generales rinden poco en piel. En el segundo la exactitud pasa de
-entre 20\,\% y 40\,\% en los conjuntos públicos a entre 1.5\,\% y 13\,\% con la imagen sola en la consulta real. Tres de los
-cuatro trabajos de 2025 y 2026 comparten autores, Yan y Ge, con Derm1M, MAKE y PanDerm, de modo que parte de esa
-convergencia es una sola línea de trabajo; el de Jiang et al.\ es independiente.
+reales, y los dos muestran que los VLM médicos generales rinden poco en piel. En el segundo, el mejor modelo
+abierto llega a entre 20\,\% y 40\,\% en los conjuntos públicos, y los abiertos obtienen entre 1.5\,\% y 13\,\% con la
+imagen sola en la consulta real. Tres de los cuatro trabajos de 2025 y 2026 comparten autores, Yan y Ge, con Derm1M, MAKE y PanDerm, de modo que parte de esa
+convergencia es una sola línea de trabajo, a diferencia del estudio independiente de Jiang et al.
 
 Quedan abiertas varias cuestiones. Los trabajos descritos no combinan un clasificador supervisado con un
 generador ni recuperan casos parecidos para anclar el texto. La incertidumbre aparece como limitación, en los
@@ -1999,9 +1999,7 @@ los generativos los expertos son cinco evaluadores de las salidas del propio mod
 Un reporte dermatológico reúne la descripción de lo que se ve, un diagnóstico y, cuando corresponde, una
 recomendación. Los trabajos difieren en cómo lo producen, con un único VLM o con un clasificador que precede a
 un redactor; en qué evidencia usan, solo la imagen o también un contexto recuperado; y en cómo lo evalúan, por
-parecido con una referencia, por corrección del diagnóstico, con un juez automático o con especialistas.
-Esos criterios miden cosas distintas (Secciones~\ref{sec:marco_rep_ejes} y~\ref{sec:marco_eval_texto}), y por eso
-importa qué mide cada trabajo y con qué hardware lo entrena.
+parecido con una referencia, por corrección del diagnóstico, con un juez automático o con expertos.
 
 Un primer grupo de trabajos genera el texto con un único VLM ajustado a dermatología
 (Tabla~\ref{tab:marco_generadores}). SkinGPT-4 ajusta un VLM de la familia de MiniGPT-4 con Llama-2 sobre
@@ -2103,12 +2101,12 @@ autores, sus reportes son muy largos y confunden al modelo. Ninguno de los dos i
 RULE reconoce solo que deja para el futuro la seguridad, la equidad, la robustez y la privacidad, y MMed-RAG
 señala que sus experimentos son \emph{zero-shot} y que una modalidad nueva puede exigir reentrenar el recuperador.
 
-\begin{table}[htbp]
+\begin{table}[!t]
     \centering
     \caption[Evaluación de narrativas y recuperación en modelos visión--lenguaje médicos]{Trabajos recientes
     sobre la evaluación de narrativas dermatológicas y sobre la recuperación de contexto para modelos
-    visión--lenguaje médicos. Las cifras son las que informa cada trabajo, en su alcance. BLEU se informa en
-    IU-Xray. DermBench es una preimpresión; MMed-RAG y RULE son artículos de conferencia.}
+    visión--lenguaje médicos. Cifras de cada trabajo, en su alcance; BLEU de IU-Xray. DermBench es una
+    preimpresión; los otros dos son artículos de congreso.}
     \label{tab:marco_sota_reportes}
     \footnotesize
     \setlength{\tabcolsep}{3.5pt}
@@ -2144,7 +2142,8 @@ señala que sus experimentos son \emph{zero-shot} y que una modalidad nueva pued
     \end{tabularx}
 \end{table}
 
-Los trabajos evalúan el texto de maneras muy distintas. Varios usan métricas con referencia, que miden el
+Los trabajos evalúan el texto de maneras muy distintas, y cada una mide algo diferente
+(Sección~\ref{sec:marco_rep_ejes}). Varios usan métricas con referencia, que miden el
 parecido con un texto particular y no la corrección clínica (Sección~\ref{sec:marco_eval_texto}); otros
 miden solo si el diagnóstico es correcto, sin juzgar la descripción, y pocos combinan las dos cosas con la
 revisión de un especialista. DermBench pasa de esa medida de parecido a dimensiones clínicas, pero sus referencias
@@ -2154,3 +2153,80 @@ con métricas léxicas, en radiología y oftalmología, y recuperan textos y no 
 El hardware va de dos GPU de consumo a ocho A100, y dos de los tres sistemas que separan diagnóstico y redacción redactan con
 un modelo grande consultado por API.
 
+\subsection{Posicionamiento del trabajo}
+\label{sec:estado_arte_posicion}
+
+Cada línea deja algo sin resolver. En la clasificación de lesiones, los trabajos revisados usan redes
+convolucionales, eligen el modelo con promedios por clase o con el AUC y dan al melanoma una sensibilidad propia, pero su evidencia
+descansa sobre la prueba de un desafío, sobre un solo centro o sobre una partición temporal, y los sistemas de
+mejor desempeño son ensambles grandes. Entre los modelos visión--lenguaje, los contrastivos especializados clasifican
+y recuperan pero no redactan, los generativos exigen un cómputo elevado, y los modelos médicos generales rinden poco
+en piel según las comparaciones de DermoGPT y de Jiang et al. En la generación de reportes, la mayoría de los
+sistemas se evalúa por parecido textual o solo por la exactitud del diagnóstico, y las recuperaciones estudiadas
+traen textos, en radiología y oftalmología, con un contexto que puede degradar respuestas correctas.
+
+\begin{table}[htbp]
+    \centering
+    \caption[De las brechas de la literatura a las decisiones del trabajo]{De las brechas que deja la revisión
+    a las decisiones del trabajo. La columna de evidencia remite a las subsecciones de esta sección.}
+    \label{tab:marco_brechas}
+    \small
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{3.3cm}
+        >{\raggedright\arraybackslash\hspace{0pt}}X >{\raggedright\arraybackslash\hspace{0pt}}X@{}}
+        \toprule
+        Brecha & Evidencia en la revisión & Decisión del trabajo \\
+        \midrule
+        Sin comparación bajo un mismo protocolo
+            & Los clasificadores usan solo redes convolucionales y se validan sobre pruebas de desafíos o en un solo centro
+              (Sección~\ref{sec:estado_arte_diagnostico}); los modelos visión--lenguaje se miden entre sí o con clínicos
+              (Sección~\ref{sec:estado_arte_vlm})
+            & Comparar clasificadores supervisados, modelos médicos generales y modelos dermatológicos con el mismo
+              protocolo, con partición disjunta por lesión, selección en validación y un conjunto externo \\
+        \filasep
+        Texto evaluado por su parecido con una referencia
+            & Métricas con referencia, exactitud del diagnóstico, un juez que no ve la imagen o métricas léxicas
+              (Sección~\ref{sec:estado_arte_reportes})
+            & Medir por separado la fidelidad diagnóstica y la calidad descriptiva del reporte
+              (Sección~\ref{sec:marco_rep_ejes}) \\
+        \filasep
+        Incertidumbre y evidencia sin integrar
+            & La incertidumbre aparece como limitación y no como decisión; el contexto recuperado son textos de otras
+              especialidades y puede empeorar respuestas correctas
+              (Secciones~\ref{sec:estado_arte_vlm} y~\ref{sec:estado_arte_reportes})
+            & Recuperar casos parecidos por imagen, usar la concordancia entre predicciones como señal de confianza y
+              decidir entre afirmar, ofrecer diferenciales o derivar
+              (Secciones~\ref{sec:marco_integracion} y~\ref{sec:marco_tres_salidas}) \\
+        \filasep
+        Cómputo fuera del alcance de un equipo sin infraestructura
+            & Ocho RTX 4090, cuatro H100, ensambles de 90 archivos de pesos o un modelo de 70 mil millones de parámetros
+              por API
+            & Ejecutar todo en una GPU de consumo, con un codificador contrastivo dermatológico y adaptación con LoRA \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+De esos huecos sale el \emph{pipeline}. Encadena un clasificador que estima el diagnóstico, una recuperación de
+casos parecidos y un generador de reportes, y una decisión que depende de la confianza determina cuánto afirma el
+texto. Cada pieza responde a una brecha de la Tabla~\ref{tab:marco_brechas}. La comparación bajo un protocolo
+común atiende la primera. La medición separada de la fidelidad diagnóstica y de la calidad descriptiva atiende
+la segunda. La recuperación de casos y la decisión por concordancia atienden la tercera, con la estructura en
+cascada que se sigue de la Sección~\ref{sec:marco_tres_salidas}. Los análisis del trabajo se desprenden del mismo
+modo: si la evidencia recuperada mejora la fidelidad diagnóstica, si el acuerdo entre predictores separa los casos
+confiables de los que no lo son y cuánto degrada un vecino equivocado el texto, como advierten MMed-RAG y RULE
+sobre el contexto recuperado~\cite{xia2025mmedrag,xia2024rule}. El aporte es el \emph{pipeline} y el análisis conjunto, y no la réplica de un modelo
+previo.
+
+El codificador contrastivo es DermLIP. DermFM-Zero, posterior, con un codificador ViT-Large de 304 millones de
+parámetros, lo supera en su propio protocolo, pero DermLIP, en su variante ViT-B/16, se ejecuta en una GPU de
+consumo y un mismo espacio sirve para clasificar sin ajuste, para entrenar un clasificador lineal y para
+recuperar los vecinos visuales de la Sección~\ref{sec:marco_recuperacion_imagenes}~\cite{yan2025derm1m}. Los
+modelos generativos se adaptan con LoRA (Sección~\ref{sec:marco_llm_lora}), que entrena pocos parámetros sobre un
+modelo congelado.
+
+Dos trabajos revisados se acercan a una parte de este diseño. El ensamble de \textcite{khan2025ensemble} deriva a
+revisión de un especialista los casos en que sus miembros no coinciden, pero la concordancia decide la derivación y no
+la forma de redactar, y el texto lo escribe un modelo de 70 mil millones de parámetros consultado por API.
+\textcite{chakrabarti2025skin} miden la corrección diagnóstica de los reportes, y lo hacen con un único modelo
+destilado. Ninguno de los dos combina en una cascada la recuperación de casos parecidos, la decisión por
+concordancia y la redacción. La implementación del \emph{pipeline}, y el protocolo con que se lo evalúa, se
+describen en el Capítulo~\ref{cp:metodos}.
