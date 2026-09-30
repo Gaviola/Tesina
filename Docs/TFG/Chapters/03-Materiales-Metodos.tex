@@ -24,7 +24,16 @@
 
 \pendiente{Este capítulo describe todo lo necesario para reproducir los experimentos: datos, particiones,
 modelos, \emph{pipeline} y protocolo de evaluación. Los resultados se presentan en los capítulos
-siguientes.}
+siguientes.
+
+Recibe del Capítulo~\ref{cp:introduccion} lo que antes estaba en su sección de alcance y delimitación
+(commit f520295), cada cosa en la sección que le corresponde: el rol de cada conjunto (HAM10000
+dermatoscópico para entrenar y comparar los clasificadores y para medir la fidelidad diagnóstica, SkinCaRe
+de fotografía clínica solo como fuente de pares imagen--texto, HIBA para la generalización, histopatología
+fuera); la definición de «detección» como la tarea binaria de melanoma derivada de la clasificación, no la
+localización ni la segmentación; la distinción entre fidelidad diagnóstica y validez clínica en el
+protocolo de evaluación; y la decisión de no pre-entrenar un modelo visión--lenguaje y adaptar modelos
+pre-entrenados con \gls{lora} por la restricción de cómputo.}
 
 \section{Metodología de trabajo}
 \label{sec:met_metodologia}
