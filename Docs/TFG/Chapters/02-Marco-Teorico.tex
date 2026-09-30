@@ -1197,30 +1197,62 @@ sección siguiente.
 \section{Evaluación de modelos}
 \label{sec:marco_evaluacion}
 
-Cada componente del \emph{pipeline} entrega una salida distinta, y cada salida se evalúa con su propia
-familia de métricas. Del clasificador se evalúa la categoría que asigna y también la probabilidad que la
-acompaña, porque el \emph{pipeline} usa esa probabilidad para decidir cómo tratar cada caso. Del
-generador se evalúa el texto. Una diferencia entre dos modelos, además, solo se puede afirmar si supera
-la variación que produce el azar de qué imágenes cayeron en el conjunto de test, y un mapa de las
-regiones que usó el clasificador permite revisar si miró la lesión.
+Una métrica ve una parte del desempeño de un modelo y no otra, y por eso conviene agruparlas según lo que
+evalúan. Las métricas de clasificación comparan la categoría que el modelo asigna con la real. Las de
+generación evalúan un texto, que no tiene una única respuesta correcta. Las transversales describen
+propiedades del comportamiento del modelo que no dependen del tipo de salida: si su confianza es fiable, si
+una diferencia entre dos modelos es real, cuánto cambia su desempeño ante perturbaciones y en qué se apoya
+para decidir.
 
-\subsection{Métricas de clasificación}
+\subsection{Evaluación de la clasificación}
 \label{sec:marco_eval_clasif}
 
-Todas las métricas de clasificación se calculan a partir de la matriz de confusión, que cuenta cuántas
-imágenes de cada clase real recibieron cada clase predicha. En la tarea binaria de melanoma frente al
-resto, la sensibilidad es la fracción de melanomas que el modelo detecta y la especificidad, la fracción
-de lesiones que no son melanoma y que el modelo descarta correctamente. Las dos se mueven en sentidos
-opuestos cuando cambia el umbral de decisión~\cite{fawcett2006introduction}.
+Evaluar un clasificador es comparar, imagen por imagen, la categoría que predice con la real, y las métricas
+difieren en cómo resumen esas comparaciones. El resumen más completo es la \textbf{matriz de confusión}
+$M \in \mathbb{N}^{C \times C}$, en la que $M_{ij}$ cuenta las imágenes de la clase real $i$ que el modelo
+predice como $j$, y de la que salen todas las demás métricas. Su diagonal reúne los aciertos. Es lo que se
+inspecciona para ver qué se confunde con qué, porque una clase cuyas imágenes se predicen sistemáticamente
+como otra se ve en la matriz y ningún número aislado lo muestra. En la tarea binaria, con una clase de interés
+(la positiva) frente al resto, la matriz tiene cuatro celdas: los verdaderos positivos ($\mathrm{TP}$), los
+falsos negativos ($\mathrm{FN}$), los falsos positivos ($\mathrm{FP}$) y los verdaderos negativos
+($\mathrm{TN}$).
 
-La exactitud, la fracción de imágenes bien clasificadas, es engañosa cuando las clases están
-desbalanceadas. En HAM10000 los nevos melanocíticos son alrededor de dos tercios de las
-imágenes~\cite{tschandl2018ham10000}, de modo que un modelo que responda NV para cualquier imagen alcanza
-una exactitud cercana a 0.67 sin detectar un solo melanoma. Por eso el trabajo no selecciona modelos por
-exactitud y usa métricas que dan peso a las clases minoritarias.
+De la matriz salen las medidas por clase. La sensibilidad de la clase $c$, $R_c$, es la fracción de sus
+imágenes que el modelo acierta, y la especificidad es la fracción de las imágenes de las otras clases que el
+modelo no predice como $c$,
+\begin{equation}
+    R_c = \frac{M_{cc}}{\sum_{j} M_{cj}}, \qquad
+    \mathrm{Esp}_c = \frac{\sum_{i \neq c}\sum_{j \neq c} M_{ij}}{\sum_{i \neq c}\sum_{j} M_{ij}}.
+    \label{eq:marco_sens_esp}
+\end{equation}
+Tienen una lectura clínica directa: la sensibilidad es la fracción de los casos de una categoría que se
+detectan, y la especificidad, la fracción de los que no la tienen que se descartan. Las dos se mueven en
+sentidos opuestos cuando cambia el umbral de decisión~\cite{fawcett2006introduction}. Cuando interesa una sola
+condición, la salida multiclase se colapsa en una binaria: la clase de interés frente al resto, o un grupo de
+clases, por ejemplo las malignas, frente a las demás. El puntaje de esa tarea es la probabilidad de la clase o
+la suma de las probabilidades del grupo, y a esta tarea binaria derivada se la llama detección.
 
-Para cada clase $c$, la precisión $P_c$ es la fracción de las predicciones de $c$ que son correctas, la
-sensibilidad $R_c$ es la fracción de las imágenes de $c$ que el modelo acierta, y el \textbf{F1} es su media
+La exactitud es la fracción de imágenes bien clasificadas, $\sum_c M_{cc} / n$, y es engañosa cuando las clases
+están desbalanceadas (Sección~\ref{sec:marco_desbalance}). Si una clase reúne dos tercios de las imágenes, un
+modelo que responda siempre esa clase alcanza una exactitud cercana a 0.67 sin acertar una sola imagen de las
+demás. Para que cada clase pese lo mismo se promedian las sensibilidades por clase. La \textbf{sensibilidad
+macro} es ese promedio,
+\begin{equation}
+    \text{sensibilidad macro} = \frac{1}{C}\sum_{c=1}^{C} R_c,
+    \label{eq:marco_acc_bal}
+\end{equation}
+y en la literatura se la llama también exactitud balanceada. Una clase rara mal clasificada la baja tanto
+como una frecuente.
+
+\pendiente[Cita de la exactitud balanceada]{Citar la definición de exactitud balanceada y de los promedios
+macro y ponderado. Referencias propuestas, ambas sin verificar: Brodersen, K. H. et al., «The balanced accuracy
+and its posterior distribution», ICPR 2010, DOI 10.1109/ICPR.2010.764 (clave sugerida
+\texttt{brodersen2010balanced}); Sokolova, M. y Lapalme, G., «A systematic analysis of performance measures for
+classification tasks», \emph{Information Processing \& Management} 45(4), 2009, DOI
+10.1016/j.ipm.2009.03.002 (clave sugerida \texttt{sokolova2009systematic}). Ninguna está en el \texttt{.bib}.}
+
+La sensibilidad no dice cuántas de las predicciones de una clase son correctas. Esa es la precisión
+(\emph{precision}) de la clase $c$, $P_c$, y el \textbf{F1} la combina con la sensibilidad mediante su media
 armónica. El promedio de los F1 por clase se puede hacer de dos maneras,
 \begin{equation}
     F1_c = \frac{2\,P_c R_c}{P_c + R_c}, \qquad
@@ -1228,94 +1260,56 @@ armónica. El promedio de los F1 por clase se puede hacer de dos maneras,
     F1_{\text{ponderado}} = \sum_{c=1}^{C} \frac{n_c}{n}\, F1_c,
     \label{eq:marco_f1}
 \end{equation}
-donde $n_c$ es el número de imágenes de la clase $c$ y $n$ el total. El F1 ponderado pesa cada clase por
-su tamaño y queda dominado por NV; el F1 macro da a las siete clases el mismo peso, y una clase rara mal
-clasificada lo baja tanto como una frecuente. La sensibilidad macro promedia del mismo modo los $R_c$ y
-responde a cuántas lesiones de cada tipo encuentra el modelo.
+donde $n_c$ es el número de imágenes de la clase $c$ y $n$ el total. El F1 ponderado pesa cada clase por su
+tamaño y queda dominado por la más frecuente. El F1 macro da a las $C$ clases el mismo peso, y una clase rara
+mal clasificada lo baja tanto como una frecuente.
 
-Las métricas anteriores dependen de un umbral de decisión. En la tarea binaria, el modelo asigna a cada
-imagen un puntaje $s$, por ejemplo la probabilidad de melanoma, y la declara positiva si $s$ supera un
+Las métricas anteriores dependen de un umbral de decisión. En la tarea binaria, el modelo asigna a cada imagen
+un puntaje $s$, por ejemplo la probabilidad de la clase de interés, y la declara positiva si $s$ supera un
 umbral $\tau$. Cada umbral produce una tasa de verdaderos positivos y una de falsos positivos,
 \begin{equation}
     \mathrm{TPR}(\tau) = \frac{\mathrm{TP}}{\mathrm{TP} + \mathrm{FN}}, \qquad
     \mathrm{FPR}(\tau) = \frac{\mathrm{FP}}{\mathrm{FP} + \mathrm{TN}},
     \label{eq:marco_tpr_fpr}
 \end{equation}
-donde TP, FN, FP y TN cuentan los verdaderos positivos, falsos negativos, falsos positivos y verdaderos
-negativos. La TPR es la sensibilidad, y la FPR es uno menos la especificidad. La curva ROC recorre todos
-los umbrales y dibuja la TPR contra la FPR, y el \textbf{\gls{auc}} es el área bajo esa curva. Vale 0.5 para un
-clasificador al azar, cuya curva es la diagonal, y 1 para uno que separa perfectamente las dos clases. El
-área tiene además una lectura directa: es la probabilidad de que el modelo asigne más puntaje a un
-positivo elegido al azar que a un negativo elegido al azar,
+donde las cuatro cantidades son las de la matriz binaria para ese umbral. La TPR es la sensibilidad, y la FPR
+es uno menos la especificidad. La curva ROC recorre todos los umbrales y dibuja la TPR contra la FPR, y el
+\textbf{\gls{auc}} es el área bajo esa curva. Vale 0.5 para un clasificador al azar, cuya curva es la
+diagonal, y 1 para uno que separa perfectamente las dos clases. El área tiene además una lectura directa: es la
+probabilidad de que el modelo asigne más puntaje a un positivo elegido al azar que a un negativo elegido al
+azar,
 \begin{equation}
     \mathrm{AUC} = P\!\left(s(x^{+}) > s(x^{-})\right),
     \label{eq:marco_auc}
 \end{equation}
-y por eso no depende de ningún umbral en particular. En la práctica se calcula sobre los puntos de la
-curva con la regla del trapecio~\cite{fawcett2006introduction}.
+y por eso no depende de ningún umbral en particular. En la práctica se calcula sobre los puntos de la curva
+con la regla del trapecio~\cite{fawcett2006introduction}.
 
 En el caso multiclase se construye una curva por clase, que trata esa clase como positiva y al resto como
 negativa, y se combinan las $C$ áreas. Una opción las pondera por la prevalencia de cada
-clase~\cite{fawcett2006introduction}; el trabajo usa el promedio simple,
-$\mathrm{AUC}_{\text{macro}} = \frac{1}{C}\sum_{c} \mathrm{AUC}_c$, por la misma razón por la que prefiere
-el F1 macro al ponderado.
+clase~\cite{fawcett2006introduction}, y otra usa el promedio simple,
+$\mathrm{AUC}_{\text{macro}} = \frac{1}{C}\sum_{c} \mathrm{AUC}_c$, que da a cada clase el mismo peso, como el
+F1 macro.
 
-\subsection{Calibración de probabilidades}
-\label{sec:marco_eval_calib}
+Estas métricas comparan una categoría con otra. Un reporte, en cambio, es un texto, y comparar dos textos
+exige métricas de otro tipo.
 
-Un modelo está calibrado cuando sus probabilidades coinciden con sus frecuencias de acierto: entre todas
-las predicciones hechas con confianza 0.8, acierta en el 80\,\% de los casos. La probabilidad que devuelve
-la softmax (Ecuación~\ref{eq:marco_softmax}) no tiene por qué cumplirlo, y las redes profundas actuales
-tienden a ser sobreconfiadas, con probabilidades más altas que su exactitud real. Redes más profundas y
-más anchas, entrenadas con normalización por lotes y poco decaimiento de pesos, están peor calibradas que
-redes más chicas y antiguas aun cuando clasifican mejor~\cite{guo2017calibration}.
-
-El diagrama de confiabilidad hace visible la diferencia (Figura~\ref{fig:marco_confiabilidad}). Las
-predicciones se agrupan en $M$ intervalos según su confianza, y para cada intervalo $B_m$ se compara la
-exactitud $\mathrm{acc}(B_m)$ con la confianza media $\mathrm{conf}(B_m)$. El \textbf{\gls{ece}} promedia
-esa brecha pesando cada intervalo por su cantidad de predicciones, y el \textbf{error de calibración
-máximo} (MCE) toma la peor,
-\begin{equation}
-    \mathrm{ECE} = \sum_{m=1}^{M} \frac{|B_m|}{n}\,\bigl|\mathrm{acc}(B_m) - \mathrm{conf}(B_m)\bigr|,
-    \qquad
-    \mathrm{MCE} = \max_{m}\,\bigl|\mathrm{acc}(B_m) - \mathrm{conf}(B_m)\bigr|.
-    \label{eq:marco_ece}
-\end{equation}
-El ECE resume la calibración típica del modelo, y el MCE importa cuando un error de confianza en un
-intervalo concreto tiene consecuencias graves~\cite{guo2017calibration}.
-
-\input{Figures/Capitulos/02-confiabilidad}
-
-El \textbf{puntaje de Brier} mide la calibración sin agrupar en intervalos. Es el error cuadrático medio
-entre el vector de probabilidades y la codificación de la clase real,
-\begin{equation}
-    \mathrm{BS} = \frac{1}{n}\sum_{i=1}^{n}\sum_{c=1}^{C} \left(p_{ic} - y_{ic}\right)^2,
-    \label{eq:marco_brier}
-\end{equation}
-donde $p_{ic}$ es la probabilidad que el modelo asigna a la clase $c$ en la imagen $i$, e $y_{ic}$ vale 1
-si $c$ es la clase real de esa imagen y 0 si no. Se propuso para evaluar pronósticos meteorológicos
-expresados como probabilidades~\cite{brier1950verification}. Como es un error cuadrático, baja tanto
-cuando las probabilidades se acercan a las frecuencias reales como cuando el modelo concentra más
-probabilidad en la clase correcta, y por eso no mide solo la calibración.
-
-La calibración se puede corregir después del entrenamiento con un conjunto de validación. El
-\emph{temperature scaling} divide todos los logits por un único escalar $T>0$ antes de la softmax, como en
-la Ecuación~\ref{eq:marco_temperatura}, y ajusta $T$ para minimizar la entropía cruzada en validación; con $T>1$ las probabilidades se suavizan. Como
-divide todos los logits por el mismo número, no cambia su orden, y la clase predicha y la exactitud
-quedan iguales. El \emph{vector scaling} aprende en cambio un factor y un sesgo para cada clase; tiene más
-capacidad de corrección, pero puede cambiar la clase predicha en algunas imágenes y con ello la
-exactitud~\cite{guo2017calibration}. Para el \emph{pipeline} la calibración importa porque una confianza
-sobreestimada llevaría a tratar como seguros casos que no lo son.
-
-\subsection{Métricas de generación de texto}
+\subsection{Evaluación de la generación}
 \label{sec:marco_eval_texto}
 
-Las métricas con referencia comparan el texto generado $g$ con un texto de referencia $r$ escrito para la
-misma imagen, y las más usadas cuentan coincidencias de $n$-gramas, secuencias de $n$ palabras
-consecutivas. \textbf{BLEU} calcula, para cada $n$ entre 1 y 4, la precisión $p_n$ de los $n$-gramas de $g$:
-la fracción que también aparece en $r$, sin contar un $n$-grama más veces de las que figura en la
-referencia. Combina las cuatro precisiones con una media geométrica y multiplica el resultado por una
-penalización de brevedad, porque un texto muy corto puede tener precisión alta sin cubrir la referencia,
+Evaluar la generación de texto es más difícil que evaluar una clasificación, porque no hay una única respuesta
+correcta. Una misma imagen admite muchas descripciones válidas, y un texto puede ser fluido y parecerse a la
+referencia sin ser correcto. Las métricas se agrupan en tres familias según lo que comparan. Las textuales
+comparan el texto generado con uno de referencia. Las diagnósticas comprueban si el texto nombra el
+diagnóstico correcto, y las descriptivas cuentan cuánto contenido clínico menciona. Estas dos últimas no
+necesitan texto de referencia (Tabla~\ref{tab:marco_familias_texto}).
+
+Las métricas textuales comparan el texto generado $g$ con un texto de referencia $r$ escrito para la misma
+imagen, y las más usadas cuentan coincidencias de $n$-gramas, secuencias de $n$ palabras consecutivas.
+\textbf{BLEU} calcula, para cada $n$ entre 1 y 4, la precisión $p_n$ de los $n$-gramas de $g$: la fracción que
+también aparece en $r$, sin contar un $n$-grama más veces de las que figura en la referencia. Combina las cuatro
+precisiones con una media geométrica y multiplica el resultado por una penalización de brevedad, porque un texto
+muy corto puede tener precisión alta sin cubrir la referencia,
 \begin{equation}
     \mathrm{BLEU} = \mathrm{BP}\cdot\exp\!\left(\sum_{n=1}^{4} \tfrac{1}{4}\log p_n\right), \qquad
     \mathrm{BP} =
@@ -1327,9 +1321,9 @@ penalización de brevedad, porque un texto muy corto puede tener precisión alta
 \end{equation}
 donde $\ell_g$ y $\ell_r$ son las longitudes en palabras de los dos textos~\cite{papineni2002bleu}.
 
-\textbf{ROUGE-L} se basa en la subsecuencia común más larga, $\mathrm{LCS}(g, r)$: la secuencia más larga
-de palabras que aparece en los dos textos en el mismo orden, aunque con otras palabras intercaladas. Con
-ella define una sensibilidad y una precisión y las combina en una medida F,
+\textbf{ROUGE-L} se basa en la subsecuencia común más larga, $\mathrm{LCS}(g, r)$: la secuencia más larga de
+palabras que aparece en los dos textos en el mismo orden, aunque con otras palabras intercaladas. Con ella
+define una sensibilidad y una precisión y las combina en una medida F,
 \begin{equation}
     R_{\mathrm{lcs}} = \frac{\mathrm{LCS}(g, r)}{\ell_r}, \qquad
     P_{\mathrm{lcs}} = \frac{\mathrm{LCS}(g, r)}{\ell_g}, \qquad
@@ -1339,25 +1333,25 @@ ella define una sensibilidad y una precisión y las combina en una medida F,
 donde $\beta$ fija cuánto pesa la sensibilidad frente a la precisión; con $\beta = 1$, la versión habitual,
 queda la media armónica de las dos~\cite{lin2004rouge}.
 
-\textbf{METEOR} alinea las palabras de los dos textos: primero las idénticas, después las que comparten la
-raíz y por último los sinónimos. Sobre las $m$ palabras alineadas calcula la precisión $P$ y la
-sensibilidad $R$ y las combina dando más peso a la segunda. Después agrupa las palabras alineadas en la
-menor cantidad posible de tramos contiguos, $ch$, y penaliza que las coincidencias estén fragmentadas,
+\textbf{METEOR} alinea las palabras de los dos textos: primero las idénticas, después las que comparten la raíz
+y por último los sinónimos. Sobre las $m$ palabras alineadas calcula la precisión $P$ y la sensibilidad $R$ y
+las combina dando más peso a la segunda. Después agrupa las palabras alineadas en la menor cantidad posible de
+tramos contiguos, $ch$, y penaliza que las coincidencias estén fragmentadas,
 \begin{equation}
     F_{\text{mean}} = \frac{10\,P R}{R + 9P}, \qquad
     \mathrm{Pen} = 0.5\left(\frac{ch}{m}\right)^{3}, \qquad
     \mathrm{METEOR} = F_{\text{mean}}\,(1 - \mathrm{Pen}).
     \label{eq:marco_meteor}
 \end{equation}
-Si todas las coincidencias forman un único tramo, la penalización es casi nula; si ninguna palabra
-alineada es contigua a otra, reduce el puntaje hasta la mitad~\cite{banerjee2005meteor}.
+Si todas las coincidencias forman un único tramo, la penalización es casi nula; si ninguna palabra alineada es
+contigua a otra, reduce el puntaje hasta la mitad~\cite{banerjee2005meteor}.
 
-\textbf{CIDEr} se diseñó para describir imágenes con varias referencias por imagen. Representa cada texto
-con un vector $\mathbf{t}^n(\cdot)$ con un peso TF-IDF por $n$-grama, que crece con la frecuencia del
-$n$-grama en ese texto y decrece con la cantidad de imágenes en cuyas descripciones aparece. Así, las
-expresiones que se repiten en las descripciones de todas las imágenes pesan poco, y las específicas de una
-imagen pesan mucho. Para cada $n$ promedia la similitud coseno con las $J$ referencias, y después promedia
-sobre $n$~\cite{vedantam2015cider},
+\textbf{CIDEr} se diseñó para describir imágenes con varias referencias por imagen. Representa cada texto con
+un vector $\mathbf{t}^n(\cdot)$ con un peso TF-IDF por $n$-grama, que crece con la frecuencia del $n$-grama en
+ese texto y decrece con la cantidad de imágenes en cuyas descripciones aparece. Así, las expresiones que se
+repiten en las descripciones de todas las imágenes pesan poco, y las específicas de una imagen pesan mucho.
+Para cada $n$ promedia la similitud coseno con las $J$ referencias, y después promedia sobre
+$n$~\cite{vedantam2015cider},
 \begin{equation}
     \mathrm{CIDEr}_n = \frac{1}{J}\sum_{j=1}^{J}
     \frac{\mathbf{t}^n(g)^{\top}\mathbf{t}^n(r_j)}{\lVert\mathbf{t}^n(g)\rVert\,\lVert\mathbf{t}^n(r_j)\rVert},
@@ -1367,10 +1361,10 @@ sobre $n$~\cite{vedantam2015cider},
 \end{equation}
 donde $r_1, \dots, r_J$ son las referencias de la imagen.
 
-Las cuatro premian la coincidencia literal, y una paráfrasis correcta puntúa bajo. \textbf{BERTScore}
-compara en cambio los \emph{embeddings} contextuales de cada token, obtenidos con un modelo como BERT. Cada
-token de un texto se empareja con el token más parecido del otro, con la similitud coseno como medida, y
-las similitudes se promedian,
+Las cuatro premian la coincidencia literal, y una paráfrasis correcta puntúa bajo. \textbf{BERTScore} compara
+en cambio los \emph{embeddings} contextuales de cada token, obtenidos con un modelo como BERT. Cada token de un
+texto se empareja con el token más parecido del otro, con la similitud coseno como medida, y las similitudes se
+promedian,
 \begin{equation}
     R_{\mathrm{BERT}} = \frac{1}{|r|}\sum_{r_i \in r}\,\max_{g_j \in g}\, \mathbf{r}_i^{\top}\mathbf{g}_j,
     \qquad
@@ -1378,118 +1372,232 @@ las similitudes se promedian,
     \label{eq:marco_bertscore}
 \end{equation}
 donde los \emph{embeddings} $\mathbf{r}_i$ y $\mathbf{g}_j$ están normalizados, y el puntaje final
-$F_{\mathrm{BERT}}$ es la media armónica de los dos, como el F1 de la Ecuación~\ref{eq:marco_f1}. Como dos sinónimos tienen
-\emph{embeddings} cercanos, la métrica tolera reformulaciones~\cite{zhang2020bertscore}. Mide mejor el
-parecido de significado, pero sigue midiendo parecido con un texto particular.
+$F_{\mathrm{BERT}}$ es la media armónica de los dos, como el F1 de la Ecuación~\ref{eq:marco_f1}. Como dos
+sinónimos tienen \emph{embeddings} cercanos, la métrica tolera reformulaciones~\cite{zhang2020bertscore}. Mide
+mejor el parecido de significado, pero sigue midiendo parecido con un texto particular.
 
-Las métricas con referencia suponen que el texto de referencia es la descripción correcta de la imagen,
-y en dermatología ese supuesto no está garantizado. Cuando varios dermatólogos marcan por separado los mismos
+Las métricas con referencia suponen que el texto de referencia es la descripción correcta de la imagen, y en
+dermatología ese supuesto no está garantizado. Cuando varios dermatólogos marcan por separado los mismos
 criterios dermatoscópicos sobre las mismas imágenes, la concordancia va de pobre a
-moderada~\cite{carrera2016validity}. El texto de referencia de un par imagen--texto recoge entonces una
-lectura de la lesión entre varias posibles, y una descripción generada puede apartarse de él sin estar
-equivocada. Una métrica que compara contra ese único texto la penaliza igual que a una descripción
-errónea.
+moderada~\cite{carrera2016validity}. El texto de referencia de un par imagen--texto recoge entonces una lectura
+de la lesión entre varias posibles, y una descripción generada puede diferir de él sin estar equivocada. Una
+métrica que compara contra ese único texto la penaliza igual que a una descripción errónea.
 
-Las métricas sin referencia se apoyan en otra propiedad del dominio. La descripción de una lesión se
-escribe con un vocabulario cerrado de términos para color, patrón, forma y distribución, que la
-comunidad dermatoscópica estandarizó por consenso. Dentro de ese vocabulario, algoritmos como la lista
-de 7 puntos convierten la presencia de ciertos hallazgos en peso diagnóstico, de modo que el camino
-entre la imagen y la etiqueta pasa por entidades con
-nombre~\cite{kittler2016standardization,argenziano1998checklist}. Con un inventario finito de
-entidades se puede contar cuántas de ellas menciona un texto generado sin compararlo con otro texto.
+Las métricas diagnósticas y descriptivas evitan ese supuesto porque no comparan textos: comprueban lo que el
+texto afirma. La \textbf{consistencia diagnóstica} mide la fidelidad diagnóstica de la
+Sección~\ref{sec:marco_rep_ejes}, la fracción de los textos que nombran la categoría real de la imagen o un
+sinónimo reconocido,
+\begin{equation}
+    \mathrm{FD} = \frac{1}{n}\sum_{i=1}^{n} \mathbf{1}\bigl[\mathrm{dx}(g_i) = y_i\bigr],
+    \label{eq:marco_fd}
+\end{equation}
+donde $g_i$ es el texto generado para la imagen $i$, $y_i$ su categoría real y $\mathrm{dx}(\cdot)$ extrae la
+categoría que el texto nombra. Solo necesita la etiqueta de la imagen.
 
-El trabajo usa dos métricas de este tipo. La \textbf{cobertura de entidades clínicas} cuenta qué proporción de las
-categorías del vocabulario dermatoscópico, como color, patrón o estructura, menciona el reporte generado,
-y mide cuánto contenido clínico describe. La \textbf{consistencia diagnóstica} verifica si el reporte nombra la
-categoría real de la imagen, o un sinónimo reconocido, y mide la fidelidad diagnóstica de la
-Sección~\ref{sec:marco_rep_ejes}. Ninguna de las dos necesita un texto de referencia. La segunda usa
-solo la etiqueta de la imagen. La lista de términos y las reglas de coincidencia se detallan en la
-Sección~\ref{sec:met_protocolo}.
+Las métricas descriptivas se apoyan en el vocabulario cerrado de términos de la
+Sección~\ref{sec:marco_rep_ejes}: con un inventario finito de entidades se puede contar cuántas menciona un
+texto sin compararlo con otro. La \textbf{cobertura de entidades clínicas} es la proporción de las categorías
+del vocabulario, como color, patrón o estructura, que el texto menciona,
+\begin{equation}
+    \mathrm{cob}(g) = \frac{\bigl|\{k : \exists\, e \in V_k,\ e \text{ aparece en } g\}\bigr|}{K},
+    \label{eq:marco_cobertura_ent}
+\end{equation}
+donde $V_k$ es el conjunto de términos de la categoría $k$ y $K$ el número de categorías. Mide cuánto contenido
+clínico describe el texto y no si lo que describe es cierto. La lista de términos y las reglas de coincidencia
+se definen en la Sección~\ref{sec:met_protocolo}.
 
-Cada familia ve una parte del reporte. Las métricas con referencia premian que el texto se parezca a una
-descripción particular, y las sin referencia, que contenga vocabulario clínico y el diagnóstico correcto.
-Ninguna comprueba que lo descrito esté en la imagen, de modo que un reporte que menciona muchos términos
-puede incluir hallazgos que la lesión no tiene. Por eso la alucinación de la
-Sección~\ref{sec:marco_rep_fallas} requiere, además de estas métricas, revisar el reporte contra la
-imagen.
+\begin{table}[htbp]
+    \centering
+    \caption[Familias de métricas de generación]{Las tres familias de métricas de generación de reportes, con
+    lo que comparan, lo que miden y lo que no ven.}
+    \label{tab:marco_familias_texto}
+    \small
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{2.3cm}
+        >{\raggedright\arraybackslash\hspace{0pt}}X >{\raggedright\arraybackslash\hspace{0pt}}X
+        >{\raggedright\arraybackslash\hspace{0pt}}X >{\raggedright\arraybackslash\hspace{0pt}}X@{}}
+        \toprule
+        Familia & Métricas & Compara con & Mide & No ve \\
+        \midrule
+        Textuales & BLEU, ROUGE-L, METEOR, CIDEr, BERTScore & Un texto de referencia
+            & Parecido léxico o de significado con esa referencia
+            & Si lo descrito está en la imagen \\
+        \filasep
+        Diagnósticas & Consistencia diagnóstica & La etiqueta de la imagen
+            & Si el texto nombra la categoría correcta
+            & Si la descripción es fiel a la imagen \\
+        \filasep
+        Descriptivas & Cobertura de entidades clínicas & Un vocabulario cerrado
+            & Cuánto contenido clínico menciona el texto
+            & Si lo mencionado es cierto \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
 
-\subsection{Inferencia estadística para comparar modelos}
+Cada familia ve una parte del reporte, y ninguna comprueba que lo descrito esté en la imagen. Un reporte que
+menciona muchos términos puede incluir hallazgos que la lesión no tiene, y una revisión de los VLM aplicados a
+reportes médicos documenta que las métricas léxicas no capturan la corrección
+clínica~\cite{hartsock2024vision}. Detectar la alucinación de la Sección~\ref{sec:marco_rep_fallas} requiere
+que un especialista lea el reporte contra la imagen y lo puntúe según una rúbrica, es decir, según criterios
+fijados de antemano. Las métricas automáticas y la revisión de especialistas se complementan, y ninguna
+reemplaza a la otra. Quedan por ver las propiedades que se aplican a ambas salidas.
+
+\subsection{Evaluación transversal}
+\label{sec:marco_eval_transversal}
+
+Las cuatro propiedades siguientes no dependen del tipo de salida. La calibración y la robustez califican el
+comportamiento de un modelo, la inferencia estadística decide si una diferencia entre dos modelos es real, y la
+interpretabilidad examina en qué se apoya una predicción concreta, y con ello si esa base clínica es razonable o si el modelo
+se apoya en rasgos ajenos a la lesión.
+
+\setcounter{secnumdepth}{3}
+\subsubsection{Calibración}
+\label{sec:marco_eval_calib}
+
+La calibración se definió en la Sección~\ref{sec:marco_senales_confianza} como la coincidencia entre las
+probabilidades de un modelo y sus frecuencias de acierto. El diagrama de confiabilidad la hace visible
+(Figura~\ref{fig:marco_confiabilidad}). Las predicciones se agrupan en $M$ intervalos según su confianza, y
+para cada intervalo $B_m$ se compara la exactitud $\mathrm{acc}(B_m)$ con la confianza media
+$\mathrm{conf}(B_m)$. El \textbf{\gls{ece}} promedia esa brecha pesando cada intervalo por su cantidad de
+predicciones, y el \textbf{error de calibración máximo} (MCE) toma la peor,
+\begin{equation}
+    \mathrm{ECE} = \sum_{m=1}^{M} \frac{|B_m|}{n}\,\bigl|\mathrm{acc}(B_m) - \mathrm{conf}(B_m)\bigr|,
+    \qquad
+    \mathrm{MCE} = \max_{m}\,\bigl|\mathrm{acc}(B_m) - \mathrm{conf}(B_m)\bigr|.
+    \label{eq:marco_ece}
+\end{equation}
+El ECE resume la calibración típica del modelo, y el MCE importa cuando un error de confianza en un intervalo
+concreto tiene consecuencias graves~\cite{guo2017calibration}.
+
+El \textbf{puntaje de Brier} mide la calibración sin agrupar en intervalos. Es el error cuadrático medio entre
+el vector de probabilidades y la codificación de la clase real,
+\begin{equation}
+    \mathrm{BS} = \frac{1}{n}\sum_{i=1}^{n}\sum_{c=1}^{C} \left(p_{ic} - y_{ic}\right)^2,
+    \label{eq:marco_brier}
+\end{equation}
+donde $p_{ic}$ es la probabilidad que el modelo asigna a la clase $c$ en la imagen $i$, e $y_{ic}$ vale 1 si
+$c$ es la clase real de esa imagen y 0 si no. Se propuso para evaluar pronósticos meteorológicos expresados como
+probabilidades~\cite{brier1950verification}. Como es un error cuadrático, baja tanto cuando las probabilidades
+se acercan a las frecuencias reales como cuando el modelo concentra más probabilidad en la clase correcta, y por
+eso no mide solo la calibración.
+
+\input{Figures/Capitulos/02-confiabilidad}
+
+La calibración se puede corregir después del entrenamiento con un conjunto de validación. El \emph{temperature
+scaling} divide todos los logits por un único escalar $T>0$ antes de la softmax, como en la
+Ecuación~\ref{eq:marco_temperatura}, y ajusta $T$ para minimizar la entropía cruzada en validación. Como divide todos los logits por el mismo número, no cambia su orden, y la clase
+predicha y la exactitud quedan iguales. El \emph{vector scaling} aprende en cambio un factor y un sesgo para
+cada clase; tiene más capacidad de corrección, pero puede cambiar la clase predicha en algunas imágenes y con
+ello la exactitud~\cite{guo2017calibration}.
+
+Ni el ECE ni el puntaje de Brier dicen si la confianza sirve para abstenerse, porque un modelo bien calibrado
+puede no separar los casos fáciles de los difíciles. Esa propiedad la mide la curva riesgo--cobertura de la
+Sección~\ref{sec:marco_pred_selectiva}.
+
+\subsubsection{Inferencia estadística}
 \label{sec:marco_eval_estadistica}
 
-El conjunto de test es una muestra de las imágenes posibles, y otra muestra del mismo tamaño daría
-valores algo distintos para todas las métricas. Cuando dos modelos difieren en una o dos centésimas de F1
-macro, esa diferencia puede deberse a qué imágenes cayeron en el test y no a los modelos. Para afirmar que
-un modelo es mejor que otro hace falta estimar cuánto variaría la diferencia de una muestra a otra.
+El conjunto de test es una muestra de las imágenes posibles, y otra muestra del mismo tamaño daría valores algo
+distintos para todas las métricas. Cuando dos modelos difieren en una o dos centésimas de F1 macro, esa
+diferencia puede deberse a qué imágenes cayeron en el test y no a los modelos. Para afirmar que un modelo es
+mejor que otro hace falta estimar cuánto variaría la diferencia de una muestra a otra.
 
 El \textbf{\emph{bootstrap}} estima esa variación con los datos disponibles. Se construyen muchas muestras del
 mismo tamaño que el test tomando imágenes al azar con reposición, se calcula la métrica en cada una, y la
 dispersión de los valores obtenidos aproxima la que tendría la métrica entre muestras
-independientes~\cite{efron1979bootstrap}. En la versión pareada, cada remuestreo toma las mismas imágenes
-para los dos modelos y registra la diferencia entre ellos. Los percentiles de esas diferencias dan un
-intervalo, y si no contiene el cero, la diferencia no se explica por la composición del test. Sirve para
-cualquier métrica agregada, como el F1 macro o el AUC.
+independientes~\cite{efron1979bootstrap}. En la versión pareada, cada remuestreo toma las mismas imágenes para
+los dos modelos y registra la diferencia entre ellos. Los percentiles de esas diferencias dan un intervalo, y si
+no contiene el cero, la diferencia no se explica por la composición del test. Sirve para cualquier métrica
+agregada, como el F1 macro o el AUC.
 
 La \textbf{prueba de McNemar} compara los aciertos de dos clasificadores sobre las mismas imágenes. Las
-imágenes en las que los dos aciertan o los dos fallan no dicen nada sobre cuál es mejor, y la prueba solo
-usa los casos discordantes: $b$, los que el primero acierta y el segundo falla, y $c$, los del caso
-inverso. Si los dos modelos fueran equivalentes, $b$ y $c$ deberían ser parecidos, y el estadístico
+imágenes en las que los dos aciertan o los dos fallan no dicen nada sobre cuál es mejor, y la prueba solo usa
+los casos discordantes: $b$, los que el primero acierta y el segundo falla, y $c$, los del caso inverso. Si los
+dos modelos fueran equivalentes, $b$ y $c$ deberían ser parecidos, y el estadístico
 \begin{equation}
     \chi^2 = \frac{(b-c)^2}{b+c}
     \label{eq:marco_mcnemar}
 \end{equation}
-mide cuánto se separan; bajo la hipótesis de equivalencia sigue aproximadamente una distribución $\chi^2$
-con un grado de libertad~\cite{mcnemar1947note}. La aproximación exige una cantidad razonable de casos
-discordantes. Cuando son pocos se usa la versión exacta: si los modelos son equivalentes, cada caso
-discordante tiene la misma probabilidad de caer en $b$ que en $c$, de modo que $b$ sigue una distribución
-binomial con $b+c$ ensayos y probabilidad $1/2$, y el valor $p$ se calcula directamente de ella. El
-trabajo usa la versión exacta.
+mide cuánto se separan; bajo la hipótesis de equivalencia sigue aproximadamente una distribución $\chi^2$ con
+un grado de libertad~\cite{mcnemar1947note}. La aproximación exige una cantidad razonable de casos discordantes.
+Cuando son pocos se usa la versión exacta: si los modelos son equivalentes, cada caso discordante tiene la misma
+probabilidad de caer en $b$ que en $c$, de modo que $b$ sigue una distribución binomial con $b+c$ ensayos y
+probabilidad $1/2$, y el valor $p$ se calcula directamente de ella.
 
-La \textbf{prueba de Wilcoxon} de rangos con signo compara dos series de $N$ valores pareados sin suponer
-que las diferencias sigan una distribución normal. Calcula las diferencias $d_i$ entre los dos modelos,
-las ordena por su valor absoluto y asigna a cada una su rango, de 1 para la menor a $N$ para la mayor. Suma
-por separado los rangos de las diferencias positivas y de las negativas, y toma la menor de las dos
-sumas,
+La \textbf{prueba de Wilcoxon} de rangos con signo compara dos series de $N$ valores pareados sin suponer que
+las diferencias sigan una distribución normal. Calcula las diferencias $d_i$ entre los dos modelos, las ordena
+por su valor absoluto y asigna a cada una su rango, de 1 para la menor a $N$ para la mayor. Suma por separado
+los rangos de las diferencias positivas y de las negativas, y toma la menor de las dos sumas,
 \begin{equation}
     R^{+} = \sum_{d_i > 0} \mathrm{rango}(d_i), \qquad
     R^{-} = \sum_{d_i < 0} \mathrm{rango}(d_i), \qquad
     T = \min\left(R^{+}, R^{-}\right).
     \label{eq:marco_wilcoxon}
 \end{equation}
-Si los modelos fueran equivalentes, las dos sumas serían parecidas, y un $T$ pequeño indica que las
-diferencias favorecen de forma consistente a uno de ellos. Para $N$ de hasta 25, $T$ se compara con
-valores críticos tabulados~\cite{wilcoxon1945individual,demsar2006statistical}. Para comparar dos
-clasificadores sobre varios conjuntos de datos es una prueba robusta, porque no supone normalidad y los
-valores atípicos pesan menos~\cite{demsar2006statistical}. El trabajo la aplica con las siete clases en el
-lugar de los conjuntos, emparejando la sensibilidad de cada clase en los dos modelos.
+Si los modelos fueran equivalentes, las dos sumas serían parecidas, y un $T$ pequeño indica que las diferencias
+favorecen de forma consistente a uno de ellos. Para $N$ de hasta 25, $T$ se compara con valores críticos
+tabulados~\cite{wilcoxon1945individual,demsar2006statistical}. Para comparar dos clasificadores sobre varios
+conjuntos de datos es una prueba robusta, porque no supone normalidad y los valores atípicos pesan
+menos~\cite{demsar2006statistical}. Cuando se dispone de un solo conjunto, las $N$ series pueden ser las $C$
+clases, y se empareja la sensibilidad de cada clase en los dos modelos.
 
-\subsection{Interpretabilidad visual}
+\subsubsection{Robustez}
+\label{sec:marco_eval_robustez}
+
+La robustez es cuánto cambia una métrica cuando la entrada se perturba de una manera que no altera su
+contenido clínico, como el desenfoque, los cambios de brillo o de contraste, la compresión o el ruido. Sea $m$
+una métrica calculada sobre el conjunto de test original y $m_s$ la misma métrica sobre el conjunto perturbado
+con una perturbación de severidad $s$. La caída de desempeño, en valor absoluto o relativa a $m$,
+\begin{equation}
+    \Delta m_s = m - m_s, \qquad
+    \Delta m_s^{\text{rel}} = \frac{m - m_s}{m},
+    \label{eq:marco_robustez}
+\end{equation}
+mide la sensibilidad del modelo a esa perturbación, y un modelo es más robusto cuanto menor es.
+
+Sirve para anticipar el comportamiento ante las variaciones de adquisición de la
+Sección~\ref{sec:marco_generalizacion} sin recurrir a otro conjunto de datos: se degradan las imágenes del test
+de maneras controladas y se mide cuánto cae el desempeño. Tiene dos límites. Las perturbaciones sintéticas
+reproducen solo una parte de la variación real entre equipos y centros, de modo que una caída pequeña no
+garantiza robustez ante un cambio de dominio. Además, esta robustez no es la adversarial, que estudia la
+resistencia a perturbaciones diseñadas para inducir un error. Las perturbaciones consideradas son las que
+ocurren en la adquisición común.
+
+\pendiente[Cita de robustez ante perturbaciones]{Citar la evaluación de la robustez con perturbaciones
+comunes. Referencia propuesta: Hendrycks, D. y Dietterich, T., «Benchmarking Neural Network Robustness to Common
+Corruptions and Perturbations», ICLR 2019, arXiv:1903.12261 (clave sugerida
+\texttt{hendrycks2019benchmarking}; no está en el \texttt{.bib}).}
+
+\subsubsection{Interpretabilidad visual}
 \label{sec:marco_eval_gradcam}
+\setcounter{secnumdepth}{2}
 
 Las métricas anteriores dicen cuánto acierta un clasificador pero no en qué se basa. \textbf{Grad-CAM}
-(\emph{gradient-weighted class activation mapping}) produce un mapa de calor de las regiones de la imagen
-que más influyeron en la predicción de una clase. Parte de los mapas de características $A^k$ de la última
-capa convolucional, cada uno con una disposición espacial de $i \times j$ posiciones, y del puntaje $y^c$
-de la clase $c$ antes de la softmax. Primero mide cuánto importa cada mapa para esa clase, promediando
-sobre todas las posiciones el gradiente del puntaje respecto del mapa. Después suma los mapas pesados por
-esa importancia y conserva solo los valores positivos,
+(\emph{gradient-weighted class activation mapping}) produce un mapa de calor de las regiones de la imagen que
+más influyeron en la predicción de una clase. Parte de los mapas de características $A^k$ de la última capa
+convolucional, cada uno con una disposición espacial de $i \times j$ posiciones, y del puntaje $y^c$ de la
+clase $c$ antes de la softmax. Primero mide cuánto importa cada mapa para esa clase, promediando sobre todas
+las posiciones el gradiente del puntaje respecto del mapa. Después suma los mapas pesados por esa importancia y
+conserva solo los valores positivos,
 \begin{equation}
     \alpha_k^c = \frac{1}{Z}\sum_{i}\sum_{j} \frac{\partial y^c}{\partial A^k_{ij}}, \qquad
     L^c_{\text{Grad-CAM}} = \mathrm{ReLU}\!\left(\sum_k \alpha_k^c A^k\right),
     \label{eq:marco_gradcam}
 \end{equation}
 donde $Z$ es la cantidad de posiciones del mapa. La ReLU descarta las regiones que bajan el puntaje de la
-clase, que suelen corresponder a otras clases~\cite{selvaraju2017gradcam}. El mapa resultante se
-reescala al tamaño de la imagen y se superpone a ella. En el Swin, cuya última etapa también devuelve un
-mapa con disposición espacial (Sección~\ref{sec:marco_vit}), el cálculo es el mismo.
+clase, que suelen corresponder a otras clases~\cite{selvaraju2017gradcam}. El mapa resultante se reescala al
+tamaño de la imagen y se superpone a ella. En el Swin, cuya última etapa también devuelve un mapa con
+disposición espacial (Sección~\ref{sec:marco_vit}), el cálculo es el mismo.
 
 El mapa tiene la resolución de la última capa, mucho menor que la de la imagen, y por eso marca regiones
-gruesas y no estructuras finas~\cite{selvaraju2017gradcam}. Tampoco basta con que el mapa se vea
-razonable. Algunos métodos de saliencia producen mapas casi iguales con los pesos del modelo aleatorizados
-y actúan como detectores de bordes; Grad-CAM supera esas pruebas, pero la inspección visual por sí sola no
-distingue un método fiel de uno que no lo es~\cite{adebayo2018sanity}. El mapa muestra dónde se apoyó el
-modelo y no si esa región justifica el diagnóstico. Su uso en el trabajo es detectar un modelo que se
-apoya en algo ajeno a la lesión, como una regla, un borde oscuro o un marcador en la piel, y esa clase de
-atajos lleva a la pregunta de la sección siguiente.
+gruesas y no estructuras finas~\cite{selvaraju2017gradcam}. Tampoco basta con que el mapa se vea razonable.
+Algunos métodos de saliencia producen mapas casi iguales con los pesos del modelo aleatorizados y actúan como
+detectores de bordes; Grad-CAM supera esas pruebas, pero la inspección visual por sí sola no distingue un
+método fiel de uno que no lo es~\cite{adebayo2018sanity}. El mapa muestra dónde se apoyó el modelo y no si esa
+región justifica el diagnóstico. Sirve para detectar un modelo que se apoya en algo ajeno a la lesión, como una
+regla, un borde oscuro o un marcador en la piel.
+
+Las métricas de esta sección describen el desempeño sobre la distribución del test, y esa clase de atajos lleva
+a la pregunta de hasta dónde valen fuera de ella.
 
 \section{Sesgo y generalización}
 \label{sec:marco_generalizacion}
