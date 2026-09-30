@@ -1601,7 +1601,9 @@ Un conjunto puede contener además rasgos que acompañan a una clase sin formar 
 imágenes dermatológicas son frecuentes las marcas de tinta violeta con que se señala una lesión antes de
 biopsiarla, las etiquetas adhesivas y los bordes del dermatoscopio. Como esas marcas aparecen sobre todo en
 ciertos tipos de imagen, un modelo puede aprender a asociar la tinta con la malignidad y alcanzar una exactitud
-alta apoyado en ella. MONET, un modelo contrastivo entrenado con imágenes y texto de la literatura médica,
+alta apoyado en ella. En ISIC 2019 y 2020, por ejemplo, las esquinas oscuras de la imagen son mucho más
+frecuentes en los melanomas, y un modelo entrenado sobre esos conjuntos tiende a predecir melanoma cuando
+aparecen~\cite{yan2023towards}. MONET, un modelo contrastivo entrenado con imágenes y texto de la literatura médica,
 recupera esos artefactos a partir de su nombre y permite auditar un conjunto antes de entrenar sobre
 él~\cite{kim2024transparent}. Un mapa de Grad-CAM que marca la tinta y no la lesión
 (Sección~\ref{sec:marco_eval_gradcam}) es el síntoma visible de ese atajo, y un atajo así no sobrevive fuera del
