@@ -457,6 +457,22 @@ Se descartó Elkan (2001), que proponía la tanda de §2.1 para el ajuste de umb
 mismo método (*thresholding* por las probabilidades a priori) y basta con una cita. Metadatos verificados
 contra Crossref (Buda) y arXiv (Yosinski, Raghu).
 
+### Alucinación, vecinos y ensambles de §2.6 — incorporado el 29/09/2026
+
+| Clave | Referencia | Sostiene |
+|---|---|---|
+| `ji2023survey` | Ji et al., *ACM Computing Surveys* 55(12), 2023 | La alucinación en generación de lenguaje natural (§2.6.3) |
+| `rohrbach2018object` | Rohrbach et al., EMNLP 2018 | Alucinación de objetos en descripción de imágenes, por el peso de los patrones del lenguaje (§2.6.3) |
+| `bai2024hallucination` | Bai et al., arXiv 2404.18930, 2024 | La alucinación en los VLM (§2.6.3) |
+| `kalai2025hallucinate` | Kalai et al., arXiv 2509.04664, 2025 | Evaluar premiando acertar y sin penalizar adivinar incentiva la alucinación (§2.6.3) |
+| `cover1967nearest` | Cover y Hart, *IEEE Trans. Inf. Theory* 13(1):21–27, 1967 | El clasificador de vecinos más cercanos (§2.6.5) |
+| `ramos2023smallcap` | Ramos et al., CVPR 2023 (SmallCap) | Recuperar descripciones de imágenes parecidas y pasarlas como *prompt*, con el recuperador congelado (§2.6.5) |
+| `lakshminarayanan2017simple` | Lakshminarayanan et al., NeurIPS 2017 | El desacuerdo de un ensamble como estimación de incertidumbre (§2.6.6) |
+
+Metadatos verificados contra arXiv y Crossref. `ji2023survey` sigue la lista de 10 autores de la versión
+publicada en ACM. Las páginas de `rohrbach2018object` y `ramos2023smallcap` se verificaron en Crossref. `kalai2025hallucinate` es un informe técnico sin versión arbitrada conocida al
+29/09/2026.
+
 ## 2. Consolidación del 17/09/2026
 
 El `.bib` se armó fusionando cuatro archivos dispersos: `estado_del_arte/referencias.bib` (37),

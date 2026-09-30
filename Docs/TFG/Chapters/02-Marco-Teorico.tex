@@ -746,15 +746,10 @@ Ese orden de dependencia es el de lo que sigue. Primero las fallas que afectan a
 \label{sec:marco_rep_fallas}
 
 Una alucinación es un texto fluido cuyo contenido no está sustentado por la entrada, que en este caso es la
-imagen. El fenómeno se describió primero en la generación de lenguaje natural y en la descripción de
-imágenes, donde los modelos nombran objetos que la imagen no contiene en parte por el peso de los patrones
-del lenguaje, y se documentó después en los VLM.
-
-\pendiente{Citar el respaldo de este párrafo. Claves propuestas, sin entrada en el \texttt{.bib}:
-\texttt{ji2023survey} (Ji et~al., \emph{Survey of Hallucination in Natural Language Generation}, ACM
-Computing Surveys, 2023, arXiv 2202.03629), \texttt{rohrbach2018object} (Rohrbach et~al., \emph{Object
-Hallucination in Image Captioning}, EMNLP 2018, arXiv 1809.02156) y \texttt{bai2024hallucination} (Bai et~al.,
-\emph{Hallucination of Multimodal Large Language Models: A Survey}, 2024, arXiv 2404.18930).}
+imagen. El fenómeno se describió primero en la generación de lenguaje natural~\cite{ji2023survey} y en la
+descripción de imágenes, donde los modelos nombran objetos que la imagen no contiene en parte por el peso de
+los patrones del lenguaje~\cite{rohrbach2018object}, y se documentó después en los
+VLM~\cite{bai2024hallucination}.
 
 En los VLM médicos, un estudio sistemático encontró que los modelos ajustados al dominio son más propensos a
 alucinar que los de propósito general, aun cuando rinden mejor en las tareas médicas
@@ -769,11 +764,7 @@ tampoco informa nada sobre la lesión concreta. Es una falla que se observó al 
 el Capítulo~\ref{cp:res_gen} documenta con qué frecuencia ocurre. Expresar incertidumbre no es en sí una
 falla. Se convierte en \emph{hedging} cuando es indiscriminada, es decir, cuando no depende de cuán incierto
 sea el caso. Se ha argumentado que los esquemas de evaluación que premian acertar y no penalizan adivinar
-incentivan la alucinación en lugar de la expresión de incertidumbre.
-
-\pendiente{Citar el último argumento del párrafo: \texttt{kalai2025hallucinate} (Kalai, Nachum, Vempala y
-Zhang, \emph{Why Language Models Hallucinate}, arXiv 2509.04664, 2025). Revisar el PDF antes de citar: no
-afirma nada sobre el \emph{hedging} y hay que comprobar si existe versión arbitrada.}
+incentivan la alucinación en lugar de la expresión de incertidumbre~\cite{kalai2025hallucinate}.
 
 Los tres comportamientos, afirmar con sustento, alucinar y el \emph{hedging}, se comparan en la Tabla~\ref{tab:marco_comportamientos}.
 Ninguno de los tres es deseable siempre. Afirmar sirve cuando el diagnóstico es correcto y perjudica cuando
@@ -900,13 +891,9 @@ probabilidad local,
     \label{eq:marco_knn}
 \end{equation}
 donde $y_j$ es la etiqueta del caso $j$, y la predicción es la clase de mayor proporción, el voto
-mayoritario. Aplicada a un modelo de lenguaje, la búsqueda de vecinos mejora la predicción sin ningún
+mayoritario~\cite{cover1967nearest}. Aplicada a un modelo de lenguaje, la búsqueda de vecinos mejora la predicción sin ningún
 entrenamiento adicional, sobre todo en los patrones poco frecuentes, porque el modelo accede en el momento de
 predecir a casos concretos que no tiene que memorizar~\cite{khandelwal2020generalization}.
-
-\pendiente{Citar la referencia clásica del clasificador de vecinos más cercanos: \texttt{cover1967nearest}
-(Cover y Hart, \emph{Nearest neighbor pattern classification}, IEEE Transactions on Information Theory 13(1),
-1967; DOI 10.1109/TIT.1967.1053964; sin verificar).}
 
 Este mecanismo se distingue del anterior en tres puntos. No hay documentos ni recuperador entrenado, porque
 el codificador ya existe y se usa congelado. Lo recuperado son etiquetas y atributos de imágenes, no textos.
@@ -915,11 +902,7 @@ contra documento. Para que un generador use la evidencia, la función $\psi$ de 
 Ecuación~\ref{eq:marco_rag_ctx} la serializa como texto y la agrega al \emph{prompt}. Ese procedimiento ancla el
 texto en evidencia externa y se lo conoce como \emph{grounding}. Un antecedente en descripción de imágenes
 recupera las descripciones de imágenes parecidas y las entrega como \emph{prompt} a un modelo de lenguaje, sin
-entrenar el recuperador.
-
-\pendiente{Citar el antecedente en descripción de imágenes: \texttt{ramos2023smallcap} (Ramos, Martins,
-Elliott y Kementchedjhieva, \emph{SmallCap: Lightweight Image Captioning Prompted with Retrieval
-Augmentation}, CVPR 2023, arXiv 2209.15323).}
+entrenar el recuperador~\cite{ramos2023smallcap}.
 
 La calidad de la evidencia depende de la representación y de la cobertura de la base. Los vecinos de una
 imagen de una clase rara pueden pertenecer a otra clase, y si la base no contiene casos parecidos los $k$
@@ -941,17 +924,14 @@ entre sus predicciones $\hat{y}_1(x)$ y $\hat{y}_2(x)$ es
     \label{eq:marco_concordancia}
 \end{equation}
 
-El desacuerdo entre modelos aproxima la incertidumbre del sistema, un principio que explotan los ensambles.
+El desacuerdo entre modelos aproxima la incertidumbre del sistema, un principio que explotan los
+ensambles~\cite{lakshminarayanan2017simple}.
 Que la concordancia sirva como señal es una condición que se verifica con datos,
 \begin{equation}
     P(\text{error} \mid a = 1) < P(\text{error} \mid a = 0),
 \end{equation}
 es decir, que los casos en que los predictores coinciden se equivoquen menos que aquellos en que no. Si la
 condición no se cumple, la concordancia no informa.
-
-\pendiente{Citar el principio del ensamble: \texttt{lakshminarayanan2017simple} (Lakshminarayanan, Pritzel y
-Blundell, \emph{Simple and Scalable Predictive Uncertainty Estimation using Deep Ensembles}, NeurIPS 2017,
-arXiv 1612.01474).}
 
 La concordancia no recupera información ni condiciona el texto. Es una regla de decisión que usa predictores ya
 disponibles, y por eso se distingue de los dos mecanismos anteriores. Cómo convertirla en una política de
