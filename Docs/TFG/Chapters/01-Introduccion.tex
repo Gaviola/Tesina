@@ -106,56 +106,21 @@ entonces el estudio conjunto de la clasificación de lesiones y de la generació
 visión--lenguaje, con recursos de hardware limitados. De ese problema se derivan las preguntas de
 investigación de la sección siguiente.
 
-\section{Preguntas de investigación e hipótesis}
+\section{Preguntas de investigación}
 \label{sec:intro_preguntas}
-A cada una de las dos tareas le corresponde una pregunta, y esa correspondencia organiza el trabajo en dos
-fases: la primera se responde comparando clasificadores sobre el mismo material, y la segunda, evaluando los
-reportes que un modelo produce. Las preguntas se separan porque las salidas son de naturaleza distinta (una
-categoría y un texto), con criterios de acierto y métricas que no se traducen entre sí, de modo que la
-respuesta a una no adelanta la de la otra.
+El problema de investigación se traduce en dos preguntas, una por tarea. Se formulan por separado porque las
+salidas son de naturaleza distinta, una categoría y un texto, y se evalúan con criterios de acierto y métricas
+que no se traducen entre sí, de modo que la respuesta a una no adelanta la de la otra.
 
 \begin{enumerate}[label=\textbf{PI\arabic*.}]
-  \item ¿En qué medida un modelo visión--lenguaje aporta mejoras reales frente a modelos orientados
-  exclusivamente a visión (CNN y \gls{vit}) en el diagnóstico de lesiones de piel, en particular en la
-  identificación de melanoma?
-  \item ¿Qué tan precisos, completos y clínicamente relevantes resultan los reportes generados
-  automáticamente por un VLM ajustado a partir de la imagen?
+  \item ¿Cómo se compara el desempeño de modelos visión--lenguaje generales y especializados con el de
+  clasificadores visuales supervisados en la clasificación de lesiones de piel y en la detección de melanoma?
+  \item ¿Qué fidelidad diagnóstica y qué calidad descriptiva alcanzan, por separado, los reportes que genera un
+  VLM ajustado a partir de la imagen?
 \end{enumerate}
 
-Las hipótesis que siguen no tienen todas el mismo estatus. Dos son de partida: se derivan de las
-preguntas del plan de trabajo, son anteriores a cualquier resultado y son las que el diseño experimental
-original se proponía poner a prueba. Las otras cuatro son exploratorias. Se formularon durante la
-experimentación, cada una a partir de un resultado que contradijo lo esperado, y se contrastan con evidencia
-que incluye los mismos datos que las motivaron. Su respaldo es por eso más débil que el de una hipótesis de
-partida, y la Sección~\ref{sec:disc_limitaciones} indica, para cada una, si hubo evidencia independiente de
-esos datos.
-
-Las dos hipótesis de partida son:
-\begin{enumerate}[label=\textbf{H\arabic*.}]
-  \item Un VLM, al integrar información visual y textual, alcanza en el diagnóstico de lesiones de piel un
-  desempeño comparable o superior al de una CNN y un ViT entrenados sobre los mismos datos
-  (Capítulo~\ref{cp:res_clasif}).
-  \item Un VLM ajustado para generación puede producir, a partir de la imagen, reportes clínicos coherentes y con
-  el diagnóstico correcto (Capítulo~\ref{cp:res_gen}).
-\end{enumerate}
-
-Las exploratorias se presentan en el orden en que se formularon, cada una junto al resultado que la motivó:
-\begin{enumerate}[label=\textbf{H\arabic*.}, start=3]
-  \item El bajo desempeño de los VLMs generales en clasificación se explica por el desbalance de clases
-  (Capítulo~\ref{cp:res_clasif}). Se plantea tras refutarse H1.
-  \item La especialización de dominio del modelo visión--lenguaje recupera la capacidad de discriminar entre
-  clases (Capítulo~\ref{cp:res_clasif}). Se plantea tras refutarse H3, al observarse el colapso también en
-  \emph{zero-shot}.
-  \item Anclar el generador al diagnóstico de un clasificador especializado (ensamble en cascada) mejora la
-  fidelidad diagnóstica de los reportes respecto de la generación directa (Capítulo~\ref{cp:res_gen}). Se
-  plantea al observarse que H2 se cumple solo parcialmente.
-  \item Incorporar la incertidumbre del clasificador (afirmar, ofrecer un diferencial o derivar) mejora la
-  fidelidad diagnóstica sobre los casos no derivados (Capítulo~\ref{cp:res_gen}). Se plantea a partir del
-  análisis de errores de la cascada.
-\end{enumerate}
-
-El orden de formulación se conserva, con las refutadas incluidas, porque cada refutación acotó las
-explicaciones posibles del resultado que la motivó y dio origen a la hipótesis siguiente. Los objetivos, en cambio, son los mismos desde el principio.
+La primera pregunta se responde en el Capítulo~\ref{cp:res_clasif} y la segunda en el
+Capítulo~\ref{cp:res_gen}, y ambas se discuten en conjunto en el Capítulo~\ref{cp:discusion}.
 
 \section{Objetivos}
 \label{sec:intro_objetivos}
