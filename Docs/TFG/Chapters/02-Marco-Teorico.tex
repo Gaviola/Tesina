@@ -1,35 +1,23 @@
 \chapter[Marco teórico]{Marco teórico}
 \label{cp:marco}
-% Extensión estimada: a revisar. El reparto de la ficha daba 27--30 páginas, pero el bloque A cerró en 7
-% contra las 10--11 previstas. Ver el encabezado de fichas/02-marco-teorico.md.
-% Fuentes: Docs/marco_teorico/Documento_LLMs_VLLMs.tex (recortar NLP general, one-hot, RNN/LSTM a una
-% mención breve), Docs/estado_del_arte/resumen_papers.tex (fichas de ~40 trabajos) y
-% Docs/tabla_resultados_sota. Los fundamentos clínicos, de calibración y de estadística no están en esos
-% documentos.
-%
-% Feedback del tutor (14/09/2026): el estado del arte pasa a ser la última sección de este capítulo, porque
-% revisa y usa los conceptos introducidos antes. Los conjuntos de datos y el sesgo, que antes estaban en el
-% estado del arte, son conceptos y por eso van aquí. Se agrega una subsección sobre generación de texto a
-% partir de imágenes médicas, que faltaba pese a ser el objeto central del trabajo. La subsección "Uso de un
-% VLM generativo como clasificador" se traslada a Materiales y métodos por tratarse del enfoque propio.
-%
-% Revisión 25/09/2026: la atención pasa a sección propia, antes de visión y lenguaje, porque la usan los
-% dos (ficha, decisión 13). El capítulo queda solo con conceptos de computación: los fundamentos clínicos
-% se reparten entre Materiales y métodos y las métricas de texto, y los conjuntos concretos pasan a
-% Materiales y métodos; aquí quedan el sesgo y la generalización como conceptos (ficha, decisión 14).
-% Se agregan los fundamentos del aprendizaje profundo como §2.1 y el capítulo sigue el recorrido del
-% pipeline (ficha, «Propuesta del 25/09/2026», aprobada).
+% Extensión estimada: sin límite (guía, §5); la ficha orienta con unas 44 páginas para las diez secciones.
+% Estructura (ficha fichas/02-marco-teorico.md): 2.1 fundamentos del aprendizaje profundo, 2.2 transformers y
+% atención, 2.3 clasificación visual, 2.4 modelos de lenguaje, 2.5 modelos visión--lenguaje, 2.6 generación de
+% reportes y recuperación de información, 2.7 incertidumbre y predicción selectiva, 2.8 evaluación,
+% 2.9 sesgo, robustez y generalización, 2.10 estado del arte y posicionamiento.
+% Fuentes: Docs/marco_teorico/Documento_LLMs_VLLMs.tex, Docs/estado_del_arte/resumen_papers.tex (fichas de
+% lectura de ~40 trabajos; no es fuente de cifras) y Docs/tabla_resultados_sota. Los fundamentos de calibración
+% y de estadística no están en esos documentos.
 
-Este capítulo reúne los conceptos que usa el resto del trabajo, en el orden en que los atraviesa un ejemplo
-dentro del \emph{pipeline} (Figura~\ref{fig:marco_mapa}). Una imagen dermatoscópica llega a un
-clasificador, que le asigna una categoría, y a un codificador visual, que recupera casos parecidos; con
-esa información, un modelo de lenguaje escribe el reporte. La salida se evalúa después con métricas de
-clasificación y de texto, y se analiza si el desempeño medido se mantiene con imágenes de otras fuentes y
-de otras poblaciones. Los tres componentes son redes neuronales entrenadas con el mismo procedimiento, y casi todos se
-construyen sobre la operación de atención; por eso el capítulo empieza por ahí. La última sección revisa
-el estado del arte con esos conceptos ya disponibles.
-
-\input{Figures/Capitulos/02-mapa-capitulo}
+Este capítulo presenta los conceptos de aprendizaje profundo, de modelos visión--lenguaje, de generación de
+reportes, de incertidumbre y de evaluación que se necesitan para leer el resto del trabajo, y revisa los
+trabajos más cercanos. Se organiza en diez secciones. Las tres primeras explican cómo aprende una red neuronal
+y cómo se aplica a las imágenes: los fundamentos del aprendizaje profundo, el mecanismo de atención en que se
+apoyan los modelos actuales y las arquitecturas de clasificación visual. La cuarta y la quinta presentan los
+modelos de lenguaje y su unión con la imagen. La sexta y la séptima tratan cómo se genera un reporte clínico y
+cómo se decide cuánta confianza merece cada diagnóstico. La octava y la novena describen cómo se mide el
+desempeño de un modelo y hasta dónde se puede confiar en lo medido. La décima revisa el estado del arte y ubica
+en él la posición de este trabajo.
 
 \section{Fundamentos del aprendizaje profundo}
 \label{sec:marco_fundamentos}
