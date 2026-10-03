@@ -50,6 +50,49 @@
 \begin{document}
 \maketitle
 
+\noindent\fbox{\begin{minipage}{\dimexpr\textwidth-2\fboxsep-2\fboxrule\relax}
+\small
+\textbf{Nota de actualización (octubre de 2026).} Las cifras del cuerpo de este documento se obtuvieron
+con una partición de HAM10000 \emph{por imagen}, que dejaba el 36\% del test con lesiones vistas en
+entrenamiento (fuga de información), y con el ganador del barrido elegido por F1 ponderado. La
+experimentación se rehízo con una partición \emph{disjunta por lesión}, el ganador elegido por F1 macro
+en validación y tres semillas; la cascada se regeneró con el clasificador nuevo. El cuerpo no se reescribió:
+las cifras vigentes, que son las de la tesina, son las de esta tabla.
+
+\smallskip
+\centering
+\footnotesize
+\begin{tabular}{@{}p{0.42\textwidth}ll@{}}
+\toprule
+\textbf{Resultado} & \textbf{En este documento} & \textbf{Vigente} \\
+\midrule
+Swin-Tiny: exactitud / F1 macro / sens.\ macro & 0.868 / --- / 0.870 & 0.846 / 0.733 / 0.692 ($\pm$0.025) \\
+ConvNeXt-Tiny: exactitud / sens.\ macro & 0.827 / 0.849 & 0.843 / 0.691 \\
+Ensamble Swin$+$ConvNeXt: exactitud / sens.\ macro & --- & 0.855 / 0.706 \\
+DenseNet121 / ViT-B/16: exactitud & 0.846 / 0.858 & 0.812 / 0.814 \\
+Pesos por clase (Swin): sens.\ macro con CE simple $\to$ con pesos & sin ganancia & 0.707 $\to$ 0.783 \\
+ECE de Swin-Tiny (sin calibrar) & 0.380 (subconfiado) & 0.040 (sin pesos por clase) \\
+Melanoma, Swin: AUC / sens.\ con esp.\ $\geq$0.85 & 0.931 / 0.862 & 0.921 / 0.796 \\
+Melanoma, ensamble: AUC / sens.\ con esp.\ $\geq$0.85 & --- & 0.926 / 0.828 \\
+DermLIP SVM vs Swin-ImageNet congelado: sens.\ macro & 0.788 vs 0.579 & 0.673 vs 0.466 \\
+HIBA, Swin: exactitud / sens.\ macro & 0.585 / 0.532 & 0.546 / 0.424 \\
+Ruteo de 3 niveles: cobertura de lo presentado & 0.934 & 0.904 \\
+Cascada, consistencia con Swin: Mini-VLM / LLaVA-Med / SkinVL & 0.812 / 0.696 / 0.80 & 0.864 / 0.752 / 0.847 \\
+Pipeline avanzado, Mini-VLM: simple $\to$ avanzado & 0.82 $\to$ 0.94 ($+$0.118) & 0.873 $\to$ 0.916 ($+$0.043) \\
+Pipeline avanzado, LLaVA-Med: simple $\to$ avanzado & 0.706 $\to$ 0.831 ($+$0.125) & 0.760 $\to$ 0.816 ($+$0.056) \\
+\bottomrule
+\end{tabular}
+
+\smallskip
+\raggedright
+Cambios de interpretación: (1) las pérdidas para desbalance sí suben la sensibilidad macro, a costa de
+exactitud y F1 macro; (2) la subconfianza de la calibración venía de los pesos por clase y de ajustar la
+temperatura sobre un val solapado con train; (3) la ganancia del pipeline avanzado es menor porque el
+clasificador nuevo deja menos casos inciertos (248 en vez de 334). Las conclusiones centrales se
+sostienen. RAG, \texttt{full\_uncertainty} y la taxonomía por clase quedan con el anclaje anterior.
+\end{minipage}}
+\bigskip
+
 \begin{abstract}
 \noindent
 Este documento reporta de forma detallada los experimentos realizados para la tesina, organizados en
