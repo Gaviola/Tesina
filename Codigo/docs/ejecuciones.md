@@ -4,6 +4,31 @@ Ayuda-memoria cronológico de experimentos enviados a cluster, ordenado de más 
 
 ---
 
+## 2026-10-03
+
+### Re-anclaje: LLaVA-Med terminado y evaluado; cierre del re-anclaje — Mendieta 1178901
+Terminó el 2026-10-01 18:08 (12 h 56 min, exit 0; el `run_arm` nuevo no marcó fallas): `full_swin_les`
+1503/1503 y `full_differential_les` 248/248. Bajado por `tar` sobre `ssh`; logs en
+`outputs/logs/llava_med/1178901.*`. Evaluado localmente con `C:\Python313\python.exe`
+(`ensemble_bootstrap.py --model llava_med --anchor les`, `uncertainty_analysis.py --model llava_med
+--anchor les`, `error_taxonomy.py` → `error_taxonomy_les/llava_med/`). No queda ningún job en cola.
+
+- **Grounding con el Swin nuevo:** consistencia 0.696 → **0.752**, Δ +0.057 [+0.039, +0.075]; frente a
+  oracle −0.099 (antes −0.156); frente a sin anclaje +0.107 (antes +0.051).
+- **Pipeline avanzado vs grounding simple (n = 1452):** 0.816 vs 0.760, Δ **+0.056** [+0.043, +0.070]
+  (antes +0.125). Subconjunto diferencial (n = 248): 0.843 vs 0.516, Δ +0.327 (antes +0.542).
+- **Taxonomía consciente del nivel:** dx incorrecto 9.5 % → 9.0 % (antes 13.5 % → 7.0 %). Dentro del
+  nivel diferencial, LLaVA-Med deja afuera el gt en 61/248 reportes (antes 61/334), mientras que el
+  grounding simple pasó de 155 a 69 errores en ese subconjunto: con LLaVA-Med el pipeline ya casi no
+  corrige diagnósticos, solo convierte hedging/contradicciones en diferenciales. Abstención: 19 dx
+  incorrectos evitados de 51.
+- **Taxonomía report-only:** dx incorrecto 0.14 → 0.10; ok 0.35 → 0.38.
+- **Tabla SOTA v33:** tabla nueva `tab:cascada` (tres generadores × anclaje + pipeline avanzado) y
+  `tab:posicionamiento` corregida, que todavía tenía los números de la partición por imagen.
+
+**Resul:** [reanclaje_cascada_resul](resul/reanclaje_cascada_resul_20261003.md) — veredicto **CUMPLE**
+(la ganancia del pipeline avanzado baja a +0.043/+0.056).
+
 ## 2026-09-27
 
 ### Re-anclaje: Mini-VLM terminado y evaluado — Mendieta 1177953
@@ -26,7 +51,7 @@ Terminó el 2026-09-27 02:26 (8 h 08 min, exit 0, `.err` sin errores): `full_swi
 - **Entorno local:** el `python` del PATH pasó a ser 3.14 (sin pandas); todo el análisis corre con
   `C:\Python313\python.exe`, el mismo de las corridas anteriores.
 
-**Resul:** pendiente de LLaVA-Med (se escribe con los dos generadores).
+**Resul:** [reanclaje_cascada_resul](resul/reanclaje_cascada_resul_20261003.md).
 
 ## 2026-09-26
 
@@ -93,7 +118,7 @@ Los tres jobs del 2026-09-17 recién arrancaron el 2026-09-26 (cola).
 python scripts/mendieta/submit.py reanchor_llava   # 1178901
 ```
 
-**Resul:** pendiente hasta que bajen los tres brazos.
+**Resul:** [reanclaje_cascada_resul](resul/reanclaje_cascada_resul_20261003.md).
 
 ## 2026-09-17
 
@@ -195,7 +220,7 @@ registrados en `submit.py` como `reanchor_{mini,llava,skinvl}`. Quedan afuera lo
 - Los brazos `full_baseline`, `full_oracle`, `full_dermlip`, `full_oracle_noimage` y
   `full_wrong_swap` no dependen del Swin y no se tocan.
 
-**Resul:** pendiente hasta que bajen los reportes.
+**Resul:** [reanclaje_cascada_resul](resul/reanclaje_cascada_resul_20261003.md).
 
 ## 2026-09-15
 

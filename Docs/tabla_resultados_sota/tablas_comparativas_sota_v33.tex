@@ -9,8 +9,13 @@
 %   (b) Se agregan el ensamble Swin+ConvNeXt y el F1 macro; DermLIP linear-probe re-ajustado
 %       sobre el train por lesión. DermLIP y VLMs zero-shot no cambian (no ven HAM).
 %   (c) HIBA: solo Swin/ConvNeXt (los legacy no se re-evaluaron con la partición por lesión).
-%   (d) Tablas de generación (reportes, NER) SIN CAMBIOS: pendientes del re-anclaje de la
-%       cascada (Mendieta 1177953, 1178901).
+%   (d) Tablas de generación (métricas automáticas, NER v1) sin cambios: no dependen del anclaje.
+%   (e) Tabla nueva tab:cascada (2026-10-03): consistencia diagnóstica de la cascada con los tres
+%       generadores re-anclados al Swin de la partición por lesión, y pipeline avanzado.
+%       Fuente: Codigo/docs/resul/reanclaje_cascada_resul_20261003.md (Mendieta 1177953,
+%       1177955, 1178901).
+%   (f) tab:posicionamiento con los números de la partición por lesión (la v32 tenía los
+%       de la partición por imagen) y el ensamble Swin+ConvNeXt.
 %
 % Historia anterior (v3):
 % Cambios respecto a v2:
@@ -745,6 +750,68 @@ Mini-VLM (CLIP ViT-B/16~$+$~Phi-3-mini)
 
 
 % ──────────────────────────────────────────────────────────────
+%  TABLA 4b — Ensamble en cascada: consistencia diagnóstica (partición por lesión)
+% ──────────────────────────────────────────────────────────────
+\begin{table}[htbp]
+\centering
+\caption{%
+  Consistencia diagnóstica de los reportes generados según la fuente del diagnóstico que recibe el
+  generador (HAM10000, test $n{=}1503$). El anclaje Swin-Tiny es el de la partición disjunta por lesión
+  (exactitud 0.847); la columna «Swin v32» repite el anclaje anterior (partición por imagen, 0.795).
+  Sin referencia directa en la literatura: ningún trabajo comparable reporta esta métrica.
+}
+\label{tab:cascada}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{@{}lrrrrrl@{}}
+\toprule
+\textbf{Generador}
+  & \textbf{Sin anclaje}
+  & \textbf{DermLIP}
+  & \textbf{Swin v32}
+  & \textbf{Swin (por lesión)}
+  & \textbf{Oráculo}
+  & \textbf{$\Delta$ por lesión $-$ v32 [IC 95\%]} \\
+\midrule
+\rowcolor{thiswork}
+Mini-VLM (CLIP ViT-B/16~$+$~Phi-3-mini) & 0.246 & 0.497 & 0.812 & \textbf{0.864} & 0.999 & $+$0.052 [$+$0.033, $+$0.071] \\
+\rowcolor{thiswork}
+LLaVA-Med 7B~$+$~LoRA~$(r{=}64)$        & 0.645 & 0.454 & 0.696 & 0.752 & 0.852 & $+$0.057 [$+$0.039, $+$0.075] \\
+\rowcolor{thiswork}
+SkinVL-MM (LLaVA-Med$+$LoRA, MM-Skin)    & 0.002 & 0.432 & 0.802 & 0.847 & 0.999 & $+$0.045 [$+$0.025, $+$0.064] \\
+\midrule
+\multicolumn{7}{@{}l}{\small\itshape Pipeline avanzado (ruteo de 3 niveles: afirmativo / diferencial / abstención)} \\[2pt]
+ & \multicolumn{2}{r}{\textbf{Grounding simple}} & \multicolumn{2}{r}{\textbf{Pipeline avanzado}} & & \\
+\rowcolor{thiswork}
+Mini-VLM, no derivadas ($n{=}1452$)   & \multicolumn{2}{r}{0.873} & \multicolumn{2}{r}{\textbf{0.916}} & & $+$0.043 [$+$0.031, $+$0.054] \\
+\rowcolor{thiswork}
+LLaVA-Med, no derivadas ($n{=}1452$)  & \multicolumn{2}{r}{0.760} & \multicolumn{2}{r}{\textbf{0.816}} & & $+$0.056 [$+$0.043, $+$0.070] \\
+\rowcolor{thiswork}
+Mini-VLM, nivel diferencial ($n{=}248$)  & \multicolumn{2}{r}{0.605} & \multicolumn{2}{r}{\textbf{0.855}} & & $+$0.250 [$+$0.190, $+$0.310] \\
+\rowcolor{thiswork}
+LLaVA-Med, nivel diferencial ($n{=}248$) & \multicolumn{2}{r}{0.516} & \multicolumn{2}{r}{\textbf{0.843}} & & $+$0.327 [$+$0.262, $+$0.395] \\
+\bottomrule
+\end{tabular}%
+}
+\vspace{4pt}
+\begin{minipage}{\textwidth}
+  \footnotesize
+  Consistencia diagnóstica: fracción de reportes que mencionan el diagnóstico verdadero (o un sinónimo).
+  $\Delta$ e intervalos: \textit{bootstrap} pareado por imagen, 2000 remuestreos; todas las diferencias
+  con $p<0.001$. «Sin anclaje»: el generador recibe solo la imagen; SkinVL-MM sin anclaje responde con una
+  descripción memorizada (tiña corporal) que no nombra ninguna de las 7 clases. El oráculo recibe la etiqueta verdadera: su techo mide cuánto copia el generador el
+  diagnóstico que se le da (LLaVA-Med no lo menciona en el 15\% de los casos).\\[4pt]
+  \textbf{Pipeline avanzado:} el nivel afirmativo usa el reporte anclado al Swin, el diferencial
+  (confianza calibrada baja) pide al generador los dos candidatos principales y la abstención deriva el
+  caso (51 imágenes, excluidas de $n{=}1452$). SkinVL-MM no tiene brazo diferencial. Con el anclaje anterior
+  la ganancia del pipeline era mayor ($+$0.118 Mini-VLM, $+$0.125 LLaVA-Med; 334 casos diferenciales):
+  con un clasificador mejor calibrado hay menos casos inciertos y el \textit{grounding} simple ya
+  acierta más.\\[4pt]
+  Fuente: \texttt{Codigo/docs/resul/reanclaje\_cascada\_resul\_20261003.md}.
+\end{minipage}
+\end{table}
+
+
+% ──────────────────────────────────────────────────────────────
 %  TABLA 5 — Resumen posicional de este trabajo vs. SOTA
 % ──────────────────────────────────────────────────────────────
 \begin{table}[htbp]
@@ -770,26 +837,30 @@ Mini-VLM (CLIP ViT-B/16~$+$~Phi-3-mini)
   & CNN (FT) & \textbf{93.00} & \textbf{0.93}$^{(w)}$ & --- & SOTA absoluto CNN \\
 
 \rowcolor{thiswork}
-(b') Swin-Tiny [\textit{este trabajo}]
-  & ViT mod.\ (FT, sweep v4) & 86.83 & \textbf{0.882}$^{(w)}$ & $-$6.17 & \textbf{Mejor de este trabajo} \\
-
-\cite{SkinR12025} Skin-R1
-  & VLM (FT$+$RL) & 74.72 & 0.404$^{(m)}$ & $-$18.28 & Mejor VLM (debajo de supervisados) \\
+(a'+b') Ensamble Swin$+$ConvNeXt [\textit{este trabajo}]
+  & ViT$+$CNN mod.\ (FT) & 85.45$\pm$0.34 & 0.853$^{(w)}$ / \textbf{0.747}$^{(m)}$ & $-$7.55 & \textbf{Mejor de este trabajo}; sd mínimo \\
 
 \rowcolor{thiswork}
-(b) ViT-B/16 [\textit{este trabajo}]
-  & ViT (FT) & 85.76 & 0.862$^{(w)}$ & $-$7.24 & --- \\
+(b') Swin-Tiny [\textit{este trabajo}]
+  & ViT mod.\ (FT, sweep v4) & 84.61$\pm$0.21 & 0.846$^{(w)}$ / 0.733$^{(m)}$ & $-$8.39 & Mejor modelo individual \\
 
 \rowcolor{thiswork}
 (a') ConvNeXt-Tiny [\textit{este trabajo}]
-  & CNN mod.\ (FT, sweep v4) & 82.70 & 0.861$^{(w)}$ & $-$10.30 & Mejor F1 entre CNNs \\
+  & CNN mod.\ (FT, sweep v4) & 84.34$\pm$0.52 & 0.840$^{(w)}$ / 0.727$^{(m)}$ & $-$8.66 & Empatado con Swin (McNemar $p{=}0.87$) \\
+
+\rowcolor{thiswork}
+(b) ViT-B/16 [\textit{este trabajo}]
+  & ViT (FT) & 81.37 & 0.815$^{(w)}$ / 0.696$^{(m)}$ & $-$11.63 & \textit{Legacy}, una semilla \\
 
 \rowcolor{thiswork}
 (a) DenseNet121 [\textit{este trabajo}]
-  & CNN (FT) & 84.56 & 0.852$^{(w)}$ & $-$8.44 & --- \\
+  & CNN (FT) & 81.17 & 0.815$^{(w)}$ / 0.660$^{(m)}$ & $-$11.83 & \textit{Legacy}, una semilla \\
 
 \cite{SkinSavvy22025} Swin-Transformer
   & ViT (FT) & 78.00$^{(\dagger\dagger)}$ & 0.793$^{(m)}$ & $-$15.00 & HAM10000 aumentado \\
+
+\cite{SkinR12025} Skin-R1
+  & VLM (FT$+$RL) & 74.72 & 0.404$^{(m)}$ & $-$18.28 & Mejor VLM (debajo de supervisados) \\
 
 \addlinespace[4pt]
 \cite{MMSkin2025} SkinVL-Pub
@@ -819,22 +890,25 @@ Mini-VLM (CLIP ViT-B/16~$+$~Phi-3-mini)
   $^{(\star)}$~$\Delta$ calculado respecto al mejor resultado global
   (EfficientNet Ensemble, 93.00\%).
   $^{(w)}$~F1 weighted; $^{(m)}$~F1 macro.
-  $^{(\dagger\dagger)}$~Sobre HAM10000 aumentado (ver nota Tabla~\ref{tab:sota_clasificacion_ham}).\\[4pt]
+  $^{(\dagger\dagger)}$~Sobre HAM10000 aumentado (ver nota Tabla~\ref{tab:sota_clasificacion_ham}).
+  Filas de este trabajo: partición disjunta por lesión; (a'), (b') y el ensamble, media $\pm$ desvío de
+  3 semillas (ver Tabla~\ref{tab:sota_clasificacion_ham}).\\[4pt]
   \textbf{Hallazgos clave:}
-  (1)~Swin-Tiny sweep v4 (86.83\%, F1${=}0.882$) y ViT-B/16 (85.76\%, F1${=}0.862$) de este
-  trabajo se posicionan como los mejores modelos individuales (no ensemble) del SOTA
-  comparable, superando a todos los VLMs evaluados, incluyendo los fine-tuneados con LoRA.
-  (2)~La brecha de 6--7 puntos con el SOTA CNN (93\%) se debe principalmente
-  al uso de ensembles y pesos \textit{Noisy Student} en~\cite{SkinHealthMate2024}.
-  (3)~La optimización de HPs (sweep v4) cierra la brecha entre arquitecturas modernas y
-  legacy: Swin-Tiny v4 (0.882) supera a ViT-B/16 legacy (0.862), y ConvNeXt-Tiny v4 (0.861)
-  iguala a ViT-B/16 legacy.
+  (1)~Con la partición por lesión, el ensamble Swin$+$ConvNeXt (85.45\%, F1 macro 0.747) y Swin-Tiny
+  (84.61\%, 0.733) son los mejores de este trabajo y superan a todos los VLMs evaluados, incluidos los
+  ajustados con LoRA o RL.
+  (2)~La brecha de 7.5--8.4 puntos con el SOTA CNN (93\%) combina el uso de ensembles y pesos
+  \textit{Noisy Student} en~\cite{SkinHealthMate2024} con la diferencia de partición: las cifras de la
+  literatura que parten HAM10000 por imagen admiten fuga entre particiones (en la v32, con fuga, Swin-Tiny
+  daba 86.83\%).
+  (3)~Las arquitecturas modernas con barrido de hiperparámetros superan a las \textit{legacy} (F1 macro
+  0.733 y 0.727 frente a 0.696 y 0.660; McNemar $p<0.001$ contra Swin), y entre sí quedan empatadas.
   (4)~Los VLMs en zero-shot (método \textit{generate}) colapsan hacia clases
   mayoritarias, resultando en accuracy por debajo del azar (14.3\% para 7 clases).
   El \textit{likelihood scoring} y CoT no aportan mejora significativa.
   Este es el punto de partida de la Fase~2 del trabajo.
   (5)~Con números verificados contra los papers, emerge una jerarquía clara: los
-  clasificadores supervisados (CNN/ViT, 86--93\%) superan a los VLMs ajustados o con RL
+  clasificadores supervisados (CNN/ViT, 81--93\%) superan a los VLMs ajustados o con RL
   (SkinVL-Pub FT 79.3\%, Skin-R1 FT$+$RL 74.7\%), y estos a su vez a los VLMs en zero-shot
   (23--41\%, con colapso de clase). Es decir, ni siquiera el mejor VLM derm-especializado
   (Skin-R1) alcanza a los clasificadores supervisados sobre HAM10000; la especialización

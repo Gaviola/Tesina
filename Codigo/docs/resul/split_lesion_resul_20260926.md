@@ -135,8 +135,8 @@ sensibilidad macro; ninguna gana en F1 macro a la CE. Legacy: DenseNet121 0.812 
 
 ## 8. Qué queda sobre la partición anterior
 
-- **Cascada de generación:** en re-anclaje (Mendieta 1177953, 1178901; SkinVL ya terminado:
-  consistencia 0.802 → **0.847**, Δ +0.045 [+0.025, +0.064]). Resultado en su propio documento.
+- **Cascada de generación:** re-anclada con los tres generadores (Mendieta 1177953, 1177955, 1178901).
+  Resultado en [reanclaje_cascada_resul](reanclaje_cascada_resul_20261003.md) (*addendum* 2026-10-03).
 - **RAG y `full_uncertainty`**: fuera del re-anclaje por decisión del 17/09 (brazos complementarios, 400
   casos cada uno). Se declaran como análisis con el anclaje anterior.
 - **Métricas por clase, taxonomía de errores de v3, ablaciones de receta
@@ -151,8 +151,8 @@ sensibilidad macro; ninguna gana en F1 macro a la CE. Legacy: DenseNet121 0.812 
 - *Estabilidad* (sd de sens. macro ≤ 0.02): **cumple ConvNeXt (0.009), no cumple Swin (0.025)**. Se
   reporta igual, con el desvío, y el ensamble (sd 0.002) queda como la configuración estable.
 - *Conclusiones centrales*: **se sostienen**. El orden de los enfoques no cambia, DermLIP ZS sigue
-  rompiendo el colapso de los VLM generales y la cascada re-anclada mejora con el ancla nueva (SkinVL;
-  Mini-VLM y LLaVA-Med pendientes).
+  rompiendo el colapso de los VLM generales y la cascada re-anclada mejora con el ancla nueva con los tres
+  generadores (ver [reanclaje_cascada_resul](reanclaje_cascada_resul_20261003.md)).
 - *Criterio de selección* (plan del 17/09): **cumple**.
 
 **Siguiente paso:** cerrar el re-anclaje con Mini-VLM y LLaVA-Med; actualizar la tabla SOTA (v33) y
