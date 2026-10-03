@@ -14,11 +14,17 @@ Con ``--report_only`` se descartan los bloques ``<think>...</think>`` antes de m
 clínico. Solo cambia LLaVA-Med (Mini-VLM y SkinVL-MM no emiten razonamiento). Salida con sufijo
 ``_report_only``; sin el flag se reproducen los JSON anteriores.
 
+Con ``--strict`` la consistencia usa el matcher estricto de ``clinical_ner`` (términos distintivos, sin
+coincidencias por subcadena; sufijo ``_strict``). **Métrica oficial desde la revisión del 2026-10-03:**
+``--report_only --strict``. En ese modo se agrega la línea base mecánica del pipeline avanzado: escribir sin
+generador el diagnóstico del nivel afirmativo y el par de candidatos del diferencial.
+
 Uso:
     python scripts/ensemble_bootstrap.py                    # Mini-VLM (default)
     python scripts/ensemble_bootstrap.py --model llava_med  # 2do generador
     python scripts/ensemble_bootstrap.py --model skinvl --anchor les
     python scripts/ensemble_bootstrap.py --model llava_med --anchor les --report_only
+    python scripts/ensemble_bootstrap.py --model mini_vlm --anchor les --report_only --strict   # oficial
 """
 
 import argparse
@@ -41,6 +47,7 @@ logger = logging.getLogger(__name__)
 DATA_DIR = Path("data/raw/HAM10000")
 THINK_RE = re.compile(r"<think>.*?</think>", re.DOTALL | re.IGNORECASE)
 REPORT_ONLY = False  # --report_only
+STRICT = False       # --strict
 REPORTS_DIR = Path("outputs/generated_reports/mini_vlm")  # sobreescrito por --model
 UNCERTAINTY_DIR = Path("outputs/uncertainty")
 OUTPUT = Path("outputs/results/ensemble_bootstrap.json")
@@ -78,11 +85,11 @@ def load_condition(name: str) -> dict:
 def flags_for(cond: dict, label_map: dict, ids: list) -> list:
     reports = [cond[i] for i in ids]
     labels = [label_map[i] for i in ids]
-    return diagnostic_consistency_flags(reports, labels)
+    return diagnostic_consistency_flags(reports, labels, strict=STRICT)
 
 
 def main():
-    global REPORTS_DIR, OUTPUT, REPORT_ONLY
+    global REPORTS_DIR, OUTPUT, REPORT_ONLY, STRICT
     parser = argparse.ArgumentParser(description="IC bootstrap pareado (ensamble + pipeline avanzado)")
     parser.add_argument("--model", default="mini_vlm", choices=["mini_vlm", "llava_med", "skinvl"])
     parser.add_argument("--anchor", default="v3", choices=["v3", "les"],
@@ -90,12 +97,16 @@ def main():
                              "(split disjunto por lesión).")
     parser.add_argument("--report_only", action="store_true",
                         help="Descarta los bloques <think> antes de medir (solo el reporte que lee el clínico).")
+    parser.add_argument("--strict", action="store_true",
+                        help="Matcher estricto (sin coincidencias por subcadena) para la consistencia.")
     args = parser.parse_args()
     REPORT_ONLY = args.report_only
+    STRICT = args.strict
     REPORTS_DIR = Path("outputs/generated_reports") / args.model
     stem = "ensemble_bootstrap" if args.model == "mini_vlm" else f"ensemble_bootstrap_{args.model}"
     suffix = "_les" if args.anchor == "les" else ""
-    OUTPUT = OUTPUT.with_name(f"{stem}{suffix}{'_report_only' if REPORT_ONLY else ''}.json")
+    mode = ("_report_only" if REPORT_ONLY else "") + ("_strict" if STRICT else "")
+    OUTPUT = OUTPUT.with_name(f"{stem}{suffix}{mode}.json")
     swin_cond, diff_cond = f"full_swin{suffix}", f"full_differential{suffix}"
     tier_csv = UNCERTAINTY_DIR / f"uncertainty_3tier{suffix}.csv"
     logger.info("Generador: %s | anclaje: %s", args.model, args.anchor)
@@ -107,7 +118,8 @@ def main():
     common_ids = [i for i in common_ids if i in label_map]
     logger.info("tab:ensamble — n=%d imágenes con las 4 condiciones + gt_label", len(common_ids))
 
-    result = {"anchor": args.anchor, "report_only": REPORT_ONLY, "n": len(common_ids), "consistencia": {},
+    result = {"anchor": args.anchor, "report_only": REPORT_ONLY, "strict": STRICT, "n": len(common_ids),
+              "consistencia": {},
               "tab_ensamble": {}, "tab_incertidumbre_e2e": {}}
 
     if args.anchor == "les" and (REPORTS_DIR / "full_swin").exists():
@@ -163,8 +175,8 @@ def main():
     if missing_diff:
         logger.warning("%d imágenes diferenciales sin reporte full_differential", missing_diff)
 
-    pipeline_flags = diagnostic_consistency_flags(pipeline_reports, labels_e2e)
-    grounding_flags = diagnostic_consistency_flags(grounding_reports, labels_e2e)
+    pipeline_flags = diagnostic_consistency_flags(pipeline_reports, labels_e2e, strict=STRICT)
+    grounding_flags = diagnostic_consistency_flags(grounding_reports, labels_e2e, strict=STRICT)
 
     print("\n=== tab:incertidumbre_e2e — bootstrap pareado (n=%d) ===" % len(ids_e2e))
     print(f"  Pipeline avanzado consistency = {sum(pipeline_flags)/len(pipeline_flags):.3f}")
@@ -180,8 +192,8 @@ def main():
     # Subconjunto diferencial (n=334): diferencial vs grounding forzado
     diff_ids = sorted(i for i in differential_ids if i in label_map and i in diff_reports and i in swin_reports)
     labels_d = [label_map[i] for i in diff_ids]
-    diff_flags = diagnostic_consistency_flags([diff_reports[i] for i in diff_ids], labels_d)
-    forced_flags = diagnostic_consistency_flags([swin_reports[i] for i in diff_ids], labels_d)
+    diff_flags = diagnostic_consistency_flags([diff_reports[i] for i in diff_ids], labels_d, strict=STRICT)
+    forced_flags = diagnostic_consistency_flags([swin_reports[i] for i in diff_ids], labels_d, strict=STRICT)
     d2, lo2, hi2, p2 = paired_bootstrap_diff_flags(diff_flags, forced_flags, n_boot=2000, seed=42)
     result["tab_incertidumbre_e2e"]["differential_subset"] = {
         "diff": d2, "ci95": [lo2, hi2], "p": p2, "n": len(diff_ids),
@@ -192,6 +204,25 @@ def main():
     print(f"  Diferencial      consistency = {sum(diff_flags)/len(diff_flags):.3f}")
     print(f"  Forzado (Swin)   consistency = {sum(forced_flags)/len(forced_flags):.3f}")
     print(f"  Delta = {d2:+.3f} [{lo2:+.3f},{hi2:+.3f}]  p={p2:.4f}")
+
+    if STRICT:
+        # Línea base mecánica: sin generador, el nivel afirmativo "escribe" el diagnóstico de Swin y el
+        # diferencial el par de candidatos {Swin, kNN}. Mide cuánto aporta el generador sobre el ruteo.
+        cands = {r.image_id: [c.strip() for c in str(r.unc_candidates).split(";")] for r in tier.itertuples()}
+        mech = [int(label_map[i] in cands[i][:1]) if i in affirmative_ids else int(label_map[i] in cands[i])
+                for i in ids_e2e]
+        d3, lo3, hi3, p3 = paired_bootstrap_diff_flags(pipeline_flags, mech, n_boot=2000, seed=42)
+        mech_d = [int(label_map[i] in cands[i]) for i in diff_ids]
+        d4, lo4, hi4, p4 = paired_bootstrap_diff_flags(diff_flags, mech_d, n_boot=2000, seed=42)
+        result["tab_incertidumbre_e2e"]["pipeline_vs_mecanica"] = {
+            "diff": d3, "ci95": [lo3, hi3], "p": p3, "n": len(ids_e2e), "mecanica": sum(mech) / len(mech)}
+        result["tab_incertidumbre_e2e"]["diferencial_vs_par"] = {
+            "diff": d4, "ci95": [lo4, hi4], "p": p4, "n": len(diff_ids), "par": sum(mech_d) / len(mech_d)}
+        print("\n=== Línea base mecánica (sin generador) ===")
+        print(f"  Mecánica (n={len(ids_e2e)}) = {sum(mech)/len(mech):.3f}; pipeline − mecánica = "
+              f"{d3:+.3f} [{lo3:+.3f},{hi3:+.3f}]  p={p3:.4f}")
+        print(f"  Par de candidatos (n={len(diff_ids)}) = {sum(mech_d)/len(mech_d):.3f}; diferencial − par = "
+              f"{d4:+.3f} [{lo4:+.3f},{hi4:+.3f}]  p={p4:.4f}")
 
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT.write_text(json.dumps(result, indent=2, ensure_ascii=False), encoding="utf-8")

@@ -11,6 +11,10 @@ tests estadísticos del ensamble (P0.2, `statistical_tests.py --consistency_json
     python scripts/per_class_ensemble.py
     # Con el anclaje de la partición por lesión y los tres generadores:
     python scripts/per_class_ensemble.py --models llava_med mini_vlm skinvl         --conditions full_baseline full_dermlip full_swin full_swin_les full_oracle         --output_dir outputs/results/per_class_les
+    # Métrica oficial (solo reporte, que es el default, + matcher estricto):
+    python scripts/per_class_ensemble.py --models llava_med mini_vlm skinvl --strict \
+        --conditions full_baseline full_dermlip full_swin full_swin_les full_oracle \
+        --output_dir outputs/results/per_class_les_strict
 """
 
 import argparse
@@ -89,6 +93,8 @@ def main():
     parser.add_argument("--no_strip_reasoning", action="store_true",
                         help="No eliminar <think>...</think> (por defecto se elimina: report-only).")
     parser.add_argument("--output_dir", type=str, default="outputs/results/per_class")
+    parser.add_argument("--strict", action="store_true",
+                        help="Matcher estricto de consistencia (métrica oficial desde el 2026-10-03).")
     args = parser.parse_args()
 
     strip = not args.no_strip_reasoning
@@ -123,7 +129,7 @@ def main():
         for cond, data in conds.items():
             reports = [data[i]["report"] for i in common]
             gts = [data[i]["gt_label"] for i in common]
-            flags = diagnostic_consistency_flags(reports, gts)
+            flags = diagnostic_consistency_flags(reports, gts, strict=args.strict)
             recalls = [_compute_entity_recall(_extract_dict_entities(r)) for r in reports]
             cons_arrays[COND_LABEL.get(cond, cond)] = flags
 

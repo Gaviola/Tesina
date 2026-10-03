@@ -6,6 +6,28 @@ Ayuda-memoria cronológico de experimentos enviados a cluster, ordenado de más 
 
 ## 2026-10-03
 
+### RAG con el índice por lesión + métrica oficial de la cascada — Mendieta job 1179315
+Decisiones del autor sobre la [revisión](resul/revision_experimentacion_20261003.md) (§5): métrica oficial
+solo reporte + matcher estricto; H6 se lee como propiedad del ruteo; RAG se regenera; el ancla se declara
+como limitación.
+
+- **Métrica oficial implementada** (local): `clinical_ner.diagnostic_consistency_flags(strict=True)` con los
+  términos de la taxonomía (`CLASS_TERMS` movido a `clinical_ner.py`; taxonomía idéntica);
+  `ensemble_bootstrap.py --report_only --strict` (+ línea base sin generador) y
+  `per_class_ensemble.py --strict`. Cifras: Mini 0.798 → 0.849, LLaVA 0.687 → 0.749, SkinVL 0.794 → 0.846;
+  pipeline − sin generador: Mini −0.003 (n. s.), LLaVA −0.110. `tab:cascada` (v33) actualizada.
+- **RAG regenerado:** plan [rag_les_plan](ideas/rag_les_plan_20261003.md). Script
+  `slurm/mendieta/v4/rag_les_mini_vlm.sh` (alias `rag_les`): `full_rag_les` y `full_swin_rag_les`, Mini-VLM,
+  1503 cada uno, índice `rag_context_les.csv`, con `run_arm` y prueba de `/scratch`. Subidos por `scp` el
+  `.sh` y `rag_context_les.csv` (md5 verificado); `generate_report.py` remoto idéntico al local.
+
+**Envío:**
+```
+python scripts/mendieta/submit.py rag_les --no-sync   # 1179315 (inicio estimado 2026-10-04 15:45)
+```
+
+**Resul:** pendiente hasta que baje el job.
+
 ### Revisión profunda de la experimentación — **Sin jobs SLURM** (local + segunda opinión)
 Resul: [revision_experimentacion](resul/revision_experimentacion_20261003.md) — **CUMPLE con correcciones**.
 Revisión propia + auditoría independiente (Fable 5.1). Clasificación, partición, selección y titulares

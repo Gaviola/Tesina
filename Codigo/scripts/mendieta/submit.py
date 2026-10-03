@@ -12,6 +12,7 @@ Uso:
   python scripts/mendieta/submit.py llava_s2_v2    # LLaVA-Med stage2 v2 — epochs=10 (~14GB)
   python scripts/mendieta/submit.py classifier     # DenseNet + ViT baselines
   python scripts/mendieta/submit.py reanchor_mini   # Re-ancla la cascada (full_swin_les + diferencial)
+  python scripts/mendieta/submit.py rag_les         # RAG con índice por lesión (Mini-VLM, 2 x 1503)
   python scripts/mendieta/submit.py gen_llava      # Generacion reportes LLaVA-Med (~12h)
   python scripts/mendieta/submit.py gen_mini       # Generacion reportes Mini-VLM (~8h)
   python scripts/mendieta/submit.py gen_llava_mmskin  # Solo MM-SkinQA con LLaVA-Med
@@ -257,6 +258,8 @@ JOBS = {
     "reanchor_mini":   "slurm/mendieta/v4/reanchor_mini_vlm.sh",
     "reanchor_llava":  "slurm/mendieta/v4/reanchor_llava_med.sh",
     "reanchor_skinvl": "slurm/mendieta/v4/reanchor_skinvl.sh",
+    ## RAG con el índice de la partición por lesión (2026-10-03). Ver docs/ideas/rag_les_plan_20261003.md.
+    "rag_les":         "slurm/mendieta/v4/rag_les_mini_vlm.sh",
 }
 
 # Grupos de jobs para envios multiples

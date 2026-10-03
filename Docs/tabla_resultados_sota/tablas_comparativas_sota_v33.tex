@@ -10,7 +10,8 @@
 %       sobre el train por lesión. DermLIP y VLMs zero-shot no cambian (no ven HAM).
 %   (c) HIBA: solo Swin/ConvNeXt (los legacy no se re-evaluaron con la partición por lesión).
 %   (d) Tablas de generación (métricas automáticas, NER v1) sin cambios: no dependen del anclaje.
-%   (e) Tabla nueva tab:cascada (2026-10-03): consistencia diagnóstica de la cascada con los tres
+%   (e) Tabla nueva tab:cascada (2026-10-03; métrica corregida en la revisión del mismo día:
+%       solo reporte + matcher estricto, con línea base sin generador): consistencia de la cascada con los tres
 %       generadores re-anclados al Swin de la partición por lesión, y pipeline avanzado.
 %       Fuente: Codigo/docs/resul/reanclaje_cascada_resul_20261003.md (Mendieta 1177953,
 %       1177955, 1178901).
@@ -758,8 +759,8 @@ Mini-VLM (CLIP ViT-B/16~$+$~Phi-3-mini)
 \caption{%
   Consistencia diagnóstica de los reportes generados según la fuente del diagnóstico que recibe el
   generador (HAM10000, test $n{=}1503$). El anclaje Swin-Tiny es el de la partición disjunta por lesión
-  (exactitud 0.847); la columna «Swin v32» repite el anclaje anterior (partición por imagen, 0.795).
-  Sin referencia directa en la literatura: ningún trabajo comparable reporta esta métrica.
+  (semilla 42, exactitud 0.847); la columna «Swin v32» repite el anclaje anterior (partición por imagen,
+  0.795). Sin referencia directa en la literatura: ningún trabajo comparable reporta esta métrica.
 }
 \label{tab:cascada}
 \resizebox{\textwidth}{!}{%
@@ -774,43 +775,46 @@ Mini-VLM (CLIP ViT-B/16~$+$~Phi-3-mini)
   & \textbf{$\Delta$ por lesión $-$ v32 [IC 95\%]} \\
 \midrule
 \rowcolor{thiswork}
-Mini-VLM (CLIP ViT-B/16~$+$~Phi-3-mini) & 0.246 & 0.497 & 0.812 & \textbf{0.864} & 0.999 & $+$0.052 [$+$0.033, $+$0.071] \\
+Mini-VLM (CLIP ViT-B/16~$+$~Phi-3-mini) & 0.163 & 0.391 & 0.798 & \textbf{0.849} & 0.999 & $+$0.051 [$+$0.031, $+$0.071] \\
 \rowcolor{thiswork}
-LLaVA-Med 7B~$+$~LoRA~$(r{=}64)$        & 0.645 & 0.454 & 0.696 & 0.752 & 0.852 & $+$0.057 [$+$0.039, $+$0.075] \\
+LLaVA-Med 7B~$+$~LoRA~$(r{=}64)$        & 0.582 & 0.345 & 0.687 & 0.749 & 0.860 & $+$0.062 [$+$0.044, $+$0.081] \\
 \rowcolor{thiswork}
-SkinVL-MM (LLaVA-Med$+$LoRA, MM-Skin)    & 0.002 & 0.432 & 0.802 & 0.847 & 0.999 & $+$0.045 [$+$0.025, $+$0.064] \\
+SkinVL-MM (LLaVA-Med$+$LoRA, MM-Skin)    & 0.001 & 0.377 & 0.794 & 0.846 & 0.999 & $+$0.052 [$+$0.033, $+$0.072] \\
 \midrule
 \multicolumn{7}{@{}l}{\small\itshape Pipeline avanzado (ruteo de 3 niveles: afirmativo / diferencial / abstención)} \\[2pt]
- & \multicolumn{2}{r}{\textbf{Grounding simple}} & \multicolumn{2}{r}{\textbf{Pipeline avanzado}} & & \\
+ & \textbf{Grounding} & \textbf{Pipeline} & \textbf{Sin generador} & \multicolumn{2}{r}{\textbf{Pipeline $-$ grounding}} & \textbf{Pipeline $-$ sin generador} \\
 \rowcolor{thiswork}
-Mini-VLM, no derivadas ($n{=}1452$)   & \multicolumn{2}{r}{0.873} & \multicolumn{2}{r}{\textbf{0.916}} & & $+$0.043 [$+$0.031, $+$0.054] \\
+Mini-VLM, no derivadas ($n{=}1452$)      & 0.858 & \textbf{0.901} & 0.904 & \multicolumn{2}{r}{$+$0.043 [$+$0.031, $+$0.055]} & $-$0.003 [$-$0.008, $+$0.002] \\
 \rowcolor{thiswork}
-LLaVA-Med, no derivadas ($n{=}1452$)  & \multicolumn{2}{r}{0.760} & \multicolumn{2}{r}{\textbf{0.816}} & & $+$0.056 [$+$0.043, $+$0.070] \\
+LLaVA-Med, no derivadas ($n{=}1452$)     & 0.760 & \textbf{0.793} & 0.904 & \multicolumn{2}{r}{$+$0.034 [$+$0.020, $+$0.048]} & $-$0.110 [$-$0.129, $-$0.092] \\
 \rowcolor{thiswork}
-Mini-VLM, nivel diferencial ($n{=}248$)  & \multicolumn{2}{r}{0.605} & \multicolumn{2}{r}{\textbf{0.855}} & & $+$0.250 [$+$0.190, $+$0.310] \\
+Mini-VLM, nivel diferencial ($n{=}248$)  & 0.581 & \textbf{0.831} & 0.847 & \multicolumn{2}{r}{$+$0.250 [$+$0.190, $+$0.310]} & $-$0.016 [$-$0.044, $+$0.012] \\
 \rowcolor{thiswork}
-LLaVA-Med, nivel diferencial ($n{=}248$) & \multicolumn{2}{r}{0.516} & \multicolumn{2}{r}{\textbf{0.843}} & & $+$0.327 [$+$0.262, $+$0.395] \\
+LLaVA-Med, nivel diferencial ($n{=}248$) & 0.480 & \textbf{0.677} & 0.847 & \multicolumn{2}{r}{$+$0.198 [$+$0.121, $+$0.270]} & $-$0.169 [$-$0.222, $-$0.117] \\
 \bottomrule
 \end{tabular}%
 }
 \vspace{4pt}
 \begin{minipage}{\textwidth}
   \footnotesize
-  Consistencia diagnóstica: fracción de reportes que mencionan el diagnóstico verdadero (o un sinónimo).
-  $\Delta$ e intervalos: \textit{bootstrap} pareado por imagen, 2000 remuestreos; todas las diferencias
-  con $p<0.001$. «Sin anclaje»: el generador recibe solo la imagen; SkinVL-MM sin anclaje responde con una
-  descripción memorizada (tiña corporal) que no nombra ninguna de las 7 clases. El oráculo recibe la etiqueta verdadera: su techo mide cuánto copia el generador el
-  diagnóstico que se le da (LLaVA-Med no lo menciona en el 15\% de los casos).\\[4pt]
+  \textbf{Métrica:} fracción de reportes que nombran el diagnóstico verdadero, contando solo el texto del
+  reporte (se descartan los bloques de razonamiento \texttt{<think>} que emite LLaVA-Med) y con términos
+  distintivos por clase (sin coincidencias por subcadena como «mel» dentro de «melanocytic»). $\Delta$ e
+  intervalos: \textit{bootstrap} pareado por imagen, 2000 remuestreos; salvo las dos diferencias de Mini-VLM
+  contra «sin generador» ($p{=}0.35$ y $0.30$), todas con $p<0.001$. «Sin anclaje»: el generador recibe
+  solo la imagen; SkinVL-MM responde con una descripción memorizada (tiña corporal) que no nombra ninguna de
+  las 7 clases. El oráculo recibe la etiqueta verdadera: mide cuánto copia el generador el diagnóstico que
+  se le da (LLaVA-Med no lo nombra en el 14\% de los casos).\\[4pt]
   \textbf{Pipeline avanzado:} el ruteo compara el diagnóstico de Swin con el voto de los 3 vecinos más
   cercanos en el espacio de DermLIP. Si coinciden, nivel afirmativo (reporte anclado al Swin); si no
   coinciden, nivel diferencial (el generador recibe los dos candidatos, Swin y kNN); si los tres vecinos
   discrepan entre sí, abstención (51 imágenes, excluidas de $n{=}1452$). SkinVL-MM no tiene brazo
-  diferencial. Con el anclaje anterior la ganancia era mayor ($+$0.118 Mini-VLM, $+$0.125 LLaVA-Med; 334
-  casos diferenciales): con el clasificador y el índice kNN nuevos hay menos desacuerdos.
-  \textbf{Pendiente de revisión} (\texttt{Codigo/docs/resul/revision\_experimentacion\_20261003.md}):
-  esta ganancia no supera la cobertura mecánica del par de candidatos y las cifras de LLaVA-Med
-  incluyen texto de razonamiento (\texttt{<think>}).\\[4pt]
-  Fuente: \texttt{Codigo/docs/resul/reanclaje\_cascada\_resul\_20261003.md}.
+  diferencial. «Sin generador»: escribir el diagnóstico de Swin en el nivel afirmativo y el par de
+  candidatos en el diferencial. La mejora del pipeline sobre el \textit{grounding} simple proviene del
+  ruteo (el par contiene el diagnóstico verdadero en el 84.7\% de los casos diferenciales, el top-1 de Swin
+  en el 57.3\%); el generador la conserva (Mini-VLM) o la reduce (LLaVA-Med omite candidatos).\\[4pt]
+  Fuentes: \texttt{Codigo/docs/resul/revision\_experimentacion\_20261003.md};
+  \texttt{outputs/results/ensemble\_bootstrap*\_les\_report\_only\_strict.json}.
 \end{minipage}
 \end{table}
 

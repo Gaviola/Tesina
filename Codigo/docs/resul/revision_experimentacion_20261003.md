@@ -175,6 +175,38 @@ ancla, y el ancla nueva no usa pesos por clase. Además usa solo la semilla 42, 
 4. **Abstención y ancla:** si la cascada debería anclarse en un punto de operación que proteja las clases
    malignas (p. ej., el ensamble o el umbral de melanoma fijado en val) o se declara la limitación.
 
+## 5. Decisiones tomadas y estado (2026-10-03, mismo día)
+
+El autor aceptó las recomendaciones de §3 y aclaró que se pueden regenerar brazos si hace falta (cola de
+6–10 días).
+
+1. **Métrica oficial de la cascada: solo reporte + *matcher* estricto.** Implementada:
+   `diagnostic_consistency_flags(..., strict=True)` en `src/evaluation/clinical_ner.py`, con los mismos
+   términos distintivos que ya usaba la taxonomía (`CLASS_TERMS` pasó de `error_taxonomy.py` a
+   `clinical_ner.py`; taxonomía verificada idéntica). `ensemble_bootstrap.py --report_only --strict` agrega
+   la línea base sin generador; `per_class_ensemble.py --strict`. Salidas:
+   `outputs/results/ensemble_bootstrap{,_llava_med,_skinvl}_les_report_only_strict.json` y
+   `per_class_les_strict/`. El default de todos los scripts reproduce las cifras anteriores.
+2. **H6:** se mantiene el enunciado; el Cap. 5 presenta la mejora como propiedad del ruteo, con la línea base
+   sin generador al lado (`tab:cascada` de la v33 ya lo hace).
+3. **RAG: se regenera** (cambio respecto de la recomendación original, al haber cola disponible). Plan
+   [rag_les_plan](../ideas/rag_les_plan_20261003.md); Mendieta **1179315** (`full_rag_les`,
+   `full_swin_rag_les`, Mini-VLM, 2 × 1503). Inicio estimado por SLURM: 2026-10-04 15:45.
+4. **Ancla de la cascada:** se declara la limitación (la cascada hereda la sensibilidad por clase del
+   clasificador; semilla 42). No se re-ancla: el ensamble no mejora el recall de melanoma con *argmax*
+   (0.605 de media) y el umbral de melanoma cambiaría el diagnóstico de cientos de nevus.
+
+### Cifras oficiales de la cascada (solo reporte + estricto, n = 1503)
+
+| | Sin anclaje | DermLIP | Swin v32 | Swin por lesión | Oráculo | Δ por lesión − v32 |
+|---|---|---|---|---|---|---|
+| Mini-VLM | 0.163 | 0.391 | 0.798 | 0.849 | 0.999 | +0.051 [+0.031, +0.071] |
+| LLaVA-Med | 0.582 | 0.345 | 0.687 | 0.749 | 0.860 | +0.062 [+0.044, +0.081] |
+| SkinVL-MM | 0.001 | 0.377 | 0.794 | 0.846 | 0.999 | +0.052 [+0.033, +0.072] |
+
+Pipeline avanzado: ver §2.1 (mismas cifras). Con la métrica estricta el anclaje a DermLIP también baja
+(Mini-VLM 0.497 → 0.391): el *matcher* viejo le acreditaba «keratosis» y «vascular» sueltos.
+
 ## 4. Conclusión (veredicto)
 
 **CUMPLE con correcciones.** La clasificación, la partición, la selección y las cifras principales son

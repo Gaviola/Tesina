@@ -14,7 +14,8 @@ Las versiones sin `_les` son las del anclaje anterior y no se tocaron.
 > `<think>`, que el resto de los análisis excluye; (2) el *matcher* de consistencia busca subcadenas («mel»
 > dentro de «melanocytic», «nv» dentro de «invasion»), lo que explica el «12 %» de §3.1; (3) la ganancia del
 > pipeline avanzado de §3.2 no supera la cobertura mecánica del par de candidatos (imprimirlos sin
-> generador). Las cifras corregidas y la lectura vigente están en la revisión.
+> generador). Las cifras corregidas y la lectura vigente están en la revisión (§5: métrica oficial,
+> `ensemble_bootstrap*_les_report_only_strict.json`).
 
 ## 1. Motivación
 

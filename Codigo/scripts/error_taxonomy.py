@@ -36,6 +36,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 from src.evaluation.clinical_ner import (
+    CLASS_RE,
     _compute_entity_recall,
     _extract_dict_entities,
     _normalize_label,
@@ -46,19 +47,8 @@ logger = logging.getLogger(__name__)
 
 THINK_RE = re.compile(r"<think>.*?</think>", re.DOTALL | re.IGNORECASE)
 
-# Términos DISTINTIVOS por clase HAM (word-boundary; evita falsos por substring como "mel").
-CLASS_TERMS = {
-    "melanoma": [r"melanoma"],
-    "nevus": [r"nevus", r"nevi", r"\bmole\b"],
-    "basal cell carcinoma": [r"basal cell", r"\bbcc\b", r"basalioma"],
-    "actinic keratosis": [r"actinic kerato", r"solar kerato", r"\bakiec\b"],
-    "benign keratosis": [r"benign kerato", r"seborrh\w+ kerato", r"\bbkl\b"],
-    "dermatofibroma": [r"dermatofibroma"],
-    # "vascular lesion" completo, no "vascular" suelto (evita matchear el feature dermoscópico
-    # "vascular pattern/structures", que describe morfología, no el diagnóstico).
-    "vascular lesion": [r"vascular lesion", r"hemangioma", r"angioma", r"pyogenic granuloma"],
-}
-CLASS_RE = {c: re.compile("|".join(pats), re.IGNORECASE) for c, pats in CLASS_TERMS.items()}
+# Términos DISTINTIVOS por clase HAM (CLASS_RE): definidos en clinical_ner, donde también los usa la
+# consistencia diagnóstica estricta.
 
 HEDGE_MARKERS = [
     "may be", "might be", "could be", "possibly", "cannot be determined",
