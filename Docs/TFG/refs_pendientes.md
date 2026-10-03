@@ -646,9 +646,9 @@ Cruce de las 108 entradas del `.bib` y las cinco propuestas (cuatro de fundament
 documento.
 
 **Ya en `Papers/`: 69 de las 108 entradas del `.bib`.** Todas las de `Fundacionales/` y `derma/` tienen su entrada, salvo los
-PDFs que no están en el `.bib` (ver al final). `yan2025vision` (PanDerm) está como preprint («A
-General-Purpose Multimodal Foundation Model for Dermatology»); conviene bajar la versión publicada en
-*Nature Medicine*.
+PDFs que no están en el `.bib` (ver al final). `yan2025vision` (PanDerm) tiene en `Papers/derma/` la
+versión publicada en *Nature Medicine* y el preprint («A General-Purpose Multimodal Foundation Model for
+Dermatology»); se cita la publicada.
 
 ### Por conseguir, con acceso libre (34)
 
