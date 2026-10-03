@@ -9,12 +9,20 @@ Fuentes: `outputs/results/ensemble_bootstrap{,_llava_med,_skinvl}_les.json`,
 `uncertainty_analysis{,_llava_med}_les.json`, `error_taxonomy_les/{mini_vlm,llava_med,skinvl}/`.
 Las versiones sin `_les` son las del anclaje anterior y no se tocaron.
 
+> **Revisión del mismo día** ([revision_experimentacion_20261003](revision_experimentacion_20261003.md)).
+> Este documento quedó parcialmente superado: (1) las cifras de LLaVA-Med cuentan texto dentro de bloques
+> `<think>`, que el resto de los análisis excluye; (2) el *matcher* de consistencia busca subcadenas («mel»
+> dentro de «melanocytic», «nv» dentro de «invasion»), lo que explica el «12 %» de §3.1; (3) la ganancia del
+> pipeline avanzado de §3.2 no supera la cobertura mecánica del par de candidatos (imprimirlos sin
+> generador). Las cifras corregidas y la lectura vigente están en la revisión.
+
 ## 1. Motivación
 
 La cascada clasificador → generador estaba anclada al Swin de la partición por imagen (con fuga). Con el
 ganador de la partición por lesión cambian 291/1503 diagnósticos del ancla (19.4 %), la exactitud del ancla
-pasa de 0.795 a 0.847, y la recalibración cambia el ruteo de 3 niveles: el conjunto diferencial pasa de 334
-a 248 imágenes **distintas** (no un subconjunto). Había que regenerar los reportes para que el Cap. 5 no
+pasa de 0.795 a 0.847, y el ruteo de 3 niveles (acuerdo entre Swin y el voto kNN de DermLIP, también re-ajustado
+sobre la partición por lesión) cambia: el conjunto diferencial pasa de 334 a 248 imágenes **distintas** (no
+un subconjunto). Había que regenerar los reportes para que el Cap. 5 no
 reporte una cascada anclada a un clasificador que el Cap. 4 ya no presenta.
 
 ## 2. Diseño
@@ -48,10 +56,12 @@ SkinVL −0.152 (antes −0.187, −0.156, −0.197).
 1. **La mejora del ancla se traslada a los tres generadores con magnitud casi igual** (+0.045 a +0.057,
    frente a +0.052 de exactitud del ancla). La cascada sigue siendo, en esencia, un canal que copia el
    diagnóstico del clasificador.
-2. **SkinVL-MM copia exacto**: consistencia 0.847 = exactitud del ancla. Mini-VLM queda **por encima** del
-   ancla (0.864) porque menciona varias clases (*hedging* 35 %) y a veces nombra la correcta aunque el ancla
-   sea otra. LLaVA-Med queda **por debajo** (0.752): ni con el oráculo pasa de 0.852; reescribe o diluye el
-   diagnóstico que recibe en ~15 % de los casos.
+2. **SkinVL-MM copia exacto**: consistencia 0.847 = exactitud del ancla (con ancla correcta 0.999, con
+   ancla equivocada 0.004). Mini-VLM queda **por encima** del ancla (0.864): copia el diagnóstico correcto
+   (0.999) y, cuando el ancla se equivoca (n = 230), el 12 % de sus reportes igual nombra la clase verdadera.
+   LLaVA-Med queda **por debajo** (0.752): con ancla correcta solo la menciona en el 86 % de los reportes
+   (con el oráculo, 0.852), es decir, pierde el diagnóstico que recibe en ~14 % de los casos; con ancla
+   equivocada nombra la verdadera en el 16 %.
 3. **El orden de las fuentes no cambia**: Swin ≫ DermLIP para los tres; sin anclaje, solo LLaVA-Med nombra
    diagnósticos con alguna frecuencia (0.645), y el anclaje al Swin nuevo lo supera por +0.107
    [+0.073, +0.140] (antes +0.051).
@@ -66,8 +76,8 @@ SkinVL −0.152 (antes −0.187, −0.156, −0.197).
 | Δ [IC 95 %] (anterior, n = 334) | +0.250 [+0.190, +0.310] (+0.509) | +0.327 [+0.262, +0.395] (+0.542) |
 
 **El pipeline sigue mejorando la fidelidad con ambos generadores, pero la ganancia es entre un tercio y la
-mitad de la anterior.** No es un deterioro del pipeline sino del margen que tiene para actuar: con un
-clasificador mejor calibrado (ECE 0.394 → 0.040) hay menos casos inciertos (334 → 248), y en los que quedan
+mitad de la anterior.** No es un deterioro del pipeline sino del margen que tiene para actuar: con el
+clasificador y el kNN nuevos hay menos desacuerdos entre ambos (334 → 248 casos diferenciales), y en los que quedan
 el Swin acierta más a menudo, así que el *grounding* simple ya los resuelve mejor (`dx_incorrecto` del
 *grounding* simple dentro del subconjunto diferencial: Mini 64 % → 40 %, LLaVA-Med 46 % → 28 %; §3.3). El
 estimado del subconjunto limpio del plan del 12/09 (+0.077 Mini, +0.096 LLaVA) también sobrestimaba: usaba

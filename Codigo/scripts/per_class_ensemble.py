@@ -9,6 +9,8 @@ tests estadísticos del ensamble (P0.2, `statistical_tests.py --consistency_json
 
 100% local (los reportes ya están en outputs/generated_reports/). Uso:
     python scripts/per_class_ensemble.py
+    # Con el anclaje de la partición por lesión y los tres generadores:
+    python scripts/per_class_ensemble.py --models llava_med mini_vlm skinvl         --conditions full_baseline full_dermlip full_swin full_swin_les full_oracle         --output_dir outputs/results/per_class_les
 """
 
 import argparse
@@ -39,7 +41,8 @@ logger = logging.getLogger(__name__)
 HAM_CLASSES = ["melanoma", "nevus", "basal cell carcinoma", "actinic keratosis",
                "benign keratosis", "dermatofibroma", "vascular lesion"]
 COND_LABEL = {"full_baseline": "baseline", "full_dermlip": "DermLIP (0.38)",
-              "full_swin": "Swin (0.80)", "full_oracle": "oracle (gt)"}
+              "full_swin": "Swin (0.80)", "full_swin_les": "Swin lesión (0.85)",
+              "full_oracle": "oracle (gt)"}
 THINK_RE = re.compile(r"<think>.*?</think>", re.DOTALL | re.IGNORECASE)
 
 
@@ -47,13 +50,17 @@ def _strip_reasoning(t: str) -> str:
     return THINK_RE.sub("", t or "").strip()
 
 
-def _load_condition(cond_dir: Path, strip: bool) -> dict:
-    """image_id -> {report, gt_label} para todos los .json de una condición."""
+def _load_condition(cond_dir: Path, strip: bool, label_map: dict) -> dict:
+    """image_id -> {report, gt_label} para todos los .json de una condición.
+
+    Los reportes re-anclados (`*_les`) no traen `gt_label`: se toma de la metadata de HAM.
+    """
     out = {}
     for jf in cond_dir.glob("*.json"):
         d = json.loads(jf.read_text(encoding="utf-8"))
         rep = _strip_reasoning(d.get("report", "")) if strip else d.get("report", "")
-        out[d.get("image_id", jf.stem)] = {"report": rep, "gt_label": d.get("gt_label", "")}
+        iid = Path(d.get("image_id", jf.stem)).stem.replace("_report", "")
+        out[iid] = {"report": rep, "gt_label": d.get("gt_label") or label_map.get(iid, "")}
     return out
 
 
@@ -88,6 +95,8 @@ def main():
     out_dir = Path(args.output_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     root = Path(args.reports_root)
+    from scripts.ensemble_bootstrap import build_label_map
+    label_map = build_label_map()
 
     summary = {}
     fig, axes = plt.subplots(1, len(args.models), figsize=(5.5 * len(args.models), 4.5), squeeze=False)
@@ -100,7 +109,7 @@ def main():
             if not cdir.exists():
                 logger.warning("SKIP %s/%s: no existe", model, cond)
                 continue
-            conds[cond] = _load_condition(cdir, strip)
+            conds[cond] = _load_condition(cdir, strip, label_map)
         if not conds:
             continue
 

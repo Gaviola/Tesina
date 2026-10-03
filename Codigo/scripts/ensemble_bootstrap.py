@@ -9,15 +9,22 @@ Con ``--anchor les`` usa los brazos re-anclados al Swin del split disjunto por l
 anclaje viejo vs nuevo y guarda en ``ensemble_bootstrap[_<modelo>]_les.json``. SkinVL no tiene brazo
 diferencial: para él solo se calcula la parte de tab:ensamble.
 
+Con ``--report_only`` se descartan los bloques ``<think>...</think>`` antes de medir, como en
+``uncertainty_analysis.py``, ``error_taxonomy.py`` y ``per_class_ensemble.py``: cuenta solo lo que lee el
+clínico. Solo cambia LLaVA-Med (Mini-VLM y SkinVL-MM no emiten razonamiento). Salida con sufijo
+``_report_only``; sin el flag se reproducen los JSON anteriores.
+
 Uso:
     python scripts/ensemble_bootstrap.py                    # Mini-VLM (default)
     python scripts/ensemble_bootstrap.py --model llava_med  # 2do generador
     python scripts/ensemble_bootstrap.py --model skinvl --anchor les
+    python scripts/ensemble_bootstrap.py --model llava_med --anchor les --report_only
 """
 
 import argparse
 import json
 import logging
+import re
 import sys
 from pathlib import Path
 
@@ -32,6 +39,8 @@ logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 DATA_DIR = Path("data/raw/HAM10000")
+THINK_RE = re.compile(r"<think>.*?</think>", re.DOTALL | re.IGNORECASE)
+REPORT_ONLY = False  # --report_only
 REPORTS_DIR = Path("outputs/generated_reports/mini_vlm")  # sobreescrito por --model
 UNCERTAINTY_DIR = Path("outputs/uncertainty")
 OUTPUT = Path("outputs/results/ensemble_bootstrap.json")
@@ -62,7 +71,7 @@ def load_condition(name: str) -> dict:
     for f in (REPORTS_DIR / name).glob("*.json"):
         d = json.loads(f.read_text(encoding="utf-8"))
         img_id = Path(d["image_id"]).stem
-        out[img_id] = d["report"]
+        out[img_id] = THINK_RE.sub("", d["report"] or "").strip() if REPORT_ONLY else d["report"]
     return out
 
 
@@ -73,17 +82,20 @@ def flags_for(cond: dict, label_map: dict, ids: list) -> list:
 
 
 def main():
-    global REPORTS_DIR, OUTPUT
+    global REPORTS_DIR, OUTPUT, REPORT_ONLY
     parser = argparse.ArgumentParser(description="IC bootstrap pareado (ensamble + pipeline avanzado)")
     parser.add_argument("--model", default="mini_vlm", choices=["mini_vlm", "llava_med", "skinvl"])
     parser.add_argument("--anchor", default="v3", choices=["v3", "les"],
                         help="Clasificador que ancla la cascada: v3 (partición aleatoria) o les "
                              "(split disjunto por lesión).")
+    parser.add_argument("--report_only", action="store_true",
+                        help="Descarta los bloques <think> antes de medir (solo el reporte que lee el clínico).")
     args = parser.parse_args()
+    REPORT_ONLY = args.report_only
     REPORTS_DIR = Path("outputs/generated_reports") / args.model
     stem = "ensemble_bootstrap" if args.model == "mini_vlm" else f"ensemble_bootstrap_{args.model}"
     suffix = "_les" if args.anchor == "les" else ""
-    OUTPUT = OUTPUT.with_name(f"{stem}{suffix}.json")
+    OUTPUT = OUTPUT.with_name(f"{stem}{suffix}{'_report_only' if REPORT_ONLY else ''}.json")
     swin_cond, diff_cond = f"full_swin{suffix}", f"full_differential{suffix}"
     tier_csv = UNCERTAINTY_DIR / f"uncertainty_3tier{suffix}.csv"
     logger.info("Generador: %s | anclaje: %s", args.model, args.anchor)
@@ -95,7 +107,7 @@ def main():
     common_ids = [i for i in common_ids if i in label_map]
     logger.info("tab:ensamble — n=%d imágenes con las 4 condiciones + gt_label", len(common_ids))
 
-    result = {"anchor": args.anchor, "n": len(common_ids), "consistencia": {},
+    result = {"anchor": args.anchor, "report_only": REPORT_ONLY, "n": len(common_ids), "consistencia": {},
               "tab_ensamble": {}, "tab_incertidumbre_e2e": {}}
 
     if args.anchor == "les" and (REPORTS_DIR / "full_swin").exists():
@@ -160,6 +172,8 @@ def main():
     d, lo, hi, p = paired_bootstrap_diff_flags(pipeline_flags, grounding_flags, n_boot=2000, seed=42)
     result["tab_incertidumbre_e2e"]["pipeline_vs_grounding_simple"] = {
         "diff": d, "ci95": [lo, hi], "p": p, "n": len(ids_e2e),
+        "pipeline": sum(pipeline_flags) / len(pipeline_flags),
+        "grounding_simple": sum(grounding_flags) / len(grounding_flags),
     }
     print(f"  Delta = {d:+.3f} [{lo:+.3f},{hi:+.3f}]  p={p:.4f}")
 
@@ -171,6 +185,8 @@ def main():
     d2, lo2, hi2, p2 = paired_bootstrap_diff_flags(diff_flags, forced_flags, n_boot=2000, seed=42)
     result["tab_incertidumbre_e2e"]["differential_subset"] = {
         "diff": d2, "ci95": [lo2, hi2], "p": p2, "n": len(diff_ids),
+        "diferencial": sum(diff_flags) / len(diff_flags),
+        "forzado": sum(forced_flags) / len(forced_flags),
     }
     print("\n=== Subconjunto diferencial (n=%d) ===" % len(diff_ids))
     print(f"  Diferencial      consistency = {sum(diff_flags)/len(diff_flags):.3f}")

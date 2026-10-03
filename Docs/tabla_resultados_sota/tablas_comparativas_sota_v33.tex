@@ -387,8 +387,8 @@
 \centering
 \caption{%
   Evaluación de generalización fuera de distribución (\textit{out-of-distribution}, OOD)
-  sobre el dataset \textbf{HIBA} ($n=1616$), compuesto por imágenes dermoscópicas
-  de pacientes argentinos con fototipos III--VI.
+  sobre el dataset \textbf{HIBA} ($n=1616$) de pacientes argentinos: 1270 imágenes dermoscópicas y 346
+  clínicas (fotografía de cámara); fototipos I (114), II (1085), III (275), IV (25), sin dato (117).
   Ningún modelo de esta tabla fue entrenado con datos HIBA; todos se entrenaron con la partición
   disjunta por lesión de HAM10000 (semilla 42).
   El mapping de clases HIBA$\to$HAM10000 es 1:1 para 6 de las 7 categorías;
@@ -428,9 +428,10 @@
   mediante barrido de hiperparámetros optimizando F1 macro en validación HAM10000 (partición por
   lesión). DenseNet121 y ViT-B/16 no se re-evaluaron sobre HIBA con la partición por lesión.\\[4pt]
   \textbf{Observaciones:}
-  (1)~Ambos modelos pierden unos 30 puntos de exactitud al pasar de HAM10000 (84.6\% y 84.3\%) a HIBA,
-  un \textit{domain shift} marcado atribuible a fototipo, adquisición y composición de clases (no
-  separables con estos datos).
+  (1)~Ambos modelos pierden unos 30 puntos de exactitud al pasar de HAM10000 (84.6\% y 84.3\%) a HIBA.
+  Buena parte de la caída es de modalidad: sobre las 1270 dermoscópicas la exactitud es 62.4\% (Swin) y
+  63.2\% (ConvNeXt); sobre las 346 clínicas, 26.3\% y 28.3\%, fuera del alcance de modelos entrenados solo
+  con dermoscopía. El resto del \textit{domain shift} mezcla población y composición de clases.
   (2)~El \textit{recall} de melanoma cae a 0.455 (Swin) y 0.435 (ConvNeXt), frente a 0.623 y 0.553 en
   HAM10000: la clase prioritaria es la que peor generaliza.
   (3)~Con la partición por imagen (v32), Swin daba 58.48\% / sens.\ macro 53.20\% y ConvNeXt
@@ -800,12 +801,15 @@ LLaVA-Med, nivel diferencial ($n{=}248$) & \multicolumn{2}{r}{0.516} & \multicol
   con $p<0.001$. «Sin anclaje»: el generador recibe solo la imagen; SkinVL-MM sin anclaje responde con una
   descripción memorizada (tiña corporal) que no nombra ninguna de las 7 clases. El oráculo recibe la etiqueta verdadera: su techo mide cuánto copia el generador el
   diagnóstico que se le da (LLaVA-Med no lo menciona en el 15\% de los casos).\\[4pt]
-  \textbf{Pipeline avanzado:} el nivel afirmativo usa el reporte anclado al Swin, el diferencial
-  (confianza calibrada baja) pide al generador los dos candidatos principales y la abstención deriva el
-  caso (51 imágenes, excluidas de $n{=}1452$). SkinVL-MM no tiene brazo diferencial. Con el anclaje anterior
-  la ganancia del pipeline era mayor ($+$0.118 Mini-VLM, $+$0.125 LLaVA-Med; 334 casos diferenciales):
-  con un clasificador mejor calibrado hay menos casos inciertos y el \textit{grounding} simple ya
-  acierta más.\\[4pt]
+  \textbf{Pipeline avanzado:} el ruteo compara el diagnóstico de Swin con el voto de los 3 vecinos más
+  cercanos en el espacio de DermLIP. Si coinciden, nivel afirmativo (reporte anclado al Swin); si no
+  coinciden, nivel diferencial (el generador recibe los dos candidatos, Swin y kNN); si los tres vecinos
+  discrepan entre sí, abstención (51 imágenes, excluidas de $n{=}1452$). SkinVL-MM no tiene brazo
+  diferencial. Con el anclaje anterior la ganancia era mayor ($+$0.118 Mini-VLM, $+$0.125 LLaVA-Med; 334
+  casos diferenciales): con el clasificador y el índice kNN nuevos hay menos desacuerdos.
+  \textbf{Pendiente de revisión} (\texttt{Codigo/docs/resul/revision\_experimentacion\_20261003.md}):
+  esta ganancia no supera la cobertura mecánica del par de candidatos y las cifras de LLaVA-Med
+  incluyen texto de razonamiento (\texttt{<think>}).\\[4pt]
   Fuente: \texttt{Codigo/docs/resul/reanclaje\_cascada\_resul\_20261003.md}.
 \end{minipage}
 \end{table}

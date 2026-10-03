@@ -6,6 +6,28 @@ Ayuda-memoria cronológico de experimentos enviados a cluster, ordenado de más 
 
 ## 2026-10-03
 
+### Revisión profunda de la experimentación — **Sin jobs SLURM** (local + segunda opinión)
+Resul: [revision_experimentacion](resul/revision_experimentacion_20261003.md) — **CUMPLE con correcciones**.
+Revisión propia + auditoría independiente (Fable 5.1). Clasificación, partición, selección y titulares
+reproducidos sin fuga ni selección sobre test. Hallazgos:
+
+- **Pipeline avanzado = ruteo, no generador:** imprimir los candidatos sin generador da 0.904 sobre las
+  1452 no derivadas; Mini-VLM 0.901 (−0.003, n. s.), LLaVA-Med 0.793 (−0.110). El diferencial recibe {Swin,
+  kNN}, no el top-2.
+- **`ensemble_bootstrap.py` contaba texto `<think>`** (solo LLaVA-Med): pipeline +0.056 → +0.032 solo reporte;
+  v3 +0.125 → +0.092. Nuevo `--report_only` (salida `*_report_only.json`).
+- **Matcher de consistencia por subcadena** («mel» en «melanocytic», «nv» en «invasion»): el «12 %» de Mini
+  con ancla equivocada es artefacto (1.7 % estricto). Δ del re-anclaje sin cambios.
+- **RAG con índice con fuga:** kNN 0.831 → 0.781 con índice por lesión; en el subconjunto limpio RAG solo
+  queda −0.087 [−0.136, −0.038] bajo el grounding Swin.
+- **HIBA:** 346/1616 clínicas (acc Swin 0.263 vs 0.624 dermoscópicas); fototipos I–IV. Corregido en v33.
+- **Ruteo mal descrito** (no usa calibración ni τ). Corregido en v33 y en el resul del re-anclaje.
+- **Por clase** (`per_class_ensemble.py` ahora lee la etiqueta de la metadata → `per_class_les/`): la mejora
+  del ancla nueva es de nevus; melanoma, BCC, AK y vascular bajan.
+
+**Pendiente del autor:** métrica oficial (solo reporte + estricto), lectura de H6, RAG, punto de operación
+del ancla.
+
 ### Re-anclaje: LLaVA-Med terminado y evaluado; cierre del re-anclaje — Mendieta 1178901
 Terminó el 2026-10-01 18:08 (12 h 56 min, exit 0; el `run_arm` nuevo no marcó fallas): `full_swin_les`
 1503/1503 y `full_differential_les` 248/248. Bajado por `tar` sobre `ssh`; logs en
