@@ -247,6 +247,15 @@ Schmidhuber 1997 no está en el `.bib`. Como la ficha del Capítulo 2 ya había 
 una mención mínima, **se eliminó la cláusula** en lugar de proponer la referencia. Si el marco
 teórico llegara a necesitar LSTM con desarrollo, hay que incorporarla primero.
 
+### Dato argentino del Capítulo 1 — incorporado el 04/10/2026
+
+| Clave | Referencia | Sostiene |
+|---|---|---|
+| `ervik2026cancertoday` | Ervik et al., *Global Cancer Observatory: Cancer Today*, ficha de Argentina, GLOBOCAN 2024 (IARC, septiembre de 2026) | 1 602 casos nuevos de melanoma y 571 muertes en la Argentina en 2024 (§1.1) |
+
+Verificado contra la ficha PDF de IARC (página 2, tabla por sitio). Es la cita de sitio web que la propia ficha
+recomienda.
+
 ### Estado del arte de §2.10 — incorporado el 29/09/2026
 
 Surgen de la revisión del tutor, que pidió ampliar el estado del arte con trabajos de 2020 a 2026. Cada
