@@ -18,9 +18,15 @@ que lo guían, y la Sección~\ref{sec:intro_organizacion} describe cómo se orga
 El cáncer de piel es uno de los tipos de cáncer más frecuentes del mundo. La última estimación de GLOBOCAN,
 publicada en 2026, atribuye al año 2024 1\,138\,314 casos nuevos de cáncer de piel no melanoma y 337\,969 de
 melanoma~\cite{sung2026global}. El melanoma es menos de una cuarta parte de los diagnósticos, pero causa casi
-tantas muertes como el resto de los cánceres de piel juntos, 58\,398 frente a 58\,721. En la Argentina, la misma
-estimación registra 1\,602 casos nuevos de melanoma y 571 muertes~\cite{ervik2026cancertoday}, casi una muerte
-cada tres diagnósticos, frente a una cada seis en el total mundial.
+tantas muertes como el resto de los cánceres de piel juntos, 58\,398 frente a 58\,721.
+
+En la Argentina, la misma estimación registra 1\,602 casos nuevos de melanoma y 571 muertes en
+2024~\cite{ervik2026cancertoday}, casi una muerte cada tres diagnósticos, frente a una cada seis en el total
+mundial. La enfermedad tampoco se presenta igual en todo el país. El Registro Argentino de Melanoma Cutáneo
+reunió 10\,199 casos entre 2002 y 2018: más del 80\,\% de sus pacientes residía en la región Centro, donde vive
+cerca del 65\,\% de la población, y en el Noroeste y el Noreste fueron más frecuentes las lesiones de más de
+2~mm de espesor de Breslow, la medida de profundidad del tumor con que se estima su
+pronóstico~\cite{loria2020cutaneous}.
 
 El desenlace del melanoma depende del momento en que se lo diagnostica. La supervivencia relativa a cinco años
 es de 100.0\,\% cuando se detecta localizado, baja a 76.0\,\% cuando alcanzó los ganglios regionales y a
@@ -33,34 +39,38 @@ países de ingreso bajo y 5.05 en los de ingreso alto~\cite{freeman2026global}. 
 primera valoración queda en manos de clínicos no especializados, y la dermatoscopía, el examen de la lesión con
 aumento e iluminación controlada, mejora el diagnóstico sobre todo en quienes tienen formación para
 usarla~\cite{dinnes2018dermoscopy}. Además, la lectura de una misma imagen no es uniforme, sino que varía entre
-observadores según su nivel de formación~\cite{tschandl2019comparison}.
+observadores según su nivel de formación~\cite{tschandl2019comparison}. La demanda de valoración, en cambio, es
+alta: en la campaña nacional de prevención de 2022 de la Sociedad Argentina de Dermatología, los dermatólogos
+encontraron alguna lesión sospechosa en una de cada cuatro de las 3\,635 personas examinadas en 17 provincias y
+la Ciudad de Buenos Aires, y en 70 de ellas sospecharon un melanoma~\cite{sad2023campana}.
 
-A la interpretación se suma la documentación. Cada consulta termina en un registro escrito, y en atención
-primaria casi la mitad del tiempo que el médico pasa frente a la historia clínica electrónica se va en tareas
-administrativas y de registro~\cite{arndt2017tethered}. Pocos especialistas, formación desigual y lecturas que
-varían alargan así los tiempos de atención en dos puntos: la interpretación de la lesión y la redacción de su
-reporte.
+A la interpretación se suma la documentación. Cada consulta requiere un reporte escrito, y en atención primaria
+el médico pasa 5.9 horas de una jornada de 11.4 frente a la historia clínica electrónica, casi la mitad de ellas
+en tareas administrativas y de registro~\cite{arndt2017tethered}. Pocos especialistas, formación desigual,
+lecturas que varían entre ellos y la carga de documentación alargan así los tiempos de atención de los pacientes
+en dos puntos: la interpretación de la lesión y la redacción de su reporte.
 
 Para acortar esos tiempos se aplicaron distintos métodos computacionales, entre ellos las redes neuronales. Con
 el aprendizaje profundo, las \glspl{cnn} y, más recientemente, los \glspl{vit} aprendieron a clasificar
 imágenes de lesiones a partir de ejemplos etiquetados, hasta alcanzar un desempeño comparable al de
 dermatólogos~\cite{esteva2017dermatologistlevel}. Con la masificación de los modelos de lenguaje surgieron
-después los \glspl{vlm}, que procesan imagen y texto a la vez: pueden asignar una categoría a una imagen y
-también redactar un texto sobre ella~\cite{radford2021learning,liu2023visual}, y ya se adaptaron al dominio
-médico~\cite{li2023llavamed}. Con ellos, las dos tareas, clasificar la lesión y redactar su reporte, se pueden
+después los \glspl{vlm}, que procesan imagen y texto a la vez, de modo que pueden asignar una categoría a una
+imagen y también redactar un texto sobre ella~\cite{radford2021learning,liu2023visual}, con adaptaciones
+recientes al dominio médico~\cite{li2023llavamed}. Con ellos, las dos tareas, clasificar la lesión y redactar su reporte, se pueden
 abordar con un mismo tipo de modelo.
 
 Estos métodos aceleran el análisis, pero traen sus propios problemas. Las exactitudes altas que informan las
 revisiones se obtienen en condiciones controladas~\cite{magalhaes2024systematic,kreouzi2024learning}, y queda
-abierto si se sostienen en atención primaria~\cite{jones2022intelligence} o en otra población. El desempeño cae
-en los tonos de piel menos representados en los datos de entrenamiento~\cite{daneshjou2022disparities,groh2021neural},
-y la población argentina tampoco es homogénea, porque el Registro Argentino de Melanoma Cutáneo documentó
-diferencias regionales en las características de la enfermedad~\cite{loria2020cutaneous}. En la generación de
+abierto si se sostienen en atención primaria~\cite{jones2022intelligence} o en otras poblaciones. El desempeño
+cae en los tonos de piel menos representados en los datos de entrenamiento, que dominan los conjuntos
+públicos~\cite{daneshjou2022disparities,groh2021neural}, y la población argentina, con las diferencias
+regionales que muestra su registro, recién cuenta desde 2023 con un conjunto público de imágenes
+propio~\cite{riccilara2023dataset}. En la generación de
 texto, además, un reporte puede ser fluido y aun así afirmar un diagnóstico equivocado o describir hallazgos que
 la imagen no muestra~\cite{bai2024hallucination}.
 
 Esta tesina aborda esas problemáticas. Estudia en conjunto la clasificación de lesiones de piel y la generación
-de sus reportes con \glspl{vlm}, porque las dos tareas están conectadas: el diagnóstico que produce la
+de sus reportes con \glspl{vlm}, porque las dos tareas están conectadas entre sí. El diagnóstico que produce la
 clasificación es el que el reporte debe afirmar, y un buen clasificador no garantiza un buen reporte. Todo el
 trabajo se realiza con recursos de hardware limitados.
 

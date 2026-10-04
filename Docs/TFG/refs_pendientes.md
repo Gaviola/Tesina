@@ -252,8 +252,9 @@ teórico llegara a necesitar LSTM con desarrollo, hay que incorporarla primero.
 | Clave | Referencia | Sostiene |
 |---|---|---|
 | `ervik2026cancertoday` | Ervik et al., *Global Cancer Observatory: Cancer Today*, ficha de Argentina, GLOBOCAN 2024 (IARC, septiembre de 2026) | 1 602 casos nuevos de melanoma y 571 muertes en la Argentina en 2024 (§1.1) |
+| `sad2023campana` | Sociedad Argentina de Dermatología, informe de la 29.ª Campaña Nacional de Prevención del Cáncer de Piel (2022), publicado en 2023 | 3 635 personas examinadas en 17 provincias y CABA; lesión sospechosa en 23.5 % (855); 70 melanomas presuntivos (§1.1) |
 
-Verificado contra la ficha PDF de IARC (página 2, tabla por sitio). Es la cita de sitio web que la propia ficha
+Verificado contra la ficha PDF de IARC (página 2, tabla por sitio) y contra el informe PDF de la SAD (págs. 6 y 15). Las cifras del registro argentino (10 199 casos, región Centro, Breslow > 2 mm en NOA y NEA) se tomaron del texto de `loria2020cutaneous`. Es la cita de sitio web que la propia ficha
 recomienda.
 
 ### Estado del arte de §2.10 — incorporado el 29/09/2026
