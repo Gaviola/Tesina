@@ -41,12 +41,6 @@
         \draw[figflecha] (proj.east) -- (43, 0) |- (t0.west);
 
     \end{tikzpicture}
-    \caption[Del parche al token en el Vision Transformer]{Del parche al token en el Vision
-    Transformer. La imagen se divide en una rejilla de parches cuadrados y cada parche se aplana y
-    proyecta a un token; el color indica qué token corresponde a cada parche de la fila superior. Al
-    inicio de la secuencia se agrega un token de clase ([CLS]), a partir del cual se decide la categoría.
-    A cada token se le suma un embedding de posición, porque la operación de atención por sí sola no
-    distingue el orden, y la secuencia entra al codificador \emph{transformer} sin volver a la retícula
-    de píxeles.}
+    \caption{Del parche al token en el Vision Transformer, con el token de clase ([CLS]) al inicio.}
     \label{fig:marco_vit_patches}
 \end{figure}

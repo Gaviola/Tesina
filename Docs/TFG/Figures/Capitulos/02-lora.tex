@@ -31,9 +31,6 @@
         \draw[figflecha] (sum.north) -- (h.south);
 
     \end{tikzpicture}
-    \caption[Reparametrización de LoRA]{Reparametrización de LoRA. La entrada recorre dos ramas: la de los
-    pesos preentrenados $W$, que no se modifican, y la del incremento de bajo rango $BA$, donde $A$ reduce
-    la dimensión a $r$ y $B$ la devuelve a $d$. Solo se entrenan $A$ y $B$; al terminar, $BA$ se suma a $W$ y
-    la inferencia usa una única matriz. Adaptada de \textcite{hu2021lora}.}
+    \caption{Reparametrización de LoRA con el incremento de bajo rango $BA$. Adaptada de \textcite{hu2021lora}.}
     \label{fig:marco_lora}
 \end{figure}
