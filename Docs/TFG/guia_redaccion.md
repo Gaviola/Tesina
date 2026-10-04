@@ -99,6 +99,42 @@ las dos versiones juntas.
 - **Alternativas paralelas en lista.** Cuando un párrafo enumera opciones que se comparan (estrategias de
   pérdida, variantes de un método), van en `enumerate`, no numeradas a mano dentro del texto.
 
+### Concisión: menos es más
+
+Decisión del autor (2026-10-04), tras comparar con la tesina de ejemplo: el texto estaba más largo y
+más desconectado de lo necesario. Una explicación simple, concisa y precisa se entiende mejor que una
+exhaustiva.
+
+- **Cada oración aporta un dato, una definición o un vínculo que el lector necesita.** Si se puede
+  borrar sin que el lector pierda nada, se borra. Una idea se dice una vez: no se repite al cerrar el
+  párrafo ni en la tabla y en el texto con las mismas palabras.
+- **Las transiciones son conceptuales y cortas.** Una oración que conecta un concepto con el
+  siguiente («el ajuste completo de un modelo grande no entra en una GPU, y eso motiva LoRA») basta.
+  No se escriben párrafos de cierre que anuncian la sección siguiente o enumeran lo que viene
+  («Ese orden es el de lo que sigue: primero…, después…»), ni que recapitulan lo ya dicho
+  («Las probabilidades $p_c$ son la cantidad sobre la que operan varias piezas de este capítulo…»).
+- **Sin aclaraciones defensivas.** No se agregan frases que se adelantan a una objeción («es una
+  propiedad deseable y no un diseño», «se toman como muestra del alcance, no como el desempeño
+  alcanzable hoy») salvo que el lector se vaya a equivocar sin ellas.
+- **Un ejemplo por idea, y solo si aclara.** Los ejemplos de otros dominios (el 6 rotado que pasa a
+  ser un 9) sobran cuando la idea se entiende sin ellos.
+- **Cifras solo las que sostienen el argumento.** Un dato por afirmación; el resto, si hace falta,
+  va en una tabla. En la introducción alcanzan los números que muestran la magnitud del problema.
+- **Epígrafes (`\caption`) breves.** Una oración que dice qué muestra la figura o la tabla, de una
+  línea o poco más (orientativo: hasta unas 20 palabras). La explicación de cómo leerla va en el
+  párrafo que la cita, no en el epígrafe. Una segunda oración corta solo para abreviaturas o para
+  «Tomada de / Adaptada de \cite{}». Con un epígrafe así, el argumento opcional `\caption[...]`
+  sobra.
+- **Estado del arte: un párrafo compacto por trabajo** (orientativo: 6 a 10 líneas). Dice el
+  objetivo y la novedad del método, con qué datos, contra qué se comparó y el resultado principal,
+  si hubo expertos y la limitación principal que reconocen los autores. El detalle (arquitecturas
+  exactas, todas las cifras, tamaños de cada partición) va en la tabla comparativa o no va. Los
+  trabajos secundarios, en una o dos oraciones. Cada eje ocupa del orden de una carilla y media a
+  dos (pedido del tutor, A16), tabla aparte.
+- **Referencia de proporciones** (`Docs/tesinamaglione_ejemplo.pdf`): introducción de unas tres
+  páginas, epígrafes de una línea, un párrafo por trabajo en el estado del arte, transiciones de una
+  oración.
+
 ### Conceptos, fórmulas y notación
 
 El documento es explicativo: el lector tiene que poder reconstruir cómo se calcula cada cosa que el
@@ -146,12 +182,12 @@ misma carrera que pasó el tutor (`Docs/tesinamaglione_ejemplo.pdf`, no versiona
 - **El marco teórico no se ordena según el *pipeline*.** Presenta los conceptos que después
   justifican el *pipeline*, de modo que el diseño del Capítulo 3 aparezca como consecuencia del
   marco y del estado del arte, y no al revés.
-- **Transición entre secciones.** Cada sección del marco cierra con un párrafo que relaciona sus
-  arquitecturas o conceptos con los de la sección siguiente.
+- **Transición entre secciones.** Cada sección del marco cierra relacionando sus arquitecturas o
+  conceptos con los de la sección siguiente, en una o dos oraciones (ver «Concisión»).
 - **El estado del arte cierra cada eje con una síntesis**: qué aporta la línea, cómo la atacan las
-  distintas familias de trabajos y qué queda sin resolver. Por cada trabajo se dice objetivo,
-  método, datos, métricas, contra qué se comparó, resultados, si hubo evaluación con expertos y
-  qué limitaciones reconocen los autores.
+  distintas familias de trabajos y qué queda sin resolver, en uno o dos párrafos. Por cada trabajo
+  se dice objetivo, método, datos, métricas, contra qué se comparó, resultados, si hubo evaluación
+  con expertos y qué limitaciones reconocen los autores, en un párrafo compacto (ver «Concisión»).
 
 ### Patrones de escritura automatizada
 
@@ -222,7 +258,8 @@ inglés, así que las denominaciones coinciden. No se redefine un acrónimo ya d
 
 **No hay límite de extensión.** Cada capítulo tiene la extensión que necesite para cubrir su
 contenido (decisión del autor, 2026-09-28). La ficha estima la extensión de cada sección solo como
-orientación para planificar.
+orientación para planificar. Que no haya límite no habilita el relleno: la extensión se justifica
+con contenido, y ante la duda se elige la versión más corta (ver «Concisión», 2026-10-04).
 
 Las estimaciones de extensión y las fuentes de cada capítulo van como **comentarios LaTeX**
 (`% Extensión estimada:`, `% Fuentes:`) al inicio del archivo, nunca en el cuerpo del texto.
@@ -281,8 +318,9 @@ El encuadre de cada referencia anterior a 2020 que ya está en el `.bib` queda r
 - **Marcas de estado:** `\pendiente{...}` para contenido no escrito. Es el lugar donde después se
   escribe la sección: la prosa lo reemplaza en el mismo archivo. La lista se imprime con
   `\listadependientes` y solo existe con `docstage=working`.
-- **Figuras** en `Figures/`, formato vectorial cuando sea posible, con `\caption` que se entienda
-  sin leer el cuerpo del texto y `\label`. Las tablas llevan `\caption` arriba.
+- **Figuras** en `Figures/`, formato vectorial cuando sea posible, con `\caption` breve que dice
+  qué muestra (sección 3, «Concisión»; la explicación va en el texto) y `\label`. Las tablas llevan
+  `\caption` arriba.
 - **Diagramas.** Uno por archivo en `Figures/Capitulos/`, con el flotante completo adentro
   (`figure`, `\caption`, `\label`), y se traen con `\input{Figures/Capitulos/...}` desde la sección.
   Se dibujan con TikZ, no se importan como imagen: así se editan con el documento y escalan con la
