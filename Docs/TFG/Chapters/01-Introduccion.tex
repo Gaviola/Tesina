@@ -77,19 +77,20 @@ trabajo se realiza con recursos de hardware limitados.
 \section{Objetivos}
 \label{sec:intro_objetivos}
 El objetivo general es desarrollar y evaluar un sistema basado en modelos de aprendizaje profundo y \glspl{vlm},
-adaptados a partir de modelos preentrenados, que clasifique lesiones de piel y genere su reporte a partir de una
-imagen, y analizar cuán bien clasifica, si el reporte afirma el diagnóstico correcto y si el sistema puede
-ejecutarse con recursos de hardware limitados.
+adaptados a partir de modelos preentrenados, capaz de asistir en el diagnóstico de lesiones de piel y en la
+generación automática de reportes clínicos estructurados a partir de imágenes, con el fin de mejorar la
+exactitud diagnóstica y agilizar el flujo de trabajo. Se analiza cuán bien clasifica, si el reporte afirma el
+diagnóstico correcto y si el sistema puede ejecutarse con recursos de hardware limitados.
 
 Los objetivos específicos son:
 \begin{enumerate}[label=\textbf{OE\arabic*.}]
-  \item Desarrollar y comparar clasificadores de lesiones de piel basados en \glspl{cnn}, \glspl{vit} y
-  \glspl{vlm}, generales y especializados en dermatología, con atención particular a la identificación del
-  melanoma.
-  \item Desarrollar un \gls{vlm} que genere, a partir de la imagen, el reporte de la lesión con un diagnóstico
-  preliminar, y evaluar por separado si ese diagnóstico es correcto y si la descripción corresponde a la lesión.
-  \item Evaluar el sistema en condiciones distintas de las de su entrenamiento: con imágenes de otra población,
-  ante los casos en que no tiene seguridad sobre el diagnóstico y según su costo computacional.
+  \item Diseñar, implementar y evaluar clasificadores de lesiones de piel basados en \glspl{cnn}, \glspl{vit}
+  y \glspl{vlm}, generales y especializados en dermatología, para identificar posibles melanomas.
+  \item Diseñar, implementar y evaluar un \gls{vlm}, ajustado a partir de un modelo preentrenado, que integre
+  información visual y textual para producir un diagnóstico preliminar y el reporte de la lesión.
+  \item Evaluar el desempeño del sistema en distintos escenarios, como imágenes de otra población o casos en
+  que no tiene seguridad sobre el diagnóstico, analizando su exactitud diagnóstica, la calidad del texto
+  generado y su utilidad práctica, incluido su costo computacional.
 \end{enumerate}
 
 Los objetivos responden a dos preguntas que guían el trabajo:
@@ -103,12 +104,13 @@ Los objetivos responden a dos preguntas que guían el trabajo:
 La Tabla~\ref{tab:intro_objetivos_preguntas} relaciona cada objetivo específico con la pregunta que contribuye a
 responder y con los capítulos donde se lo describe y se lo evalúa.
 
-\begin{table}[htbp]
+\begin{table}[H]
   \centering
   \caption{Relación entre los objetivos específicos, las preguntas y los capítulos.}
   \label{tab:intro_objetivos_preguntas}
   \small
-  \begin{tabularx}{\textwidth}{@{}p{0.29\textwidth}p{0.10\textwidth}XX@{}}
+  \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.29\textwidth}p{0.10\textwidth}
+    >{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
     \toprule
     Objetivo específico & Pregunta & Se diseña y describe en & Se evalúa y responde en \\
     \midrule
@@ -120,7 +122,7 @@ responder y con los capítulos donde se lo describe y se lo evalúa.
       Capítulo~\ref{cp:metodos}, Materiales y métodos &
       Capítulo~\ref{cp:res_gen}, Resultados de generación \\
     \filasep
-    OE3. Evaluación en distintas condiciones & PI1 y PI2 &
+    OE3. Evaluación en distintos escenarios & PI1 y PI2 &
       Capítulo~\ref{cp:metodos} (protocolo de evaluación) &
       Capítulos~\ref{cp:res_clasif} y~\ref{cp:res_gen} (resultados) y Capítulo~\ref{cp:discusion} (discusión y
       limitaciones) \\
