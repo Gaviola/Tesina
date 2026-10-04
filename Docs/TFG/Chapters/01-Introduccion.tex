@@ -5,145 +5,93 @@
 % "Marco de la Problemática"), PLAN_TFG_GAVIOLA_FACUNDO.pdf y la revisión del tutor del 28/09/2026
 % (tareas_revision_cap1-2.md, I1--I8). Sin hipótesis (D1): solo preguntas de investigación y objetivos.
 
-Este capítulo presenta el problema que motiva el trabajo, las preguntas de investigación y los objetivos que
-lo organizan, y describe cómo se estructura el resto del documento. Primero se plantea el problema clínico del
-diagnóstico de las lesiones de piel y de su documentación, y qué puede aportar la \gls{ia}. A partir de ahí se
-formulan las preguntas y se enuncian los objetivos, y el capítulo cierra con la organización de los capítulos
-siguientes.
+Este capítulo presenta el problema que motiva el trabajo, las preguntas de investigación y los objetivos, y
+describe cómo se organiza el documento.
 
 \section{Contexto y motivación}
 \label{sec:intro_contexto}
 
 El cáncer de piel es uno de los tipos de cáncer más frecuentes del mundo. La última estimación de GLOBOCAN,
-publicada en 2026, para el año 2024, atribuye 1\,138\,314 casos nuevos de cáncer de piel no melanoma, el
-quinto tumor más frecuente del planeta, y 337\,969 casos de melanoma~\cite{sung2026global}. El melanoma es
-menos de una cuarta parte de los diagnósticos, pero las muertes se reparten casi por partes iguales entre los
-dos grupos, 58\,398 por melanoma y 58\,721 por el resto de los cánceres de piel. Esa fracción menor
-concentra la mitad de la mortalidad, y queda por establecer de qué depende el desenlace.
+publicada en 2026, atribuye al año 2024 1\,138\,314 casos nuevos de cáncer de piel no melanoma y 337\,969 de
+melanoma~\cite{sung2026global}. El melanoma es menos de una cuarta parte de los diagnósticos, pero causa casi
+tantas muertes como el resto de los cánceres de piel juntos, 58\,398 frente a 58\,721.
 
-\looseness=-1 El desenlace del melanoma depende del momento en que se lo diagnostica. La supervivencia relativa a cinco
-años (la proporción de pacientes que sobrevive una vez descontada la mortalidad esperada en la población
-general) es de 100.0\,\% cuando el melanoma se detecta localizado, baja a 76.0\,\% cuando alcanzó los
-ganglios regionales y a 34.0\,\% cuando hay metástasis a distancia~\cite{nci2026melanoma}. En esa misma serie,
-77\,\% de los casos se diagnostican localizados, 10\,\% con extensión regional y 5\,\% con metástasis a
-distancia, de modo que el margen de mejora está en ese 15\,\% de diagnósticos no localizados. Por eso
-importan las herramientas de apoyo al diagnóstico que permitan detectarla a tiempo.
+El desenlace del melanoma depende del momento en que se lo diagnostica. La supervivencia relativa a cinco años
+es de 100.0\,\% cuando se detecta localizado, baja a 76.0\,\% cuando alcanzó los ganglios regionales y a
+34.0\,\% cuando hay metástasis a distancia~\cite{nci2026melanoma}. Por eso importan las herramientas de apoyo al
+diagnóstico que permitan detectarlo a tiempo.
 
-Dentro de la detección temprana intervienen varios factores, y el primero es la disponibilidad de
-especialistas. Un relevamiento de la densidad de dermatólogos en 158 países estimó una media de 2.66
-especialistas por cada 100\,000 habitantes, con un rango que va de 0.37 en los países de ingreso bajo a 5.05
-en los de ingreso alto~\cite{freeman2026global}. Donde el especialista es escaso, la primera valoración de
-una lesión queda muchas veces en manos de un clínico que no lo es, y ese clínico necesita un instrumento con el
-cual examinarla.
+La detección temprana enfrenta varias limitaciones. Los especialistas son escasos: un relevamiento en 158
+países estimó una media de 2.66 dermatólogos por cada 100\,000 habitantes, con un rango de 0.37 en los países de
+ingreso bajo a 5.05 en los de ingreso alto~\cite{freeman2026global}. Donde faltan, la primera valoración queda en
+manos de clínicos que necesitan la dermatoscopía, cuyo beneficio depende de una formación que no todos
+tienen~\cite{dinnes2018dermoscopy}. Aun con esa formación, la lectura de una misma imagen varía entre
+observadores según su nivel de experiencia~\cite{tschandl2019comparison}. A esto se suma la documentación, que
+consume una parte grande del tiempo médico~\cite{arndt2017tethered}.
 
-Ese instrumento es la dermatoscopía, que examina la lesión con aumento e iluminación controlada y mejora la
-exactitud diagnóstica respecto de la inspección a simple vista. Una revisión sistemática de 104 estudios
-confirma esa mejora sobre todo en manos de usuarios experimentados y en pacientes derivados a un especialista,
-y encuentra pocos datos que respalden su uso en atención primaria, donde la recomienda solo para clínicos con
-formación adecuada~\cite{dinnes2018dermoscopy}. La herramienta existe, pero su beneficio depende de una
-formación que no todos los clínicos que ven lesiones de piel tienen.
+Esas limitaciones retrasan la atención en dos puntos, la interpretación de la lesión y la redacción de su
+reporte, y de ahí surgen dos tareas computacionales: asignar una categoría a la lesión y redactar su reporte.
 
-Aun entre quienes cuentan con esa formación, la lectura de una misma imagen no es uniforme. Un estudio de gran
-escala enfrentó a 511 observadores humanos con 139 algoritmos sobre el mismo material dermatoscópico y encontró
-un rango amplio de desempeño entre ellos, asociado a su nivel de formación~\cite{tschandl2019comparison}. Esa
-dispersión tiene dos consecuencias. No hay una lectura humana única y, por lo tanto, la etiqueta producida por
-un único observador no constituye una referencia estable.
+Para la primera se aplicaron métodos de aprendizaje profundo, como las \glspl{cnn} y los \glspl{vit} entrenados
+de forma supervisada sobre imágenes etiquetadas~\cite{dosovitskiy2021image,liu2021swin}. Ya en 2017 una \gls{cnn}
+alcanzó un desempeño comparable al de dermatólogos certificados~\cite{esteva2017dermatologistlevel}.
+Sin embargo, las revisiones sistemáticas registran exactitudes altas en condiciones
+controladas~\cite{magalhaes2024systematic,kreouzi2024learning}, y queda abierto si ese desempeño se conserva en
+atención primaria~\cite{jones2022intelligence}. Además, un clasificador produce una categoría y no el texto que
+la describe, de modo que la documentación queda sin asistencia.
 
-A la interpretación se suma la documentación, que también consume una parte grande del tiempo médico. En
-atención primaria general, no en dermatología, los registros de uso de la historia clínica electrónica,
-validados con observación directa, muestran que el médico pasa 5.9 horas de una jornada de 11.4 frente a
-ella, 1.4 de las cuales caen fuera del horario de atención. Casi la mitad de ese tiempo (44.2\,\%) se va en
-tareas administrativas y de registro~\cite{arndt2017tethered}. Redactar el reporte de una lesión es parte de
-esa carga y una tarea distinta de la de emitir el diagnóstico. Pocos especialistas, lecturas que varían y
-documentación que consume tiempo alargan los tiempos de atención en dos puntos, el de la interpretación de la
-lesión y el de su documentación. De ahí surgen dos tareas computacionales distintas, asignar una categoría a la
-lesión y redactar su reporte.
-
-Para reducir esos retrasos se aplicaron métodos computacionales, entre ellos las redes neuronales. Con el
-aprendizaje profundo, las \glspl{cnn} y los \glspl{vit} entrenados de forma supervisada sobre imágenes etiquetadas se aplicaron a la clasificación de
-lesiones~\cite{dosovitskiy2021image,liu2021swin}. Ya en 2017 una red convolucional alcanzó un desempeño
-comparable al de dermatólogos certificados~\cite{esteva2017dermatologistlevel}, y en 2019 el estudio de
-observadores ya citado encontró que los mejores algoritmos superaban a los expertos humanos sobre el mismo tipo
-de material~\cite{tschandl2019comparison}. Ambos resultados son anteriores a la adopción de los
-\emph{transformers} en visión por computadora y se toman como muestra del alcance de estos métodos, no como el
-desempeño alcanzable hoy.
-
-\looseness=-1 Esos métodos tienen límites. Las revisiones sistemáticas posteriores registran exactitudes altas en
-condiciones controladas~\cite{magalhaes2024systematic,kreouzi2024learning}, mientras que los trabajos que
-examinan el uso de estos sistemas en atención primaria y comunitaria plantean otra pregunta, la de si ese
-desempeño se conserva fuera de condiciones de interpretación especializada~\cite{jones2022intelligence}.
-Además, un clasificador produce una categoría, o una distribución sobre categorías, y no el texto que la
-describe, de modo que la documentación queda sin asistencia.
-
-Los \glspl{vlm} responden en parte a esa limitación de la salida, porque integran
-información visual y textual. Se entrenan con pares imagen--descripción que ubican a ambas modalidades en un
-espacio común, lo que permite clasificar una imagen comparándola con frases sin fijar de antemano las
-categorías posibles~\cite{radford2021learning}. Los modelos generativos multimodales agregan un modelo de
+Los \glspl{vlm} responden a esa limitación porque integran información visual y textual. Se entrenan con pares
+imagen--descripción que ubican ambas modalidades en un espacio común, lo que permite clasificar una imagen sin
+fijar de antemano las categorías~\cite{radford2021learning}. Los modelos generativos agregan un modelo de
 lenguaje que produce texto libre condicionado a la imagen~\cite{liu2023visual}, y su adaptación al dominio
-biomédico mostró que el procedimiento se traslada a imágenes médicas~\cite{li2023llavamed}. Estos modelos
-pueden ser generales o estar especializados en un dominio, y se los ajusta a una tarea continuando su
-entrenamiento con datos de esa tarea.
+biomédico mostró que el procedimiento se traslada a imágenes médicas~\cite{li2023llavamed}. Pueden ser generales
+o estar especializados en un dominio.
 
-A partir de lo anterior se identifican dos temas de trabajo aún abiertos. El primero es la generalización. La
-evaluación de sistemas de \gls{ia} dermatológica sobre conjuntos de imágenes curados para cubrir el rango de
-fototipos muestra caídas de desempeño en los tonos de piel menos representados en los datos de entrenamiento,
-que son los que dominan los conjuntos públicos~\cite{daneshjou2022disparities,groh2021neural}, y la población
-argentina tampoco se puede suponer homogénea, porque el Registro Argentino de Melanoma Cutáneo reunió 10\,199
-casos entre 2002 y 2018 y documentó diferencias regionales en las características de la
-enfermedad~\cite{loria2020cutaneous}. El segundo son los reportes diagnósticamente fieles. Un reporte generado
-tiene que describir la lesión que la imagen muestra y afirmar el diagnóstico correcto, sin sostener lo que la
-imagen no respalda. En este trabajo se denomina fidelidad diagnóstica a la coincidencia entre el diagnóstico que
-el reporte afirma y el de referencia de la imagen, y calidad descriptiva a la adecuación del texto a la lesión
-que la imagen muestra.
+Quedan abiertos dos temas. El primero es la generalización. El desempeño de los sistemas de \gls{ia}
+dermatológica cae en los tonos de piel menos representados en los datos de entrenamiento, que dominan los
+conjuntos públicos~\cite{daneshjou2022disparities,groh2021neural}, y la población argentina tampoco se puede
+suponer homogénea, porque el Registro Argentino de Melanoma Cutáneo documentó diferencias regionales en las
+características de la enfermedad~\cite{loria2020cutaneous}. El segundo son los reportes diagnósticamente fieles,
+que describen la lesión que la imagen muestra y afirman el diagnóstico correcto sin sostener lo que la imagen no
+respalda. En este trabajo se denomina fidelidad diagnóstica a la coincidencia entre el diagnóstico que el
+reporte afirma y el de referencia de la imagen, y calidad descriptiva a la adecuación del texto a la lesión que
+la imagen muestra.
 
-Las dos tareas están conectadas, porque la salida de una es la entrada de la otra. El diagnóstico de la
-clasificación es lo que el texto debe afirmar y sostener, y por eso no basta resolverlas por separado. Un
-texto fluido puede sostener un diagnóstico equivocado, y un diagnóstico acertado puede ir acompañado de una
-descripción que no corresponde a la lesión, de modo que un modelo bueno para clasificar no garantiza un reporte
-fiel, ni un texto convincente garantiza un diagnóstico correcto. El problema de investigación que se plantea es
-entonces el estudio conjunto de la clasificación de lesiones y de la generación de reportes con modelos
-visión--lenguaje, con recursos de hardware limitados. De ese problema se derivan las preguntas de
-investigación de la sección siguiente.
+Las dos tareas están conectadas, porque el diagnóstico de la clasificación es lo que el texto debe afirmar. Un
+texto fluido puede sostener un diagnóstico equivocado, y un diagnóstico acertado puede acompañarse de una
+descripción que no corresponde a la lesión, por lo que no basta resolverlas por separado. El problema de
+investigación es entonces el estudio conjunto de la clasificación de lesiones y de la generación de reportes con
+\glspl{vlm}, con recursos de hardware limitados.
 
 \section{Preguntas de investigación}
 \label{sec:intro_preguntas}
-El problema de investigación se traduce en dos preguntas, una por tarea. Se formulan por separado porque las
-salidas son de naturaleza distinta, una categoría y un texto, y se evalúan con criterios de acierto y métricas
-que no se traducen entre sí, de modo que la respuesta a una no adelanta la de la otra.
+El problema se traduce en dos preguntas, una por tarea, porque sus salidas, una categoría y un texto, se evalúan
+con métricas que no se traducen entre sí.
 
 \begin{enumerate}[label=\textbf{PI\arabic*.}]
-  \item ¿Cómo se compara el desempeño de modelos visión--lenguaje generales y especializados con el de
-  clasificadores visuales supervisados en la clasificación de lesiones de piel y en la detección de melanoma?
+  \item ¿Cómo se compara el desempeño de \glspl{vlm} generales y especializados con el de clasificadores
+  visuales supervisados en la clasificación de lesiones de piel y en la detección de melanoma?
   \item ¿Qué fidelidad diagnóstica y qué calidad descriptiva alcanzan, por separado, los reportes que genera un
   \gls{vlm} ajustado a partir de la imagen?
 \end{enumerate}
 
-La primera pregunta se responde en el Capítulo~\ref{cp:res_clasif} y la segunda en el
-Capítulo~\ref{cp:res_gen}, y ambas se discuten en conjunto en el Capítulo~\ref{cp:discusion}.
-
 \section{Objetivos}
 \label{sec:intro_objetivos}
-A partir del problema y de las preguntas se plantean un objetivo general y tres objetivos específicos.
-
-El objetivo general es diseñar, implementar y evaluar un enfoque de aprendizaje profundo y de modelos
-visión--lenguaje, adaptados a partir de modelos preentrenados, para clasificar lesiones cutáneas y generar
-reportes dermatológicos a partir de imágenes, y analizar su desempeño diagnóstico, la fidelidad diagnóstica de
-los reportes y su viabilidad computacional con recursos de hardware limitados.
+El objetivo general es diseñar, implementar y evaluar un enfoque de aprendizaje profundo y de \glspl{vlm},
+adaptados a partir de modelos preentrenados, para clasificar lesiones cutáneas y generar reportes
+dermatológicos a partir de imágenes, y analizar su desempeño diagnóstico, la fidelidad diagnóstica de los
+reportes y su viabilidad computacional con recursos de hardware limitados.
 
 Los objetivos específicos son:
 \begin{enumerate}[label=\textbf{OE\arabic*.}]
-  \item Diseñar, implementar y evaluar, adaptando modelos preentrenados, clasificadores de lesiones
-  cutáneas basados en redes convolucionales, transformers visuales y modelos visión--lenguaje, para
-  identificar posibles melanomas. Se comparan modelos visión--lenguaje generales y especializados con
-  clasificadores visuales supervisados sobre el mismo material, y se mide su desempeño en la clasificación y en
-  la identificación de melanoma.
-  \item Diseñar, implementar y evaluar, adaptando modelos preentrenados, un modelo visión--lenguaje que
-  integre información visual y textual para producir un diagnóstico preliminar y reportes de lesiones
-  cutáneas. Incluye estrategias para que el texto afirme solo el diagnóstico que la evidencia respalda, y se
-  evalúan por separado la fidelidad diagnóstica y la calidad descriptiva de los reportes.
-  \item Evaluar el desempeño de los modelos desarrollados en distintas condiciones, analizando su desempeño
-  diagnóstico, la calidad del texto generado y su costo computacional. Incluye la generalización a otra
-  población, la calibración de la confianza de las predicciones y el tratamiento de la incertidumbre.
+  \item Diseñar, implementar y evaluar, adaptando modelos preentrenados, clasificadores de lesiones cutáneas
+  basados en \glspl{cnn}, \glspl{vit} y \glspl{vlm} para identificar posibles melanomas, y comparar los
+  \glspl{vlm} generales y especializados con los clasificadores supervisados.
+  \item Diseñar, implementar y evaluar un \gls{vlm}, adaptado de un modelo preentrenado, que integre información
+  visual y textual para producir un diagnóstico preliminar y el reporte de la lesión, con evaluación separada de
+  la fidelidad diagnóstica y la calidad descriptiva.
+  \item Evaluar los modelos desarrollados en distintas condiciones: la generalización a otra población, la
+  calibración de la confianza y el tratamiento de la incertidumbre, y el costo computacional.
 \end{enumerate}
 
 La Tabla~\ref{tab:intro_objetivos_preguntas} relaciona cada objetivo específico con la pregunta que contribuye a
@@ -174,33 +122,24 @@ responder y con los capítulos donde se lo describe y se lo evalúa.
   \end{tabularx}
 \end{table}
 
-El marco conceptual de todos los objetivos está en el Capítulo~\ref{cp:marco}, y el balance de su cumplimiento,
-en el Capítulo~\ref{cp:conclusiones}.
-
 \section{Organización del documento}
 \label{sec:intro_organizacion}
 Después de esta introducción, el documento se organiza en seis capítulos:
 
 \begin{description}
   \item[Capítulo~\ref{cp:marco}, Marco teórico.] Este capítulo presenta los conceptos necesarios para leer el
-  resto: los fundamentos del aprendizaje profundo, los \emph{transformers}, la clasificación visual, los
-  modelos de lenguaje y los modelos visión--lenguaje, la generación de reportes y el tratamiento de la
-  incertidumbre, las métricas de evaluación, el sesgo y la generalización, y el estado del arte.
-  \item[Capítulo~\ref{cp:metodos}, Materiales y métodos.] El capítulo presenta la metodología de trabajo: los
-  conjuntos de datos, los modelos que se comparan, el formato del reporte, el \emph{pipeline} y el protocolo de
-  evaluación.
-  \item[Capítulo~\ref{cp:res_clasif}, Resultados de clasificación.] Este capítulo presenta la comparación de
-  las estrategias de clasificación, los análisis que surgen de sus resultados y la evaluación del desempeño
-  fuera del conjunto de entrenamiento.
-  \item[Capítulo~\ref{cp:res_gen}, Resultados de generación.] El capítulo presenta la evaluación de los
-  reportes generados, el análisis de sus fallas y la comparación de las configuraciones del \emph{pipeline} con
-  su costo de cómputo.
+  resto y el estado del arte.
+  \item[Capítulo~\ref{cp:metodos}, Materiales y métodos.] Este capítulo presenta los conjuntos de datos, los
+  modelos, el \emph{pipeline} y el protocolo de evaluación.
+  \item[Capítulo~\ref{cp:res_clasif}, Resultados de clasificación.] Este capítulo presenta la comparación de las
+  estrategias de clasificación y la evaluación fuera del conjunto de entrenamiento.
+  \item[Capítulo~\ref{cp:res_gen}, Resultados de generación.] Este capítulo presenta la evaluación de los
+  reportes generados y el costo de cómputo de las configuraciones del \emph{pipeline}.
   \item[Capítulo~\ref{cp:discusion}, Discusión.] Este capítulo presenta la interpretación conjunta de los
-  resultados, la respuesta a las preguntas de investigación y las limitaciones del trabajo.
-  \item[Capítulo~\ref{cp:conclusiones}, Conclusiones.] El capítulo presenta los hallazgos principales, el
-  balance de los objetivos y las líneas de trabajo futuro.
+  resultados, la respuesta a las preguntas de investigación y las limitaciones.
+  \item[Capítulo~\ref{cp:conclusiones}, Conclusiones.] Este capítulo presenta los hallazgos principales, el
+  balance de los objetivos y el trabajo futuro.
 \end{description}
 
-\looseness=-1 Los apéndices reúnen el material propio que no entra en el cuerpo (hiperparámetros, \emph{prompts},
-resultados complementarios y lo necesario para reproducirlos), y el anexo, las fichas de
-los conjuntos de datos y de los modelos externos que el trabajo utiliza.
+Los apéndices reúnen el material propio que no entra en el cuerpo, y el anexo, las fichas de los conjuntos de
+datos y de los modelos externos que el trabajo utiliza.
