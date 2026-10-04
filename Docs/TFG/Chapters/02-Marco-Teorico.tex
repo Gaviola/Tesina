@@ -99,8 +99,10 @@ parámetro que se entrena.
 En redes con muchas capas, el gradiente que llega a una capa temprana es, por la regla de la cadena, un
 producto con un factor por cada capa que la separa de la pérdida. Si esos factores son menores que uno, el
 gradiente se desvanece y las primeras capas casi no aprenden, y si son mayores, explota y el entrenamiento
-diverge~\cite{goodfellow2016deep}. Las conexiones residuales (Sección~\ref{sec:marco_cnn}) atenúan el
-problema al dar al gradiente un camino directo hacia las capas anteriores~\cite{he2015residual}.
+diverge~\cite{goodfellow2016deep}. Lo atenúan las inicializaciones que conservan la escala de las
+activaciones, las capas de normalización intermedias y las conexiones residuales
+(Sección~\ref{sec:marco_cnn}), que dan al gradiente un camino directo hacia las capas
+anteriores~\cite{goodfellow2016deep,he2015residual}.
 
 \subsection{Generalización y regularización}
 \label{sec:marco_regularizacion}
@@ -959,23 +961,11 @@ cuatro celdas: los
 verdaderos positivos ($\mathrm{TP}$), los falsos negativos ($\mathrm{FN}$), los falsos positivos
 ($\mathrm{FP}$) y los verdaderos negativos ($\mathrm{TN}$).
 
-\begingroup De la matriz salen las medidas por clase. La sensibilidad de la clase $c$, $R_c$, es la fracción de sus
-imágenes que el modelo acierta, y la especificidad es la fracción de las imágenes de las otras clases que el
-modelo no predice como $c$,\clubpenalty=10000 \displaywidowpenalty=10000
-\begin{equation}
-    R_c = \frac{M_{cc}}{\sum_{j} M_{cj}}, \qquad
-    \mathrm{Esp}_c = \frac{\sum_{i \neq c}\sum_{j \neq c} M_{ij}}{\sum_{i \neq c}\sum_{j} M_{ij}}.
-    \label{eq:marco_sens_esp}
-\end{equation}
-Las dos se mueven en sentidos opuestos cuando cambia el umbral de decisión~\cite{fawcett2006introduction}.
-Cuando interesa una sola condición, la salida multiclase se colapsa en una binaria, la clase de interés o un
-grupo de clases, por ejemplo las malignas, frente a las demás, con la probabilidad de la clase o la suma de
-las del grupo como puntaje. A esa tarea binaria derivada se la llama detección.\par\endgroup
-
 La exactitud es la fracción de imágenes bien clasificadas, $\sum_c M_{cc} / n$, y es engañosa cuando las clases
 están desbalanceadas (Sección~\ref{sec:marco_desbalance}): si una clase reúne dos tercios de las imágenes, un
 modelo que responda siempre esa clase alcanza una exactitud cercana a 0.67. La \textbf{sensibilidad macro}
-promedia las sensibilidades por clase para que cada una pese lo mismo,
+corrige eso. Con $R_c = M_{cc} / \sum_{j} M_{cj}$, la fracción de las imágenes de la clase $c$ que el modelo
+acierta, promedia esas fracciones para que cada clase pese lo mismo,
 \begin{equation}
     \text{sensibilidad macro} = \frac{1}{C}\sum_{c=1}^{C} R_c,
     \label{eq:marco_acc_bal}
@@ -994,6 +984,19 @@ armónica. El promedio de los F1 por clase se puede hacer de dos maneras,
 \end{equation}
 donde $n_c$ es el número de imágenes de la clase $c$ y $n$ el total. El F1 ponderado pesa cada clase por su
 tamaño y queda dominado por la más frecuente, mientras que el F1 macro da a las $C$ clases el mismo peso.
+
+\begingroup Cuando interesa una sola condición, la salida multiclase se colapsa en una binaria, la clase de interés
+o un grupo de clases, por ejemplo las malignas, frente a las demás, con la probabilidad de la clase o la suma
+de las del grupo como puntaje. A esa tarea binaria derivada se la llama detección, y se evalúa con la
+sensibilidad $R_c$ de la clase de interés y con su especificidad, la fracción de las imágenes de las otras
+clases que el modelo no predice como $c$,\clubpenalty=10000 \displaywidowpenalty=10000
+\begin{equation}
+    R_c = \frac{M_{cc}}{\sum_{j} M_{cj}}, \qquad
+    \mathrm{Esp}_c = \frac{\sum_{i \neq c}\sum_{j \neq c} M_{ij}}{\sum_{i \neq c}\sum_{j} M_{ij}}.
+    \label{eq:marco_sens_esp}
+\end{equation}
+Las dos se mueven en sentidos opuestos cuando cambia el umbral de decisión~\cite{fawcett2006introduction}.\par
+\endgroup
 
 Las métricas anteriores dependen de un umbral de decisión. En la tarea binaria, el modelo asigna a cada imagen
 un puntaje $s$ y la declara positiva si $s$ supera un umbral $\tau$. Cada umbral produce una tasa de
@@ -1342,6 +1345,9 @@ derivadas; por eso los autores no recomiendan todavía adoptar estos modelos en 
 primaria~\cite{jones2022intelligence}. Un conjunto del Hospital Italiano de Buenos Aires, que sus autores
 presentan como el primer conjunto público de imágenes dermatoscópicas y clínicas recolectado en Argentina, se
 creó para evaluar herramientas de este tipo en la población local~\cite{riccilara2023dataset}.
+
+Con qué datos y con qué protocolo se evaluó un trabajo decide entonces si su resultado se sostiene fuera de su
+conjunto de origen, y ese es el criterio con el que la sección siguiente revisa la literatura.
 
 \section{Estado del arte}
 \label{sec:estado_arte}
