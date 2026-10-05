@@ -12,6 +12,15 @@
 % flotante que salta al principio de la página siguiente corta el párrafo que viene a continuación.
 \RequirePackage{float}
 
+% Con [H], un flotante que no entra pasa a la página siguiente. Con \flushbottom (el valor por defecto a dos
+% caras) el hueco que deja se repartía entre los párrafos y aparecían espacios en blanco en medio del texto;
+% \raggedbottom lo deja al pie de la página.
+\raggedbottom
+
+% \FloatBarrier: las tablas grandes (estado del arte) flotan para no dejar media página vacía, pero no pueden
+% pasar de la subsección en la que se las trae.
+\RequirePackage{placeins}
+
 % Paleta de Okabe e Ito, distinguible con las formas habituales de daltonismo. Cada rol del diagrama
 % tiene un color, y además una forma de trazo propia (lleno, grueso, discontinuo): el diagrama sigue
 % siendo legible impreso en blanco y negro, porque los rellenos son claros y difieren en luminancia.

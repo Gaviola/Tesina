@@ -255,24 +255,79 @@ decisión. La exactitud global, además, engaña con clases desbalanceadas, y la
 clase, como el F1 macro y la sensibilidad macro, no tienen ese defecto (Sección~\ref{sec:marco_eval_clasif}).
 
 Hasta aquí, la red trata su entrada como un vector sin estructura. Las arquitecturas que hicieron práctico el
-aprendizaje profundo incorporaron la estructura de cada tipo de dato. Para las imágenes, las redes
-convolucionales, propuestas a fines de la década de 1990, aprovechan que los píxeles cercanos están
-relacionados y aplican los mismos filtros en toda la imagen~\cite{lecun1998gradient}. Para las secuencias,
-como un texto, las redes recurrentes avanzaban un elemento por vez, de modo que el acceso a un elemento lejano
-pasaba por todos los intermedios y el cálculo de un paso esperaba al del anterior. En 2017, la atención
-resolvió ese límite y dio lugar a la arquitectura que hoy comparten los modelos de texto y buena parte de los
-de imagen~\cite{vaswani2017attention}.
+aprendizaje profundo incorporaron la estructura de cada tipo de dato, y la primera en hacerlo con las imágenes
+fue la red convolucional.
+
+\section{Redes convolucionales}
+\label{sec:marco_vision}
+
+Clasificar una imagen consiste en asignarla a una de $C$ categorías: la entrada es la imagen y la salida, el
+vector de probabilidades $p_c$ de la Ecuación~\ref{eq:marco_softmax}. Para eso hay que convertir una matriz
+de píxeles, de dimensión muy alta, en un vector de características que la cabeza de clasificación pueda
+separar por clase. Las \glspl{cnn}, propuestas a fines de la década de 1990, lo hacen componiendo filtros
+locales~\cite{lecun1998gradient}, y fueron la arquitectura dominante en clasificación de imágenes hasta la
+llegada de los transformers.
+
+\subsection{Convolución y arquitectura de una red convolucional}
+\label{sec:marco_cnn}
+
+La operación de convolución desliza un filtro de pequeño tamaño (\emph{kernel}) $K$ de $k \times k$ pesos
+sobre la entrada $I$ y calcula en cada posición el producto punto entre el filtro y la ventana que cubre,
+\begin{equation}
+    S(i, j) = \sum_{m=0}^{k-1}\sum_{n=0}^{k-1} I(i+m,\, j+n)\, K(m, n).
+    \label{eq:marco_convolucion}
+\end{equation}
+El resultado $S$ es un mapa de características, que vale alto donde la ventana se parece al patrón que el
+filtro codifica. La conectividad local supone que la información relevante se agrupa en regiones pequeñas, y
+el uso de un mismo filtro en toda la imagen, que un patrón puede aparecer en cualquier parte
+(Figura~\ref{fig:marco_convolucion}). Una capa aplica muchos filtros a la vez, cada uno con sus propios pesos,
+y apila sus mapas como canales de la salida~\cite{lecun1998gradient,goodfellow2016deep}.
+
+\input{Figures/Capitulos/02-convolucion}
+
+Una \gls{cnn} alterna capas de convolución, activaciones no lineales y capas de reducción (\emph{pooling}),
+que resumen cada ventana de un mapa, por ejemplo con su máximo, y reducen la resolución. Cada reducción hace que
+una unidad de la capa siguiente dependa de una región más grande de la imagen, su campo receptivo. Por eso las
+primeras capas responden a bordes y texturas y las últimas a partes de objetos y a objetos completos. Al final,
+un promedio global de cada canal convierte los mapas en un vector de características, y la cabeza de
+clasificación de la Ecuación~\ref{eq:marco_capa} lo convierte en los logits~\cite{goodfellow2016deep}.
+
+Apilar más capas agranda el campo receptivo, pero agrava el desvanecimiento del gradiente de la
+Sección~\ref{sec:marco_entrenamiento}. ResNet lo resuelve con conexiones residuales: cada bloque aprende una
+corrección $F$ que se suma a su entrada,
+\begin{equation}
+    \mathbf{h}^{(l+1)} = \mathbf{h}^{(l)} + F\bigl(\mathbf{h}^{(l)}\bigr),
+    \label{eq:marco_residual}
+\end{equation}
+de modo que el gradiente tiene un camino directo hacia las capas anteriores y se pueden entrenar redes de más
+de cien capas~\cite{he2015residual}. DenseNet lleva la idea más lejos: cada capa recibe la concatenación de
+los mapas de todas las capas anteriores del bloque, $\mathbf{h}^{(l)} = H_l\bigl([\mathbf{h}^{(0)}, \dots,
+\mathbf{h}^{(l-1)}]\bigr)$, con lo que reutiliza los rasgos ya calculados y alcanza una capacidad comparable con
+menos parámetros~\cite{huang2018densely}. ConvNeXt rediseña una ResNet con decisiones tomadas de los
+transformers: convoluciones por canal de $7 \times 7$, normalización por capa, un bloque que expande y vuelve a
+reducir los canales y menos activaciones. Con esos cambios, una red puramente convolucional iguala en exactitud
+al Swin Transformer de la Sección~\ref{sec:marco_swin}~\cite{liu2022convnet}.
+
+Una convolución solo relaciona píxeles cercanos, y vincular dos regiones lejanas de la imagen exige muchas
+capas. La atención, en cambio, relaciona cualquier par de posiciones en una sola capa.
 
 \section{Transformers y mecanismos de atención}
 \label{sec:marco_atencion}
+
+Para las secuencias, como un texto, las primeras redes avanzaban un elemento por vez, de modo que el acceso a un
+elemento lejano pasaba por todos los intermedios y el cálculo de un paso esperaba al del anterior. En 2017, la
+atención resolvió ese límite, y la arquitectura construida sobre ella, el transformer, es hoy la base de los
+modelos de texto y de buena parte de los de imagen~\cite{vaswani2017attention}.
+
+\subsection{Atención escalada por producto punto}
+\label{sec:marco_atencion_producto}
 
 La atención compara directamente todas las posiciones de una secuencia: cada posición de la salida pondera
 los valores de todas las posiciones de la entrada según la compatibilidad entre una consulta ($Q$) y una clave
 ($K$). Los elementos de la secuencia se llaman \emph{tokens}, y son fragmentos de palabra en un texto o parches
 en una imagen. Cada \emph{token} se representa con un \emph{embedding}, un vector aprendido, de modo que los
 elementos parecidos quedan cerca en ese espacio. Como todas las posiciones se comparan a la vez, el cálculo se
-paraleliza y aprovecha mejor el hardware que el recorrido secuencial. La arquitectura \emph{transformer},
-propuesta en 2017 para traducción automática, se construye sobre esa operación~\cite{vaswani2017attention}.
+paraleliza y aprovecha mejor el hardware que el recorrido secuencial~\cite{vaswani2017attention}.
 
 La atención escalada por producto punto proyecta el embedding de cada token en tres espacios,
 consulta $Q$, clave $K$ y valor $V$, y devuelve una combinación de valores pesada por la compatibilidad entre
@@ -290,72 +345,86 @@ compatibilidades en pesos que suman uno.
 
 La atención multi-cabeza proyecta $Q$, $K$ y $V$ en varios subespacios de menor dimensión, aplica
 la Ecuación~\ref{eq:marco_atencion} en cada uno por separado y concatena los resultados, de modo que cada
-cabeza captura relaciones de distinto tipo entre posiciones. Como la atención no distingue el orden de los
-tokens, se suma al embedding de cada uno un embedding de posición~\cite{vaswani2017attention}. Cada bloque del
-transformer combina una capa de atención con un perceptrón multicapa que se aplica a cada token por separado,
-y las matrices de proyección de ambas concentran casi todos los parámetros del modelo.
+cabeza captura relaciones de distinto tipo entre posiciones~\cite{vaswani2017attention}.
 
-El transformer original combina un codificador, que contextualiza la entrada, y un decodificador, que genera
-la salida token a token atendiendo a lo codificado y a lo ya generado. Los modelos siguientes conservan uno
-solo: los \glspl{vit} de la Sección~\ref{sec:marco_vit} usan el codificador, y los modelos de lenguaje
+\subsection{Codificación de posición}
+\label{sec:marco_posicion}
+
+La Ecuación~\ref{eq:marco_atencion} no tiene en cuenta el orden de los tokens: si se permutan las posiciones de
+la entrada, la salida se permuta de la misma manera y cada token recibe el mismo resultado. Para que el modelo
+distinga «la lesión crece» de «crece la lesión», se suma al embedding de cada token un vector que depende de su
+posición. El transformer original usa vectores fijos, formados por senos y cosenos de distinta frecuencia,
+\begin{equation}
+    \mathrm{PE}_{(pos,\,2i)} = \sin\!\left(\frac{pos}{10000^{2i/d}}\right), \qquad
+    \mathrm{PE}_{(pos,\,2i+1)} = \cos\!\left(\frac{pos}{10000^{2i/d}}\right),
+    \label{eq:marco_posicion}
+\end{equation}
+donde $pos$ es la posición, $i$ recorre las dimensiones y $d$ es la dimensión del embedding. Cada par de
+dimensiones oscila con una longitud de onda distinta, de $2\pi$ a $10000 \cdot 2\pi$, de modo que cada
+posición recibe un vector único y la de una posición desplazada en $k$ se obtiene con una transformación lineal
+de la original, lo que facilita atender por posición relativa~\cite{vaswani2017attention}. La alternativa es
+aprender un vector por posición, como un parámetro más, que es lo que hace el \gls{vit} con la posición de cada
+parche en la imagen (Sección~\ref{sec:marco_vit})~\cite{dosovitskiy2021image}.
+
+\subsection{El bloque transformer}
+\label{sec:marco_bloque_transformer}
+
+Un transformer apila bloques iguales. Cada bloque combina una capa de atención multi-cabeza con un perceptrón
+multicapa que se aplica a cada token por separado, y rodea a las dos con una conexión residual como la de la
+Ecuación~\ref{eq:marco_residual} y una normalización por capa (LN),
+\begin{equation}
+    \mathbf{z}' = \mathbf{z} + \mathrm{Atención}\bigl(\mathrm{LN}(\mathbf{z})\bigr), \qquad
+    \mathbf{z}'' = \mathbf{z}' + \mathrm{MLP}\bigl(\mathrm{LN}(\mathbf{z}')\bigr),
+    \label{eq:marco_bloque}
+\end{equation}
+donde $\mathbf{z}$ es la secuencia de embeddings que entra al bloque~\cite{vaswani2017attention,dosovitskiy2021image}.
+Las matrices de proyección de la atención y del perceptrón concentran casi todos los parámetros del modelo.
+
+El transformer original, planteado para traducción, combina un codificador, que contextualiza la entrada, y un
+decodificador, que genera la salida token a token. En el decodificador, una máscara impide que cada posición
+atienda a las posteriores, de modo que un token solo depende de los ya generados. Los modelos siguientes
+conservan una sola de las dos partes: los \glspl{vit} usan el codificador, y los modelos de lenguaje
 generativos de la Sección~\ref{sec:marco_llm_grandes}, el
-decodificador~\cite{vaswani2017attention,dosovitskiy2021image,brown2020language}. En imágenes, sin embargo, la
-atención llegó después de que las redes convolucionales dominaran la clasificación durante casi una década.
+decodificador~\cite{vaswani2017attention,dosovitskiy2021image,brown2020language}.
 
-\section{Aprendizaje profundo para clasificación visual}
-\label{sec:marco_vision}
-
-Clasificar una imagen consiste en asignarla a una de $C$ categorías: la entrada es la imagen y la salida, el
-vector de probabilidades $p_c$ de la Ecuación~\ref{eq:marco_softmax}. Para eso hay que convertir una matriz
-de píxeles, de dimensión muy alta, en un vector de características que la cabeza de clasificación pueda
-separar por clase. Las \glspl{cnn} lo hacen componiendo filtros locales apilados, y desde 2020 los \glspl{vit}
-tratan la imagen como una secuencia de tokens y la procesan con la atención.
-
-\subsection{Redes convolucionales}
-\label{sec:marco_cnn}
-
-La operación de convolución desliza un filtro de pequeño tamaño (\emph{kernel}) sobre la entrada y calcula en cada
-posición el producto punto entre el filtro y la ventana que cubre. La conectividad local supone que la
-información relevante se agrupa en regiones pequeñas, y el uso de un mismo filtro en toda la imagen, que un
-patrón puede aparecer en cualquier parte (Figura~\ref{fig:marco_convolucion}). Una \gls{cnn} apila esas
-operaciones con activaciones no lineales y reducciones de resolución intermedias~\cite{lecun1998gradient}.
-
-\input{Figures/Capitulos/02-convolucion}
-
-La profundidad compone esos rasgos locales en rasgos de mayor alcance: los bordes se combinan en
-texturas, las texturas en partes de objetos y las partes en objetos completos. En 2012, una \gls{cnn} profunda
-ganó el desafío de clasificación de ImageNet con amplia ventaja, y desde entonces las arquitecturas ganaron
-profundidad~\cite{russakovsky2015imagenet}. En 2015, VGG apiló convoluciones pequeñas, y ResNet agregó
-conexiones residuales: la salida de un bloque es su entrada más una corrección que el bloque aprende, de modo
-que el gradiente tiene un camino directo hacia las capas anteriores y se pueden entrenar redes de más de cien
-capas~\cite{simonyan2015very,he2015residual}. En DenseNet cada capa recibe las características de todas
-las anteriores, con capacidad comparable y menos parámetros~\cite{huang2018densely}. Ya en 2022, ConvNeXt
-modernizó una ResNet con decisiones de diseño tomadas de los transformers, como convoluciones de mayor tamaño
-y normalización por capa, y una red puramente convolucional igualó así al Swin Transformer en
-exactitud~\cite{liu2022convnet}.
-
-\subsection{Vision Transformer y Swin Transformer}
+\subsection{Vision Transformer}
 \label{sec:marco_vit}
 
-El \gls{vit}, de 2020, llevó a las imágenes el codificador del transformer. Divide la imagen en una rejilla de
-parches cuadrados, aplana cada parche y lo proyecta a un vector de dimensión fija, su embedding. A cada parche
-se le suma un embedding de posición, que indica su lugar en la rejilla. Sobre esa secuencia de tokens aplica un
-codificador transformer sin operaciones convolucionales, y decide la categoría a partir de un
-token de clase que se agrega al inicio de la secuencia~\cite{dosovitskiy2021image,vaswani2017attention}.
+El \gls{vit} lleva a las imágenes el codificador del transformer. Divide la imagen en una rejilla de parches
+cuadrados, por ejemplo de $16 \times 16$ píxeles (Figura~\ref{fig:marco_vit_patches}), aplana cada parche y lo proyecta a un vector de dimensión
+fija, su embedding. A cada parche se le suma el embedding de posición aprendido que indica su lugar en la
+rejilla. Sobre esa secuencia de tokens aplica bloques transformer sin operaciones convolucionales, y decide la
+categoría a partir de un token de clase que se agrega al inicio de la secuencia y que, al atravesar los bloques,
+reúne la información de todos los parches~\cite{dosovitskiy2021image}.
 
 \input{Figures/Capitulos/02-vit-patches}
 
-El ViT no incorpora las dos suposiciones que la convolución da por sentadas, la localidad y la
+El \gls{vit} no incorpora las dos suposiciones que la convolución da por sentadas, la localidad y la
 equivariancia a traslaciones, y tiene que aprenderlas de los datos. Preentrenado solo sobre
 ImageNet, rinde por debajo de \glspl{cnn} de tamaño comparable; preentrenado sobre
 corpus de entre 14 y 300 millones de imágenes, las supera. Por eso importa con qué pesos parte cada
 arquitectura antes del ajuste fino (Sección~\ref{sec:marco_transferencia})~\cite{dosovitskiy2021image}.
 
-El Swin Transformer, de 2021, devuelve a la atención parte de la estructura de una \gls{cnn}. Atiende solo
-dentro de ventanas locales, con costo lineal en el número de parches en lugar de cuadrático, y desplaza las
-ventanas entre capas para que la información cruce de una a otra (Figura~\ref{fig:marco_swin}). Además reduce
-la resolución por etapas y devuelve una pirámide de mapas de características, con la estructura jerárquica de
-una \gls{cnn} y la operación de atención de un transformer~\cite{liu2021swin}.
+\subsection{Swin Transformer}
+\label{sec:marco_swin}
+
+En el \gls{vit}, cada token atiende a todos los demás, y el costo crece con el cuadrado del número de parches.
+El Swin Transformer limita la atención a ventanas locales de $M \times M$ parches. Para un mapa de
+$h \times w$ parches con $C$ canales, el costo de la atención global y el de la atención por ventanas son
+\begin{equation}
+    \Omega_{\text{global}} = 4hwC^2 + 2(hw)^2C, \qquad \Omega_{\text{ventanas}} = 4hwC^2 + 2M^2hwC,
+    \label{eq:marco_swin_costo}
+\end{equation}
+de modo que el segundo crece de forma lineal con el número de parches~\cite{liu2021swin}.
+
+Las ventanas fijas no comunican entre sí. Para que la información cruce de una a otra, los bloques alternan una
+partición regular con otra desplazada en medio tamaño de ventana, $\lfloor M/2 \rfloor$ parches, cuyas
+ventanas abarcan parches de varias ventanas anteriores (Figura~\ref{fig:marco_swin}). Entre etapas, una capa
+de fusión concatena cada grupo de $2 \times 2$ parches vecinos y los proyecta a la mitad de canales que suman,
+con lo que la resolución se reduce a la mitad y los canales se duplican. El resultado es una pirámide de mapas
+de características, con la estructura jerárquica de una \gls{cnn} y la operación de atención de un
+transformer. La posición entra como un sesgo relativo que se suma a la compatibilidad entre cada par de parches
+de la ventana~\cite{liu2021swin}.
 
 \input{Figures/Capitulos/02-swin-ventanas}
 
@@ -376,8 +445,8 @@ La comparación solo es válida si las dos partes usan los mismos datos, partici
 enfrentar arquitecturas supervisadas contemporáneas, como ConvNeXt y el
 ViT~\cite{dosovitskiy2021image,liu2022convnet}, o familias de modelos, clasificadores supervisados frente a
 \glspl{vlm}, y esta segunda dice si el lenguaje aporta algo a la clasificación. Ninguno de estos
-clasificadores produce texto, y para eso hace falta un modelo que genere secuencias de palabras, la otra rama
-que el transformer transformó.
+clasificadores produce texto. Para eso hace falta un modelo que genere secuencias de palabras, y los modelos de
+lenguaje actuales se construyen sobre el decodificador del transformer.
 
 \section{Modelos de lenguaje y adaptación eficiente}
 \label{sec:marco_llm}
@@ -683,7 +752,7 @@ $\tau_1 > \tau_2$ sobre la señal, la política es\displaywidowpenalty=10000
     \label{eq:marco_politica}
 \end{equation}\endgroup
 
-\begin{table}[htbp]
+\begin{table}[H]
     \centering
     \caption{Salidas de un sistema con abstención: qué entrega cada una, cuándo corresponde y qué arriesga.}
     \label{tab:marco_salidas}
@@ -730,7 +799,7 @@ estandarizado por consenso, con términos para el color, el patrón, la distribu
 lesión, y algoritmos como la lista de 7 puntos convierten la presencia de ciertos hallazgos en peso
 diagnóstico~\cite{kittler2016standardization,argenziano1998checklist}.
 
-\begin{table}[htbp]
+\begin{table}[H]
     \centering
     \caption{Partes de un reporte dermatológico y lo que se le exige a cada una.}
     \label{tab:marco_partes_reporte}
@@ -846,7 +915,7 @@ mismo texto, y el \emph{hedging} dejan la decisión en el lector, y la repetici�
 aportan información. La alucinación puede acompañar a cualquiera de ellas, incluso a un diagnóstico correcto.
 La taxonomía organiza el análisis de los reportes generados del Capítulo~\ref{cp:res_gen}.
 
-\begin{table}[htbp]
+\begin{table}[H]
     \centering
     \caption{Fallas de un reporte generado y su consecuencia para el lector, de mayor a menor gravedad.}
     \label{tab:marco_fallas}
@@ -933,7 +1002,7 @@ concordancia no aporta evidencia, pero decide cuánta afirmación permite la que
 Integrados, la evidencia recuperada condiciona el texto y la señal de confianza elige si el texto afirma,
 enumera diferenciales o no se redacta.
 
-\begin{table}[!t]
+\begin{table}[H]
     \centering
     \caption{Mecanismos que agregan información al generador: qué aportan, su modalidad, qué ayudan a resolver
     y qué dejan abierto.}
@@ -980,67 +1049,68 @@ en la que $M_{ij}$ cuenta las imágenes de la clase real $i$ que el modelo predi
 todas las demás métricas. En la tarea binaria, con una clase de interés (la positiva) frente al resto, tiene
 cuatro celdas (Figura~\ref{fig:marco_matriz_roc}a): los verdaderos positivos ($\mathrm{TP}$), los falsos
 negativos ($\mathrm{FN}$), los falsos positivos ($\mathrm{FP}$) y los verdaderos negativos ($\mathrm{TN}$). Cada
-fila se lee contra la clase real y cada columna contra la predicha.
+fila se lee contra la clase real y cada columna contra la predicha. Las métricas que este trabajo usa son las
+siguientes.
 
 \input{Figures/Capitulos/02-matriz-confusion}
 
-La exactitud es la fracción de imágenes bien clasificadas, $\sum_c M_{cc} / n$, y es engañosa cuando las clases
-están desbalanceadas (Sección~\ref{sec:marco_desbalance}): si una clase reúne dos tercios de las imágenes, un
-modelo que responda siempre esa clase alcanza una exactitud cercana a 0.67. La \textbf{sensibilidad macro}
-corrige eso. Con $R_c = M_{cc} / \sum_{j} M_{cj}$, la fracción de las imágenes de la clase $c$ que el modelo
-acierta, promedia esas fracciones para que cada clase pese lo mismo,
-\begin{equation}
-    \text{sensibilidad macro} = \frac{1}{C}\sum_{c=1}^{C} R_c,
-    \label{eq:marco_acc_bal}
-\end{equation}
-y en la literatura se la llama también exactitud
-balanceada~\cite{brodersen2010balanced,sokolova2009systematic}.
+\begin{itemize}
+    \item \textbf{Exactitud.} Es la fracción de imágenes bien clasificadas, $\sum_c M_{cc} / n$. Es engañosa
+    cuando las clases están desbalanceadas (Sección~\ref{sec:marco_desbalance}): si una clase reúne dos tercios
+    de las imágenes, un modelo que responda siempre esa clase alcanza una exactitud cercana a 0.67.
 
-La sensibilidad no dice cuántas de las predicciones de una clase son correctas. Esa es la precisión
-(\emph{precision}) de la clase $c$, $P_c$, que se lee por columna, y el \textbf{F1} la combina con la
-sensibilidad mediante su media armónica. El promedio de los F1 por clase se puede hacer de dos maneras,
-\begin{equation}
-    F1_c = \frac{2\,P_c R_c}{P_c + R_c}, \qquad
-    F1_{\text{macro}} = \frac{1}{C}\sum_{c=1}^{C} F1_c, \qquad
-    F1_{\text{ponderado}} = \sum_{c=1}^{C} \frac{n_c}{n}\, F1_c,
-    \label{eq:marco_f1}
-\end{equation}
-donde $n_c$ es el número de imágenes de la clase $c$ y $n$ el total. El F1 ponderado pesa cada clase por su
-tamaño y queda dominado por la más frecuente, mientras que el F1 macro da a las $C$ clases el mismo peso.
+    \item \textbf{Sensibilidad macro.} La sensibilidad de la clase $c$, $R_c = M_{cc} / \sum_{j} M_{cj}$, es la
+    fracción de sus imágenes que el modelo acierta, y se lee por fila. La sensibilidad macro promedia esas
+    fracciones para que cada clase pese lo mismo, y corrige así el defecto de la exactitud,
+    \begin{equation}
+        \text{sensibilidad macro} = \frac{1}{C}\sum_{c=1}^{C} R_c.
+        \label{eq:marco_acc_bal}
+    \end{equation}
+    En la literatura se la llama también exactitud balanceada~\cite{brodersen2010balanced,sokolova2009systematic}.
 
-\begingroup Cuando interesa una sola condición, la salida multiclase se colapsa en una binaria, la clase de interés
-o un grupo de clases, por ejemplo las malignas, frente a las demás, con la probabilidad de la clase o la suma
-de las del grupo como puntaje. A esa tarea binaria derivada se la llama detección, y se evalúa con la
-sensibilidad $R_c$ de la clase de interés y con su especificidad, la fracción de las imágenes de las otras
-clases que el modelo no predice como $c$,\clubpenalty=10000 \displaywidowpenalty=10000
-\begin{equation}
-    R_c = \frac{M_{cc}}{\sum_{j} M_{cj}}, \qquad
-    \mathrm{Esp}_c = \frac{\sum_{i \neq c}\sum_{j \neq c} M_{ij}}{\sum_{i \neq c}\sum_{j} M_{ij}}.
-    \label{eq:marco_sens_esp}
-\end{equation}
-Las dos se mueven en sentidos opuestos cuando cambia el umbral de decisión~\cite{fawcett2006introduction}.\par
-\endgroup
+    \item \textbf{Precisión y F1.} La sensibilidad no dice cuántas de las predicciones de una clase son
+    correctas. Esa es la precisión (\emph{precision}) de la clase $c$, $P_c$, que se lee por columna. El F1 las
+    combina mediante su media armónica, y su promedio sobre las clases se puede hacer de dos maneras,
+    \begin{equation}
+        F1_c = \frac{2\,P_c R_c}{P_c + R_c}, \qquad
+        F1_{\text{macro}} = \frac{1}{C}\sum_{c=1}^{C} F1_c, \qquad
+        F1_{\text{ponderado}} = \sum_{c=1}^{C} \frac{n_c}{n}\, F1_c,
+        \label{eq:marco_f1}
+    \end{equation}
+    donde $n_c$ es el número de imágenes de la clase $c$ y $n$ el total. El F1 ponderado queda dominado por la
+    clase más frecuente, y el F1 macro da a las $C$ clases el mismo peso.
 
-Las métricas anteriores dependen de un umbral de decisión. En la tarea binaria, el modelo asigna a cada imagen
-un puntaje $s$ y la declara positiva si $s$ supera un umbral $\tau$. Cada umbral produce una tasa de
-verdaderos positivos y una de falsos positivos,
-\begin{equation}
-    \mathrm{TPR}(\tau) = \frac{\mathrm{TP}}{\mathrm{TP} + \mathrm{FN}}, \qquad
-    \mathrm{FPR}(\tau) = \frac{\mathrm{FP}}{\mathrm{FP} + \mathrm{TN}},
-    \label{eq:marco_tpr_fpr}
-\end{equation}
-La TPR es la sensibilidad, y la FPR es uno menos la especificidad. La curva ROC recorre todos los umbrales y
-dibuja la TPR contra la FPR (Figura~\ref{fig:marco_matriz_roc}b), y el \textbf{\gls{auc}} es el área bajo esa
-curva. Vale 0.5 para un clasificador al azar y 1 para uno que separa perfectamente las dos clases. Es también
-la probabilidad de que el modelo asigne más puntaje a un positivo elegido al azar que a un negativo elegido al
-azar,
-\begin{equation}
-    \mathrm{AUC} = P\!\left(s(x^{+}) > s(x^{-})\right),
-    \label{eq:marco_auc}
-\end{equation}
-y se calcula con la regla del trapecio~\cite{fawcett2006introduction}. En el caso multiclase se construye una
-curva por clase, que trata esa clase como positiva y al resto como negativa, y se promedian las $C$ áreas,
-$\mathrm{AUC}_{\text{macro}} = \frac{1}{C}\sum_{c} \mathrm{AUC}_c$~\cite{fawcett2006introduction}.
+    \item \textbf{Sensibilidad y especificidad de una clase.} Cuando interesa una sola condición, la salida
+    multiclase se colapsa en una binaria: la clase de interés, o un grupo de clases como las malignas, frente a
+    las demás, con la probabilidad de la clase o la suma de las del grupo como puntaje. A esa tarea derivada se
+    la llama detección, y se evalúa con la sensibilidad $R_c$ y con la especificidad, la fracción de las imágenes
+    de las otras clases que el modelo no predice como $c$,
+    \begin{equation}
+        \mathrm{Esp}_c = \frac{\sum_{i \neq c}\sum_{j \neq c} M_{ij}}{\sum_{i \neq c}\sum_{j} M_{ij}}.
+        \label{eq:marco_sens_esp}
+    \end{equation}
+    Las dos se mueven en sentidos opuestos cuando cambia el umbral de decisión~\cite{fawcett2006introduction}.
+
+    \item \textbf{Curva ROC y \gls{auc}.} El modelo asigna a cada imagen un puntaje $s$ y la declara positiva si
+    $s$ supera un umbral $\tau$. Cada umbral produce una tasa de verdaderos positivos, que es la sensibilidad, y
+    una de falsos positivos, que es uno menos la especificidad,
+    \begin{equation}
+        \mathrm{TPR}(\tau) = \frac{\mathrm{TP}}{\mathrm{TP} + \mathrm{FN}}, \qquad
+        \mathrm{FPR}(\tau) = \frac{\mathrm{FP}}{\mathrm{FP} + \mathrm{TN}}.
+        \label{eq:marco_tpr_fpr}
+    \end{equation}
+    La curva ROC recorre todos los umbrales y dibuja la TPR contra la FPR (Figura~\ref{fig:marco_matriz_roc}b),
+    y el \gls{auc} es el área bajo esa curva. No depende de un umbral, vale 0.5 para un clasificador al azar y 1
+    para uno que separa perfectamente las dos clases, y es la probabilidad de que el modelo asigne más puntaje a
+    un positivo elegido al azar que a un negativo elegido al azar,
+    \begin{equation}
+        \mathrm{AUC} = P\!\left(s(x^{+}) > s(x^{-})\right).
+        \label{eq:marco_auc}
+    \end{equation}
+    Se calcula con la regla del trapecio. En el caso multiclase se construye una curva por clase, que trata esa
+    clase como positiva y al resto como negativa, y se promedian las $C$ áreas,
+    $\mathrm{AUC}_{\text{macro}} = \frac{1}{C}\sum_{c} \mathrm{AUC}_c$~\cite{fawcett2006introduction}.
+\end{itemize}
 
 Un reporte, en cambio, es un texto, y comparar dos textos exige métricas de otro tipo.
 
@@ -1053,100 +1123,7 @@ comparan el texto generado con uno de referencia, las diagnósticas comprueban s
 correcto y las descriptivas cuentan cuánto contenido clínico menciona. Estas dos últimas no necesitan texto
 de referencia.
 
-Las métricas textuales comparan el texto generado $g$ con un texto de referencia $r$ escrito para la misma
-imagen, y las más usadas cuentan coincidencias de $n$-gramas, secuencias de $n$ palabras consecutivas.
-\textbf{BLEU} calcula, para cada $n$ entre 1 y 4, la precisión $p_n$ de los $n$-gramas de $g$, la fracción que
-también aparece en $r$. Combina las cuatro con una media geométrica y multiplica el resultado por una
-penalización de brevedad, porque un texto muy corto puede tener precisión alta sin cubrir la referencia,
-\begin{equation}
-    \mathrm{BLEU} = \mathrm{BP}\cdot\exp\!\left(\sum_{n=1}^{4} \tfrac{1}{4}\log p_n\right), \qquad
-    \mathrm{BP} =
-    \begin{cases}
-        1 & \text{si } \ell_g > \ell_r,\\
-        e^{\,1 - \ell_r/\ell_g} & \text{si } \ell_g \le \ell_r,
-    \end{cases}
-    \label{eq:marco_bleu}
-\end{equation}
-donde $\ell_g$ y $\ell_r$ son las longitudes en palabras de los dos textos~\cite{papineni2002bleu}.
-
-\looseness=-1 \textbf{ROUGE-L} se basa en la subsecuencia común más larga, $\mathrm{LCS}(g, r)$, la secuencia más larga de
-palabras que aparece en ambos textos en el mismo orden. Con ella define sensibilidad y precisión y las
-combina en una medida F,
-\begin{equation}
-    R_{\mathrm{lcs}} = \frac{\mathrm{LCS}(g, r)}{\ell_r}, \qquad
-    P_{\mathrm{lcs}} = \frac{\mathrm{LCS}(g, r)}{\ell_g}, \qquad
-    \text{ROUGE-L} = \frac{(1+\beta^2)\,R_{\mathrm{lcs}}\,P_{\mathrm{lcs}}}{R_{\mathrm{lcs}} + \beta^2 P_{\mathrm{lcs}}},
-    \label{eq:marco_rouge}
-\end{equation}
-donde $\beta$ fija cuánto pesa la sensibilidad frente a la precisión; con $\beta = 1$, la versión habitual,
-queda la media armónica de las dos~\cite{lin2004rouge}.
-
-\textbf{METEOR} alinea las palabras de los dos textos, primero las idénticas, después las que comparten la raíz
-y por último los sinónimos. Sobre las $m$ palabras alineadas calcula la precisión $P$ y la sensibilidad $R$ y
-las combina dando más peso a la segunda. Luego agrupa las palabras alineadas en la menor cantidad posible de
-tramos contiguos, $ch$, y penaliza que las coincidencias estén fragmentadas,
-\begin{equation}
-    F_{\text{mean}} = \frac{10\,P R}{R + 9P}, \qquad
-    \mathrm{Pen} = 0.5\left(\frac{ch}{m}\right)^{3}, \qquad
-    \mathrm{METEOR} = F_{\text{mean}}\,(1 - \mathrm{Pen}).
-    \label{eq:marco_meteor}
-\end{equation}
-La penalización es casi nula si las coincidencias forman un único tramo y reduce el puntaje hasta la mitad si
-ninguna palabra alineada es contigua a otra~\cite{banerjee2005meteor}.
-
-\textbf{CIDEr} se diseñó para describir imágenes con varias referencias por imagen. Representa cada texto con
-un vector $\mathbf{t}^n(\cdot)$ con un peso TF-IDF por $n$-grama, que crece con su frecuencia en ese texto y
-decrece con la cantidad de imágenes en cuyas descripciones aparece, de modo que las expresiones comunes pesan
-poco. Para cada $n$ promedia la similitud coseno con las $J$ referencias, y después promedia sobre
-$n$~\cite{vedantam2015cider},
-\begin{equation}
-    \mathrm{CIDEr}_n = \frac{1}{J}\sum_{j=1}^{J}
-    \frac{\mathbf{t}^n(g)^{\top}\mathbf{t}^n(r_j)}{\lVert\mathbf{t}^n(g)\rVert\,\lVert\mathbf{t}^n(r_j)\rVert},
-    \qquad
-    \mathrm{CIDEr} = \sum_{n=1}^{4} \tfrac{1}{4}\,\mathrm{CIDEr}_n
-    \label{eq:marco_cider}
-\end{equation}
-donde $r_1, \dots, r_J$ son las referencias de la imagen.
-
-Las cuatro premian la coincidencia literal, y una paráfrasis correcta puntúa bajo. \textbf{BERTScore} compara
-en cambio los \emph{embeddings} contextuales de cada token, obtenidos con un modelo de solo codificador como
-BERT (Sección~\ref{sec:marco_llm_grandes}). Cada token de un texto se empareja con el más parecido del otro por
-similitud coseno, y las similitudes se promedian,
-\begin{equation}
-    R_{\mathrm{BERT}} = \frac{1}{|r|}\sum_{r_i \in r}\,\max_{g_j \in g}\, \mathbf{r}_i^{\top}\mathbf{g}_j,
-    \qquad
-    P_{\mathrm{BERT}} = \frac{1}{|g|}\sum_{g_j \in g}\,\max_{r_i \in r}\, \mathbf{r}_i^{\top}\mathbf{g}_j,
-    \label{eq:marco_bertscore}
-\end{equation}
-donde los \emph{embeddings} $\mathbf{r}_i$ y $\mathbf{g}_j$ están normalizados, y el puntaje final
-$F_{\mathrm{BERT}}$ es la media armónica de los dos, como el F1 de la Ecuación~\ref{eq:marco_f1}. Como dos
-sinónimos tienen \emph{embeddings} cercanos, la métrica tolera reformulaciones~\cite{zhang2020bertscore}.
-
-Las métricas con referencia suponen que la referencia es la descripción correcta de la imagen, y en dermatología ese
-supuesto no está garantizado: cuando varios dermatólogos marcan por separado los mismos criterios
-dermatoscópicos, la concordancia va de pobre a moderada~\cite{carrera2016validity}. Una descripción generada
-puede diferir de la referencia sin estar equivocada. Las métricas diagnósticas y descriptivas evitan ese
-supuesto porque comprueban lo que el texto afirma. La \textbf{consistencia diagnóstica} mide la fidelidad
-diagnóstica de la Sección~\ref{sec:marco_rep_ejes}, la fracción de los textos que nombran la categoría real de
-la imagen o un sinónimo reconocido,
-\begin{equation}
-    \mathrm{FD} = \frac{1}{n}\sum_{i=1}^{n} \mathbf{1}\bigl[\mathrm{dx}(g_i) = y_i\bigr],
-    \label{eq:marco_fd}
-\end{equation}
-donde $g_i$ es el texto generado para la imagen $i$, $y_i$ su categoría real y $\mathrm{dx}(\cdot)$ extrae la
-categoría que el texto nombra.
-
-Las métricas descriptivas se apoyan en el vocabulario cerrado de la Sección~\ref{sec:marco_rep_tarea}. La
-\textbf{cobertura de entidades clínicas} es la proporción de las categorías del vocabulario, como color,
-patrón o estructura, que el texto menciona,
-\begin{equation}
-    \mathrm{cob}(g) = \frac{\bigl|\{k : \exists\, e \in V_k,\ e \text{ aparece en } g\}\bigr|}{K},
-    \label{eq:marco_cobertura_ent}
-\end{equation}
-donde $V_k$ es el conjunto de términos de la categoría $k$ y $K$ el número de categorías. Mide cuánto contenido
-clínico describe el texto y no si lo que describe es cierto.
-
-\begin{table}[!t]
+\begin{table}[H]
     \centering
     \caption{Familias de métricas de generación de reportes: qué comparan, qué miden y qué no ven.}
     \label{tab:marco_familias_texto}
@@ -1171,6 +1148,107 @@ clínico describe el texto y no si lo que describe es cierto.
         \bottomrule
     \end{tabularx}
 \end{table}
+
+Las métricas textuales comparan el texto generado $g$ con un texto de referencia $r$ escrito para la misma
+imagen. Las cuatro primeras cuentan coincidencias de $n$-gramas, secuencias de $n$ palabras consecutivas, y la
+quinta compara significados.
+
+\begin{itemize}
+    \item \textbf{BLEU.} Calcula, para cada $n$ entre 1 y 4, la precisión $p_n$ de los $n$-gramas de $g$, la
+    fracción que también aparece en $r$. Combina las cuatro con una media geométrica y multiplica el resultado
+    por una penalización de brevedad, porque un texto muy corto puede tener precisión alta sin cubrir la
+    referencia,
+    \begin{equation}
+        \mathrm{BLEU} = \mathrm{BP}\cdot\exp\!\left(\sum_{n=1}^{4} \tfrac{1}{4}\log p_n\right), \qquad
+        \mathrm{BP} =
+        \begin{cases}
+            1 & \text{si } \ell_g > \ell_r,\\
+            e^{\,1 - \ell_r/\ell_g} & \text{si } \ell_g \le \ell_r,
+        \end{cases}
+        \label{eq:marco_bleu}
+    \end{equation}
+    donde $\ell_g$ y $\ell_r$ son las longitudes en palabras de los dos textos~\cite{papineni2002bleu}.
+
+    \item \textbf{ROUGE-L.} Se basa en la subsecuencia común más larga, $\mathrm{LCS}(g, r)$, la secuencia más
+    larga de palabras que aparece en ambos textos en el mismo orden. Con ella define sensibilidad y precisión y
+    las combina en una medida F,
+    \begin{equation}
+        R_{\mathrm{lcs}} = \frac{\mathrm{LCS}(g, r)}{\ell_r}, \qquad
+        P_{\mathrm{lcs}} = \frac{\mathrm{LCS}(g, r)}{\ell_g}, \qquad
+        \text{ROUGE-L} = \frac{(1+\beta^2)\,R_{\mathrm{lcs}}\,P_{\mathrm{lcs}}}{R_{\mathrm{lcs}} + \beta^2 P_{\mathrm{lcs}}},
+        \label{eq:marco_rouge}
+    \end{equation}
+    donde $\beta$ fija cuánto pesa la sensibilidad frente a la precisión; con $\beta = 1$, la versión habitual,
+    queda la media armónica de las dos~\cite{lin2004rouge}.
+
+    \item \textbf{METEOR.} Alinea las palabras de los dos textos, primero las idénticas, después las que
+    comparten la raíz y por último los sinónimos. Sobre las $m$ palabras alineadas calcula la precisión $P$ y la
+    sensibilidad $R$ y las combina dando más peso a la segunda. Luego agrupa las palabras alineadas en la menor
+    cantidad posible de tramos contiguos, $ch$, y penaliza que las coincidencias estén fragmentadas,
+    \begin{equation}
+        F_{\text{mean}} = \frac{10\,P R}{R + 9P}, \qquad
+        \mathrm{Pen} = 0.5\left(\frac{ch}{m}\right)^{3}, \qquad
+        \mathrm{METEOR} = F_{\text{mean}}\,(1 - \mathrm{Pen}).
+        \label{eq:marco_meteor}
+    \end{equation}
+    La penalización es casi nula si las coincidencias forman un único tramo y reduce el puntaje hasta la mitad
+    si ninguna palabra alineada es contigua a otra~\cite{banerjee2005meteor}.
+
+    \item \textbf{CIDEr.} Se diseñó para describir imágenes con varias referencias por imagen. Representa cada
+    texto con un vector $\mathbf{t}^n(\cdot)$ con un peso TF-IDF por $n$-grama, que crece con su frecuencia en
+    ese texto y decrece con la cantidad de imágenes en cuyas descripciones aparece, de modo que las expresiones
+    comunes pesan poco. Para cada $n$ promedia la similitud coseno con las $J$ referencias $r_1, \dots, r_J$, y
+    después promedia sobre $n$~\cite{vedantam2015cider},
+    \begin{equation}
+        \mathrm{CIDEr}_n = \frac{1}{J}\sum_{j=1}^{J}
+        \frac{\mathbf{t}^n(g)^{\top}\mathbf{t}^n(r_j)}{\lVert\mathbf{t}^n(g)\rVert\,\lVert\mathbf{t}^n(r_j)\rVert},
+        \qquad
+        \mathrm{CIDEr} = \sum_{n=1}^{4} \tfrac{1}{4}\,\mathrm{CIDEr}_n.
+        \label{eq:marco_cider}
+    \end{equation}
+
+    \item \textbf{BERTScore.} Las cuatro anteriores premian la coincidencia literal, y una paráfrasis correcta
+    puntúa bajo. BERTScore compara en cambio los \emph{embeddings} contextuales de cada token, obtenidos con un
+    modelo de solo codificador como BERT (Sección~\ref{sec:marco_llm_grandes}). Cada token de un texto se
+    empareja con el más parecido del otro por similitud coseno, y las similitudes se promedian,
+    \begin{equation}
+        R_{\mathrm{BERT}} = \frac{1}{|r|}\sum_{r_i \in r}\,\max_{g_j \in g}\, \mathbf{r}_i^{\top}\mathbf{g}_j,
+        \qquad
+        P_{\mathrm{BERT}} = \frac{1}{|g|}\sum_{g_j \in g}\,\max_{r_i \in r}\, \mathbf{r}_i^{\top}\mathbf{g}_j,
+        \label{eq:marco_bertscore}
+    \end{equation}
+    donde los \emph{embeddings} $\mathbf{r}_i$ y $\mathbf{g}_j$ están normalizados, y el puntaje final
+    $F_{\mathrm{BERT}}$ es la media armónica de los dos, como el F1 de la Ecuación~\ref{eq:marco_f1}. Como dos
+    sinónimos tienen \emph{embeddings} cercanos, la métrica tolera reformulaciones~\cite{zhang2020bertscore}.
+\end{itemize}
+
+Las métricas con referencia suponen que la referencia es la descripción correcta de la imagen, y en
+dermatología ese supuesto no está garantizado: cuando varios dermatólogos marcan por separado los mismos
+criterios dermatoscópicos, la concordancia va de pobre a moderada~\cite{carrera2016validity}. Una descripción
+generada puede diferir de la referencia sin estar equivocada. Las métricas diagnósticas y descriptivas evitan
+ese supuesto porque comprueban lo que el texto afirma.
+
+\begin{itemize}
+    \item \textbf{Consistencia diagnóstica.} Mide la fidelidad diagnóstica de la
+    Sección~\ref{sec:marco_rep_ejes}: la fracción de los textos que nombran la categoría real de la imagen o un
+    sinónimo reconocido,
+    \begin{equation}
+        \mathrm{FD} = \frac{1}{n}\sum_{i=1}^{n} \mathbf{1}\bigl[\mathrm{dx}(g_i) = y_i\bigr],
+        \label{eq:marco_fd}
+    \end{equation}
+    donde $g_i$ es el texto generado para la imagen $i$, $y_i$ su categoría real y $\mathrm{dx}(\cdot)$ extrae la
+    categoría que el texto nombra.
+
+    \item \textbf{Cobertura de entidades clínicas.} Se apoya en el vocabulario cerrado de la
+    Sección~\ref{sec:marco_rep_tarea}. Es la proporción de las categorías del vocabulario, como color, patrón o
+    estructura, que el texto menciona,
+    \begin{equation}
+        \mathrm{cob}(g) = \frac{\bigl|\{k : \exists\, e \in V_k,\ e \text{ aparece en } g\}\bigr|}{K},
+        \label{eq:marco_cobertura_ent}
+    \end{equation}
+    donde $V_k$ es el conjunto de términos de la categoría $k$ y $K$ el número de categorías. Mide cuánto
+    contenido clínico describe el texto y no si lo que describe es cierto.
+\end{itemize}
 
 Ninguna familia comprueba que lo descrito esté en la imagen~\cite{hartsock2024vision}. Detectar la
 alucinación de la Sección~\ref{sec:marco_rep_fallas} requiere que un especialista lea el reporte contra la
@@ -1304,7 +1382,7 @@ por esa importancia y conserva solo los valores positivos,
 donde $Z$ es la cantidad de posiciones del mapa. La ReLU descarta las regiones que bajan el puntaje de la
 clase, que suelen corresponder a otras clases~\cite{selvaraju2017gradcam}. El mapa se reescala al tamaño de
 la imagen y se superpone a ella. En el Swin, cuya última etapa también devuelve un mapa con disposición
-espacial (Sección~\ref{sec:marco_vit}), el cálculo es igual.
+espacial (Sección~\ref{sec:marco_swin}), el cálculo es igual.
 
 El mapa tiene la resolución de la última capa, mucho menor que la de la imagen, y por eso marca regiones
 gruesas~\cite{selvaraju2017gradcam}. Que se vea razonable tampoco basta: algunos métodos de saliencia
@@ -1383,7 +1461,8 @@ publicados solo en arXiv, sin revisión de pares, y en cada caso se lo indica.
 La clasificación de lesiones asigna a una imagen una entre varias categorías diagnósticas, sobre imágenes
 dermatoscópicas (HAM10000 y los desafíos ISIC, conjuntos de referencia muy utilizados) o fotografías clínicas.
 Importa cómo trata cada trabajo el desbalance de clases, con qué métrica elige el modelo, si mantiene las imágenes
-de una misma lesión en una partición, si valida fuera de la fuente y si compara contra clínicos.
+de una misma lesión en una partición, si valida fuera de la fuente y si compara contra clínicos. La
+Tabla~\ref{tab:marco_sota_clasificacion} resume los trabajos.
 
 Dos hitos fijaron la tarea como un terreno en el que el aprendizaje profundo compite con el especialista. En 2017
 una \gls{cnn} igualó a dermatólogos certificados en la distinción entre lesiones benignas y
@@ -1450,7 +1529,7 @@ EfficientNetB3, ResNet50 y DenseNet121 con un modelo de lenguaje que redacta un 
 clasificador distingue nevo de carcinoma basocelular en imágenes dermatoscópicas, con partición estratificada al azar
 80/10/10, y decide por mayoría de votos; los casos en que los modelos discrepan se marcan para revisión de un
 especialista. Se compara contra cada red por separado con exactitud, F1 y pérdida logarítmica: el ensamble alcanza una
-exactitud de 97.67\,\% contra 93.83\,\% del mejor modelo individual. El texto lo genera LLaMA-3 70B con un
+exactitud de 97.67\,\% contra 93.83\,\% de ResNet50, el mejor modelo individual. El texto lo genera LLaMA-3 70B con un
 \emph{prompt} que recibe la enfermedad, la confianza y si hubo consenso, y se valora con una rúbrica propia sin
 comparar con reportes clínicos. No participaron expertos. Los autores reconocen que el marco es binario, que la
 diversidad del conjunto limita el desempeño en distintos tonos de piel y que falta una validación en entorno real.
@@ -1459,14 +1538,14 @@ diversidad del conjunto limita el desempeño en distintos tonos de piel y que fa
 y amplían HAM10000 con imágenes de revistas médicas, el archivo ISIC y DermNet NZ para atenuar el desbalance, sin
 aumento de datos para no alterar el color ni la textura de la lesión. Las exactitudes por clase del modelo entrenado con
 la versión ampliada superan las del entrenado con HAM10000 en casi todas las clases, salvo en la mayoritaria. Con Swin
-se obtienen una exactitud de 0.780, una precisión promedio de 0.812, una sensibilidad promedio de 0.779 y un F1
+se obtienen una exactitud balanceada de 0.780, una precisión promedio de 0.812, una sensibilidad promedio de 0.779 y un F1
 promedio de 0.793, contra 0.744, 0.727 y 0.734 del sistema anterior en precisión, sensibilidad y F1; la
 comparación con cuatro trabajos previos, entre ellos el de Esteva et al., da una exactitud entre 0.705 y 0.776.
 Sobre la salida del clasificador un modelo GPT genera recomendaciones de cuidado personalizadas, que valoraron 20
 participantes, dos de ellos dermatólogos; esa evaluación mide las recomendaciones y no el diagnóstico. El artículo no
 discute limitaciones propias del clasificador.
 
-\begin{table}[!t]
+\begin{table}[htbp]
     \centering
     \caption{Trabajos de clasificación de lesiones de piel. PCP: médicos de atención primaria; NP: enfermeros
     especializados.}
@@ -1520,22 +1599,24 @@ discute limitaciones propias del clasificador.
         \textcite{khan2025ensemble} & 2025 & Ensamble de EfficientNetB3, ResNet50 y DenseNet121, más LLM
             & Nevo contra carcinoma basocelular; 80/10/10 al azar
             & Exactitud, F1, pérdida logarítmica
-            & Exactitud 97.67\,\% contra 93.83\,\% del mejor individual
+            & Exactitud 97.67\,\% contra 93.83\,\% (ResNet50)
             & No \\
         \filasep
         \textcite{kim2025skinsavvy2} & 2025 & Swin o EfficientNetV2, más GPT
             & HAM10000 ampliado con imágenes externas
             & Exactitud, precisión, sensibilidad y F1 promedio
-            & Exactitud 0.780; F1 promedio 0.793 (Swin)
+            & Exactitud balanceada 0.780; F1 promedio 0.793 (Swin)
             & 2 dermatólogos entre 20 evaluadores de las recomendaciones \\
         \bottomrule
     \end{tabularx}
 \end{table}
 
-La línea amplió la tarea, trató el desbalance dentro de los desafíos y llevó el modelo fuera del banco de pruebas. Los
-trabajos más antiguos muestran que un promedio global oculta la debilidad en los tumores malignos, que el melanoma
-exige su propia sensibilidad y que el \gls{auc} se sostiene en un estudio prospectivo, aunque con una especificidad
-baja y una mejora modesta sobre los dermatólogos. Los recientes repiten ensambles y comparaciones entre redes, y
+Entre 2020 y 2023, la línea pasó de la lesión aislada a las condiciones de atención
+primaria~\cite{liu2020deep}, corrigió el desbalance dentro de los desafíos ISIC~\cite{gessert2020skin,yao2022single}
+y probó un ensamble en un estudio prospectivo~\cite{marchetti2023prospective}. Esos trabajos muestran que un
+promedio global oculta la debilidad en los tumores malignos, que el melanoma exige su propia sensibilidad y que el
+\gls{auc} se sostiene fuera del desafío, aunque con una especificidad baja y una mejora modesta sobre los
+dermatólogos. Los recientes repiten ensambles y comparaciones entre redes, y
 reportan exactitudes altas que el propio F1 macro de \textcite{aboulmira2024skinhealthmate} relativiza. Dos de ellos
 agregan un texto generado por un modelo de lenguaje sobre la predicción~\cite{khan2025ensemble,kim2025skinsavvy2}.
 
@@ -1547,13 +1628,15 @@ población latinoamericana. Por último, los mejores sistemas son ensambles gran
 comparan con reportes clínicos de referencia y solo \textcite{khan2025ensemble} marca los casos discordantes, sin
 medir esa abstención.
 
+\FloatBarrier
 \subsection{Modelos visión--lenguaje en dermatología}
 \label{sec:estado_arte_vlm}
 
 Los \glspl{vlm} llegan a la dermatología por las dos vías de la Sección~\ref{sec:marco_vlm}: la alineación
 contrastiva, que permite clasificar sin ajuste y recuperar casos, y la unión de un codificador visual con un modelo
 de lenguaje que genera texto. Interesa de cada trabajo qué problema ataca, con qué método, contra qué se comparó y si
-hubo expertos. Se presentan en orden cronológico dentro de cada estrategia.
+hubo expertos. Se presentan en orden cronológico dentro de cada estrategia, y las
+Tablas~\ref{tab:marco_sota_vlm} y~\ref{tab:marco_sota_vlm_gen} los resumen.
 
 \textcite{kim2024transparent} proponen MONET para anotar conceptos clínicos (eritema, úlcera, pigmentación) sobre
 imágenes sin etiquetas manuales, con el fin de auditar conjuntos de datos y modelos. Es una versión de CLIP ajustada
@@ -1602,58 +1685,9 @@ clínicos, 30 médicos de atención primaria con su ayuda pasan de 0.266 a 0.482
 diagnósticos. Los autores reconocen que los estudios son retrospectivos y simulados y que el preentrenamiento cubre
 más de 400 de las más de 2\,000 entidades dermatológicas.
 
-La segunda estrategia une un codificador visual con un modelo de lenguaje. \textcite{li2023llavamed} presentan
-LLaVA-Med, un asistente biomédico de propósito general. Parte de LLaVA de 7\,000 millones de parámetros, y lo ajusta
-en dos etapas con 600\,000 pares figura--texto de PubMed Central, primero para alinear el vocabulario y después con
-conversaciones generadas por GPT-4 a partir de los textos, en menos de 15 horas con ocho A100. Se evalúa en tres
-conjuntos de preguntas visuales de radiología y patología y con un puntaje relativo calculado por GPT-4. Tras el ajuste
-supera al estado del arte supervisado en las preguntas cerradas de VQA-RAD y PathVQA, y en las abiertas solo en SLAKE.
-No se evalúa en dermatología ni con expertos, y sus autores reconocen alucinaciones y poco razonamiento en profundidad.
-Med-Flamingo, PeFoMed y LLaVA-Tri comparten ese perfil radiológico y no se
-evalúan en piel~\cite{moor2023medflamingo,he2025pefomed,xie2025medtrinity25m}.
-
-\textcite{zeng2025mmskin} adaptan ese modelo a la piel con SkinVL. Sobre LLaVA-Med de 7\,000 millones de parámetros
-entrenan solo la proyección visual y adaptadores LoRA, con un corpus de imágenes de libros de texto y nueve conjuntos
-públicos de diagnóstico reformulados como preguntas (171\,600 imágenes en la variante completa). Se compara con cinco
-modelos generales y dos médicos de propósito general, entre ellos LLaVA-Med y HuatuoGPT, en descripción, preguntas y
-clasificación con ajuste y \emph{zero-shot}. En \emph{zero-shot} la variante completa alcanza 82.34\,\% de exactitud en
-Patch16 contra 68.55\,\% de LLaVA-Med, y es el único modelo que supera 50\,\% en HAM10000. Los textos provienen de
-libros de dermatólogos, pero no hubo evaluación de las respuestas por expertos ni se discuten limitaciones, más allá de
-pedir mayor capacidad de razonamiento.
-
-\textcite{shen2025skingptr1}, publicado solo en arXiv y sin revisión de pares, buscan un modelo que razone de forma
-explícita, produzca un reporte estructurado y rinda de forma pareja entre tonos de piel. Mantienen congelado
-Vision-R1-7B y entrenan solo el 0.056\,\% de los parámetros, con un sesgo sobre los \emph{logits}, un adaptador de
-mezcla de expertos que incorpora un tono de piel estimado y la destilación de PanDerm. El entrenamiento supervisado usa
-334\,618 muestras con razonamiento sintetizado por modelos de lenguaje. En siete conjuntos externos, contra cinco
-sistemas entre ellos GPT-4o mini y LLaVA-Med, alcanza 82.50\,\% de exactitud en Derm12345 y entre 42.40\,\% y
-69.30\,\% en otros tres. Cinco dermatólogos califican 1\,000 casos con una media de 3.6 sobre 5, pero solo sobre las
-salidas de este modelo. Los autores reconocen bucles de autovalidación con incertidumbre alta y una latencia que impide
-ejecutarlo en dispositivos de borde.
-
-\textcite{ru2026dermogpt}, publicado solo en arXiv y sin revisión de pares, proponen un modelo que siga el orden
-clínico de morfología, razonamiento y diagnóstico, con datos, \emph{benchmark} y pesos abiertos. Reúnen DermoInstruct,
-con 772\,675 instrucciones, y DermoBench, con 33\,999 preguntas. Ajustan Qwen3-VL-8B con LoRA y después con aprendizaje
-por refuerzo, con una recompensa que combina la exactitud, la similitud jerárquica dentro de la ontología diagnóstica y
-la coincidencia de atributos morfológicos. Comparan 16 modelos. En diagnóstico alcanza 78.04\,\% dentro de la
-distribución y 66.48\,\% fuera de ella, contra 63.37\,\% y 61.21\,\% de Gemini-2.5-Flash, el mejor modelo comercial.
-Dos dermatólogos revisan un núcleo de 900 casos y dos clínicos dan la referencia humana. Los autores reconocen que la
-brecha con la referencia humana persiste.
-
-La tercera línea mide qué tan lejos están estos modelos de la consulta real. \textcite{jiang2026multimodal}, también
-publicado solo en arXiv y sin revisión de pares, y de un grupo independiente de los anteriores, evalúan sin ajuste
-cinco modelos (LLaVA-Med v1.5, SkinGPT-4, InternVL-Chat, MedGemma-4B y GPT-4.1) en diagnóstico diferencial y triaje por
-gravedad. Usan tres conjuntos públicos y una cohorte de 5\,811 consultas de un hospital, con 46\,405 imágenes, que no
-se distribuye. La exactitud de los tres primeros diagnósticos la calcula un juez automático validado contra tres
-dermatólogos. En las consultas con la imagen sola los modelos abiertos obtienen entre 1.50\,\% y 13.35\,\% y GPT-4.1
-24.65\,\%. Sin contexto, la sensibilidad de triaje queda por debajo de 0.50 en todos, y el texto del clínico remitente
-mejora los resultados pero los vuelve sensibles a errores de ese texto. Los autores concluyen que no corresponde
-usarlos sin supervisión y reconocen que los casos provienen de un servicio con internación y que son solo cinco
-modelos.
-
-\begin{table}[!t]
+\begin{table}[htbp]
     \centering
-    \caption{\glspl{vlm} en dermatología. $^\dagger$: solo en arXiv. ID: dentro de la distribución; OOD: fuera de ella.}
+    \caption{\glspl{vlm} contrastivos y modelos fundacionales en dermatología. $^\dagger$: solo en arXiv.}
     \label{tab:marco_sota_vlm}
     \footnotesize
     \setlength{\tabcolsep}{3.5pt}
@@ -1694,7 +1728,73 @@ modelos.
             & F1 ponderado, \gls{auc}, sensibilidad macro, \emph{Recall@K}
             & \emph{Zero-shot} 73.3\,\% contra 56.1\,\% (DermLIP); atención primaria con ayuda, de 0.266 a 0.482
             & Tres estudios, con 30, 1\,090 y 34 clínicos \\
-        \filasep
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+La segunda estrategia une un codificador visual con un modelo de lenguaje. \textcite{li2023llavamed} presentan
+LLaVA-Med, un asistente biomédico de propósito general. Parte de LLaVA de 7\,000 millones de parámetros, y lo ajusta
+en dos etapas con 600\,000 pares figura--texto de PubMed Central, primero para alinear el vocabulario y después con
+conversaciones generadas por GPT-4 a partir de los textos, en menos de 15 horas con ocho A100. Se evalúa en tres
+conjuntos de preguntas visuales de radiología y patología y con un puntaje relativo calculado por GPT-4. Tras el ajuste
+supera al estado del arte supervisado en las preguntas cerradas de VQA-RAD y PathVQA, y en las abiertas solo en SLAKE.
+No se evalúa en dermatología ni con expertos, y sus autores reconocen alucinaciones y poco razonamiento en profundidad.
+Med-Flamingo, PeFoMed y LLaVA-Tri comparten ese perfil radiológico y no se
+evalúan en piel~\cite{moor2023medflamingo,he2025pefomed,xie2025medtrinity25m}.
+
+\textcite{zeng2025mmskin} adaptan ese modelo a la piel con SkinVL. Sobre LLaVA-Med de 7\,000 millones de parámetros
+entrenan solo la proyección visual y adaptadores LoRA, con un corpus de imágenes de libros de texto y nueve conjuntos
+públicos de diagnóstico reformulados como preguntas (171\,600 imágenes en la variante completa). Se compara con cinco
+modelos generales y dos modelos médicos de propósito general, entre ellos LLaVA-Med y HuatuoGPT, en descripción, preguntas y
+clasificación con ajuste y \emph{zero-shot}. En \emph{zero-shot} la variante completa alcanza 82.34\,\% de exactitud en
+Patch16 contra 68.55\,\% de LLaVA-Med, y es el único modelo que supera 50\,\% en HAM10000. Los textos provienen de
+libros de dermatólogos, pero no hubo evaluación de las respuestas por expertos ni se discuten limitaciones, más allá de
+pedir mayor capacidad de razonamiento.
+
+\textcite{shen2025skingptr1}, publicado solo en arXiv y sin revisión de pares, buscan un modelo que razone de forma
+explícita, produzca un reporte estructurado y rinda de forma pareja entre tonos de piel. Mantienen congelado
+Vision-R1-7B y entrenan solo el 0.056\,\% de los parámetros, con un sesgo sobre los \emph{logits}, un adaptador de
+mezcla de expertos que incorpora un tono de piel estimado y la destilación de PanDerm. El entrenamiento supervisado usa
+334\,618 muestras con razonamiento sintetizado por modelos de lenguaje. En siete conjuntos externos, contra cinco
+sistemas entre ellos GPT-4o mini y LLaVA-Med, alcanza 82.50\,\% de exactitud en Derm12345 y entre 42.40\,\% y
+69.30\,\% en otros tres. Cinco dermatólogos califican 1\,000 casos con una media de 3.6 sobre 5, pero solo sobre las
+salidas de este modelo. Los autores reconocen bucles de autovalidación con incertidumbre alta y una latencia que impide
+ejecutarlo en dispositivos de borde.
+
+\textcite{ru2026dermogpt}, publicado solo en arXiv y sin revisión de pares, proponen un modelo que siga el orden
+clínico de morfología, razonamiento y diagnóstico, con datos, \emph{benchmark} y pesos abiertos. Reúnen DermoInstruct,
+con 772\,675 instrucciones, y DermoBench, con 33\,999 preguntas. Ajustan Qwen3-VL-8B con LoRA y después con aprendizaje
+por refuerzo, con una recompensa que combina la exactitud, la similitud jerárquica dentro de la ontología diagnóstica y
+la coincidencia de atributos morfológicos. Comparan 16 modelos. En diagnóstico alcanza 78.04\,\% dentro de la
+distribución y 66.48\,\% fuera de ella, contra 63.37\,\% y 61.21\,\% de Gemini-2.5-Flash, el mejor modelo comercial.
+Dos dermatólogos revisan un núcleo de 900 casos y dos clínicos dan la referencia humana. Los autores reconocen que la
+brecha con la referencia humana persiste.
+
+La tercera línea mide qué tan lejos están estos modelos de la consulta real. \textcite{jiang2026multimodal}, también
+publicado solo en arXiv y sin revisión de pares, y de un grupo independiente de los anteriores, evalúan sin ajuste
+cinco modelos (LLaVA-Med v1.5, SkinGPT-4, InternVL-Chat, MedGemma-4B y GPT-4.1) en diagnóstico diferencial y triaje por
+gravedad. Usan tres conjuntos públicos y una cohorte de 5\,811 consultas de un hospital, con 46\,405 imágenes, que no
+se distribuye. La exactitud de los tres primeros diagnósticos la calcula un juez automático validado contra tres
+dermatólogos. En las consultas con la imagen sola los modelos abiertos obtienen entre 1.50\,\% y 13.35\,\% y GPT-4.1
+24.65\,\%. Sin contexto, la sensibilidad de triaje queda por debajo de 0.50 en todos, y el texto del clínico remitente
+mejora los resultados pero los vuelve sensibles a errores de ese texto. Los autores concluyen que no corresponde
+usarlos sin supervisión y reconocen que los casos provienen de un servicio con internación y que son solo cinco
+modelos.
+
+\begin{table}[htbp]
+    \centering
+    \caption{\glspl{vlm} generativos en dermatología y su evaluación crítica. $^\dagger$: solo en arXiv. ID: dentro de la distribución; OOD: fuera de ella.}
+    \label{tab:marco_sota_vlm_gen}
+    \footnotesize
+    \setlength{\tabcolsep}{3.5pt}
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{1.9cm}
+        c
+        >{\raggedright\arraybackslash\hspace{0pt}}X >{\raggedright\arraybackslash\hspace{0pt}}X
+        >{\raggedright\arraybackslash\hspace{0pt}}p{2.2cm} >{\raggedright\arraybackslash\hspace{0pt}}X
+        >{\raggedright\arraybackslash\hspace{0pt}}p{1.9cm}@{}}
+        \toprule
+        Trabajo & Año & Arquitectura & Datos & Métricas & Resultado principal & Expertos \\
+        \midrule
         \textcite{li2023llavamed} & 2023 & LLaVA de 7B ajustado en dos etapas
             & 600\,000 pares de PubMed Central; instrucciones de GPT-4
             & Puntaje relativo con GPT-4, exactitud en VQA
@@ -1728,6 +1828,8 @@ modelos.
     \end{tabularx}
 \end{table}
 
+
+
 La línea contrastiva avanzó de adaptar CLIP con texto de la literatura (MONET) a corpus dermatológicos con ontología
 (DermLIP), textos descompuestos por aspecto (MAKE) y preentrenamiento visual a gran escala (PanDerm, DermFM-Zero), y
 solo estos dos últimos se validan con clínicos. La línea generativa pasó de asistentes biomédicos que no se evaluaron en
@@ -1740,6 +1842,7 @@ La incertidumbre aparece como limitación y no como una decisión entre afirmar,
 preentrenar PanDerm o DermFM-Zero. Y los estudios con clínicos son pocos: solo PanDerm y DermFM-Zero miden el efecto de
 la ayuda sobre sus decisiones, y en los generativos los expertos evalúan las salidas del propio modelo o son dos.
 
+\FloatBarrier
 \subsection{Generación de reportes dermatológicos}
 \label{sec:estado_arte_reportes}
 
@@ -1869,7 +1972,7 @@ de las preguntas sube de 75.47 a 87.84 con RULE y a 89.54 con MMed-RAG. En la ab
 contexto recuperado sin más empeora MIMIC-CXR, de 75.79 a 67.35. Ninguno incluye expertos, y MMed-RAG señala que una
 modalidad nueva puede exigir reentrenar el recuperador.
 
-\begin{table}[!t]
+\begin{table}[htbp]
     \centering
     \caption{Evaluación de narrativas dermatológicas y recuperación de contexto para \glspl{vlm} médicos.
     DermBench se presentó como póster, sin actas.}
@@ -1918,13 +2021,14 @@ se recuperan textos y no casos con diagnóstico confirmado, y las métricas son 
 consumo a ocho A100 (DermatoLlama se ejecuta en una sola), y tres sistemas dependen de modelos cerrados o consultados por API
 para redactar o generar las referencias (Llama-3 70B en Khan et al., GPT-4 en SkinSavvy2, GPT-4V en Chakrabarti et al.).
 
+\FloatBarrier
 \subsection{Posicionamiento del trabajo}
 \label{sec:estado_arte_posicion}
 
 Cada línea deja algo sin resolver. Los clasificadores de lesiones descansan sobre la prueba de un desafío, un solo
 centro o una partición temporal, y los de mejor desempeño son ensambles grandes. Entre los \glspl{vlm}, los
 contrastivos especializados clasifican y recuperan pero no redactan, los generativos exigen un cómputo elevado y los
-médicos de propósito general rinden poco en piel. En los reportes, la mayoría de los sistemas se evalúa por parecido textual o por
+\glspl{vlm} médicos de propósito general rinden poco en piel. En los reportes, la mayoría de los sistemas se evalúa por parecido textual o por
 la exactitud del diagnóstico, y la recuperación estudiada trae textos de otras especialidades.
 
 \begin{table}[htbp]
@@ -1981,3 +2085,5 @@ los casos en que sus miembros no coinciden, pero la concordancia no decide cómo
 modelo consultado por API. \textcite{chakrabarti2025skin} miden la corrección diagnóstica de los reportes de un único
 modelo destilado. Ninguno combina en una cascada la recuperación de casos, la decisión por concordancia y la
 redacción. La implementación y el protocolo de evaluación se describen en el Capítulo~\ref{cp:metodos}.
+
+\FloatBarrier

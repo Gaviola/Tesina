@@ -334,9 +334,14 @@ El encuadre de cada referencia anterior a 2020 que ya está en el `.bib` queda r
   daltonismo. El color nunca es la única señal: cada rol conserva además su forma de trazo y los
   rellenos son claros, de modo que el diagrama sigue siendo legible impreso en blanco y negro. No se
   usan colores fuera de la paleta.
-- **Posición de las figuras.** Por defecto `[htbp]`. Si al compilar la figura salta a la página
-  siguiente y corta un párrafo que viene después de ella, se usa `[H]` (paquete `float`, cargado en
-  `13-Figuras.sty`) para fijarla donde se la trae con `\input`. Las etiquetas de un diagrama no se
+- **Posición de las figuras (revisión del autor, 2026-10-04).** Figuras y tablas del cuerpo van con `[H]`
+  (paquete `float`, cargado en `13-Figuras.sty`): quedan exactamente donde se las trae con `\input`, y
+  `\raggedbottom` deja el hueco al pie de la página y no entre párrafos. Las tablas grandes del estado del
+  arte flotan con `[htbp]`, con un `\FloatBarrier` antes de cada subsección para que no salgan de ella; una
+  tabla que no entra en una página se parte en dos. **Después de cada cambio que mueva texto** se compila y
+  se corre `python check_floats.py <capítulo>` desde `Docs/TFG/`: lista cada flotante con la página de su
+  epígrafe y la de su primera mención, y marca los que nunca se mencionan (todo flotante se menciona en el
+  texto). Se revisan además las miniaturas de las páginas del capítulo. Las etiquetas de un diagrama no se
   superponen con recuadros ni con flechas, y las flechas llegan al borde de un nodo, no al hueco entre
   dos.
 - **Tablas.** `tabularx` con `booktabs` y `\caption` arriba. Cuando las celdas ocupan varias líneas,
