@@ -16,8 +16,8 @@ que lo guían, y la Sección~\ref{sec:intro_organizacion} describe cómo se orga
 \label{sec:intro_contexto}
 
 El cáncer de piel es uno de los tipos de cáncer más frecuentes del mundo. La última estimación de GLOBOCAN,
-publicada en 2026, atribuye al año 2024 1\,138\,314 casos nuevos de cáncer de piel no melanoma y 337\,969 de
-melanoma~\cite{sung2026global}. El melanoma es menos de una cuarta parte de los diagnósticos, pero causa casi
+publicada en 2026, atribuye al año 2024 1\,138\,314 casos nuevos de cáncer de piel no melanoma, sin contar el carcinoma basocelular, y
+337\,969 de melanoma~\cite{sung2026global}. El melanoma es menos de una cuarta parte de esos diagnósticos, pero causa casi
 tantas muertes como el resto de los cánceres de piel juntos, 58\,398 frente a 58\,721.
 
 En la Argentina, la misma estimación registra 1\,602 casos nuevos de melanoma y 571 muertes en
@@ -37,12 +37,12 @@ En esa detección temprana intervienen varios factores. El primero es la disponi
 relevamiento en 158 países estimó una media de 2.66 dermatólogos por cada 100\,000 habitantes, con 0.37 en los
 países de ingreso bajo y 5.05 en los de ingreso alto~\cite{freeman2026global}. Donde el especialista falta, la
 primera valoración queda en manos de clínicos no especializados, y la dermatoscopía, el examen de la lesión con
-aumento e iluminación controlada, mejora el diagnóstico sobre todo en quienes tienen formación para
-usarla~\cite{dinnes2018dermoscopy}. Además, la lectura de una misma imagen no es uniforme, sino que varía entre
+aumento e iluminación controlada, mejora el diagnóstico sobre todo en manos de usuarios con
+experiencia~\cite{dinnes2018dermoscopy}. Además, la lectura de una misma imagen no es uniforme, sino que varía entre
 observadores según su nivel de formación~\cite{tschandl2019comparison}. La demanda de valoración, en cambio, es
 alta: en la campaña nacional de prevención de 2022 de la Sociedad Argentina de Dermatología, los dermatólogos
 encontraron alguna lesión sospechosa en una de cada cuatro de las 3\,635 personas examinadas en 17 provincias y
-la Ciudad de Buenos Aires, y en 70 de ellas sospecharon un melanoma~\cite{sad2023campana}.
+la Ciudad de Buenos Aires, y registraron 70 lesiones con sospecha de melanoma~\cite{sad2023campana}.
 
 A la interpretación se suma la documentación. Cada consulta requiere un reporte escrito, y en atención primaria
 el médico pasa 5.9 horas de una jornada de 11.4 frente a la historia clínica electrónica, casi la mitad de ellas
@@ -52,7 +52,7 @@ en dos puntos: la interpretación de la lesión y la redacción de su reporte.
 
 Para acortar esos tiempos se aplicaron distintos métodos computacionales, entre ellos las redes neuronales. Con
 el aprendizaje profundo, las \glspl{cnn} y, más recientemente, los \glspl{vit} aprendieron a clasificar
-imágenes de lesiones a partir de ejemplos etiquetados, hasta alcanzar un desempeño comparable al de
+imágenes de lesiones a partir de ejemplos etiquetados, y una \gls{cnn} llegó a un desempeño comparable al de
 dermatólogos~\cite{esteva2017dermatologistlevel}. Con la masificación de los modelos de lenguaje surgieron
 después los \glspl{vlm}, que procesan imagen y texto a la vez, de modo que pueden asignar una categoría a una
 imagen y también redactar un texto sobre ella~\cite{radford2021learning,liu2023visual}, con adaptaciones
@@ -60,7 +60,8 @@ recientes al dominio médico~\cite{li2023llavamed}. Con ellos, las dos tareas, c
 abordar con un mismo tipo de modelo.
 
 Estos métodos aceleran el análisis, pero traen sus propios problemas. Las exactitudes altas que informan las
-revisiones se obtienen en condiciones controladas~\cite{magalhaes2024systematic,kreouzi2024learning}, y queda
+revisiones y los estudios recientes se obtienen sobre conjuntos públicos de imágenes y no en el uso
+clínico~\cite{magalhaes2024systematic,kreouzi2024learning}, y queda
 abierto si se sostienen en atención primaria~\cite{jones2022intelligence} o en otras poblaciones. El desempeño
 cae en los tonos de piel menos representados en los datos de entrenamiento, que dominan los conjuntos
 públicos~\cite{daneshjou2022disparities,groh2021neural}, y la población argentina, con las diferencias

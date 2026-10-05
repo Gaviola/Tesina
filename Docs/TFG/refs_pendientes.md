@@ -255,6 +255,22 @@ teórico llegara a necesitar LSTM con desarrollo, hay que incorporarla primero.
 
 Verificado contra el resumen de arXiv (autores, fecha y afirmación de desempeño).
 
+### Versión publicada de Derm1M — incorporado el 05/10/2026
+
+| Clave | Referencia | Sostiene |
+|---|---|---|
+| `yan2025derm1miccv` | Yan et al., *Derm1M: A Million-Scale Vision-Language Dataset Aligned with Clinical Ontology Knowledge for Dermatology*, ICCV 2025, pp. 12681-12690, doi:10.1109/ICCV51701.2025.01178 | Reemplaza en el texto a `yan2025derm1m` (preprint arXiv 2503.14911): Derm1M y DermLIP tienen revisión de pares (§2.5, §2.10) |
+
+Verificado en mlanthology.org (ICCV 2025, autores, páginas y DOI) y en openaccess.thecvf.com. Las cifras del texto se verificaron contra el preprint arXiv.
+
+### Versión publicada de MAKE — incorporado el 05/10/2026
+
+| Clave | Referencia | Sostiene |
+|---|---|---|
+| `yan2025makemiccai` | Yan et al., *MAKE: Multi-Aspect Knowledge-Enhanced Vision-Language Pretraining for Zero-shot Dermatological Assessment*, MICCAI 2025, LNCS 15964, pp. 369-379, doi:10.1007/978-3-032-04971-1_35 | Reemplaza en el texto a `yan2025make` (preprint arXiv 2505.09372): MAKE tiene revisión de pares (§2.10, eje 2) |
+
+Verificado en papers.miccai.org (estado «Accepted at MICCAI 2025», volumen, páginas y DOI). Las cifras del texto se verificaron contra el preprint arXiv v1; no se tuvo acceso a la versión de Springer.
+
 ### Dato argentino del Capítulo 1 — incorporado el 04/10/2026
 
 | Clave | Referencia | Sostiene |
