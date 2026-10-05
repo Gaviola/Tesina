@@ -247,6 +247,14 @@ Schmidhuber 1997 no está en el `.bib`. Como la ficha del Capítulo 2 ya había 
 una mención mínima, **se eliminó la cláusula** en lugar de proponer la referencia. Si el marco
 teórico llegara a necesitar LSTM con desarrollo, hay que incorporarla primero.
 
+### Modelos de lenguaje de §2.4 — incorporado el 04/10/2026
+
+| Clave | Referencia | Sostiene |
+|---|---|---|
+| `jiang2023mistral` | Jiang et al., *Mistral 7B*, arXiv:2310.06825 (2023) | Mistral 7B supera a Llama 2 13B; modelo de lenguaje de LLaVA-Med v1.5 (§2.4, §2.5) |
+
+Verificado contra el resumen de arXiv (autores, fecha y afirmación de desempeño).
+
 ### Dato argentino del Capítulo 1 — incorporado el 04/10/2026
 
 | Clave | Referencia | Sostiene |

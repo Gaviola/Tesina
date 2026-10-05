@@ -1,0 +1,33 @@
+% Figura: dos formas de generar un reporte con un VLM, de extremo a extremo o condicionado en evidencia
+% externa. Se usa en sec:marco_rep_generacion.
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[x=1mm, y=1mm]
+
+        % (a) De extremo a extremo.
+        \node[font=\small\bfseries, anchor=west] at (-6, 30) {(a) De extremo a extremo};
+        \node[figentrada, text width=22mm] (a_img) at (8, 18) {Imagen e\\instrucción};
+        \node[figtarea, text width=26mm] (a_vlm) at (62, 18) {\gls{vlm}};
+        \node[figsalida, text width=26mm] (a_rep) at (122, 18) {Reporte};
+        \draw[figflecha] (a_img) -- (a_vlm);
+        \draw[figflecha] (a_vlm) -- (a_rep);
+
+        % (b) Condicionado en evidencia externa.
+        \node[font=\small\bfseries, anchor=west] at (-6, 4) {(b) Condicionado en evidencia externa};
+        \node[figentrada, text width=22mm] (b_img) at (8, -16) {Imagen};
+        \node[figtarea, text width=28mm] (b_ev) at (42, -6) {Clasificador o\\recuperación};
+        \node[figtarea, text width=24mm] (b_pol) at (42, -27) {Política\\(afirmar, diferencial\\o derivar)};
+        \node[figtarea, text width=26mm] (b_vlm) at (88, -16) {\gls{vlm}};
+        \node[figsalida, text width=26mm] (b_rep) at (122, -16) {Reporte};
+        \draw[figflecha] (b_img.east) -- ++(4, 0) |- (b_ev.west);
+        \draw[figflecha] (b_ev) -- (b_pol);
+        \draw[figflecha] (b_pol.east) -| node[figetiqueta, pos=0.25, below] {evidencia $c(x)$} (b_vlm.south);
+        \draw[figflecha] (b_img.south) -- ++(0, -18) -| ([xshift=-6mm]b_vlm.south);
+        \draw[figflecha] (b_vlm) -- (b_rep);
+
+    \end{tikzpicture}
+    \caption{Dos formas de generar un reporte: el \gls{vlm} solo, o condicionado en la evidencia de otro
+    componente.}
+    \label{fig:marco_generacion_reportes}
+\end{figure}
