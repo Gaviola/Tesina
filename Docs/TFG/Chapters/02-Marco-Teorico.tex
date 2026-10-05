@@ -1464,7 +1464,59 @@ Importa cómo trata cada trabajo el desbalance de clases, con qué métrica elig
 de una misma lesión en una partición, si valida fuera de la fuente y si compara contra clínicos. La
 Tabla~\ref{tab:marco_sota_clasificacion} resume los trabajos.
 
-\begin{table}[htbp]
+Dos hitos fijaron la tarea como un terreno en el que el aprendizaje profundo compite con el especialista. En 2017
+una \gls{cnn} igualó a dermatólogos certificados en la distinción entre lesiones benignas y
+malignas~\cite{esteva2017dermatologistlevel}. En 2019, sobre HAM10000, los clasificadores del desafío ISIC 2018
+acertaron en promedio más que 511 participantes humanos, y los tres mejores superaron también a los expertos con
+más de diez años de experiencia~\cite{tschandl2019comparison}.
+
+\textcite{liu2020deep} extendieron la tarea de la lesión aislada a las 26 condiciones de piel más frecuentes en
+atención primaria, a partir de fotografías clínicas y de la historia del paciente. Un ensamble de seis redes
+Inception-v4 fusiona las imágenes de cada caso con 45 variables de metadatos y se entrena con etiquetas blandas
+construidas con los votos de un panel de dermatólogos. Los datos son casos de teledermatología de 17 sitios de
+Estados Unidos, con partición temporal, y la referencia es el diagnóstico de tres dermatólogos, sin confirmación
+patológica. Se mide la exactitud y la sensibilidad promedio entre condiciones. Frente a 18 clínicos, en un
+subconjunto enriquecido con condiciones raras, alcanzó una exactitud de 0.67 contra 0.63 de los dermatólogos y 0.45
+de los médicos de atención primaria; entre los tumores malignos, en cambio, su sensibilidad fue 0.57 contra 0.71. Los
+autores reconocen que la partición temporal no reemplaza a un conjunto externo.
+
+\textcite{gessert2020skin} describen el ensamble de EfficientNet, SENet154 y ResNeXt que ganó las dos tareas del
+desafío ISIC 2019. Ponderan la entropía cruzada por la frecuencia inversa de cada clase y agregan una novena clase,
+con imágenes externas, para la clase desconocida de la prueba. Entrenan con 25\,331 imágenes en cinco particiones que
+mantienen juntas las de una misma lesión. La métrica es la sensibilidad macro, y la evidencia es el primer puesto, sin
+comparación con otros métodos. En validación cruzada llegan a 72.5\,\%, pero en la prueba oficial obtienen 63.6\,\%,
+una brecha que atribuyen en parte a la clase desconocida. No hubo expertos.
+
+\textcite{yao2022single} proponen en cambio un modelo único, de bajo costo, para conjuntos pequeños y
+desbalanceados. De 41 \glspl{cnn} eligen una RegNetY y le suman una pérdida con un coeficiente por clase, mayor para
+el melanoma, y un aprendizaje acumulativo que pasa del entrenamiento convencional al rebalanceo. Usan ISIC 2017, 2018,
+2019 y 7-point, con la sensibilidad macro como métrica principal y la del melanoma aparte, y se comparan con los
+ganadores de los desafíos. En ISIC 2019 alcanzan una sensibilidad macro de 0.645 contra 0.636 del ganador, y muestran
+que subir el coeficiente del melanoma eleva su sensibilidad de 0.772 a 0.871 a costa de la sensibilidad macro. No
+hubo expertos. Reconocen que los ensambles rinden en general mejor que un modelo único. El artículo no describe una
+partición de validación: la selección se hace sobre la prueba de ISIC 2018.
+
+\textcite{marchetti2023prospective} llevaron fuera del banco de pruebas el ganador del desafío SIIM-ISIC 2020,
+un ensamble de 18 modelos que incluye el trabajo de Gessert et al.; cada modelo se entrenó en cinco
+particiones, de modo que para cada imagen se ejecutan y promedian 90 redes. Lo validaron de forma
+prospectiva, con biopsia como referencia, en un estudio de un solo brazo con 603 lesiones, 95 de ellas melanomas. Con
+el umbral fijado de antemano, la sensibilidad fue 96.8\,\% y la especificidad 37.4\,\%, y el \gls{auc} de 0.857 fue
+similar al de la prueba del desafío y superior al de los dermatólogos sin ayuda (0.780). Con acceso al puntaje, el
+\gls{auc} de 11 dermatólogos subió a 0.816, aunque el impacto es teórico porque no se modificó la atención de ningún
+paciente. Los autores reconocen que fue un solo centro, con una muestra pequeña y sin participantes de fototipo V o VI.
+
+Los trabajos recientes sobre HAM10000 y conjuntos afines se comparan casi siempre entre arquitecturas, sin expertos
+ni un protocolo común. \textcite{kreouzi2024learning} enfrentan cuatro \glspl{cnn} (DenseNet121, ResNet50V2,
+NASNetMobile y MobileNetV2), preentrenadas en ImageNet y con la misma cabeza de clasificación, en la distinción binaria
+entre melanoma y nevo melanocítico sobre imágenes dermatoscópicas de DermNet. Además de la exactitud y el \gls{auc}
+miden el tiempo de inferencia y el tamaño del modelo, y evalúan la significancia de las diferencias con la prueba de
+McNemar. DenseNet121 logra la mayor exactitud (92.30\,\%) y ResNet50V2 el mayor \gls{auc} (0.957), pero MobileNetV2
+llega a 92.19\,\% con el menor tamaño (9.89 MB) y la inferencia más rápida (23.46 ms), lo que la perfila para
+dispositivos de pocos recursos. No hubo expertos ni una referencia externa. Los autores reconocen que la tarea es
+binaria, que no cubre nevos atípicos ni otras lesiones pigmentadas, que las imágenes se reducen a 224$\times$224
+píxeles y que el modelo no incorpora metadatos del paciente.
+
+\begin{table}[H]
     \centering
     \caption{Trabajos de clasificación de lesiones de piel. PCP: médicos de atención primaria; NP: enfermeros
     especializados.}
@@ -1530,58 +1582,6 @@ Tabla~\ref{tab:marco_sota_clasificacion} resume los trabajos.
     \end{tabularx}
 \end{table}
 
-Dos hitos fijaron la tarea como un terreno en el que el aprendizaje profundo compite con el especialista. En 2017
-una \gls{cnn} igualó a dermatólogos certificados en la distinción entre lesiones benignas y
-malignas~\cite{esteva2017dermatologistlevel}. En 2019, sobre HAM10000, los clasificadores del desafío ISIC 2018
-acertaron en promedio más que 511 participantes humanos, y los tres mejores superaron también a los expertos con
-más de diez años de experiencia~\cite{tschandl2019comparison}.
-
-\textcite{liu2020deep} extendieron la tarea de la lesión aislada a las 26 condiciones de piel más frecuentes en
-atención primaria, a partir de fotografías clínicas y de la historia del paciente. Un ensamble de seis redes
-Inception-v4 fusiona las imágenes de cada caso con 45 variables de metadatos y se entrena con etiquetas blandas
-construidas con los votos de un panel de dermatólogos. Los datos son casos de teledermatología de 17 sitios de
-Estados Unidos, con partición temporal, y la referencia es el diagnóstico de tres dermatólogos, sin confirmación
-patológica. Se mide la exactitud y la sensibilidad promedio entre condiciones. Frente a 18 clínicos, en un
-subconjunto enriquecido con condiciones raras, alcanzó una exactitud de 0.67 contra 0.63 de los dermatólogos y 0.45
-de los médicos de atención primaria; entre los tumores malignos, en cambio, su sensibilidad fue 0.57 contra 0.71. Los
-autores reconocen que la partición temporal no reemplaza a un conjunto externo.
-
-\textcite{gessert2020skin} describen el ensamble de EfficientNet, SENet154 y ResNeXt que ganó las dos tareas del
-desafío ISIC 2019. Ponderan la entropía cruzada por la frecuencia inversa de cada clase y agregan una novena clase,
-con imágenes externas, para la clase desconocida de la prueba. Entrenan con 25\,331 imágenes en cinco particiones que
-mantienen juntas las de una misma lesión. La métrica es la sensibilidad macro, y la evidencia es el primer puesto, sin
-comparación con otros métodos. En validación cruzada llegan a 72.5\,\%, pero en la prueba oficial obtienen 63.6\,\%,
-una brecha que atribuyen en parte a la clase desconocida. No hubo expertos.
-
-\textcite{yao2022single} proponen en cambio un modelo único, de bajo costo, para conjuntos pequeños y
-desbalanceados. De 41 \glspl{cnn} eligen una RegNetY y le suman una pérdida con un coeficiente por clase, mayor para
-el melanoma, y un aprendizaje acumulativo que pasa del entrenamiento convencional al rebalanceo. Usan ISIC 2017, 2018,
-2019 y 7-point, con la sensibilidad macro como métrica principal y la del melanoma aparte, y se comparan con los
-ganadores de los desafíos. En ISIC 2019 alcanzan una sensibilidad macro de 0.645 contra 0.636 del ganador, y muestran
-que subir el coeficiente del melanoma eleva su sensibilidad de 0.772 a 0.871 a costa de la sensibilidad macro. No
-hubo expertos. Reconocen que los ensambles rinden en general mejor que un modelo único. El artículo no describe una
-partición de validación: la selección se hace sobre la prueba de ISIC 2018.
-
-\textcite{marchetti2023prospective} llevaron fuera del banco de pruebas el ganador del desafío SIIM-ISIC 2020,
-un ensamble de 18 modelos que incluye el trabajo de Gessert et al.; cada modelo se entrenó en cinco
-particiones, de modo que para cada imagen se ejecutan y promedian 90 redes. Lo validaron de forma
-prospectiva, con biopsia como referencia, en un estudio de un solo brazo con 603 lesiones, 95 de ellas melanomas. Con
-el umbral fijado de antemano, la sensibilidad fue 96.8\,\% y la especificidad 37.4\,\%, y el \gls{auc} de 0.857 fue
-similar al de la prueba del desafío y superior al de los dermatólogos sin ayuda (0.780). Con acceso al puntaje, el
-\gls{auc} de 11 dermatólogos subió a 0.816, aunque el impacto es teórico porque no se modificó la atención de ningún
-paciente. Los autores reconocen que fue un solo centro, con una muestra pequeña y sin participantes de fototipo V o VI.
-
-Los trabajos recientes sobre HAM10000 y conjuntos afines se comparan casi siempre entre arquitecturas, sin expertos
-ni un protocolo común. \textcite{kreouzi2024learning} enfrentan cuatro \glspl{cnn} (DenseNet121, ResNet50V2,
-NASNetMobile y MobileNetV2), preentrenadas en ImageNet y con la misma cabeza de clasificación, en la distinción binaria
-entre melanoma y nevo melanocítico sobre imágenes dermatoscópicas de DermNet. Además de la exactitud y el \gls{auc}
-miden el tiempo de inferencia y el tamaño del modelo, y evalúan la significancia de las diferencias con la prueba de
-McNemar. DenseNet121 logra la mayor exactitud (92.30\,\%) y ResNet50V2 el mayor \gls{auc} (0.957), pero MobileNetV2
-llega a 92.19\,\% con el menor tamaño (9.89 MB) y la inferencia más rápida (23.46 ms), lo que la perfila para
-dispositivos de pocos recursos. No hubo expertos ni una referencia externa. Los autores reconocen que la tarea es
-binaria, que no cubre nevos atípicos ni otras lesiones pigmentadas, que las imágenes se reducen a 224$\times$224
-píxeles y que el modelo no incorpora metadatos del paciente.
-
 \textcite{aboulmira2024skinhealthmate} integran en la aplicación web y móvil SkinHealthMate un ensamble que promedia
 las probabilidades de EfficientNetB1 y EfficientNetB5, con preprocesamiento (filtro de mediana) y aumento de datos,
 para clasificar las siete categorías de HAM10000. La aplicación permite a los dermatólogos cargar la imagen, validar
@@ -1639,7 +1639,26 @@ de lenguaje que genera texto. Interesa de cada trabajo qué problema ataca, con 
 hubo expertos. Se presentan en orden cronológico dentro de cada estrategia, y las
 Tablas~\ref{tab:marco_sota_vlm} y~\ref{tab:marco_sota_vlm_gen} los resumen.
 
-\begin{table}[htbp]
+\textcite{kim2024transparent} proponen MONET para anotar conceptos clínicos (eritema, úlcera, pigmentación) sobre
+imágenes sin etiquetas manuales, con el fin de auditar conjuntos de datos y modelos. Es una versión de CLIP ajustada
+de forma contrastiva con 105\,550 imágenes dermatológicas y sus descripciones, extraídas de PubMed y de libros de
+texto. Se compara con CLIP y con un ResNet-50 supervisado con conceptos anotados, sobre SkinCon y Derm7pt. En la
+anotación del tono de piel alcanza un \gls{auc} de 0.805 contra 0.736 de CLIP y 0.874 del supervisado, que se evalúa
+en condiciones más favorables. Dos dermatólogos verifican la recuperación de imágenes por concepto, y un clasificador
+por conceptos sobre MONET supera a las líneas de base en malignidad (\gls{auc} 0.815) y melanoma (0.881). Los autores
+aclaran que no sirve para diagnosticar, que fallará con conceptos ausentes del entrenamiento y que no pudieron medir
+el tono de piel en imágenes dermatoscópicas.
+
+\textcite{yan2025derm1m} entrenan la familia DermLIP, modelos de tipo CLIP con la pérdida contrastiva original, sobre
+Derm1M, un corpus de alrededor de un millón de pares imagen--texto dermatológicos organizados según una ontología
+creada por cuatro dermatólogos. El trabajo, publicado solo en arXiv y sin revisión de pares, compara con CLIP, SigLIP,
+CoCa, PMC-CLIP, BiomedCLIP y MONET en ocho conjuntos y cuatro tareas. En clasificación \emph{zero-shot}, la
+exactitud promedio sobre cuatro conjuntos es 0.561 contra 0.441 de BiomedCLIP, y 0.588 con un codificador visual
+dermatológico (PanDerm). En anotación de conceptos supera a MONET por 1.1 puntos de \gls{auc}, con un codificador
+visual más chico. Los autores reconocen el ruido que introducen los textos educativos, y no hubo evaluación con
+clínicos.
+
+\begin{table}[H]
     \centering
     \caption{\glspl{vlm} contrastivos y modelos fundacionales en dermatología. $^\dagger$: solo en arXiv.}
     \label{tab:marco_sota_vlm}
@@ -1686,25 +1705,6 @@ Tablas~\ref{tab:marco_sota_vlm} y~\ref{tab:marco_sota_vlm_gen} los resumen.
     \end{tabularx}
 \end{table}
 
-\textcite{kim2024transparent} proponen MONET para anotar conceptos clínicos (eritema, úlcera, pigmentación) sobre
-imágenes sin etiquetas manuales, con el fin de auditar conjuntos de datos y modelos. Es una versión de CLIP ajustada
-de forma contrastiva con 105\,550 imágenes dermatológicas y sus descripciones, extraídas de PubMed y de libros de
-texto. Se compara con CLIP y con un ResNet-50 supervisado con conceptos anotados, sobre SkinCon y Derm7pt. En la
-anotación del tono de piel alcanza un \gls{auc} de 0.805 contra 0.736 de CLIP y 0.874 del supervisado, que se evalúa
-en condiciones más favorables. Dos dermatólogos verifican la recuperación de imágenes por concepto, y un clasificador
-por conceptos sobre MONET supera a las líneas de base en malignidad (\gls{auc} 0.815) y melanoma (0.881). Los autores
-aclaran que no sirve para diagnosticar, que fallará con conceptos ausentes del entrenamiento y que no pudieron medir
-el tono de piel en imágenes dermatoscópicas.
-
-\textcite{yan2025derm1m} entrenan la familia DermLIP, modelos de tipo CLIP con la pérdida contrastiva original, sobre
-Derm1M, un corpus de alrededor de un millón de pares imagen--texto dermatológicos organizados según una ontología
-creada por cuatro dermatólogos. El trabajo, publicado solo en arXiv y sin revisión de pares, compara con CLIP, SigLIP,
-CoCa, PMC-CLIP, BiomedCLIP y MONET en ocho conjuntos y cuatro tareas. En clasificación \emph{zero-shot}, la
-exactitud promedio sobre cuatro conjuntos es 0.561 contra 0.441 de BiomedCLIP, y 0.588 con un codificador visual
-dermatológico (PanDerm). En anotación de conceptos supera a MONET por 1.1 puntos de \gls{auc}, con un codificador
-visual más chico. Los autores reconocen el ruido que introducen los textos educativos, y no hubo evaluación con
-clínicos.
-
 \textcite{yan2025make} observan que CLIP trunca los textos a 77 \emph{tokens} y descarta detalle clínico. MAKE,
 publicado solo en arXiv y sin revisión de pares, usa un modelo de lenguaje para dividir cada descripción en subtextos
 por aspecto (enfermedad, concepto), los alinea con regiones de la imagen y pondera cada subtexto según su
@@ -1733,7 +1733,17 @@ clínicos, 30 médicos de atención primaria con su ayuda pasan de 0.266 a 0.482
 diagnósticos. Los autores reconocen que los estudios son retrospectivos y simulados y que el preentrenamiento cubre
 más de 400 de las más de 2\,000 entidades dermatológicas.
 
-\begin{table}[htbp]
+La segunda estrategia une un codificador visual con un modelo de lenguaje. \textcite{li2023llavamed} presentan
+LLaVA-Med, un asistente biomédico de propósito general. Parte de LLaVA de 7\,000 millones de parámetros, y lo ajusta
+en dos etapas con 600\,000 pares figura--texto de PubMed Central, primero para alinear el vocabulario y después con
+conversaciones generadas por GPT-4 a partir de los textos, en menos de 15 horas con ocho A100. Se evalúa en tres
+conjuntos de preguntas visuales de radiología y patología y con un puntaje relativo calculado por GPT-4. Tras el ajuste
+supera al estado del arte supervisado en las preguntas cerradas de VQA-RAD y PathVQA, y en las abiertas solo en SLAKE.
+No se evalúa en dermatología ni con expertos, y sus autores reconocen alucinaciones y poco razonamiento en profundidad.
+Med-Flamingo, PeFoMed y LLaVA-Tri comparten ese perfil radiológico y no se
+evalúan en piel~\cite{moor2023medflamingo,he2025pefomed,xie2025medtrinity25m}.
+
+\begin{table}[H]
     \centering
     \caption{\glspl{vlm} generativos en dermatología y su evaluación crítica. $^\dagger$: solo en arXiv. ID: dentro de la distribución; OOD: fuera de ella.}
     \label{tab:marco_sota_vlm_gen}
@@ -1779,16 +1789,6 @@ más de 400 de las más de 2\,000 entidades dermatológicas.
         \bottomrule
     \end{tabularx}
 \end{table}
-
-La segunda estrategia une un codificador visual con un modelo de lenguaje. \textcite{li2023llavamed} presentan
-LLaVA-Med, un asistente biomédico de propósito general. Parte de LLaVA de 7\,000 millones de parámetros, y lo ajusta
-en dos etapas con 600\,000 pares figura--texto de PubMed Central, primero para alinear el vocabulario y después con
-conversaciones generadas por GPT-4 a partir de los textos, en menos de 15 horas con ocho A100. Se evalúa en tres
-conjuntos de preguntas visuales de radiología y patología y con un puntaje relativo calculado por GPT-4. Tras el ajuste
-supera al estado del arte supervisado en las preguntas cerradas de VQA-RAD y PathVQA, y en las abiertas solo en SLAKE.
-No se evalúa en dermatología ni con expertos, y sus autores reconocen alucinaciones y poco razonamiento en profundidad.
-Med-Flamingo, PeFoMed y LLaVA-Tri comparten ese perfil radiológico y no se
-evalúan en piel~\cite{moor2023medflamingo,he2025pefomed,xie2025medtrinity25m}.
 
 \textcite{zeng2025mmskin} adaptan ese modelo a la piel con SkinVL. Sobre LLaVA-Med de 7\,000 millones de parámetros
 entrenan solo la proyección visual y adaptadores LoRA, con un corpus de imágenes de libros de texto y nueve conjuntos
@@ -1851,7 +1851,31 @@ redactor), en la evidencia que usan (solo la imagen o también un contexto recup
 (Sección~\ref{sec:marco_rep_ejes}). La Tabla~\ref{tab:marco_generadores} resume los generadores y la
 Tabla~\ref{tab:marco_sota_reportes}, los trabajos sobre evaluación y recuperación.
 
-\begin{table}[htbp]
+Un primer grupo genera el texto con un único \gls{vlm} ajustado a dermatología. SkinVL y SkinGPT-R1 pertenecen a
+este grupo y se describieron en la Sección~\ref{sec:estado_arte_vlm}; aquí se detallan otros tres.
+
+SkinGPT-4 busca que una persona sin acceso a un dermatólogo suba una foto y obtenga en una conversación la
+descripción de la lesión, un diagnóstico y recomendaciones. Ajusta MiniGPT-4 con Llama-2-13B en dos pasos: primero
+alinea la imagen con conceptos clínicos y después aprende diagnósticos a partir de notas de médicos, con unas 50\,000
+imágenes públicas y propias~\cite{zhou2023skingpt4,zhou2024pretrained}. Lo compara con MiniGPT-4 sin adaptar y con
+cada paso por separado, en ejemplos cualitativos. El texto lo evalúan dermatólogos certificados con un cuestionario
+sobre 150 casos reales, sin métricas con referencia: consideran correcto o pertinente el 80.63\,\% de los
+diagnósticos. El entrenamiento llevó unas 24 horas en 8 A100 de 80\,GB. Los autores reconocen que los tonos
+Fitzpatrick V y VI están poco representados, que las enfermedades con varias lesiones combinadas siguen siendo
+difíciles y que las alucinaciones de los modelos de lenguaje pueden dar información errónea al paciente.
+
+DermatoLlama apunta a un modelo que se ejecute localmente, por privacidad y por costo, y lo logra con datos
+sintéticos~\cite{yilmaz2025resourceefficient}. A partir de 367 tareas semilla redactadas por expertos y 82\,379
+imágenes abiertas, modelos más grandes consultados por API generan 1.2 millones de textos sintéticos (DermaSynth),
+con los que ajusta con LoRA un Llama~3.2 de 11 mil millones de parámetros. Se compara con el modelo base, GPT-4o y
+Gemini~2.0~Flash en tres evaluaciones. La primera, de 225 imágenes de DERM12345, la anotaron tres dermatólogos
+coautores con preguntas jerárquicas; allí DermatoLlama alcanza una exactitud de 0.87 (GPT-4o, 0.86), un BLEU-4 de
+0.66 (0.55) y un ROUGE-L de 0.93 (0.81). Se mide, pues, el diagnóstico y el parecido con un texto de referencia, y
+ningún experto revisa los textos generados. Entrena en 4 RTX 4090 y ejecuta en una. Los autores advierten que los
+datos sintéticos pueden perder rasgos sutiles en casos raros y que faltan la validación clínica externa y la
+auditoría de sesgos. Está publicado solo en medRxiv, sin revisión de pares.
+
+\begin{table}[H]
     \centering
     \caption{Generadores de texto dermatológico. «Métricas con referencia»: BLEU, ROUGE y BERTScore; «---»: no
     informado.}
@@ -1882,30 +1906,6 @@ Tabla~\ref{tab:marco_sota_reportes}, los trabajos sobre evaluación y recuperaci
         \bottomrule
     \end{tabularx}
 \end{table}
-
-Un primer grupo genera el texto con un único \gls{vlm} ajustado a dermatología. SkinVL y SkinGPT-R1 pertenecen a
-este grupo y se describieron en la Sección~\ref{sec:estado_arte_vlm}; aquí se detallan otros tres.
-
-SkinGPT-4 busca que una persona sin acceso a un dermatólogo suba una foto y obtenga en una conversación la
-descripción de la lesión, un diagnóstico y recomendaciones. Ajusta MiniGPT-4 con Llama-2-13B en dos pasos: primero
-alinea la imagen con conceptos clínicos y después aprende diagnósticos a partir de notas de médicos, con unas 50\,000
-imágenes públicas y propias~\cite{zhou2023skingpt4,zhou2024pretrained}. Lo compara con MiniGPT-4 sin adaptar y con
-cada paso por separado, en ejemplos cualitativos. El texto lo evalúan dermatólogos certificados con un cuestionario
-sobre 150 casos reales, sin métricas con referencia: consideran correcto o pertinente el 80.63\,\% de los
-diagnósticos. El entrenamiento llevó unas 24 horas en 8 A100 de 80\,GB. Los autores reconocen que los tonos
-Fitzpatrick V y VI están poco representados, que las enfermedades con varias lesiones combinadas siguen siendo
-difíciles y que las alucinaciones de los modelos de lenguaje pueden dar información errónea al paciente.
-
-DermatoLlama apunta a un modelo que se ejecute localmente, por privacidad y por costo, y lo logra con datos
-sintéticos~\cite{yilmaz2025resourceefficient}. A partir de 367 tareas semilla redactadas por expertos y 82\,379
-imágenes abiertas, modelos más grandes consultados por API generan 1.2 millones de textos sintéticos (DermaSynth),
-con los que ajusta con LoRA un Llama~3.2 de 11 mil millones de parámetros. Se compara con el modelo base, GPT-4o y
-Gemini~2.0~Flash en tres evaluaciones. La primera, de 225 imágenes de DERM12345, la anotaron tres dermatólogos
-coautores con preguntas jerárquicas; allí DermatoLlama alcanza una exactitud de 0.87 (GPT-4o, 0.86), un BLEU-4 de
-0.66 (0.55) y un ROUGE-L de 0.93 (0.81). Se mide, pues, el diagnóstico y el parecido con un texto de referencia, y
-ningún experto revisa los textos generados. Entrena en 4 RTX 4090 y ejecuta en una. Los autores advierten que los
-datos sintéticos pueden perder rasgos sutiles en casos raros y que faltan la validación clínica externa y la
-auditoría de sesgos. Está publicado solo en medRxiv, sin revisión de pares.
 
 Skin-R1 se ocupa de que el diagnóstico venga con un razonamiento fundado, no de redactar un reporte
 completo~\cite{liu2025skinr1}. Sobre Qwen2.5-VL-7B con LoRA, genera trayectorias de razonamiento a partir de libros
@@ -1949,7 +1949,17 @@ combina la imagen con datos clínicos para una única enfermedad~\cite{cao2024mp
 Dos líneas complementan a los generadores: cómo evaluar el texto y cómo condicionar la generación con contexto
 recuperado.
 
-\begin{table}[htbp]
+\textcite{shen2025dermbench} abordan cómo evaluar las narrativas diagnósticas más allá de las métricas de similitud
+textual, que según los autores correlacionan poco con la utilidad clínica. DermBench tiene una narrativa de
+referencia para cada una de 4\,000 imágenes de DermNet, redactada por modelos de lenguaje a partir de la etiqueta
+verdadera y corregida por dermatólogos. Un juez automático que no ve la imagen compara el candidato con la
+referencia y lo puntúa de 0 a 5 en seis dimensiones. DermEval es un evaluador sin referencia, un LLaVA v1.5 7B con
+LoRA entrenado con aprendizaje por refuerzo contra los puntajes de médicos. Sobre nueve modelos generales o médicos,
+el error absoluto medio contra los médicos es 0.363 para DermBench y 0.178 para DermEval. Dos dermatólogos,
+coautores, puntuaron todo, sin cuantificar el acuerdo entre ellos. Los autores reconocen que las referencias se
+redactan con modelos, lo que puede introducir sesgo. Se presentó como póster en ECCV 2026, sin actas.
+
+\begin{table}[H]
     \centering
     \caption{Evaluación de narrativas dermatológicas y recuperación de contexto para \glspl{vlm} médicos.
     DermBench se presentó como póster, sin actas.}
@@ -1986,16 +1996,6 @@ recuperado.
     \end{tabularx}
 \end{table}
 
-\textcite{shen2025dermbench} abordan cómo evaluar las narrativas diagnósticas más allá de las métricas de similitud
-textual, que según los autores correlacionan poco con la utilidad clínica. DermBench tiene una narrativa de
-referencia para cada una de 4\,000 imágenes de DermNet, redactada por modelos de lenguaje a partir de la etiqueta
-verdadera y corregida por dermatólogos. Un juez automático que no ve la imagen compara el candidato con la
-referencia y lo puntúa de 0 a 5 en seis dimensiones. DermEval es un evaluador sin referencia, un LLaVA v1.5 7B con
-LoRA entrenado con aprendizaje por refuerzo contra los puntajes de médicos. Sobre nueve modelos generales o médicos,
-el error absoluto medio contra los médicos es 0.363 para DermBench y 0.178 para DermEval. Dos dermatólogos,
-coautores, puntuaron todo, sin cuantificar el acuerdo entre ellos. Los autores reconocen que las referencias se
-redactan con modelos, lo que puede introducir sesgo. Se presentó como póster en ECCV 2026, sin actas.
-
 MMed-RAG~\cite{xia2025mmedrag} y RULE~\cite{xia2024rule}, del mismo grupo, son los antecedentes de la recuperación
 para \glspl{vlm} médicos. Buscan mejorar la factualidad de LLaVA-Med-1.5 con contexto recuperado y evitar que el
 modelo ignore la imagen o que un contexto equivocado degrade respuestas correctas. En los dos la consulta es la
@@ -2030,7 +2030,7 @@ contrastivos especializados clasifican y recuperan pero no redactan, los generat
 \glspl{vlm} médicos de propósito general rinden poco en piel. En los reportes, la mayoría de los sistemas se evalúa por parecido textual o por
 la exactitud del diagnóstico, y la recuperación estudiada trae textos de otras especialidades.
 
-\begin{table}[htbp]
+\begin{table}[H]
     \centering
     \caption{De las brechas de la revisión a las decisiones del trabajo.}
     \label{tab:marco_brechas}
