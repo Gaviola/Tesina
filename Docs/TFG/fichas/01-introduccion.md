@@ -282,7 +282,7 @@ autocontenido»).
 **Mensaje.** Qué presenta cada capítulo. **Formato: «Este capítulo presenta…»**, sin «Responde la PI1».
 
 **Extensión: 0.5 páginas.** Lista `description` por capítulo, con `\ref`, más un párrafo de cierre para
-apéndices y anexo (se conserva). Sin describir el Cap. 1. Sin estimaciones de extensión.
+los apéndices (el anexo se unificó con ellos, revisión del tutor del 2026-10-05). Sin describir el Cap. 1. Sin estimaciones de extensión.
 
 **Redacción propuesta.**
 
