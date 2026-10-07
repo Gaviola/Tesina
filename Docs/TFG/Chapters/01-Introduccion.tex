@@ -6,19 +6,22 @@
 % (tareas_revision_cap1-2.md, I1--I8). Sin hipótesis (D1). Las preguntas van dentro de Objetivos y sin
 % términos que el capítulo no presentó (revisión del autor, 2026-10-04; tutor, Audio 1).
 
-Este capítulo presenta el problema que motiva el trabajo y lo que el trabajo se propone hacer frente a él. La
-Sección~\ref{sec:intro_contexto} describe la relevancia del cáncer de piel, en el mundo y en la Argentina, las
-limitaciones que demoran su diagnóstico y su documentación, y lo que pueden aportar los métodos computacionales,
-con sus propios problemas. La Sección~\ref{sec:intro_objetivos} enuncia los objetivos del trabajo y las preguntas
+En este capítulo se introduce la problemática que da origen al presente trabajo, se contextualiza su relevancia
+y se describen los objetivos y el enfoque propuesto para abordarla. La Sección~\ref{sec:intro_contexto}
+describe la relevancia del cáncer de piel, en el mundo y en la Argentina, las limitaciones que demoran su
+diagnóstico y su documentación, y lo que pueden aportar los métodos computacionales, teniendo en cuenta sus
+ventajas y desventajas. La Sección~\ref{sec:intro_objetivos} enuncia los objetivos del trabajo y las preguntas
 que lo guían, y la Sección~\ref{sec:intro_organizacion} describe cómo se organiza el resto del documento.
 
 \section{Contexto y motivación}
 \label{sec:intro_contexto}
 
-El cáncer de piel es uno de los tipos de cáncer más frecuentes del mundo. La última estimación de GLOBOCAN,
-publicada en 2026, atribuye al año 2024 1\,138\,314 casos nuevos de cáncer de piel no melanoma, sin contar el carcinoma basocelular, y
-337\,969 de melanoma~\cite{sung2026global}. El melanoma es menos de una cuarta parte de esos diagnósticos, pero causa casi
-tantas muertes como el resto de los cánceres de piel juntos, 58\,398 frente a 58\,721.
+El cáncer de piel es uno de los tipos de cáncer más frecuentes del mundo. Según la última estimación de
+GLOBOCAN, publicada en 2026, en 2024 se diagnosticaron 337\,969 casos nuevos de melanoma y 1\,138\,314 de
+cáncer de piel no melanoma (los tumores malignos de la piel distintos del melanoma, sin contar el carcinoma
+basocelular, que la estimación excluye)~\cite{sung2026global}. El melanoma es menos de una cuarta parte de esos
+diagnósticos, pero causa casi tantas muertes como todos los demás cánceres de piel juntos: 58\,398 frente a
+58\,721 en el mismo año.
 
 En la Argentina, la misma estimación registra 1\,602 casos nuevos de melanoma y 571 muertes en
 2024~\cite{ervik2026cancertoday}, casi una muerte cada tres diagnósticos, frente a una cada seis en el total
@@ -70,18 +73,30 @@ propio~\cite{riccilara2023dataset}. En la generación de
 texto, además, un reporte puede ser fluido y aun así afirmar un diagnóstico equivocado o describir hallazgos que
 la imagen no muestra~\cite{bai2024hallucination}.
 
-Esta tesina aborda esas problemáticas. Estudia en conjunto la clasificación de lesiones de piel y la generación
-de sus reportes con \glspl{vlm}, porque las dos tareas están conectadas entre sí. El diagnóstico que produce la
-clasificación es el que el reporte debe afirmar, y un buen clasificador no garantiza un buen reporte. Todo el
-trabajo se realiza con recursos de hardware limitados.
+La presente tesina se centra en el estudio y abordaje de las problemáticas anteriormente descritas. Se busca
+estudiar en conjunto la clasificación de lesiones de piel y la generación de sus reportes con \glspl{vlm},
+porque las dos tareas están conectadas entre sí. El diagnóstico que produce la clasificación es el que el
+reporte debe reflejar. Por otro lado, un buen clasificador no garantiza un buen reporte. El desarrollo del
+presente trabajo se plantea con recursos computacionales convencionales (\emph{commodity hardware}): cada
+modelo se entrena y se ejecuta en una sola GPU, sin requerir infraestructura de cómputo de alto rendimiento,
+como los nodos con varias GPU de centro de datos.
 
 \section{Objetivos}
 \label{sec:intro_objetivos}
-El objetivo general es desarrollar y evaluar un sistema basado en modelos de aprendizaje profundo y \glspl{vlm},
-adaptados a partir de modelos preentrenados, capaz de asistir en el diagnóstico de lesiones de piel y en la
+A partir de las problemáticas planteadas, se establecen los objetivos del presente trabajo, cuya formulación
+se articula en torno a dos preguntas fundamentales que orientan su desarrollo:
+\begin{enumerate}[label=\textbf{PI\arabic*.}]
+  \item ¿Clasifican los \glspl{vlm} las lesiones de piel, y en particular el melanoma, tan bien como los
+  clasificadores entrenados solo con imágenes?
+  \item ¿Los reportes que genera un \gls{vlm} afirman el diagnóstico correcto y describen la lesión que muestra
+  la imagen?
+\end{enumerate}
+
+Para responderlas, el objetivo general es desarrollar y evaluar un sistema basado en modelos de aprendizaje
+profundo y \glspl{vlm}, adaptados a partir de modelos preentrenados, capaz de asistir en el diagnóstico de lesiones de piel y en la
 generación automática de reportes clínicos estructurados a partir de imágenes, con el fin de mejorar la
 exactitud diagnóstica y agilizar el flujo de trabajo. Se analiza cuán bien clasifica, si el reporte afirma el
-diagnóstico correcto y si el sistema puede ejecutarse con recursos de hardware limitados.
+diagnóstico correcto y si el sistema puede ejecutarse con recursos computacionales convencionales.
 
 Los objetivos específicos son:
 \begin{enumerate}[label=\textbf{OE\arabic*.}]
@@ -92,14 +107,6 @@ Los objetivos específicos son:
   \item Evaluar el desempeño del sistema en distintos escenarios, como imágenes de otra población o casos en
   que no tiene seguridad sobre el diagnóstico, analizando su exactitud diagnóstica, la calidad del texto
   generado y su utilidad práctica, incluido su costo computacional.
-\end{enumerate}
-
-Los objetivos responden a dos preguntas que guían el trabajo:
-\begin{enumerate}[label=\textbf{PI\arabic*.}]
-  \item ¿Clasifican los \glspl{vlm} las lesiones de piel, y en particular el melanoma, tan bien como los
-  clasificadores entrenados solo con imágenes?
-  \item ¿Los reportes que genera un \gls{vlm} afirman el diagnóstico correcto y describen la lesión que muestra
-  la imagen?
 \end{enumerate}
 
 La Tabla~\ref{tab:intro_objetivos_preguntas} relaciona cada objetivo específico con la pregunta que contribuye a
@@ -113,7 +120,7 @@ responder y con los capítulos donde se lo describe y se lo evalúa.
   \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.29\textwidth}p{0.10\textwidth}
     >{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
     \toprule
-    Objetivo específico & Pregunta & Se diseña y describe en & Se evalúa y responde en \\
+    \textbf{Objetivo específico} & \textbf{Pregunta} & \textbf{Se diseña y describe en} & \textbf{Se evalúa y responde en} \\
     \midrule
     OE1. Clasificadores de lesiones y de melanoma (\gls{cnn}, \gls{vit}, \gls{vlm}) & PI1 &
       Capítulo~\ref{cp:metodos}, Materiales y métodos &
@@ -151,5 +158,6 @@ Después de esta introducción, el documento se organiza en seis capítulos:
   balance de los objetivos y el trabajo futuro.
 \end{description}
 
-Los apéndices reúnen el material propio que no entra en el cuerpo, y el anexo, las fichas de los conjuntos de
-datos y de los modelos externos que el trabajo utiliza.
+Los apéndices reúnen material elaborado en este trabajo que, por ser muy extenso o detallado, no se incluye en
+el cuerpo principal de los capítulos. El anexo reúne material de terceros: las fichas de los conjuntos de datos
+y de los modelos externos que el trabajo utiliza.

@@ -142,7 +142,9 @@ trabajo usa sin ir a la fuente.
 
 - **Cada método o métrica que el trabajo usa se define con su fórmula**, además de con palabras: cómo
   se calcula, no solo qué mide. Vale para las métricas de clasificación, calibración y texto, las
-  pruebas estadísticas y los métodos (Adam, Grad-CAM, RAG).
+  pruebas estadísticas y los métodos (Grad-CAM, RAG). Los fundamentos generales del aprendizaje
+  profundo (optimización, retropropagación, optimizadores como Adam) se explican en términos generales,
+  sin fórmulas propias (revisión del tutor, 2026-10-05).
 - **La fórmula sigue la notación del trabajo original** (la de Guo para el ECE, la de Selvaraju para
   Grad-CAM) salvo que choque con un símbolo ya usado en el capítulo; en ese caso se cambia el símbolo y
   no el concepto. Convenciones fijas del documento: $C$ clases, $n$ imágenes, $p_c$ probabilidad de la
@@ -176,6 +178,12 @@ misma carrera que pasó el tutor (`Docs/tesinamaglione_ejemplo.pdf`, no versiona
 - **Hilo conductor.** Cada párrafo retoma algo del anterior y lleva al siguiente; la sección no es
   una sucesión de datos sueltos. Una frase como «El diagnóstico humano tampoco está resuelto» que
   abre un tema sin conectarlo con lo anterior es la señal de que falta la transición.
+- **Cada concepto del marco teórico cumple una función** (revisión del tutor, 2026-10-05): explica una
+  arquitectura o técnica que el trabajo usa, justifica una decisión metodológica o experimental, permite
+  interpretar un resultado o fundamenta una limitación, una comparación o una contribución. La extensión
+  sigue a la función: la retropropagación cumple en parte la primera y alcanza con unas líneas, mientras
+  que LoRA, la calibración, la incertidumbre, el desbalance de clases y la generación condicionada cumplen
+  varias y se desarrollan más. Los fundamentos generales (§2.1) ocupan unas tres páginas.
 - **El marco teórico se escribe para un lector general.** La pregunta para cada concepto es por qué
   el lector lo necesita para entender lo que se hizo o el resultado. El lector puede ser un
   informático, que ya conoce las redes neuronales, o un dermatólogo, que no las conoce.
@@ -219,7 +227,7 @@ los capítulos.
 
 | Se usa | No se usa | Nota |
 |---|---|---|
-| fuga de información entre particiones (*data leakage*) | fuga de datos, contaminación | Se define como concepto general en el marco teórico (generalización, §2.1.4); después alcanza «fuga de información» |
+| fuga de información entre particiones (*data leakage*) | fuga de datos, contaminación | Se define como concepto general en el marco teórico (generalización, §2.1.3); después alcanza «fuga de información» |
 | entorno real | producción | |
 | publicado solo en arXiv, sin revisión de pares | preimpresión, *preprint* | Revisión del autor, 2026-10-04; en las tablas basta una marca con nota |
 | \glspl{vlm} médicos de propósito general | médicos generales (para modelos) | «médicos generales» se lee como profesionales |
@@ -355,7 +363,10 @@ El encuadre de cada referencia anterior a 2020 que ya está en el `.bib` queda r
 - **Viudas, huérfanas y huecos.** Al compilar se revisa que ningún párrafo termine con una o dos
   palabras solas en la última línea ni deje una línea aislada al pie o al comienzo de una página, y
   que no queden espacios en blanco grandes antes de un título o de una figura. Se corrigen
-  reformulando la frase o sacando alguna palabra, no con espaciado manual.
+  reformulando la frase o sacando alguna palabra, no con espaciado manual. `Configurations/10-Macros.sty`
+  pide además a TeX que la última línea de cada párrafo ocupe al menos 8em (`\parfillskip`), lo que
+  resuelve la mayoría de los casos; los que quedan (listas, epígrafes, párrafos muy ajustados) se
+  corrigen a mano.
 - **Código** con `minted` (requiere `-shell-escape`). Fragmentos cortos, solo si aportan.
 - **Compilación:** `latexmk -xelatex -shell-escape tesina.tex` desde `Docs/TFG/`.
 

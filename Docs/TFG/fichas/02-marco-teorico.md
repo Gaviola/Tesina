@@ -1111,3 +1111,20 @@ Independientes de la reestructuración; se corrigen al reescribir 2.8.2:
     porque eso condiciona su validez. El detalle completo pasa al Cap. 3.
 13. **Referencias del `.bib` sin cita:** no se agregan salvo que el texto las necesite.
 14. **Calibración en 2.7 antes de 2.8:** se acepta el orden.
+
+## 14. Segunda revisión del tutor (2026-10-05)
+
+Fuente: `feedback/feedback_cap1_y_2_v2.md` y los comentarios de
+`feedback/TFG-GAVIOLA-cap1-2-corregidosV2_05_10_26.pdf` (p. 26–35). Reemplaza el plan de §5 para 2.1.
+
+| Pedido | Decisión |
+|---|---|
+| §2.1 demasiado introductoria; reducirla a unas tres páginas | Pasa de seis subsecciones (~6 páginas) a cuatro (~3.7 páginas) |
+| Uno o dos párrafos introductorios sobre aprendizaje profundo | Dos párrafos antes de 2.1.1: aprendizaje supervisado y aprendizaje de la representación (`goodfellow2016deep`) |
+| 2.1.1 Redes neuronales y aprendizaje supervisado | Neurona y MLP reducidos (sale la aproximación universal y `hornik1989multilayer`); descenso del gradiente, retropropagación y Adam en un párrafo cada uno, sin la ecuación de Adam (`eq:marco_adam` sale); predicción (inferencia). Etiqueta nueva `sec:marco_redes`; `sec:marco_perceptron` y `sec:marco_entrenamiento` desaparecen |
+| Gradientes que se desvanecen o explotan: sacar | Sale el párrafo. En 2.2, la degradación de ResNet se justifica con «el problema no es el sobreajuste» |
+| 2.1.2 Clasificación y funciones de pérdida; empezar por qué es un problema de clasificación y qué son las clases | Abre con la definición de clasificación y de clase, después logits, softmax y entropía cruzada (`eq:marco_entropia`, nueva), y la lectura de $p_c$ como confianza (remite a calibración, 2.6.3) y a la softmax del LLM (2.4.1) |
+| 2.1.3 Generalización y desafíos; regularización: reducir | Sobreajuste, particiones y fuga de información, regularización en un párrafo (sale la formalización del riesgo, `eq:marco_riesgo`, y el párrafo de sesgo y varianza), y desbalance de clases con las tres pérdidas en fórmulas en línea. `sec:marco_desbalance` queda como etiqueta dentro de 2.1.3 |
+| 2.1.4 Modelos preentrenados y adaptación | Transferencia, congelamiento y ajuste fino en dos párrafos (sale `eq:marco_transfer_act`). Olvido catastrófico con el término en inglés |
+| Introducción del capítulo | Se adopta el texto que propone el tutor |
+| Encabezados de tablas en negrita | Todas las tablas de los capítulos 1 y 2 |

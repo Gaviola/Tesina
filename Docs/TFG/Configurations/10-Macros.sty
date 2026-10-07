@@ -154,3 +154,9 @@
 
 \setlength{\parskip}{3mm}% separación entre párrafo
 \setlength{\parindent}{1cm}%identación primera linea de párrafo
+
+%% Sin palabras huérfanas al final de un párrafo (revisión del tutor, 2026-10-05): la última línea de cada
+%% párrafo ocupa al menos 8em (unos 3 cm). TeX elige los cortes de todo el párrafo para cumplirlo; \emergencystretch le da
+%% margen para no generar líneas que desborden. En columnas angostas de tablas la restricción no actúa.
+\AtBeginDocument{\setlength{\parfillskip}{0pt plus \dimexpr\textwidth-8em\relax}}
+\setlength{\emergencystretch}{1.5em}
