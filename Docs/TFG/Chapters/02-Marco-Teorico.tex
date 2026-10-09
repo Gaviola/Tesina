@@ -24,25 +24,39 @@ presente trabajo.
 \section{Fundamentos del aprendizaje profundo}
 \label{sec:marco_fundamentos}
 
-El aprendizaje automático estudia métodos que, en lugar de seguir reglas escritas a mano, ajustan un modelo a
-partir de ejemplos. En el aprendizaje supervisado, cada ejemplo es un par formado por una entrada, como una
-imagen, y la respuesta esperada, su etiqueta, y el modelo aprende a predecir la etiqueta de entradas que no
-vio. Durante décadas, el desempeño de estos métodos dependió de cómo se representaban los datos: las
-características que el modelo recibía, como medidas de color, forma o textura, las diseñaba a mano un
-especialista~\cite{goodfellow2016deep}.
+El aprendizaje automático estudia algoritmos que mejoran su desempeño en una tarea a medida que acumulan
+experiencia, que en la práctica son datos. En lugar de programar la solución de forma explícita, como un
+conjunto de reglas, se elige un modelo con parámetros ajustables y un algoritmo de entrenamiento fija esos
+parámetros a partir de ejemplos, con el objetivo de que el modelo resuelva la tarea también sobre datos que no
+vio~\cite{goodfellow2016deep}. Según la información que acompaña a los ejemplos se distinguen varias formas de
+aprendizaje. En el \textbf{supervisado}, cada ejemplo es un par formado por una entrada y la salida esperada,
+su etiqueta, y el modelo aprende la relación entre ambas para predecir la etiqueta de entradas nuevas. La entrada
+puede ser una imagen, un texto o un conjunto de mediciones, y la etiqueta, una categoría o un valor numérico.
+En el \textbf{no supervisado} los ejemplos no tienen etiqueta, y lo que se busca es la estructura de los propios
+datos, como grupos de casos parecidos~\cite{goodfellow2016deep}. Una variante intermedia, el aprendizaje
+\textbf{autosupervisado}, obtiene la etiqueta de los mismos datos, por ejemplo la palabra que sigue en un texto,
+y es la forma en que se preentrenan los modelos de lenguaje (Sección~\ref{sec:marco_llm_grandes}).
 
-El aprendizaje profundo aprende también esa representación. Un modelo profundo encadena muchas
-transformaciones simples, cada una construida sobre la anterior, de modo que las primeras capturan rasgos
-elementales, como bordes, y las últimas, conceptos más abstractos. El enfoque se impuso en el reconocimiento de
-imágenes y de voz a partir de la década de 2010, cuando hubo suficientes datos y capacidad de cómputo para
-entrenar esos modelos~\cite{goodfellow2016deep}, y es la base de todos los modelos que usa este trabajo. Las
+Durante décadas, el desempeño de estos métodos dependió de la representación de los datos, es decir, de las
+características con que se describe cada ejemplo. Un especialista las diseñaba a mano para cada problema, como
+medidas de color, forma o textura para una imagen o recuentos de palabras para un texto, y el algoritmo
+aprendía solo a tomar la decisión a partir de ellas. El aprendizaje profundo aprende también la representación,
+directamente de los datos crudos, como los píxeles de una imagen o las palabras de un texto. Para eso encadena
+muchas transformaciones simples, cada una construida sobre la salida de la anterior, de modo que las primeras
+capturan rasgos elementales y las últimas, conceptos más abstractos; en una imagen, por ejemplo, de bordes a
+contornos y de contornos a partes de objetos~\cite{goodfellow2016deep}. La diferencia con los métodos
+anteriores está en qué se aprende: no solo la decisión, sino también las características sobre las que se
+toma. El enfoque se impuso a partir de la década de 2010 en el reconocimiento de imágenes y de voz y en el
+procesamiento del lenguaje, cuando hubo suficientes datos y capacidad de cómputo para entrenar esos
+modelos~\cite{goodfellow2016deep}, y es la base de todos los modelos que usa este trabajo. Las
 transformaciones que encadena son las capas de una red neuronal.
 
 \subsection{Redes neuronales y aprendizaje supervisado}
 \label{sec:marco_redes}
 
-Una neurona artificial calcula una suma ponderada de sus entradas, le suma un sesgo y aplica al resultado una
-función no lineal, llamada función de activación. Una capa reúne varias neuronas que reciben la misma entrada,
+Una red neuronal artificial es un modelo formado por unidades de cálculo simples, las neuronas, conectadas
+entre sí y organizadas en capas. Cada neurona calcula una suma ponderada de sus entradas, le suma un sesgo y
+aplica al resultado una función no lineal, llamada función de activación. Una capa reúne varias neuronas que reciben la misma entrada,
 y un perceptrón multicapa apila capas de modo que la salida de cada una es la entrada de la siguiente. La capa
 $l$ transforma el vector $\mathbf{h}^{(l-1)}$ que recibe en
 \begin{equation}
@@ -56,21 +70,27 @@ se llama profunda~\cite{goodfellow2016deep}.
 
 Entrenar la red es elegir los valores de $\theta$. Para eso se define una función de pérdida $\mathcal{L}$, que
 cuantifica cuánto se equivoca la red en un ejemplo, y se buscan los parámetros que minimizan la pérdida promedio
-sobre el conjunto de entrenamiento. El descenso del gradiente lo hace de forma iterativa. En cada paso calcula
-el gradiente de la pérdida respecto de los parámetros y los mueve en la dirección opuesta,
+sobre el conjunto de entrenamiento. El descenso del gradiente lo hace de forma iterativa. El gradiente de la
+pérdida respecto de los parámetros, $\nabla_{\theta} \mathcal{L}$, indica en qué dirección crece la pérdida, y
+en cada paso los parámetros se desplazan en la dirección opuesta una distancia que fija la tasa de aprendizaje
+$\eta$. La regla de actualización es entonces
 \begin{equation}
-    \theta \leftarrow \theta - \eta \, \nabla_{\theta} \mathcal{L},
+    \theta \leftarrow \theta - \eta \, \nabla_{\theta} \mathcal{L}.
     \label{eq:marco_gradiente}
 \end{equation}
-donde $\eta$ es la tasa de aprendizaje. Cada paso estima el gradiente sobre un lote de ejemplos y no sobre el
-conjunto completo, y una época es una pasada por todos los lotes~\cite{goodfellow2016deep}.
+Cada paso estima el gradiente sobre un lote de ejemplos y no sobre el conjunto completo, y una época es una
+pasada por todos los lotes~\cite{goodfellow2016deep}.
 
 El gradiente de todos los parámetros se obtiene con la retropropagación, que recorre la red desde la pérdida
 hacia la entrada aplicando la regla de la cadena (Figura~\ref{fig:marco_perceptron}), con un costo del mismo orden que el de calcular la
 salida~\cite{rumelhart1986learning}. Sobre la regla de la Ecuación~\ref{eq:marco_gradiente} se construyen
 optimizadores como Adam, que adapta el paso de cada parámetro con dos promedios móviles, uno del gradiente y
 otro de su cuadrado~\cite{kingma2015adam}. Esos promedios son memoria adicional por cada parámetro que se
-entrena, un costo que pesa al adaptar modelos grandes (Sección~\ref{sec:marco_llm_lora}). Una vez entrenada,
+entrena, un costo que pesa al adaptar modelos grandes (Sección~\ref{sec:marco_llm_lora}). La tasa de
+aprendizaje tampoco suele quedar fija. Es habitual hacerla crecer de forma lineal durante las primeras
+épocas, un calentamiento (\emph{warmup}) que evita pasos demasiado grandes mientras la red todavía cambia
+rápido~\cite{goyal2017accurate}, y después hacerla decaer hasta cerca de cero siguiendo medio ciclo de
+coseno~\cite{loshchilov2017sgdr}. Una vez entrenada,
 la red predice la salida de una entrada nueva con una sola pasada hacia adelante y los parámetros fijos, lo que
 se llama inferencia.
 
@@ -79,8 +99,7 @@ se llama inferencia.
 \subsection{Clasificación y funciones de pérdida}
 \label{sec:marco_softmax}
 
-Un problema de clasificación consiste en asignar cada entrada a una categoría de un conjunto finito, y cada
-categoría es una clase. En el diagnóstico de lesiones de piel, las clases son los tipos de lesión, como el
+Un problema de clasificación consiste en asignar cada entrada a una clase de un conjunto finito. En el diagnóstico de lesiones de piel, las clases son los tipos de lesión, como el
 melanoma o el nevo, y el modelo recibe la imagen y debe indicar a cuál pertenece. Para un problema de $C$
 clases, la última capa de la red tiene una salida por clase y devuelve un vector de $C$ puntajes reales sin
 restricción, los \emph{logits} $\mathbf{z}$. La función \emph{softmax} los convierte en una distribución de
@@ -104,13 +123,25 @@ Vale cero cuando toda la probabilidad está en la clase correcta y crece sin lí
 probabilidad se acerca a cero, de modo que un error cometido con mucha confianza pesa más que uno cometido con
 duda~\cite{goodfellow2016deep}.
 
+El nombre viene de que la Ecuación~\ref{eq:marco_entropia} compara dos distribuciones sobre las $C$ clases: la
+que predice el modelo, $\mathbf{p}$, y la de la etiqueta, $\mathbf{q}$, que pone toda la probabilidad en la
+clase correcta. La entropía cruzada entre ambas es $-\sum_{c} q_c \log p_c$, y como $q_c$ vale uno para $c = y$
+y cero para las demás, se reduce a $-\log p_y$. Minimizarla en promedio sobre el entrenamiento equivale a
+maximizar la verosimilitud de las etiquetas, es decir, la probabilidad que el modelo asigna a las respuestas
+correctas~\cite{goodfellow2016deep}. Combinada con la softmax, su derivada respecto de cada logit es
+$\partial \mathcal{L} / \partial z_c = p_c - q_c$, de modo que el descenso del gradiente empuja hacia arriba
+el logit de la clase correcta y hacia abajo el de cada una de las demás, en proporción a la probabilidad que
+el modelo le había asignado. Los modelos de lenguaje se entrenan con la misma pérdida, aplicada a la
+predicción de cada token (Sección~\ref{sec:marco_llm_grandes}), y las correcciones para el desbalance de clases de la
+Sección~\ref{sec:marco_desbalance} son modificaciones de ella.
+
 \subsection{Generalización y desafíos del aprendizaje}
 \label{sec:marco_regularizacion}
 
 Minimizar la pérdida de entrenamiento no es el objetivo final. Lo que interesa de un modelo es su desempeño
 sobre casos que no vio, y una red con suficientes parámetros puede memorizar el conjunto de entrenamiento.
 Cuando eso ocurre, la pérdida de entrenamiento sigue bajando mientras el error sobre datos nuevos sube, fenómeno
-que se llama sobreajuste~\cite{goodfellow2016deep}.
+que se llama \textbf{sobreajuste}~\cite{goodfellow2016deep}.
 
 Como el error sobre datos nuevos no se puede calcular, se lo estima con ejemplos que el modelo no usó para
 ajustarse. Los datos se dividen para eso en tres particiones disjuntas. La de entrenamiento ajusta los
@@ -122,34 +153,59 @@ generalice. Esta fuga de información entre particiones (\emph{data leakage}) ha
 más favorable que el desempeño real, y se evita si todas las observaciones de un mismo caso caen en la misma
 partición.
 
-La regularización reduce el sobreajuste restringiendo lo que la red puede aprender o ampliando la variedad de
-lo que ve. El decaimiento de pesos (\emph{weight decay}) suma a la pérdida el término
-$\frac{\lambda}{2}\lVert\theta\rVert_2^2$, que en cada paso encoge los parámetros hacia cero con una intensidad
-que fija $\lambda$, y la detención temprana (\emph{early stopping}) conserva los parámetros de la época con
-mejor desempeño en validación~\cite{goodfellow2016deep}. El aumento de datos aplica a cada imagen, cada vez que
-entra en un lote, una transformación aleatoria que preserva su clase, como un volteo, un recorte o un cambio de
-brillo. Cuando el color distingue las clases, como en dermatoscopía~\cite{kittler2016standardization}, una
-transformación de color fuerte puede borrar la información que las define~\cite{shorten2019survey}.
+La \textbf{regularización} reduce el sobreajuste restringiendo lo que la red puede aprender o ampliando la
+variedad de lo que ve. El decaimiento de pesos (\emph{weight decay}) encoge los parámetros hacia cero en cada
+paso, en una proporción que fija el coeficiente $\lambda$, y desalienta así las soluciones con pesos grandes.
+Con el descenso del gradiente de la Ecuación~\ref{eq:marco_gradiente} equivale a sumar a la pérdida la
+penalización $(\lambda/2)\sum_i \theta_i^2$, proporcional a la suma de los cuadrados de los
+parámetros~\cite{goodfellow2016deep}. Con Adam la equivalencia no vale, y la variante AdamW aplica el
+decaimiento por separado, fuera de la actualización que calcula el optimizador~\cite{loshchilov2019decoupled}.
+La detención temprana (\emph{early stopping}) conserva los parámetros de la época con mejor desempeño en
+validación~\cite{goodfellow2016deep}. El suavizado de etiquetas (\emph{label smoothing}) actúa sobre la
+distribución $\mathbf{q}$ de la Sección~\ref{sec:marco_softmax}: le quita a la clase correcta una fracción
+$\varepsilon$ de la probabilidad y la reparte por igual entre todas las clases. El modelo deja de tener
+incentivo para llevar $p_y$ a uno, lo que reduce la sobreconfianza y suele mejorar la calibración
+(Sección~\ref{sec:marco_senales_confianza})~\cite{szegedy2016rethinking,muller2019does}.
+
+El aumento de datos aplica a cada imagen, cada vez que entra en un lote, una transformación aleatoria que
+preserva su clase, como una rotación, un recorte o un cambio de brillo o resolución. RandAugment simplifica la
+elección de esas transformaciones: a cada imagen le aplica $N$ operaciones sorteadas de una lista fija, todas con
+la misma magnitud $M$, de modo que la intensidad del aumento queda en dos hiperparámetros~\cite{cubuk2020randaugment}.
+El borrado aleatorio (\emph{random erasing}) reemplaza un rectángulo de la imagen elegido al azar por valores
+aleatorios y simula así oclusiones parciales~\cite{zhong2020random}. Cuando el color distingue las clases, como
+en dermatoscopía~\cite{kittler2016standardization}, una transformación de color fuerte puede borrar la
+información que las define~\cite{shorten2019survey}. El aumento se usa también al predecir: el \gls{tta}
+promedia las probabilidades que el modelo asigna a la imagen original y a algunas versiones transformadas de
+ella, como su reflejo horizontal~\cite{krizhevsky2012imagenet}.
 
 Otro desafío es el desbalance de clases\label{sec:marco_desbalance}. Cuando unas clases tienen muchos más
 ejemplos que otras, minimizar la entropía cruzada promedio favorece a las frecuentes, porque sus ejemplos
-dominan la suma de la pérdida, y el efecto crece con el grado de desbalance~\cite{buda2018systematic}. Con
-$n_c$ ejemplos de la clase $c$ entre $n$, las correcciones más usadas cambian la pérdida para que las clases
-raras pesen más:
+dominan la suma de la pérdida, y el efecto crece con el grado de desbalance~\cite{buda2018systematic}. Sean
+$n$ la cantidad total de ejemplos de entrenamiento, $n_c$ la de la clase $c$ e $y$ la clase correcta del
+ejemplo. Las correcciones más usadas modifican la entropía cruzada de la Ecuación~\ref{eq:marco_entropia} para
+que las clases raras pesen más:
 \begin{enumerate}
-    \item la \textbf{pérdida ponderada} multiplica la de cada ejemplo por $w_y = n/(C\,n_y)$, de modo que
-    todas las clases aportan el mismo peso total;
-    \item la \textbf{pérdida focal}, $-(1-p_y)^{\gamma}\log p_y$ con $\gamma \ge 0$, atenúa el aporte de los
-    ejemplos que el modelo ya clasifica con confianza y concentra el entrenamiento en los
-    difíciles~\cite{lin2017focal};
-    \item el \textbf{\emph{balanced softmax}} incorpora la frecuencia de cada clase en la softmax, lo que
-    equivale a sumar $\log n_c$ al logit de $c$ durante el entrenamiento~\cite{ren2020balanced}.
+    \item la \textbf{pérdida ponderada}, $-w_y \log p_y$, multiplica la pérdida de cada ejemplo por un peso que
+    depende de su clase, $w_y = n/(C\,n_y)$, inversamente proporcional a la frecuencia de esa clase. Una clase
+    con la cantidad promedio de ejemplos, $n/C$, recibe peso uno, una con la mitad recibe peso dos, y cada
+    clase aporta en total el mismo peso a la suma;
+    \item la \textbf{pérdida focal}, $-(1-p_y)^{\gamma}\log p_y$, agrega un factor que depende de la
+    probabilidad $p_y$ que el modelo asigna a la clase correcta. En los ejemplos que el modelo ya clasifica con
+    confianza, con $p_y$ cerca de uno, el factor se acerca a cero y su aporte se atenúa, de modo que el
+    entrenamiento se concentra en los difíciles. El parámetro $\gamma \ge 0$ regula la atenuación, y con
+    $\gamma = 0$ se recupera la entropía cruzada~\cite{lin2017focal};
+    \item el \textbf{\emph{balanced softmax}} multiplica en la softmax de la Ecuación~\ref{eq:marco_softmax}
+    la exponencial de cada logit por la cantidad de ejemplos de su clase,
+    $p_c = n_c \exp(z_c) / \sum_{j} n_j \exp(z_j)$, lo que equivale a sumar $\log n_c$ al logit $z_c$. Durante
+    el entrenamiento, las clases frecuentes reciben así una ventaja que el modelo no necesita aprender en sus
+    logits, y al predecir se usa la softmax común, sin ese término~\cite{ren2020balanced}.
 \end{enumerate}
 La alternativa es entrenar sin corrección y ajustar la regla de decisión, dividiendo la probabilidad de cada
 clase por su proporción en el entrenamiento~\cite{buda2018systematic} o eligiendo en validación un umbral para
 una clase rara. Ninguna de estas correcciones agrega información sobre las clases raras. Además, la exactitud
-global oculta el desbalance, y por eso se usan métricas que promedian por clase, como el F1 macro
-(Sección~\ref{sec:marco_eval_clasif}).
+global oculta el desbalance, y por eso se usan métricas que promedian por clase
+(Sección~\ref{sec:marco_eval_clasif}): la sensibilidad macro, que mide qué fracción de los casos de cada clase
+se detecta, y el F1 macro, que además penaliza los falsos positivos.
 
 \subsection{Modelos preentrenados y adaptación}
 \label{sec:marco_transferencia}
@@ -174,6 +230,35 @@ completo o solo sus últimas capas, con una tasa de aprendizaje menor que la de 
 aprendido. Entrenar más parámetros da más libertad para adaptarse a la tarea nueva, pero con pocos datos aumenta
 el riesgo de sobreajuste y de olvido catastrófico (\emph{catastrophic forgetting}), es decir, que el modelo
 pierda parte de lo que aprendió en el preentrenamiento.
+
+Entre esos dos extremos hay estrategias que adaptan el \emph{backbone} sin deformar lo que aprendió. La primera
+ordena el entrenamiento en dos etapas: primero entrena solo la cabeza, con el \emph{backbone} congelado, y
+recién después ajusta la red completa. Si el ajuste fino empieza con una cabeza inicializada al azar, los
+gradientes que llegan al \emph{backbone} mientras la cabeza aprende deforman las características
+preentrenadas; con la cabeza ya entrenada, el ajuste parte de una solución razonable y las modifica menos. Esa
+secuencia rinde más que
+cualquiera de sus dos partes por separado, y la ventaja es mayor sobre datos de una distribución distinta de
+la del entrenamiento~\cite{kumar2022finetuning}. La segunda asigna a cada capa su propia tasa de aprendizaje,
+decreciente hacia la entrada, porque las capas capturan información de distinto tipo y conviene modificarlas
+en distinta medida~\cite{howard2018universal}. En su forma geométrica, con $L$ capas numeradas desde la entrada
+y un factor de decaimiento $\xi < 1$, la capa $l$ se entrena con la tasa
+\begin{equation}
+    \eta_l = \eta \, \xi^{\,L-l}, \qquad l = 1, \dots, L,
+    \label{eq:marco_llrd}
+\end{equation}
+de modo que la cabeza, la capa $L$, recibe la tasa completa $\eta$ y las primeras capas, que guardan los
+rasgos más generales, cambian menos. La técnica se conoce como decaimiento de la tasa de aprendizaje por capa
+(\emph{layer-wise learning rate decay}).
+
+La extracción de características sirve además para medir cuánto aporta un preentrenamiento. Si una cabeza
+lineal entrenada sobre las características congeladas separa bien las clases, la representación ya contiene
+la información que la tarea necesita, y el resultado no depende de cuánto se ajustó el resto de la red. Con
+esa prueba, el \emph{linear probe} de la Sección~\ref{sec:marco_vlm_clip}, se comparan representaciones
+de distinto origen sobre la misma tarea, como las de un modelo preentrenado con imágenes naturales y las de
+uno preentrenado con imágenes dermatológicas~\cite{radford2021learning}. La distancia entre el dominio de
+origen y el de destino, que limita el beneficio de ImageNet en imágenes médicas~\cite{raghu2019transfusion},
+motiva los modelos preentrenados sobre imágenes del propio dominio, como DermLIP
+(Sección~\ref{sec:marco_vlm_clip}).
 
 Hasta aquí, la red trata su entrada como un vector sin estructura. Las arquitecturas que hicieron práctico el
 aprendizaje profundo incorporaron la estructura de cada tipo de dato, y la primera en hacerlo con las imágenes
@@ -277,17 +362,10 @@ La Ecuación~\ref{eq:marco_atencion} no tiene en cuenta el orden de los tokens: 
 la entrada, la salida se permuta de la misma manera y cada token recibe el mismo resultado. Para que el modelo
 distinga «la lesión crece» de «crece la lesión», se suma al embedding de cada token un vector que depende de su
 posición. El transformer original usa vectores fijos, formados por senos y cosenos de distinta frecuencia,
-\begin{equation}
-    \mathrm{PE}_{(pos,\,2i)} = \sin\!\left(\frac{pos}{10000^{2i/d}}\right), \qquad
-    \mathrm{PE}_{(pos,\,2i+1)} = \cos\!\left(\frac{pos}{10000^{2i/d}}\right),
-    \label{eq:marco_posicion}
-\end{equation}
-donde $pos$ es la posición, $i$ recorre las dimensiones y $d$ es la dimensión del embedding. Cada par de
-dimensiones oscila con una longitud de onda distinta, de $2\pi$ a $10000 \cdot 2\pi$, de modo que cada
-posición recibe un vector único y la de una posición desplazada en $k$ se obtiene con una transformación lineal
-de la original, lo que facilita atender por posición relativa~\cite{vaswani2017attention}. La alternativa es
-aprender un vector por posición, como un parámetro más, que es lo que hace el \gls{vit} con la posición de cada
-parche en la imagen (Sección~\ref{sec:marco_vit})~\cite{dosovitskiy2021image}.
+que dan a cada posición un vector único~\cite{vaswani2017attention}. La alternativa es aprender un vector por
+posición, como un parámetro más, que es lo que hace el \gls{vit} con la posición de cada parche en la imagen
+(Sección~\ref{sec:marco_vit})~\cite{dosovitskiy2021image}, y el Swin Transformer reemplaza la posición absoluta
+por un sesgo que depende de la posición relativa entre parches (Sección~\ref{sec:marco_swin}).
 
 \subsection{El bloque transformer}
 \label{sec:marco_bloque_transformer}
@@ -548,8 +626,6 @@ con la instrucción en la secuencia de entrada de un \gls{llm} de solo decodific
 respuesta token a token (Figura~\ref{fig:marco_llava}). La imagen llega como una parte más de la secuencia de
 entrada, sin la estructura codificador--decodificador del transformer original~\cite{liu2023visual}.
 
-\input{Figures/Capitulos/02-llava}
-
 LLaVA se entrena en dos etapas. En la primera, con el codificador visual y el \gls{llm} congelados, solo se
 ajusta el proyector sobre pares imagen--leyenda, para que los tokens visuales caigan en una región del
 espacio que el \gls{llm} interprete. En la segunda, el \emph{visual instruction tuning}, se ajustan el
@@ -558,14 +634,22 @@ sobre una imagen~\cite{liu2023visual}. Como el \gls{llm} concentra la mayoría d
 segunda etapa se le puede aplicar \gls{lora} (Sección~\ref{sec:marco_llm_lora}) en lugar del ajuste completo,
 mientras el codificador visual sigue congelado y el proyector se entrena entero.
 
+\input{Figures/Capitulos/02-llava}
+
 La misma receta se llevó después al dominio médico cambiando los datos. LLaVA-Med, de 2023, la repite con
 figuras y leyendas de artículos biomédicos y se entrena en menos de quince horas con ocho
 GPU~\cite{li2023llavamed}; su versión 1.5 usa Mistral como modelo de lenguaje~\cite{zeng2025mmskin}. SkinVL, de 2025, la repite con
 conjuntos dermatológicos, entre ellos uno construido a partir de libros de texto de la
 especialidad~\cite{zeng2025mmskin}. Phi-3.5-vision combina también un codificador de imagen con un modelo de
-lenguaje de solo decodificador, en un tamaño menor~\cite{abdin2024phi3}. Un \gls{vlm} generativo, en cualquiera de estas variantes,
-devuelve texto y no una distribución de probabilidad sobre las clases, y su respuesta no dice cuánto confiar en
-ella. Antes de pedirle un reporte hay que saber cuándo una predicción merece afirmarse.
+lenguaje de solo decodificador, en un tamaño menor~\cite{abdin2024phi3}.
+
+Un \gls{vlm} generativo, en cualquiera de estas variantes, devuelve texto y no una distribución de probabilidad
+sobre las clases. Para clasificar con él se puede buscar la clase en la respuesta generada o, sin generar,
+calcular con la Ecuación~\ref{eq:marco_lm} la probabilidad que el modelo asigna al nombre de cada clase como
+continuación del \emph{prompt}, normalizada por su cantidad de tokens para no favorecer los nombres cortos, y
+elegir la mayor. Esos puntajes ordenan las clases, pero nada garantiza que estén
+calibrados, y una respuesta generada no dice cuánto confiar en ella. Antes de pedirle un reporte hay que saber
+cuándo una predicción merece afirmarse.
 
 \section{Incertidumbre y predicción selectiva}
 \label{sec:marco_incertidumbre}
@@ -637,7 +721,9 @@ menos 0.9 de probabilidad de ser correctas; sin calibración el umbral no tiene 
 calibración y sus correcciones se presentan en la Sección~\ref{sec:marco_eval_calib}.
 
 Hay señales que no dependen de la probabilidad de un único modelo. El desacuerdo entre modelos aproxima la
-incertidumbre del sistema, un principio que explotan los ensambles~\cite{lakshminarayanan2017simple}.
+incertidumbre del sistema, un principio que explotan los ensambles. Un ensamble promedia las probabilidades de
+varios modelos entrenados por separado, lo que se llama voto suave, y suele ser más exacto y estar mejor
+calibrado que cada uno de ellos~\cite{lakshminarayanan2017simple}.
 
 \phantomsection\label{sec:marco_concordancia}%
 Dos predictores con sesgos distintos, por ejemplo un clasificador supervisado y uno basado en vecinos
@@ -792,6 +878,8 @@ completo, $y \sim p_\theta(\cdot \mid x)$: describe la lesión e infiere el diag
 Resuelve los tres problemas con un solo modelo, que tiene que ser a la vez un buen clasificador y un buen
 redactor.
 
+\input{Figures/Capitulos/02-generacion-reportes}
+
 En la generación \textbf{condicionada en evidencia externa}, otro componente aporta información que se agrega al
 \emph{prompt} del generador,
 \begin{equation}
@@ -804,8 +892,6 @@ candidatos que deja la política de la Ecuación~\ref{eq:marco_politica}. El gen
 redacta la descripción, pero el diagnóstico le llega como dato. Anclar así el texto en evidencia externa se
 conoce como \emph{grounding}, y es aprendizaje en contexto (Sección~\ref{sec:marco_llm_grandes}): el
 generador no cambia sus pesos~\cite{brown2020language}.
-
-\input{Figures/Capitulos/02-generacion-reportes}
 
 La segunda forma separa los problemas: la fidelidad diagnóstica pasa a depender de la evidencia, y la calidad
 descriptiva sigue a cargo del generador. Tiene dos costos. El reporte hereda los errores de la evidencia,
@@ -835,13 +921,6 @@ indiscriminada, es decir, cuando no depende de cuán incierto sea el caso. Se ha
 de evaluación que premian acertar y no penalizan adivinar incentivan la alucinación en lugar de la expresión
 de incertidumbre~\cite{kalai2025hallucinate}. Enumerar diferenciales cuando una señal de confianza lo
 justifica (Sección~\ref{sec:marco_tres_salidas}) es lo opuesto al \emph{hedging}.
-
-Estas dos fallas no son las únicas. Al leer los reportes uno por uno, cada uno se puede asignar a su falla
-principal (Tabla~\ref{tab:marco_fallas}). Afirmar un diagnóstico incorrecto es la más grave, porque el lector
-recibe un error con la forma de un acierto. La contradicción, que nombra dos diagnósticos incompatibles en el
-mismo texto, y el \emph{hedging} dejan la decisión en el lector, y la repetición y el texto insuficiente no
-aportan información. La alucinación puede acompañar a cualquiera de ellas, incluso a un diagnóstico correcto.
-La taxonomía organiza el análisis de los reportes generados del Capítulo~\ref{cp:res_gen}.
 
 \begin{table}[H]
     \centering
@@ -873,6 +952,13 @@ La taxonomía organiza el análisis de los reportes generados del Capítulo~\ref
         \bottomrule
     \end{tabularx}
 \end{table}
+
+Estas dos fallas no son las únicas. Al leer los reportes uno por uno, cada uno se puede asignar a su falla
+principal (Tabla~\ref{tab:marco_fallas}). Afirmar un diagnóstico incorrecto es la más grave, porque el lector
+recibe un error con la forma de un acierto. La contradicción, que nombra dos diagnósticos incompatibles en el
+mismo texto, y el \emph{hedging} dejan la decisión en el lector, y la repetición y el texto insuficiente no
+aportan información. La alucinación puede acompañar a cualquiera de ellas, incluso a un diagnóstico correcto.
+La taxonomía organiza el análisis de los reportes generados del Capítulo~\ref{cp:res_gen}.
 
 Las métricas de solapamiento con un texto de referencia (Sección~\ref{sec:marco_eval_texto}) miden un
 parecido superficial y pueden no detectar si el reporte transmite los hallazgos clínicos
@@ -1397,54 +1483,10 @@ Importa cómo trata cada trabajo el desbalance de clases, con qué métrica elig
 de una misma lesión en una partición, si valida fuera de la fuente y si compara contra clínicos. La
 Tabla~\ref{tab:marco_sota_clasificacion} resume los trabajos.
 
-Dos hitos fijaron la tarea como un terreno en el que el aprendizaje profundo compite con el especialista. En 2017
-una \gls{cnn} igualó a dermatólogos certificados en dos distinciones entre lesiones malignas y benignas, carcinoma
-queratinocítico contra queratosis seborreica y melanoma contra nevo~\cite{esteva2017dermatologistlevel}. En 2019,
-los clasificadores del desafío ISIC 2018, entrenados con HAM10000, acertaron en su prueba en promedio más que 511 participantes humanos, y los tres mejores superaron también a los expertos con
-más de diez años de experiencia~\cite{tschandl2019comparison}.
-
-\textcite{liu2020deep} extendieron la tarea de la lesión aislada a las 26 condiciones de piel más frecuentes en
-atención primaria, a partir de fotografías clínicas y de la historia del paciente. Un ensamble de seis redes
-Inception-v4 fusiona las imágenes de cada caso con 45 variables de metadatos y se entrena con etiquetas blandas
-construidas con los votos de un panel de dermatólogos. Los datos son casos de teledermatología de 17 sitios de
-Estados Unidos, con partición temporal y separada por paciente, y la referencia es el diagnóstico de tres dermatólogos, sin confirmación
-patológica. Se mide la exactitud y la sensibilidad promedio entre condiciones. Frente a 18 clínicos, en un
-subconjunto enriquecido con condiciones raras, alcanzó una exactitud top-1 de 0.67 contra 0.63 de los dermatólogos y 0.45
-de los médicos de atención primaria; entre los tumores malignos, en cambio, su sensibilidad top-1 fue 0.57 contra
-0.71 (0.88 contra 0.89 entre los tres primeros diagnósticos). Los
-autores reconocen que la partición temporal no reemplaza a un conjunto externo.
-
-\textcite{gessert2020skin} describen el ensamble de EfficientNet, SENet154 y ResNeXt que ganó las dos tareas del
-desafío ISIC 2019. Ponderan la entropía cruzada por la frecuencia inversa de cada clase y agregan una novena clase,
-con imágenes externas, para la clase desconocida de la prueba. Parten de 25\,331 imágenes, más datos externos, en cinco
-particiones que mantienen juntas las de una misma lesión. La métrica es la sensibilidad macro, y la evidencia es el primer puesto, sin
-comparación con otros métodos. En la tarea sin metadatos llegan a 72.5\,\% en validación cruzada, pero a 63.6\,\% en la
-prueba oficial, una brecha que atribuyen en parte a la clase desconocida; con metadatos, 74.2\,\% y 63.4\,\%. No hubo expertos.
-
-\textcite{yao2022single} proponen en cambio un modelo único, de bajo costo, para conjuntos pequeños y
-desbalanceados. De 41 \glspl{cnn} eligen una RegNetY y le suman una pérdida con un coeficiente por clase, mayor para
-el melanoma, y un aprendizaje acumulativo que pasa del entrenamiento convencional al rebalanceo. Usan ISIC 2017, 2018,
-2019 y 7-point, con la sensibilidad macro como métrica principal y la del melanoma aparte, y se comparan con los
-ganadores de los desafíos. En ISIC 2019 alcanzan una sensibilidad macro de 0.645 contra 0.636 del ganador original del
-desafío, y en ISIC 2018 muestran que subir el coeficiente del melanoma eleva su sensibilidad de 0.772 a 0.871 a
-costa de la sensibilidad macro. No
-hubo expertos. Reconocen que los ensambles rinden en general mejor que un modelo único. El artículo no describe una
-partición de validación: la selección se hace sobre la prueba de ISIC 2018.
-
-\textcite{marchetti2023prospective} llevaron fuera del banco de pruebas el ganador del desafío SIIM-ISIC 2020,
-un ensamble de 18 modelos EfficientNet y ResNet; cada modelo se entrenó en cinco
-particiones, de modo que para cada imagen se ejecutan y promedian 90 redes. Lo validaron de forma
-prospectiva, con biopsia como referencia, en un estudio observacional con 603 lesiones, 95 de ellas melanomas. Con
-el umbral fijado de antemano, la sensibilidad fue 96.8\,\% y la especificidad 37.4\,\%, y el \gls{auc} de 0.857 fue
-similar al de la prueba del desafío y superior al de los dermatólogos sin ayuda (0.780). Con acceso al puntaje, el
-\gls{auc} de 11 dermatólogos subió a 0.816, aunque el impacto es teórico porque no se modificó la atención de ningún
-paciente. Los autores reconocen que fue un solo centro, con una muestra pequeña y sin lesiones biopsiadas de pacientes de
-fototipo V o VI.
-
-\begin{table}[H]
+\begin{table}[!t]
     \centering
     \caption{Trabajos de clasificación de lesiones de piel. PCP: médicos de atención primaria; NP: enfermeros
-    especializados.}
+    especializados (\emph{nurse practitioners}).}
     \label{tab:marco_sota_clasificacion}
     \footnotesize
     \setlength{\tabcolsep}{3pt}
@@ -1506,6 +1548,50 @@ fototipo V o VI.
         \bottomrule
     \end{tabularx}
 \end{table}
+
+Dos hitos fijaron la tarea como un terreno en el que el aprendizaje profundo compite con el especialista. En 2017
+una \gls{cnn} igualó a dermatólogos certificados en dos distinciones entre lesiones malignas y benignas, carcinoma
+queratinocítico contra queratosis seborreica y melanoma contra nevo~\cite{esteva2017dermatologistlevel}. En 2019,
+los clasificadores del desafío ISIC 2018, entrenados con HAM10000, acertaron en su prueba en promedio más que 511 participantes humanos, y los tres mejores superaron también a los expertos con
+más de diez años de experiencia~\cite{tschandl2019comparison}.
+
+\textcite{liu2020deep} extendieron la tarea de la lesión aislada a las 26 condiciones de piel más frecuentes en
+atención primaria, a partir de fotografías clínicas y de la historia del paciente. Un ensamble de seis redes
+Inception-v4 fusiona las imágenes de cada caso con 45 variables de metadatos y se entrena con etiquetas blandas
+construidas con los votos de un panel de dermatólogos. Los datos son casos de teledermatología de 17 sitios de
+Estados Unidos, con partición temporal y separada por paciente, y la referencia es el diagnóstico de tres dermatólogos, sin confirmación
+patológica. Se mide la exactitud y la sensibilidad promedio entre condiciones. Frente a 18 clínicos, en un
+subconjunto enriquecido con condiciones raras, alcanzó una exactitud top-1 de 0.67 contra 0.63 de los dermatólogos y 0.45
+de los médicos de atención primaria; entre los tumores malignos, en cambio, su sensibilidad top-1 fue 0.57 contra
+0.71 (0.88 contra 0.89 entre los tres primeros diagnósticos). Los
+autores reconocen que la partición temporal no reemplaza a un conjunto externo.
+
+\textcite{gessert2020skin} describen el ensamble de EfficientNet, SENet154 y ResNeXt que ganó las dos tareas del
+desafío ISIC 2019. Ponderan la entropía cruzada por la frecuencia inversa de cada clase y agregan una novena clase,
+con imágenes externas, para la clase desconocida de la prueba. Parten de 25\,331 imágenes, más datos externos, en cinco
+particiones que mantienen juntas las de una misma lesión. La métrica es la sensibilidad macro, y la evidencia es el primer puesto, sin
+comparación con otros métodos. En la tarea sin metadatos llegan a 72.5\,\% en validación cruzada, pero a 63.6\,\% en la
+prueba oficial, una brecha que atribuyen en parte a la clase desconocida; con metadatos, 74.2\,\% y 63.4\,\%. No hubo expertos.
+
+\textcite{yao2022single} proponen en cambio un modelo único, de bajo costo, para conjuntos pequeños y
+desbalanceados. De 41 \glspl{cnn} eligen una RegNetY y le suman una pérdida con un coeficiente por clase, mayor para
+el melanoma, y un aprendizaje acumulativo que pasa del entrenamiento convencional al rebalanceo. Usan ISIC 2017, 2018,
+2019 y 7-point, con la sensibilidad macro como métrica principal y la del melanoma aparte, y se comparan con los
+ganadores de los desafíos. En ISIC 2019 alcanzan una sensibilidad macro de 0.645 contra 0.636 del ganador original del
+desafío, y en ISIC 2018 muestran que subir el coeficiente del melanoma eleva su sensibilidad de 0.772 a 0.871 a
+costa de la sensibilidad macro. No
+hubo expertos. Reconocen que los ensambles rinden en general mejor que un modelo único. El artículo no describe una
+partición de validación: la selección se hace sobre la prueba de ISIC 2018.
+
+\textcite{marchetti2023prospective} llevaron fuera del banco de pruebas el ganador del desafío SIIM-ISIC 2020,
+un ensamble de 18 modelos EfficientNet y ResNet; cada modelo se entrenó en cinco
+particiones, de modo que para cada imagen se ejecutan y promedian 90 redes. Lo validaron de forma
+prospectiva, con biopsia como referencia, en un estudio observacional con 603 lesiones, 95 de ellas melanomas. Con
+el umbral fijado de antemano, la sensibilidad fue 96.8\,\% y la especificidad 37.4\,\%, y el \gls{auc} de 0.857 fue
+similar al de la prueba del desafío y superior al de los dermatólogos sin ayuda (0.780). Con acceso al puntaje, el
+\gls{auc} de 11 dermatólogos subió a 0.816, aunque el impacto es teórico porque no se modificó la atención de ningún
+paciente. Los autores reconocen que fue un solo centro, con una muestra pequeña y sin lesiones biopsiadas de pacientes de
+fototipo V o VI.
 
 Los trabajos recientes sobre HAM10000 y conjuntos afines se comparan casi siempre entre arquitecturas, sin expertos
 ni un protocolo común. \textcite{kreouzi2024learning} enfrentan cuatro \glspl{cnn} (DenseNet121, ResNet50V2,
@@ -1577,17 +1663,7 @@ de lenguaje que genera texto. Interesa de cada trabajo qué problema ataca, con 
 hubo expertos. Se presentan en orden cronológico dentro de cada estrategia, y las
 Tablas~\ref{tab:marco_sota_vlm} y~\ref{tab:marco_sota_vlm_gen} los resumen.
 
-\textcite{kim2024transparent} proponen MONET para anotar conceptos clínicos (eritema, úlcera, pigmentación) sobre
-imágenes sin etiquetas manuales, con el fin de auditar conjuntos de datos y modelos. Es una versión de CLIP ajustada
-de forma contrastiva con 105\,550 imágenes dermatológicas y sus descripciones, extraídas de PubMed y de libros de
-texto. Se compara con CLIP y con un ResNet-50 supervisado con conceptos anotados, sobre SkinCon y Derm7pt. En la
-anotación del tono de piel alcanza un \gls{auc} de 0.805 contra 0.736 de CLIP y 0.874 del supervisado, que se evalúa
-en condiciones más favorables. Dos dermatólogos verifican la recuperación de imágenes por concepto, y un clasificador
-por conceptos sobre MONET supera, en imágenes clínicas, a las líneas de base en malignidad (\gls{auc} 0.815) y melanoma (0.881). Los autores
-aclaran que no sirve para diagnosticar, que fallará con conceptos ausentes del entrenamiento y que no pudieron medir
-el tono de piel en imágenes dermatoscópicas.
-
-\begin{table}[H]
+\begin{table}[!t]
     \centering
     \caption{\glspl{vlm} contrastivos y modelos fundacionales en dermatología. $^\dagger$: sin revisión de pares.}
     \label{tab:marco_sota_vlm}
@@ -1633,6 +1709,63 @@ el tono de piel en imágenes dermatoscópicas.
         \bottomrule
     \end{tabularx}
 \end{table}
+
+\begin{table}[!t]
+    \centering
+    \caption{\glspl{vlm} generativos en dermatología y su evaluación crítica. $^\dagger$: sin revisión de pares. ID: dentro de la distribución; OOD: fuera de ella.}
+    \label{tab:marco_sota_vlm_gen}
+    \footnotesize
+    \setlength{\tabcolsep}{3.5pt}
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{1.9cm}
+        c
+        >{\raggedright\arraybackslash\hspace{0pt}}X >{\raggedright\arraybackslash\hspace{0pt}}X
+        >{\raggedright\arraybackslash\hspace{0pt}}p{2.2cm} >{\raggedright\arraybackslash\hspace{0pt}}X
+        >{\raggedright\arraybackslash\hspace{0pt}}p{1.9cm}@{}}
+        \toprule
+        \textbf{Trabajo} & \textbf{Año} & \textbf{Arquitectura} & \textbf{Datos} & \textbf{Métricas} & \textbf{Resultado principal} & \textbf{Expertos} \\
+        \midrule
+        \textcite{li2023llavamed} & 2023 & LLaVA de 7B ajustado en dos etapas
+            & 600\,000 pares de PubMed Central; instrucciones de GPT-4
+            & Puntaje relativo con GPT-4, exactitud en VQA
+            & Supera al supervisado en VQA-RAD y PathVQA cerradas; sin evaluar en piel
+            & Ninguno \\
+        \filasep
+        \textcite{zeng2025mmskin} & 2025 & LLaVA-Med de 7B con LoRA
+            & 171\,600 imágenes de libros y nueve conjuntos públicos
+            & BLEU-4, BERTScore, exactitud
+            & \emph{Zero-shot} Patch16 82.34\,\% contra 68.55\,\% (LLaVA-Med)
+            & Ninguno \\
+        \filasep
+        \textcite{shen2025skingptr1}$^\dagger$ & 2025 & Vision-R1-7B congelado con adaptadores
+            & 334\,618 muestras con razonamiento sintético
+            & Exactitud, puntajes de 0 a 5, peor grupo
+            & 82.50\,\% en Derm12345; media de 3.6 sobre 5
+            & 5 dermatólogos, 1\,000 casos \\
+        \filasep
+        \textcite{ru2026dermogpt}$^\dagger$ & 2026 & Qwen3-VL-8B con LoRA y aprendizaje por refuerzo
+            & 772\,675 instrucciones; 33\,999 preguntas
+            & Exactitud, juez automático, equidad
+            & ID 78.04\,\% y OOD 66.48\,\% (Gemini-2.5-Flash: 63.37\,\% y 61.21\,\%)
+            & 2 dermatólogos revisan; referencia humana en 100 casos por tarea \\
+        \filasep
+        \textcite{jiang2026multimodal}$^\dagger$ & 2026 & Evaluación sin ajuste de cinco modelos
+            & Tres conjuntos públicos y 5\,811 consultas de un hospital
+            & Exactitud de los tres primeros diagnósticos, triaje
+            & Imagen sola en consulta real: 1.50\,\% a 13.35\,\% (abiertos), 24.65\,\% (GPT-4.1)
+            & 3 dermatólogos validan el juez \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+\textcite{kim2024transparent} proponen MONET para anotar conceptos clínicos (eritema, úlcera, pigmentación) sobre
+imágenes sin etiquetas manuales, con el fin de auditar conjuntos de datos y modelos. Es una versión de CLIP ajustada
+de forma contrastiva con 105\,550 imágenes dermatológicas y sus descripciones, extraídas de PubMed y de libros de
+texto. Se compara con CLIP y con un ResNet-50 supervisado con conceptos anotados, sobre SkinCon y Derm7pt. En la
+anotación del tono de piel alcanza un \gls{auc} de 0.805 contra 0.736 de CLIP y 0.874 del supervisado, que se evalúa
+en condiciones más favorables. Dos dermatólogos verifican la recuperación de imágenes por concepto, y un clasificador
+por conceptos sobre MONET supera, en imágenes clínicas, a las líneas de base en malignidad (\gls{auc} 0.815) y melanoma (0.881). Los autores
+aclaran que no sirve para diagnosticar, que fallará con conceptos ausentes del entrenamiento y que no pudieron medir
+el tono de piel en imágenes dermatoscópicas.
 
 \textcite{yan2025derm1miccv} entrenan la familia DermLIP, modelos de tipo CLIP con la pérdida contrastiva original, sobre
 Derm1M, un corpus de alrededor de un millón de pares imagen--texto dermatológicos organizados según una ontología
@@ -1702,53 +1835,6 @@ sistemas entre ellos GPT-4o mini y LLaVA-Med, alcanza 82.50\,\% de exactitud en 
 salidas de este modelo. Los autores reconocen bucles de autovalidación con incertidumbre alta y una latencia que impide
 ejecutarlo en dispositivos de borde.
 
-\begin{table}[H]
-    \centering
-    \caption{\glspl{vlm} generativos en dermatología y su evaluación crítica. $^\dagger$: sin revisión de pares. ID: dentro de la distribución; OOD: fuera de ella.}
-    \label{tab:marco_sota_vlm_gen}
-    \footnotesize
-    \setlength{\tabcolsep}{3.5pt}
-    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{1.9cm}
-        c
-        >{\raggedright\arraybackslash\hspace{0pt}}X >{\raggedright\arraybackslash\hspace{0pt}}X
-        >{\raggedright\arraybackslash\hspace{0pt}}p{2.2cm} >{\raggedright\arraybackslash\hspace{0pt}}X
-        >{\raggedright\arraybackslash\hspace{0pt}}p{1.9cm}@{}}
-        \toprule
-        \textbf{Trabajo} & \textbf{Año} & \textbf{Arquitectura} & \textbf{Datos} & \textbf{Métricas} & \textbf{Resultado principal} & \textbf{Expertos} \\
-        \midrule
-        \textcite{li2023llavamed} & 2023 & LLaVA de 7B ajustado en dos etapas
-            & 600\,000 pares de PubMed Central; instrucciones de GPT-4
-            & Puntaje relativo con GPT-4, exactitud en VQA
-            & Supera al supervisado en VQA-RAD y PathVQA cerradas; sin evaluar en piel
-            & Ninguno \\
-        \filasep
-        \textcite{zeng2025mmskin} & 2025 & LLaVA-Med de 7B con LoRA
-            & 171\,600 imágenes de libros y nueve conjuntos públicos
-            & BLEU-4, BERTScore, exactitud
-            & \emph{Zero-shot} Patch16 82.34\,\% contra 68.55\,\% (LLaVA-Med)
-            & Ninguno \\
-        \filasep
-        \textcite{shen2025skingptr1}$^\dagger$ & 2025 & Vision-R1-7B congelado con adaptadores
-            & 334\,618 muestras con razonamiento sintético
-            & Exactitud, puntajes de 0 a 5, peor grupo
-            & 82.50\,\% en Derm12345; media de 3.6 sobre 5
-            & 5 dermatólogos, 1\,000 casos \\
-        \filasep
-        \textcite{ru2026dermogpt}$^\dagger$ & 2026 & Qwen3-VL-8B con LoRA y aprendizaje por refuerzo
-            & 772\,675 instrucciones; 33\,999 preguntas
-            & Exactitud, juez automático, equidad
-            & ID 78.04\,\% y OOD 66.48\,\% (Gemini-2.5-Flash: 63.37\,\% y 61.21\,\%)
-            & 2 dermatólogos revisan; referencia humana en 100 casos por tarea \\
-        \filasep
-        \textcite{jiang2026multimodal}$^\dagger$ & 2026 & Evaluación sin ajuste de cinco modelos
-            & Tres conjuntos públicos y 5\,811 consultas de un hospital
-            & Exactitud de los tres primeros diagnósticos, triaje
-            & Imagen sola en consulta real: 1.50\,\% a 13.35\,\% (abiertos), 24.65\,\% (GPT-4.1)
-            & 3 dermatólogos validan el juez \\
-        \bottomrule
-    \end{tabularx}
-\end{table}
-
 \textcite{ru2026dermogpt}, publicado solo en arXiv y sin revisión de pares, proponen un modelo que siga el orden
 clínico de morfología, razonamiento y diagnóstico, y anuncian que publicarán los datos, el \emph{benchmark} y los
 pesos tras la aceptación. Reúnen DermoInstruct,
@@ -1790,10 +1876,10 @@ la ayuda sobre sus decisiones, y en los generativos los expertos son dos o tres,
 Un reporte dermatológico reúne la descripción de lo que se ve, un diagnóstico y, cuando corresponde, una
 recomendación. Los trabajos difieren en cómo lo producen (un único \gls{vlm} o un clasificador que precede a un
 redactor), en la evidencia que usan (solo la imagen o también un contexto recuperado) y en cómo evalúan el texto
-(Sección~\ref{sec:marco_rep_ejes}). La Tabla~\ref{tab:marco_generadores} resume los generadores y la
-Tabla~\ref{tab:marco_sota_reportes}, los trabajos sobre evaluación y recuperación.
+(Sección~\ref{sec:marco_rep_ejes}). La Tabla~\ref{tab:marco_generadores} resume los generadores, y la
+Tabla~\ref{tab:marco_sota_reportes}, los trabajos que se ocupan de la evaluación y de la recuperación.
 
-\begin{table}[H]
+\begin{table}[!t]
     \centering
     \caption{Generadores de texto dermatológico. «Métricas con referencia»: BLEU, ROUGE y BERTScore; «---»: no
     informado.}
@@ -1821,6 +1907,42 @@ Tabla~\ref{tab:marco_sota_reportes}, los trabajos sobre evaluación y recuperaci
         Chakrabarti et al.~\cite{chakrabarti2025skin} & LLaVA-1.5-13B destilado de GPT-4V & métricas con referencia, corrección diagnóstica y revisión de un médico & --- \\
         \filasep
         MpoxVLM~\cite{cao2024mpoxvlm} & Llama-2-7B con LoRA & exactitud del diagnóstico & 2 RTX 4090 \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+\begin{table}[!t]
+    \centering
+    \caption{Evaluación de narrativas dermatológicas y recuperación de contexto para \glspl{vlm} médicos.}
+    \label{tab:marco_sota_reportes}
+    \footnotesize
+    \setlength{\tabcolsep}{3.5pt}
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{1.9cm}
+        c
+        >{\raggedright\arraybackslash\hspace{0pt}}X >{\raggedright\arraybackslash\hspace{0pt}}X
+        >{\raggedright\arraybackslash\hspace{0pt}}p{2.2cm} >{\raggedright\arraybackslash\hspace{0pt}}X
+        >{\raggedright\arraybackslash\hspace{0pt}}p{1.9cm}@{}}
+        \toprule
+        \textbf{Trabajo} & \textbf{Año} & \textbf{Arquitectura} & \textbf{Datos} & \textbf{Métricas} & \textbf{Resultado principal} & \textbf{Expertos} \\
+        \midrule
+        \textcite{shen2025dermbench} & 2025 & Juez automático y evaluador LLaVA v1.5 7B con LoRA
+            & 4\,000 imágenes de DermNet con referencia; 500 imágenes y nueve modelos
+            & Error absoluto medio contra médicos, seis dimensiones
+            & Error medio 0.363 (DermBench) y 0.178 (DermEval)
+            & 2 dermatólogos, coautores \\
+        \filasep
+        \textcite{xia2025mmedrag} & 2025 & LLaVA-Med-1.5 con recuperación de reportes y optimización de preferencias
+            & Radiología, oftalmología y patología
+            & Exactitud, F1, \gls{auc}; BLEU, ROUGE-L, METEOR
+            & IU-Xray: exactitud 75.47 a 89.54; BLEU 9.64 a 31.38
+            & No \\
+        \filasep
+        \textcite{xia2024rule} & 2024 & LLaVA-Med-1.5 con recuperación de reportes, $k$ calibrado y optimización
+            de preferencias
+            & Radiología y oftalmología
+            & Exactitud, F1; BLEU, ROUGE-L, METEOR
+            & IU-Xray: exactitud 75.47 a 87.84; BLEU 9.64 a 27.53
+            & No \\
         \bottomrule
     \end{tabularx}
 \end{table}
@@ -1917,42 +2039,6 @@ de las preguntas sube de 75.47 a 87.84 con RULE y a 89.54 con MMed-RAG. En la ab
 contexto recuperado sin más empeora MIMIC-CXR, de 75.79 a 67.35. Ninguno incluye expertos, y MMed-RAG señala que una
 modalidad nueva puede exigir reentrenar el recuperador.
 
-\begin{table}[H]
-    \centering
-    \caption{Evaluación de narrativas dermatológicas y recuperación de contexto para \glspl{vlm} médicos.}
-    \label{tab:marco_sota_reportes}
-    \footnotesize
-    \setlength{\tabcolsep}{3.5pt}
-    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{1.9cm}
-        c
-        >{\raggedright\arraybackslash\hspace{0pt}}X >{\raggedright\arraybackslash\hspace{0pt}}X
-        >{\raggedright\arraybackslash\hspace{0pt}}p{2.2cm} >{\raggedright\arraybackslash\hspace{0pt}}X
-        >{\raggedright\arraybackslash\hspace{0pt}}p{1.9cm}@{}}
-        \toprule
-        \textbf{Trabajo} & \textbf{Año} & \textbf{Arquitectura} & \textbf{Datos} & \textbf{Métricas} & \textbf{Resultado principal} & \textbf{Expertos} \\
-        \midrule
-        \textcite{shen2025dermbench} & 2025 & Juez automático y evaluador LLaVA v1.5 7B con LoRA
-            & 4\,000 imágenes de DermNet con referencia; 500 imágenes y nueve modelos
-            & Error absoluto medio contra médicos, seis dimensiones
-            & Error medio 0.363 (DermBench) y 0.178 (DermEval)
-            & 2 dermatólogos, coautores \\
-        \filasep
-        \textcite{xia2025mmedrag} & 2025 & LLaVA-Med-1.5 con recuperación de reportes y optimización de preferencias
-            & Radiología, oftalmología y patología
-            & Exactitud, F1, \gls{auc}; BLEU, ROUGE-L, METEOR
-            & IU-Xray: exactitud 75.47 a 89.54; BLEU 9.64 a 31.38
-            & No \\
-        \filasep
-        \textcite{xia2024rule} & 2024 & LLaVA-Med-1.5 con recuperación de reportes, $k$ calibrado y optimización
-            de preferencias
-            & Radiología y oftalmología
-            & Exactitud, F1; BLEU, ROUGE-L, METEOR
-            & IU-Xray: exactitud 75.47 a 87.84; BLEU 9.64 a 27.53
-            & No \\
-        \bottomrule
-    \end{tabularx}
-\end{table}
-
 El texto se evalúa de tres maneras que casi no se combinan (Sección~\ref{sec:marco_eval_texto}). Las métricas con
 referencia miden el parecido con un texto y no la corrección clínica, y las referencias suelen ser sintéticas:
 DermatoLlama usa preguntas anotadas por sus coautores y Chakrabarti et al.\ los pseudorreportes del propio maestro.
@@ -1977,7 +2063,13 @@ contrastivos especializados clasifican y recuperan pero no redactan, los generat
 \glspl{vlm} médicos de propósito general rinden poco en piel. En los reportes, la mayoría de los sistemas se evalúa por parecido textual o por
 la exactitud del diagnóstico, y la recuperación estudiada trae textos de otras especialidades.
 
-\begin{table}[H]
+De esos huecos sale el \emph{pipeline}: un clasificador que estima el diagnóstico, una recuperación de casos
+parecidos y un generador de reportes, con una decisión que depende de la confianza y determina cuánto afirma el
+texto. Cada pieza atiende una brecha de la Tabla~\ref{tab:marco_brechas}
+(Sección~\ref{sec:marco_tres_salidas}), y el análisis incluye cuánto degrada un vecino equivocado el
+texto, como advierten MMed-RAG y RULE~\cite{xia2025mmedrag,xia2024rule}.
+
+\begin{table}[!t]
     \centering
     \caption{De las brechas de la revisión a las decisiones del trabajo.}
     \label{tab:marco_brechas}
@@ -2014,12 +2106,6 @@ la exactitud del diagnóstico, y la recuperación estudiada trae textos de otras
         \bottomrule
     \end{tabularx}
 \end{table}
-
-De esos huecos sale el \emph{pipeline}: un clasificador que estima el diagnóstico, una recuperación de casos
-parecidos y un generador de reportes, con una decisión que depende de la confianza y determina cuánto afirma el
-texto. Cada pieza atiende una brecha de la Tabla~\ref{tab:marco_brechas}
-(Sección~\ref{sec:marco_tres_salidas}), y el análisis incluye cuánto degrada un vecino equivocado el
-texto, como advierten MMed-RAG y RULE~\cite{xia2025mmedrag,xia2024rule}.
 
 El codificador contrastivo es DermLIP. DermFM-Zero lo supera en su propio protocolo, pero DermLIP, en su variante
 ViT-B/16, se ejecuta en una GPU de consumo, y un mismo espacio sirve para clasificar sin ajuste, entrenar un

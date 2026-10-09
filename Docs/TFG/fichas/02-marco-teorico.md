@@ -1128,3 +1128,24 @@ Fuente: `feedback/feedback_cap1_y_2_v2.md` y los comentarios de
 | 2.1.4 Modelos preentrenados y adaptación | Transferencia, congelamiento y ajuste fino en dos párrafos (sale `eq:marco_transfer_act`). Olvido catastrófico con el término en inglés |
 | Introducción del capítulo | Se adopta el texto que propone el tutor |
 | Encabezados de tablas en negrita | Todas las tablas de los capítulos 1 y 2 |
+
+## 15. Revisión del autor sobre la segunda revisión (2026-10-08)
+
+| Pedido | Decisión |
+|---|---|
+| Los dos párrafos introductorios parecen exclusivos de imágenes; la definición de aprendizaje automático y la de supervisado son flojas; no se entiende qué distingue al aprendizaje profundo | Definición por experiencia y desempeño (Mitchell, vía `goodfellow2016deep`); supervisado, no supervisado y autosupervisado (este último remite a 2.4.1); ejemplos de imagen y de texto; la diferencia es qué se aprende: también la representación, no solo la decisión |
+| 2.1.1: decir qué es una red neuronal | Una oración de definición antes de la neurona |
+| La ecuación del descenso del gradiente corta la oración | La regla se enuncia completa en prosa y la ecuación cierra la oración |
+| «una categoría de un conjunto finito y cada categoría es una clase» | «asignar cada entrada a una clase de un conjunto finito» |
+| Relación de la entropía cruzada con las salidas | Párrafo nuevo: distribución de la etiqueta $\mathbf{q}$, máxima verosimilitud, gradiente $p_c - q_c$ sobre los logits, misma pérdida en los modelos de lenguaje |
+| Negrita en «sobreajuste» y «regularización» | Hecho |
+| $\frac{\lambda}{2}\lVert\theta\rVert_2^2$ se ve raro | Es correcto (penalización L2); se escribe $(\lambda/2)\sum_i \theta_i^2$ y se aclara que con Adam no equivale al decaimiento de pesos (AdamW, `loshchilov2019decoupled`) |
+| Explicar las variables de las tres pérdidas para desbalance | Se definen $n$, $n_c$, $y$; cada ítem explica su fórmula y el balanced softmax muestra la softmax modificada |
+| Nombrar la sensibilidad macro junto al F1 macro | Hecho, con qué mide cada una |
+| ¿«Olvido catastrófico» es la traducción correcta? | Sí, es la usual en español (también «interferencia catastrófica»); se conserva |
+| 2.1.4 corta; agregar uno o dos párrafos, fórmula o figura | Dos párrafos: ajuste en dos etapas (`kumar2022finetuning`) y tasa de aprendizaje por capa con fórmula (`eq:marco_llrd`, `howard2018universal`); y la extracción de características como medida del preentrenamiento (linear probe, remite a DermLIP) |
+| Explicar lo que usan el código y los experimentos | Se agregan: calentamiento y coseno (2.1.1), AdamW, suavizado de etiquetas, RandAugment, borrado aleatorio y TTA (2.1.3), dos etapas y LLRD (2.1.4), clasificación de un VLM por verosimilitud (2.5.2), voto suave del ensamble (2.6.3). Diez referencias nuevas (`refs_pendientes.md`) |
+| Menos «cómo funcionan las redes», más «por qué» | Sale la ecuación sinusoidal de posición (2.3.2), que no usa ningún modelo del trabajo; se agrega cómo codifican la posición el ViT y el Swin |
+| Palabras huérfanas | `check_huerfanas.py` en `Docs/TFG/`, citado en la guía §6; 0 en los capítulos 1 y 2 |
+
+Extensión: §2.1 pasa de ~4 a ~6 páginas por los agregados pedidos, por encima de las tres que sugirió el tutor.

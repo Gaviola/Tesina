@@ -183,7 +183,10 @@ misma carrera que pasó el tutor (`Docs/tesinamaglione_ejemplo.pdf`, no versiona
   interpretar un resultado o fundamenta una limitación, una comparación o una contribución. La extensión
   sigue a la función: la retropropagación cumple en parte la primera y alcanza con unas líneas, mientras
   que LoRA, la calibración, la incertidumbre, el desbalance de clases y la generación condicionada cumplen
-  varias y se desarrollan más. Los fundamentos generales (§2.1) ocupan unas tres páginas.
+  varias y se desarrollan más. Los fundamentos generales (§2.1) ocupan unas tres páginas. A la inversa,
+  toda técnica que usan el código o los experimentos que se reportan (la receta de entrenamiento de
+  `Codigo/src/training/recipes.py`, el TTA, el ensamble, la clasificación de un VLM por verosimilitud)
+  tiene en el marco al menos una o dos oraciones que la expliquen, para que el Cap. 3 pueda remitir a ella.
 - **El marco teórico se escribe para un lector general.** La pregunta para cada concepto es por qué
   el lector lo necesita para entender lo que se hizo o el resultado. El lector puede ser un
   informático, que ya conoce las redes neuronales, o un dermatólogo, que no las conoce.
@@ -366,7 +369,11 @@ El encuadre de cada referencia anterior a 2020 que ya está en el `.bib` queda r
   reformulando la frase o sacando alguna palabra, no con espaciado manual. `Configurations/10-Macros.sty`
   pide además a TeX que la última línea de cada párrafo ocupe al menos 8em (`\parfillskip`), lo que
   resuelve la mayoría de los casos; los que quedan (listas, epígrafes, párrafos muy ajustados) se
-  corrigen a mano.
+  corrigen a mano. **Antes de cada commit** se corre `python -X utf8 check_huerfanas.py <capítulo>`
+  desde `Docs/TFG/` (después de compilar), que lista las últimas líneas de párrafo con tres palabras o
+  menos, y `python -X utf8 check_floats.py <capítulo>` para los flotantes. Una tabla que ocupa casi una
+  página no entra nunca junto a su mención: va con `[!t]` después del párrafo que la menciona, para que
+  el texto llene la página y no quede un hueco.
 - **Código** con `minted` (requiere `-shell-escape`). Fragmentos cortos, solo si aportan.
 - **Compilación:** `latexmk -xelatex -shell-escape tesina.tex` desde `Docs/TFG/`.
 

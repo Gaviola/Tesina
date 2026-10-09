@@ -247,6 +247,27 @@ Schmidhuber 1997 no está en el `.bib`. Como la ficha del Capítulo 2 ya había 
 una mención mínima, **se eliminó la cláusula** en lugar de proponer la referencia. Si el marco
 teórico llegara a necesitar LSTM con desarrollo, hay que incorporarla primero.
 
+### Receta de entrenamiento de §2.1 — incorporado el 08/10/2026
+
+Técnicas que usa la receta de los clasificadores (`Codigo/src/training/recipes.py`, receta `modern`) y que el
+marco teórico no explicaba (revisión del autor, 2026-10-08).
+
+| Clave | Referencia | Sostiene | Sección |
+|---|---|---|---|
+| `goyal2017accurate` | Goyal et al., arXiv:1706.02677, 2017 | Calentamiento lineal de la tasa de aprendizaje | 2.1.1 |
+| `loshchilov2017sgdr` | Loshchilov y Hutter, *ICLR* 2017 (SGDR) | Decaimiento de la tasa de aprendizaje con coseno | 2.1.1 |
+| `loshchilov2019decoupled` | Loshchilov y Hutter, *ICLR* 2019 | AdamW: con Adam el decaimiento de pesos no equivale a la penalización L2 | 2.1.3 |
+| `szegedy2016rethinking` | Szegedy et al., *CVPR* 2818–2826, 2016 | Suavizado de etiquetas (reparte $\varepsilon$ uniforme entre las clases) | 2.1.3 |
+| `muller2019does` | Müller, Kornblith y Hinton, *NeurIPS* 32, 2019 | El suavizado de etiquetas mejora la calibración | 2.1.3 |
+| `cubuk2020randaugment` | Cubuk et al., *CVPRW* 702–703, 2020 | RandAugment: $N$ operaciones al azar con magnitud común $M$ | 2.1.3 |
+| `zhong2020random` | Zhong et al., *AAAI* 34(07):13001–13008, 2020 | Borrado aleatorio: rectángulo con valores aleatorios, simula oclusión | 2.1.3 |
+| `krizhevsky2012imagenet` | Krizhevsky, Sutskever y Hinton, *NeurIPS* 25:1097–1105, 2012 | Promedio de la softmax sobre recortes y reflejos horizontales al predecir (TTA) | 2.1.3 |
+| `kumar2022finetuning` | Kumar et al., *ICLR* 2022 | Sondeo lineal y después ajuste fino (LP-FT) supera a cada parte; la cabeza aleatoria deforma las características | 2.1.4 |
+| `howard2018universal` | Howard y Ruder, *ACL* 328–339, 2018 | Ajuste fino discriminativo: tasa de aprendizaje distinta por capa | 2.1.4 |
+
+Verificado contra las páginas de las actas y los resúmenes (autores, sede, páginas y DOI). `muller2019does`
+sin páginas: las actas de NeurIPS 2019 no las confirmaron en la búsqueda.
+
 ### Modelos de lenguaje de §2.4 — incorporado el 04/10/2026
 
 | Clave | Referencia | Sostiene |
