@@ -1148,4 +1148,4 @@ Fuente: `feedback/feedback_cap1_y_2_v2.md` y los comentarios de
 | Menos «cómo funcionan las redes», más «por qué» | Sale la ecuación sinusoidal de posición (2.3.2), que no usa ningún modelo del trabajo; se agrega cómo codifican la posición el ViT y el Swin |
 | Palabras huérfanas | `check_huerfanas.py` en `Docs/TFG/`, citado en la guía §6; 0 en los capítulos 1 y 2 |
 
-Extensión: §2.1 pasa de ~4 a ~6 páginas por los agregados pedidos, por encima de las tres que sugirió el tutor.
+Extensión: los agregados llevaron §2.1 a ~6 páginas; un recorte posterior (2026-10-09) la deja en ~5.2. Sale el párrafo del `linear probe` de 2.1.4 (ya está en 2.5.1; queda una oración sobre DermLIP), el gradiente de la entropía cruzada pasa a prosa ( - q_c$ sin el lado izquierdo, que se veía mal en línea) y la Ecuación 2.4 muestra la suma completa; se condensan la introducción, el sobreajuste, la regularización y las pérdidas para desbalance.
