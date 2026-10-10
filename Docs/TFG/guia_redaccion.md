@@ -7,16 +7,69 @@ en este archivo y no sección por sección.
 
 ## 1. Circuito de trabajo
 
-Cada sección del documento pasa por tres etapas. No se saltea ninguna.
+### Un archivo por sección
+
+Desde el 10/10/2026 cada capítulo es una carpeta y cada `\section` un archivo, para revisar los cambios
+sección por sección:
+
+| Qué | Dónde |
+|---|---|
+| Encabezado del capítulo (`\chapter`, comentarios de extensión y fuentes, introducción) y los `\input` de sus secciones | `Chapters/<NN-Capitulo>/00-capitulo.tex` (lo trae `tesina.tex` con `\include`) |
+| Una sección, con sus subsecciones | `Chapters/<NN-Capitulo>/<NN-seccion>.tex` |
+| Diagramas del capítulo | `Figures/Capitulos/<NN-Capitulo>/<nombre>.tex` |
+| Ficha general del capítulo (mensaje, estructura, decisiones, historial) | `fichas/<nn-capitulo>/00-capitulo.md` |
+| Ficha de una sección (hilo conductor y plan) | `fichas/<nn-capitulo>/<NN-seccion>.md`, con el mismo nombre que su `.tex` |
+| Apéndices | `Chapters/Apendices/<letra>-<nombre>.tex`, uno por apéndice |
+
+Una sección nueva se agrega creando su archivo y su `\input` en `00-capitulo.tex`; si cambia el orden de las
+secciones, se renombran los archivos para que el prefijo numérico siga el orden del índice.
+
+### Etapas
+
+Cada sección del documento pasa por cuatro etapas, **de a una sección por vez**. No se saltea ninguna.
 
 | Etapa | Qué se produce | Quién decide |
 |---|---|---|
-| 1. Ficha | `fichas/<capitulo>.md`: mensaje central, esqueleto de párrafos, claves de cita, figuras y extensión | El autor aprueba antes de que se escriba prosa |
-| 2. Redacción | La prosa se escribe **en el `.tex` del capítulo**, reemplazando el `\pendiente` de la sección, y se compila | Quien redacta |
-| 3. Cierre | Un commit por sección en la rama del capítulo | El autor, sobre el diff |
+| 1. Ficha | `fichas/<nn-capitulo>/<NN-seccion>.md`: mensaje central, **hilo conductor** (ver abajo), claves de cita, figuras y extensión | El autor aprueba antes de que se escriba prosa |
+| 2. Redacción | La prosa se escribe **en el `.tex` de la sección**, siguiendo el hilo de la ficha, y se compila | Quien redacta |
+| 3. Pasada de estilo | La sección se relee contra la lista de control (§3, «Lista de control») y se corrige | Quien redacta |
+| 4. Cierre | Un commit por sección en la rama del capítulo; el autor la revisa sobre el diff y la envía al tutor por separado | El autor |
 
 Sin ficha aprobada no se redacta. La ficha es el punto de control real: es más rápido corregir un
-esqueleto de una página que treinta páginas de prosa ajena.
+esqueleto de una página que treinta páginas de prosa ajena. La sección siguiente no se empieza hasta que
+la anterior está cerrada, porque lo que una define la otra solo lo retoma (§3, «Estructura y progresión»).
+Primero se resuelven la organización y la coherencia (etapas 1 y 2) y después la gramática y el estilo
+(etapa 3), como pidió el tutor (revisión del 09/10/2026).
+
+### Hilo conductor en la ficha
+
+La ficha de cada sección empieza con un esqueleto que muestra cómo se encadenan los párrafos, antes de
+cualquier tabla de contenidos. Es la herramienta para que el texto sea un desarrollo argumentativo y no una
+enumeración de conceptos (tutor, 09/10/2026, Audio 3). Formato:
+
+```
+## Hilo conductor
+
+Pregunta que responde la sección: ¿…?
+Viene de: lo que dejó instalado la sección anterior (concepto o limitación).
+Deja instalado: lo que la sección siguiente va a usar.
+
+P1  [idea central del párrafo]                         función: define | justifica | interpreta | limita
+    ↓ relación: necesidad — «Para usar estas representaciones en una clasificación, hace falta…»
+P2  [idea central]                                     función: …
+    ↓ relación: consecuencia — «Por lo tanto…»
+P3  …
+→ Transición a la sección siguiente: «…» (una o dos oraciones)
+
+Se definen acá (y no se vuelven a definir): término (*English term*), …
+Se retoman de antes (solo se nombran, con \ref): …
+Extensión: N párrafos, ~N páginas.
+```
+
+Cada flecha nombra la relación que une un párrafo con el siguiente (causa, consecuencia, necesidad, contraste,
+ejemplo, ampliación). Si entre dos párrafos no se puede escribir la flecha, falta un párrafo, sobra uno o
+están en el orden equivocado. La columna «función» aplica el criterio del marco teórico (§3, «Cada concepto
+cumple una función»): un párrafo sin función se borra.
 
 **No hay borradores en archivos aparte.** El circuito tuvo una etapa intermedia que escribía la
 sección en `borradores/<label>.tex` antes de tocar el capítulo, y se eliminó: apenas la sección
@@ -36,10 +89,10 @@ las dos versiones juntas.
    `\pendiente{}` con lo que haría falta medir.
 3. **No se inventan referencias.** Solo se citan claves que ya existen en
    `Bibliography/Bibliography.bib` (ver sección 6).
-4. **Se toca el capítulo y nada más.** La redacción de una sección modifica el `.tex` de su
-   capítulo y, si la ficha pide una figura, el archivo de esa figura en `Figures/Capitulos/`. Ni
-   `tesina.tex`, ni otros capítulos, ni el `.bib`. Si hiciera falta tocar un archivo compartido, se
-   reporta aparte y se justifica.
+4. **Se toca la sección y nada más.** La redacción de una sección modifica su `.tex` y, si la ficha
+   pide una figura, el archivo de esa figura en `Figures/Capitulos/<NN-Capitulo>/`. Ni `tesina.tex`,
+   ni otras secciones, ni el `.bib`. Si hiciera falta tocar un archivo compartido (por ejemplo, para
+   quitar de otra sección una definición repetida), se reporta aparte y se justifica.
 5. **Toda decisión se reporta.** Al terminar, la sección se entrega con: claves citadas,
    afirmaciones sin respaldo, decisiones tomadas por cuenta propia y preguntas abiertas. Las que
    condicionan lo que se escriba después se anotan en «Decisiones tomadas» de la ficha, que es lo
@@ -57,8 +110,9 @@ las dos versiones juntas.
   siguiente. No se anuncia lo que se va a hacer («en esta sección se describirá…», «esta sección
   presenta cómo…»): se hace. La excepción es la introducción de cada capítulo, que sí describe qué
   contiene el capítulo y cómo se organiza (ver «Estructura y progresión»).
-- **Nada de relleno.** Sin frases de transición vacías, sin recapitulaciones de lo ya dicho, sin
-  adjetivos de énfasis («notablemente», «sumamente»).
+- **Nada de relleno.** Sin frases que anuncian lo que viene, sin recapitulaciones de lo ya dicho, sin
+  adjetivos de énfasis («notablemente», «sumamente»). Una oración que relaciona un concepto con el
+  anterior **no es relleno**: es la transición que el lector necesita (ver «Cohesión y progresión»).
 - **Español neutro formal.** Documentación y documento en español; el código y los nombres de
   variables, en inglés.
 - **Los términos en inglés se usan cuando son los corrientes en el área.** *Pipeline*, *array*,
@@ -68,7 +122,13 @@ las dos versiones juntas.
   «muestreo de núcleo») dificulta la lectura en lugar de facilitarla, así que se usan tal cual. Lo
   mismo vale para calcos de expresiones: «la masa de probabilidad acumulada» se reformula como «la
   probabilidad acumulada». Se prefiere el castellano cuando ya es de uso
-  corriente («ajuste fino», «conjunto de datos», «aprendizaje profundo», «atención multi-cabeza»).
+  corriente («ajuste fino», «conjunto de datos», «aprendizaje profundo», «atención multicabezal»).
+- **Término en castellano con el inglés entre paréntesis la primera vez.** Muchos lectores conocen
+  los conceptos del área por su nombre en inglés, así que la primera aparición en el documento de un
+  término traducido lleva el original en cursiva: «sobreajuste (*overfitting*)», «aumento de datos
+  (*data augmentation*)», «parches (*patches*)», «atención multicabezal (*multi-head attention*)»,
+  «fuga de información (*data leakage*)». Vale para todo término que se use habitualmente en inglés en
+  el área, no solo para las siglas (tutor, 09/10/2026).
 - **Cursiva la primera vez en cada capítulo** con `\emph{}`; después, redonda. En títulos de
   sección y en los índices, siempre redonda. Un término que aparece cincuenta veces en cursiva es
   ruido tipográfico.
@@ -92,18 +152,128 @@ las dos versiones juntas.
   paraleliza permitiendo un cálculo más eficiente».
 - **Afirmaciones medidas.** No se escribe «el primero», «la prueba recomendada» o «el supuesto es
   débil» si la fuente no lo dice así. Cuando la afirmación es de los autores del trabajo citado, se les
-  atribuye («que sus autores presentan como el primer conjunto público…»).
+  atribuye («que sus autores presentan como el primer conjunto público…»). Las capacidades y las
+  limitaciones de los modelos se enuncian con su alcance («en los trabajos revisados», «sobre
+  imágenes dermatoscópicas», «suele»), no como verdades generales, y se prefieren las palabras de
+  intensidad moderada: «dificultades» o «limitaciones» antes que «problemas».
 - **Las decisiones se explican desde los objetivos.** «Como uno de los objetivos es ejecutar todo en una
   GPU de consumo, los modelos se adaptan con LoRA», no «se adaptan con LoRA, y por eso se ejecutan en una
   GPU de consumo». La causalidad sigue el orden en que se tomó la decisión.
 - **Alternativas paralelas en lista.** Cuando un párrafo enumera opciones que se comparan (estrategias de
-  pérdida, variantes de un método), van en `enumerate`, no numeradas a mano dentro del texto.
+  pérdida, variantes de un método) o varias técnicas de una misma familia (las de regularización), van en
+  una lista (`enumerate` o `itemize`) con el nombre de cada una en negrita al comienzo, precedida por una
+  oración que dice qué tienen en común. No se encadenan cuatro técnicas en un mismo párrafo.
+
+### Cohesión y progresión del texto
+
+Revisión del tutor del 09/10/2026: el texto se leía como una enumeración de conceptos y no como un
+desarrollo argumentativo. Los párrafos acumulaban ideas de temas distintos, las primeras oraciones no
+decían de qué trataba el párrafo y se pasaba de un tema al siguiente sin transición. Estas reglas
+prevalecen sobre «Concisión»: **la concisión se logra sacando temas, no comprimiendo los que quedan**.
+
+- **La primera oración de un párrafo lo orienta.** Dice de qué trata el párrafo y, cuando hace falta, cómo
+  se relaciona con el anterior. No abre con un detalle, una cifra, un condicional ni el nombre de una
+  técnica que el lector todavía no conoce. «Si imágenes de una misma lesión caen en dos particiones…» se
+  reescribe como «Una situación a evitar es que imágenes de una misma lesión…»; «El aumento de datos
+  aplica…», después de un párrafo sobre regularización, necesita antes una oración que diga por qué
+  aparece.
+- **Primero el problema, después la técnica.** Antes de nombrar una técnica (RandAugment, AdamW, el
+  TTA) se dice qué dificultad resuelve y qué tipo de cosa es («un método de aumento de datos que…»), y
+  se cita su fuente. Un nombre propio que aparece sin presentación deja al lector preguntándose de
+  dónde viene.
+- **Oraciones autocontenidas que se encadenan.** Cada oración dice una cosa completa y define algo que la
+  siguiente usa. Modelo del tutor para las particiones: «Para estimar este error se utilizan datos que no
+  se emplearon durante el ajuste del modelo. Con este propósito, el conjunto de datos se divide en tres
+  particiones disjuntas: entrenamiento, validación y prueba. El conjunto de entrenamiento se usa para
+  ajustar los parámetros, mientras que el de validación permite seleccionar las configuraciones y los
+  hiperparámetros. Finalmente, el de prueba se emplea para evaluar el rendimiento sobre datos no
+  utilizados durante el desarrollo…».
+- **Los conceptos se construyen unos sobre otros.** La explicación avanza de lo que el lector ya tiene a
+  lo nuevo, y cada concepto se apoya en los anteriores. Ejemplo del tutor: la red recibe los datos de
+  entrada → los transforma y produce un valor por cada clase posible (y se dice qué es una clase) → como
+  esos valores no son probabilidades, la softmax los lleva al rango 0–1 con suma uno → la entropía
+  cruzada compara esas probabilidades con la etiqueta. Al terminar, el lector entiende cómo funciona la
+  red, no una lista de definiciones.
+- **Las relaciones entre oraciones se dicen con conectores.** Cuando dos afirmaciones tienen una relación
+  de causa, consecuencia, contraste o finalidad, se la explicita en lugar de yuxtaponerlas. Conectores
+  sencillos, uno por relación, sin construcciones rebuscadas:
+
+  | Relación | Conectores |
+  |---|---|
+  | Causa | porque, ya que, dado que, debido a |
+  | Consecuencia | por lo tanto, en consecuencia, por ello, de este modo, así |
+  | Contraste | sin embargo, en cambio, no obstante, a diferencia de |
+  | Finalidad | para ello, con este propósito, a fin de |
+  | Necesidad | para…, es necesario…; esto requiere… |
+  | Adición y orden | además, asimismo, por otra parte, en primer lugar, finalmente |
+  | Ejemplo y reformulación | por ejemplo, en particular, es decir |
+
+  El registro es el de un estudiante que termina la carrera: claro y formal, no ampuloso. Si una oración
+  necesita tres subordinadas para decir algo simple, se parte en dos.
+- **Un párrafo, una idea central.** Si un párrafo reúne varios conceptos, resultados o antecedentes, se
+  divide en unidades temáticas o se pasa a una lista (ver «Alternativas paralelas en lista»). Cuando una
+  subsección agrupa temas relacionados pero distintos (sobreajuste, particiones, regularización,
+  aumento de datos, desbalance), cada tema puede llevar un título de párrafo con `\paragraph{}`, que no
+  aparece en el índice.
+- **Cada párrafo cierra su idea.** La última oración completa la idea central y, cuando corresponde, la
+  relaciona con el argumento de la sección o con el trabajo («…y por eso las particiones se arman por
+  lesión»), sin recapitular.
+- **No se salta de tema de tropezón.** Entre dos secciones o subsecciones hay siempre una oración que
+  diga por qué el tema siguiente hace falta (la limitación que deja el anterior, la pregunta que
+  queda abierta). Vale también para el comienzo de una sección: su primer párrafo retoma lo que dejó la
+  anterior.
+
+### Léxico preciso
+
+- **Sin adjetivos de grado sin referencia.** «Valores altos», «exactitudes altas», «bajo costo», «buen
+  desempeño» no dicen nada si no se sabe respecto de qué. Se da el valor, la comparación o el criterio:
+  «exactitudes superiores al 90 %», «mayores que las de los dermatólogos del mismo estudio».
+- **Sin referencias ambiguas.** «Eso», «esto», «lo», «esta forma», «esa equivalencia» se reemplazan por
+  el sustantivo cuando no es inmediato a qué remiten. Ante la duda, se repite el sustantivo.
+- **Sin calcos ni verbos figurados.** Las expresiones que suenan traducidas del inglés o fuera de
+  contexto se reescriben con el verbo literal. Casos señalados por el tutor:
+
+  | Se evita | Se escribe |
+  |---|---|
+  | «Cada línea deja algo sin resolver» | «La revisión de las distintas líneas de investigación permite identificar limitaciones que aún no se abordaron de manera conjunta» |
+  | «De esos huecos sale el *pipeline*» | «A partir de las limitaciones identificadas se propone un *pipeline* que integra…» |
+  | «Los clasificadores descansan sobre la prueba…» | «La evaluación de los clasificadores se realizó principalmente sobre…» |
+  | «Cada pieza atiende una brecha» | «Cada componente del *pipeline* busca abordar una de las limitaciones identificadas» |
+  | «cada token atiende a todos los demás» | «la atención relaciona cada token con todos los demás» |
+  | «tropieza con la memoria» | «requiere más memoria de la que tiene una GPU de consumo» |
+  | «El ViT lleva a las imágenes el codificador» | «El ViT aplica a las imágenes el codificador del transformer» |
+  | «que una imagen y su descripción queden cerca» | «que una imagen y su descripción tengan *embeddings* similares» |
+  | «no redacta» | «no genera texto» |
+  | «una predicción merece afirmarse» | «una predicción es lo bastante confiable para presentarla como diagnóstico» |
+  | «esta segunda dice si…» | «esta última permite determinar si…» |
+  | «esa equivalencia no vale» | se explica por qué no se cumple |
+
+- **Artículo delante del nombre de una técnica.** «El preentrenamiento contrastivo lenguaje–imagen
+  (CLIP) entrena…», no «Preentrenamiento contrastivo… entrena…».
+
+### Lista de control de la pasada de estilo
+
+Etapa 3 del circuito. Se recorre la sección párrafo por párrafo:
+
+1. ¿La primera oración de cada párrafo dice de qué trata y lo conecta con el anterior?
+2. ¿Cada párrafo tiene una sola idea central y la cierra?
+3. ¿Toda técnica nombrada se presentó antes por el problema que resuelve, con cita?
+4. ¿Las relaciones de causa, consecuencia o contraste están dichas con un conector?
+5. ¿Quedan «eso», «esto», «lo» o adjetivos de grado («alto», «bajo») sin referencia?
+6. ¿Quedan calcos, verbos figurados o afirmaciones categóricas sin alcance?
+7. ¿Cada término traducido lleva el inglés entre paréntesis en su primera aparición?
+8. ¿Se redefine algo que ya se definió en otra sección? Si es así, se reemplaza por una mención con `\ref`.
+9. ¿La sección abre retomando la anterior y cierra con la transición a la siguiente?
+10. ¿Compila sin huérfanas ni flotantes fuera de lugar (§7)?
 
 ### Concisión: menos es más
 
 Decisión del autor (2026-10-04), tras comparar con la tesina de ejemplo: el texto estaba más largo y
 más desconectado de lo necesario. Una explicación simple, concisa y precisa se entiende mejor que una
-exhaustiva.
+exhaustiva. La revisión del tutor del 09/10/2026 mostró el riesgo opuesto: al condensar se juntaron
+oraciones de temas distintos en un mismo párrafo y se perdieron las transiciones. Se recorta quitando
+conceptos que el trabajo no necesita o bajando su profundidad, nunca quitando los conectores y las
+oraciones que orientan (ver «Cohesión y progresión del texto»).
 
 - **Cada oración aporta un dato, una definición o un vínculo que el lector necesita.** Si se puede
   borrar sin que el lector pierda nada, se borra. Una idea se dice una vez: no se repite al cerrar el
@@ -125,12 +295,17 @@ exhaustiva.
   párrafo que la cita, no en el epígrafe. Una segunda oración corta solo para abreviaturas o para
   «Tomada de / Adaptada de \cite{}». Con un epígrafe así, el argumento opcional `\caption[...]`
   sobra.
-- **Estado del arte: un párrafo compacto por trabajo** (orientativo: 6 a 10 líneas). Dice el
-  objetivo y la novedad del método, con qué datos, contra qué se comparó y el resultado principal,
-  si hubo expertos y la limitación principal que reconocen los autores. El detalle (arquitecturas
-  exactas, todas las cifras, tamaños de cada partición) va en la tabla comparativa o no va. Los
-  trabajos secundarios, en una o dos oraciones. Cada eje ocupa del orden de una carilla y media a
-  dos (pedido del tutor, A16), tabla aparte.
+- **Estado del arte: análisis agrupado, no sucesión de fichas.** Revisión del tutor del 09/10/2026: un
+  párrafo por trabajo que reúne objetivo, arquitectura, datos, métricas, resultados, limitaciones y
+  hardware, uno tras otro, se lee como una lista de antecedentes. Los trabajos se agrupan por lo que
+  comparten (el mismo problema, el mismo conjunto de datos, el mismo enfoque) y el texto dice cómo se
+  relacionan: qué agrega cada uno respecto del anterior, en qué se diferencian y qué problema sigue
+  abierto, de modo que se entienda la evolución de la línea. Cuando un trabajo se desarrolla, se
+  distinguen el problema, el método, los resultados y las limitaciones. Las cifras de detalle
+  (arquitecturas exactas, tamaños de partición, hardware) van en la tabla comparativa o no van. Los
+  trabajos secundarios, en una o dos oraciones dentro del grupo; un antecedente breve puede quedar en un
+  solo párrafo. Cada eje ocupa del orden de una carilla y media a dos (pedido del tutor, A16), tabla
+  aparte.
 - **Referencia de proporciones** (`Docs/tesinamaglione_ejemplo.pdf`): introducción de unas tres
   páginas, epígrafes de una línea, un párrafo por trabajo en el estado del arte, transiciones de una
   oración.
@@ -140,11 +315,21 @@ exhaustiva.
 El documento es explicativo: el lector tiene que poder reconstruir cómo se calcula cada cosa que el
 trabajo usa sin ir a la fuente.
 
-- **Cada método o métrica que el trabajo usa se define con su fórmula**, además de con palabras: cómo
+- **La profundidad de cada concepto es proporcional a su importancia para entender los experimentos y
+  los aportes** (tutor, 09/10/2026). Un tema puede ser central para la inteligencia artificial y no
+  necesitar más de un párrafo acá. Los fundamentos generales del aprendizaje profundo (optimización,
+  retropropagación, Adam y los planificadores de la tasa de aprendizaje, las variantes de
+  regularización, las arquitecturas CNN una por una, los aspectos generales del transformer) se
+  nombran y se dice qué hacen, sin fórmulas propias ni desarrollos matemáticos. Lo que es el núcleo del
+  trabajo (ViT, Swin, LLM, VLM, LoRA, transferencia y ajuste fino, incertidumbre, generación de
+  reportes) se desarrolla con más detalle. Si no queda claro por qué el lector necesita una fórmula para
+  entender la investigación, la fórmula sale.
+- **Las métricas y métodos que el trabajo usa se definen con su fórmula**, además de con palabras: cómo
   se calcula, no solo qué mide. Vale para las métricas de clasificación, calibración y texto, las
-  pruebas estadísticas y los métodos (Grad-CAM, RAG). Los fundamentos generales del aprendizaje
-  profundo (optimización, retropropagación, optimizadores como Adam) se explican en términos generales,
-  sin fórmulas propias (revisión del tutor, 2026-10-05).
+  pruebas estadísticas y los métodos (Grad-CAM, RAG). Cada grupo de métricas abre diciendo qué aspecto
+  del desempeño evalúa y por qué ese aspecto importa en este trabajo. Las métricas secundarias se
+  nombran con una explicación breve, su fórmula y qué información dan sobre los resultados, sin más
+  desarrollo.
 - **La fórmula sigue la notación del trabajo original** (la de Guo para el ECE, la de Selvaraju para
   Grad-CAM) salvo que choque con un símbolo ya usado en el capítulo; en ese caso se cambia el símbolo y
   no el concepto. Convenciones fijas del documento: $C$ clases, $n$ imágenes, $p_c$ probabilidad de la
@@ -171,6 +356,10 @@ misma carrera que pasó el tutor (`Docs/tesinamaglione_ejemplo.pdf`, no versiona
   decisiones propias («no hables de cosas prácticas»). Eso va en el Capítulo 3.
 - **Ningún término se usa antes de haberlo presentado.** Si un concepto aparece, se explica en ese
   lugar o ya se explicó antes; no se escribe «esto se verá después».
+- **Cada concepto se define una sola vez**, en la sección donde es más pertinente. Las secciones
+  posteriores lo nombran y remiten con `\ref`, sin volver a explicarlo (tutor, 09/10/2026, Audio 3):
+  al hablar de los LLM alcanza con «como en cualquier red neuronal, el modelo tiene que generalizar
+  (Sección~\ref{…})». La ficha de cada sección lista qué define y qué retoma.
 - **La introducción de un capítulo dice qué contiene y cómo se organiza**, sin detalle técnico y
   sin figuras, salvo que la figura sea imprescindible para entender la organización.
 - **En la organización del documento cada capítulo se describe por su contenido**: «Este capítulo
@@ -239,6 +428,8 @@ los capítulos.
 | modelo visión--lenguaje (VLM) | modelo de lenguaje visual, modelo multimodal (a secas) | El guion es `--` (semirraya) |
 | *pipeline* | sistema propuesto, tubería, canal | Nombra la arquitectura completa: clasificador, kNN y generador encadenados. «Sistema» queda para usos genéricos («sistema de apoyo al diagnóstico») |
 | exactitud | precisión | «precisión» queda reservada para *precision* |
+| atención multicabezal (*multi-head attention*) | atención multi-cabeza | Pedido del tutor (09/10/2026) |
+| parche (*patch*) | — | El inglés entre paréntesis en la primera mención |
 | sensibilidad macro | *recall* macro, exhaustividad, exactitud balanceada (como nombre propio) | Es el mismo número que la exactitud balanceada; la definición lo menciona una vez como sinónimo |
 | F1 ponderado, F1 macro | F1-score, puntaje F1 | |
 | ajuste fino | *fine-tuning* | El anglicismo solo en la definición inicial |
@@ -334,8 +525,10 @@ El encuadre de cada referencia anterior a 2020 que ya está en el `.bib` queda r
 - **Figuras** en `Figures/`, formato vectorial cuando sea posible, con `\caption` breve que dice
   qué muestra (sección 3, «Concisión»; la explicación va en el texto) y `\label`. Las tablas llevan
   `\caption` arriba.
-- **Diagramas.** Uno por archivo en `Figures/Capitulos/`, con el flotante completo adentro
-  (`figure`, `\caption`, `\label`), y se traen con `\input{Figures/Capitulos/...}` desde la sección.
+- **Diagramas.** Uno por archivo en `Figures/Capitulos/<NN-Capitulo>/`, con el flotante completo adentro
+  (`figure`, `\caption`, `\label`), y se traen con `\input{Figures/Capitulos/<NN-Capitulo>/...}` desde la
+  sección. Las etiquetas tienen aire entre sí y respecto de los recuadros: si dos textos quedan pegados
+  en el PDF, se separan o se acortan (tutor, 09/10/2026, Figura 2.2).
   Se dibujan con TikZ, no se importan como imagen: así se editan con el documento y escalan con la
   fuente. Los estilos comunes —recuadros, flechas, agrupaciones— están en
   `Configurations/13-Figuras.sty` y se usan tal cual (`figentrada`, `figtarea`, `figsalida`,
@@ -383,8 +576,9 @@ Un capítulo, una rama: `doc/cap01-introduccion`, `doc/cap02-marco-teorico`, y a
 desde `master` actualizado y se integra cuando el capítulo está cerrado.
 
 - Un commit por sección redactada, con el asunto en imperativo y en español.
-- En ese commit van el `.tex` del capítulo, las figuras que la sección haya incorporado y la ficha
-  si se actualizó.
+- En ese commit van el `.tex` de la sección, las figuras que haya incorporado y su ficha. Un commit
+  no mezcla dos secciones, salvo que el cambio sea quitar de otra sección una definición repetida, y
+  en ese caso el mensaje lo dice.
 - **Se compila en la rama en la que se está trabajando**, tantas veces como haga falta: es la única
   forma de ver cómo queda el documento. `tesina.pdf` está versionado y se commitea también ahí.
 - El PDF es un artefacto generado, así que su conflicto de merge no se resuelve a mano.
