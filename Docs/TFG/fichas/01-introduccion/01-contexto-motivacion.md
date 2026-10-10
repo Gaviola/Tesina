@@ -2,7 +2,7 @@
 
 Sección del `.tex`: `Chapters/01-Introduccion/01-contexto-motivacion.tex`.
 
-**Estado: propuesta pendiente de aprobación del autor (2026-10-10).** Responde a la tercera revisión del
+**Estado: aprobada y redactada (2026-10-10).** Responde a la tercera revisión del
 tutor (`feedback_cap1_y_2_v3.md`): los comentarios de las p26–27 y el pedido del mensaje de reforzar las
 conexiones entre el problema clínico, las dificultades del diagnóstico y la documentación, las
 oportunidades de los métodos computacionales y la motivación, «de modo que conduzcan naturalmente hacia las
@@ -94,7 +94,10 @@ Extensión: 10 párrafos, unas 3 páginas (hoy 9 párrafos y unas 2.5).
 `jones2022intelligence`, `daneshjou2022disparities`, `groh2021neural`, `riccilara2023dataset`,
 `bai2024hallucination`.
 
-**Preguntas para el autor:**
+**Decisiones del autor (2026-10-10):** P2 usa «cerca de la mitad de las muertes por cáncer de piel», sin las
+dos cifras de muertes; la presentación de los métodos en P7 va sin cita.
+
+**Preguntas que se resolvieron:**
 1. En P2, ¿alcanza con «cerca de la mitad de las muertes por cáncer de piel», o se conservan las dos
    cifras de muertes (58 398 y 58 721)? Con la proporción hay menos números, que es lo que pidió el tutor.
 2. Las oraciones que presentan los métodos en P7, ¿van sin cita, como presentación general, o se propone
