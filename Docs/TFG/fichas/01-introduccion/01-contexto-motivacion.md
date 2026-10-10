@@ -32,15 +32,18 @@ P3  Detección temprana: supervivencia a cinco años según el estadio; detectar
     una lesión sospechosa sea examinada por alguien capaz de reconocerla                función: motiva
     ↓ ampliación — que eso ocurra depende de varios factores
 P4  Acceso: pocos dermatólogos, sobre todo en los países de ingresos bajos, frente a una demanda
-    frecuente (campaña de la SAD); la primera valoración queda en manos de no especialistas
+    frecuente (campaña de la SAD); la primera valoración queda en manos de no especialistas, lo que
+    dificulta la detección temprana
     ↓ consecuencia — quién hace la primera valoración condiciona la interpretación
 P5  Interpretación: la dermatoscopía mejora el diagnóstico sobre todo con experiencia, y la lectura de
-    una misma imagen varía entre observadores según su formación
-    ↓ adición — a la interpretación se suma la documentación
-P6  Documentación: cada consulta requiere un reporte, y el registro ocupa buena parte de la jornada
-    (atención primaria). Cierre: los tiempos se alargan en dos puntos, la interpretación de la lesión y la
-    redacción del reporte                                        función: define las dos tareas
-    ↓ necesidad — asistir esas dos tareas
+    una misma imagen varía entre observadores según su formación; el resultado depende de la formación
+    de quien valora
+    ↓ adición — además de diagnosticar, cada consulta exige un reporte
+P6  Documentación: cada consulta exige un reporte escrito, distinto de la interpretación; el tiempo de
+    historia clínica electrónica ocupa buena parte de la jornada (atención primaria, dato no específico de
+    dermatología). Cierre: los tiempos se alargan en dos tareas, la interpretación y la redacción del reporte
+                                                                  función: define las dos tareas
+    ↓ necesidad — por eso se requieren dos tareas computacionales
 P7  Métodos computacionales. Abre con una o dos oraciones que los presentan en general (pedido del
     tutor): herramientas de apoyo que analizan la imagen de la lesión y, más recientemente, modelos que
     también producen texto. Después, las redes neuronales: CNN y ViT que aprenden a clasificar a partir de
@@ -79,13 +82,16 @@ Extensión: 10 párrafos, unas 3 páginas (hoy 9 párrafos y unas 2.5).
 | p27: «exactitudes altas»: ¿qué es alto? | «Los desempeños que informan las revisiones…», sin el adjetivo, porque la fuente no da una cifra que se pueda citar acá |
 | Mensaje: un párrafo, una idea | El párrafo de las limitaciones se divide en clasificación (P8) y generación (P9). El de los factores de la detección se divide en acceso (P4) e interpretación (P5) |
 | Mensaje: llegar naturalmente a las preguntas | P10 reemplaza «La presente tesina se centra en el estudio y abordaje de las problemáticas anteriormente descritas», que no dice cuáles, por las dos cuestiones abiertas que 1.2 formula como preguntas |
+| Revisión del autor (2026-10-10): el párrafo de documentación no se entendía (mezclaba el registro general con el reporte, repetía las causas de los ¶2–¶5 y no conectaba con la tarea) | ¶6 se reescribe en tres oraciones: el reporte como tarea distinta; el dato de tiempo, aclarado como atención primaria general; el cierre en las dos tareas que retoma P7. Además, P4 cierra con la consecuencia para la detección temprana, P5 deja de cerrar con «el recurso que escasea» y se ajustan palabras sueltas en P1–P3 y P7 |
 | Guía: sin adjetivos de grado | «La demanda de valoración, en cambio, es alta» se reemplaza por lo que muestra la campaña |
 
 **Cambios asociados fuera de la sección:**
-- Introducción del capítulo (`00-capitulo.tex`, l. 13), comentario p26: «enuncia las preguntas que guían
-  el trabajo y sus objetivos», en ese orden. Va en el mismo commit.
-- Primera oración de 1.2 (`02-objetivos.tex`): retoma «estas dos cuestiones» en lugar de «A partir de las
-  problemáticas planteadas». Va en el commit de 1.2.
+- Introducción del capítulo (`00-capitulo.tex`), comentario p26: enuncia primero las preguntas y después los
+  objetivos. En la revisión del autor (2026-10-10) dice además que la Sección 1.1 presenta lo que pueden aportar
+  los métodos computacionales «para mitigar dichas limitaciones», en lugar de «teniendo en cuenta sus ventajas y
+  desventajas».
+- 1.2 y 1.3 no se modifican: el tutor no las comentó (decisión del autor, 2026-10-10). La primera oración de
+  1.2 («A partir de las problemáticas planteadas…») queda como está.
 
 **Claves de cita** (todas en el `.bib`, sin cambios): `sung2026global`, `ervik2026cancertoday`,
 `loria2020cutaneous`, `nci2026melanoma`, `freeman2026global`, `sad2023campana`, `dinnes2018dermoscopy`,
@@ -147,7 +153,7 @@ diagnóstico humano tampoco está resuelto» (p28: el diagnóstico siempre es hu
 | 3 | **Pocos especialistas** (va primero, Audio 3). Densidad media de 2.66 dermatólogos cada 100 000 habitantes en 158 países, de 0.37 en ingreso bajo a 5.05 en ingreso alto. Consecuencia: la primera valoración de una lesión queda muchas veces en manos de quien no es especialista | ¶2 (detectar a tiempo) → ¶4 (qué herramienta usa ese clínico) | `freeman2026global` |
 | 4 | **Dermatoscopía: qué aporta y qué exige.** Mejora la exactitud diagnóstica respecto de la inspección a simple vista, pero sobre todo en manos experimentadas; hay pocos datos que respalden su uso en atención primaria, donde la revisión sistemática de 104 estudios la recomienda solo para clínicos con formación adecuada. Cierra diciendo qué aporta al problema: la herramienta existe, pero pocos clínicos tienen la formación (p28) | ¶3 (no hay especialistas) → ¶5 (aun entre formados la lectura no es uniforme) | `dinnes2018dermoscopy` |
 | 5 | **La lectura varía entre observadores.** Estudio de 511 observadores y 139 algoritmos sobre el mismo material dermatoscópico: rango amplio de desempeño asociado a la formación. Dos consecuencias: no hay una lectura única y, por lo tanto, la etiqueta de un solo observador no es una referencia estable. **No se afirma una cifra de concordancia** (decisión 3, se conserva) | ¶4 → ¶6 | `tschandl2019comparison` |
-| 6 | **Carga de documentación.** Registros de historia clínica electrónica en atención primaria: 5.9 h de una jornada de 11.4 h frente a ella, 1.4 h fuera del horario de atención; 44.2 % en tareas administrativas. Redactar el reporte de una lesión es parte de esa carga y una tarea distinta de emitir el diagnóstico. **Cierre del bloque (M1.2, Audio 3):** pocos especialistas, lecturas que varían y documentación que consume tiempo alargan los tiempos y generan **dos retrasos**, el de la interpretación y el de la documentación. De ahí dos tareas computacionales distintas: asignar una categoría a la lesión y redactar su reporte | ¶5 → ¶7 (se buscan métodos computacionales que aceleren ambas) | `arndt2017tethered` |
+| 6 | **Carga de documentación.** Registros de historia clínica electrónica en atención primaria: 5.9 h de una jornada de 11.4 h frente a ella, 1.4 h fuera del horario de atención; 44.2 % en tareas administrativas. Redactar el reporte de una lesión es parte de esa carga y una tarea distinta de emitir el diagnóstico. **Cierre del bloque (M1.2, Audio 3):** los tiempos de atención se alargan en **dos etapas**, la interpretación y la redacción del reporte (la causa de cada etapa ya está en los ¶2–¶5). De ahí dos tareas computacionales distintas: asignar una categoría a la lesión y redactar su reporte | ¶5 → ¶7 (se buscan métodos computacionales que aceleren ambas) | `arndt2017tethered` |
 
 Nota de transparencia: `arndt2017tethered` es de atención primaria general, no de dermatología; el párrafo
 lo dice así, como en la versión anterior.

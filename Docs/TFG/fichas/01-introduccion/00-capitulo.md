@@ -14,8 +14,8 @@ objetivos (`feedback/cap1_2/feedback_cap1_y_2_v3.md`).
 |---|---|---|---|
 | Introducción del capítulo | `00-capitulo.tex` | Qué contiene el capítulo y cómo se organiza | Nombrar primero las preguntas y después los objetivos (p26) |
 | 1.1 Contexto y motivación | `01-contexto-motivacion.tex` | Del problema clínico a las dos cuestiones abiertas | Ficha `01-contexto-motivacion.md` |
-| 1.2 Objetivos | `02-objetivos.tex` | PI1 y PI2, objetivo general, OE1–OE3, tabla objetivo–pregunta–capítulo | Primera oración que retome las dos cuestiones de 1.1; revisar OE3 (decisión 6) |
-| 1.3 Organización del documento | `03-organizacion.tex` | Un párrafo por capítulo | Revisar al final, cuando el Cap. 2 tenga sus secciones nuevas |
+| 1.2 Objetivos | `02-objetivos.tex` | PI1 y PI2, objetivo general, OE1–OE3, tabla objetivo–pregunta–capítulo | Ninguno: el tutor no la comentó |
+| 1.3 Organización del documento | `03-organizacion.tex` | Un párrafo por capítulo | Ninguno: el tutor no la comentó. Si cambian los títulos de los capítulos, se actualiza |
 
 ### Hilo del capítulo
 
@@ -31,7 +31,7 @@ Intro  qué contiene el capítulo y cómo se organiza
 
 ### Orden de trabajo
 
-1.1 → introducción del capítulo (va en el mismo commit que 1.1) → 1.2 → 1.3.
+1.1 y la introducción del capítulo, cerradas el 10/10/2026. 1.2 y 1.3 no se modifican en esta revisión.
 
 ## Decisiones vigentes
 
@@ -57,7 +57,7 @@ Consolidadas el 10/10/2026 a partir de `historial.md`.
    formación y varía entre observadores (`tschandl2019comparison`). Las referencias anteriores a 2020 van
    fechadas, como punto de partida y no como el desempeño alcanzable hoy.
 6. **OE3 sin «utilidad práctica»** (decisión del 28/09), porque no hubo evaluación con especialistas. El
-   `.tex` todavía la menciona; se corrige en 1.2.
+   `.tex` todavía la menciona; como el tutor no comentó 1.2, queda como está hasta que se revise esa sección.
 7. **Vocabulario.** «Acá» se reemplaza por «en este trabajo». «Preciso» queda reservado para *precision*.
 
 ## Claves de cita del capítulo

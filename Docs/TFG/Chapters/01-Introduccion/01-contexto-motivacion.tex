@@ -3,14 +3,14 @@
 
 El cáncer de piel es uno de los tipos de cáncer más frecuentes del mundo. Según la última estimación de
 GLOBOCAN, publicada en 2026, durante el año 2024 se diagnosticaron 337\,969 casos nuevos de melanoma y
-1\,138\,314 de cáncer de piel no melanoma, que agrupa a los tumores malignos de la piel distintos del melanoma
+1\,138\,314 de cáncer de piel no melanoma, que agrupa a aquellos tumores malignos de la piel distintos del melanoma
 sin contar el carcinoma basocelular, que la estimación excluye~\cite{sung2026global}. En la Argentina, la misma
-estimación registra 1\,602 casos nuevos de melanoma en ese año~\cite{ervik2026cancertoday}.
+estimación registra 1\,602 casos nuevos de melanoma en ese mismo año~\cite{ervik2026cancertoday}.
 
 Sin embargo, no todos los cánceres de piel tienen la misma gravedad. El melanoma representa menos de la cuarta
 parte de los diagnósticos, pero causa cerca de la mitad de las muertes por cáncer de piel~\cite{sung2026global}.
 En la Argentina, la relación entre muertes y diagnósticos es más desfavorable: las 571 muertes por melanoma
-registradas en 2024 equivalen a casi una cada tres diagnósticos, frente a una cada seis en el total
+registradas en 2024 equivalen a casi una de cada tres diagnósticos, frente a una de cada seis en el total
 mundial~\cite{ervik2026cancertoday}. Además, la enfermedad no se presenta igual en todo el país. Según el
 Registro Argentino de Melanoma Cutáneo, en el Noroeste y el Noreste fueron más frecuentes las lesiones de más
 de 2~mm de espesor de Breslow, la medida de profundidad del tumor con la que se estima su
@@ -19,33 +19,32 @@ pronóstico~\cite{loria2020cutaneous}.
 Esa diferencia de espesor importa porque el desenlace del melanoma depende del momento en que se lo
 diagnostica. La supervivencia relativa a cinco años es de 100.0\,\% cuando se lo detecta localizado, baja a
 76.0\,\% cuando alcanzó los ganglios regionales y a 34.0\,\% cuando hay metástasis a
-distancia~\cite{nci2026melanoma}. Por lo tanto, la detección temprana es decisiva, y depende de que una lesión
-sospechosa sea examinada e interpretada a tiempo por alguien capaz de reconocerla.
+distancia~\cite{nci2026melanoma}. Por lo tanto, la detección temprana es decisiva y depende de que una lesión
+sospechosa sea examinada e interpretada a tiempo por alguien con la capacidad de reconocerla.
 
 Que esa valoración ocurra a tiempo depende, en primer lugar, de la disponibilidad de especialistas. Un
 relevamiento en 158 países estimó una media de 2.66 dermatólogos por cada 100\,000 habitantes, con 0.37 en los
 países de ingreso bajo y 5.05 en los de ingreso alto~\cite{freeman2026global}. Al mismo tiempo, las lesiones que
 requieren una valoración son frecuentes: en la campaña nacional de prevención de 2022 de la Sociedad Argentina
-de Dermatología, los dermatólogos encontraron alguna lesión sospechosa en una de cada cuatro de las 3\,635
-personas examinadas en 17 provincias y la Ciudad de Buenos Aires, y registraron 70 lesiones con sospecha de
+de Dermatología, los dermatólogos encontraron lesiones sospechosas en una de cada cuatro de las 3\,635
+personas examinadas en 17 provincias y la Ciudad de Buenos Aires y se registraron 70 lesiones con sospecha de
 melanoma~\cite{sad2023campana}. Donde los especialistas no alcanzan, la primera valoración queda en manos de
-médicos no especializados en dermatología.
+médicos no especializados en dermatología dificultando la detección temprana de melanomas.
 
 Quién realiza esa primera valoración condiciona la interpretación de la lesión. La dermatoscopía, el examen de
 la lesión con aumento e iluminación controlada, mejora el diagnóstico, pero sobre todo en manos de usuarios con
 experiencia~\cite{dinnes2018dermoscopy}. Además, la lectura de una misma imagen no es uniforme, sino que varía
 entre observadores según su nivel de formación~\cite{tschandl2019comparison}. En consecuencia, el resultado de
-la valoración depende en buena medida de la formación de quien la realiza, que es el recurso que escasea.
+la valoración depende en buena medida de la formación de quien la realiza.
 
-A la interpretación se suma la documentación. Cada consulta requiere un reporte escrito que registre lo
-observado y el diagnóstico, y el registro compite con la atención de los pacientes: en atención primaria, el
-médico pasa 5.9 horas de una jornada de 11.4 frente a la historia clínica electrónica, casi la mitad de ellas
-en tareas administrativas y de registro~\cite{arndt2017tethered}. La escasez de especialistas, la formación
-desigual, la variabilidad entre observadores y la carga de documentación alargan así los tiempos de atención en
-dos puntos: la interpretación de la lesión y la redacción de su reporte.
+Cada consulta exige, además de diagnosticar, un reporte escrito que registre lo observado y la conclusión.
+Redactarlo es una tarea distinta de la interpretación de la lesión, y también consume tiempo: en atención
+primaria, los médicos dedican 5.9 horas de una jornada de 11.4 a la historia clínica electrónica, y casi la
+mitad de ese tiempo a tareas administrativas y de registro~\cite{arndt2017tethered}. Así, los tiempos de
+atención se alargan en dos tareas: la interpretación de la lesión y la redacción de su reporte.
 
 Para asistir en esas dos tareas se desarrollaron herramientas computacionales de apoyo al diagnóstico. Las
-primeras analizaban la imagen de la lesión para asignarla a una categoría diagnóstica, y las más recientes
+primeras analizan la imagen de la lesión para asignar una categoría diagnóstica, y las más recientes
 pueden, además, producir un texto sobre ella. Con el aprendizaje profundo, las
 \glspl{cnn} y, más tarde, los \glspl{vit} aprendieron a clasificar imágenes de lesiones a partir de ejemplos
 etiquetados, y en 2017 una \gls{cnn} alcanzó un desempeño comparable al de
