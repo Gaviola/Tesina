@@ -222,10 +222,10 @@ prevalecen sobre «Concisión»: **la concisión se logra sacando temas, no comp
   El registro es el de un estudiante que termina la carrera: claro y formal, no ampuloso. Si una oración
   necesita tres subordinadas para decir algo simple, se parte en dos.
 - **Un párrafo, una idea central.** Si un párrafo reúne varios conceptos, resultados o antecedentes, se
-  divide en unidades temáticas o se pasa a una lista (ver «Alternativas paralelas en lista»). Cuando una
-  subsección agrupa temas relacionados pero distintos (sobreajuste, particiones, regularización,
-  aumento de datos, desbalance), cada tema puede llevar un título de párrafo con `\paragraph{}`, que no
-  aparece en el índice.
+  divide en unidades temáticas o se pasa a una lista (ver «Alternativas paralelas en lista»). **No se usan
+  títulos de párrafo** (`\paragraph{}`): cortan el hilo y dificultan la lectura (decisión del autor,
+  10/10/2026). Cuando un párrafo introduce un tema nuevo, lo marca el nombre del concepto en negrita donde se
+  define, con el inglés entre paréntesis: «La **regularización** (*regularization*) busca…».
 - **Cada párrafo cierra su idea.** La última oración completa la idea central y, cuando corresponde, la
   relaciona con el argumento de la sección o con el trabajo («…y por eso las particiones se arman por
   lesión»), sin recapitular.

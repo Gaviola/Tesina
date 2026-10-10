@@ -55,7 +55,7 @@ P8  Particiones de entrenamiento, validación y prueba (*test*), con la redacci�
 P9  Fuga de información (*data leakage*): imágenes del mismo paciente o lesión en dos
     particiones                                                            define · justifica (Cap. 3)
     ↓ ampliación — además de medir el sobreajuste, se lo puede reducir
-P10 \paragraph{Regularización}: definición del tutor (evitar aprender lo demasiado específico de los
+P10 **Regularización** (*regularization*), en negrita donde se define: definición del tutor (evitar aprender lo demasiado específico de los
     ejemplos de entrenamiento, para predecir bien sobre datos nuevos), y una oración que presenta la
     lista. Lista con el nombre en negrita:                                 define · explica lo usado
       · decaimiento de pesos (*weight decay*) y AdamW, con una oración que diga por qué con Adam se
@@ -68,7 +68,7 @@ P10 \paragraph{Regularización}: definición del tutor (evitar aprender lo demas
     Cierra con el TTA: el aumento usado también al predecir.
     ↓ contraste — otro desafío no depende de cuánto memoriza el modelo sino de cómo se reparten
       los ejemplos entre las clases
-P11 \paragraph{Desbalance de clases}: por qué favorece a las clases más frecuentes; variables
+P11 **Desbalance de clases** (*class imbalance*), en negrita: por qué favorece a las clases más frecuentes; variables
     n, n_c, y; las tres pérdidas en lista (ponderada, focal, *balanced softmax*); la alternativa de
     fijar un umbral en validación; la exactitud global lo oculta, y por eso se usan métricas por
     clase (solo se nombran, remite a 2.6)                       define · explica lo usado · justifica
@@ -117,7 +117,7 @@ Extensión: 14 párrafos, unas 4 páginas (hoy 5.2).
 | p33, «no vale», «wut?» sobre AdamW | Una oración que explica que Adam reescala el paso de cada parámetro, y que por eso el decaimiento se aplica directamente sobre los parámetros |
 | p34, el aumento de datos llega sin transición | Pasa a ser un ítem de la lista de regularización, presentado por lo que hace |
 | p34, RandAugment: ¿qué es? ¿cita? | «un método de aumento de datos que…», con `cubuk2020randaugment` |
-| p34, títulos de párrafo | `\paragraph{Regularización}` y `\paragraph{Desbalance de clases}` |
+| p34, títulos de párrafo | No se usan (decisión del autor): el tema nuevo se marca con el término en negrita y el inglés entre paréntesis, y la transición lo introduce |
 | p34, «favorece a las frecuentes» | «favorece a las clases más frecuentes» |
 | Definir una sola vez | Salen de 2.1 las definiciones de sensibilidad y F1 macro (quedan en 2.6) y las menciones a los LLM en la softmax y la entropía cruzada (2.3 las retoma) |
 | p35, *ImageNet* en cursiva | Cursiva, y la regla vale para todo conjunto de datos |
@@ -137,10 +137,7 @@ etiquetas `sec:marco_redes`, `sec:marco_softmax`, `eq:marco_entropia` y `eq:marc
 
 **Decisiones del autor (2026-10-10):**
 1. Sale el aprendizaje no supervisado; el autosupervisado se explica en 2.3.
-
-**Preguntas abiertas:**
-1. ¿Los títulos de párrafo (`\paragraph`) solo para regularización y desbalance, o también para
-   sobreajuste y particiones?
+2. Sin títulos de párrafo: cada concepto nuevo va en negrita donde se define, con el inglés entre paréntesis.
 
 ---
 
