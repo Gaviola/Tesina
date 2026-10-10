@@ -135,17 +135,18 @@ Extensión: 14 párrafos, unas 4 páginas (hoy 5.2).
 etiquetas `sec:marco_redes`, `sec:marco_softmax`, `eq:marco_entropia` y `eq:marco_llrd` siguen existiendo. Sale
 `eq:marco_gradiente`.
 
-**Preguntas para el autor:**
-1. ¿Se puede sacar el aprendizaje no supervisado? El trabajo no lo usa, y el autosupervisado se explica en
-   2.3, donde aparece.
-2. ¿Los títulos de párrafo (`\paragraph`) solo para regularización y desbalance, o también para
+**Decisiones del autor (2026-10-10):**
+1. Sale el aprendizaje no supervisado; el autosupervisado se explica en 2.3.
+
+**Preguntas abiertas:**
+1. ¿Los títulos de párrafo (`\paragraph`) solo para regularización y desbalance, o también para
    sobreajuste y particiones?
 
 ---
 
 # Historial
 
-Plan movido desde la ficha única del capítulo el 10/10/2026, sin cambios de contenido. Es la historia de la sección; las decisiones posteriores están en `00-capitulo.md`. El hilo conductor (§1 de la guía) se agrega arriba de este plan cuando se reescriba la sección.
+Plan movido desde la ficha única del capítulo el 10/10/2026, sin cambios de contenido. Es la historia de la sección; las decisiones posteriores están en `historial.md` y lo vigente, en `00-capitulo.md`. El hilo conductor (§1 de la guía) se agrega arriba de este plan cuando se reescriba la sección.
 
 ---
 
