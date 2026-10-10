@@ -2,6 +2,149 @@
 
 Sección del `.tex`: `Chapters/02-Marco-Teorico/01-fundamentos.tex`.
 
+**Estado: propuesta pendiente de aprobación del autor (2026-10-10).** Responde a la tercera revisión del
+tutor (`feedback_cap1_y_2_v3.md`: mensaje, Audio 2 y los comentarios de las p. 30–35).
+
+## Hilo conductor
+
+Pregunta que responde la sección: ¿cómo aprende una red neuronal a clasificar imágenes, qué hace que lo
+aprendido valga para casos nuevos y cómo se aprovecha un modelo ya entrenado cuando hay pocos datos?
+
+Viene de: la introducción del capítulo (todos los modelos del trabajo son redes neuronales profundas).
+Es la primera sección, así que no retoma conceptos.
+
+Deja instalado: red, capa, parámetros, activación, clase, *logits*, softmax, entropía cruzada, entrenamiento,
+inferencia; generalización, sobreajuste, particiones, fuga de información, cambio de distribución,
+regularización, aumento de datos, TTA, desbalance; preentrenamiento, transferencia, *backbone* y cabeza,
+extracción de características, ajuste fino, olvido catastrófico. Y una limitación para 2.2: la red trata su
+entrada como un vector, sin la disposición espacial de los píxeles.
+
+```
+(sin subsección: dos párrafos de entrada)
+P1  Aprendizaje automático y supervisado: los modelos del trabajo aprenden la tarea de ejemplos
+    etiquetados, no de reglas escritas a mano                                       función: define
+    ↓ relación: contraste — los métodos se diferencian por cómo describen cada ejemplo
+P2  Aprendizaje profundo: aprende también la descripción (la representación), en una cadena de
+    transformaciones que van de rasgos simples a conceptos; esa cadena es una red neuronal    define
+    ↓ necesidad — qué es una red y cómo produce una respuesta
+
+2.1.1 Redes neuronales y aprendizaje supervisado
+P3  Red neuronal: neuronas → capa → red de varias capas; activación no lineal; parámetros.
+    Ecuación de la capa y Figura 2.1                                                define
+    ↓ consecuencia — en un clasificador, la última capa da un valor por clase
+P4  Clasificación: qué es una clase (tipo de lesión), logits, softmax → probabilidades entre 0 y 1
+    que suman uno; clase predicha y confianza (remite a 2.4)                         define
+    ↓ necesidad — para que esas probabilidades sirvan hay que ajustar los parámetros, y para eso
+      medir cuánto se equivoca la red
+P5  Pérdida: la entropía cruzada mide el error de una predicción; qué castiga y por qué
+    (un error con mucha confianza pesa más)                                          define
+    ↓ consecuencia — entrenar es buscar los parámetros que minimizan la pérdida
+P6  Entrenamiento: descenso del gradiente por lotes y épocas, retropropagación, Adam (su costo de
+    memoria, remite a LoRA en 2.3), tasa de aprendizaje con calentamiento y coseno; inferencia
+                                                                      define · justifica (LoRA)
+    ↓ problema — que la pérdida baje en el entrenamiento no garantiza aciertos en casos nuevos
+
+2.1.2 Generalización y desafíos del aprendizaje
+P7  Generalización y sobreajuste (*overfitting*): aprender las particularidades y el ruido de los
+    ejemplos en lugar de lo que distingue a las clases; cambio de distribución en una oración
+    (remite a 2.6)                                                       define · fundamenta límites
+    ↓ necesidad — para detectarlo hay que medir el error sobre datos no usados
+P8  Particiones de entrenamiento, validación y prueba (*test*), con la redacción que propone el
+    tutor: una oración por partición                                                 define
+    ↓ precaución — «Una situación a evitar es que…»
+P9  Fuga de información (*data leakage*): imágenes del mismo paciente o lesión en dos
+    particiones                                                            define · justifica (Cap. 3)
+    ↓ ampliación — además de medir el sobreajuste, se lo puede reducir
+P10 \paragraph{Regularización}: definición del tutor (evitar aprender lo demasiado específico de los
+    ejemplos de entrenamiento, para predecir bien sobre datos nuevos), y una oración que presenta la
+    lista. Lista con el nombre en negrita:                                 define · explica lo usado
+      · decaimiento de pesos (*weight decay*) y AdamW, con una oración que diga por qué con Adam se
+        aplica aparte;
+      · detención temprana (*early stopping*);
+      · suavizado de etiquetas (*label smoothing*), que además mejora la calibración (remite a 2.4);
+      · aumento de datos (*data augmentation*): transformaciones que conservan la clase, con
+        RandAugment y el borrado aleatorio como métodos concretos, y el cuidado con el color en
+        dermatoscopía.
+    Cierra con el TTA: el aumento usado también al predecir.
+    ↓ contraste — otro desafío no depende de cuánto memoriza el modelo sino de cómo se reparten
+      los ejemplos entre las clases
+P11 \paragraph{Desbalance de clases}: por qué favorece a las clases más frecuentes; variables
+    n, n_c, y; las tres pérdidas en lista (ponderada, focal, *balanced softmax*); la alternativa de
+    fijar un umbral en validación; la exactitud global lo oculta, y por eso se usan métricas por
+    clase (solo se nombran, remite a 2.6)                       define · explica lo usado · justifica
+    ↓ necesidad — todas estas medidas trabajan con los datos disponibles; con pocos datos conviene
+      partir de un modelo que ya aprendió de otros
+
+2.1.3 Modelos preentrenados y transferencia de aprendizaje
+P12 Preentrenamiento y transferencia: pocos datos etiquetados en medicina; *ImageNet*; capas
+    generales y específicas; la distancia con las imágenes médicas motiva el preentrenamiento en el
+    dominio (DermLIP, remite a 2.3)                                         define · justifica
+    ↓ consecuencia — cómo se reutiliza el modelo preentrenado
+P13 *Backbone* y cabeza; extracción de características (la evaluación por *linear probe* es este caso);
+    ajuste fino (*fine-tuning*); el compromiso entre libertad y sobreajuste, y el olvido catastrófico
+    (*catastrophic forgetting*); cuando el modelo es tan grande que el ajuste fino no entra en una
+    GPU, se recurre a métodos que entrenan pocos parámetros (remite a LoRA, 2.3)    define · justifica
+    ↓ ampliación — entre los dos extremos hay estrategias intermedias
+P14 Ajuste en dos etapas y tasa de aprendizaje por capa (*layer-wise learning rate decay*), con la
+    ecuación de la tasa por capa                                       explica lo usado · justifica
+→ Transición a 2.2: «La red descrita en esta sección trata su entrada como un vector y no aprovecha
+  que, en una imagen, los píxeles vecinos están relacionados. Las arquitecturas de la sección
+  siguiente incorporan esa estructura.»
+
+Se definen acá (y no se vuelven a definir): los conceptos de «Deja instalado».
+Se retoman de antes: nada.
+Remisiones hacia adelante (`\ref`): calibración (2.4), LoRA y DermLIP (2.3), métricas y cambio de
+distribución (2.6).
+Extensión: 14 párrafos, unas 4 páginas (hoy 5.2).
+```
+
+## Qué cambia respecto del texto actual
+
+| Comentario | Cambio |
+|---|---|
+| p30, «que en la práctica son datos»: conectar mejor | P1 abre desde el trabajo («Los modelos que se comparan en este trabajo…») y la experiencia se nombra como ejemplos, sin la aclaración suelta |
+| Audio 2: salto de supervisado y no supervisado al aprendizaje profundo | Sale el aprendizaje no supervisado, que el trabajo no usa. El autosupervisado pasa a 2.3, donde se explica el preentrenamiento de los LLM |
+| Audio 2 y mensaje: los conceptos deben construirse unos sobre otros | 2.1.1 sigue la cadena entrada → capas → un valor por clase → softmax → pérdida → entrenamiento. Se unen las 2.1.1 y 2.1.2 actuales |
+| p32, «La pérdida de clasificación es la entropía cruzada.»: redactar mejor | P5 abre presentando la función de pérdida como lo que mide el error y después nombra la entropía cruzada |
+| p33, «Vale»: falta un texto intro | La propiedad se introduce como consecuencia de la fórmula («Por cómo está definida, la pérdida…») |
+| Menos matemática en lo general | Salen la ecuación del descenso del gradiente (`eq:marco_gradiente`, nadie la cita), la penalización L2 y el gradiente $p_c - q_c$. Quedan la capa, la softmax, la entropía cruzada y la tasa por capa |
+| p33, memorizar no se entiende | P7 explica qué se memoriza (las particularidades y el ruido) y qué se pierde |
+| p33, sobreajuste sin el inglés | «sobreajuste (*overfitting*)», y lo mismo para cada término que se usa en inglés |
+| p33, particiones mal redactadas | P8 usa la redacción del tutor |
+| p33, «Si imágenes»: no se empieza así | «Una situación a evitar es que…» |
+| p33, la definición de regularización es incorrecta | Definición del tutor |
+| p33, varias técnicas en un párrafo: usar viñetas | P10 en lista |
+| p33, «no vale», «wut?» sobre AdamW | Una oración que explica que Adam reescala el paso de cada parámetro, y que por eso el decaimiento se aplica directamente sobre los parámetros |
+| p34, el aumento de datos llega sin transición | Pasa a ser un ítem de la lista de regularización, presentado por lo que hace |
+| p34, RandAugment: ¿qué es? ¿cita? | «un método de aumento de datos que…», con `cubuk2020randaugment` |
+| p34, títulos de párrafo | `\paragraph{Regularización}` y `\paragraph{Desbalance de clases}` |
+| p34, «favorece a las frecuentes» | «favorece a las clases más frecuentes» |
+| Definir una sola vez | Salen de 2.1 las definiciones de sensibilidad y F1 macro (quedan en 2.6) y las menciones a los LLM en la softmax y la entropía cruzada (2.3 las retoma) |
+| p35, *ImageNet* en cursiva | Cursiva, y la regla vale para todo conjunto de datos |
+| Mensaje: 2.1.3 con más detalle, porque el trabajo la usa | Se conservan las dos etapas y la tasa por capa con su ecuación, y se agrega el vínculo con LoRA |
+
+**Claves de cita** (todas en el `.bib`): `goodfellow2016deep`, `rumelhart1986learning`, `kingma2015adam`,
+`goyal2017accurate`, `loshchilov2017sgdr`, `loshchilov2019decoupled`, `szegedy2016rethinking`, `muller2019does`,
+`cubuk2020randaugment`, `zhong2020random`, `kittler2016standardization`, `shorten2019survey`,
+`krizhevsky2012imagenet`, `buda2018systematic`, `lin2017focal`, `ren2020balanced`, `pan2010survey`,
+`russakovsky2015imagenet`, `raghu2019transfusion`, `yosinski2014transferable`, `kumar2022finetuning`,
+`howard2018universal`.
+
+**Labels que se conservan** (los citan otras secciones): `sec:marco_fundamentos`, `eq:marco_capa`,
+`eq:marco_softmax`, `sec:marco_regularizacion`, `sec:marco_desbalance`, `sec:marco_transferencia`. Las
+etiquetas `sec:marco_redes`, `sec:marco_softmax`, `eq:marco_entropia` y `eq:marco_llrd` siguen existiendo. Sale
+`eq:marco_gradiente`.
+
+**Preguntas para el autor:**
+1. ¿Se puede sacar el aprendizaje no supervisado? El trabajo no lo usa, y el autosupervisado se explica en
+   2.3, donde aparece.
+2. ¿Los títulos de párrafo (`\paragraph`) solo para regularización y desbalance, o también para
+   sobreajuste y particiones?
+
+---
+
+# Historial
+
 Plan movido desde la ficha única del capítulo el 10/10/2026, sin cambios de contenido. Es la historia de la sección; las decisiones posteriores están en `00-capitulo.md`. El hilo conductor (§1 de la guía) se agrega arriba de este plan cuando se reescriba la sección.
 
 ---

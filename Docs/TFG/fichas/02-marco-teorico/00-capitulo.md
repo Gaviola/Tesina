@@ -1,4 +1,93 @@
-# Ficha del Capítulo 2 — Marco teórico (reestructuración del 28/09/2026)
+# Ficha del Capítulo 2 — Marco teórico
+
+## Estructura vigente: tercera revisión del tutor (2026-10-09)
+
+Esta parte es el contrato actual del capítulo. Las secciones numeradas 0 a 15 que siguen son el historial
+de las revisiones anteriores. Fuente: `feedback/cap1_2/feedback_cap1_y_2_v3.md`.
+
+### Decisiones del autor (2026-10-10)
+
+| Pedido o duda | Decisión |
+|---|---|
+| Reestructurar el capítulo en siete secciones (propuesta «IDEA» del tutor) | Se adopta. Los archivos se reorganizan al reescribir cada sección |
+| «NO ponga subsecciones» | Se refiere al índice: muestra solo capítulos y secciones (`tocdepth` 1 en `tesina.tex`). Las subsecciones siguen en el texto, numeradas |
+| Sección 2.9 (sesgo, robustez y generalización) | Pasa a ser la introducción de la evaluación (2.6); se revisa cómo queda al escribirla |
+| Cursiva en *ImageNet* | Todos los nombres de conjuntos de datos van en cursiva (guía §3) |
+| Hilo conductor entre secciones | Cada sección se escribe después de leer las anteriores del capítulo y retoma lo que dejaron (guía §1) |
+
+### Hilo del capítulo
+
+Pregunta que responde el capítulo: ¿qué conceptos hacen falta para entender por qué el trabajo compara
+clasificadores supervisados y modelos visión–lenguaje, cómo los combina en un *pipeline* que decide cuándo
+afirmar un diagnóstico y cómo evalúa el resultado?
+
+```
+Intro    Todos los modelos del trabajo son redes neuronales profundas que se entrenan con ejemplos
+          ↓ necesidad: entender cómo aprende una red y qué hace que lo aprendido valga fuera del entrenamiento
+2.1      Fundamentos: red → clasificación → pérdida → entrenamiento; generalización; transferencia
+          ↓ limitación: la red de 2.1 trata la imagen como un vector sin estructura
+2.2      Arquitecturas para imágenes: la CNN aprovecha la vecindad de los píxeles; la atención relaciona
+         regiones lejanas (ViT); el Swin combina las dos ideas. Son los clasificadores del trabajo
+          ↓ limitación: un clasificador devuelve una categoría pero no genera texto
+2.3      Lenguaje y visión–lenguaje: el decodificador del transformer genera texto (LLM); LoRA lo adapta en
+         una GPU de consumo; CLIP y los VLM generativos conectan imagen y texto
+          ↓ limitación: clasificadores y VLM responden siempre, y su puntaje no dice cuánto confiar
+2.4      Incertidumbre y predicción selectiva: confianza, calibración, abstención, tres salidas
+          ↓ consecuencia: la decisión de cuánto afirmar condiciona un texto, que tiene fallas propias
+2.5      Generación de reportes: estructura clínica, estrategias de generación, fallas, recuperación
+          ↓ necesidad: categorías, textos y abstenciones se evalúan con métricas distintas, y una métrica
+            sobre el test de la misma fuente no garantiza el desempeño fuera de ella
+2.6      Evaluación: por qué el test no alcanza (sesgo, robustez, generalización) y métricas de clasificación,
+         generación, calibración, robustez e interpretabilidad
+          ↓ criterio: con qué datos y protocolo se evaluó un trabajo decide si su resultado se sostiene
+2.7      Estado del arte: tres líneas agrupadas, sus limitaciones, y el posicionamiento del trabajo
+```
+
+### Secciones, contenido de origen y archivos
+
+| Nueva | Título | Contenido que reúne (numeración actual) | Archivo nuevo | Extensión orientativa |
+|---|---|---|---|---|
+| 2.1 | Fundamentos del aprendizaje profundo | 2.1 completa, en tres subsecciones: redes neuronales y aprendizaje supervisado (2.1.1 + 2.1.2 actuales), generalización y desafíos del aprendizaje (2.1.3), modelos preentrenados y transferencia (2.1.4) | `01-fundamentos.tex` (se conserva) | 3.5–4 p. |
+| 2.2 | Arquitecturas para clasificación de imágenes | 2.2 (CNN, ConvNeXt); de 2.3, la atención, la posición y el bloque, condensados a lo que el ViT necesita; ViT; Swin; la comparación entre familias (2.3.6) | `02-arquitecturas-imagenes.tex` (reúne `02-redes-convolucionales` y `03-transformers`) | 4–5 p. |
+| 2.3 | Modelos de lenguaje y modelos visión–lenguaje | 2.4 (LLM, LoRA) y 2.5 (CLIP, VLM generativos, clasificación por verosimilitud) | `03-lenguaje-vlm.tex` (reúne `04-modelos-lenguaje` y `05-vlm`) | 5 p. |
+| 2.4 | Incertidumbre y predicción selectiva | 2.6 completa: confianza, calibración, abstención y políticas de decisión | `04-incertidumbre.tex` | 3 p. |
+| 2.5 | Generación automática de reportes dermatológicos | 2.7 completa: estructura clínica, calidad descriptiva, fidelidad diagnóstica, estrategias de generación, errores y recuperación | `05-generacion-reportes.tex` | 4–5 p. |
+| 2.6 | Evaluación de modelos | 2.9 como introducción; 2.8 (clasificación, generación, calibración, inferencia estadística, robustez, Grad-CAM) | `06-evaluacion.tex` (reúne `08-evaluacion` y `09-sesgo-robustez`) | 6–7 p. |
+| 2.7 | Estado del arte | 2.10, con los trabajos agrupados por lo que comparten (guía §3) | `07-estado-arte.tex` | 10–12 p. |
+
+Los archivos se renombran y reúnen en el commit de la sección que los reescribe, y los labels se
+conservan (`sec:marco_vision`, `sec:marco_atencion`, `sec:marco_llm`, etc.), porque los usan los Caps. 3–6.
+Mientras una sección no se reescribe, conserva su archivo y su número viejo.
+
+### Dónde se define cada concepto
+
+Cada concepto se define una sola vez (guía §3). Las secciones posteriores lo nombran con `\ref`.
+
+| Concepto | Se define en | Se retoma en |
+|---|---|---|
+| Aprendizaje supervisado, red neuronal, capa, parámetros, activación | 2.1 | 2.2 |
+| Clase, *logits*, softmax, confianza como probabilidad | 2.1 | 2.3 (softmax sobre el vocabulario), 2.4 |
+| Entropía cruzada | 2.1 | 2.3 (pérdida por *token*), desbalance en 2.1 |
+| Descenso del gradiente, retropropagación, Adam, tasa de aprendizaje | 2.1 | 2.3 (memoria de Adam como motivo de LoRA) |
+| Generalización, sobreajuste, particiones, fuga de información, cambio de distribución | 2.1 | 2.4, 2.6 |
+| Regularización, aumento de datos, TTA | 2.1 | Cap. 3 |
+| Desbalance de clases y sus pérdidas | 2.1 | 2.6 (métricas por clase) |
+| Preentrenamiento, transferencia, extracción de características, ajuste fino | 2.1 | 2.2, 2.3 (LoRA, *linear probe* de CLIP) |
+| *Token*, *embedding*, atención, parche (*patch*) | 2.2 | 2.3 |
+| Aprendizaje autosupervisado, LLM, LoRA, CLIP, VLM generativo | 2.3 | 2.4, 2.5 |
+| Calibración (concepto), abstención, cobertura | 2.4 | 2.6 (métricas: ECE, curvas) |
+| Reporte clínico, alucinación, RAG | 2.5 | 2.6 (métricas de texto) |
+| Sesgo, robustez, cambio de dominio | 2.6 | 2.7 |
+| Sensibilidad macro, F1 macro y las demás métricas | 2.6 | 2.7 |
+
+### Orden de trabajo
+
+2.1 → 2.2 → … → 2.7, de a una, cada una con su ficha y su hilo aprobados antes de redactar (guía §1).
+La introducción del capítulo (`00-capitulo.tex`) se reescribe al final, cuando la estructura esté cerrada.
+
+---
+
+# Historial: reestructuración del 28/09/2026 y revisiones posteriores
 
 Contrato de contenido de la nueva versión del capítulo. Reemplaza a la ficha anterior, cuyas decisiones y
 verificaciones vigentes se conservan en la sección 9. **Nada de esto se redacta hasta que el autor apruebe
@@ -478,4 +567,4 @@ Fuente: `feedback/feedback_cap1_y_2_v2.md` y los comentarios de
 | Menos «cómo funcionan las redes», más «por qué» | Sale la ecuación sinusoidal de posición (2.3.2), que no usa ningún modelo del trabajo; se agrega cómo codifican la posición el ViT y el Swin |
 | Palabras huérfanas | `check_huerfanas.py` en `Docs/TFG/`, citado en la guía §6; 0 en los capítulos 1 y 2 |
 
-Extensión: los agregados llevaron §2.1 a ~6 páginas; un recorte posterior (2026-10-09) la deja en ~5.2. Sale el párrafo del `linear probe` de 2.1.4 (ya está en 2.5.1; queda una oración sobre DermLIP), el gradiente de la entropía cruzada pasa a prosa ( - q_c$ sin el lado izquierdo, que se veía mal en línea) y la Ecuación 2.4 muestra la suma completa; se condensan la introducción, el sobreajuste, la regularización y las pérdidas para desbalance.
+Extensión: los agregados llevaron §2.1 a ~6 páginas; un recorte posterior (2026-10-09) la deja en ~5.2. Sale el párrafo del `linear probe` de 2.1.4 (ya está en 2.5.1; queda una oración sobre DermLIP), el gradiente de la entropía cruzada pasa a prosa ($p_c - q_c$, sin el lado izquierdo, que se veía mal en línea) y la Ecuación 2.4 muestra la suma completa; se condensan la introducción, el sobreajuste, la regularización y las pérdidas para desbalance.

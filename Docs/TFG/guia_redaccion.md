@@ -38,6 +38,13 @@ Cada sección del documento pasa por cuatro etapas, **de a una sección por vez*
 Sin ficha aprobada no se redacta. La ficha es el punto de control real: es más rápido corregir un
 esqueleto de una página que treinta páginas de prosa ajena. La sección siguiente no se empieza hasta que
 la anterior está cerrada, porque lo que una define la otra solo lo retoma (§3, «Estructura y progresión»).
+
+**Cada sección se escribe conociendo las anteriores del capítulo** (decisión del autor, 10/10/2026). Antes
+de armar la ficha de una sección se leen el `.tex` de las secciones anteriores del mismo capítulo y el
+«Deja instalado» y el «Se definen acá» de sus fichas, además del hilo del capítulo en `00-capitulo.md`.
+El «Viene de» de la ficha nueva cita lo que dejó la sección anterior, la primera oración de la sección lo
+retoma, y lo que ya se definió antes solo se nombra con `\ref`. Si al escribir aparece algo que habría que
+cambiar en una sección ya cerrada, se anota como pregunta y no se toca sin acuerdo.
 Primero se resuelven la organización y la coherencia (etapas 1 y 2) y después la gramática y el estilo
 (etapa 3), como pidió el tutor (revisión del 09/10/2026).
 
@@ -132,6 +139,10 @@ las dos versiones juntas.
 - **Cursiva la primera vez en cada capítulo** con `\emph{}`; después, redonda. En títulos de
   sección y en los índices, siempre redonda. Un término que aparece cincuenta veces en cursiva es
   ruido tipográfico.
+- **Los nombres de conjuntos de datos van siempre en cursiva** (`\emph{ImageNet}`, `\emph{HAM10000}`,
+  `\emph{Derm1M}`), en el texto, los epígrafes y las tablas, como el título de una obra (pedido del tutor,
+  09/10/2026). En títulos de sección e índices, redonda. Los nombres de modelos (DermLIP, LLaVA) y las
+  siglas van en redonda. Se aplica al reescribir cada sección.
 - **Las siglas se definen una sola vez en el documento.** La primera aparición va con `\gls{}`, que
   escribe el nombre en español, y entre paréntesis el nombre en inglés en cursiva y la sigla en
   redonda, separados por coma: «red neuronal convolucional (*Convolutional Neural Network*, CNN)».
