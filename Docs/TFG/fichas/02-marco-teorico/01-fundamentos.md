@@ -2,7 +2,7 @@
 
 Sección del `.tex`: `Chapters/02-Marco-Teorico/01-fundamentos.tex`.
 
-**Estado: propuesta pendiente de aprobación del autor (2026-10-10).** Responde a la tercera revisión del
+**Estado: aprobada y redactada (2026-10-10).** Extensión resultante: unas 5.7 páginas (p. 30–36; antes, 5.2), por encima de las 4 estimadas: las listas, los párrafos divididos y las oraciones de orientación suman extensión. El P6 del hilo quedó en dos párrafos (descenso del gradiente; optimizadores, tasa y inferencia) y el P13 en dos (extracción de características; ajuste fino). La Figura 2.1 se cita donde se define el perceptrón multicapa. Responde a la tercera revisión del
 tutor (`feedback_cap1_y_2_v3.md`: mensaje, Audio 2 y los comentarios de las p. 30–35).
 
 ## Hilo conductor
