@@ -1,0 +1,45 @@
+\chapter[Materiales y métodos]{Materiales y métodos}
+\label{cp:metodos}
+% Extensión estimada: 20--25 páginas.
+% Fuentes: sección "Configuración experimental" y subsecciones "Diseño del experimento" del documento de
+% experimentación, Propuesta (datasets, técnicas), planes en Codigo/docs/ideas/ (en particular
+% split_lesion_semillas_plan_20260912.md). Incorpora el protocolo unificado pedido en el feedback del tutor
+% del 12/09/2026 (Codigo/docs/feedback_20260912.md).
+%
+% Feedback del tutor (14/09/2026):
+%  - "Particiones y auditoría de fuga de información" se renombra: el término no se entiende fuera de
+%    contexto. Ahora la subsección se llama por lo que produce (la partición disjunta por lesión) y el
+%    término "fuga de información (data leakage)" se introduce dentro del texto, definido.
+%  - La subsección "Métricas" repetía el marco teórico. Se fusiona con la de selección: el marco teórico
+%    define qué es cada métrica, aquí se justifica cuál se usa para decidir.
+%  - "Robustez, calibración e interpretabilidad" no decía a qué se refería; se renombra por extenso.
+%  - "Sistema propuesto" pasa a llamarse "pipeline", que es el término corriente en el área para la
+%    arquitectura completa: clasificador, kNN y generador encadenados.
+%  - Se incorpora aquí "Uso de un VLM generativo como clasificador", que estaba en el marco teórico pese a
+%    ser parte del enfoque propio.
+%
+% Revisión 25/09/2026: recibe del marco teórico la prosa ya escrita sobre las categorías de HAM10000
+% (§HAM10000), los costos asimétricos de confusión (§selección de métricas) y las partes del reporte
+% (§generación de reportes). Ver fichas/02-marco-teorico/00-capitulo.md, decisión 14.
+
+\pendiente{Este capítulo describe todo lo necesario para reproducir los experimentos: datos, particiones,
+modelos, \emph{pipeline} y protocolo de evaluación. Los resultados se presentan en los capítulos
+siguientes.
+
+Recibe del Capítulo~\ref{cp:introduccion} lo que antes estaba en su sección de alcance y delimitación
+(commit f520295), cada cosa en la sección que le corresponde: el rol de cada conjunto (HAM10000
+dermatoscópico para entrenar y comparar los clasificadores y para medir la fidelidad diagnóstica, SkinCaRe
+de fotografía clínica solo como fuente de pares imagen--texto, HIBA para la generalización, histopatología
+fuera); la definición de «detección» como la tarea binaria de melanoma derivada de la clasificación, no la
+localización ni la segmentación; la distinción entre fidelidad diagnóstica y validez clínica en el
+protocolo de evaluación; y la decisión de no preentrenar un modelo visión--lenguaje y adaptar modelos
+preentrenados con \gls{lora} por la restricción de cómputo.}
+
+\input{Chapters/03-Materiales-Metodos/01-metodologia}
+\input{Chapters/03-Materiales-Metodos/02-datos-particiones}
+\input{Chapters/03-Materiales-Metodos/03-modelos-evaluados}
+\input{Chapters/03-Materiales-Metodos/04-clasificacion-vlm}
+\input{Chapters/03-Materiales-Metodos/05-generacion-reportes}
+\input{Chapters/03-Materiales-Metodos/06-pipeline}
+\input{Chapters/03-Materiales-Metodos/07-protocolo-evaluacion}
+\input{Chapters/03-Materiales-Metodos/08-infraestructura}

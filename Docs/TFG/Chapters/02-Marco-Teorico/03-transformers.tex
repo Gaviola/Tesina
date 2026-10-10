@@ -1,0 +1,132 @@
+\section{Transformers y mecanismos de atención}
+\label{sec:marco_atencion}
+
+Para las secuencias, como un texto, las primeras redes avanzaban un elemento por vez, de modo que el acceso a un
+elemento lejano pasaba por todos los intermedios y el cálculo de un paso esperaba al del anterior. En 2017, la
+atención resolvió ese límite, y la arquitectura construida sobre ella, el transformer, es hoy la base de los
+modelos de texto~\cite{vaswani2017attention} y de buena parte de los de imagen~\cite{dosovitskiy2021image}.
+
+\subsection{Atención escalada por producto punto}
+\label{sec:marco_atencion_producto}
+
+La atención compara directamente todas las posiciones de una secuencia: cada posición de la salida pondera
+los valores de todas las posiciones de la entrada según la compatibilidad entre una consulta ($Q$) y una clave
+($K$). Los elementos de la secuencia se llaman \emph{tokens}, y son fragmentos de palabra en un texto o parches
+en una imagen. Cada \emph{token} se representa con un \emph{embedding}, un vector aprendido, de modo que los
+elementos parecidos quedan cerca en ese espacio. Como todas las posiciones se comparan a la vez, el cálculo se
+paraleliza y aprovecha mejor el hardware que el recorrido secuencial~\cite{vaswani2017attention}.
+
+La atención escalada por producto punto proyecta el embedding de cada token en tres espacios,
+consulta $Q$, clave $K$ y valor $V$, y devuelve una combinación de valores pesada por la compatibilidad entre
+consulta y clave:
+\begin{equation}
+    \mathrm{Attention}(Q, K, V) = \mathrm{softmax}\!\left(\frac{QK^{\top}}{\sqrt{d_k}}\right) V,
+    \label{eq:marco_atencion}
+\end{equation}
+donde $d_k$ es la dimensión de la clave. La división por su raíz contrarresta que el producto punto
+crezca con la dimensión y lleve la softmax a zonas de gradiente muy chico~\cite{vaswani2017attention}. En la Figura~\ref{fig:marco_atencion}, cada
+fila de la matriz compara una consulta con las claves de todas las posiciones, y la softmax convierte esas
+compatibilidades en pesos que suman uno.
+
+\input{Figures/Capitulos/02-Marco-Teorico/atencion}
+
+La atención multi-cabeza proyecta $Q$, $K$ y $V$ en varios subespacios de menor dimensión, aplica
+la Ecuación~\ref{eq:marco_atencion} en cada uno por separado y concatena los resultados, de modo que cada
+cabeza captura relaciones de distinto tipo entre posiciones~\cite{vaswani2017attention}.
+
+\subsection{Codificación de posición}
+\label{sec:marco_posicion}
+
+La Ecuación~\ref{eq:marco_atencion} no tiene en cuenta el orden de los tokens: si se permutan las posiciones de
+la entrada, la salida se permuta de la misma manera y cada token recibe el mismo resultado. Para que el modelo
+distinga «la lesión crece» de «crece la lesión», se suma al embedding de cada token un vector que depende de su
+posición. El transformer original usa vectores fijos, formados por senos y cosenos de distinta frecuencia,
+que dan a cada posición un vector único~\cite{vaswani2017attention}. La alternativa es aprender un vector por
+posición, como un parámetro más, que es lo que hace el \gls{vit} con la posición de cada parche en la imagen
+(Sección~\ref{sec:marco_vit})~\cite{dosovitskiy2021image}, y el Swin Transformer reemplaza la posición absoluta
+por un sesgo que depende de la posición relativa entre parches (Sección~\ref{sec:marco_swin}).
+
+\subsection{El bloque transformer}
+\label{sec:marco_bloque_transformer}
+
+Un transformer apila bloques iguales. Cada bloque combina una capa de atención multi-cabeza con un perceptrón
+multicapa que se aplica a cada token por separado, y rodea a las dos con una conexión residual como la de la
+Ecuación~\ref{eq:marco_residual} y una normalización por capa (LN). El transformer original normaliza después
+de sumar la conexión residual~\cite{vaswani2017attention}; el \gls{vit}, antes de cada parte,
+\begin{equation}
+    \mathbf{z}' = \mathbf{z} + \mathrm{Atención}\bigl(\mathrm{LN}(\mathbf{z})\bigr), \qquad
+    \mathbf{z}'' = \mathbf{z}' + \mathrm{MLP}\bigl(\mathrm{LN}(\mathbf{z}')\bigr),
+    \label{eq:marco_bloque}
+\end{equation}
+donde $\mathbf{z}$ es la secuencia de embeddings que entra al bloque~\cite{dosovitskiy2021image}. Casi todos
+los parámetros del modelo están en las matrices de proyección de la atención y del perceptrón~\cite{kaplan2020scaling}.
+
+El transformer original, planteado para traducción, combina un codificador, que contextualiza la entrada, y un
+decodificador, que genera la salida token a token. En el decodificador, una máscara impide que cada posición
+atienda a las posteriores, de modo que un token solo depende de los ya generados. Los modelos siguientes
+conservan una sola de las dos partes: los \glspl{vit} usan el codificador, y los modelos de lenguaje
+generativos de la Sección~\ref{sec:marco_llm_grandes}, el
+decodificador~\cite{vaswani2017attention,dosovitskiy2021image,brown2020language}.
+
+\subsection{Vision Transformer}
+\label{sec:marco_vit}
+
+El \gls{vit} lleva a las imágenes el codificador del transformer. Divide la imagen en una rejilla de parches
+cuadrados, por ejemplo de $16 \times 16$ píxeles (Figura~\ref{fig:marco_vit_patches}), aplana cada parche y lo proyecta a un vector de dimensión
+fija, su embedding. A cada parche se le suma el embedding de posición aprendido que indica su lugar en la
+rejilla. Sobre esa secuencia de tokens aplica bloques transformer sin operaciones convolucionales, y decide la
+categoría a partir de un token de clase que se agrega al inicio de la secuencia y que, al atravesar los bloques,
+reúne la información de todos los parches~\cite{dosovitskiy2021image}.
+
+\input{Figures/Capitulos/02-Marco-Teorico/vit-patches}
+
+El \gls{vit} tiene mucho menos sesgo inductivo propio de las imágenes que una \gls{cnn}: en la convolución, la
+localidad y la equivariancia a traslaciones están en cada capa, mientras que en el \gls{vit} solo el
+perceptrón de cada bloque es local y la atención es global, de modo que las relaciones espaciales tiene que
+aprenderlas de los datos. Preentrenado solo sobre
+ImageNet, rinde por debajo de \glspl{cnn} de tamaño comparable; preentrenado sobre
+corpus de entre 14 y 300 millones de imágenes, las supera. Por eso importa con qué pesos parte cada
+arquitectura antes del ajuste fino (Sección~\ref{sec:marco_transferencia})~\cite{dosovitskiy2021image}.
+
+\subsection{Swin Transformer}
+\label{sec:marco_swin}
+
+En el \gls{vit}, cada token atiende a todos los demás, y el costo crece con el cuadrado del número de parches.
+El Swin Transformer limita la atención a ventanas locales de $M \times M$ parches. Para un mapa de
+$h \times w$ parches con $C$ canales, el costo de la atención global y el de la atención por ventanas son
+\begin{equation}
+    \Omega_{\text{global}} = 4hwC^2 + 2(hw)^2C, \qquad \Omega_{\text{ventanas}} = 4hwC^2 + 2M^2hwC,
+    \label{eq:marco_swin_costo}
+\end{equation}
+de modo que el segundo crece de forma lineal con el número de parches~\cite{liu2021swin}.
+
+Las ventanas fijas no comunican entre sí. Para que la información cruce de una a otra, los bloques alternan una
+partición regular con otra desplazada en medio tamaño de ventana, $\lfloor M/2 \rfloor$ parches, cuyas
+ventanas abarcan parches de varias ventanas anteriores (Figura~\ref{fig:marco_swin}). Entre etapas, una capa
+de fusión concatena cada grupo de $2 \times 2$ parches vecinos y los proyecta a la mitad de canales que suman,
+con lo que la resolución se reduce a la mitad y los canales se duplican. El resultado es una pirámide de mapas
+de características, con la estructura jerárquica de una \gls{cnn} y la operación de atención de un
+transformer. La posición entra como un sesgo relativo que se suma a la compatibilidad entre cada par de parches
+de la ventana~\cite{liu2021swin}.
+
+\input{Figures/Capitulos/02-Marco-Teorico/swin-ventanas}
+
+\subsection{Redes convolucionales y transformers como línea base}
+\label{sec:marco_baseline_visual}
+
+Una línea base (\emph{baseline}) es una arquitectura de referencia, entrenada con protocolo fijo, contra la
+que se compara otra: sin ella una exactitud aislada no dice nada, porque es alta o baja según lo que logre la
+referencia sobre los mismos datos.
+
+Las \glspl{cnn} y los \glspl{vit} cumplen ese papel para los \glspl{vlm}
+(Sección~\ref{sec:marco_vlm}): son las arquitecturas establecidas para clasificar imágenes, con recetas de
+entrenamiento maduras y con supervisión completa, es decir, con las etiquetas de la tarea de destino. Un
+modelo de otra familia justifica su costo si iguala o supera a esas referencias, o si ofrece algo que ellas
+no pueden dar, como producir texto o clasificar sin entrenar sobre la tarea.
+
+La comparación solo es válida si las dos partes usan los mismos datos, particiones y métricas. Puede
+enfrentar arquitecturas supervisadas contemporáneas, como ConvNeXt y el
+ViT~\cite{dosovitskiy2021image,liu2022convnet}, o familias de modelos, clasificadores supervisados frente a
+\glspl{vlm}, y esta segunda dice si el lenguaje aporta algo a la clasificación. Ninguno de estos
+clasificadores produce texto. Para eso hace falta un modelo que genere secuencias de palabras, y los modelos de
+lenguaje actuales se construyen sobre el decodificador del transformer.

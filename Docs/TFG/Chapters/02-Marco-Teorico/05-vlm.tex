@@ -1,0 +1,94 @@
+\section{Modelos visión--lenguaje}
+\label{sec:marco_vlm}
+
+Un \gls{vlm} procesa imagen y texto en un mismo modelo, y hay dos formas de construirlo, que aparecieron en
+ese orden. La primera, desde 2021, entrena un codificador de imagen y uno de texto para que proyecten al mismo
+espacio, de modo que una imagen y su descripción queden cerca. El resultado sirve para clasificar y para
+buscar casos parecidos, pero no redacta. La segunda, desde 2023, conecta un codificador visual a la entrada de
+un \gls{llm}, que entonces genera texto a partir de la imagen. En ambas, el codificador de imagen suele ser un
+\gls{vit} como los de la Sección~\ref{sec:marco_vit}~\cite{radford2021learning,liu2023visual}.
+
+\subsection{Alineación contrastiva: CLIP}
+\label{sec:marco_vlm_clip}
+
+\Gls{clip} entrena un codificador de imagen y uno de texto sobre pares imagen--texto, cada uno con una
+proyección final a un espacio común de embeddings. La similitud entre el embedding de una imagen ($\mathbf{u}$)
+y el de un texto ($\mathbf{v}$) es el coseno del ángulo que forman,
+\begin{equation}
+    \cos(\mathbf{u}, \mathbf{v}) = \frac{\mathbf{u}^{\top}\mathbf{v}}{\lVert\mathbf{u}\rVert\,\lVert\mathbf{v}\rVert},
+    \label{eq:marco_cos}
+\end{equation}
+que vale 1 si los vectores apuntan en la misma dirección, 0 si son ortogonales y $-1$ si son opuestos. En cada
+lote de $N$ pares, el modelo calcula la similitud entre cada imagen y cada texto y aprende a distinguir los $N$
+pares correctos entre las $N^2$ combinaciones posibles, lo que acerca los embeddings de cada par y aleja los de
+pares distintos (Figura~\ref{fig:marco_clip}). El modelo original se entrenó así sobre 400 millones de pares
+recogidos de internet, sin ninguna etiqueta de clase~\cite{radford2021learning}.
+
+\input{Figures/Capitulos/02-Marco-Teorico/clip}
+
+Ese espacio compartido permite clasificar sin entrenar un clasificador. Cada clase se escribe como un
+texto, por ejemplo «una imagen dermatoscópica de un melanoma», y la imagen se asigna a la clase cuyo
+embedding de texto le queda más cerca. Esta clasificación \emph{zero-shot}, que no usa ningún ejemplo
+etiquetado de la tarea, depende de cómo se redacten esos textos: cambiar la plantilla del \emph{prompt}
+cambia la exactitud~\cite{radford2021learning}.
+
+Con etiquetas disponibles, el codificador de imagen se usa como extractor de características congelado, de dos
+maneras. Un clasificador lineal entrenado sobre los embeddings, el \emph{linear probe}, mide cuánta información
+sobre las clases contiene la representación~\cite{radford2021learning}. El método de los \gls{knn}, en cambio,
+no entrena ningún parámetro. Con una base de $m$ casos etiquetados, para una imagen consulta $x$ busca los $k$
+casos cuyo embedding $f(x_j)$ tiene mayor similitud coseno con el suyo,
+\begin{equation}
+    \mathcal{N}_k(x) = \operatorname*{arg\,max}_{S \subseteq \{1,\dots,m\},\ |S| = k}\ \sum_{j \in S}
+    \cos\bigl(f(x),\, f(x_j)\bigr),
+    \label{eq:marco_vecinos}
+\end{equation}
+y estima la probabilidad de cada clase $c$ como la proporción de vecinos que la tienen,
+\begin{equation}
+    \hat{p}_{\text{kNN}}(c \mid x) = \frac{1}{k}\sum_{j \in \mathcal{N}_k(x)} \mathbf{1}[\,y_j = c\,],
+    \label{eq:marco_knn}
+\end{equation}
+donde $y_j$ es la etiqueta del caso $j$. La predicción es la clase de mayor proporción, el voto mayoritario,
+que extiende a $k$ vecinos la regla del vecino más cercano~\cite{cover1967nearest}. Así, el espacio contrastivo sirve también de índice de casos parecidos,
+que la Sección~\ref{sec:marco_rep_recuperacion} usa como evidencia para el texto.
+
+Un modelo contrastivo solo relaciona lo que vio en sus pares de entrenamiento, y los pares de internet
+casi no contienen imágenes dermatoscópicas. DermLIP, de 2025, aplica el mismo esquema a alrededor de un millón
+de pares imagen--texto dermatológicos, y en clasificación \emph{zero-shot} de enfermedades de la piel supera a
+los modelos biomédicos de propósito general~\cite{yan2025derm1miccv}. Un modelo contrastivo, sin embargo, no
+produce texto nuevo, y para redactar hace falta conectar el codificador visual con un modelo de lenguaje
+generativo.
+
+\subsection{Modelos multimodales generativos}
+\label{sec:marco_vlm_generativos}
+
+LLaVA, de 2023, es un esquema representativo de los \glspl{vlm} generativos abiertos. Un codificador
+visual del tipo de \gls{clip} extrae los rasgos de la imagen, y un proyector, en LLaVA una capa lineal, los
+lleva a la dimensión de los embeddings de palabra del \gls{llm}. Los tokens visuales resultantes se concatenan
+con la instrucción en la secuencia de entrada de un \gls{llm} de solo decodificador, que genera la
+respuesta token a token (Figura~\ref{fig:marco_llava}). La imagen llega como una parte más de la secuencia de
+entrada, sin la estructura codificador--decodificador del transformer original~\cite{liu2023visual}.
+
+LLaVA se entrena en dos etapas. En la primera, con el codificador visual y el \gls{llm} congelados, solo se
+ajusta el proyector sobre pares imagen--leyenda, para que los tokens visuales caigan en una región del
+espacio que el \gls{llm} interprete. En la segunda, el \emph{visual instruction tuning}, se ajustan el
+proyector y el \gls{llm} sobre conversaciones en las que se pide describir, razonar o responder preguntas
+sobre una imagen~\cite{liu2023visual}. Como el \gls{llm} concentra la mayoría de los parámetros, en esa
+segunda etapa se le puede aplicar \gls{lora} (Sección~\ref{sec:marco_llm_lora}) en lugar del ajuste completo,
+mientras el codificador visual sigue congelado y el proyector se entrena entero.
+
+\input{Figures/Capitulos/02-Marco-Teorico/llava}
+
+La misma receta se llevó después al dominio médico cambiando los datos. LLaVA-Med, de 2023, la repite con
+figuras y leyendas de artículos biomédicos y se entrena en menos de quince horas con ocho
+GPU~\cite{li2023llavamed}; su versión 1.5 usa Mistral como modelo de lenguaje~\cite{zeng2025mmskin}. SkinVL, de 2025, la repite con
+conjuntos dermatológicos, entre ellos uno construido a partir de libros de texto de la
+especialidad~\cite{zeng2025mmskin}. Phi-3.5-vision combina también un codificador de imagen con un modelo de
+lenguaje de solo decodificador, en un tamaño menor~\cite{abdin2024phi3}.
+
+Un \gls{vlm} generativo, en cualquiera de estas variantes, devuelve texto y no una distribución de probabilidad
+sobre las clases. Para clasificar con él se puede buscar la clase en la respuesta generada o, sin generar,
+calcular con la Ecuación~\ref{eq:marco_lm} la probabilidad que el modelo asigna al nombre de cada clase como
+continuación del \emph{prompt}, normalizada por su cantidad de tokens para no favorecer los nombres cortos, y
+elegir la mayor. Esos puntajes ordenan las clases, pero nada garantiza que estén
+calibrados, y una respuesta generada no dice cuánto confiar en ella. Antes de pedirle un reporte hay que saber
+cuándo una predicción merece afirmarse.
