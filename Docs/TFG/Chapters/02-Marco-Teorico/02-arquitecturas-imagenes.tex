@@ -2,51 +2,75 @@
 \label{sec:marco_vision}
 
 La red neuronal de la Sección~\ref{sec:marco_fundamentos} recibe su entrada como un vector y procesa cada valor
-sin tener en cuenta dónde está ubicado. En una imagen, sin embargo, la ubicación importa: los píxeles vecinos
+sin tener en cuenta dónde está ubicado. En una imagen, sin embargo, la ubicación es importante: los píxeles vecinos
 suelen pertenecer a un mismo borde o a una misma región, y un mismo patrón, como el borde de una lesión, puede
 aparecer en cualquier lugar. Las arquitecturas para clasificación de imágenes incorporan esta estructura de dos
 maneras, la convolución y la atención. Los cuatro clasificadores que evalúa el trabajo pertenecen a esas dos
 familias: DenseNet y ConvNeXt son redes convolucionales, y el \gls{vit} y el Swin Transformer se basan en la
-atención. La sección presenta primero la convolución, que es la más antigua, y después la atención.
+atención. La sección presenta estas arquitecturas comenzando con las redes convolucionales y siguiendo con la
+atención, el transformer y sus adaptaciones a imágenes.
 
 \subsection{Redes convolucionales}
 \label{sec:marco_cnn}
 
-Las \glspl{cnn} se construyen sobre la operación de \textbf{convolución} (\emph{convolution}). Un filtro
-(\emph{kernel}) es una pequeña matriz de pesos, por ejemplo de $3 \times 3$, que recorre la imagen posición
-por posición. En cada posición, el filtro calcula el producto punto entre sus pesos y la ventana de píxeles que
-cubre, y los resultados forman un mapa de características (\emph{feature map}), cuyos valores son mayores donde
-la ventana más se parece al patrón que codifica el filtro (Figura~\ref{fig:marco_convolucion}). La operación
-responde a los dos rasgos de las imágenes señalados antes. Como cada valor del mapa depende solo de una ventana
-pequeña, la red supone que la información relevante es local, y como el mismo filtro, con los mismos pesos, se
-aplica en toda la imagen, un patrón se detecta en cualquier lugar en que aparezca. Una capa convolucional
-aplica muchos filtros a la vez, cada uno con sus propios pesos aprendidos, y apila sus mapas como canales de la
-salida~\cite{lecun1998gradient,goodfellow2016deep}.
+Las \glspl{cnn} parten de la idea de mirar la imagen por partes pequeñas en lugar de toda junta. La operación
+que lo hace es la \textbf{convolución} (\emph{convolution}), y su herramienta es un filtro (\emph{kernel}): una
+pequeña matriz de pesos, por ejemplo de $3 \times 3$, que codifica un patrón visual, como el paso de un tono
+claro a uno oscuro. El filtro se apoya sobre una ventana de $3 \times 3$ píxeles, multiplica cada peso por el
+píxel que tiene debajo y suma los nueve productos, es decir, calcula el producto punto entre sus pesos y la
+ventana. Cuanto más se parece la ventana al patrón que codifica el filtro, mayor es el resultado. Por ejemplo,
+un filtro con pesos positivos en su columna izquierda, nulos en la central y negativos en la derecha da un valor
+grande sobre una ventana clara a la izquierda y oscura a la derecha, porque los píxeles claros, que tienen
+valores mayores que los oscuros, se multiplican por los pesos positivos. Sobre una ventana de tono uniforme, en
+cambio, las dos columnas se cancelan y el resultado es cero. Después, el filtro se desplaza un píxel y repite el cálculo, hasta recorrer toda la imagen. Los resultados, ordenados según la
+posición en que se calcularon, forman un mapa de características (\emph{feature map}) que indica dónde aparece
+el patrón. En una imagen dermatoscópica, ese filtro produce valores grandes en los tramos verticales del contorno
+de la lesión, donde la piel pasa de clara a oscura, y valores cercanos a cero sobre la piel sana, de tono
+uniforme.
 
 \input{Figures/Capitulos/02-Marco-Teorico/convolucion}
+
+La Figura~\ref{fig:marco_convolucion} muestra el recorrido sobre una entrada de $6 \times 6$: como el filtro
+cabe en cuatro posiciones por fila y cuatro por columna, el mapa es de $4 \times 4$. La operación responde a los dos rasgos de las imágenes señalados antes. Como cada valor del mapa depende solo de
+una ventana pequeña, la red supone que la información relevante es local, y como el mismo filtro, con los mismos
+pesos, se aplica en toda la imagen, el contorno de la lesión se detecta en cualquier lugar en que aparezca. Los
+pesos de los filtros no se fijan a mano, sino que se aprenden durante el entrenamiento, como los de cualquier
+otra capa. Una capa convolucional aplica muchos filtros a la vez, cada uno con sus propios pesos, y apila sus
+mapas como canales de la salida~\cite{lecun1998gradient,goodfellow2016deep}.
 
 Una \gls{cnn} completa alterna capas convolucionales, funciones de activación y capas de reducción
 (\emph{pooling}), que resumen cada ventana de un mapa en un solo valor, por ejemplo su máximo, y reducen así la
 resolución. Cada reducción hace que una unidad de la capa siguiente dependa de una región más grande de la
 imagen original, llamada su campo receptivo (\emph{receptive field}). De este modo, la red concreta la cadena
 de rasgos simples a complejos descrita al comienzo de la Sección~\ref{sec:marco_fundamentos}: las primeras capas
-responden a bordes y las últimas, a partes de objetos~\cite{goodfellow2016deep}. Al final de la red, el
+responden a bordes y las últimas, a partes de objetos~\cite{goodfellow2016deep}. En una imagen dermatoscópica,
+esa cadena iría del contorno y los cambios de color a estructuras que ocupan parte de la lesión, como una red de
+líneas pigmentadas o un grupo de puntos~\cite{argenziano1998checklist}, y de ellas a la lesión completa. Al
+final de la red, el
 promedio de cada canal sobre todas las posiciones convierte los mapas en un vector de características, y la
 cabeza de clasificación de la Sección~\ref{sec:marco_transferencia} lo convierte en los
 logits~\cite{he2015residual}.
 
-La profundidad es, entonces, lo que permite pasar de rasgos simples a complejos, pero agregar capas no siempre
-mejora la red. A partir de cierta profundidad aparece la degradación: el error aumenta al sumar capas, incluso
-sobre los datos de entrenamiento, de modo que el problema no es el sobreajuste de la
-Sección~\ref{sec:marco_regularizacion}, sino la dificultad de optimizar una red tan profunda. ResNet resolvió
-esta dificultad con las \textbf{conexiones residuales} (\emph{residual connections}). En lugar de transformar
-su entrada por completo, cada bloque de capas aprende una corrección $F$ que se suma a esa entrada,
+Agregar capas, sin embargo, no siempre mejora la red. A partir de cierta profundidad aparece la degradación
+(\emph{degradation}): el error aumenta al sumar capas. Por ejemplo, una red convolucional de 56 capas obtiene
+más error de entrenamiento que una de 20 sobre el mismo conjunto~\cite{he2015residual}. Como el error crece
+sobre los propios datos de entrenamiento, el problema no es el sobreajuste de la
+Sección~\ref{sec:marco_regularizacion}, sino la dificultad de optimizar la red. En principio, a la red de 56
+capas le bastaría con que sus 36 capas adicionales calcularan la identidad, es decir, devolvieran su entrada
+sin cambios, para igualar a la de 20. Sin embargo, al optimizador le resulta difícil aproximar la identidad con
+varias capas no lineales~\cite{he2015residual}.
+
+ResNet resolvió esta dificultad con las \textbf{conexiones residuales} (\emph{residual connections}). Una
+conexión residual suma la entrada de un bloque de capas al resultado de esas capas, de modo que la entrada
+llega a la salida del bloque también por un camino que no la transforma. Así, el bloque ya no tiene que producir su salida completa, sino solo la
+corrección $F$ que hay que agregarle a la entrada,
 \begin{equation}
     \mathbf{h}^{(l+1)} = \mathbf{h}^{(l)} + F\bigl(\mathbf{h}^{(l)}\bigr),
     \label{eq:marco_residual}
 \end{equation}
-de modo que, si lo mejor para un bloque es dejar pasar su entrada sin cambios, le basta con llevar $F$ a cero.
-Con esta modificación se pudieron entrenar redes de más de cien capas~\cite{he2015residual}, y la misma conexión
+donde $\mathbf{h}^{(l)}$ es la entrada del bloque $l$. Si lo mejor para un bloque es no modificar su entrada, le
+basta con llevar los pesos de $F$ a cero, y su salida es igual a su entrada. De este modo, en el peor caso un
+bloque nuevo no cambia nada, y en el mejor aporta una corrección útil. Con esta modificación se pudieron entrenar redes de más de cien capas~\cite{he2015residual}, y la misma conexión
 reaparece en el transformer (Sección~\ref{sec:marco_atencion}).
 
 Las dos redes convolucionales que evalúa el trabajo parten de esta idea y la desarrollan en direcciones
@@ -55,8 +79,9 @@ mapas de características de las capas previas, de modo que reutiliza los rasgos
 exactitud comparable a la de una ResNet con menos parámetros~\cite{huang2018densely}. ConvNeXt, en cambio,
 conserva la estructura de una ResNet y actualiza su diseño con decisiones tomadas de los transformers que se
 presentan a continuación, como filtros de $7 \times 7$ y la normalización por capa~\cite{liu2022convnet}.
-Aun con estas mejoras, una convolución solo relaciona píxeles cercanos, y para vincular dos regiones alejadas de
-la imagen la red necesita apilar muchas capas.
+Aun con estas mejoras, una convolución solo relaciona píxeles cercanos. Para vincular dos regiones alejadas de
+la imagen, por ejemplo, para comparar un borde de la lesión con el opuesto, la red necesita apilar capas hasta
+que su campo receptivo cubra a ambos.
 
 \subsection{Atención y arquitectura transformer}
 \label{sec:marco_atencion}
@@ -100,8 +125,7 @@ La atención, tal como se definió, no tiene en cuenta el orden de los tokens: s
 cada token obtiene el mismo resultado que antes. Para que el modelo distinga las posiciones, se suma al
 embedding de cada token un vector que depende de su lugar en la secuencia, llamado codificación de
 posición (\emph{positional encoding}), que puede ser fijo o aprenderse durante el
-entrenamiento~\cite{vaswani2017attention,dosovitskiy2021image}. Con la posición incorporada, la atención se
-integra en un bloque que se repite a lo largo del modelo.
+entrenamiento~\cite{vaswani2017attention,dosovitskiy2021image}.
 
 Un transformer apila bloques iguales. Cada bloque aplica primero una capa de atención multicabezal, que combina
 información entre tokens, y después un perceptrón multicapa, que transforma cada token por
@@ -116,10 +140,14 @@ representen los tokens, de modo que también puede procesar una imagen si sus to
 \subsection{Vision Transformer}
 \label{sec:marco_vit}
 
-El \gls{vit} aplica el codificador del transformer a la clasificación de imágenes, y para ello convierte la
-imagen en una secuencia de tokens (Figura~\ref{fig:marco_vit_patches}). Primero divide la imagen en una
+Hasta la aparición del \gls{vit}, la atención se usaba en visión junto con las \glspl{cnn} o en reemplazo de
+algunas de sus partes, y la convolución seguía siendo la base de los clasificadores. El \gls{vit} probó si un
+transformer sin convoluciones, aplicado directamente a la imagen, podía clasificarla~\cite{dosovitskiy2021image}.
+Para ello, aplica el codificador del transformer y convierte la imagen en una secuencia de tokens
+(Figura~\ref{fig:marco_vit_patches}). Primero divide la imagen en una
 rejilla de parches cuadrados, por ejemplo de $16 \times 16$ píxeles, de modo que una imagen de
-$224 \times 224$ píxeles da 196 parches. Después aplana cada parche en un vector y lo proyecta, con una capa
+$224 \times 224$ píxeles da 196 parches. En una imagen dermatoscópica, cada parche cubre un fragmento de la
+lesión o de la piel que la rodea. Después aplana cada parche en un vector y lo proyecta, con una capa
 lineal, a un embedding de dimensión fija, al que suma una codificación de posición aprendida que indica
 su lugar en la rejilla. Al comienzo de la secuencia agrega un token de clase, que no corresponde a ningún
 parche. Al atravesar los bloques del codificador, ese token reúne información de todos los parches, y la
@@ -143,11 +171,16 @@ ajuste fino (Sección~\ref{sec:marco_transferencia}).
 \subsection{Swin Transformer}
 \label{sec:marco_swin}
 
-La atención global del \gls{vit} tiene, además, un costo de cálculo que crece con el cuadrado del número de
-parches, porque relaciona cada token con todos los demás. Este costo limita la resolución de las
-imágenes que se pueden procesar, ya que duplicar el lado de una imagen cuadruplica la cantidad de parches. El
-Swin Transformer reduce el costo limitando la atención a ventanas locales de $M \times M$ parches. Para un
-mapa de $h \times w$ parches con $D$ canales, el costo de la atención global y el de la atención por ventanas
+El \gls{vit} mostró que la atención alcanza para clasificar imágenes, pero dejó dos problemas. El primero es el
+costo: la atención global crece con el cuadrado del número de parches, porque relaciona cada token con todos
+los demás, y eso limita la resolución de las imágenes que se pueden procesar, ya que duplicar el lado de una
+imagen cuadruplica la cantidad de parches. El segundo es que procesa toda la imagen a una sola escala: sus
+parches conservan el mismo tamaño en todos los bloques, sin la pirámide de mapas cada vez más pequeños de una
+\gls{cnn}, que sirve cuando los objetos aparecen a tamaños distintos~\cite{liu2021swin}. El Swin Transformer
+resuelve ambos problemas.
+
+Para reducir el costo, el Swin Transformer limita la atención a ventanas locales de $M \times M$ parches. Si el
+mapa tiene $h \times w$ parches y $D$ canales, el costo de la atención global y el de la atención por ventanas
 son
 \begin{equation}
     \Omega_{\text{global}} = 4hwD^2 + 2(hw)^2D, \qquad \Omega_{\text{ventanas}} = 4hwD^2 + 2M^2hwD,
@@ -155,18 +188,18 @@ son
 \end{equation}
 de modo que, con $M$ fijo, el segundo crece de forma lineal con el número de parches~\cite{liu2021swin}.
 
+\input{Figures/Capitulos/02-Marco-Teorico/swin-ventanas}
+
 Las ventanas fijas, sin embargo, no intercambian información entre sí. Para que la información pase de una
 ventana a otra, los bloques alternan una partición regular en ventanas con otra desplazada en medio tamaño de
 ventana, cuyas ventanas abarcan parches de varias ventanas de la partición anterior
-(Figura~\ref{fig:marco_swin}). Además, entre etapas, una capa de fusión de parches (\emph{patch merging})
+(Figura~\ref{fig:marco_swin}). Para resolver el segundo problema, entre una etapa y la siguiente, una capa de
+fusión de parches (\emph{patch merging})
 combina cada grupo de $2 \times 2$ parches vecinos en uno solo, de modo que la resolución se reduce a la mitad
 y la cantidad de canales se duplica. El resultado es una pirámide de mapas de características como la de una
-\gls{cnn}, con resolución decreciente y rasgos cada vez más abstractos, construida con atención en lugar de
-convolución. Por último, la posición de los parches no se suma al embedding como en el \gls{vit}, sino
+\gls{cnn}. Por último, la posición de los parches no se suma al embedding como en el \gls{vit}, sino
 que entra como un término que depende de la posición relativa entre cada par de parches de la ventana y se suma
 a su compatibilidad~\cite{liu2021swin}.
-
-\input{Figures/Capitulos/02-Marco-Teorico/swin-ventanas}
 
 Las arquitecturas presentadas en esta sección se diferencian, en definitiva, por cuánto suponen sobre la
 imagen. Las \glspl{cnn} incorporan la localidad y la jerarquía en su diseño; el \gls{vit} prescinde de esos

@@ -3,8 +3,9 @@
 Sección del `.tex`: `Chapters/02-Marco-Teorico/02-arquitecturas-imagenes.tex`, que reúne
 `02-redes-convolucionales.tex` y `03-transformers.tex`.
 
-**Estado: aprobada y redactada (2026-10-11).** Extensión resultante: unas 5 páginas (p. 37–42), con cuatro
-figuras; las 2.2 y 2.3 viejas ocupaban lo mismo, y la ficha estimaba 4.5. P7 quedó en dos párrafos
+**Estado: aprobada, redactada y revisada por el autor (2026-10-11).** Extensión resultante: unas 6 páginas
+(p. 37–43), con cuatro figuras; las 2.2 y 2.3 viejas ocupaban unas 5, y la ficha estimaba 4.5. La diferencia
+viene de la revisión del autor (decisión 3). P7 quedó en dos párrafos
 (atención; atención multicabezal) y P8 en dos (codificación de posición; bloque y codificador). En la
 ecuación del Swin, los canales pasan a llamarse $D$, porque $C$ es la cantidad de clases (decisión vigente 4).
 Responde a la tercera revisión del tutor (`feedback_cap1_y_2_v3.md`: la propuesta «IDEA», el mensaje, el
@@ -141,7 +142,8 @@ Extensión: 13 párrafos, unas 4.5 páginas (hoy, 2.2 y 2.3 suman unas 5, p. 37�
 ## Citas
 
 `lecun1998gradient`, `goodfellow2016deep`, `he2015residual`, `huang2018densely`, `liu2022convnet`,
-`vaswani2017attention`, `dosovitskiy2021image`, `liu2021swin`. Todas existen en el `.bib`. `kaplan2020scaling`
+`vaswani2017attention`, `dosovitskiy2021image`, `liu2021swin` y `argenziano1998checklist` (estructuras
+dermatoscópicas del ejemplo de la jerarquía). Todas existen en el `.bib`. `kaplan2020scaling`
 y `brown2020language` pasan a 2.3.
 
 ## Decisiones
@@ -151,3 +153,22 @@ y `brown2020language` pasan a 2.3.
 
 2. **La línea base se define en el cierre de 2.2** (autor, 2026-10-11): ahí se presentan los clasificadores,
    y los Caps. 3 y 4 usan el término. La sección 2.6 no la redefine.
+
+3. **Revisión del autor sobre el texto redactado** (autor, 2026-10-11):
+   - La convolución se explica paso a paso: qué codifica el filtro, cómo calcula el producto punto con la
+     ventana, un filtro concreto (columnas de pesos positivos, nulos y negativos) que da un valor grande en
+     un cambio de claro a oscuro y cero en un tono uniforme, y por qué el mapa de la Figura 2.2 es de 4 × 4.
+   - La degradación se ilustra con la red de 56 capas que obtiene más error de entrenamiento que la de 20, y
+     se explica por qué no basta con que las capas extra calculen la identidad. La conexión residual se
+     define como la suma de la entrada del bloque al resultado de sus capas (sin la palabra «atajo») y se
+     explica por qué agregar bloques ya no empeora la red.
+   - Ejemplos dermatoscópicos genéricos, sin nombrar conjuntos (decisión vigente 1): el contorno de la lesión
+     en la convolución, la jerarquía de rasgos con estructuras de la lesión, el borde opuesto como límite de
+     la convolución, y lo que cubre cada parche del ViT. Sale la comparación con el tamaño del conjunto del
+     trabajo, porque no aporta teoría y adelanta el Cap. 3.
+   - Cada arquitectura se presenta por la limitación de la anterior: la apertura del ViT plantea si un
+     transformer sin convoluciones puede clasificar imágenes, y la del Swin nombra los dos problemas que deja
+     el ViT (costo cuadrático y una sola escala), que resuelven las ventanas y la fusión de parches.
+   - Se quitan repeticiones: la cadena de rasgos simples a complejos, el anuncio del bloque transformer, el
+     anuncio de las subsecciones siguientes y la idea de que el Swin recupera localidad y jerarquía, que
+     queda solo en la síntesis del cierre.
