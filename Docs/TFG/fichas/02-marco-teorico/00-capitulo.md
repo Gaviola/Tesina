@@ -75,6 +75,7 @@ Cada concepto se define una sola vez (guía §3). Las secciones posteriores lo n
 | Desbalance de clases y sus pérdidas | 2.1 | 2.6 (métricas por clase) |
 | Preentrenamiento, transferencia, extracción de características, ajuste fino | 2.1 | 2.2, 2.3 (LoRA, *linear probe* de CLIP) |
 | *Token*, *embedding*, atención, parche (*patch*) | 2.2 | 2.3 |
+| Convolución, conexión residual, codificador, sesgo inductivo, línea base (*baseline*) | 2.2 | 2.3 (decodificador), Caps. 3–4 |
 | Aprendizaje autosupervisado, LLM, LoRA, CLIP, VLM generativo | 2.3 | 2.4, 2.5 |
 | Calibración (concepto), abstención, cobertura | 2.4 | 2.6 (métricas: ECE, curvas) |
 | Reporte clínico, alucinación, RAG | 2.5 | 2.6 (métricas de texto) |

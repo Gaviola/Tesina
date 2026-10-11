@@ -482,3 +482,80 @@ Fuente: `feedback/feedback_cap1_y_2_v2.md` y los comentarios de
 | Palabras huérfanas | `check_huerfanas.py` en `Docs/TFG/`, citado en la guía §6; 0 en los capítulos 1 y 2 |
 
 Extensión: los agregados llevaron §2.1 a ~6 páginas; un recorte posterior (2026-10-09) la deja en ~5.2. Sale el párrafo del `linear probe` de 2.1.4 (ya está en 2.5.1; queda una oración sobre DermLIP), el gradiente de la entropía cruzada pasa a prosa ($p_c - q_c$, sin el lado izquierdo, que se veía mal en línea) y la Ecuación 2.4 muestra la suma completa; se condensan la introducción, el sobreajuste, la regularización y las pérdidas para desbalance.
+
+---
+
+# Fichas anteriores de 2.2 y 2.3 (reunidas en `02-arquitecturas-imagenes.md`, 2026-10-11)
+
+## Ficha 2.2 — Redes convolucionales
+
+Sección del `.tex`: `Chapters/02-Marco-Teorico/02-redes-convolucionales.tex`.
+
+Plan movido desde la ficha única del capítulo el 10/10/2026, sin cambios de contenido. Es la historia de la sección; las decisiones posteriores están en `historial.md` y lo vigente, en `00-capitulo.md`. El hilo conductor (§1 de la guía) se agrega arriba de este plan cuando se reescriba la sección.
+
+---
+
+## 2.3 Aprendizaje profundo para clasificación visual — `sec:marco_vision`
+
+**Mensaje central.** Dos familias de arquitectura, convolucionales y transformers visuales, resuelven la
+clasificación de imágenes y son la referencia contra la que se evalúa el desempeño de los modelos
+multimodales.
+
+**Razón de ser.** Sin conocer las dos familias no se entiende la comparación central del trabajo ni por qué un
+VLM tiene que superarlas para justificarse. **Extensión: 3,5 páginas.**
+
+**Apertura.** Se elimina «El primer componente del pipeline recibe la imagen…» (l. 244–250) y las remisiones a
+DenseNet, ConvNeXt y `cp:res_clasif`. Se abre diciendo qué problema resuelven estas familias (clasificar una
+imagen en una de $C$ categorías: entrada imagen, salida $p_c$) y qué se necesita de una arquitectura para ello.
+
+| Subsección | Se reutiliza | Se recorta / elimina | Nuevo |
+|---|---|---|---|
+| 2.3.1 Redes convolucionales — `sec:marco_cnn` | l. 255–282; `fig:marco_convolucion`, VGG, ResNet, DenseNet, ConvNeXt | **Se recorta** en DenseNet la mención a «conjuntos del orden de diez mil imágenes, como HAM10000» (l. 274) y en ConvNeXt «En el comparativo, ConvNeXt representa…» (l. 280–282): son decisiones propias (Cap. 3) | Una oración: las conexiones residuales permiten entrenar redes muy profundas (retoma el gradiente de 2.1.3); ya está en l. 190–191 |
+| 2.3.2 Vision Transformer y Swin Transformer — `sec:marco_vit` | l. 287–311; `fig:marco_vit_patches`, `fig:marco_swin` | Se quita el *embedding* del ViT (pasa a 2.2). Se mantiene la escala del preentrenamiento como variable (l. 297–302) | — |
+| 2.3.3 CNN y transformers visuales como referencia de comparación — `sec:marco_baseline_visual` | — | — | **Nuevo, 2–3 párrafos (F5, A9).** Ver abajo |
+
+### 2.3.3 (F5, A9) — ideas
+
+1. **Qué es una línea base** (*baseline*): una arquitectura de referencia con protocolo fijo contra la que
+   se mide otra. Definición general, sin nombres del trabajo.
+2. **Por qué CNN y ViT lo son.** Son las arquitecturas establecidas para clasificar imágenes, con recetas de
+   entrenamiento maduras y supervisión completa; un modelo multimodal solo justifica su costo si supera a
+   estas referencias o si aporta algo que ellas no pueden (texto, explicación, uso sin ajuste). Los
+   codificadores visuales de los VLM son a su vez ViT (por eso las dos familias se explican antes).
+3. **Qué hace comparable una comparación**: mismos datos, misma partición y mismas métricas; y diferencia
+   entre comparar arquitecturas (2.3.1 frente a 2.3.2) y comparar familias de modelos (supervisados frente a
+   VLM), que es lo que interesa. Cita: `dosovitskiy2021image`, `liu2022convnet` (el caso de ConvNeXt como CNN
+   contemporánea del ViT, l. 277–282: es hecho de la literatura y se puede conservar).
+
+**Párrafo de transición a 2.4 (C4).** El clasificador entrega una probabilidad por clase y ningún texto.
+Producir un texto exige un modelo que genere secuencias. El mismo transformer, usado como decodificador,
+lo hace (2.4). Se elimina «Con esto el clasificador queda completo» (l. 342) por ser la fórmula del *pipeline*.
+**Citas:** `lecun1998gradient`, `simonyan2015very`, `he2015residual`, `huang2018densely`, `liu2022convnet`,
+`dosovitskiy2021image`, `liu2021swin`, `vaswani2017attention`; `tan2020efficientnet` solo si se lo nombra.
+
+## Ficha 2.3 — Transformers y mecanismos de atención
+
+Sección del `.tex`: `Chapters/02-Marco-Teorico/03-transformers.tex`.
+
+Plan movido desde la ficha única del capítulo el 10/10/2026, sin cambios de contenido. Es la historia de la sección; las decisiones posteriores están en `historial.md` y lo vigente, en `00-capitulo.md`. El hilo conductor (§1 de la guía) se agrega arriba de este plan cuando se reescriba la sección.
+
+---
+
+## 2.2 Transformers y mecanismos de atención — `sec:marco_atencion`
+
+**Mensaje central.** La atención compara directamente todas las posiciones y sustituye la recurrencia; el
+transformer se construye sobre ella y sus dos módulos dan lugar a modelos visuales y de lenguaje distintos.
+
+**Razón de ser.** Todo lo que sigue (ViT, Swin, LLM, VLM) usa esta operación. **Extensión: 1,5 páginas.**
+
+| Contenido | Se reutiliza | Se recorta / elimina | Nuevo |
+|---|---|---|---|
+| Idea de la atención, *tokens* | l. 206–213 | Se elimina «reemplaza el recorrido paso a paso de las redes recurrentes» tal como está (las RNN no se presentaron); se reformula como «frente al procesamiento secuencial de 2.1» | Definición de *embedding* (traída de l. 288–290) al introducir la proyección del token: es la primera vez que se necesita |
+| Atención escalada por producto punto | l. 215–225, `eq:marco_atencion`, `fig:marco_atencion` | — | — |
+| Atención multi-cabeza | l. 229–232 | — | — |
+| Codificador y decodificador | l. 234–239 | Se elimina la oración con referencias adelante a `sec:marco_vit` y `sec:marco_llm_grandes` si sobra (se mantienen: es la transición) | Una oración: **codificación de la posición** (la atención no distingue el orden; se suma un *embedding* de posición), que hoy solo aparece en el ViT (l. 290) |
+
+**Párrafo de transición (C4).** Ideas: la atención es una operación sobre secuencias de *tokens*; según qué
+módulo se conserve (codificador o decodificador) y qué se tokenice (parches o palabras), sale una familia
+distinta. Se empieza por las imágenes (2.3), donde conviven con las convolucionales.
+**Citas:** `vaswani2017attention`, `dosovitskiy2021image`, `brown2020language`.
