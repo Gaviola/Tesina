@@ -120,7 +120,7 @@ iguales durante el entrenamiento, y no porque generalice correctamente. Esta fug
 (\emph{data leakage}) hace que la estimación sea más favorable que el desempeño real del modelo.
 
 Además de detectar el sobreajuste, es posible reducirlo. La \textbf{regularización} (\emph{regularization})
-son aquellas técnicas o modificaciones que buscan evitar que la red aprenda detalles excesivamente específicos de los ejemplos de
+reúne las técnicas o modificaciones que buscan evitar que la red aprenda detalles excesivamente específicos de los ejemplos de
 entrenamiento, incluido su ruido, para que pueda hacer buenas predicciones sobre datos que nunca
 vio~\cite{goodfellow2016deep}. Las más usadas en el entrenamiento de clasificadores de imágenes son las
 siguientes:
@@ -128,7 +128,7 @@ siguientes:
     \item \textbf{Decaimiento de pesos} (\emph{weight decay}). En cada paso reduce los parámetros en una pequeña
     proporción, lo que favorece soluciones con pesos pequeños, menos propensas a ajustarse al
     ruido~\cite{goodfellow2016deep}. Con el descenso del gradiente, este decaimiento equivale a sumar a la
-    pérdida una penalización proporcional los pesos. En Adam, en cambio, el
+    pérdida una penalización proporcional a la suma de los cuadrados de los pesos. En Adam, en cambio, el
     gradiente de esa penalización se divide, como el resto del gradiente, por la magnitud de los gradientes
     recientes de cada parámetro, de modo que los parámetros con gradientes grandes reciben menos
     regularización que la prevista. AdamW evita este efecto: en lugar de sumar la penalización a la pérdida,
@@ -157,11 +157,11 @@ siguientes:
 Aun sin sobreajuste, la pérdida promedio puede ocultar errores en las clases que más interesan. El
 entrenamiento minimiza la pérdida sobre todos los ejemplos, y ese promedio no distingue a qué clase pertenece
 cada uno. Cuando unas clases tienen muchos más ejemplos que otras, hay \textbf{desbalance de clases}
-(\emph{class imbalance})\label{sec:marco_desbalance}. Es lo habitual en dermatoscopía: en \emph{HAM10000}, por
-ejemplo, dos tercios de las imágenes son nevos y alrededor de una de cada nueve, melanomas~\cite{tschandl2018ham10000}.
+(\emph{class imbalance})\label{sec:marco_desbalance}. Es lo habitual en dermatoscopía, donde los nevos superan
+varias veces a los melanomas (Sección~\ref{sec:met_ham}).
 En ese caso, los ejemplos de las clases más frecuentes dominan la suma de la pérdida, y el modelo puede reducirla
 acertando sobre todo en ellas aunque se equivoque en las raras. El efecto crece con el grado de
-    desbalance~\cite{buda2018systematic}. Las correcciones más usadas modifican la entropía cruzada de la
+desbalance~\cite{buda2018systematic}. Las correcciones más usadas modifican la entropía cruzada de la
 Ecuación~\ref{eq:marco_entropia} para que las clases con pocos ejemplos pesen más. Si $n$ es la cantidad total
 de ejemplos de entrenamiento, $n_c$ la de la clase $c$ e $y$ la clase correcta de un ejemplo, las tres más
 comunes son:
