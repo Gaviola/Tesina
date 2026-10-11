@@ -36,6 +36,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 from src.evaluation.clinical_ner import (
+    CLASS_RE,
     _compute_entity_recall,
     _extract_dict_entities,
     _normalize_label,
@@ -46,19 +47,8 @@ logger = logging.getLogger(__name__)
 
 THINK_RE = re.compile(r"<think>.*?</think>", re.DOTALL | re.IGNORECASE)
 
-# Términos DISTINTIVOS por clase HAM (word-boundary; evita falsos por substring como "mel").
-CLASS_TERMS = {
-    "melanoma": [r"melanoma"],
-    "nevus": [r"nevus", r"nevi", r"\bmole\b"],
-    "basal cell carcinoma": [r"basal cell", r"\bbcc\b", r"basalioma"],
-    "actinic keratosis": [r"actinic kerato", r"solar kerato", r"\bakiec\b"],
-    "benign keratosis": [r"benign kerato", r"seborrh\w+ kerato", r"\bbkl\b"],
-    "dermatofibroma": [r"dermatofibroma"],
-    # "vascular lesion" completo, no "vascular" suelto (evita matchear el feature dermoscópico
-    # "vascular pattern/structures", que describe morfología, no el diagnóstico).
-    "vascular lesion": [r"vascular lesion", r"hemangioma", r"angioma", r"pyogenic granuloma"],
-}
-CLASS_RE = {c: re.compile("|".join(pats), re.IGNORECASE) for c, pats in CLASS_TERMS.items()}
+# Términos DISTINTIVOS por clase HAM (CLASS_RE): definidos en clinical_ner, donde también los usa la
+# consistencia diagnóstica estricta.
 
 HEDGE_MARKERS = [
     "may be", "might be", "could be", "possibly", "cannot be determined",
@@ -118,12 +108,26 @@ def classify_error(report: str, gt_label: str) -> str:
     return "otros"  # adecuado en largo pero sin dx claro
 
 
+_LABEL_MAP = None
+
+
+def _gt_from_metadata(image_id: str) -> str:
+    """gt_label desde la metadata de HAM10000. Los reportes del re-anclaje (``*_les``) se generaron
+    sin ``--label_csv`` y traen gt_label vacío; sin este respaldo todo cae en dx_incorrecto."""
+    global _LABEL_MAP
+    if _LABEL_MAP is None:
+        from scripts.ensemble_bootstrap import build_label_map
+        _LABEL_MAP = build_label_map()
+    return _LABEL_MAP.get(Path(image_id).stem, "")
+
+
 def _load_condition(cond_dir: Path) -> list[dict]:
     out = []
     for jf in cond_dir.glob("*.json"):
         d = json.loads(jf.read_text(encoding="utf-8"))
         rep = THINK_RE.sub("", d.get("report", "") or "").strip()
-        out.append({"report": rep, "gt_label": d.get("gt_label", "")})
+        gt = d.get("gt_label", "") or _gt_from_metadata(d.get("image_id", jf.stem.replace("_report", "")))
+        out.append({"report": rep, "gt_label": gt})
     return out
 
 

@@ -193,13 +193,34 @@ def _compute_entity_recall(entities: list[dict]) -> float:
     return len(covered) / max(len(DERMATOLOGY_TERMS), 1)
 
 
+# Términos DISTINTIVOS por clase HAM, con límite de palabra donde hace falta. Es el matcher estricto de la
+# consistencia (``strict=True``) y el de la taxonomía de errores. Evita los falsos positivos por subcadena
+# de ``_DIAGNOSIS_SYNONYMS``: "mel" dentro de "melanocytic", "nv" dentro de "invasion", "keratosis" suelto
+# (acredita queratosis benigna cuando el reporte dice "actinic keratosis") y "vascular" suelto (describe
+# el patrón dermatoscópico, no el diagnóstico).
+CLASS_TERMS = {
+    "melanoma": [r"melanoma"],
+    "nevus": [r"nevus", r"nevi", r"\bmole\b"],
+    "basal cell carcinoma": [r"basal cell", r"\bbcc\b", r"basalioma"],
+    "actinic keratosis": [r"actinic kerato", r"solar kerato", r"\bakiec\b"],
+    "benign keratosis": [r"benign kerato", r"seborrh\w+ kerato", r"\bbkl\b"],
+    "dermatofibroma": [r"dermatofibroma"],
+    "vascular lesion": [r"vascular lesion", r"hemangioma", r"angioma", r"pyogenic granuloma"],
+}
+CLASS_RE = {c: re.compile("|".join(pats), re.IGNORECASE) for c, pats in CLASS_TERMS.items()}
+
+
 def diagnostic_consistency_flags(
     reports: list[str],
     gt_labels: list[str],
+    strict: bool = False,
 ) -> list[int]:
     """Consistencia diagnóstica POR reporte: 1 si el dx GT (o un sinónimo) aparece, 0 si no.
 
     Expuesto para análisis por-clase (P0.3) y tests estadísticos por-reporte (P0.2).
+    Con ``strict=True`` usa ``CLASS_RE`` (términos distintivos, sin coincidencias por subcadena) para las
+    7 clases de HAM10000; es la métrica oficial desde la revisión del 2026-10-03. El default reproduce las
+    cifras anteriores.
     """
     if len(reports) != len(gt_labels):
         raise ValueError(
@@ -211,6 +232,9 @@ def diagnostic_consistency_flags(
     for report, label in zip(reports, gt_labels):
         report_lower = (report or "").lower()
         canonical = _normalize_label(label) if label else ""
+        if strict and canonical in CLASS_RE:
+            flags.append(int(bool(CLASS_RE[canonical].search(report_lower))))
+            continue
         synonyms = _DIAGNOSIS_SYNONYMS.get(canonical, [canonical])
         flags.append(int(any(syn in report_lower for syn in synonyms if syn)))
     return flags

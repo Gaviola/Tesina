@@ -8,6 +8,9 @@ sobre HAM10000. No se espera superar a Swin fine-tuneado, sino ver si la represe
 Local (RTX 4070). Uso:
     python scripts/embeddings_classical.py
     python scripts/embeddings_classical.py --limit-train 4000
+    # Partición disjunta por lesión (mismo test; train sin las lesiones del test):
+    python scripts/embeddings_classical.py --splits_file data/splits/ham10000_splits_lesion.json \
+        --output outputs/results/embeddings/embeddings_classical_les.json
 """
 
 import argparse
@@ -85,13 +88,13 @@ def _classical(Xtr, ytr, Xte, yte):
         out[name] = {
             "acc": float(accuracy_score(yte, pred)),
             "f1_weighted": float(f1_score(yte, pred, average="weighted", zero_division=0)),
+            "f1_macro": float(f1_score(yte, pred, average="macro", zero_division=0)),
             "sens_macro": float(recall_score(yte, pred, average="macro", zero_division=0)),
         }
     return out
 
 
-def _load_split(split, data_dir, limit=None):
-    splits = str(Path(data_dir) / "splits" / "ham10000_splits.json")
+def _load_split(split, data_dir, splits, limit=None):
     ds = HAM10000Dataset(root_dir=str(Path(data_dir) / "processed" / "HAM10000"),
                          split=split, splits_file=splits, return_pil=True)
     n = len(ds) if limit is None else min(limit, len(ds))
@@ -104,6 +107,7 @@ def main():
     parser = argparse.ArgumentParser(description="P2.3 Clásicos sobre embeddings")
     parser.add_argument("--data_dir", type=str, default="data")
     parser.add_argument("--limit-train", type=int, default=None, dest="limit_train")
+    parser.add_argument("--splits_file", type=str, default="data/splits/ham10000_splits.json")
     parser.add_argument("--output", type=str, default="outputs/results/embeddings/embeddings_classical.json")
     args = parser.parse_args()
 
@@ -111,8 +115,8 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     logger.info("Cargando splits de HAM...")
-    tr_pils, ytr = _load_split("train", args.data_dir, args.limit_train)
-    te_pils, yte = _load_split("test", args.data_dir)
+    tr_pils, ytr = _load_split("train", args.data_dir, args.splits_file, args.limit_train)
+    te_pils, yte = _load_split("test", args.data_dir, args.splits_file)
     logger.info("Train=%d  Test=%d", len(tr_pils), len(te_pils))
 
     summary = {}

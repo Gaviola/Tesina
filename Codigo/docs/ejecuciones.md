@@ -4,40 +4,165 @@ Ayuda-memoria cronológico de experimentos enviados a cluster, ordenado de más 
 
 ---
 
-## 2026-08-17
+## 2026-10-03
 
-### S6 consolidación — E1 (bootstrap pareado ensamble/incertidumbre) + E2 (regenerar fig:robustez_ej) — **Sin jobs SLURM** (local)
-Handoff: [handoff_s6_consolidacion.md](review_sessions/handoff_s6_consolidacion.md) (aplica los 5 reportes de
-revisión `docs/review_sessions/reporte_s{1..5}_*.md`).
-**E1:** `scripts/ensemble_bootstrap.py` (nuevo, reusa `paired_bootstrap_diff_flags` de `statistical_tests.py`
-y `diagnostic_consistency_flags` de `clinical_ner.py`) sobre los reportes ya generados en
-`outputs/generated_reports/mini_vlm/full_{baseline,dermlip,swin,oracle,differential}` + gt_label de
-`data/raw/HAM10000`. Los puntuales reproducen exactamente los números ya citados en `tab:ensamble`
-(0.246/0.497/0.812/0.999) y `tab:incertidumbre_e2e` (0.822/0.940, subset diferencial 0.392/0.901) — valida el
-script. ICs pareados (n\_boot=2000): Swin vs Oracle Δ=-0.187 [-0.207,-0.168]; pipeline avanzado vs grounding
-simple Δ=+0.118 [+0.101,+0.134] (n=1445); diferencial vs forzado Δ=+0.509 [+0.452,+0.566] (n=334). Todas
-significativas (IC no cruza 0). Resultado: `outputs/results/ensemble_bootstrap.json`.
-**E2:** `scripts/robustness_examples.py` extendido a multi-ejemplo (antes 1 imagen fija). La imagen previa
-mostraba blur/resolución fallando antes que ruido/JPEG, **contradiciendo la curva agregada real**
-(`fig:robustez`: ruido es la perturbación más dañina, resolución la más tolerada — confirmado inspeccionando
-el PNG). El nuevo selector busca automáticamente ejemplos cuyo patrón de primera-falla coincide con esa
-tendencia agregada (ya no con la caracterización del handoff, que tenía la dirección invertida). 2 ejemplos
-(BKL, DF) regenerados, ambos coherentes con el texto y `fig:robustez`. Nota: el handoff S6 describía la
-tendencia agregada al revés ("falla primero en desenfoque/resolución") — se verificó contra `P24_robustness.png`
-y se siguió el dato real, no la descripción del handoff.
+### RAG con el índice por lesión + métrica oficial de la cascada — Mendieta job 1179315
+Decisiones del autor sobre la [revisión](resul/revision_experimentacion_20261003.md) (§5): métrica oficial
+solo reporte + matcher estricto; H6 se lee como propiedad del ruteo; RAG se regenera; el ancla se declara
+como limitación.
 
-#### Pasada de verificación final (post-S6) — cierre de E1/E2 en el `.tex`
-La verificación independiente detectó dos brechas que S6 dejó abiertas pese a reportarlas como hechas:
-**(P1)** los ICs bootstrap de E1 se habían computado (`ensemble_bootstrap.json`) pero **nunca se insertaron
-en el `.tex`** — `tab:ensamble` y `tab:incertidumbre_e2e` no tenían significancia. Corregido: se agregó la
-prosa de significancia pareada a ambas (Δ y IC95 del JSON; baseline→Swin Δ=+0.567 [0.536,0.596],
-Swin→oracle Δ=0.187, pipeline vs grounding Δ=+0.118, diferencial vs forzado Δ=+0.509).
-**(P2)** la figura regenerada por S6 seguía teniendo un ejemplo (DF) que **contradecía su caption** (ruido/JPEG
-verdes en los 5 niveles; solo fallaba desenfoque). El selector usaba `score<0`, que se satisface solo con el
-ruido. Se endureció `_exhibits_trend` a `max(fast) < min(slow)` (ruido *y* JPEG deben fallar antes que
-desenfoque *y* resolución) + early-stop por pool. Regenerada: 2 ejemplos BKL (ISIC\_0034291, ISIC\_0034175),
-ambos verificados visualmente coherentes con el caption. Docstrings del script corregidos (estaban invertidos).
-Compila limpio: 38 págs, 0 undefined, overfull máx 21.4pt (preexistente).
+- **Métrica oficial implementada** (local): `clinical_ner.diagnostic_consistency_flags(strict=True)` con los
+  términos de la taxonomía (`CLASS_TERMS` movido a `clinical_ner.py`; taxonomía idéntica);
+  `ensemble_bootstrap.py --report_only --strict` (+ línea base sin generador) y
+  `per_class_ensemble.py --strict`. Cifras: Mini 0.798 → 0.849, LLaVA 0.687 → 0.749, SkinVL 0.794 → 0.846;
+  pipeline − sin generador: Mini −0.003 (n. s.), LLaVA −0.110. `tab:cascada` (v33) actualizada.
+- **RAG regenerado:** plan [rag_les_plan](ideas/rag_les_plan_20261003.md). Script
+  `slurm/mendieta/v4/rag_les_mini_vlm.sh` (alias `rag_les`): `full_rag_les` y `full_swin_rag_les`, Mini-VLM,
+  1503 cada uno, índice `rag_context_les.csv`, con `run_arm` y prueba de `/scratch`. Subidos por `scp` el
+  `.sh` y `rag_context_les.csv` (md5 verificado); `generate_report.py` remoto idéntico al local.
+
+**Envío:**
+```
+python scripts/mendieta/submit.py rag_les --no-sync   # 1179315 (inicio estimado 2026-10-04 15:45)
+```
+
+**Resul:** pendiente hasta que baje el job.
+
+### Revisión profunda de la experimentación — **Sin jobs SLURM** (local + segunda opinión)
+Resul: [revision_experimentacion](resul/revision_experimentacion_20261003.md) — **CUMPLE con correcciones**.
+Revisión propia + auditoría independiente (Fable 5.1). Clasificación, partición, selección y titulares
+reproducidos sin fuga ni selección sobre test. Hallazgos:
+
+- **Pipeline avanzado = ruteo, no generador:** imprimir los candidatos sin generador da 0.904 sobre las
+  1452 no derivadas; Mini-VLM 0.901 (−0.003, n. s.), LLaVA-Med 0.793 (−0.110). El diferencial recibe {Swin,
+  kNN}, no el top-2.
+- **`ensemble_bootstrap.py` contaba texto `<think>`** (solo LLaVA-Med): pipeline +0.056 → +0.032 solo reporte;
+  v3 +0.125 → +0.092. Nuevo `--report_only` (salida `*_report_only.json`).
+- **Matcher de consistencia por subcadena** («mel» en «melanocytic», «nv» en «invasion»): el «12 %» de Mini
+  con ancla equivocada es artefacto (1.7 % estricto). Δ del re-anclaje sin cambios.
+- **RAG con índice con fuga:** kNN 0.831 → 0.781 con índice por lesión; en el subconjunto limpio RAG solo
+  queda −0.087 [−0.136, −0.038] bajo el grounding Swin.
+- **HIBA:** 346/1616 clínicas (acc Swin 0.263 vs 0.624 dermoscópicas); fototipos I–IV. Corregido en v33.
+- **Ruteo mal descrito** (no usa calibración ni τ). Corregido en v33 y en el resul del re-anclaje.
+- **Por clase** (`per_class_ensemble.py` ahora lee la etiqueta de la metadata → `per_class_les/`): la mejora
+  del ancla nueva es de nevus; melanoma, BCC, AK y vascular bajan.
+
+**Pendiente del autor:** métrica oficial (solo reporte + estricto), lectura de H6, RAG, punto de operación
+del ancla.
+
+### Re-anclaje: LLaVA-Med terminado y evaluado; cierre del re-anclaje — Mendieta 1178901
+Terminó el 2026-10-01 18:08 (12 h 56 min, exit 0; el `run_arm` nuevo no marcó fallas): `full_swin_les`
+1503/1503 y `full_differential_les` 248/248. Bajado por `tar` sobre `ssh`; logs en
+`outputs/logs/llava_med/1178901.*`. Evaluado localmente con `C:\Python313\python.exe`
+(`ensemble_bootstrap.py --model llava_med --anchor les`, `uncertainty_analysis.py --model llava_med
+--anchor les`, `error_taxonomy.py` → `error_taxonomy_les/llava_med/`). No queda ningún job en cola.
+
+- **Grounding con el Swin nuevo:** consistencia 0.696 → **0.752**, Δ +0.057 [+0.039, +0.075]; frente a
+  oracle −0.099 (antes −0.156); frente a sin anclaje +0.107 (antes +0.051).
+- **Pipeline avanzado vs grounding simple (n = 1452):** 0.816 vs 0.760, Δ **+0.056** [+0.043, +0.070]
+  (antes +0.125). Subconjunto diferencial (n = 248): 0.843 vs 0.516, Δ +0.327 (antes +0.542).
+- **Taxonomía consciente del nivel:** dx incorrecto 9.5 % → 9.0 % (antes 13.5 % → 7.0 %). Dentro del
+  nivel diferencial, LLaVA-Med deja afuera el gt en 61/248 reportes (antes 61/334), mientras que el
+  grounding simple pasó de 155 a 69 errores en ese subconjunto: con LLaVA-Med el pipeline ya casi no
+  corrige diagnósticos, solo convierte hedging/contradicciones en diferenciales. Abstención: 19 dx
+  incorrectos evitados de 51.
+- **Taxonomía report-only:** dx incorrecto 0.14 → 0.10; ok 0.35 → 0.38.
+- **Tabla SOTA v33:** tabla nueva `tab:cascada` (tres generadores × anclaje + pipeline avanzado) y
+  `tab:posicionamiento` corregida, que todavía tenía los números de la partición por imagen.
+
+**Resul:** [reanclaje_cascada_resul](resul/reanclaje_cascada_resul_20261003.md) — veredicto **CUMPLE**
+(la ganancia del pipeline avanzado baja a +0.043/+0.056).
+
+## 2026-09-27
+
+### Re-anclaje: Mini-VLM terminado y evaluado — Mendieta 1177953
+Terminó el 2026-09-27 02:26 (8 h 08 min, exit 0, `.err` sin errores): `full_swin_les` 1503/1503 y
+`full_differential_les` 248/248. Bajado y evaluado localmente (`ensemble_bootstrap.py --anchor les`,
+`uncertainty_analysis.py --anchor les`, `error_taxonomy.py` → `error_taxonomy_les/mini_vlm/`).
+**LLaVA-Med 1178901 sigue en cola** (prioridad; inicio estimado por SLURM: 2026-09-29 12:18).
+
+- **Grounding con el Swin nuevo:** consistencia diagnóstica 0.812 → **0.864**, Δ +0.052 [+0.033, +0.071]
+  (el ancla pasó de 0.795 a 0.847). Frente a oracle: −0.135 [−0.152, −0.117] (antes −0.187).
+- **Pipeline avanzado vs grounding simple (n = 1452 no derivadas):** 0.916 vs 0.873, Δ **+0.043**
+  [+0.031, +0.054]. Sigue siendo significativo, pero la ganancia es un tercio de la anterior (+0.118):
+  con un ancla mejor calibrada hay menos casos inciertos (248 diferenciales en vez de 334) y el grounding
+  simple ya acierta más.
+- **Subconjunto diferencial (n = 248):** 0.855 vs 0.605 forzado, Δ +0.250 [+0.190, +0.310] (antes +0.509).
+- **Taxonomía consciente del nivel:** dx incorrecto 13.6 % → 9.0 %; la repetición sigue amplificándose en
+  el nivel diferencial con Mini-VLM (0.5 % → 3.3 %), como en la versión anterior. Derivar evita 20 dx
+  incorrectos de las 51 abstenciones.
+- **Taxonomía report-only:** dx incorrecto 0.20 → 0.15; ok 0.38 → 0.40.
+- **Entorno local:** el `python` del PATH pasó a ser 3.14 (sin pandas); todo el análisis corre con
+  `C:\Python313\python.exe`, el mismo de las corridas anteriores.
+
+**Resul:** [reanclaje_cascada_resul](resul/reanclaje_cascada_resul_20261003.md).
+
+## 2026-09-26
+
+### Análisis locales migrados al split por lesión + resul — **Sin jobs SLURM** (local)
+Resul: [split_lesion_resul](resul/split_lesion_resul_20260926.md) (cierra los planes del 12/09 y del 17/09;
+veredicto **CUMPLE**, con Swin fuera del criterio de estabilidad: sd sens. macro 0.025 > 0.02).
+
+- **Ensamble de clasificadores:** `classifier_ensemble.py --preset les` (antes solo modern_v3). Salida
+  nueva en `outputs/results/classifier_ensemble_les/`; el preset v3 reproduce su 0.862. Swin+ConvNeXt
+  por semilla: F1m 0.747±0.005, sens. macro 0.706±0.002 (Swin solo 0.733±0.026 / 0.692±0.025).
+- **Tests estadísticos:** `statistical_tests.py --models` con los ganadores `_les`, legacy `_les`, DermLIP
+  ZS y VLM ZS → `outputs/results/statistical_tests_les.json`. Swin vs ConvNeXt no significativo
+  (McNemar p = 0.87); Swin > DenseNet/ViT (p < 0.001).
+- **Grad-CAM:** `interpretability.py` tenía el mismo error de preprocesamiento que las perturbaciones
+  (`center_crop=False` en modelos modern) y superponía el mapa sobre la imagen sin recortar. Corregido
+  (`--no-center-crop` para el modo legacy; carga con `strict=True`); default al Swin `t06_les`, salida en
+  `interpretability_les/`. La saliencia de DermLIP es un artefacto de grilla de parches en ambas versiones.
+- **Melanoma:** ya estaba migrado dentro de `lesion_split_report.json`; no se rehízo.
+- **Embeddings congelados + clásicos (DermLIP vs Swin-ImageNet):** `embeddings_classical.py --splits_file`
+  (antes fijo a la partición aleatoria; agrega F1 macro) → `embeddings/embeddings_classical_les.json`.
+  Sens. macro DermLIP vs ImageNet: SVM 0.673 vs 0.466, LogReg 0.689 vs 0.538, RF 0.515 vs 0.162 (antes
+  SVM 0.788 vs 0.579). El SVM de DermLIP reproduce el 0.673 de `dermlip_split_eval.json`. H4 se sostiene.
+- **Ejemplos de perturbaciones:** `robustness_examples.py` tenía fijo el Swin v3 y la tendencia v3 (ruido y
+  JPEG fallan primero). Con el Swin nuevo la tendencia es ruido y desenfoque primero, JPEG y resolución
+  toleradas hasta sev4–5; checkpoint y tendencia pasan a argumentos. Salida `robustness_examples_les.png`
+  (ISIC_0025567, ISIC_0032013; todas las fallas caen en NV).
+- **SkinVL `full_swin_les` (1177955) bajado y evaluado:** consistencia diagnóstica 0.802 → **0.847**
+  (= exactitud del ancla), Δ +0.045 [+0.025, +0.064]; taxonomía: ok 0.79 → 0.85, dx incorrecto 0.20 → 0.15.
+  `outputs/results/ensemble_bootstrap_skinvl_les.json`, `error_taxonomy_les/skinvl/`.
+- **Los reportes `_les` no traen `gt_label`**: los `reanchor_*.sh` no pasan `--label_csv`. No afecta la
+  generación; `error_taxonomy.py` ahora lo toma de la metadata de HAM cuando falta (antes daba 100 %
+  `dx_incorrecto`). `ensemble_bootstrap.py` y `uncertainty_analysis.py` ya usaban la metadata.
+- **Melanoma por semilla:** `lesion_split_report.py` agrega `melanoma_semillas` (el resto del JSON queda
+  idéntico). Esp ≥ 0.85 en val: sens Swin 0.796 ± 0.036, ConvNeXt 0.794 ± 0.012, ensamble 0.828 ± 0.007;
+  AUC 0.921 / 0.909 / 0.926. Con *argmax*, Swin 0.623 ± 0.071: el umbral en val también estabiliza.
+- **Figuras de soporte del Cap. 4:** (1) `evaluate_calibration.py --hist --labels` → `calibration_les/`:
+  ganadores sin pesos ECE 0.040, mismo trial con pesos por clase 0.376 (Swin) / 0.211 (ConvNeXt), con 76–79 %
+  de predicciones de confianza < 0.5; (2) `interpretability.py --no-dermlip` → `interpretability_swin.png`;
+  (3) `plot_classification_summary.py` (nuevo) → `classification_summary_les.png`, reemplaza a la
+  `F1_clasificacion.png` hecha a mano, que además rotulaba como «gen ZS» barras de *likelihood*.
+- **Tabla SOTA v33** (`Docs/tabla_resultados_sota/tablas_comparativas_sota_v33.tex`): filas propias de
+  clasificación (media ± sd de 3 semillas + ensamble), melanoma y HIBA con la partición por lesión; nota de
+  comparabilidad con el efecto medido de la fuga. Tablas de generación sin cambios hasta el re-anclaje.
+- **Preparado para Mini-VLM y LLaVA-Med:** `ensemble_bootstrap.py` y `uncertainty_analysis.py` aceptan
+  `--anchor les` (brazos `*_les`, `uncertainty_3tier_les.csv`, salida con sufijo `_les`); el modo v3
+  reproduce exactamente sus JSON anteriores.
+
+### Re-anclaje: estado real de 1177953-1177955 + reenvío de LLaVA-Med — Mendieta job 1178901
+Los tres jobs del 2026-09-17 recién arrancaron el 2026-09-26 (cola).
+
+- **1177955 (SkinVL `full_swin_les`): OK**, 1503/1503. Falta bajarlo.
+- **1177953 (Mini-VLM):** corriendo (1110/1503 de `full_swin_les` a las 22:19; después, 248 diferenciales).
+- **1177954 (LLaVA-Med): FALLÓ sin avisar.** `OSError: [Errno 5] Input/output error` en
+  `/scratch/1177954` del nodo ivb17 al crear temporales (import de wandb/torch). El `.sh` no propagaba
+  el error: SLURM lo marcó COMPLETED, exit 0, en 3 min y sin ningún reporte.
+- **Arreglo en `slurm/mendieta/v4/reanchor_*.sh`:** (1) `/scratch` se prueba escribiendo un archivo, no
+  solo con `mkdir`; si falla, `TMPDIR=/tmp`. (2) Cada brazo corre por `run_arm <out_dir> <n>`, que
+  registra el código de salida de `generate_report.py` y cuenta los `*_report.json`; si algo falla, el
+  job termina con exit 1 (FAILED). Probado localmente con un `PYTHON` falso. Subido solo el `.sh` por
+  `scp` (sin `sync_up`, para no tocar el job de Mini-VLM en curso).
+
+**Envío:**
+```
+python scripts/mendieta/submit.py reanchor_llava   # 1178901
+```
+
+**Resul:** [reanclaje_cascada_resul](resul/reanclaje_cascada_resul_20261003.md).
 
 ## 2026-09-17
 
@@ -63,7 +188,7 @@ resultados ya existentes.
 - **Pendiente de ejecución:** semillas 43/44 y HIBA del ConvNeXt nuevo. Hasta que estén, su fila es
   de una sola semilla y la mejora de recall MEL (+0.096) es de ~1.5 desvíos, sugestiva y no firme.
 
-**Resul:** pendiente, junto con el del split por lesión (`docs/resul/split_lesion_resul_*.md`).
+**Resul:** [split_lesion_resul](resul/split_lesion_resul_20260926.md).
 
 ### Semillas + HIBA del criterio nuevo, y dos arreglos aguas abajo — TOKO jobs 98243-98246
 Los 4 jobs terminaron el 2026-09-17 sin errores (early stopping ~17 épocas, 3-8 min cada uno).
@@ -107,7 +232,7 @@ Los 4 jobs terminaron el 2026-09-17 sin errores (early stopping ~17 épocas, 3-8
 - Descartado: la sospecha de que el informe mezclaba números con y sin TTA. Todo el barrido es con
   TTA; ver el plan.
 
-**Resul:** pendiente, junto con el del split por lesión (`docs/resul/split_lesion_resul_*.md`).
+**Resul:** [split_lesion_resul](resul/split_lesion_resul_20260926.md).
 
 ### Re-anclaje de la cascada al split por lesión — Mendieta jobs 1177953-1177955
 Enviados el 2026-09-17, alcance «titulares»: `full_swin_les` con los tres generadores (1503 cada
@@ -139,7 +264,7 @@ registrados en `submit.py` como `reanchor_{mini,llava,skinvl}`. Quedan afuera lo
 - Los brazos `full_baseline`, `full_oracle`, `full_dermlip`, `full_oracle_noimage` y
   `full_wrong_swap` no dependen del Swin y no se tocan.
 
-**Resul:** pendiente hasta que bajen los reportes.
+**Resul:** [reanclaje_cascada_resul](resul/reanclaje_cascada_resul_20261003.md).
 
 ## 2026-09-15
 
@@ -159,13 +284,13 @@ Cierra la entrada del 2026-09-13. Cola vacía, los 6 jobs terminaron el 2026-09-
 - Sigue abierta la tensión de selección: por F1 ponderado en val gana siempre `cwnone`, pero las corridas con
   pesos por clase llegan a sensM ~0.78 en test. Decidir el criterio antes de escribir los números finales.
 
-**Resul:** pendiente de redacción (`docs/resul/split_lesion_resul_*.md`).
+**Resul:** [split_lesion_resul](resul/split_lesion_resul_20260926.md).
 
 ## 2026-09-13
 
 ### Split por lesión: barrido terminado + tanda C (semillas) — TOKO jobs 98041–98044 + 2 reenvíos
 Continúa la entrada del 2026-09-12. Cola vacía; `sync_down.py` + `scripts/lesion_split_report.py`
-(`outputs/results/lesion_split_report.json`). Resul: pendiente (después de las semillas).
+(`outputs/results/lesion_split_report.json`). Resul: [split_lesion_resul](resul/split_lesion_resul_20260926.md).
 
 - **72/74 corridas OK.** Fallaron `swin_tiny_sweep_t04_les` (97983) y `convnext_tiny_sweep_t15_les` (97963),
   ambas con `class_weights=auto`: crash del DataLoader (`worker killed by signal: Segmentation fault/Aborted`),
@@ -195,7 +320,7 @@ python scripts/toko/submit_sweep.py --model convnext_tiny --lesion-split --class
 
 ### Split disjunto por lesión + selección en val + semillas — TOKO jobs 97933–98007 (73 jobs)
 Plan: [split_lesion_semillas_plan](ideas/split_lesion_semillas_plan_20260912.md) · Origen:
-[feedback_20260912](feedback_20260912.md). Resul: pendiente (se escribe al bajar resultados).
+[feedback_20260912](feedback_20260912.md). Resul: [split_lesion_resul](resul/split_lesion_resul_20260926.md).
 
 **Auditoría previa (local, `scripts/leakage_analysis.py` → `outputs/results/leakage_analysis.json`):**
 - **LEAKAGE CONFIRMADO.** `prepare_data.py` estratifica POR IMAGEN. 543/1503 imágenes de test (36.1%)
@@ -584,6 +709,41 @@ criterios del tutor + proxies) + muestra estratificada n=28 (`sample_reports_for
 **Tabla SOTA:** nueva `tab:sota_melanoma` en `tablas_comparativas_sota_v32.tex` — detección de melanoma
 binaria: ensamble **AUC 0.954 ≈ SOTA (Kreouzi2024, 0.951)** con modelos Tiny/GPU consumo; FN 0.07, VPN 0.99.
 Compila (wrapper 6 págs).
+
+## 2026-08-17
+
+### S6 consolidación — E1 (bootstrap pareado ensamble/incertidumbre) + E2 (regenerar fig:robustez_ej) — **Sin jobs SLURM** (local)
+Handoff: [handoff_s6_consolidacion.md](review_sessions/handoff_s6_consolidacion.md) (aplica los 5 reportes de
+revisión `docs/review_sessions/reporte_s{1..5}_*.md`).
+**E1:** `scripts/ensemble_bootstrap.py` (nuevo, reusa `paired_bootstrap_diff_flags` de `statistical_tests.py`
+y `diagnostic_consistency_flags` de `clinical_ner.py`) sobre los reportes ya generados en
+`outputs/generated_reports/mini_vlm/full_{baseline,dermlip,swin,oracle,differential}` + gt_label de
+`data/raw/HAM10000`. Los puntuales reproducen exactamente los números ya citados en `tab:ensamble`
+(0.246/0.497/0.812/0.999) y `tab:incertidumbre_e2e` (0.822/0.940, subset diferencial 0.392/0.901) — valida el
+script. ICs pareados (n\_boot=2000): Swin vs Oracle Δ=-0.187 [-0.207,-0.168]; pipeline avanzado vs grounding
+simple Δ=+0.118 [+0.101,+0.134] (n=1445); diferencial vs forzado Δ=+0.509 [+0.452,+0.566] (n=334). Todas
+significativas (IC no cruza 0). Resultado: `outputs/results/ensemble_bootstrap.json`.
+**E2:** `scripts/robustness_examples.py` extendido a multi-ejemplo (antes 1 imagen fija). La imagen previa
+mostraba blur/resolución fallando antes que ruido/JPEG, **contradiciendo la curva agregada real**
+(`fig:robustez`: ruido es la perturbación más dañina, resolución la más tolerada — confirmado inspeccionando
+el PNG). El nuevo selector busca automáticamente ejemplos cuyo patrón de primera-falla coincide con esa
+tendencia agregada (ya no con la caracterización del handoff, que tenía la dirección invertida). 2 ejemplos
+(BKL, DF) regenerados, ambos coherentes con el texto y `fig:robustez`. Nota: el handoff S6 describía la
+tendencia agregada al revés ("falla primero en desenfoque/resolución") — se verificó contra `P24_robustness.png`
+y se siguió el dato real, no la descripción del handoff.
+
+#### Pasada de verificación final (post-S6) — cierre de E1/E2 en el `.tex`
+La verificación independiente detectó dos brechas que S6 dejó abiertas pese a reportarlas como hechas:
+**(P1)** los ICs bootstrap de E1 se habían computado (`ensemble_bootstrap.json`) pero **nunca se insertaron
+en el `.tex`** — `tab:ensamble` y `tab:incertidumbre_e2e` no tenían significancia. Corregido: se agregó la
+prosa de significancia pareada a ambas (Δ y IC95 del JSON; baseline→Swin Δ=+0.567 [0.536,0.596],
+Swin→oracle Δ=0.187, pipeline vs grounding Δ=+0.118, diferencial vs forzado Δ=+0.509).
+**(P2)** la figura regenerada por S6 seguía teniendo un ejemplo (DF) que **contradecía su caption** (ruido/JPEG
+verdes en los 5 niveles; solo fallaba desenfoque). El selector usaba `score<0`, que se satisface solo con el
+ruido. Se endureció `_exhibits_trend` a `max(fast) < min(slow)` (ruido *y* JPEG deben fallar antes que
+desenfoque *y* resolución) + early-stop por pool. Regenerada: 2 ejemplos BKL (ISIC\_0034291, ISIC\_0034175),
+ambos verificados visualmente coherentes con el caption. Docstrings del script corregidos (estaban invertidos).
+Compila limpio: 38 págs, 0 undefined, overfull máx 21.4pt (preexistente).
 
 ## 2026-07-25
 
