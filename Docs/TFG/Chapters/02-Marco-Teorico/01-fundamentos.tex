@@ -1,7 +1,7 @@
 \section{Fundamentos del aprendizaje profundo}
 \label{sec:marco_fundamentos}
 
-Los clasificadores de imágenes y los \glspl{vlm} que se comparan en este trabajo no se programan con reglas
+Los clasificadores de imágenes que se comparan en este trabajo no se programan con reglas
 escritas a mano, sino que aprenden su tarea a partir de ejemplos. Ese es el principio del aprendizaje
 automático (\emph{machine learning}). En lugar de codificar la solución, se elige un modelo con parámetros
 ajustables y se fijan sus valores a partir de datos, de modo que el modelo resuelva la tarea también sobre casos
@@ -105,23 +105,22 @@ condiciones en que se obtienen los datos, por ejemplo el equipo, el centro o la 
 de distribución (\emph{distribution shift}), y el desempeño puede caer aunque el modelo no esté sobreajustado
 (Sección~\ref{sec:marco_generalizacion}).
 
-Para detectar el sobreajuste, el error se estima con datos que no se emplearon durante el ajuste del modelo. Con
-este propósito, el conjunto de datos se divide en tres particiones disjuntas: entrenamiento, validación y prueba
-(\emph{test}). El conjunto de entrenamiento se usa para ajustar los parámetros del modelo, mientras que el de
+Para detectar el sobreajuste, el error se estima con datos que no se utilizaron durante el ajuste del modelo. Con
+este propósito, el conjunto de datos se divide en tres particiones disjuntas: entrenamiento, validación y prueba.
+El conjunto de entrenamiento se usa para ajustar los parámetros del modelo, mientras que el de
 validación permite elegir las configuraciones y los hiperparámetros, es decir, los valores que no se aprenden
-durante el entrenamiento, como la tasa de aprendizaje. Finalmente, el conjunto de test se emplea una sola vez,
-para estimar el desempeño sobre datos no utilizados durante el desarrollo. Es importante que este último no
-intervenga en ninguna decisión, ya que una elección hecha mirando el test vuelve optimista la
+durante el entrenamiento, como la tasa de aprendizaje. Finalmente, el conjunto de prueba se emplea una sola vez,
+para estimar el desempeño sobre datos no utilizados durante las etapas anteriores. Es importante que este último no
+intervenga en ninguna decisión, ya que una elección hecha mirando el conjunto de prueba vuelve optimista la
 estimación~\cite{goodfellow2016deep}.
 
-Una situación a evitar es que imágenes de un mismo paciente o de una misma lesión queden repartidas entre el
-entrenamiento y el test. En ese caso, el modelo puede acertar las imágenes de test por haber visto otras casi
-iguales durante el entrenamiento, y no porque generalice. Esta fuga de información entre particiones
-(\emph{data leakage}) hace que la estimación sea más favorable que el desempeño real, y se evita asignando todas
-las imágenes de un mismo caso a la misma partición.
+Una situación a evitar es que, al dividir los datos, las imágenes de un mismo paciente o de una misma lesión queden repartidas entre el
+entrenamiento y el conjunto de prueba. En ese caso, el modelo puede acertar las imágenes de prueba por haber visto otras casi
+iguales durante el entrenamiento, y no porque generalice correctamente. Esta fuga de información entre particiones
+(\emph{data leakage}) hace que la estimación sea más favorable que el desempeño real del modelo.
 
 Además de detectar el sobreajuste, es posible reducirlo. La \textbf{regularización} (\emph{regularization})
-reúne las técnicas que buscan evitar que la red aprenda detalles demasiado específicos de los ejemplos de
+son aquellas técnicas o modificaciones que buscan evitar que la red aprenda detalles excesivamente específicos de los ejemplos de
 entrenamiento, incluido su ruido, para que pueda hacer buenas predicciones sobre datos que nunca
 vio~\cite{goodfellow2016deep}. Las más usadas en el entrenamiento de clasificadores de imágenes son las
 siguientes:
@@ -129,9 +128,12 @@ siguientes:
     \item \textbf{Decaimiento de pesos} (\emph{weight decay}). En cada paso reduce los parámetros en una pequeña
     proporción, lo que favorece soluciones con pesos pequeños, menos propensas a ajustarse al
     ruido~\cite{goodfellow2016deep}. Con el descenso del gradiente, este decaimiento equivale a sumar a la
-    pérdida una penalización por el tamaño de los pesos. En Adam esa equivalencia no se cumple, porque el
-    optimizador reescala el paso de cada parámetro y, con él, la penalización. Por eso AdamW aplica el
-    decaimiento directamente sobre los parámetros, por separado del paso del optimizador~\cite{loshchilov2019decoupled}.
+    pérdida una penalización proporcional los pesos. En Adam, en cambio, el
+    gradiente de esa penalización se divide, como el resto del gradiente, por la magnitud de los gradientes
+    recientes de cada parámetro, de modo que los parámetros con gradientes grandes reciben menos
+    regularización que la prevista. AdamW evita este efecto: en lugar de sumar la penalización a la pérdida,
+    resta en cada paso una fracción fija de cada parámetro, fuera del reescalado de Adam, y así todos los pesos
+    decaen en la misma proporción~\cite{loshchilov2019decoupled}.
     \item \textbf{Detención temprana} (\emph{early stopping}). Evalúa el modelo en validación al final de cada
     época y conserva los parámetros de la época con mejor desempeño, en lugar de los de la
     última~\cite{goodfellow2016deep}.
@@ -147,16 +149,19 @@ siguientes:
     erasing}) cubre un rectángulo elegido al azar para simular oclusiones~\cite{zhong2020random}. Cuando el
     color es uno de los rasgos que distinguen a las clases, como en dermatoscopía~\cite{kittler2016standardization},
     una transformación de color intensa puede borrar la información que las define~\cite{shorten2019survey}.
+    El aumento de datos también puede aplicarse durante la inferencia. El \gls{tta} promedia las
+    probabilidades que el modelo asigna a la imagen original y a algunas versiones transformadas de ella, como
+    su reflejo horizontal~\cite{krizhevsky2012imagenet}.
 \end{itemize}
-El aumento de datos también puede aplicarse durante la inferencia. El \gls{tta} promedia las probabilidades que
-el modelo asigna a la imagen original y a algunas versiones transformadas de ella, como su reflejo
-horizontal~\cite{krizhevsky2012imagenet}.
 
-Otro desafío no depende de cuánto memoriza la red, sino de cómo se reparten los ejemplos entre las clases. Hay
-\textbf{desbalance de clases} (\emph{class imbalance})\label{sec:marco_desbalance} cuando unas clases tienen
-muchos más ejemplos que otras. En ese caso, minimizar la entropía cruzada promedio favorece a las clases más
-frecuentes, porque sus ejemplos dominan la suma de la pérdida, y el efecto crece con el grado de
-desbalance~\cite{buda2018systematic}. Las correcciones más usadas modifican la entropía cruzada de la
+Aun sin sobreajuste, la pérdida promedio puede ocultar errores en las clases que más interesan. El
+entrenamiento minimiza la pérdida sobre todos los ejemplos, y ese promedio no distingue a qué clase pertenece
+cada uno. Cuando unas clases tienen muchos más ejemplos que otras, hay \textbf{desbalance de clases}
+(\emph{class imbalance})\label{sec:marco_desbalance}. Es lo habitual en dermatoscopía: en \emph{HAM10000}, por
+ejemplo, dos tercios de las imágenes son nevos y alrededor de una de cada nueve, melanomas~\cite{tschandl2018ham10000}.
+En ese caso, los ejemplos de las clases más frecuentes dominan la suma de la pérdida, y el modelo puede reducirla
+acertando sobre todo en ellas aunque se equivoque en las raras. El efecto crece con el grado de
+    desbalance~\cite{buda2018systematic}. Las correcciones más usadas modifican la entropía cruzada de la
 Ecuación~\ref{eq:marco_entropia} para que las clases con pocos ejemplos pesen más. Si $n$ es la cantidad total
 de ejemplos de entrenamiento, $n_c$ la de la clase $c$ e $y$ la clase correcta de un ejemplo, las tres más
 comunes son:
