@@ -650,3 +650,5 @@ propuso en `refs_pendientes.md` y queda indefinida hasta que el autor la incorpo
 - Sale de P4 la mención a Mistral 7B, LLaVA-Med 1.5 y Phi-3-mini: los modelos se presentan en el Cap. 3.
   «Pesos abiertos» abre 2.3.2.
 - 2.3.3 abre conectado con el cierre de 2.3.2, y *zero-shot* se define explícitamente en P12.
+- Phi-3.5-vision sale de P15: el párrafo trata la receta de LLaVA llevada al dominio médico, y Phi-3.5-vision
+  es un VLM de propósito general que solo usa este trabajo. Lo presenta el Cap. 3 (3.6).

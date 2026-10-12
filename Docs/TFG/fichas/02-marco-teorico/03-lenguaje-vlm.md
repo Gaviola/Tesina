@@ -94,8 +94,8 @@ P13 DermLIP: el mismo esquema sobre un millón de pares dermatológicos. Cierre:
 2.3.4 Modelos visión–lenguaje generativos (sec:marco_vlm_generativos)
 P14 LLaVA: codificador visual tipo CLIP, proyector y LLM de solo decodificador; los tokens visuales entran
     como parte del *prompt* (Figura LLaVA). Entrenamiento en dos etapas, con LoRA en la segunda   define
-P15 La receta en el dominio médico: LLaVA-Med (sobre Mistral), SkinVL (dermatología) y Phi-3.5-vision
-    (más chico)                                                                     explica lo usado
+P15 La receta en el dominio médico: LLaVA-Med (sobre Mistral) y SkinVL (dermatología). Phi-3.5-vision no
+    va acá: es de propósito general y lo presenta el Cap. 3 (revisión del autor, 2026-10-12)  explica lo usado
     ↓ problema — un VLM generativo devuelve texto, no una probabilidad por clase
 P16 Clasificar con un VLM generativo: buscar la clase en la respuesta o puntuar cada nombre de clase con
     eq:marco_lm, normalizado por longitud. Esos puntajes ordenan las clases, pero no están calibrados
