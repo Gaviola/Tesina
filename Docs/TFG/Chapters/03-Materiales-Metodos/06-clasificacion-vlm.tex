@@ -1,12 +1,111 @@
+% Extensión estimada: unas 3.5 páginas, 10 párrafos y tres subsecciones (ficha 3.6).
+% Fuentes: ficha fichas/03-materiales-metodos/06-clasificacion-vlm.md; config.json de Phi-3.5-vision-instruct;
+% src/models/mini_vlm.py, llava_med.py, dermlip.py; src/evaluation/vlm_scoring.py; scripts/train_vlm_classify.py,
+% embeddings_classical.py, dermlip_split_eval.py; docs/resul/split_lesion_resul_20260926.md (§2, §6, §8).
 \section{Clasificación con modelos visión--lenguaje}
 \label{sec:met_clasif_vlm}
-\pendiente{Obtener una clase de un modelo generativo admite varias formas, y la elección condiciona el
-resultado. Esta sección presenta las cuatro estrategias evaluadas —respuesta libre (\emph{zero-shot}),
-\emph{likelihood scoring} sobre las etiquetas candidatas, razonamiento estructurado (\emph{Chain-of-Thought})
-y ajuste fino con LoRA— junto con los prompts, el parseo de respuestas y la configuración de cada una.}
 
-\pendiente{Se presentan Mini-VLM (Phi-3.5-Vision) y LLaVA-Med: arquitectura, tamaño y motivo de su
-elección.}
+Los clasificadores supervisados de la Sección~\ref{sec:met_supervisados} devuelven una distribución sobre las siete
+clases y no generan texto. Esa diferencia abre la primera pregunta de investigación, PI1 (Sección~\ref{sec:met_tareas}):
+si un \gls{vlm} clasifica igual de bien. Para responderla se usan dos familias de \glspl{vlm}. Las generativas, Mini-VLM
+y LLaVA-Med, devuelven texto, así que hay que decidir cómo se convierte ese texto en una clase. La contrastiva, DermLIP,
+no genera texto y se usa con cabezas de clasificación sobre su representación.
 
-\pendiente{Se describen la arquitectura y el preentrenamiento de DermLIP (Derm1M) y sus modos de uso:
-\emph{zero-shot}, \emph{linear probe}, kNN y SVM sobre \emph{embeddings}.}
+\subsection{Mini-VLM y LLaVA-Med}
+\label{sec:met_vlm_generativos}
+
+Mini-VLM es el modelo Phi-3.5-vision-instruct~\cite{abdin2024phi3}, un \gls{vlm} de propósito general. Combina un
+codificador de imagen \gls{clip} ViT-L/14 a 336 píxeles con una proyección de tipo MLP y un \gls{llm} de solo
+decodificador, Phi-3.5-mini, de 32 capas y 3\,072 dimensiones, para un total de unos 4.1 mil millones de parámetros.
+Se eligió por dos motivos: sus pesos son abiertos y su tamaño permite aplicarle \gls{lora} en una GPU de consumo.
+
+LLaVA-Med~\cite{li2023llavamed}, en su versión 1.5 con Mistral-7B, es el \gls{vlm} biomédico con el que se contrasta
+el de propósito general. Usa el mismo tipo de codificador, \gls{clip} ViT-L/14, una proyección y el modelo de lenguaje
+Mistral-7B, y se entrenó con figuras y leyendas de la literatura biomédica. Con un modelo de lenguaje de unos 7 mil
+millones de parámetros, es el más pesado de los dos. La comparación pone frente a frente un modelo entrenado con datos biomédicos y otro de propósito general.
+
+Ninguno de los dos devuelve siempre una etiqueta, así que hace falta fijar cómo se obtiene una clase con cada uno.
+
+\subsection{Cuatro estrategias para obtener una clase}
+\label{sec:met_vlm_estrategias}
+
+Las cuatro estrategias usan el mismo conjunto de siete categorías y se diferencian en cómo se obtiene la clase. La
+Figura~\ref{fig:met_zsvslik} contrasta las dos primeras, que son las que leen la respuesta frente a las que puntúan las
+clases. Los \emph{prompts} completos están en el Apéndice~\ref{ap:prompts}.
+
+\begin{enumerate}[leftmargin=1.6em]
+  \item \emph{Zero-shot} por generación. El modelo recibe la imagen y un \emph{prompt} con las clases posibles, y la
+  clase se extrae del texto que genera con decodificación voraz (Sección~\ref{sec:marco_llm}). Se acepta la coincidencia
+  exacta con una etiqueta o la primera que aparece como palabra completa. Si no hay etiqueta válida, la respuesta cuenta
+  como «desconocido».
+  \item \emph{Likelihood scoring}. En lugar de leer la respuesta, se compara la probabilidad que el modelo asigna al
+  nombre de cada clase dada la imagen. La puntuación se define en la Ecuación~\ref{eq:met_likelihood}.
+  \item Razonamiento paso a paso. Es la estrategia de \gls{cot}: el prompt pide describir los rasgos de la
+  lesión, listar diagnósticos diferenciales y concluir con una línea «Final diagnosis:» seguida de la clase. Si esa línea
+  falta, se usa el parseo de la primera estrategia, y sin etiqueta válida la respuesta cuenta como «desconocido».
+  La respuesta se limita a 32 tokens nuevos en la primera estrategia y a 200 en esta, que necesita espacio para el
+  razonamiento.
+  \item Ajuste fino con \gls{lora}. Se evalúa el checkpoint de la etapa 2 de generación, ajustado con LoRA~\cite{hu2021lora}
+  sobre \emph{SkinCaRe}~\cite{shen2025skincare}, por verosimilitud o por \gls{cot}.
+  Este checkpoint no se ajustó sobre \emph{HAM10000}. El procedimiento en dos etapas se describe en la
+  Sección~\ref{sec:met_generacion}.
+\end{enumerate}
+
+\input{Figures/Capitulos/03-Materiales-Metodos/zsvslik}
+
+Para la estrategia de verosimilitud, cada imagen $x$ y cada clase $c$ se toman los tres sinónimos del nombre de la clase.
+Se calcula la log-probabilidad de cada sinónimo como continuación del \emph{prompt} dada la imagen, se divide por su
+cantidad de tokens para no favorecer los nombres cortos y se queda con el máximo entre ellos. Ese valor se promedia sobre
+los cuatro \emph{prompts} y la clase predicha es la de mayor puntaje:
+\begin{equation}
+    s_c = \frac{1}{|\mathcal{P}|} \sum_{p \in \mathcal{P}} \max_{s \in S_c} \frac{\log P(s \mid p, x)}{|s|},
+    \qquad \hat{c} = \arg\max_{c} s_c,
+    \label{eq:met_likelihood}
+\end{equation}
+donde $\mathcal{P}$ es el conjunto de los cuatro \emph{prompts}, $S_c$ los sinónimos de la clase $c$, $P(s \mid p, x)$ la
+probabilidad que el modelo asigna a $s$ como continuación de $p$ dada la imagen $x$, como en la
+Ecuación~\ref{eq:marco_lm}, y $|s|$ la cantidad de tokens de $s$. Como la comparación se hace entre clases, nunca produce
+«desconocido». La respuesta generada, en cambio, depende de la decodificación y puede no contener ninguna etiqueta.
+
+Para comprobar si el puntaje depende de la imagen, el mismo cálculo se repite con cada imagen reemplazada por una gris
+neutra de $224 \times 224$ píxeles (RGB 128). Si el modelo sigue dando la misma distribución de puntajes, el \emph{prompt}
+y no la imagen guía la respuesta. Este control se describe aquí como procedimiento; sus resultados se presentan en los
+capítulos de resultados.
+
+\subsection{DermLIP y sus modos de uso}
+\label{sec:met_dermlip}
+
+Los modelos anteriores generan texto. DermLIP~\cite{yan2025derm1miccv} es otro tipo de modelo: un \gls{vlm} contrastivo
+al estilo de \gls{clip}, con codificadores de imagen y de texto; el de imagen es un \gls{vit} de la variante ViT-B/16.
+Se preentrenó sobre \emph{Derm1M}, un conjunto de 1\,029\,761 pares imagen--texto dermatológicos
+(Sección~\ref{sec:met_datasets}). No genera texto: produce un
+\emph{embedding} de 512 dimensiones por imagen. Se incluye para separar la especialización de dominio de la modalidad
+generativa.
+
+El \emph{embedding} de cada imagen, congelado y normalizado, se usa de cuatro maneras:
+\begin{enumerate}[leftmargin=1.6em]
+  \item \emph{Zero-shot}. Se compara el \emph{embedding} de la imagen con el de cada clase por similitud coseno
+  (Ecuación~\ref{eq:marco_cos}). El de cada clase promedia los \emph{embeddings} del texto de cuatro plantillas, como
+  «A dermatoscopic image of \emph{clase}». Se elige la clase de mayor similitud, sin «desconocido».
+  \item \emph{Linear probe}. Una regresión logística sobre el \emph{embedding} normalizado, con $C = 1.0$ y pesos
+  balanceados por clase.
+  \item Vecinos más cercanos. Es el \gls{knn} con $k = 3$ y similitud coseno (Ecuaciones~\ref{eq:marco_knn} y
+  \ref{eq:marco_vecinos}). La clase se elige por voto mayoritario de los tres vecinos; si hay empate, gana el vecino
+  más similar.
+  \item SVM con núcleo RBF. Una SVM con $C = 10$ sobre \emph{embeddings} estandarizados, con pesos balanceados
+  por clase.
+\end{enumerate}
+Los valores de las cabezas son fijos en el código.
+\pendiente{dato: confirmar en ejecuciones.md si hubo búsqueda de $C$ y $k$ sobre validación para estas cabezas}
+Con cuatro cabezas sobre la misma representación, un resultado mezcla el efecto de la representación y el de la cabeza.
+
+Para separar ambos efectos, cabezas clásicas equivalentes (SVM con núcleo RBF y $C = 10$, regresión logística y un
+\emph{random forest} de 300 árboles, todas con pesos balanceados) se ajustan sobre el \emph{embedding} de Swin congelado, preentrenado en
+\emph{ImageNet}~\cite{liu2021swin}, sin ajuste sobre \emph{HAM10000}. Si la diferencia entre las dos representaciones
+es la misma con cada cabeza, el efecto es de la representación.
+
+Las cabezas y el control se ajustan sobre la partición disjunta por lesión: se descartan del entrenamiento y la
+validación las 776 imágenes de lesiones que aparecen en el test, y quedan 6\,447 imágenes para entrenar y 1\,289 para
+validar, frente a 1\,503 de test, sin lesiones compartidas. La zero-shot de DermLIP no depende de esta partición, porque
+nunca vio \emph{HAM10000}. Los VLM generativos tampoco se ajustaron sobre \emph{HAM10000}: su checkpoint se entrenó con
+\emph{SkinCaRe} (Sección~\ref{sec:met_generacion}), y ese mismo checkpoint es el que aquí se evalúa como clasificador.

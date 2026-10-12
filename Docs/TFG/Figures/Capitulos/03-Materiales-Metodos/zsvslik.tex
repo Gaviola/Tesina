@@ -1,0 +1,25 @@
+% Figura 3.6: zero-shot frente a likelihood scoring. Adaptada de fig:zsvslik de Docs/experimentacion/experimentacion.tex,
+% redibujada con los estilos de Configurations/13-Figuras.sty, sin cifras.
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=0.6cm and 0.55cm]
+  % (a) zero-shot: se lee la clase de la respuesta generada
+  \node[font=\small, anchor=south west] (la) at (-1.45,0.95) {(a) \emph{zero-shot}};
+  \node[figentrada, text width=2.7cm] (ai) at (0,0) {imagen + \emph{prompt}};
+  \node[figtarea, text width=2.7cm, right=of ai] (ag) {el VLM genera texto libre};
+  \node[figsalida, text width=2.9cm, right=of ag] (ap) {extracción de la clase o «desconocido»};
+  \draw[figflecha] (ai) -- (ag);
+  \draw[figflecha] (ag) -- (ap);
+
+  % (b) likelihood: se puntúa el nombre de cada clase
+  \node[font=\small, anchor=south west] (lb) at (-1.45,-1.75) {(b) \emph{likelihood}};
+  \node[figentrada, text width=2.7cm] (bi) at (0,-2.95) {imagen + \emph{prompt}};
+  \node[figtarea, text width=2.7cm, right=of bi] (bs) {el VLM puntúa $P(\text{nombre}_c \mid x)$ para cada clase $c$};
+  \node[figsalida, text width=2.9cm, right=of bs] (ba) {$\arg\max_c$, sin «desconocido»};
+  \draw[figflecha] (bi) -- (bs);
+  \draw[figflecha] (bs) -- (ba);
+\end{tikzpicture}
+\caption{Dos formas de clasificar con un VLM generativo: leer la clase de la respuesta (a) o elegir la clase de
+mayor puntaje (b).}
+\label{fig:met_zsvslik}
+\end{figure}

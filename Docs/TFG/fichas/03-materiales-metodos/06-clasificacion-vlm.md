@@ -143,6 +143,12 @@ Traslado de contenido: las subsecciones de VLM generales y de DermLIP de `03-mod
 - **D7. Ningún desempeño.** La sección describe datos y configuración. Los números que aparecen (parámetros, dimensiones, tokens, sinónimos, tamaños de partición) salen de archivos citados en la tabla.
 - **D8. Control sin imagen y control con Swin-ImageNet** se describen como procedimiento, con el criterio de interpretación del plan. Los resultados van al Cap. 4.
 - **D9. Partición declarada en P10**, como pide la ficha del capítulo (decisión 6), en lugar de en el apéndice.
+- **D10. Cita de Phi-3.5-vision.** Se cita `abdin2024phi3` para Mini-VLM (corrección del coordinador: el reporte de Phi-3 presenta Phi-3.5-vision). No queda `\pendiente` por cita.
+- **D11. P10 sin «la fuga solo podría favorecerlos».** La revisión cruzada (punto 4) y la decisión 6 de la ficha del capítulo fijan que los VLM generativos no se ajustaron sobre *HAM10000*; la frase de P10 se contradecía con eso. Se escribe la versión vigente: las cabezas de DermLIP y el control se reajustan sobre la partición por lesión, la zero-shot no depende de la partición y el checkpoint se entrenó con *SkinCaRe*.
+- **D12. Terminología de la pregunta 1 aplicada.** Mini-VLM es «VLM de propósito general» y LLaVA-Med «VLM biomédico». La fila de la guía §4 sigue diciendo «médicos de propósito general» y queda para el autor.
+- **D13. Cifras solo de datos.** Del reporte de la partición (§2) se usan 776 imágenes descartadas, 6\,447 de entrenamiento, 1\,289 de validación y 1\,503 de test. No se toma ningún valor de §6 (son resultados).
+- **D14. Pendientes que quedan en el `.tex`.** Longitudes máximas de generación (estrategias 1 y 3, sin verificar en `train_vlm_classify.py`), cantidad de pares de *Derm1M* (a confirmar en `yan2025derm1miccv`) y si hubo búsqueda de $C$ y $k$ sobre validación (pregunta 12; en el código los valores son fijos, pero no se verificó en `ejecuciones.md`).
+- **D15. Acrónimos nuevos propuestos** (no están en `Matter/05-Acronyms.tex`): `\acronimo{svm}{SVM}{máquina de vectores de soporte}{Support Vector Machine}`, `\acronimo{rbf}{RBF}{de base radial}{Radial Basis Function}`, `\acronimo{mlp}{MLP}{perceptrón multicapa}{Multilayer Perceptron}`, `\acronimo{gpu}{GPU}{unidad de procesamiento gráfico}{Graphics Processing Unit}`. Por ahora se escriben en texto llano en el `.tex` (SVM, RBF, MLP, GPU).
 
 ## Números que no pude verificar
 
