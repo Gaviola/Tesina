@@ -295,22 +295,6 @@ un grado de libertad~\cite{mcnemar1947note}. Cuando los casos discordantes son p
 exacta: $b$ sigue una distribución binomial con $b+c$ ensayos y probabilidad $1/2$, y el valor $p$ se calcula
 directamente de ella.\par\endgroup
 
-La \textbf{prueba de Wilcoxon} de rangos con signo compara dos series de $N$ valores pareados sin suponer que
-las diferencias sigan una distribución normal. Calcula las diferencias $d_i$ entre los dos modelos, las ordena
-por su valor absoluto y asigna a cada una su rango, de 1 para la menor a $N$ para la mayor. Suma por separado
-los rangos de las diferencias positivas y de las negativas, y toma la menor de las dos sumas,
-\begin{equation}
-    R^{+} = \sum_{d_i > 0} \mathrm{rango}(d_i), \qquad
-    R^{-} = \sum_{d_i < 0} \mathrm{rango}(d_i), \qquad
-    T = \min\left(R^{+}, R^{-}\right).
-    \label{eq:marco_wilcoxon}
-\end{equation}
-Un $T$ pequeño indica que las diferencias favorecen de forma consistente a uno de los modelos, y para $N$ de
-hasta 25 se compara con valores críticos tabulados~\cite{wilcoxon1945individual,demsar2006statistical}. Es
-una prueba robusta, porque no supone normalidad y los valores atípicos pesan menos~\cite{demsar2006statistical}.
-Con un solo conjunto de datos, las $N$ series pueden ser las $C$ clases, con la sensibilidad de cada clase en
-los dos modelos.
-
 \subsubsection{Robustez}
 \label{sec:marco_eval_robustez}
 

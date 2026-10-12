@@ -19,7 +19,7 @@ diciendo que las métricas se agrupan por lo que evalúan.
 
 **Verificar que se use (E1).** Cada métrica presentada debe aparecer en los resultados; la que no, sale. El código
 implementa las siguientes: matriz, AUC, sensibilidad/especificidad, exactitud balanceada, F1, ECE, MCE, Brier,
-BLEU, ROUGE, METEOR, CIDEr, BERTScore, McNemar, Wilcoxon, *temperature scaling* y *vector scaling*, Grad-CAM,
+BLEU, ROUGE, METEOR, CIDEr, BERTScore, McNemar, *temperature scaling* y *vector scaling*, Grad-CAM,
 robustez por perturbaciones, entidades clínicas. El autor confirma con los resultados de Cap. 4–5 y se saca lo
 que no se reporte (pregunta 3). Los candidatos más probables de no estar en los resultados son MCE,
 *vector scaling*, METEOR y CIDEr.
@@ -83,6 +83,6 @@ Nota de estructura: 2.8.3 se puede implementar como subsección con cuatro `\sub
 del test; queda por saber hasta dónde valen fuera de ella.
 **Citas de 2.8:** existentes: `fawcett2006introduction`, `guo2017calibration`, `brier1950verification`,
 `papineni2002bleu`, `lin2004rouge`, `banerjee2005meteor`, `vedantam2015cider`, `zhang2020bertscore`,
-`carrera2016validity`, `efron1979bootstrap`, `mcnemar1947note`, `wilcoxon1945individual`, `demsar2006statistical`,
+`carrera2016validity`, `efron1979bootstrap`, `mcnemar1947note`,
 `selvaraju2017gradcam`, `adebayo2018sanity`. Nuevas: `hendrycks2019benchmarking`, y opcionales
 `brodersen2010balanced`, `sokolova2009systematic`.

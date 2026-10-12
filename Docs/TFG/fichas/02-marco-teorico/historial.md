@@ -626,3 +626,11 @@ clínico. Qué se espera de un reporte, qué puede fallar y qué información ad
 para fallar menos es el tema de 2.6.
 **Citas:** `radford2021learning`, `yan2025derm1m`, `liu2023visual`, `li2023blip2`, `li2023llavamed`,
 `zeng2025mmskin`, `abdin2024phi3`, `zhou2023skingpt4` solo si se nombra un VLM dermatológico más.
+
+## Decisión del autor (2026-10-12): Wilcoxon fuera del marco
+
+Con la corrección de Holm sobre 21 pares, Wilcoxon sobre siete clases nunca alcanza el umbral corregido
+(p mínimo 0.016 frente a 0.0024), así que el Cap. 3 (3.9) compara la sensibilidad por clase de forma
+descriptiva y no usa la prueba. Por la regla E1 (cada método presentado se usa en los resultados), se quita
+de 2.8 el párrafo y la ecuación `eq:marco_wilcoxon`; `wilcoxon1945individual` y `demsar2006statistical`
+quedan sin citar.

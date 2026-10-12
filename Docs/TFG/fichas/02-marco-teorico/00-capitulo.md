@@ -96,11 +96,11 @@ repiten.
    entrenamiento (`Codigo/src/training/recipes.py`) se explica en 2.1 con una o dos oraciones y su cita.
    Las estrategias de desbalance llevan fórmula porque el Cap. 4 las compara. MixUp y CutMix no se mencionan
    (la receta las desactivó), y la pérdida por número efectivo y la predicción conforme quedan fuera.
-3. **Métricas.** Se mantienen todas las que usa la experimentación, incluidas MCE, Wilcoxon, METEOR, CIDEr y
+3. **Métricas.** Se mantienen todas las que usa la experimentación, incluidas MCE, METEOR, CIDEr y
    *vector scaling*. «Sensibilidad macro» es el único nombre, y su definición menciona una vez que también se
    la llama exactitud balanceada. MCE se escribe en línea, sin acrónimo.
 4. **Fórmulas verificadas.** Las de atención, LoRA, CLIP, probabilidad de un modelo de lenguaje, temperatura,
-   RAG, TPR/FPR y AUC, ECE/MCE, Brier, BLEU, ROUGE-L, METEOR, CIDEr, BERTScore, McNemar, Wilcoxon y Grad-CAM se
+   RAG, TPR/FPR y AUC, ECE/MCE, Brier, BLEU, ROUGE-L, METEOR, CIDEr, BERTScore, McNemar y Grad-CAM se
    verificaron contra los artículos. Al reescribir, se copian de las ecuaciones existentes y no se reescriben
    a mano. Notación: $C$ clases, $J$ referencias en CIDEr, $M$ intervalos en ECE, $N$ pares en CLIP. Adam y el
    decaimiento de pesos ya no llevan fórmula.
