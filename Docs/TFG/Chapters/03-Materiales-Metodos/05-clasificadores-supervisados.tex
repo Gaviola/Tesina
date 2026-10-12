@@ -21,12 +21,15 @@ Tabla~\ref{tab:met_modelos_sup} resume sus características. Las variantes Tiny 
 un tercio de los que tiene ViT-B/16, y encajan en la restricción de cómputo de la Sección~\ref{sec:met_tareas}: se
 entrenan en una GPU de consumo.
 
-Los cuatro modelos no comparten receta. La receta moderna se aplica a ConvNeXt-Tiny y a Swin-Tiny: incluye un barrido de
-hiperparámetros, un ajuste en dos etapas y aumentos más fuertes. La receta anterior, que reproduce el entrenamiento previo a
-la receta moderna, se aplica a DenseNet121 y a ViT-B/16, que quedan fuera del barrido. El plan del barrido los excluyó
-porque las iteraciones anteriores atribuían el bajo desempeño de DenseNet121 con la receta moderna a la interacción
-entre su normalización por lotes y el aumento agresivo. Ese argumento no alcanza a ViT-B/16, que normaliza por capa.
-\pendiente{decidir cómo se justifica la exclusión de ViT-B/16 del barrido: el plan no da un motivo propio}
+Los cuatro modelos se entrenan con la receta moderna, que incluye un ajuste en dos etapas y aumentos más fuertes. El
+barrido de hiperparámetros se hizo solo sobre ConvNeXt-Tiny y Swin-Tiny. En lugar de repetirlo, DenseNet121 y ViT-B/16
+toman el trial ganador del modelo de su familia: DenseNet121, el de ConvNeXt-Tiny, que también es convolucional, y
+ViT-B/16, el de Swin-Tiny, que también es un transformer. Con hiperparámetros transferidos, un resultado peor indica que
+el modelo rinde menos con esa configuración, no que no pueda rendir más con otra. Antes, DenseNet121 y ViT-B/16 se habían
+entrenado con una receta anterior, que reproduce el entrenamiento previo a la receta moderna, y esas corridas se conservan
+para medir el efecto de la receta.
+\pendiente{cuando terminen los jobs 99007 a 99012 de TOKO, confirmar que DenseNet121 y ViT-B/16 con la receta moderna
+completaron sus tres semillas y pasar sus resultados del Capítulo~\ref{cp:res_clasif} a esta receta}
 Ambas recetas se comparan lado a lado en la Tabla~\ref{tab:met_receta}. La réplica del experimento de desbalance
 (Sección~\ref{sec:met_supervisados_receta}) usa la receta moderna en ConvNeXt-Tiny, Swin-Tiny y DenseNet121. Todos los
 modelos reciben la misma entrada.
@@ -121,13 +124,13 @@ decaimiento de pesos por defecto (0.05) y su magnitud de RandAugment por defecto
 ganador. La tasa también es fija en la réplica: $10^{-4}$ para Swin-Tiny y ConvNeXt-Tiny, y $7.91 \times 10^{-5}$ para
 DenseNet121. No hubo búsqueda para cada pérdida; las cuatro se comparan con los mismos valores.
 
-La receta anterior se aplica a DenseNet121 y a ViT-B/16 con una sola etapa de AdamW, sin suavizado de etiquetas ni
+La receta anterior entrena DenseNet121 y ViT-B/16 con una sola etapa de AdamW, sin suavizado de etiquetas ni
 calentamiento, con hasta 30 épocas, paciencia de cinco épocas y decaimiento de pesos de 0.01, que es el valor por defecto.
 Usa pesos por clase automáticos, que son el valor por defecto de la interfaz de entrenamiento, y no usa TTA. Su tasa y su
-planificador salen de la búsqueda de la Sección~\ref{sec:met_supervisados_busqueda}. Por eso, la comparación entre las dos
-recetas mezcla dos factores: la receta misma y el manejo del desbalance y del TTA. DenseNet121 y ViT-B/16 se evalúan con una
-sola vista y pesos por clase, mientras que ConvNeXt-Tiny y Swin-Tiny se evalúan con TTA y sin pesos por clase. Esa diferencia
-se declara en el Capítulo~\ref{cp:res_clasif}, y las corridas con la receta anterior no se vuelven a entrenar. Las ablaciones de la receta
+planificador salen de la búsqueda de la Sección~\ref{sec:met_supervisados_busqueda}. Esas corridas se evalúan con una sola vista
+y pesos por clase, así que compararlas con la receta moderna, que usa TTA y no usa pesos por clase, mezcla dos factores: la
+receta misma y el manejo del desbalance y del TTA. Por eso las arquitecturas se comparan entre sí con la receta moderna, y
+las corridas con la receta anterior se presentan como antecedente. Las ablaciones de la receta
 (sin MixUp, sin TTA, sin pérdida focal, sin dos etapas, sin suavizado de etiquetas y sin RandAugment) se hicieron sobre la
 partición aleatoria anterior, que tenía fuga de información (Sección~\ref{sec:met_particiones}). Se presentan en el
 Capítulo~\ref{cp:res_clasif} como análisis de mecanismo, no de magnitud.
@@ -221,8 +224,9 @@ para ViT-B/16.
 Los ganadores de la búsqueda moderna son Swin-Tiny, con el trial t06 (tasa $7.5 \times 10^{-5}$, decaimiento 0.10 y $M = 6$),
 y ConvNeXt-Tiny, con el trial t02 (tasa $3.0 \times 10^{-5}$, decaimiento 0.05 y $M = 9$). Ambos prescinden de pesos por
 clase. Cada uno se entrena con las semillas 42, 43 y 44, y sus resultados se presentan como media ± desvío
-(Sección~\ref{sec:met_seleccion}). Las corridas de DenseNet121 y ViT-B/16, y las de la réplica del desbalance, usan una sola
-semilla (42): su desvío no se estimó, y por eso no se presenta como media ± desvío.
+(Sección~\ref{sec:met_seleccion}). DenseNet121, con el trial t02, y ViT-B/16, con el t06, se entrenan con las mismas tres
+semillas. Las corridas con la receta anterior y las de la réplica del desbalance usan una sola semilla (42): su desvío no se
+estimó, y por eso no se presenta como media ± desvío.
 
 \subsection{Ensamble y detección de melanoma}
 \label{sec:met_supervisados_ensamble}
@@ -237,8 +241,7 @@ La detección de melanoma es una tarea binaria derivada de la clasificación: ME
 (Sección~\ref{sec:met_tareas}). El puntaje es la probabilidad de MEL, del modelo o del ensamble. El umbral se fija en
 validación como el que da la mayor sensibilidad entre los puntos de la curva ROC con especificidad de al menos 0.85, el
 valor que fija la Sección~\ref{sec:met_seleccion}, y se aplica sin cambios al test. El \gls{auc} (Ecuación~\ref{eq:marco_auc})
-no depende del umbral, así que no interviene en su elección. \pendiente{decidir si se presenta maligno frente a benigno en el
-Capítulo~\ref{cp:res_clasif}; si sí, definirla aquí}
+no depende del umbral, así que no interviene en su elección.
 
 Estos clasificadores devuelven una probabilidad por clase y no generan texto. Para saber si un \gls{vlm}, que sí genera
 texto, clasifica tan bien como ellos, se comparan ambos con las mismas métricas (Sección~\ref{sec:met_clasif_vlm}).

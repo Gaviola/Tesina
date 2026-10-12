@@ -49,8 +49,9 @@ declara en la Sección~\ref{sec:met_pipeline}, y con la variante \emph{noreasoni
 piloto de 100 imágenes de las que 17 son de prueba.
 
 El resultado principal de cada modelo es la media $\pm$ desvío de las semillas 42, 43 y 44 de su ganador, y el
-desvío es el muestral. \pendiente{decidir si se declara que el barrido se ordena solo con la semilla 42 o si se
-corren las semillas 43 y 44 de todos los candidatos} Con tres semillas el desvío es una estimación gruesa, y por
+desvío es el muestral. El barrido, en cambio, ordena los trials con una sola corrida, la de la semilla 42, y las
+semillas 43 y 44 se corren solo para el ganador. Si el orden entre dos trials cercanos dependiera de la semilla, el
+ganador podría ser otro, y esa posibilidad no se midió. Con tres semillas el desvío es una estimación gruesa, y por
 eso las comparaciones entre modelos se completan con pruebas pareadas (Sección~\ref{sec:met_complementarios}).
 
 La detección de melanoma es la clasificación binaria de melanoma frente al resto de las clases, sin localización.
@@ -129,7 +130,7 @@ supervisados de la Sección~\ref{sec:met_supervisados}.
         \filasep
         Calibración (ECE, Brier) & Se analiza en la Sección~\ref{sec:met_complementarios}; no decide & Sección~\ref{sec:marco_eval_calib} \\
         \filasep
-        McNemar y Wilcoxon & Pruebas de comparación; se analizan en la Sección~\ref{sec:met_complementarios} & Sección~\ref{sec:marco_eval_estadistica} \\
+        McNemar & Prueba de comparación; se analizan en la Sección~\ref{sec:met_complementarios} & Sección~\ref{sec:marco_eval_estadistica} \\
         \filasep
         Evaluación en HIBA & Solo en la Sección~\ref{sec:met_complementarios}; no decide & Sección~\ref{sec:met_datasets} \\
         \bottomrule

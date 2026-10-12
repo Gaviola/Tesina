@@ -65,16 +65,20 @@ y la prueba de cada resultado de clasificación, y la Tabla~\ref{tab:met_protoco
             & TTA (receta moderna, semilla 42) & \emph{Trial} con mejor F1 macro en validación, por pérdida
             & Por lesión (1\,503) & Descriptiva \\
         \filasep
+        DenseNet121 y ViT-B/16, receta moderna
+            & TTA & Trial de su familia, semillas 42, 43 y 44 & Por lesión; media $\pm$ desvío
+            & McNemar y bootstrap contra Swin (semilla 42) \\
+        \filasep
         DenseNet121 y ViT-B/16, receta anterior
             & Vista única (sin TTA) & Ganadores de la receta anterior & Por lesión (1\,503)
-            & McNemar y bootstrap contra Swin, con protocolo distinto (declarado) \\
+            & Descriptiva, como antecedente \\
         \filasep
         Calibración: sin calibrar, \emph{temperature scaling} y \emph{vector scaling}
             & TTA & Ganadores, semilla 42 & Ajuste en validación; evaluación en test
             & ECE, MCE y Brier; sin IC \\
         \filasep
-        Wilcoxon por clase
-            & TTA, misma corrida & Ganadores, semilla 42 & Test & Wilcoxon sobre siete clases \\
+        Sensibilidad por clase entre modelos
+            & TTA, misma corrida & Ganadores, semilla 42 & Test & Descriptiva \\
         \filasep
         Melanoma frente al resto: AUC y punto de operación con especificidad $\geq$ 0.85
             & TTA & Ganadores y ensamble, semillas 42, 43 y 44 & Umbral fijado en validación; test
@@ -101,7 +105,7 @@ y la prueba de cada resultado de clasificación, y la Tabla~\ref{tab:met_protoco
         \midrule
         VLM generales, \emph{zero-shot}
             & Vista única & Ninguno (preentrenados) & Test de \emph{HAM10000} (1\,503)
-            & IC bootstrap de la sensibilidad macro; McNemar; Wilcoxon \\
+            & IC bootstrap de la sensibilidad macro; McNemar \\
         \filasep
         VLM generales ajustados, por verosimilitud y CoT
             & Vista única & Etapa 2 de cada VLM (v2, 10 épocas) & Test de \emph{HAM10000} (1\,503)
@@ -118,7 +122,7 @@ y la prueba de cada resultado de clasificación, y la Tabla~\ref{tab:met_protoco
         DermLIP \emph{zero-shot} en \emph{HAM10000} y en fotografía clínica
             & Vista única & DermLIP ViT-B/16 preentrenado
             & Test de \emph{HAM10000} (1\,503); \emph{SkinCAP} (n = 624)
-            & IC bootstrap; McNemar; Wilcoxon \\
+            & IC bootstrap; McNemar \\
         \filasep
         \emph{kNN} ($k = 3$), regresión logística y SVM-RBF sobre \emph{embeddings} de DermLIP
             & Vista única & Cabezas ajustadas en entrenamiento & Entrenamiento y test por lesión & Semilla 42; sin IC \\
@@ -138,22 +142,20 @@ en una métrica agregada, como el F1 macro o la sensibilidad macro, debe compara
 test, se usa un bootstrap pareado sobre imágenes (Sección~\ref{sec:marco_eval_estadistica}). Si la pregunta es qué imágenes
 acierta cada modelo, se usa McNemar en su versión exacta: la binomial bilateral sobre los casos discordantes, que es la que
 calcula el código para todos los pares. La aproximación $\chi^2$ (Ecuación~\ref{eq:marco_mcnemar}) no se usa en ningún
-resultado. Si la pregunta es si la mejora es sistemática entre clases, se usa Wilcoxon sobre la sensibilidad de las siete
-clases (\emph{recall}). Como cada familia tiene 21 comparaciones, los p de McNemar y de Wilcoxon se corrigen con el
-método de Holm dentro de su familia, que controla la probabilidad de declarar al menos una diferencia falsa.
-\pendiente{confirmar la corrección de Holm: con ella McNemar conserva sus 19 diferencias significativas y Wilcoxon pierde
-las 10, porque con siete clases su menor p (0.016) no alcanza el umbral corregido (0.0024)}
+resultado. Como hay 21 pares de modelos, los p de McNemar se corrigen con el método de Holm, que controla la probabilidad
+de declarar al menos una diferencia falsa entre los 21. La sensibilidad por clase (\emph{recall}) de dos modelos se
+compara de forma descriptiva, contando en cuántas de las siete clases mejora cada uno, y sin prueba: con siete clases, el
+menor p bilateral de la prueba de Wilcoxon (Sección~\ref{sec:marco_eval_estadistica}) es 0.016, y ningún par podría
+alcanzar el umbral que Holm exige para 21 comparaciones ($0.05/21 \approx 0.0024$).
 
 Los intervalos son percentiles al 95\,\%: si el intervalo de una diferencia no contiene el cero, la diferencia no se
 explica por la composición del test. El p-valor del bootstrap, que es dos veces la menor proporción de remuestreos con
-signo contrario, solo orienta, y la decisión se toma con el intervalo. McNemar y Wilcoxon se evalúan a nivel 0.05
-bilateral. Las pruebas pareadas se corren sobre la corrida de la semilla 42, y la variación entre semillas se presenta como
-desvío (Sección~\ref{sec:met_protocolo}). Hay 21 comparaciones de McNemar y 21 de Wilcoxon entre los siete modelos. El
+signo contrario, solo orienta, y la decisión se toma con el intervalo. McNemar se evalúa a nivel 0.05 bilateral,
+con el p ya corregido. Las pruebas pareadas se corren sobre la corrida de la semilla 42, y la variación entre semillas se presenta como
+desvío (Sección~\ref{sec:met_protocolo}). El
 bootstrap remuestrea imágenes (1\,503), no lesiones (1\,429 en el test), así que las imágenes de una misma lesión se tratan
 como independientes. Remuestrear por lesión casi no cambia los intervalos: para la diferencia de F1 macro entre los
-dos ganadores, los extremos se mueven menos de 0.002. Con siete
-clases, el menor p bilateral de Wilcoxon es 0.016. Si dos modelos tienen el mismo recall en una clase, esa clase se descarta
-y la N baja, por lo que el Capítulo~\ref{cp:res_clasif} declara la N de cada par.
+dos ganadores, los extremos se mueven menos de 0.002.
 
 \begingroup
 \small
@@ -185,14 +187,14 @@ y la N baja, por lo que el Capítulo~\ref{cp:res_clasif} declara la N de cada pa
         Aciertos por imagen entre dos modelos
             & ¿Uno acierta imágenes en las que el otro falla?
             & McNemar exacto (binomial bilateral sobre los discordantes)
-            & Casos discordantes $b$ y $c$; sin corrección de continuidad
+            & Casos discordantes $b$ y $c$; sin corrección de continuidad; Holm sobre 21 pares
             & 0.05 \\
         \filasep
         Sensibilidad por clase entre dos modelos
-            & ¿La mejora es sistemática entre clases?
-            & Wilcoxon de rangos con signo, bilateral
-            & Siete clases; método \texttt{wilcox} para los empates
-            & 0.05 \\
+            & ¿En cuántas clases mejora cada uno?
+            & Descriptiva, sin prueba
+            & Siete clases
+            & --- \\
         \filasep
         Consistencia diagnóstica por reporte (cascada, ensamble)
             & ¿La diferencia de proporciones excede la variación de los reportes?
