@@ -325,7 +325,8 @@ def main():
             with open(args.splits_file, encoding="utf-8") as f:
                 split_ids = set(json.load(f).get(args.split, []))
             before = len(image_paths)
-            image_paths = [p for p in image_paths if p.stem in split_ids]
+            # Los splits de HAM10000 guardan el id sin extensión; los de MM-Skin, el nombre con extensión.
+            image_paths = [p for p in image_paths if p.stem in split_ids or p.name in split_ids]
             logger.info("Split '%s': %d/%d imágenes tras filtrar por %s",
                         args.split, len(image_paths), before, args.splits_file)
 
@@ -419,8 +420,10 @@ def main():
             for _, row in ref_df.iterrows():
                 img_id = Path(str(row.get("image", ""))).name.replace("dataset/", "")
                 text = row.get(ref_col, "")
-                if img_id and text:
-                    references[img_id] = str(text)
+                # Las filas sin descripción vienen como NaN (float, que es verdadero): sin este control se
+                # guardaba la cadena «nan» como referencia (539 reportes de Mini-VLM v2 en MM-Skin).
+                if img_id and isinstance(text, str) and text.strip():
+                    references[img_id] = text
 
         # Directorio de referencias en estructura paralela (ej: SkinCoT EN/)
         reference_dir = Path(args.reference_dir) if args.reference_dir else None

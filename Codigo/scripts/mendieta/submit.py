@@ -260,6 +260,19 @@ JOBS = {
     "reanchor_skinvl": "slurm/mendieta/v4/reanchor_skinvl.sh",
     ## RAG con el índice de la partición por lesión (2026-10-03). Ver docs/ideas/rag_les_plan_20261003.md.
     "rag_les":         "slurm/mendieta/v4/rag_les_mini_vlm.sh",
+    ## Mini-VLM v3: LoRA sobre el LLM (qkv_proj) + CLIP (2026-10-12). Ver docs/ideas/mini_vlm_lora_llm_plan_20261012.md.
+    ## Los que usan el checkpoint v3 se envían con --after <JOBID de mini_s2_v3>.
+    "mini_s2_v3":           "slurm/mendieta/v5/train_vlm_s2_mini_v3.sh",
+    "cascade_mini_v3":      "slurm/mendieta/v5/cascade_mini_v3.sh",
+    "extra_mini_v3":        "slurm/mendieta/v5/extra_mini_v3.sh",
+    "classify_mini_v3_lik": ("slurm/mendieta/v5/classify_mini_v3.sh", {"METHOD": "likelihood"}),
+    "classify_mini_v3_cot": ("slurm/mendieta/v5/classify_mini_v3.sh", {"METHOD": "cot"}),
+    "level1_mini_v3":       ("slurm/mendieta/v5/level1_test.sh", {
+        "MODEL": "mini_vlm", "CKPT": "outputs/checkpoints/stage2_mini_vlm_v3/best_model.pt",
+        "OUT": "outputs/generated_reports/mini_vlm_v3"}),
+    "level1_llava_v2":      ("slurm/mendieta/v5/level1_test.sh", {
+        "MODEL": "llava_med", "CKPT": "outputs/checkpoints/stage2_llava_med_v2/best_model.pt",
+        "OUT": "outputs/generated_reports/llava_med/v2"}),
 }
 
 # Grupos de jobs para envios multiples
@@ -275,6 +288,8 @@ _IMB_EXTRA_JOBS = [
     "imb_densenet_ce", "imb_densenet_weighted", "imb_densenet_focal", "imb_densenet_balsoftmax",
 ]
 GROUPS = {
+    "after_mini_v3": ["cascade_mini_v3", "extra_mini_v3", "classify_mini_v3_lik", "classify_mini_v3_cot",
+                      "level1_mini_v3"],
     "imb_all_extra": _IMB_EXTRA_JOBS,
     "all":          _TRAINING_JOBS,
     "all_s1":       ["mini_s1", "llava_s1"],
@@ -348,13 +363,13 @@ def _log_subdir(name: str) -> str:
     return "shared"
 
 
-def submit_job(name: str, script: str, env_vars: dict | None = None) -> str | None:
-    """Envia un job con sbatch y retorna el JOBID."""
+def submit_job(name: str, script: str, env_vars: dict | None = None, after: str | None = None) -> str | None:
+    """Envia un job con sbatch y retorna el JOBID. Con ``after``, espera a que ese job termine bien (afterok)."""
     print(f"--- Enviando: {name} ---")
-    export_flag = ""
+    export_flag = f" --dependency=afterok:{after}" if after else ""
     if env_vars:
         pairs = ",".join(f'{k}="{v}"' for k, v in env_vars.items())
-        export_flag = f" --export=ALL,{pairs}"
+        export_flag += f" --export=ALL,{pairs}"
         print(f"  Variables extra: {env_vars}")
     # Crear subdirectorios de logs antes de enviar el job
     cmd = (
@@ -406,6 +421,10 @@ def main():
         "--no-sync", action="store_true",
         help="No sincronizar codigo antes de enviar (usar si ya se sincronizo)"
     )
+    parser.add_argument(
+        "--after", metavar="JOBID", default=None,
+        help="Encola con --dependency=afterok:JOBID (el job arranca solo si JOBID termina bien)"
+    )
     args = parser.parse_args()
 
     check_tools()
@@ -431,13 +450,14 @@ def main():
 
     jobids = []
     for name, script, env_vars in targets:
-        jid = submit_job(name, script, env_vars)
+        jid = submit_job(name, script, env_vars, after=args.after)
         if jid:
             jobids.append(jid)
         print()
 
     if jobids:
-        append_jobs_log(jobids, "mendieta", f"submit {args.target}")
+        after = f" after={args.after}" if args.after else ""
+        append_jobs_log(jobids, "mendieta", f"submit {args.target}{after}")
         print("=== Jobs encolados ===")
         print(f"Ver cola:  python scripts/mendieta/monitor.py")
         for jid in jobids:

@@ -4,6 +4,41 @@ Ayuda-memoria cronológico de experimentos enviados a cluster, ordenado de más 
 
 ---
 
+## 2026-10-12
+
+### Mini-VLM v3 (LoRA sobre el LLM) + Nivel 1 sobre las particiones de prueba — Mendieta jobs 1179985–1179991
+Plan: [mini_vlm_lora_llm_plan](ideas/mini_vlm_lora_llm_plan_20261012.md). El LoRA de `stage2_mini_vlm_v2` quedó
+solo en CLIP; v3 usa `--lora_target_modules qkv_proj q_proj v_proj` (31 457 280 entrenables, verificado sin cargar
+pesos). Cambios de código: `train_vlm_stage2.py` (`--lora_target_modules`; métricas `stage2_metrics_<run>.json`),
+`generate_report.py` (filtro de partición acepta nombres con extensión, como los de `mmskin_splits.json`;
+referencias NaN ya no se guardan como «nan»), `evaluate_reports.py` (descarta referencias «nan»), `submit.py`
+(`--after JOBID` → `afterok`, alias `*_v3`), `slurm/mendieta/v5/`. Subidos por `scp` (md5 verificado; copias
+`*.bak_20261012` en remoto); no se usó `sync_up` porque la carpeta principal está en otra rama.
+
+| Job | Alias | Depende de | Qué hace |
+|---|---|---|---|
+| 1179985 | `mini_s2_v3` | — | Etapa 2 v3 → `outputs/checkpoints/stage2_mini_vlm_v3/` |
+| 1179986 | `cascade_mini_v3` | 1179985 | baseline, swin_les, oracle, dermlip (1503) + differential_les (248) → `generated_reports/mini_vlm_v3/` |
+| 1179987 | `extra_mini_v3` | 1179985 | rag_les, swin_rag_les (1503) + oracle_noimage, wrong_swap (400) |
+| 1179988 | `classify_mini_v3_lik` | 1179985 | Clasificación por verosimilitud → `results/mini_vlm/v3/` |
+| 1179989 | `classify_mini_v3_cot` | 1179985 | Clasificación CoT → `results/mini_vlm/v3/` |
+| 1179990 | `level1_mini_v3` | 1179985 | SkinCoT test (457) + MM-Skin test (1653) |
+| 1179991 | `level1_llava_v2` | — | Ídem con LLaVA-Med v2 → `generated_reports/llava_med/v2/{skincot,mmskin}_test` |
+
+**Envío:**
+```
+python scripts/mendieta/submit.py mini_s2_v3 --no-sync                       # 1179985
+python scripts/mendieta/submit.py after_mini_v3 --no-sync --after 1179985    # 1179986-1179990
+python scripts/mendieta/submit.py level1_llava_v2 --no-sync                  # 1179991
+```
+
+**Locales del mismo día (sin SLURM):** Nivel 1 de MM-Skin recalculado sin las referencias «nan»
+(`scripts/level1_mmskin_recalc.py`, nota en [reportes_resul_v2](resul/reportes_resul_v2_20260517.md) §4.1);
+latencia de generación desde las corridas comparables del re-anclaje (`measure_cost.py`, nota en
+[costo_resul](resul/costo_resul_20260705.md)): Mini-VLM 16.4 s, LLaVA-Med 26.2 s, SkinVL-MM 3.4 s por reporte.
+
+**Resul:** pendiente hasta que bajen los jobs.
+
 ## 2026-10-11
 
 ### Verificaciones para los pendientes del Cap. 3 — **Sin jobs SLURM** (local)

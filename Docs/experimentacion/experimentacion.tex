@@ -1968,7 +1968,7 @@ Nuestros modelos aparecen al pie del Cuadro~\ref{tab:sota_gen}, evaluados sobre 
 \emph{benchmark} que las primeras filas). El contraste es la mejor evidencia del punto anterior: como
 fueron entrenados sobre SkinCaRe y se aplican a MM-Skin \emph{sin reajuste}, su BLEU-4 cae a
 $\approx 0.1$ —dos órdenes de magnitud por debajo de los modelos ajustados sobre MM-Skin—; sin embargo,
-su \emph{BERTScore} ($\approx 66$--$70$), que mide similitud \emph{semántica} y no de palabras exactas,
+su \emph{BERTScore} ($\approx 67$--$71$), que mide similitud \emph{semántica} y no de palabras exactas,
 queda al nivel del SOTA sobre ese mismo \emph{benchmark} ($\approx 67$--$71$). Es decir, el contenido es
 comparable pero la redacción difiere: el BLEU castiga la diferencia de estilo, no la de calidad clínica.
 Esto confirma por qué la evaluación de Nivel 2 es la métrica decisiva en este trabajo.
@@ -1997,8 +1997,8 @@ Esto confirma por qué la evaluación de Nivel 2 es la métrica decisiva en este
     \cite{DermatoLlama2025} & DermatoLlama / DERM12345 (sint.) & 65.59 & 93.44$^{c}$ & --- & --- \\
     \cite{PeFoMed2024} & PeFoMed / IU-Xray (radiol.) & --- & 28.60$^{d}$ & 15.70 & --- \\
     \multicolumn{6}{@{}l}{\itshape Este trabajo --- evaluado sobre MM-Skin$^{e}$} \\
-    & LLaVA-Med (FT SkinCaRe) & 0.08 & 3.12 & 8.10 & 65.80 \\
-    & Mini-VLM (FT SkinCaRe) & \textbf{0.15} & \textbf{5.36} & \textbf{10.36} & \textbf{69.91} \\
+    & LLaVA-Med (FT SkinCaRe) & 0.09 & 3.36 & 8.72 & 67.03 \\
+    & Mini-VLM (FT SkinCaRe) & \textbf{0.16} & \textbf{5.80} & \textbf{11.21} & \textbf{71.29} \\
     \bottomrule
   \end{tabular}%
   }
@@ -2008,7 +2008,10 @@ Esto confirma por qué la evaluación de Nivel 2 es la métrica decisiva en este
   sintéticos. $^{d}$Reportes radiológicos (IU-Xray), no dermatológicos; incluido como referencia de la
   arquitectura VLM$+$LoRA. $^{e}$Nuestros modelos se entrenaron sobre SkinCaRe y se evalúan aquí sobre
   MM-Skin \emph{sin ajuste a ese corpus} (transferencia entre datasets), de ahí los puntajes léxicos muy
-  bajos pese a su fidelidad diagnóstica en Nivel 2.\par}
+  bajos pese a su fidelidad diagnóstica en Nivel 2. Recalculado el 12/10/2026 sin las imágenes sin descripción
+  (antes entraban con la referencia ``nan'') y sin los bloques \texttt{<think>}: $n = 6\,590$ (Mini-VLM) y
+  $2\,426$ (LLaVA-Med), sobre el archivo completo cortado por tiempo y no sobre la partición de prueba (en
+  regeneración, jobs 1179990 y 1179991).\par}
 \end{table}
 
 \begin{figure}[H]

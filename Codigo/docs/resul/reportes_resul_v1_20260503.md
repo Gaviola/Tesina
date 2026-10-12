@@ -45,6 +45,13 @@ Se realizó un sweep de hiperparámetros en Mendieta con 4 trials por modelo (se
 
 **Batch efectivo:** 16 para LLaVA-Med, 8 para Mini-VLM (reducido por OOM en A30 con Phi-3-mini)
 
+> **Corrección (2026-10-12, [verificaciones_cap03](verificaciones_cap03_resul_20261011.md)).** El log del
+> barrido 1147378 (trial t04 de Mini-VLM, misma configuración) muestra lote 4 × 4 = 16: ante falta de memoria
+> el código activa *gradient checkpointing* y no reduce el lote efectivo (`train_vlm_stage2.py:296-301`). El
+> modelo es Phi-3.5-vision, no Phi-3-mini. Además, el LoRA de Mini-VLM quedó solo en el codificador CLIP
+> (6 291 456 parámetros), porque Phi-3.5 fusiona la atención del LLM en `qkv_proj`; se reentrena como v3
+> ([plan](../ideas/mini_vlm_lora_llm_plan_20261012.md)).
+
 **Val loss final (Stage 2):**
 
 | Modelo | Trial ganador | Val loss Stage 2 | Val loss Stage 1 |
