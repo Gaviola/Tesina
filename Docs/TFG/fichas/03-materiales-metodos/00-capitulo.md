@@ -197,7 +197,8 @@ Las nueve fichas se prepararon en paralelo. Lo que esta revisión resolvió prev
 1. **Labels del Cap. 2.** La fuga de información y el TTA están en `sec:marco_regularizacion` (2.1), no en
    `sec:marco_generalizacion` (2.9, sesgo y robustez). Ya corregido en las fichas 3.2, 3.3, 3.4, 3.6, 3.8 y 3.9.
 2. **Claves de cita.** *HIBA* es `riccilara2023dataset`; LLaVA-Med es `li2023llavamed`; LoRA es `hu2021lora`.
-   Mini-VLM (Phi-3.5-vision) y SkinVL no tienen clave en el `.bib`: se proponen en `refs_pendientes.md`.
+   Mini-VLM (Phi-3.5-vision) es `abdin2024phi3` y SkinVL (presentado en el artículo de *MM-Skin*) es
+   `zeng2025mmskin`: las dos ya estaban en el `.bib` (corrección del 11/10/2026).
 3. **Duplicaciones.** Las partes del reporte se definen en 3.1 (3.7 las nombra). El *oracle* y la línea base sin
    generador se definen en 3.8 (3.4 solo anuncia que el *pipeline* tiene su propia línea base).
 4. **VLM ajustados sin fuga** (ver «Alcance», punto 6). Afecta a 3.6 y a la ficha del Cap. 4.

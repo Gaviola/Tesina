@@ -1,19 +1,310 @@
+% Extensión estimada: unas 3 páginas con dos tablas de protocolo y una de pruebas.
+% Fuentes: src/training/recipes.py; scripts/train_classifier.py y src/training/callbacks.py (checkpoint por val_f1);
+% scripts/statistical_tests.py (bootstrap_ci, paired_bootstrap_diff, mcnemar_exact, wilcoxon con zero_method="wilcox");
+% scripts/ensemble_bootstrap.py (paired_bootstrap_diff_flags); scripts/robustness_perturbations.py;
+% scripts/posthoc_calibration.py; scripts/interpretability.py; scripts/measure_cost.py;
+% outputs/results/{statistical_tests_les, lesion_split_report, robustness/robustness_summary, cost/cost_comparison,
+% *_hiba_test_results}.json; docs/resul/revision_experimentacion_20261003.md.
+
 \section{Análisis complementarios}
 \label{sec:met_complementarios}
 
+La sección anterior presentó el \emph{pipeline} con su ruteo en tres niveles. Un resultado obtenido sobre el mismo test
+que eligió los modelos no alcanza para sostenerlo (Sección~\ref{sec:marco_generalizacion}). Cada número de los capítulos
+de resultados depende de cuatro decisiones: la regla de inferencia con la que se obtienen las probabilidades, el
+\emph{checkpoint} que se evalúa, la partición sobre la que se mide y la prueba con la que se compara con otro resultado.
+La regla de inferencia cambia el número antes de cualquier comparación, así que estas decisiones se fijan una vez, y los
+Capítulos~\ref{cp:res_clasif} y~\ref{cp:res_gen} las nombran sin justificarlas de nuevo.
+
 \subsection{Protocolos de inferencia}
-\pendiente{Una tabla única indica, para cada resultado reportado, si se usa vista única o TTA, qué
-\emph{checkpoint} y qué partición.}
+\label{sec:met_inferencia}
+
+Dos reglas de inferencia producen las probabilidades de los clasificadores. La \emph{vista única} hace una sola pasada
+con el preprocesamiento de validación. El \gls{tta} (Sección~\ref{sec:marco_regularizacion}) promedia las
+probabilidades de la imagen original y de su reflejo horizontal, y es la regla de la receta moderna
+(Sección~\ref{sec:met_supervisados}). El \emph{checkpoint} es la época con mejor F1 ponderado en validación, y el
+\emph{trial} es el de mejor F1 macro en validación (Sección~\ref{sec:met_seleccion}). El paso a F1 macro como criterio de
+selección y la elección de la concordancia como señal de ruteo (Sección~\ref{sec:met_pipeline}) se motivaron con cifras
+del test. Aun así, los ganadores y los umbrales se eligen en validación.
+La partición es la disjunta por lesión (Sección~\ref{sec:met_particiones}): el test tiene 1\,503 imágenes, las mismas
+del conjunto original.
+
+Algunos resultados no siguen esta regla, y se declaran en lugar de corregirse. DenseNet121 y ViT-B/16 se entrenaron con
+la receta anterior (Sección~\ref{sec:met_supervisados}), sin TTA y con una sola semilla, así que se evalúan con vista
+única. Los VLM ajustados también se
+evalúan con vista única. Su ajuste usa \emph{SkinCaRe} y no \emph{HAM10000}, así que el test de este conjunto no
+interviene en el entrenamiento de los VLM (Sección~\ref{sec:met_generacion}). La robustez y el Grad-CAM usan vista única,
+de modo que su línea de base queda por debajo de la de las tablas con TTA, y el costo se mide sin TTA. Estos resultados se
+mantienen tal como se midieron. Las Tablas~\ref{tab:met_protocolos} y~\ref{tab:met_protocolos_vlm} enumeran la regla, el \emph{checkpoint}, la partición
+y la prueba de cada resultado de clasificación, y la Tabla~\ref{tab:met_protocolos_analisis} los de análisis y generación.
+
+\begingroup
+\small
+\setlength{\tabcolsep}{3pt}
+\begin{table}[H]
+    \centering
+    \caption{Protocolo de los resultados de los clasificadores supervisados.}
+    \label{tab:met_protocolos}
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{3.6cm}
+        >{\raggedright\arraybackslash\hspace{0pt}}X
+        >{\raggedright\arraybackslash\hspace{0pt}}X
+        >{\raggedright\arraybackslash\hspace{0pt}}X
+        >{\raggedright\arraybackslash\hspace{0pt}}X@{}}
+        \toprule
+        \textbf{Resultado} & \textbf{Regla de inferencia} & \textbf{Checkpoint} & \textbf{Partición} & \textbf{Prueba o IC} \\
+        \midrule
+        Swin-Tiny y ConvNeXt-Tiny, métricas de test, media $\pm$ desvío
+            & TTA & Época con mejor F1 ponderado en validación; \emph{trial} con mejor F1 macro en validación
+            & Por lesión (1\,503); semillas 42, 43 y 44 & IC bootstrap por métrica; desvío entre semillas \\
+        \filasep
+        Ensamble Swin + ConvNeXt, voto suave
+            & TTA; promedio de probabilidades & Ganadores, por semilla & Por lesión; media $\pm$ desvío
+            & Desvío entre semillas \\
+        \filasep
+        Réplica de desbalance: entropía cruzada, ponderada, focal y \emph{balanced softmax}, en tres arquitecturas
+            & TTA (receta moderna, semilla 42) & \emph{Trial} con mejor F1 macro en validación, por pérdida
+            & Por lesión (1\,503) & Descriptiva \\
+        \filasep
+        DenseNet121 y ViT-B/16, receta anterior
+            & Vista única (sin TTA) & Ganadores de la receta anterior & Por lesión (1\,503)
+            & McNemar y bootstrap contra Swin, con protocolo distinto (declarado) \\
+        \filasep
+        Calibración: sin calibrar, \emph{temperature scaling} y \emph{vector scaling}
+            & TTA & Ganadores, semilla 42 & Ajuste en validación; evaluación en test
+            & ECE, MCE y Brier; sin IC \\
+        \filasep
+        Wilcoxon por clase
+            & TTA, misma corrida & Ganadores, semilla 42 & Test & Wilcoxon sobre siete clases \\
+        \filasep
+        Melanoma frente al resto: AUC y punto de operación con especificidad $\geq$ 0.85
+            & TTA & Ganadores y ensamble, semillas 42, 43 y 44 & Umbral fijado en validación; test
+            & Media $\pm$ desvío \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+\endgroup
+
+\begingroup
+\small
+\setlength{\tabcolsep}{3pt}
+\begin{table}[H]
+    \centering
+    \caption{Protocolo de los resultados de los modelos visión--lenguaje y de DermLIP.}
+    \label{tab:met_protocolos_vlm}
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{3.6cm}
+        >{\raggedright\arraybackslash\hspace{0pt}}X
+        >{\raggedright\arraybackslash\hspace{0pt}}X
+        >{\raggedright\arraybackslash\hspace{0pt}}X
+        >{\raggedright\arraybackslash\hspace{0pt}}X@{}}
+        \toprule
+        \textbf{Resultado} & \textbf{Regla de inferencia} & \textbf{Checkpoint} & \textbf{Partición} & \textbf{Prueba o IC} \\
+        \midrule
+        VLM generales, \emph{zero-shot}
+            & Vista única & Ninguno (preentrenados) & Test de \emph{HAM10000} (1\,503)
+            & IC bootstrap de la sensibilidad macro; McNemar; Wilcoxon \\
+        \filasep
+        VLM generales ajustados, por verosimilitud y CoT
+            & Vista única & Etapa 2 de cada VLM (v2, 10 épocas) & Test de \emph{HAM10000} (1\,503)
+            & Sin IC (a verificar) \\
+        \filasep
+        Prueba con imagen gris y sin imagen
+            & Vista única (a verificar) & Los ajustados & Test de \emph{HAM10000} (1\,503) & Descriptiva \\
+        \filasep
+        VLM \emph{zero-shot} sobre fotografía clínica
+            & Vista única & Ninguno
+            & \emph{SkinCAP} mapeado a siete clases (n = 624; subconjunto a verificar)
+            & Descriptiva \\
+        \filasep
+        DermLIP \emph{zero-shot} en \emph{HAM10000} y en fotografía clínica
+            & Vista única & DermLIP ViT-B/16 preentrenado
+            & Test de \emph{HAM10000} (1\,503); \emph{SkinCAP} (n = 624)
+            & IC bootstrap; McNemar; Wilcoxon \\
+        \filasep
+        \emph{kNN} ($k = 3$), regresión logística y SVM-RBF sobre \emph{embeddings} de DermLIP
+            & Vista única & Cabezas ajustadas en entrenamiento & Entrenamiento y test por lesión & Semilla 42; sin IC \\
+        \filasep
+        Control: cabezas equivalentes sobre Swin congelado y preentrenado en \emph{ImageNet}
+            & Vista única & Preentrenado en \emph{ImageNet} & Por lesión & Semilla 42; sin IC \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+\endgroup
 
 \subsection{Análisis estadístico}
-\pendiente{Se indica qué intervalo o prueba corresponde a cada métrica y comparación: \emph{bootstrap}
-pareado para diferencias de métricas agregadas, McNemar para aciertos por imagen y Wilcoxon para
-\emph{recall} por clase.}
+\label{sec:met_estadistica}
 
-\subsection{Validación externa, perturbaciones, calibración e interpretabilidad}
-\pendiente{Además de las métricas sobre el test, se realizan cuatro análisis que responden preguntas
-distintas de ``cuánto acierta el modelo'': si el desempeño se sostiene en otra población (evaluación en
-HIBA), si se sostiene bajo peores condiciones de captura (perturbaciones de adquisición: ruido, desenfoque,
-compresión JPEG y pérdida de resolución), si las probabilidades que entrega el modelo son confiables
-(calibración post-hoc ajustada en validación) y si el modelo mira la lesión o el contexto de la imagen
-(Grad-CAM). Esta subsección describe el procedimiento de cada uno.}
+Cada comparación tiene su prueba, según lo que se pregunta (Tabla~\ref{tab:met_pruebas}). Si la diferencia entre dos modelos
+en una métrica agregada, como el F1 macro o la sensibilidad macro, debe compararse con lo que cambia la composición del
+test, se usa un bootstrap pareado sobre imágenes (Sección~\ref{sec:marco_eval_estadistica}). Si la pregunta es qué imágenes
+acierta cada modelo, se usa McNemar en su versión exacta: la binomial bilateral sobre los casos discordantes, que es la que
+calcula el código para todos los pares. La aproximación $\chi^2$ (Ecuación~\ref{eq:marco_mcnemar}) no se usa en ningún
+resultado. Si la pregunta es si la mejora es sistemática entre clases, se usa Wilcoxon sobre la sensibilidad de las siete
+clases (\emph{recall}). Las pruebas no corrigen por comparaciones múltiples.
+\pendiente{decidir si se aplica corrección por
+comparaciones múltiples (Holm)}
+
+Los intervalos son percentiles al 95\,\%: si el intervalo de una diferencia no contiene el cero, la diferencia no se
+explica por la composición del test. El p-valor del bootstrap, que es dos veces la menor proporción de remuestreos con
+signo contrario, solo orienta, y la decisión se toma con el intervalo. McNemar y Wilcoxon se evalúan a nivel 0.05
+bilateral. Las pruebas pareadas se corren sobre la corrida de la semilla 42, y la variación entre semillas se presenta como
+desvío (Sección~\ref{sec:met_protocolo}). Hay 21 comparaciones de McNemar y 21 de Wilcoxon entre los siete modelos. El
+bootstrap remuestrea imágenes (1\,503), no lesiones (1\,429 en el test), así que las imágenes de una misma lesión se tratan
+como independientes.
+\pendiente{decidir si el bootstrap remuestrea por lesión o si esta limitación se declara} Con siete
+clases, el menor p bilateral de Wilcoxon es 0.016. Si dos modelos tienen el mismo recall en una clase, esa clase se descarta
+y la N baja, por lo que el Capítulo~\ref{cp:res_clasif} declara la N de cada par.
+
+\begingroup
+\small
+\setlength{\tabcolsep}{3pt}
+\begin{table}[H]
+    \centering
+    \caption{Pruebas y parámetros por comparación.}
+    \label{tab:met_pruebas}
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{3.1cm}
+        >{\raggedright\arraybackslash\hspace{0pt}}X
+        >{\raggedright\arraybackslash\hspace{0pt}}X
+        >{\raggedright\arraybackslash\hspace{0pt}}X
+        >{\raggedright\arraybackslash\hspace{0pt}}p{1.4cm}@{}}
+        \toprule
+        \textbf{Comparación} & \textbf{Pregunta que responde} & \textbf{Prueba} & \textbf{Parámetros} & \textbf{Nivel} \\
+        \midrule
+        Métrica agregada de un modelo (exactitud, F1 ponderado, F1 macro, sensibilidad macro)
+            & ¿Cuánto varía por la composición del test?
+            & IC percentil de bootstrap
+            & 2\,000 remuestreos con reposición de imágenes; semilla 42
+            & IC 95\,\% \\
+        \filasep
+        Diferencia de F1 macro o de sensibilidad macro entre dos modelos
+            & ¿La diferencia excede la variación de la muestra?
+            & Bootstrap pareado
+            & 2\,000 remuestreos sobre las mismas imágenes
+            & IC 95\,\% sin cero \\
+        \filasep
+        Aciertos por imagen entre dos modelos
+            & ¿Uno acierta imágenes en las que el otro falla?
+            & McNemar exacto (binomial bilateral sobre los discordantes)
+            & Casos discordantes $b$ y $c$; sin corrección de continuidad
+            & 0.05 \\
+        \filasep
+        Sensibilidad por clase entre dos modelos
+            & ¿La mejora es sistemática entre clases?
+            & Wilcoxon de rangos con signo, bilateral
+            & Siete clases; método \texttt{wilcox} para los empates
+            & 0.05 \\
+        \filasep
+        Consistencia diagnóstica por reporte (cascada, ensamble)
+            & ¿La diferencia de proporciones excede la variación de los reportes?
+            & Bootstrap pareado de la diferencia de medias
+            & 2\,000 remuestreos; semilla 42
+            & IC 95\,\% sin cero \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+\endgroup
+
+\subsection{Análisis complementarios}
+\label{sec:met_analisis_compl}
+
+¿El desempeño se sostiene en una población distinta de la del entrenamiento? Se evalúa el conjunto externo \emph{HIBA},
+solo en test, con los dos clasificadores ganadores (semilla 42, TTA). Cada modelo se compara con su resultado en el test de
+\emph{HAM10000} con el mismo \emph{checkpoint}, y el resultado se separa por modalidad, porque \emph{HIBA} mezcla
+dermatoscopía y fotografía clínica: 346 de sus imágenes son clínicas, y sus fototipos van de I a IV. Las diez categorías de
+\emph{HIBA} se llevan a las siete de \emph{HAM10000} con el mapeo de la Sección~\ref{sec:met_datasets}. El carcinoma
+escamoso pasa a AKIEC, que en \emph{HAM10000} agrupa queratosis actínicas y carcinoma intraepitelial; esa aproximación es
+una fuente de ruido que se declara. El conjunto tiene 1\,616 imágenes.
+\pendiente{confirmar si la evaluación usó las 1\,616
+imágenes o el test de 243 de hiba\_splits.json} Cada modelo tiene un solo \emph{checkpoint} y no tiene intervalo de
+confianza.
+\pendiente{decidir si se agrega un IC bootstrap sobre las 1\,616 imágenes} La validación externa cambia la
+población, pero no las condiciones de captura, que el análisis siguiente varía.
+
+¿Qué ocurre si las condiciones de captura empeoran, sin cambiar de conjunto de datos? Se aplican cuatro perturbaciones de
+adquisición a las 1\,503 imágenes originales, antes del preprocesamiento, con cinco niveles cada una: compresión JPEG con
+calidad 70, 50, 30, 15 y 5; ruido gaussiano con desvío 8, 16, 32, 48 y 64 sobre la escala de 0 a 255; desenfoque gaussiano
+de radio 1, 2, 3, 4 y 6 píxeles; y resolución reducida a 0.75, 0.50, 0.35, 0.25 y 0.15 del tamaño original, y llevada de
+nuevo al tamaño original. La medida es la caída relativa de la sensibilidad macro (Ecuación~\ref{eq:marco_robustez}) frente
+a la línea base de vista única, con una sola corrida y semilla 42 para el ruido. Las perturbaciones sintéticas cubren solo
+parte de la variación real entre equipos.
+
+La robustez mide cuánto cambia el acierto. La calibración mide otra cosa: cuánto vale la probabilidad del modelo como medida
+de confianza, y si puede corregirse sin reentrenar. Se miden el ECE y el MCE con diez intervalos de igual ancho, el Brier y
+la log-pérdida (Sección~\ref{sec:marco_eval_calib}), sin calibrar y con dos ajustes posteriores: \emph{temperature
+scaling} y \emph{vector scaling}. Ambos se ajustan en validación con las predicciones del ganador y se evalúan en test. El
+primero divide los logits por un escalar $T$, que minimiza la log-pérdida con L-BFGS (tasa 0.1, hasta 500 iteraciones), y
+no cambia la clase predicha. El segundo aplica un factor y un sesgo por clase, con un término $L_2$ de $10^{-3}$ para no
+sobreajustar la validación, y puede cambiar la clase predicha. Como el modelo guarda probabilidades promediadas con TTA y no
+logits, los logits se reconstruyen como $\log p$. Es una aproximación que se declara, porque el promedio de dos softmax no es
+el softmax de un promedio de logits. Se miden dos versiones del mismo trial: sin pesos por clase (el ganador) y con pesos.
+
+La calibración dice cuánto creer la probabilidad, y la pregunta siguiente es en qué se apoya el modelo. ¿Mira la lesión o el
+contexto de la imagen? Se aplica Grad-CAM (Sección~\ref{sec:marco_eval_gradcam}) al Swin ganador sobre la salida de su
+última etapa, con el gradiente del logit de la clase predicha (Ecuación~\ref{eq:marco_gradcam}), rectificado con ReLU y
+reescalado, y se superpone sobre el recorte de validación que recibe el modelo. Son siete imágenes, una por clase, tomadas
+del test. Es una inspección cualitativa: no mide acierto ni prueba razonamiento clínico. Queda fuera la saliencia por
+gradiente de DermLIP, que no se interpreta.
+
+Los análisis anteriores miden el modelo, y el costo computacional mide qué cuesta usarlo. ¿Qué hardware exige cada
+alternativa? Para los clasificadores se mide el número de parámetros, la latencia con lote de una imagen y el
+\emph{throughput} con lote de 32, en punto flotante de 32 bits, sobre una entrada aleatoria de 224 $\times$ 224, con cinco
+iteraciones de calentamiento, el promedio de 20 medidas y sin gradiente, en una RTX 4070 de 12 GB. La memoria de video
+(VRAM) es una estimación a partir de los pesos, con cuatro bytes por parámetro y 0.5 GB adicionales, no un valor medido. Para
+los generadores se toman los segundos por reporte de los registros de SLURM en una A30 de 24 GB, como el tiempo entre la
+primera y la última línea de progreso dividido por los reportes generados entre ambas, con decodificación voraz y 512
+tokens como máximo. El Mini-VLM tiene un solo registro. LLaVA-Med tiene dos, y el código toma el valor más alto.
+\pendiente{confirmar si se reporta un rango o si se vuelve a medir la latencia de LLaVA-Med} No es un \emph{benchmark}
+pareado, sino una medida del orden de magnitud. La comparación con el hardware de la literatura va al
+Capítulo~\ref{cp:discusion}.
+
+\begingroup
+\small
+\setlength{\tabcolsep}{3pt}
+\begin{table}[H]
+    \centering
+    \caption{Protocolo de los resultados de análisis complementarios y de generación.}
+    \label{tab:met_protocolos_analisis}
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{3.6cm}
+        >{\raggedright\arraybackslash\hspace{0pt}}X
+        >{\raggedright\arraybackslash\hspace{0pt}}X
+        >{\raggedright\arraybackslash\hspace{0pt}}X
+        >{\raggedright\arraybackslash\hspace{0pt}}X@{}}
+        \toprule
+        \textbf{Resultado} & \textbf{Regla de inferencia} & \textbf{Checkpoint} & \textbf{Partición} & \textbf{Prueba o IC} \\
+        \midrule
+        Validación externa en \emph{HIBA}
+            & TTA & Ganadores, semilla 42 & Solo test de \emph{HIBA} & Sin IC; un checkpoint por modelo \\
+        \filasep
+        Perturbaciones de adquisición
+            & Vista única & Ganadores, semilla 42 & Test (1\,503) & Sin IC; una corrida \\
+        \filasep
+        Grad-CAM del Swin ganador
+            & Vista única, recorte de validación & Ganador, semilla 42 & Siete imágenes del test & Cualitativa \\
+        \filasep
+        Consistencia diagnóstica de los reportes, con cada generador
+            & Decodificación voraz; métrica oficial de solo reporte, con \emph{matcher} estricto
+            & Ancla Swin por lesión, semilla 42
+            & Test (1\,503) o subconjunto según el brazo (a verificar)
+            & Bootstrap pareado de la diferencia de medias \\
+        \filasep
+        Ensamble y cascada: ruteo y línea base sin generador
+            & Ancla Swin por lesión, semilla 42; métrica oficial & Ganador & Test (1\,503)
+            & Bootstrap pareado, 2\,000 remuestreos, IC 95\,\% \\
+        \filasep
+        RAG con índice por lesión
+            & Vista única (a verificar)
+            & \emph{kNN} con DermLIP ($k = 3$) sobre entrenamiento
+            & Test (1\,503)
+            & Bootstrap pareado (corrida pendiente) \\
+        \filasep
+        Costo de clasificadores y generadores
+            & Sin TTA; latencia medida & Arquitecturas sin entrenar; registros de SLURM
+            & Entrada aleatoria; registros de SLURM & Sin IC \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+\endgroup
+\pendiente{Tablas~\ref{tab:met_protocolos_vlm} y~\ref{tab:met_protocolos_analisis}: verificar las celdas marcadas «a
+verificar» y completar la fila del RAG con índice por lesión cuando termine su corrida (\texttt{full\_rag\_les}).}
+
+Los resultados de clasificación del Capítulo~\ref{cp:res_clasif} se leen con este protocolo: cada número lleva la regla y
+la partición de la Tabla~\ref{tab:met_protocolos}, y cada diferencia, la prueba de la Tabla~\ref{tab:met_pruebas}.
