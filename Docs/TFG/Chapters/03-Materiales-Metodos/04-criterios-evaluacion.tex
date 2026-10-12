@@ -1,30 +1,137 @@
+% Extensión estimada: 3 páginas; 11 párrafos en tres subsecciones (3.4.1 a 3.4.3) y una tabla.
+% Fuentes: HAM10000 (metadatos, Codigo/data/raw); y_true del test en Codigo/outputs/results/swin_tiny_sweep_t06_les_cwnone_predictions.json;
+% Codigo/docs/ideas/criterio_seleccion_plan_20260917.md; Codigo/docs/resul/split_lesion_resul_20260926.md;
+% Codigo/docs/resul/revision_experimentacion_20261003.md (§2.3, §2.8 y §5); src/evaluation/clinical_ner.py;
+% scripts/melanoma_detection.py; scripts/lesion_split_report.py; SkinCaRe (arXiv:2405.18004, resumen); MM-Skin (título).
+
 \section{Criterios de evaluación y líneas base}
 \label{sec:met_protocolo}
 
-\subsection{Selección de modelos, métricas y criterio de decisión}
+\subsection{Métricas de decisión y criterio de selección}
 \label{sec:met_seleccion}
 
-Las confusiones entre categorías no tienen el mismo costo clínico. Confundir MEL con NV retrasa la
-extirpación de una lesión cuya letalidad depende del estadio en que se diagnostica; confundir NV con MEL
+Las confusiones entre categorías no tienen el mismo costo clínico. Confundir \gls{mel} con \gls{nv} retrasa la
+extirpación de una lesión cuya letalidad depende del estadio en que se diagnostica; confundir \gls{nv} con \gls{mel}
 lleva a extirpar una lesión benigna sin necesidad; las confusiones entre las clases benignas tienen menor
-consecuencia~\cite{tschandl2018ham10000,nci2026melanoma}. Esa asimetría obliga a medir el desempeño clase
-por clase, además de en conjunto, y a dar a las clases minoritarias el mismo peso que a la mayoritaria.
+consecuencia~\cite{tschandl2018ham10000,nci2026melanoma}. En \emph{HAM10000}, \gls{nv} reúne 6\,705 de las
+10\,015 imágenes (66.95\,\%). Esa asimetría obliga a medir el desempeño clase por clase, además de en conjunto,
+y a dar a las clases minoritarias el mismo peso que a la mayoritaria.
 
-\pendiente{El Capítulo~\ref{cp:marco} define qué mide cada métrica; esta subsección indica cuáles se usan
-para decidir y por qué. Se justifican la sensibilidad macro como métrica principal de clasificación y el F1
-macro como complemento, el umbral de especificidad $\geq 0.85$ fijado en validación para la detección de
-melanoma, las métricas de calibración y las dos de generación (Nivel 1 con referencia; Nivel 2 con
-\emph{clinical entity recall} y \emph{diagnostic consistency}), con la distinción entre fidelidad diagnóstica
-y validez clínica.
+Medir clase por clase exige una métrica que no deje que la clase mayoritaria decida el resultado. La
+sensibilidad macro, definida en la Sección~\ref{sec:marco_eval_clasif}, promedia la sensibilidad de las clases
+sin ponderarlas por su frecuencia, y se presenta como resultado principal de clasificación. La exactitud no sirve
+para ese propósito: con una clase que reúne dos tercios de las imágenes, un modelo que responda siempre esa clase
+la alcanza sin reconocer ninguna otra. En el test, el clasificador trivial que responde siempre \gls{nv} tiene una
+exactitud de 0.669 y una sensibilidad macro de 0.143 (1/7), porque acierta todas las imágenes de \gls{nv} y ninguna
+de las otras seis clases. La sensibilidad macro mide directamente el desempeño de las clases minoritarias, que la
+exactitud oculta.
 
-Se describen a continuación los barridos de hiperparámetros y el criterio de selección, que opera
-enteramente en validación: el test no interviene en ninguna decisión. Hay que distinguir dos niveles. El
-\emph{checkpoint} de cada corrida es la época con mejor F1 ponderado en validación. La corrida ganadora
-entre las del barrido, en cambio, se elige por \emph{F1 macro} en validación, porque el F1 ponderado está
-dominado por la clase mayoritaria ---NV es el 67\,\% de las imágenes--- y la sensibilidad macro, que sería
-la alternativa natural por ser la métrica principal de este trabajo, ignora los falsos positivos y por lo
-tanto premia a los modelos que sobre-predicen las clases minoritarias. El F1 macro es el único de los tres
-que pondera las clases por igual y a la vez penaliza los falsos positivos. La sensibilidad macro se reporta
-como resultado principal, pero no se usa para elegir.
+El F1 macro cumple dos papeles: se reporta como complemento de la sensibilidad macro y es el criterio con el que se
+elige la corrida ganadora del barrido. Pondera las clases por igual y, a diferencia de la sensibilidad macro,
+penaliza los falsos positivos, de modo que no premia a los modelos que sobre-predicen las clases minoritarias. El F1
+ponderado, en cambio, queda dominado por \gls{nv}: para el clasificador trivial vale 0.537, frente a 0.115 del F1
+macro. Cuando ambas métricas divergen, la diferencia refleja el intercambio entre detectar cada clase y alertar de
+más. La Tabla~\ref{tab:met_roles} resume el rol de cada métrica en el trabajo.
 
-Los resultados se reportan como media $\pm$ desvío entre semillas.}
+La selección opera en dos niveles, con métricas distintas. Dentro de cada corrida, el \emph{checkpoint} que se
+guarda es la época con mayor F1 ponderado en validación. Entre corridas, el ganador es el candidato con mayor F1
+macro en validación. Cada modelo tiene 30 candidatos, que resultan de combinar los 15 \emph{trials} del barrido con
+pesos por clase y sin ellos, y el ranking se hace con la semilla 42. El F1 ponderado se mantuvo para el
+\emph{checkpoint} porque cambiarlo obligaba a reentrenar las 60 corridas del barrido, un costo que no se justificaba.
+
+La selección de modelos y la fijación de umbrales se hacen en validación, y el test se usa para reportar los
+resultados. Hay una excepción que conviene declarar. El paso de F1 ponderado a F1 macro como criterio entre corridas
+se decidió el 17 de septiembre de 2026 después de haber visto cifras del conjunto de prueba, y el cambio se motivó
+con ellas. Por eso la elección del criterio no es ajena al test. Su justificación, sin embargo, es la del párrafo
+anterior, y el cambio no favorece a los modelos que se presentan: con el criterio anterior sus valores en el test no
+habrían sido menores. La misma situación se da con la concordancia entre clasificador y \emph{kNN} como señal de ruteo, que se
+declara en la Sección~\ref{sec:met_pipeline}. \pendiente{dato: confirmar si la variante \emph{noreasoning} se eligió
+mirando el test (ficha 3.8)}
+
+El resultado principal de cada modelo es la media $\pm$ desvío de las semillas 42, 43 y 44 de su ganador, y el
+desvío es el muestral. \pendiente{decidir si se declara que el barrido se ordena solo con la semilla 42 o si se
+corren las semillas 43 y 44 de todos los candidatos} Con tres semillas el desvío es una estimación gruesa, y por
+eso las comparaciones entre modelos se completan con pruebas pareadas (Sección~\ref{sec:met_complementarios}).
+
+La detección de melanoma es la clasificación binaria de melanoma frente al resto de las clases, sin localización.
+Para esa tarea, el argmax de la clasificación multiclase no fija un punto de operación adecuado, porque el costo de
+perder un melanoma no entra en la regla. Por eso el umbral se fija en validación como el que maximiza la
+sensibilidad con una especificidad de al menos 0.85, y se aplica sin cambios al test para el ganador de cada modelo
+y para el ensamble de la Sección~\ref{sec:met_supervisados}, que promedia las probabilidades de sus integrantes. El
+umbral desplaza el punto de operación hacia la sensibilidad a costa de más falsos positivos, lo que es coherente con
+el costo asimétrico de las confusiones.
+
+\subsection{Líneas base y cotas}
+\label{sec:met_lineas_base}
+
+Cada línea base responde una pregunta distinta, y se define como un procedimiento que se aplica al mismo test. El
+azar fija el piso de cualquier clasificador de siete clases: una sensibilidad macro de 1/7. El clasificador trivial,
+que responde siempre \gls{nv}, muestra qué se obtiene del conjunto de datos sin ningún modelo, y sus valores están
+en la Sección~\ref{sec:met_seleccion}. Los clasificadores supervisados de la Sección~\ref{sec:met_supervisados} son
+la referencia con la que se comparan los \gls{vlm} de la Sección~\ref{sec:met_clasif_vlm},. El \emph{pipeline} tiene sus propias líneas
+base, que se definen junto con él en la Sección~\ref{sec:met_pipeline}, porque necesitan la cascada y el ruteo que
+allí se presentan.
+
+\subsection{Evaluación de la generación}
+\label{sec:met_eval_generacion}
+
+La evaluación del texto generado tiene dos niveles, según haya o no un texto de referencia. El Nivel~1 compara el
+reporte con una referencia mediante BLEU-4, ROUGE-L, METEOR, CIDEr y BERTScore (Sección~\ref{sec:marco_eval_texto}).
+Solo es aplicable a \emph{MM-Skin} y a \emph{SkinCoT}, que tienen texto de referencia; no se aplica a
+\emph{HAM10000}, que no lo tiene, y no decide ninguna elección. Esas referencias no son diagnósticos clínicos de la
+lesión, y quién las escribió condiciona lo que mide la comparación: el origen de cada una está en la
+Tabla~\ref{tab:met_conjuntos}.
+
+El Nivel~2 no requiere referencia. La cobertura de entidades clínicas (\emph{clinical entity recall}) mide cuántos
+términos clínicos relevantes aparecen en el texto, así que mide riqueza y no pertinencia. La consistencia diagnóstica
+(\emph{diagnostic consistency}) comprueba si el diagnóstico verdadero, o un sinónimo, aparece en el reporte. Es la
+métrica más importante de generación en este trabajo.
+
+La métrica oficial de generación es la consistencia diagnóstica calculada solo sobre el reporte: los bloques de
+razonamiento delimitados por etiquetas de pensamiento se descartan, porque el clínico lee el reporte. Para reconocer
+el diagnóstico se usa un \emph{matcher} estricto, que busca términos distintivos de cada clase con límite de palabra
+y sin coincidencias por subcadena. Un \emph{matcher} por subcadena acreditaba diagnósticos que el texto no nombraba,
+como «mel» dentro de «melanocytic» o «keratosis» dentro de «actinic keratosis». La misma regla gobierna la taxonomía
+de errores, y se fijó el 3 de octubre de 2026.
+
+La consistencia diagnóstica mide fidelidad diagnóstica, no validez clínica. Comprueba que el diagnóstico verdadero
+aparece en el texto, pero no que la descripción morfológica sea correcta, que no haya afirmaciones falsas junto al
+diagnóstico, ni que el texto sea útil o seguro. Las dos métricas de Nivel~2 son aproximaciones automáticas de esas
+propiedades, y por eso ningún resultado se presenta como evidencia de validez clínica; la Sección~\ref{sec:marco_rep_fallas}
+describe el riesgo de alucinación que motiva esa cautela. Con estos criterios se entrenan y comparan los clasificadores
+supervisados de la Sección~\ref{sec:met_supervisados}.
+
+\begin{table}[H]
+    \caption{Rol de cada métrica en el trabajo: qué decide, qué se presenta como resultado principal y qué solo se reporta.}
+    \label{tab:met_roles}
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{4.6cm}
+        >{\raggedright\arraybackslash\hspace{0pt}}X >{\raggedright\arraybackslash\hspace{0pt}}p{3.6cm}@{}}
+        \toprule
+        \textbf{Métrica} & \textbf{Rol en el trabajo} & \textbf{Se define en} \\
+        \midrule
+        Sensibilidad macro & Resultado principal de clasificación en el test; no decide ninguna elección & Sección~\ref{sec:marco_eval_clasif} \\
+        \filasep
+        F1 macro & Criterio para elegir la corrida ganadora del barrido (validación); complemento en el test & Ecuación~\ref{eq:marco_f1} \\
+        \filasep
+        F1 ponderado & Criterio para elegir el \emph{checkpoint} dentro de cada corrida (validación) & Ecuación~\ref{eq:marco_f1} \\
+        \filasep
+        Exactitud & Solo como referencia del clasificador trivial & Sección~\ref{sec:marco_eval_clasif} \\
+        \filasep
+        Sensibilidad y especificidad de melanoma & Umbral fijado en validación (especificidad de al menos 0.85); resultado en el test & Sección~\ref{sec:marco_eval_clasif} \\
+        \filasep
+        AUC de melanoma & Se reporta; no decide & Sección~\ref{sec:marco_eval_clasif} \\
+        \filasep
+        Nivel 1 (BLEU-4, ROUGE-L, METEOR, CIDEr, BERTScore) & Solo para \emph{MM-Skin} y \emph{SkinCoT}; no decide & Sección~\ref{sec:marco_eval_texto} \\
+        \filasep
+        Cobertura de entidades clínicas & Métrica de Nivel 2 que se reporta como complemento & Sección~\ref{sec:marco_eval_texto} \\
+        \filasep
+        Consistencia diagnóstica & Métrica oficial de generación (solo reporte, \emph{matcher} estricto) & Sección~\ref{sec:marco_eval_texto} \\
+        \filasep
+        Calibración (ECE, Brier) & Se analiza en la Sección~\ref{sec:met_complementarios}; no decide & Sección~\ref{sec:marco_eval_calib} \\
+        \filasep
+        McNemar y Wilcoxon & Pruebas de comparación; se analizan en la Sección~\ref{sec:met_complementarios} & Sección~\ref{sec:marco_eval_estadistica} \\
+        \filasep
+        Evaluación en HIBA & Solo en la Sección~\ref{sec:met_complementarios}; no decide & Sección~\ref{sec:met_datasets} \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
