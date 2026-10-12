@@ -1,26 +1,221 @@
+% Extensión estimada: 5--6 páginas (catorce párrafos, dos tablas, tres figuras y un fragmento de texto).
+% Fuentes: conteos propios sobre Codigo/data/raw/HAM10000/HAM10000_metadata, Codigo/data/splits/ham10000_splits.json
+% y ham10000_splits_lesion.json (solo lectura, 2026-10-11); Codigo/outputs/results/leakage_analysis.json;
+% Codigo/scripts/make_lesion_disjoint_split.py; Codigo/scripts/prepare_data.py (splits de SkinCaRe);
+% Codigo/data/splits/mmskin_splits.json, hiba_splits.json, skincare_*_splits.json. Figuras de HAM10000 generadas con
+% Codigo/scripts/plot_ham_dataset_figs.py. Papers en Papers/derma/ (SkinCaRe, MM-Skin, HIBA, Derm1M): cifras de
+% SkinCaRe, MM-Skin y HIBA cruzadas con el texto del artículo; porcentajes de origen de Derm1M de su Figura 1a;
+% atribuciones de HIBA a sus autores. Ejemplo de formato SkinCoT: EN/Acne and Rosacea Photos/07PerioralDermEye.jpg.txt.
+% Claves: tschandl2018ham10000, shen2025skincare, groh2021neural, daneshjou2022disparities, zeng2025mmskin,
+% riccilara2023dataset, yan2025derm1miccv.
 \section{Conjuntos de datos}
 \label{sec:met_datasets}
 
-\subsection{HAM10000}
+Cinco conjuntos de datos cumplen roles distintos, y no todos sirven para lo mismo. \emph{HAM10000} es el único que
+entrena y evalúa los clasificadores de las siete categorías, así que de él salen las decisiones que obligan a
+justificar la métrica y la partición. Los demás alimentan la generación de texto, la evaluación con referencia, la
+evaluación fuera de distribución o el preentrenamiento de DermLIP. La Tabla~\ref{tab:met_conjuntos} resume la
+modalidad, el tamaño, el rol y el origen del texto de referencia de cada uno. Las categorías de \emph{HAM10000} y su
+gravedad se definen en la Sección~\ref{sec:met_tareas}; aquí solo se retoman.
+
+\begin{table}[H]
+    \centering
+    \small
+    \caption{Conjuntos de datos, su modalidad, su tamaño, su rol y el origen de su texto de referencia.}
+    \label{tab:met_conjuntos}
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{1.8cm}
+        >{\raggedright\arraybackslash}p{2.5cm} >{\raggedright\arraybackslash}p{2.2cm}
+        >{\raggedright\arraybackslash\hspace{0pt}}p{2.4cm} >{\raggedright\arraybackslash\hspace{0pt}}X@{}}
+        \toprule
+        \textbf{Conjunto} & \textbf{Modalidad} & \textbf{Tamaño} & \textbf{Rol} & \textbf{Origen del texto de referencia} \\
+        \midrule
+        \emph{HAM10000} & Dermatoscópica & 10\,015 imágenes; 7\,470 lesiones
+            & Clasificación (entrenamiento, validación y prueba)
+            & Sin texto. Etiqueta por histopatología (53.32\,\%), seguimiento (36.98\,\%, solo NV), consenso (9.01\,\%) o confocal (0.69\,\%) \\
+        \filasep
+        \emph{SkinCAP} (\emph{SkinCaRe}) & Clínica (fotografía) & 4\,000 en el artículo; 3\,561 usadas
+            & Entrenamiento de la generación
+            & Descripciones de cuatro dermatólogos, escritas en chino y traducidas al inglés \\
+        \filasep
+        \emph{SkinCoT} (\emph{SkinCaRe}) & Clínica (fotografía) & 3\,041 imágenes
+            & Entrenamiento de la generación (razonamiento)
+            & Observación de un modelo de visión; razonamiento de otro modelo con la etiqueta; revisado por dermatólogos \\
+        \filasep
+        \emph{MM-Skin} & Clínica, patológica y «derm»
+            & 11\,015 imágenes; 27\,259 pares de preguntas y respuestas
+            & Evaluación de la generación con referencia
+            & Descripciones de libros de texto; preguntas y respuestas generadas con Llama-3.1 \\
+        \filasep
+        \emph{HIBA} & Dermatoscópica (1\,270) y clínica (346)
+            & 1\,616 imágenes; 1\,246 lesiones
+            & Evaluación fuera de distribución (solo prueba)
+            & Diagnóstico de dermatólogos del hospital \\
+        \filasep
+        \emph{Derm1M} & Dermatoscópica y clínica (según el artículo) & 1\,029\,761 pares imagen--texto
+            & Preentrenamiento de DermLIP (no se entrena ni se evalúa aquí)
+            & Fuentes web, educativas y bases públicas; texto procesado con \gls{llm} \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+\subsection{HAM10000: composición y análisis exploratorio}
 \label{sec:met_ham}
 
-\pendiente{Se presentan la composición del conjunto, la distribución de clases y su desbalance.}
+\emph{HAM10000} contiene 10\,015 imágenes dermatoscópicas de 7\,470 lesiones, tomadas en dos centros, Viena y
+Queensland~\cite{tschandl2018ham10000}. El conjunto no incluye un identificador de paciente, por lo que la lesión es
+la agrupación más fina disponible. Antes de decidir cómo se mide un clasificador y cómo se parte el conjunto, conviene
+ver cómo se reparten sus clases.
+
+La distribución es muy desigual. \gls{nv} reúne el 66.95\,\% de las imágenes, seguida de \gls{mel} (11.11\,\%),
+\gls{bkl} (10.97\,\%), \gls{bcc} (5.13\,\%), \gls{akiec} (3.27\,\%), \gls{vasc} (1.42\,\%) y \gls{df} (1.15\,\%)
+(Figura~\ref{fig:met_ham_dist}). Un clasificador que predice siempre NV acierta el 66.95\,\% de las imágenes, así que
+la exactitud global no distingue entre modelos. Por eso el protocolo usa la sensibilidad macro y el F1 macro
+(Sección~\ref{sec:met_protocolo}), que dan a todas las clases el mismo peso (Sección~\ref{sec:marco_desbalance}).
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Figures/Capitulos/03-Materiales-Metodos/ham-distribucion.pdf}
+    \caption{Imágenes por clase en \emph{HAM10000} y su porcentaje sobre el total. MEL y BCC en bermellón con trama; las demás clases en azul.}
+    \label{fig:met_ham_dist}
+\end{figure}
+
+Otra propiedad afecta la partición: una misma lesión puede tener varias imágenes. Hay 1\,956 lesiones con más de una
+imagen, de hasta seis, que reúnen 4\,501 imágenes, el 44.94\,\% del conjunto (Figura~\ref{fig:met_ham_lesiones}). Si
+imágenes de una misma lesión caen en entrenamiento y en prueba, el modelo puede reconocer la lesión en lugar de
+generalizar a lesiones nuevas, y la prueba deja de medir lo que dice medir. Por eso la partición tiene que agrupar las
+imágenes por lesión.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{Figures/Capitulos/03-Materiales-Metodos/ham-imagenes-por-lesion.pdf}
+    \caption{Lesiones de \emph{HAM10000} según el número de imágenes que tienen, de una a seis.}
+    \label{fig:met_ham_lesiones}
+\end{figure}
+
+Las etiquetas no tienen el mismo respaldo en todas las clases. La histopatología confirma el diagnóstico en 5\,340
+imágenes (53.32\,\%); el seguimiento clínico, en 3\,704 (36.98\,\%), todas NV; el consenso de los autores, en 902
+(9.01\,\%), y la microscopía confocal, en 69 (0.69\,\%). MEL, BCC y AKIEC tienen histopatología en todas sus imágenes.
+En cambio, el 62.74\,\% de las NV no tiene histopatología (seguimiento, 55.24\,\%; consenso, 7.50\,\%). La referencia
+es más sólida en las clases malignas y premalignas que en las benignas. La Figura~\ref{fig:met_ham_ejemplos} muestra una imagen de cada clase.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Figures/Capitulos/03-Materiales-Metodos/ham-ejemplos.pdf}
+    \caption{Una imagen dermatoscópica por clase, en el orden MEL, NV, BCC, AKIEC, BKL, DF y VASC: la primera confirmada por histopatología de cada una. Imágenes de \emph{HAM10000}~\cite{tschandl2018ham10000}, licencia CC BY-NC 4.0.}
+    \label{fig:met_ham_ejemplos}
+\end{figure}
 
 \subsection{Partición disjunta por lesión}
 \label{sec:met_particiones}
-\pendiente{HAM10000 contiene varias imágenes de una misma lesión y la partición original se estratificó por
-imagen, de modo que imágenes de una misma lesión quedaron repartidas entre entrenamiento y test. Esta
-subsección explica ese problema, conocido como fuga de información entre particiones (\emph{data leakage}),
-lo cuantifica (el 36\% del test comparte lesión con entrenamiento; el 63\% en melanoma) y describe cómo se
-midió su efecto sobre las métricas: reevaluación sobre el subconjunto de test cuya lesión no aparece en
-entrenamiento ni en validación, y control con un modelo que nunca vio HAM10000 (DermLIP \emph{zero-shot}).
 
-Se describe luego la partición disjunta por lesión que se construyó como reemplazo, con test idéntico al
-original y validación agrupada (\texttt{StratifiedGroupKFold}), sus tamaños finales y qué resultados se
-recalcularon sobre ella.}
+La partición original de \emph{HAM10000} es de 70/15/15 y se estratificó por imagen, no por lesión. Como consecuencia,
+el 36.13\,\% de las 1\,503 imágenes de prueba (543) comparte lesión con el entrenamiento; en melanoma, el porcentaje
+sube a 63.47\,\% (106 de 167) y en BCC, a 70.13\,\% (54 de 77). Esa es una fuga de información entre particiones
+(\emph{data leakage}; Sección~\ref{sec:marco_regularizacion}): el conjunto de prueba ya no mide imágenes de lesiones
+nuevas. El número principal cuenta solo las lesiones de entrenamiento; otras 66 imágenes de prueba comparten lesión
+únicamente con la validación y se suman aparte.
 
-\subsection{SkinCaRe, MM-Skin y HIBA}
-\pendiente{Se describe el rol de cada conjunto: entrenamiento de la generación (SkinCAP y SkinCoT),
-evaluación con referencia (MM-Skin) y evaluación fuera de distribución (HIBA, solo test). Se indica la
-modalidad de cada uno, en particular que SkinCaRe es de fotografía clínica y HAM10000 dermatoscópico, con
-remisión a la Sección~\ref{sec:marco_generalizacion}.}
+Para medir cuánto cambia la evaluación al corregir la partición se usan dos referencias, sin cifras de desempeño en
+esta sección. La primera es el subconjunto limpio: las 894 imágenes de prueba cuya lesión no aparece ni en
+entrenamiento ni en validación. La segunda es un control, DermLIP en \emph{zero-shot}, que según las fuentes declaradas
+de su corpus de preentrenamiento no vio \emph{HAM10000} (\emph{Derm1M}, al final de esta sección). Si el desempeño de DermLIP también cambia entre el conjunto completo y el subconjunto limpio, esa
+diferencia no puede atribuirse a la fuga, sino a la composición del subconjunto. Los resultados se presentan en el
+Capítulo~\ref{cp:res_clasif}.
+
+La partición nueva conserva el test original completo (1\,503 imágenes), para que la comparación con los VLM y con el
+ruteo ya evaluados sobre él siga siendo válida. Del entrenamiento y la validación originales se descartan 776 imágenes
+cuya lesión aparece en el test. Las 7\,736 restantes se reparten con \texttt{StratifiedGroupKFold} de scikit-learn, en
+seis folds, con la lesión como grupo, el diagnóstico como estrato y la semilla 42. La validación es el fold cuya
+distribución de clases se parece más a la global, un criterio que no mira desempeño. El resultado son 6\,447 imágenes
+de entrenamiento y 1\,289 de validación, sin lesiones compartidas entre particiones. El costo es que el entrenamiento
+queda un 8\,\% por debajo del original (7\,010 imágenes).
+
+La Tabla~\ref{tab:met_tamanos} muestra los tamaños por clase y partición. En validación, DF (14 imágenes) y VASC (18)
+quedan con menos de 20, por lo que sus métricas por clase en validación varían mucho con pocos aciertos. Los conjuntos de generación y de
+evaluación externa no pasan por esta partición, porque cada uno trae su propia división o se usa completo como prueba.
+
+\begin{table}[H]
+    \centering
+    \caption{Imágenes por clase y partición de \emph{HAM10000}. La última columna cuenta las imágenes de entrenamiento y validación originales que se descartaron, porque su lesión aparece en prueba.}
+    \label{tab:met_tamanos}
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X r r r r@{}}
+        \toprule
+        \textbf{Clase} & \textbf{Entrenamiento} & \textbf{Validación} & \textbf{Prueba} & \textbf{Descartadas} \\
+        \midrule
+        AKIEC & 207 & 41 & 49 & 30 \\
+        BCC & 307 & 62 & 77 & 68 \\
+        BKL & 682 & 137 & 165 & 115 \\
+        DF & 73 & 14 & 17 & 11 \\
+        MEL & 661 & 132 & 167 & 153 \\
+        NV & 4\,427 & 885 & 1\,006 & 387 \\
+        VASC & 90 & 18 & 22 & 12 \\
+        \midrule
+        \textbf{Total} & \textbf{6\,447} & \textbf{1\,289} & \textbf{1\,503} & \textbf{776} \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+\subsection{SkinCaRe: SkinCAP y SkinCoT}
+
+\emph{SkinCaRe} entrena la generación del modelo visión--lenguaje (Sección~\ref{sec:met_generacion}). Su primera parte,
+\emph{SkinCAP}, reúne 4\,000 imágenes clínicas tomadas de \emph{Fitzpatrick 17k} y de \emph{DDI}~\cite{groh2021neural,daneshjou2022disparities}.
+Sus descripciones las escribieron cuatro dermatólogos certificados, en chino, y se tradujeron al inglés con un software
+propio basado en Google Translate y se revisaron a mano~\cite{shen2025skincare}. En el archivo local, 439 imágenes están
+marcadas «Do not consider this image» y el código las excluye: quedan 3\,561, que se parten por imagen en 70/15/15
+(2\,492, 534 y 535). \pendiente{dato: motivo de las 439 marcas «Do not consider this image»; el repositorio no lo documenta (pregunta 13)}
+
+\emph{SkinCoT} aporta otras 3\,041 imágenes clínicas con razonamiento escrito. Según el artículo, las imágenes provienen
+de DermNet~\cite{shen2025skincare}. \pendiente{dato: confirmar el origen de las imágenes de SkinCoT; el artículo dice DermNet y el README y el acuerdo de uso mencionan Fitzpatrick 17k, DDI y SKINCON (pregunta 4)}
+Cada par tiene dos componentes que escriben modelos distintos. La observación, sin diagnóstico, la escribe un modelo de
+visión (Gemini 2.5 Pro). El razonamiento lo escribe otro modelo (GPT-o4-mini) con la etiqueta verdadera a la vista, y
+dermatólogos lo evalúan en seis criterios con puntaje de 0 a 5. De 4\,002 casos enviados, 3\,813 pasan los controles
+iniciales y 772 se descartan por tener una media menor a 4.5, lo que deja 3\,041 pares. Como el razonamiento se escribió
+conociendo el diagnóstico, describe cómo se justifica una etiqueta conocida y no cómo se llega a ella desde la imagen.
+Esa limitación pesa en la lectura de la generación (Sección~\ref{sec:met_generacion}).
+
+El formato intercala bloques \texttt{\textless{}think\textgreater{}} entre oraciones, y el diagnóstico aparece en la última
+oración, en negrita. El fragmento siguiente, de un caso de párpados, muestra la forma; la traducción es propia.
+
+\begin{quote}
+    \small
+    \texttt{\textless{}think\textgreater{}} First, I observe the primary location: the changes are specifically affecting
+    the eyelids (both upper and lower). The skin here is thin and sensitive, making it prone to certain dermatological
+    conditions. \texttt{\textless{}/think\textgreater{}}
+
+    \noindent Traducción propia: «Primero, observo la localización principal: los cambios afectan específicamente los
+    párpados (superior e inferior). La piel aquí es fina y sensible, lo que la hace propensa a ciertas afecciones
+    dermatológicas.»
+\end{quote}
+
+\subsection{MM-Skin, HIBA y Derm1M}
+
+\emph{MM-Skin} es el conjunto de evaluación de la generación con referencia (Sección~\ref{sec:met_generacion}). Sus textos
+de referencia son descripciones de 15 libros de texto de dermatología, casi diez mil pares imagen--texto, y 27\,259
+preguntas y respuestas que el artículo genera con Llama-3.1 a partir de la descripción de cada imagen~\cite{zeng2025mmskin}.
+El archivo local tiene 11\,090 filas (11\,015 imágenes únicas): 7\,020 con modalidad «skin», 3\,028 «pathology» y 1\,042
+«derm». \pendiente{dato: qué significa la modalidad «derm» y por qué el archivo tiene más filas que pares que describe el artículo (pregunta 6)}
+Se parte por imagen en 70/15/15 (7\,710, 1\,652 y 1\,653 imágenes). \pendiente{confirmar si la evaluación de la generación usa el test de \texttt{mmskin\_splits.json} o el archivo completo (pregunta 7)}
+Su modalidad difiere de la de \emph{HAM10000}, porque incluye imágenes clínicas y patológicas
+(Tabla~\ref{tab:met_conjuntos}).
+
+\emph{HIBA} es el único conjunto de población distinta: 1\,616 imágenes de un hospital de Buenos Aires, de 1\,246 lesiones
+y 623 pacientes, con licencia CC BY~\cite{riccilara2023dataset}. \pendiente{dato: confirmar si la evaluación usó las 1\,616 imágenes o el test de 243 de \texttt{hiba\_splits.json} (pregunta 8)}
+De ellas, 1\,270 son dermatoscopias de contacto con polarización y 346 son clínicas. Los autores la presentan como la
+primera de ese tipo en Hispanoamérica. Por imagen, la columna de fototipo registra 114 de tipo I, 1\,085 de tipo II,
+275 de tipo III, 25 de tipo IV y 117 sin dato; el artículo cuenta los fototipos por paciente. Sus diagnósticos se mapean
+a las siete categorías de HAM10000. En ese mapeo, el carcinoma escamoso se asigna a AKIEC, una correspondencia que el
+código documenta como limitación y que se discute en la Sección~\ref{sec:met_complementarios}. El melanoma es el 15.66\,\%
+de HIBA (253 imágenes), frente al 11.11\,\% de HAM10000. HIBA sirve solo como evaluación fuera de distribución
+(Sección~\ref{sec:marco_generalizacion}): ningún modelo se entrena con él. Como combina imágenes dermatoscópicas y clínicas,
+permite separar la caída de desempeño atribuible a la modalidad (Sección~\ref{sec:met_complementarios}).
+
+\emph{Derm1M} tiene 1\,029\,761 pares imagen--texto y es el corpus con el que se preentrenó DermLIP~\cite{yan2025derm1miccv}.
+Según el artículo, sus fuentes son YouTube (45.6\,\%), PubMed (19.4\,\%), foros médicos (15.1\,\%), conjuntos públicos
+como SCIN y MSKCC (10.1\,\%) y material educativo (9.8\,\%). El texto se limpió y resumió con un \gls{llm} y se enriqueció
+con una ontología de 390 afecciones. En las fuentes declaradas no figura \emph{HAM10000}, aunque no puede descartarse
+que material de PubMed o educativo reproduzca imágenes de ese conjunto. El trabajo usa los pesos publicados de DermLIP,
+sin reentrenar sus codificadores: solo se entrenan cabezas o se usa kNN sobre los \emph{embeddings}. \emph{Derm1M} no se usa para
+entrenar ni para evaluar, y la Sección~\ref{sec:met_clasif_vlm} describe cómo se emplea DermLIP.
+
+Con el desbalance, el origen de las etiquetas y las particiones fijadas, resta decidir con qué métrica se juzgan los
+clasificadores y contra qué se comparan (Sección~\ref{sec:met_protocolo}).
