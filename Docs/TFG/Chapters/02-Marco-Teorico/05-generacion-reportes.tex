@@ -76,7 +76,7 @@ donde $c(x)$ es esa evidencia escrita como texto. Puede ser el diagnóstico que 
 diagnósticos de casos parecidos recuperados de una base (Sección~\ref{sec:marco_rep_recuperacion}) o los
 candidatos que deja la regla de la Ecuación~\ref{eq:marco_politica}. El generador conserva la imagen y redacta
 la descripción, pero el diagnóstico le llega como dato. Anclar así el texto en evidencia externa se conoce como
-\emph{grounding}, y es el aprendizaje en contexto de la Sección~\ref{sec:marco_llm_grandes}, porque el
+\emph{grounding} (anclaje), y es el aprendizaje en contexto de la Sección~\ref{sec:marco_llm_grandes}, porque el
 generador no cambia sus pesos~\cite{brown2020language}.
 
 La generación condicionada separa los requisitos: la fidelidad diagnóstica pasa a depender de la evidencia, y
@@ -156,30 +156,33 @@ forma más estudiada de obtenerla es la recuperación.
 \label{sec:marco_rep_recuperacion}
 
 \phantomsection\label{sec:marco_rag}%
-La \gls{rag}, de 2020, agrega al generador un paso de búsqueda en una base externa de documentos. Tiene tres
-partes: la base, un recuperador que selecciona los documentos más relevantes para cada entrada y un generador
-que produce la salida condicionado en la entrada y en lo recuperado. En la formulación original, los documentos
-son textos, el codificador de consultas del recuperador se ajusta junto con el generador, y el generador produce
-una salida con cada documento recuperado y las combina, pesándolas por la relevancia que les asignó el
-recuperador. Como el conocimiento queda en la base y no en los pesos, la base se puede cambiar o ampliar sin
-reentrenar~\cite{lewis2020retrievalaugmented}. En radiología, la recuperación parte de la imagen y recupera
-reportes de casos parecidos, y entrenar el recuperador para que prefiera reportes con los mismos hallazgos
-clínicos mejora la corrección de lo generado~\cite{sun2025factaware}.
+La \gls{rag}, propuesta en 2020, agrega un paso de búsqueda antes de generar. Un sistema de este tipo tiene
+tres componentes. El primero es una \textbf{base} de documentos, por ejemplo artículos o reportes anteriores. El
+segundo es un \textbf{recuperador}, que compara la entrada con los documentos de la base y selecciona los más
+parecidos. El tercero es el \textbf{generador}, que produce la salida a partir de la entrada y de los documentos
+seleccionados. Como el conocimiento queda en la base y no en los pesos del generador, la base se puede cambiar o
+ampliar sin reentrenarlo~\cite{lewis2020retrievalaugmented}. En radiología, por ejemplo, el recuperador parte
+de la imagen y selecciona reportes de casos parecidos, y entrenarlo para que prefiera reportes con los mismos
+hallazgos clínicos mejora la corrección de lo generado~\cite{sun2025factaware}.
 
 \phantomsection\label{sec:marco_recuperacion_imagenes}%
-Con una base de casos etiquetados, lo recuperable son imágenes. Los $k$ vecinos de la
-Ecuación~\ref{eq:marco_vecinos} son los casos más parecidos a la consulta en el espacio de un codificador
-visual, y su información, como el diagnóstico o la localización de cada uno, es \textbf{evidencia visual}:
-dice qué casos ya vistos se parecen a la consulta. Esa información entra en la
-Ecuación~\ref{eq:marco_rep_condicionada} como $c(x) = \psi\bigl(\mathcal{N}_k(x)\bigr)$, donde $\psi$ escribe
-como texto lo que se sabe de los vecinos. Un antecedente en descripción de imágenes recupera las descripciones
-de imágenes parecidas y las entrega como prompt a un modelo de lenguaje, sin entrenar el
-recuperador~\cite{ramos2023smallcap}.
+Cuando la base es un conjunto de casos etiquetados, lo que se recupera son imágenes. El recuperador es entonces
+el kNN de la Ecuación~\ref{eq:marco_vecinos}, que selecciona los $k$ casos más parecidos a la consulta en el
+espacio de un codificador visual, y lo que se sabe de cada vecino, como su diagnóstico o su localización, es
+\textbf{evidencia visual}: indica qué casos ya vistos se parecen a la lesión. Para que el generador la use, esa
+información se escribe como texto y se agrega al prompt, es decir, $c(x) = \psi\bigl(\mathcal{N}_k(x)\bigr)$ en
+la Ecuación~\ref{eq:marco_rep_condicionada}, donde $\psi$ convierte en texto la información de los vecinos. Por
+ejemplo, si dos de los tres vecinos de una lesión son melanomas y el tercero es un nevo, el prompt informa esos
+tres diagnósticos. Un antecedente en descripción de imágenes hace lo mismo con las descripciones de imágenes
+parecidas, que entrega como prompt a un modelo de lenguaje~\cite{ramos2023smallcap}.
 
-Esta variante difiere de la formulación de \textcite{lewis2020retrievalaugmented} en tres aspectos. El
-recuperador puede quedar congelado, sin ajustarse junto con el generador. El generador recibe todo el contexto a
-la vez y produce una única salida, en lugar de una por documento. Y lo recuperado son etiquetas y atributos de
-imágenes, de la misma modalidad que la consulta, y no documentos de texto. Su límite es el que la
+Esta variante conserva los tres componentes de la \gls{rag}, pero difiere de la formulación original de
+\textcite{lewis2020retrievalaugmented} en tres aspectos. En la original, los documentos son textos, mientras
+que en la variante son etiquetas y atributos de imágenes, de la misma modalidad que la consulta. En la original,
+el codificador con que el recuperador representa la entrada se ajusta junto con el generador, mientras que el
+kNN puede quedar congelado. Por último, en la original el generador produce una salida con cada documento
+recuperado y las combina según la relevancia que les asignó el recuperador, mientras que en la variante recibe
+todos los vecinos a la vez y produce una única salida. Su límite es el que la
 Sección~\ref{sec:marco_senales_confianza} señaló para el consenso de los vecinos: los $k$ vecinos se recuperan
 aunque la base no tenga casos parecidos a la consulta, y entonces la evidencia que aportan no describe la
 lesión.
