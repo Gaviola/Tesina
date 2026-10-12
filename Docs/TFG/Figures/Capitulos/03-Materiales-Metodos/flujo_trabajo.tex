@@ -1,0 +1,50 @@
+% Figura: recorrido iterativo de las decisiones (arriba) y ciclo de cada iteración (abajo), fig:met_flujo.
+% Usada en sec:met_metodologia (3.2.1). Sin cifras ni fechas: muestra el orden del argumento, no el calendario.
+% Ancho total del dibujo: 141 mm (el ancho de texto es de 150 mm).
+
+\begin{figure}[H]
+    \centering
+    % Sin separación silábica dentro de las etiquetas: un nodo angosto no corta palabras con guion.
+    \hyphenpenalty=10000 \exhyphenpenalty=10000
+    \begin{tikzpicture}[x=1mm, y=1mm]
+
+        % Fila 1: línea base y la primera hipótesis, que se refuta y cambia el rumbo.
+        \node[figtarea, text width=38mm] (base) at (19, 0) {Baseline supervisado};
+        \node[figtarea, text width=38mm] (vlm) at (71, 0) {VLM generales: colapso en clasificación};
+        \node[figentrada, text width=38mm] (desb) at (123, 0) {Hipótesis: desbalance de clases};
+        \draw[figflecha] (base) -- (vlm);
+        \draw[figflecha] (vlm) -- (desb);
+
+        % Fila 2 (de derecha a izquierda): la segunda hipótesis, el VLM de dominio y la generación.
+        \node[figentrada, text width=38mm] (dom) at (123, -26) {Hipótesis: falta de especialización de dominio};
+        \node[figtarea, text width=38mm] (derm) at (71, -26) {DermLIP: recupera la discriminación};
+        \node[figtarea, text width=38mm] (rep) at (19, -26) {Generación de reportes: fidelidad insuficiente};
+        \draw[figflecha, figbermellon, densely dashed] (desb) -- node[figetiqueta, right=2mm] {refutada} (dom);
+        \draw[figflecha] (dom) -- (derm);
+        \draw[figflecha] (derm) -- (rep);
+
+        % Fila 3 (de izquierda a derecha): la cascada, el ruteo y la auditoría de fuga, que la re-ancla.
+        \node[figtarea, text width=38mm] (casc) at (19, -52) {Cascada: clasificador y generador con \emph{grounding}};
+        \node[figsalida, text width=38mm] (rut) at (71, -52) {Ruteo por incertidumbre en tres niveles};
+        \node[fignodo, text width=38mm, draw=figceleste!80!black, fill=figceleste!18] (aud)
+            at (123, -52) {Auditoría de fuga: partición disjunta por lesión};
+        \draw[figflecha] (rep) -- (casc);
+        \draw[figflecha] (casc) -- (rut);
+        \draw[figflecha, densely dotted] (aud) -- (rut);
+
+        % Inset: el ciclo de cada iteración, con su bucle de nueva iteración.
+        \node[figetiqueta, font=\small\itshape] at (68, -70) {Cada iteración};
+        \node[figentrada, text width=26mm] (plan) at (14, -80) {Plan};
+        \node[figtarea, text width=26mm] (ejec) at (50, -80) {Ejecución y registro};
+        \node[figtarea, text width=26mm] (res) at (86, -80) {Resultado con veredicto};
+        \node[figsalida, text width=26mm] (dec) at (122, -80) {Decisión};
+        \draw[figflecha] (plan) -- (ejec);
+        \draw[figflecha] (ejec) -- (res);
+        \draw[figflecha] (res) -- (dec);
+        \draw[figflecha, densely dashed] (dec.south) -- ++(0, -7) -| (plan.south);
+        \node[figetiqueta, anchor=north] at (68, -96) {no cumple: se abre una iteración $v_{N+1}$};
+
+    \end{tikzpicture}
+    \caption{Recorrido iterativo de las decisiones (arriba) y ciclo de cada iteración (abajo).}
+    \label{fig:met_flujo}
+\end{figure}
