@@ -142,8 +142,8 @@ en una métrica agregada, como el F1 macro o la sensibilidad macro, debe compara
 test, se usa un bootstrap pareado sobre imágenes (Sección~\ref{sec:marco_eval_estadistica}). Si la pregunta es qué imágenes
 acierta cada modelo, se usa McNemar en su versión exacta: la binomial bilateral sobre los casos discordantes, que es la que
 calcula el código para todos los pares. La aproximación $\chi^2$ (Ecuación~\ref{eq:marco_mcnemar}) no se usa en ningún
-resultado. Como hay 21 pares de modelos, los p de McNemar se corrigen con el método de Holm, que controla la probabilidad
-de declarar al menos una diferencia falsa entre los 21. La sensibilidad por clase (\emph{recall}) de dos modelos se
+resultado. Como hay 21 pares de modelos, los p de McNemar se corrigen con el método de Holm (Ecuación~\ref{eq:marco_holm}),
+que controla la probabilidad de declarar al menos una diferencia falsa entre los 21. La sensibilidad por clase (\emph{recall}) de dos modelos se
 compara de forma descriptiva, contando en cuántas de las siete clases mejora cada uno, y sin prueba: con siete clases, el
 menor p bilateral de una prueba de rangos con signo, como la de Wilcoxon~\cite{wilcoxon1945individual}, es 0.016, y ningún par podría
 alcanzar el umbral que Holm exige para 21 comparaciones ($0.05/21 \approx 0.0024$).
