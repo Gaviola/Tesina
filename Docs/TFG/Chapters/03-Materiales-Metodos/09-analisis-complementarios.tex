@@ -145,7 +145,7 @@ calcula el código para todos los pares. La aproximación $\chi^2$ (Ecuación~\r
 resultado. Como hay 21 pares de modelos, los p de McNemar se corrigen con el método de Holm, que controla la probabilidad
 de declarar al menos una diferencia falsa entre los 21. La sensibilidad por clase (\emph{recall}) de dos modelos se
 compara de forma descriptiva, contando en cuántas de las siete clases mejora cada uno, y sin prueba: con siete clases, el
-menor p bilateral de la prueba de Wilcoxon (Sección~\ref{sec:marco_eval_estadistica}) es 0.016, y ningún par podría
+menor p bilateral de una prueba de rangos con signo, como la de Wilcoxon~\cite{wilcoxon1945individual}, es 0.016, y ningún par podría
 alcanzar el umbral que Holm exige para 21 comparaciones ($0.05/21 \approx 0.0024$).
 
 Los intervalos son percentiles al 95\,\%: si el intervalo de una diferencia no contiene el cero, la diferencia no se
