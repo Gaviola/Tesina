@@ -26,11 +26,14 @@ primero en radiología, desde 2018, con modelos que predicen etiquetas de hallaz
 oración por oración, y con arquitecturas que recuerdan patrones de redacción entre reportes
 parecidos~\cite{jing2018automatic,chen2020generating}. Con los \glspl{vlm} generativos de la
 Sección~\ref{sec:marco_vlm_generativos}, la tarea pasó a resolverse con un único modelo que recibe la imagen y
-una instrucción~\cite{hartsock2024vision}. En todos los casos el entrenamiento requiere pares de imagen y texto
-clínico, y en dermatología esos pares son escasos y recientes. Su texto fue redactado por dermatólogos, tomado
-de libros de la especialidad o generado por un modelo y revisado por
-especialistas~\cite{shen2025skincare,zeng2025mmskin,yan2025derm1miccv}, y ese origen limita cuánto se puede
-confiar en él como referencia.
+una instrucción~\cite{hartsock2024vision}.
+
+En todos los casos, el entrenamiento requiere pares de imagen y texto clínico, y esos mismos textos sirven
+después de referencia para comparar los reportes generados. En dermatología, estos pares son escasos y
+recientes, y su texto tiene orígenes distintos: según el conjunto, lo redactaron dermatólogos, se tomó de libros
+de la especialidad o lo generó un modelo y lo revisaron especialistas~\cite{shen2025skincare,zeng2025mmskin,yan2025derm1miccv}.
+Ese origen condiciona lo que mide la comparación, porque un texto generado por un modelo, aun revisado, no es el
+reporte que un dermatólogo habría escrito al examinar la lesión.
 
 \subsection{Calidad descriptiva y fidelidad diagnóstica}
 \label{sec:marco_rep_ejes}
