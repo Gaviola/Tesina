@@ -100,7 +100,7 @@ repiten.
    *vector scaling*. «Sensibilidad macro» es el único nombre, y su definición menciona una vez que también se
    la llama exactitud balanceada. MCE se escribe en línea, sin acrónimo.
 4. **Fórmulas verificadas.** Las de atención, LoRA, CLIP, probabilidad de un modelo de lenguaje, temperatura,
-   RAG, TPR/FPR y AUC, ECE/MCE, Brier, BLEU, ROUGE-L, METEOR, CIDEr, BERTScore, McNemar y Grad-CAM se
+   RAG, TPR/FPR y AUC, ECE/MCE, Brier, BLEU, ROUGE-L, METEOR, CIDEr, BERTScore, McNemar, Holm y Grad-CAM se
    verificaron contra los artículos. Al reescribir, se copian de las ecuaciones existentes y no se reescriben
    a mano. Notación: $C$ clases, $J$ referencias en CIDEr, $M$ intervalos en ECE, $N$ pares en CLIP. Adam y el
    decaimiento de pesos ya no llevan fórmula.

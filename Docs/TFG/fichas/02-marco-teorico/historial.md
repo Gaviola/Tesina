@@ -634,3 +634,9 @@ Con la corrección de Holm sobre 21 pares, Wilcoxon sobre siete clases nunca alc
 descriptiva y no usa la prueba. Por la regla E1 (cada método presentado se usa en los resultados), se quita
 de 2.8 el párrafo y la ecuación `eq:marco_wilcoxon`; `wilcoxon1945individual` y `demsar2006statistical`
 quedan sin citar.
+
+## Decisión del autor (2026-10-12): corrección de Holm en el marco
+
+3.9 corrige los p de McNemar con Holm sobre 21 pares, así que 2.8 la define después de McNemar, con su
+ecuación (`eq:marco_holm`) y la relación con Bonferroni. La cita `holm1979simple` no estaba en el `.bib`: se
+propuso en `refs_pendientes.md` y queda indefinida hasta que el autor la incorpore.

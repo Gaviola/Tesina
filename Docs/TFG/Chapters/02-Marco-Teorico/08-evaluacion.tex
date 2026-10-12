@@ -295,6 +295,20 @@ un grado de libertad~\cite{mcnemar1947note}. Cuando los casos discordantes son p
 exacta: $b$ sigue una distribución binomial con $b+c$ ensayos y probabilidad $1/2$, y el valor $p$ se calcula
 directamente de ella.\par\endgroup
 
+\begingroup Cada prueba a nivel $\alpha$ tiene una probabilidad $\alpha$ de declarar una diferencia que no existe. Al
+comparar muchos pares de modelos, la probabilidad de que al menos una de las pruebas lo haga crece con el número de
+pruebas $m$. La \textbf{corrección de Holm} controla esa probabilidad para el conjunto de las $m$
+pruebas~\cite{holm1979simple}. Ordena los valores $p$ de menor a mayor, $p_{(1)} \le \dots \le p_{(m)}$, y compara cada
+uno con un umbral que se relaja paso a paso,\displaywidowpenalty=10000
+\begin{equation}
+    p_{(k)} \le \frac{\alpha}{m - k + 1}, \qquad k = 1, \dots, m.
+    \label{eq:marco_holm}
+\end{equation}
+Las hipótesis se rechazan en ese orden mientras se cumpla la desigualdad. En la primera que no la cumple el
+procedimiento se detiene, y esa y todas las siguientes se conservan. El primer umbral, $\alpha/m$, es el de la
+corrección de Bonferroni, pero los siguientes son menos exigentes, así que Holm rechaza al menos las mismas hipótesis
+que Bonferroni con el mismo control.\par\endgroup
+
 \subsubsection{Robustez}
 \label{sec:marco_eval_robustez}
 
