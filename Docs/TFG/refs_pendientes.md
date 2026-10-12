@@ -125,6 +125,7 @@ como desempeño alcanzable hoy.
 | Dropout: A Simple Way to Prevent Neural Networks from Overfitting (*JMLR* 15:1929–1958) | Srivastava, Hinton, Krizhevsky, Sutskever, Salakhutdinov | 2014 | https://jmlr.org/papers/v15/srivastava14a.html | §2.1 ¶4. Clave sugerida: `srivastava2014dropout` |
 | Long Short-Term Memory (*Neural Computation* 9(8):1735–1780) | Hochreiter, Schmidhuber | 1997 | https://doi.org/10.1162/neco.1997.9.8.1735 | §2.1 ¶5. Clave sugerida: `hochreiter1997long` |
 | WILDS: A Benchmark of in-the-Wild Distribution Shifts (*Proceedings of the 38th ICML*, PMLR 139) | Koh, Sagawa, Marklund et al. | 2021 | https://proceedings.mlr.press/v139/koh21a.html — verificar antes de incorporar | §2.6 ¶1, definición del cambio de distribución. Clave sugerida: `koh2021wilds` |
+| A Simple Sequentially Rejective Multiple Test Procedure (*Scandinavian Journal of Statistics* 6(2):65–70) | Holm | 1979 | https://www.jstor.org/stable/4615733 — sin DOI; verificar antes de incorporar | §2.8, corrección de Holm sobre McNemar (la usa §3.9). Clave sugerida: `holm1979simple` |
 
 **Entradas listas para copiar al `.bib`** (fundamentos, §2.1, redactada el 25/09/2026). Ya se citan en el
 capítulo con estas claves y figuran como indefinidas hasta que se incorporen. Conviene verificarlas contra
@@ -205,6 +206,24 @@ la página del editor antes de pegarlas.
   pages     = {419--426},
   year      = {2017},
   doi       = {10.1370/afm.2121},
+  langid    = {english}
+}
+```
+
+**Entrada lista para copiar al `.bib`** (§2.8, 12/10/2026). Ya se cita en 2.8 con esta clave y figura como
+indefinida hasta que se incorpore. Es anterior a 2020 y entra por la condición 1 de la guía (fundacional,
+define el procedimiento).
+
+```bibtex
+@article{holm1979simple,
+  author    = {Holm, Sture},
+  title     = {A Simple Sequentially Rejective Multiple Test Procedure},
+  journal   = {Scandinavian Journal of Statistics},
+  volume    = {6},
+  number    = {2},
+  pages     = {65--70},
+  year      = {1979},
+  url       = {https://www.jstor.org/stable/4615733},
   langid    = {english}
 }
 ```

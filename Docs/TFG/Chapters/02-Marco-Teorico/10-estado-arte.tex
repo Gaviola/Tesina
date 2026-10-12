@@ -263,7 +263,7 @@ Tablas~\ref{tab:marco_sota_vlm} y~\ref{tab:marco_sota_vlm_gen} los resumen.
             & Ninguno \\
         \filasep
         \textcite{zeng2025mmskin} & 2025 & LLaVA-Med de 7B con LoRA
-            & 171\,600 imágenes de libros y nueve conjuntos públicos
+            & 171\,600 imágenes de libros y nueve conjuntos públicos (variante completa)
             & BLEU-4, BERTScore, exactitud
             & \emph{Zero-shot} Patch16 82.34\,\% contra 68.55\,\% (LLaVA-Med)
             & Ninguno \\
@@ -350,7 +350,8 @@ piel~\cite{moor2023medflamingo,he2025pefomed,xie2025medtrinity25m}.
 
 \textcite{zeng2025mmskin} adaptan ese modelo a la piel con SkinVL. Sobre LLaVA-Med de 7\,000 millones de parámetros
 entrenan solo la proyección visual y adaptadores LoRA, con un corpus de imágenes de libros de texto y nueve conjuntos
-públicos de diagnóstico reformulados como preguntas (171\,600 imágenes en la variante completa). Se compara con cinco
+públicos de diagnóstico reformulados como preguntas (171\,600 imágenes en la variante completa; la variante SkinVL-MM,
+que es la que usa este trabajo, se entrena solo con el corpus de libros). Se compara con cinco
 modelos generales y dos modelos médicos de propósito general, entre ellos LLaVA-Med y HuatuoGPT, en descripción, preguntas y
 clasificación con ajuste y \emph{zero-shot}. En \emph{zero-shot} la variante completa alcanza 82.34\,\% de exactitud en
 Patch16 contra 68.55\,\% de LLaVA-Med, y es el único modelo que supera 50\,\% en HAM10000. Los textos provienen de

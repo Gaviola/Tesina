@@ -559,3 +559,84 @@ transformer se construye sobre ella y sus dos módulos dan lugar a modelos visua
 módulo se conserve (codificador o decodificador) y qué se tokenice (parches o palabras), sale una familia
 distinta. Se empieza por las imágenes (2.3), donde conviven con las convolucionales.
 **Citas:** `vaswani2017attention`, `dosovitskiy2021image`, `brown2020language`.
+
+---
+
+# Fichas anteriores de 2.4 y 2.5 (reunidas en `03-lenguaje-vlm.md`, 2026-10-11)
+
+## Ficha 2.4 — Modelos de lenguaje y adaptación eficiente
+
+Sección del `.tex`: `Chapters/02-Marco-Teorico/04-modelos-lenguaje.tex`.
+
+Plan movido desde la ficha única del capítulo el 10/10/2026, sin cambios de contenido. Es la historia de la sección; las decisiones posteriores están en `historial.md` y lo vigente, en `00-capitulo.md`. El hilo conductor (§1 de la guía) se agrega arriba de este plan cuando se reescriba la sección.
+
+---
+
+## 2.4 Modelos de lenguaje y adaptación eficiente — `sec:marco_llm`
+
+**Mensaje central.** Un LLM es un predictor del siguiente *token* preentrenado a gran escala; se lo
+condiciona con texto y se lo adapta con métodos que actualizan pocos parámetros.
+
+**Razón de ser.** El generador de reportes es un LLM con entrada visual; sin este marco no se entienden la
+decodificación, el *prompt* ni LoRA. **Extensión: 2,5 páginas.**
+
+**Apertura.** Se elimina «El generador de reportes del pipeline es un modelo de este tipo…» (l. 349–354).
+Abre diciendo qué es un modelo de lenguaje y qué necesita saber el lector: cómo se obtiene, cómo genera texto y
+cómo se lo adapta.
+
+| Subsección | Se reutiliza | Se recorta / elimina | Nuevo |
+|---|---|---|---|
+| 2.4.1 Grandes modelos de lenguaje — `sec:marco_llm_grandes` | l. 359–406; `eq:marco_lm`, `eq:marco_temperatura` | **Se elimina** en el último párrafo «se fija y se documenta como un hiperparámetro más del generador» (l. 404–406) o se generaliza | **Contexto y *prompt* (necesario para G3):** un párrafo. El modelo condiciona la salida en el texto que recibe; una instrucción y ejemplos incluidos en el *prompt* orientan el comportamiento sin cambiar los pesos (*in-context learning*, `brown2020language`). Se define *prompt* y se establece que **agregar información al contexto es una forma de condicionar la generación**. Es la base de la variante de RAG de §6 |
+| 2.4.2 Ajuste eficiente de parámetros: LoRA — `sec:marco_llm_lora` | l. 411–434; `eq:marco_lora`, `fig:marco_lora` | **Se elimina** l. 436–438 («Uno de los objetivos del trabajo es… y por eso los modelos generativos se adaptan con LoRA…»): decisión propia | **Un párrafo inicial de conexión con 2.1.5:** el ajuste fino completo de 2.1.5 es costoso en memoria; los métodos de ajuste eficiente en parámetros (*parameter-efficient fine-tuning*, PEFT) congelan el modelo y entrenan pocos parámetros nuevos. Se nombra la familia (con `\gls{peft}` si se mantiene la sigla) antes de LoRA |
+
+**Párrafo de transición a 2.5.** Se elimina l. 440–441 tal como está («Un modelo de lenguaje, sin embargo, solo
+recibe texto») y se reescribe: hasta acá el modelo procesa texto y el clasificador procesa imágenes; unir los
+dos exige una forma de llevar los rasgos de la imagen al espacio de *tokens* del LLM, o de alinear ambas
+modalidades en un espacio común. Eso es un modelo visión–lenguaje.
+**Citas:** `brown2020language`, `touvron2023llama`, `devlin2019bert`, `ouyang2022training`, `holtzman2020curious`,
+`hu2021lora`, `yilmaz2025resourceefficient` (solo si respalda la afirmación sobre costos; se puede pasar al estado del arte).
+
+## Ficha 2.5 — Modelos visión–lenguaje
+
+Sección del `.tex`: `Chapters/02-Marco-Teorico/05-vlm.tex`.
+
+Plan movido desde la ficha única del capítulo el 10/10/2026, sin cambios de contenido. Es la historia de la sección; las decisiones posteriores están en `historial.md` y lo vigente, en `00-capitulo.md`. El hilo conductor (§1 de la guía) se agrega arriba de este plan cuando se reescriba la sección.
+
+---
+
+## 2.5 Modelos visión–lenguaje — `sec:marco_vlm`
+
+**Mensaje central.** Hay dos formas de unir imagen y texto: alinearlos en un espacio común (contrastivo) o
+inyectar la imagen en un LLM (generativo). La primera permite clasificar y recuperar, la segunda redactar.
+
+**Razón de ser.** Dos de los tres mecanismos de 2.6 (recuperación de imágenes y clasificación *zero-shot*)
+descansan en el espacio contrastivo; el generador descansa en el esquema generativo. **Extensión: 3,5
+páginas.**
+
+**Apertura.** Se elimina «El *pipeline* usa las dos» y la mención a DermLIP como componente (l. 446–451). Se
+abre con la definición de VLM y las dos formas de construirlo.
+
+| Subsección | Se reutiliza | Se recorta / elimina | Nuevo |
+|---|---|---|---|
+| 2.5.1 Alineación contrastiva: CLIP — `sec:marco_vlm_clip` | l. 456–483; `fig:marco_clip` | **Se elimina** «Los dos modos reaparecen en el trabajo, y el segundo es además el mecanismo de recuperación de la Sección…» (l. 475–476) y «Por eso el *pipeline* usa un modelo contrastivo especializado y no el CLIP original» (l. 482–483). Se conserva `yan2025derm1m` como ejemplo de preentrenamiento de dominio | **Similitud coseno** (traída de l. 583–585 de RAG): $\cos(\mathbf{u},\mathbf{v})=\mathbf{u}^\top\mathbf{v}/(\lVert\mathbf{u}\rVert\lVert\mathbf{v}\rVert)$, con su lectura: con vectores normalizados coincide con el producto interno. Definición de *kNN* como concepto (los $k$ vecinos más cercanos en el espacio de *embeddings*) |
+| 2.5.2 Modelos multimodales generativos — `sec:marco_vlm_generativos` | l. 488–516; `fig:marco_llava`, LLaVA, BLIP-2, ajuste en dos etapas, LLaVA-Med, SkinVL, Phi-3 | **Se recorta** l. 514–516 («A ese tamaño, el ajuste con LoRA… cabe en una GPU de consumo. Los generadores que compara el trabajo son variantes de este mismo diseño») | — |
+
+**Párrafo de transición a 2.6.** Un VLM generativo produce texto, pero no cualquier texto sirve como reporte
+clínico. Qué se espera de un reporte, qué puede fallar y qué información adicional puede darle al modelo
+para fallar menos es el tema de 2.6.
+**Citas:** `radford2021learning`, `yan2025derm1m`, `liu2023visual`, `li2023blip2`, `li2023llavamed`,
+`zeng2025mmskin`, `abdin2024phi3`, `zhou2023skingpt4` solo si se nombra un VLM dermatológico más.
+
+## Decisión del autor (2026-10-12): Wilcoxon fuera del marco
+
+Con la corrección de Holm sobre 21 pares, Wilcoxon sobre siete clases nunca alcanza el umbral corregido
+(p mínimo 0.016 frente a 0.0024), así que el Cap. 3 (3.9) compara la sensibilidad por clase de forma
+descriptiva y no usa la prueba. Por la regla E1 (cada método presentado se usa en los resultados), se quita
+de 2.8 el párrafo y la ecuación `eq:marco_wilcoxon`; `wilcoxon1945individual` y `demsar2006statistical`
+quedan sin citar.
+
+## Decisión del autor (2026-10-12): corrección de Holm en el marco
+
+3.9 corrige los p de McNemar con Holm sobre 21 pares, así que 2.8 la define después de McNemar, con su
+ecuación (`eq:marco_holm`) y la relación con Bonferroni. La cita `holm1979simple` no estaba en el `.bib`: se
+propuso en `refs_pendientes.md` y queda indefinida hasta que el autor la incorpore.
