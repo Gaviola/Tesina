@@ -196,12 +196,9 @@ patológicas, de las que 9\,369 tienen una descripción propia (las subfiguras d
 leyenda), y 27\,259 preguntas y respuestas que el artículo genera con Llama-3.1 a partir de esas
 descripciones~\cite{zeng2025mmskin}. El archivo local tiene 11\,090 filas (11\,015 imágenes únicas): 7\,020 con
 modalidad clínica, 3\,028 patológica y 1\,042 dermatoscópica; 1\,721 filas no tienen descripción, y las 9\,369
-restantes coinciden con los pares del artículo. Ningún generador de este trabajo se ajustó con \emph{MM-Skin}, así que
-no se usa su partición: los reportes se generaron sobre el archivo completo, en orden, hasta el límite de tiempo del
-clúster, y las métricas con referencia se calculan sobre los que llegaron a generarse
-(Sección~\ref{sec:met_eval_generacion}). SkinVL, que sí se ajustó con \emph{MM-Skin}, no se evalúa sobre él.
-\pendiente{recalcular las métricas de Nivel~1 de \emph{MM-Skin} excluyendo los pares sin descripción: 539 reportes de
-Mini-VLM y 175 de LLaVA-Med tienen como referencia la cadena «nan» y entran en el cálculo actual}
+restantes coinciden con los pares del artículo. Las métricas con referencia se calculan sobre su partición de prueba (1\,653 imágenes) y solo con las imágenes que
+tienen descripción (Sección~\ref{sec:met_eval_generacion}). Ningún generador propio se ajustó con \emph{MM-Skin};
+SkinVL, que sí se ajustó con él, no se evalúa sobre este conjunto.
 Su modalidad difiere de la de \emph{HAM10000}, porque incluye imágenes clínicas y patológicas
 (Tabla~\ref{tab:met_conjuntos}).
 

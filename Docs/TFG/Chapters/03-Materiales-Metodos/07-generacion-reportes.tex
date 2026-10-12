@@ -49,15 +49,17 @@ El ajuste tiene dos etapas, y en ambas la instrucción es la misma: «Describe t
 solo el proyector visual, la capa que traduce las características de la imagen al espacio del modelo de lenguaje, con
 pares imagen--caption de \emph{SkinCAP}. El codificador visual y el modelo de lenguaje quedan congelados, de modo que
 esta etapa solo alinea la imagen con el texto. En la segunda se aplica \gls{lora} sobre los pares de \emph{SkinCoT} en
-inglés. Los adaptadores se colocan en los módulos llamados \texttt{q\_proj} y \texttt{v\_proj}, y ese filtro por nombre
-alcanza partes distintas de cada modelo. En LLaVA-Med coincide con las proyecciones de atención del modelo de lenguaje y
-también con las del codificador visual \gls{clip}. En Mini-VLM, cuyo modelo de lenguaje fusiona las tres proyecciones de
-atención en un único módulo (\texttt{qkv\_proj}), el filtro solo coincide con el codificador visual: el adaptador quedó
-en las 24 capas de ese codificador y el modelo de lenguaje no se ajustó.
-Los registros de entrenamiento lo confirman: LLaVA-Med entrena 33\,554\,432 parámetros, de los que 27\,262\,976 están
-en el modelo de lenguaje y 6\,291\,456 en el codificador visual, mientras que Mini-VLM entrena 6\,291\,456, todos en el
-codificador visual. En la segunda etapa el proyector queda congelado.
-\pendiente{decisión del autor: declarar así el ajuste de Mini-VLM o reentrenarlo con LoRA sobre \texttt{qkv\_proj}}
+inglés, en las proyecciones de atención del modelo de lenguaje y del codificador visual \gls{clip}. En LLaVA-Med son
+los módulos \texttt{q\_proj} y \texttt{v\_proj} de ambos. Mini-VLM fusiona las tres proyecciones de atención de su
+modelo de lenguaje en un único módulo (\texttt{qkv\_proj}), y el adaptador se coloca ahí y en \texttt{q\_proj} y
+\texttt{v\_proj} de \gls{clip}. Una primera versión filtró solo por \texttt{q\_proj} y \texttt{v\_proj}, que en
+Mini-VLM no alcanzan al modelo de lenguaje: el ajuste quedó en el codificador visual, y por eso se reentrenó con los
+módulos corregidos y el resto de la configuración sin cambios.
+Con esa configuración, LLaVA-Med entrena 33\,554\,432 parámetros, 27\,262\,976 en el modelo de lenguaje y 6\,291\,456
+en el codificador visual, y Mini-VLM entrena 31\,457\,280, 25\,165\,824 y 6\,291\,456 respectivamente. En la segunda
+etapa el proyector queda congelado.
+\pendiente{confirmar con el log del job 1179985 el número de parámetros entrenables de Mini-VLM y, cuando terminen los
+jobs 1179986 a 1179990, pasar los resultados de Mini-VLM de los Caps.~4 y~5 a la versión reentrenada}
 
 El ajuste no usa \emph{HAM10000}, que trae una etiqueta diagnóstica por imagen y no un texto, así que no sirve como
 referencia para entrenar el generador~\cite{tschandl2018ham10000}. Su partición de prueba, de 1\,503 imágenes en la partición por lesión, se reserva
@@ -112,7 +114,7 @@ rango, escala, dropout y módulos de LoRA, tasa de aprendizaje, optimizador, ép
         \filasep
         Dropout de LoRA & 0.0 \\
         \filasep
-        Módulos & \texttt{q\_proj}, \texttt{v\_proj} (ver el texto) \\
+        Módulos & \texttt{q\_proj}, \texttt{v\_proj}; en Mini-VLM, además \texttt{qkv\_proj} \\
         \filasep
         Proyector & Congelado \\
         \filasep

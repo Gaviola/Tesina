@@ -248,9 +248,9 @@ alternativa? Para los clasificadores se mide el número de parámetros, la laten
 iteraciones de calentamiento, el promedio de 20 medidas y sin gradiente, en una RTX 4070 de 12 GB. La memoria de video
 (VRAM) es una estimación a partir de los pesos, con cuatro bytes por parámetro y 0.5 GB adicionales, no un valor medido. Para
 los generadores se toman los segundos por reporte de los registros de SLURM en una A30 de 24 GB, como el tiempo entre la
-primera y la última línea de progreso dividido por los reportes generados entre ambas, con decodificación voraz y 512
-tokens como máximo. El Mini-VLM tiene un solo registro. LLaVA-Med tiene dos, con 512 y 384 tokens como máximo, y se
-presenta el rango entre ambos. No es un \emph{benchmark}
+primera y la última línea de progreso dividido por los reportes generados entre ambas. Se usan las corridas del
+re-anclaje de la cascada, que comparten script, plantilla, decodificación voraz y un máximo de 384 tokens en los tres
+generadores, de modo que la diferencia refleja el modelo y la longitud de lo que escribe. No es un \emph{benchmark}
 pareado, sino una medida del orden de magnitud. La comparación con el hardware de la literatura va al
 Capítulo~\ref{cp:discusion}.
 
