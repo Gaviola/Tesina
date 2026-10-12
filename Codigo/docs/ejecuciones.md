@@ -6,6 +6,19 @@ Ayuda-memoria cronológico de experimentos enviados a cluster, ordenado de más 
 
 ## 2026-10-12
 
+### DenseNet121 y ViT-B/16 con la receta moderna (split por lesión) — TOKO jobs 99007–99012
+Plan: [densenet_vit_moderna_plan](ideas/densenet_vit_moderna_plan_20261012.md). Los dos modelos que quedaron con la
+receta legacy se entrenan con la moderna y el trial ganador de su familia, sin pesos por clase, semillas 42/43/44:
+DenseNet121 ← t02 de ConvNeXt (99007–99009), ViT-B/16 ← t06 de Swin (99010–99012). Cambio de código:
+`submit_sweep.py --model` acepta `densenet` y `vit`. Código remoto idéntico al local (md5 sin CRLF); sin `sync_up`.
+
+```
+python scripts/toko/submit_sweep.py --model densenet --lesion-split --class-weights none --trials t02 --seeds 42 43 44
+python scripts/toko/submit_sweep.py --model vit      --lesion-split --class-weights none --trials t06 --seeds 42 43 44
+```
+
+**Resul:** pendiente hasta que bajen los jobs.
+
 ### Mini-VLM v3 (LoRA sobre el LLM) + Nivel 1 sobre las particiones de prueba — Mendieta jobs 1179985–1179991
 Plan: [mini_vlm_lora_llm_plan](ideas/mini_vlm_lora_llm_plan_20261012.md). El LoRA de `stage2_mini_vlm_v2` quedó
 solo en CLIP; v3 usa `--lora_target_modules qkv_proj q_proj v_proj` (31 457 280 entrenables, verificado sin cargar
