@@ -4,6 +4,16 @@ Ayuda-memoria cronológico de experimentos enviados a cluster, ordenado de más 
 
 ---
 
+## 2026-10-11
+
+### Verificaciones para los pendientes del Cap. 3 — **Sin jobs SLURM** (local)
+Resul: [verificaciones_cap03_resul](resul/verificaciones_cap03_resul_20261011.md) — **CUMPLE**. Se bajaron los logs
+1153597/1153598 (stage 2 v2) y se calcularon con `scripts/verificaciones_cap03.py` y
+`scripts/verificaciones_cap03_vlm_ci.py` los IC de HIBA, el bootstrap por lesión, Holm y los IC de los VLM ajustados.
+Hallazgos: el LoRA de Mini-VLM entrena solo el codificador visual (6 291 456 parámetros; Phi-3.5 fusiona la atención
+en `qkv_proj`); las métricas de Nivel 1 de MM-Skin incluyen 539/175 referencias «nan» y no usan su partición; el
+piloto de *noreasoning* mezcló 67 train / 10 val / 17 test; Wilcoxon por clase no sobrevive a Holm.
+
 ## 2026-10-03
 
 ### RAG con el índice por lesión + métrica oficial de la cascada — Mendieta job 1179315
