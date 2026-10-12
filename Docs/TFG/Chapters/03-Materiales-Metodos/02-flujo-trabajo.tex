@@ -54,9 +54,8 @@ presentan al final de cada capítulo de resultados, porque se aplican a modelos 
 
 Hay tres entornos de cómputo. La GPU local, una RTX 4070 de 12~GB, sirve para depurar, correr pruebas rápidas y los
 análisis locales. El clúster TOKO, con una RTX 4080 de 16~GB, tiene cola corta y se usa para los clasificadores, los
-barridos y algunos \glspl{vlm} de primera etapa. Mendieta, con una A30 de 24~GB, tiene una cola de cinco a siete días
-y se usa para el ajuste de larga duración de los \gls{vlm} y para la nueva evaluación de la cascada.
-\pendiente{dato: confirmar en qué clúster corrió la generación de reportes de Mini-VLM}
+barridos y algunas evaluaciones de clasificación con \glspl{vlm}. Mendieta, con una A30 de 24~GB, tiene una cola de
+cinco a siete días y se usa para el ajuste de los \glspl{vlm} y para toda la generación de reportes.
 Los trabajos se envían a los clústeres con SLURM desde un mismo gestor, que deja cada envío registrado, y los barridos
 guardan sus corridas en Weights \& Biases sin conexión (Tabla~\ref{tab:met_entorno}).
 

@@ -23,8 +23,10 @@ entrenan en una GPU de consumo.
 
 Los cuatro modelos no comparten receta. La receta moderna se aplica a ConvNeXt-Tiny y a Swin-Tiny: incluye un barrido de
 hiperparámetros, un ajuste en dos etapas y aumentos más fuertes. La receta anterior, que reproduce el entrenamiento previo a
-la receta moderna, se aplica a DenseNet121 y a ViT-B/16, que quedan fuera del barrido.
-\pendiente{motivo de excluir DenseNet121 y ViT-B/16 del barrido: el plan v4 invoca BatchNorm, que no aplica a ViT-B/16}
+la receta moderna, se aplica a DenseNet121 y a ViT-B/16, que quedan fuera del barrido. El plan del barrido los excluyó
+porque las iteraciones anteriores atribuían el bajo desempeño de DenseNet121 con la receta moderna a la interacción
+entre su normalización por lotes y el aumento agresivo. Ese argumento no alcanza a ViT-B/16, que normaliza por capa.
+\pendiente{decidir cómo se justifica la exclusión de ViT-B/16 del barrido: el plan no da un motivo propio}
 Ambas recetas se comparan lado a lado en la Tabla~\ref{tab:met_receta}. La réplica del experimento de desbalance
 (Sección~\ref{sec:met_supervisados_receta}) usa la receta moderna en ConvNeXt-Tiny, Swin-Tiny y DenseNet121. Todos los
 modelos reciben la misma entrada.

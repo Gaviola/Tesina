@@ -95,8 +95,7 @@ El \emph{embedding} de cada imagen, congelado y normalizado, se usa de cuatro ma
   \item SVM con núcleo RBF. Una SVM con $C = 10$ sobre \emph{embeddings} estandarizados, con pesos balanceados
   por clase.
 \end{enumerate}
-Los valores de las cabezas son fijos en el código.
-\pendiente{dato: confirmar en ejecuciones.md si hubo búsqueda de $C$ y $k$ sobre validación para estas cabezas}
+Los valores de las cabezas son fijos: no hubo búsqueda de $C$ ni de $k$ sobre validación.
 Con cuatro cabezas sobre la misma representación, un resultado mezcla el efecto de la representación y el de la cabeza.
 
 Para separar ambos efectos, cabezas clásicas equivalentes (SVM con núcleo RBF y $C = 10$, regresión logística y un

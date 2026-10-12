@@ -41,8 +41,8 @@ gravedad se definen en la Sección~\ref{sec:met_tareas}; aquí solo se retoman.
             & Entrenamiento de la generación (razonamiento)
             & Observación de un modelo de visión; razonamiento de otro modelo con la etiqueta; revisado por dermatólogos \\
         \filasep
-        \emph{MM-Skin} & Clínica, patológica y «derm»
-            & 11\,015 imágenes; 27\,259 pares de preguntas y respuestas
+        \emph{MM-Skin} & Clínica, dermatoscópica y patológica
+            & 11\,015 imágenes, 9\,369 con descripción; 27\,259 pares de preguntas y respuestas
             & Evaluación de la generación con referencia
             & Descripciones de libros de texto; preguntas y respuestas generadas con Llama-3.1 \\
         \filasep
@@ -161,11 +161,12 @@ evaluación externa no pasan por esta partición, porque cada uno trae su propia
 \emph{SkinCAP}, reúne 4\,000 imágenes clínicas tomadas de \emph{Fitzpatrick 17k} y de \emph{DDI}~\cite{groh2021neural,daneshjou2022disparities}.
 Sus descripciones las escribieron cuatro dermatólogos certificados, en chino, y se tradujeron al inglés con un software
 propio basado en Google Translate y se revisaron a mano~\cite{shen2025skincare}. En el archivo local, 439 imágenes están
-marcadas «Do not consider this image» y el código las excluye: quedan 3\,561, que se parten por imagen en 70/15/15
-(2\,492, 534 y 535). \pendiente{dato: motivo de las 439 marcas «Do not consider this image»; el repositorio no lo documenta (pregunta 13)}
+marcadas «Do not consider this image». La marca viene de \emph{SKINCON}, cuyos anotadores podían usarla para
+descartar imágenes de mala calidad~\cite{daneshjou2022skincon}, y ninguna de esas 439 tiene conceptos anotados. El
+código las excluye: quedan 3\,561, que se parten por imagen en 70/15/15 (2\,492, 534 y 535).
 
-\emph{SkinCoT} aporta otras 3\,041 imágenes clínicas con razonamiento escrito. Según el artículo, las imágenes provienen
-de DermNet~\cite{shen2025skincare}. \pendiente{dato: confirmar el origen de las imágenes de SkinCoT; el artículo dice DermNet y el README y el acuerdo de uso mencionan Fitzpatrick 17k, DDI y SKINCON (pregunta 4)}
+\emph{SkinCoT} aporta otras 3\,041 imágenes clínicas con razonamiento escrito, tomadas del atlas público
+DermNet~\cite{shen2025skincare}.
 Cada par tiene dos componentes que escriben modelos distintos. La observación, sin diagnóstico, la escribe un modelo de
 visión (Gemini 2.5 Pro). El razonamiento lo escribe otro modelo (GPT-o4-mini) con la etiqueta verdadera a la vista, y
 dermatólogos lo evalúan en seis criterios con puntaje de 0 a 5. De 4\,002 casos enviados, 3\,813 pasan los controles
@@ -190,16 +191,23 @@ oración, en negrita. El fragmento siguiente, de un caso de párpados, muestra l
 \subsection{MM-Skin, HIBA y Derm1M}
 
 \emph{MM-Skin} es el conjunto de evaluación de la generación con referencia (Sección~\ref{sec:met_generacion}). Sus textos
-de referencia son descripciones de 15 libros de texto de dermatología, casi diez mil pares imagen--texto, y 27\,259
-preguntas y respuestas que el artículo genera con Llama-3.1 a partir de la descripción de cada imagen~\cite{zeng2025mmskin}.
-El archivo local tiene 11\,090 filas (11\,015 imágenes únicas): 7\,020 con modalidad «skin», 3\,028 «pathology» y 1\,042
-«derm». \pendiente{dato: qué significa la modalidad «derm» y por qué el archivo tiene más filas que pares que describe el artículo (pregunta 6)}
-Se parte por imagen en 70/15/15 (7\,710, 1\,652 y 1\,653 imágenes). \pendiente{confirmar si la evaluación de la generación usa el test de \texttt{mmskin\_splits.json} o el archivo completo (pregunta 7)}
+de referencia son descripciones de 15 libros de texto de dermatología: 11\,039 imágenes clínicas, dermatoscópicas y
+patológicas, de las que 9\,369 tienen una descripción propia (las subfiguras de una misma figura comparten la
+leyenda), y 27\,259 preguntas y respuestas que el artículo genera con Llama-3.1 a partir de esas
+descripciones~\cite{zeng2025mmskin}. El archivo local tiene 11\,090 filas (11\,015 imágenes únicas): 7\,020 con
+modalidad clínica, 3\,028 patológica y 1\,042 dermatoscópica; 1\,721 filas no tienen descripción, y las 9\,369
+restantes coinciden con los pares del artículo. Ningún generador de este trabajo se ajustó con \emph{MM-Skin}, así que
+no se usa su partición: los reportes se generaron sobre el archivo completo, en orden, hasta el límite de tiempo del
+clúster, y las métricas con referencia se calculan sobre los que llegaron a generarse
+(Sección~\ref{sec:met_eval_generacion}). SkinVL, que sí se ajustó con \emph{MM-Skin}, no se evalúa sobre él.
+\pendiente{recalcular las métricas de Nivel~1 de \emph{MM-Skin} excluyendo los pares sin descripción: 539 reportes de
+Mini-VLM y 175 de LLaVA-Med tienen como referencia la cadena «nan» y entran en el cálculo actual}
 Su modalidad difiere de la de \emph{HAM10000}, porque incluye imágenes clínicas y patológicas
 (Tabla~\ref{tab:met_conjuntos}).
 
 \emph{HIBA} es el único conjunto de población distinta: 1\,616 imágenes de un hospital de Buenos Aires, de 1\,246 lesiones
-y 623 pacientes, con licencia CC BY~\cite{riccilara2023dataset}. \pendiente{dato: confirmar si la evaluación usó las 1\,616 imágenes o el test de 243 de \texttt{hiba\_splits.json} (pregunta 8)}
+y 623 pacientes, con licencia CC BY~\cite{riccilara2023dataset}. Se usa entero como validación externa: la división
+en entrenamiento, validación y prueba que trae el repositorio no interviene.
 De ellas, 1\,270 son dermatoscopias de contacto con polarización y 346 son clínicas. Los autores la presentan como la
 primera de ese tipo en Hispanoamérica. Por imagen, la columna de fototipo registra 114 de tipo I, 1\,085 de tipo II,
 275 de tipo III, 25 de tipo IV y 117 sin dato; el artículo cuenta los fototipos por paciente. Sus diagnósticos se mapean

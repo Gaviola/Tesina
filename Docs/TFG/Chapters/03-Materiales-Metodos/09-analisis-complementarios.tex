@@ -105,14 +105,14 @@ y la prueba de cada resultado de clasificación, y la Tabla~\ref{tab:met_protoco
         \filasep
         VLM generales ajustados, por verosimilitud y CoT
             & Vista única & Etapa 2 de cada VLM (v2, 10 épocas) & Test de \emph{HAM10000} (1\,503)
-            & Sin IC (a verificar) \\
+            & IC bootstrap \\
         \filasep
         Prueba con imagen gris y sin imagen
-            & Vista única (a verificar) & Los ajustados & Test de \emph{HAM10000} (1\,503) & Descriptiva \\
+            & Vista única; una imagen gris de $224 \times 224$ & Modelos base & Test de \emph{HAM10000} (1\,503) & Descriptiva \\
         \filasep
         VLM \emph{zero-shot} sobre fotografía clínica
             & Vista única & Ninguno
-            & \emph{SkinCAP} mapeado a siete clases (n = 624; subconjunto a verificar)
+            & \emph{SkinCAP} mapeado a siete clases (n = 624, todo el conjunto)
             & Descriptiva \\
         \filasep
         DermLIP \emph{zero-shot} en \emph{HAM10000} y en fotografía clínica
@@ -139,9 +139,10 @@ test, se usa un bootstrap pareado sobre imágenes (Sección~\ref{sec:marco_eval_
 acierta cada modelo, se usa McNemar en su versión exacta: la binomial bilateral sobre los casos discordantes, que es la que
 calcula el código para todos los pares. La aproximación $\chi^2$ (Ecuación~\ref{eq:marco_mcnemar}) no se usa en ningún
 resultado. Si la pregunta es si la mejora es sistemática entre clases, se usa Wilcoxon sobre la sensibilidad de las siete
-clases (\emph{recall}). Las pruebas no corrigen por comparaciones múltiples.
-\pendiente{decidir si se aplica corrección por
-comparaciones múltiples (Holm)}
+clases (\emph{recall}). Como cada familia tiene 21 comparaciones, los p de McNemar y de Wilcoxon se corrigen con el
+método de Holm dentro de su familia, que controla la probabilidad de declarar al menos una diferencia falsa.
+\pendiente{confirmar la corrección de Holm: con ella McNemar conserva sus 19 diferencias significativas y Wilcoxon pierde
+las 10, porque con siete clases su menor p (0.016) no alcanza el umbral corregido (0.0024)}
 
 Los intervalos son percentiles al 95\,\%: si el intervalo de una diferencia no contiene el cero, la diferencia no se
 explica por la composición del test. El p-valor del bootstrap, que es dos veces la menor proporción de remuestreos con
@@ -149,8 +150,8 @@ signo contrario, solo orienta, y la decisión se toma con el intervalo. McNemar 
 bilateral. Las pruebas pareadas se corren sobre la corrida de la semilla 42, y la variación entre semillas se presenta como
 desvío (Sección~\ref{sec:met_protocolo}). Hay 21 comparaciones de McNemar y 21 de Wilcoxon entre los siete modelos. El
 bootstrap remuestrea imágenes (1\,503), no lesiones (1\,429 en el test), así que las imágenes de una misma lesión se tratan
-como independientes.
-\pendiente{decidir si el bootstrap remuestrea por lesión o si esta limitación se declara} Con siete
+como independientes. Remuestrear por lesión casi no cambia los intervalos: para la diferencia de F1 macro entre los
+dos ganadores, los extremos se mueven menos de 0.002. Con siete
 clases, el menor p bilateral de Wilcoxon es 0.016. Si dos modelos tienen el mismo recall en una clase, esa clase se descarta
 y la N baja, por lo que el Capítulo~\ref{cp:res_clasif} declara la N de cada par.
 
@@ -212,11 +213,8 @@ solo en test, con los dos clasificadores ganadores (semilla 42, TTA). Cada model
 dermatoscopía y fotografía clínica: 346 de sus imágenes son clínicas, y sus fototipos van de I a IV. Las diez categorías de
 \emph{HIBA} se llevan a las siete de \emph{HAM10000} con el mapeo de la Sección~\ref{sec:met_datasets}. El carcinoma
 escamoso pasa a AKIEC, que en \emph{HAM10000} agrupa queratosis actínicas y carcinoma intraepitelial; esa aproximación es
-una fuente de ruido que se declara. El conjunto tiene 1\,616 imágenes.
-\pendiente{confirmar si la evaluación usó las 1\,616
-imágenes o el test de 243 de hiba\_splits.json} Cada modelo tiene un solo \emph{checkpoint} y no tiene intervalo de
-confianza.
-\pendiente{decidir si se agrega un IC bootstrap sobre las 1\,616 imágenes} La validación externa cambia la
+una fuente de ruido que se declara. Se evalúan las 1\,616 imágenes del conjunto, con un solo \emph{checkpoint} por
+modelo e intervalos \emph{bootstrap} sobre las imágenes (2\,000 remuestreos). La validación externa cambia la
 población, pero no las condiciones de captura, que el análisis siguiente varía.
 
 ¿Qué ocurre si las condiciones de captura empeoran, sin cambiar de conjunto de datos? Se aplican cuatro perturbaciones de
@@ -251,8 +249,8 @@ iteraciones de calentamiento, el promedio de 20 medidas y sin gradiente, en una 
 (VRAM) es una estimación a partir de los pesos, con cuatro bytes por parámetro y 0.5 GB adicionales, no un valor medido. Para
 los generadores se toman los segundos por reporte de los registros de SLURM en una A30 de 24 GB, como el tiempo entre la
 primera y la última línea de progreso dividido por los reportes generados entre ambas, con decodificación voraz y 512
-tokens como máximo. El Mini-VLM tiene un solo registro. LLaVA-Med tiene dos, y el código toma el valor más alto.
-\pendiente{confirmar si se reporta un rango o si se vuelve a medir la latencia de LLaVA-Med} No es un \emph{benchmark}
+tokens como máximo. El Mini-VLM tiene un solo registro. LLaVA-Med tiene dos, con 512 y 384 tokens como máximo, y se
+presenta el rango entre ambos. No es un \emph{benchmark}
 pareado, sino una medida del orden de magnitud. La comparación con el hardware de la literatura va al
 Capítulo~\ref{cp:discusion}.
 
@@ -272,7 +270,7 @@ Capítulo~\ref{cp:discusion}.
         \textbf{Resultado} & \textbf{Regla de inferencia} & \textbf{Checkpoint} & \textbf{Partición} & \textbf{Prueba o IC} \\
         \midrule
         Validación externa en \emph{HIBA}
-            & TTA & Ganadores, semilla 42 & Solo test de \emph{HIBA} & Sin IC; un checkpoint por modelo \\
+            & TTA & Ganadores, semilla 42 & \emph{HIBA} completo (1\,616) & IC bootstrap; un checkpoint por modelo \\
         \filasep
         Perturbaciones de adquisición
             & Vista única & Ganadores, semilla 42 & Test (1\,503) & Sin IC; una corrida \\
@@ -283,18 +281,18 @@ Capítulo~\ref{cp:discusion}.
         Consistencia diagnóstica de los reportes, con cada generador
             & Decodificación voraz; métrica oficial de solo reporte, con \emph{matcher} estricto
             & Ancla Swin por lesión, semilla 42
-            & Test (1\,503) o subconjunto según el brazo (a verificar)
+            & Test (1\,503); 400 en las ablaciones; 248 en el nivel diferencial
             & Bootstrap pareado de la diferencia de medias \\
         \filasep
         Ensamble y cascada: ruteo y línea base sin generador
             & Ancla Swin por lesión, semilla 42; métrica oficial & Ganador & Test (1\,503)
             & Bootstrap pareado, 2\,000 remuestreos, IC 95\,\% \\
         \filasep
-        RAG con índice por lesión
-            & Vista única (a verificar)
-            & \emph{kNN} con DermLIP ($k = 3$) sobre entrenamiento
+        Recuperación sola y Swin con recuperación (Mini-VLM)
+            & Decodificación voraz; métrica oficial
+            & \emph{kNN} con DermLIP ($k = 3$) sobre el entrenamiento por lesión; ancla Swin por lesión, semilla 42
             & Test (1\,503)
-            & Bootstrap pareado (corrida pendiente) \\
+            & Bootstrap pareado, 2\,000 remuestreos, IC 95\,\% \\
         \filasep
         Costo de clasificadores y generadores
             & Sin TTA; latencia medida & Arquitecturas sin entrenar; registros de SLURM
@@ -303,8 +301,6 @@ Capítulo~\ref{cp:discusion}.
     \end{tabularx}
 \end{table}
 \endgroup
-\pendiente{Tablas~\ref{tab:met_protocolos_vlm} y~\ref{tab:met_protocolos_analisis}: verificar las celdas marcadas «a
-verificar» y completar la fila del RAG con índice por lesión cuando termine su corrida (\texttt{full\_rag\_les}).}
 
 Los resultados de clasificación del Capítulo~\ref{cp:res_clasif} se leen con este protocolo: cada número lleva la regla y
 la partición de la Tabla~\ref{tab:met_protocolos}, y cada diferencia, la prueba de la Tabla~\ref{tab:met_pruebas}.

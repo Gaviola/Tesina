@@ -35,8 +35,10 @@ solo el reporte final, prohíbe los bloques de razonamiento y prohíbe mencionar
 que los generadores suelen razonar en voz alta y contradecir el diagnóstico que reciben, y prohibirles el razonamiento
 de manera explícita los obliga a comprometerse con él. El \emph{grounding} en general se describe en la
 Sección~\ref{sec:marco_rep_generacion}, y la plantilla completa está en el Apéndice~\ref{ap:prompts}.
-\pendiente{dato: verificar si las 100 imágenes del piloto de junio con el que se eligió \emph{noreasoning}
-(\texttt{ensamble\_resul\_20260607.md}) son de test; si lo son, declararlo aquí (decisión transversal 1)}
+La variante se eligió en un piloto con las primeras 100 imágenes de \emph{HAM10000} por orden de nombre, sin
+distinguir particiones: 67 son de entrenamiento, 10 de validación, 17 de prueba y 6 quedaron fuera de la partición por
+lesión. La elección se basó en la consistencia de los reportes con el diagnóstico verdadero inyectado, no en la
+exactitud de ningún clasificador, y las 17 imágenes de prueba son el 1.13\,\% del test.
 
 El diagnóstico que recibe el generador puede venir de cuatro fuentes, comparadas con el mismo generador. La primera es
 Swin-Tiny, la predicción \emph{argmax} del modelo con semilla 42, que se usa como ancla principal y se entrena con la

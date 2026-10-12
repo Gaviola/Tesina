@@ -18,8 +18,10 @@ de generación: la descripción de lo que se ve en la imagen y la impresión dia
 la recomendación de manejo quedan fuera. En la Sección~\ref{sec:met_clasif_vlm} los \glspl{vlm} clasifican, es decir,
 eligen una etiqueta de un inventario cerrado. Redactar un texto libre con la estructura de un reporte exige otra forma
 de salida, y por eso los modelos se ajustan para generar.
-\pendiente{dato: en tres o cuatro reportes de una corrida, verificar si la impresión diagnóstica aparece en la
-condición base, sin diagnóstico declarado (Q15). Si no aparece, decirlo aquí y remitir a la Sección~\ref{sec:met_pipeline}.}
+Sin un diagnóstico de entrada, ninguno de los dos generadores cierra con una impresión diagnóstica: Mini-VLM ofrece
+un diferencial abierto y LLaVA-Med reproduce la estructura de los razonamientos de entrenamiento, pero el texto se
+corta antes de la conclusión en nueve de cada diez casos. La impresión diagnóstica la aporta el \emph{pipeline}
+(Sección~\ref{sec:met_pipeline}).
 
 \subsection{Generadores}
 
@@ -31,11 +33,11 @@ salida de una etiqueta a un texto. Ambos son de propósito general, y falta un g
 con el cual compararlos.
 
 \textcite{zeng2025mmskin} presentan SkinVL junto con MM-Skin, un conjunto de pares imagen--texto de dermatología.
-SkinVL es LLaVA-Med v1.5 con Mistral-7B ajustado a dermatología con MM-Skin.
-\pendiente{dato: el Capítulo~2 atribuye a zeng2025mmskin un ajuste con proyección y adaptadores LoRA, mientras que la
-inspección del repositorio dice que los pesos publicados (\texttt{zwq803/SkinVL-MM}) son completos y sin adaptadores
-(Q11). Describir el método según el artículo y anotar la inspección como dato propio.}
-Los pesos publicados están en el formato original de LLaVA-Med y no incluyen el codificador visual, así que se
+SkinVL parte de LLaVA-Med v1.5 con Mistral-7B y ajusta con \gls{lora} (rango 128) el modelo de lenguaje y la
+proyección visual, con el codificador visual congelado, en una sola etapa de instrucciones. Se usa la variante
+SkinVL-MM, ajustada solo con \emph{MM-Skin}. Sus pesos publicados (\texttt{zwq803/SkinVL-MM}) no traen adaptadores
+separados sino el modelo de lenguaje y el proyector completos, lo que sugiere que el \gls{lora} se fusionó antes de
+publicarlos; el artículo no lo dice. Los pesos publicados están en el formato original de LLaVA-Med y no incluyen el codificador visual, así que se
 convirtieron al formato de Hugging Face: los pesos del modelo de lenguaje y del proyector se trasplantaron sobre la base
 \texttt{chaoyinshe/llava-med-v1.5-mistral-7b-hf}, que aporta el codificador visual. No se ajustó de nuevo. Se incluye
 como generador especializado de comparación, para saber si la especialización en dermatología cambia el texto frente
@@ -52,20 +54,20 @@ alcanza partes distintas de cada modelo. En LLaVA-Med coincide con las proyeccio
 también con las del codificador visual \gls{clip}. En Mini-VLM, cuyo modelo de lenguaje fusiona las tres proyecciones de
 atención en un único módulo (\texttt{qkv\_proj}), el filtro solo coincide con el codificador visual: el adaptador quedó
 en las 24 capas de ese codificador y el modelo de lenguaje no se ajustó.
-\pendiente{decisión del autor: declarar así el ajuste de Mini-VLM o reentrenarlo con LoRA sobre \texttt{qkv\_proj}.
-Verificar los módulos del checkpoint v2 de LLaVA-Med, que no está en la copia local (en la v1: 64 módulos en el modelo
-de lenguaje y 48 en el codificador visual), y si el proyector se entrena en la etapa 2 (Q4).}
+Los registros de entrenamiento lo confirman: LLaVA-Med entrena 33\,554\,432 parámetros, de los que 27\,262\,976 están
+en el modelo de lenguaje y 6\,291\,456 en el codificador visual, mientras que Mini-VLM entrena 6\,291\,456, todos en el
+codificador visual. En la segunda etapa el proyector queda congelado.
+\pendiente{decisión del autor: declarar así el ajuste de Mini-VLM o reentrenarlo con LoRA sobre \texttt{qkv\_proj}}
 
 El ajuste no usa \emph{HAM10000}, que trae una etiqueta diagnóstica por imagen y no un texto, así que no sirve como
 referencia para entrenar el generador~\cite{tschandl2018ham10000}. Su partición de prueba, de 1\,503 imágenes en la partición por lesión, se reserva
 para medir la fidelidad diagnóstica (Sección~\ref{sec:met_protocolo}). \emph{SkinCaRe} trae, en cambio, un texto de
 clínicos para cada imagen: las descripciones de \emph{SkinCAP}, escritas por dermatólogos, y el razonamiento diagnóstico
-revisado de \emph{SkinCoT}~\cite{shen2025skincare}. De los 4\,000 pares de \emph{SkinCAP}, la partición usa 3\,561.
-\pendiente{dato: motivo de la exclusión de 439 pares (Q10)} \emph{SkinCoT} aporta 3\,041 textos, y la segunda etapa
-ve 23 clases de enfermedades, no las siete de \emph{HAM10000}.
-\pendiente{dato: confirmar qué anota cada subconjunto y si la impresión diagnóstica está en el texto de SkinCoT o se
-obtiene de su conclusión (Q14).}
-Sin embargo, los textos de \emph{SkinCoT} son razonamientos y no reportes, lo que tiene consecuencias para el
+revisado de \emph{SkinCoT}~\cite{shen2025skincare}. De los 4\,000 pares de \emph{SkinCAP}, la partición usa 3\,561 (las demás están marcadas como descartables,
+Sección~\ref{sec:met_datasets}). Las descripciones de \emph{SkinCAP} son observacionales: sitio, morfología, color y
+distribución. \emph{SkinCoT} aporta 3\,041 textos de 23 clases de enfermedades, no las siete de \emph{HAM10000}, y cada
+uno termina con una impresión diagnóstica explícita, porque el modelo que lo redactó recibía la etiqueta y debía
+nombrarla en la última oración~\cite{shen2025skincare}. Sin embargo, los textos de \emph{SkinCoT} son razonamientos y no reportes, lo que tiene consecuencias para el
 entrenamiento.
 
 Por la restricción de cómputo de la Sección~\ref{sec:met_tareas}, los modelos se adaptan
@@ -96,7 +98,11 @@ rango, escala, dropout y módulos de LoRA, tasa de aprendizaje, optimizador, ép
         \filasep
         Planificador & Coseno \\
         \filasep
-        Tasa, épocas, lote y paciencia & a verificar \\
+        Tasa de aprendizaje & $1.09 \times 10^{-4}$ \\
+        \filasep
+        Épocas & 2, sin detención temprana \\
+        \filasep
+        Lote & 16 (15 en LLaVA-Med, reducido por memoria) \\
         \midrule
         \multicolumn{2}{@{}l}{\emph{Etapa 2: LoRA}} \\
         \midrule
@@ -108,7 +114,7 @@ rango, escala, dropout y módulos de LoRA, tasa de aprendizaje, optimizador, ép
         \filasep
         Módulos & \texttt{q\_proj}, \texttt{v\_proj} (ver el texto) \\
         \filasep
-        Proyector & a verificar \\
+        Proyector & Congelado \\
         \filasep
         Datos & 2\,128 / 456 / 457 (entrenamiento / validación / prueba) \\
         \filasep
@@ -128,14 +134,15 @@ rango, escala, dropout y módulos de LoRA, tasa de aprendizaje, optimizador, ép
         \filasep
         Precisión & bf16 en GPU de arquitectura Ampere o posterior \\
         \filasep
-        Cuantización & a verificar \\
+        Cuantización & No \\
         \filasep
         Semilla & 42 \\
         \bottomrule
     \end{tabularx}
 \end{table}
-\pendiente{Tabla~\ref{tab:met_lora}: completar la tasa, las épocas, el lote y la paciencia de la etapa 1 (Q1), si el
-proyector se entrena en la etapa 2 (Q4), el lote real según el log (Q6) y si hubo cuantización (Q7).}
+La etapa 1 que usan los modelos finales es la del mejor \emph{trial} de un barrido de su tasa de aprendizaje, cargada
+en su segunda época. En la etapa 2, ninguna de las dos corridas activó la detención temprana: la pérdida de validación
+siguió bajando hasta la décima época, que es la que se conserva.
 
 \subsection{Reporte y razonamiento}
 
