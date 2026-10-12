@@ -1,0 +1,29 @@
+% Figura: ruteo en tres niveles según la concordancia. Adaptada de fig:incertidumbre de
+% Docs/experimentacion/experimentacion.tex; se quitan los porcentajes y las coberturas. Se usa en sec:met_ruteo.
+
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[x=1mm, y=1mm]
+
+        \node[figentrada, text width=30mm] (sig) at (0, 0)
+            {Clasificador y kNN\\{\footnotesize concordancia $a(x)$}};
+
+        \node[figsalida, text width=36mm, draw=figverde!70!black, fill=figverde!12] (aff) at (80, 24)
+            {Afirmativo\\{\footnotesize reporte definitivo}};
+        \node[figsalida, text width=36mm, draw=fignaranja!70!black, fill=fignaranja!18] (dif) at (80, 0)
+            {Diferencial\\{\footnotesize reporte con dos candidatos}};
+        \node[figsalida, text width=36mm, draw=figbermellon!80!black, fill=figbermellon!12] (abs) at (80, -24)
+            {Abstención\\{\footnotesize derivar a especialista}};
+
+        \draw[figflecha] (sig.east) -- (30, 0) |- (aff.west);
+        \draw[figflecha] (30, 0) |- (abs.west);
+        \draw[figflecha] (sig.east) -- (dif.west);
+
+        \node[figetiqueta, above] at (45, 24) {$a = 1$};
+        \node[figetiqueta, above] at (45, 0) {$a = 0$ y $\kappa > 1/3$};
+        \node[figetiqueta, below] at (45, -24) {$a = 0$ y $\kappa = 1/3$};
+
+    \end{tikzpicture}
+    \caption{Ruteo en tres niveles según la concordancia entre el clasificador y el kNN.}
+    \label{fig:met_ruteo}
+\end{figure}

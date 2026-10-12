@@ -1,0 +1,37 @@
+% Figura: pipeline propuesto (cascada con ruteo). Adaptada de fig:cascada y de fig:incertidumbre de
+% Docs/experimentacion/experimentacion.tex, sin cifras. Se usa en sec:met_pipeline, después del párrafo que la cita.
+
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[x=0.93mm, y=1mm]
+
+        \node[figentrada, text width=20mm] (img) at (0, 0) {Imagen\\{\footnotesize dermatoscópica}};
+
+        \node[figtarea, text width=32mm] (clf) at (36, 16)
+            {Clasificador\\{\footnotesize Swin-Tiny o DermLIP}};
+        \node[figtarea, text width=32mm, draw=figceleste!70!black, fill=figceleste!18] (knn) at (36, -16)
+            {kNN sobre\\{\footnotesize \emph{embeddings} de DermLIP}};
+
+        \node[fignodo, text width=24mm, fill=figrelleno] (rut) at (76, 0) {Ruteo por\\concordancia};
+
+        \node[figtarea, text width=22mm] (gen) at (110, 0) {Generador\\{\footnotesize \emph{noreasoning}}};
+        \node[figsalida, text width=14mm] (rep) at (136, 0) {Reporte};
+
+        \node[figsalida, text width=30mm, draw=figbermellon!80!black, fill=figbermellon!12] (der) at (76, -28)
+            {Derivación a\\especialista};
+
+        \draw[figflecha] (img.east) -- ++(4, 0) |- (clf.west);
+        \draw[figflecha] (img.east) -- ++(4, 0) |- (knn.west);
+        \draw[figflecha] (clf.east) -| (rut.north);
+        \draw[figflecha] (knn.east) -- ++(4, 0) |- (rut.west);
+        \draw[figflecha] (rut.east) -- (gen.west);
+        \draw[figflecha] (gen.east) -- (rep.west);
+        \draw[figflecha] (rut.south) -- (der.north);
+
+        \node[figetiqueta, anchor=west] at (78, -14) {abstención};
+
+    \end{tikzpicture}
+    \caption{Pipeline propuesto. Según la concordancia entre clasificador y kNN, el generador redacta un reporte
+    o el caso se deriva.}
+    \label{fig:met_pipeline}
+\end{figure}

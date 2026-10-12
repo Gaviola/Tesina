@@ -1,15 +1,118 @@
-\section{Pipeline propuesto: ensamble en cascada consciente de la incertidumbre}
+% Extensión estimada: unas 3.5 páginas (doce párrafos, dos figuras y una lista de tres niveles).
+% Fuentes: Codigo/scripts/generate_report.py (plantillas y elección de la plantilla); Codigo/scripts/dermlip_split_eval.py
+% (kNN e índice por lesión, líneas 100–111); Codigo/scripts/build_uncertainty_3tier.py (regla de ruteo);
+% Codigo/scripts/ensemble_bootstrap.py (línea base sin generador); Codigo/docs/resul/revision_experimentacion_20261003.md
+% (ancla Swin, índice por lesión, ruteo); Codigo/docs/ideas/rag_les_plan_20261003.md (decodificación de la recuperación);
+% Codigo/docs/resul/ensamble_resul_20260607.md (piloto de noreasoning); Capítulo 2, Sección 2.5 (concordancia, consenso y
+% política de tres salidas) y Sección 2.4 (kNN, Ecuación de vecinos); Figuras de Docs/experimentacion (sin cifras).
+\section{Pipeline propuesto}
 \label{sec:met_pipeline}
 
-\subsection{Cascada clasificador--generador (\emph{grounding})}
-\pendiente{Se explica por qué separar el diagnóstico de la redacción, cómo se inyecta el diagnóstico en el
-prompt y qué variantes se evalúan (clasificador, DermLIP y \emph{oracle} como cota superior). Un diagrama
-resume el pipeline.}
+Los generadores de la Sección~\ref{sec:met_generacion} son \glspl{vlm} generativos y presentan dos limitaciones que este
+trabajo evalúa por separado. Cuando clasifican, no discriminan bien las lesiones; sus resultados están en el
+Capítulo~\ref{cp:res_clasif}. Cuando redactan, suelen no comprometerse con un diagnóstico y recurrir a
+reservas (\emph{hedging}; Sección~\ref{sec:marco_rep_fallas}). Para atender ambas, el \emph{pipeline} separa las tareas: un
+clasificador decide el diagnóstico y el generador redacta el reporte. Así, el \emph{pipeline} atiende la clasificación (T1) y la
+generación del reporte (T3). La detección de melanoma (T2) queda fuera, porque el ruteo no emite una decisión binaria.
+
+Una forma de separar las tareas es la cascada clasificador--generador. El clasificador entrega una clase, que se
+inyecta en el \emph{prompt} junto con la imagen, y el generador redacta un reporte que la afirma. A esa inyección se
+la llama \emph{grounding} (Sección~\ref{sec:marco_rep_generacion}). Su costo es que el reporte hereda el error del
+clasificador, y su límite es que una sola clase no indica cuándo el clasificador duda (Figura~\ref{fig:met_pipeline}).
+
+\input{Figures/Capitulos/03-Materiales-Metodos/pipeline}
+
+Un segundo predictor, con otros datos y otro sesgo, permite saber si el primero duda. En este trabajo es un \gls{knn}
+sobre los \emph{embeddings} de DermLIP, que recupera los casos de entrenamiento más parecidos a la imagen
+\cite{cover1967nearest}. Sus vecinos cumplen dos funciones: son evidencia textual para el generador y son la base de
+una señal de concordancia con el clasificador (Sección~\ref{sec:marco_concordancia}).
+
+\subsection{Cascada clasificador--generador (grounding)}
+\label{sec:met_cascada}
+
+La cascada depende de la instrucción con que el generador recibe el diagnóstico. La variante \emph{noreasoning} pide
+solo el reporte final, prohíbe los bloques de razonamiento y prohíbe mencionar diagnósticos alternativos. El motivo es
+que los generadores suelen razonar en voz alta y contradecir el diagnóstico que reciben, y prohibirles el razonamiento
+de manera explícita los obliga a comprometerse con él. El \emph{grounding} en general se describe en la
+Sección~\ref{sec:marco_rep_generacion}, y la plantilla completa está en el Apéndice~\ref{ap:prompts}.
+\pendiente{dato: verificar si las 100 imágenes del piloto de junio con el que se eligió \emph{noreasoning}
+(\texttt{ensamble\_resul\_20260607.md}) son de test; si lo son, declararlo aquí (decisión transversal 1)}
+
+El diagnóstico que recibe el generador puede venir de cuatro fuentes, comparadas con el mismo generador. La primera es
+Swin-Tiny, la predicción \emph{argmax} del modelo con semilla 42, que se usa como ancla principal y se entrena con la
+partición por lesión (Sección~\ref{sec:met_supervisados}). La segunda es DermLIP en modo \emph{zero-shot}, una
+alternativa sin entrenamiento sobre \emph{HAM10000} (Sección~\ref{sec:met_clasif_vlm}). La tercera es el \emph{oracle},
+que entrega el diagnóstico verdadero: es una cota superior y no un sistema usable, porque en la práctica la etiqueta no
+se conoce de antemano. La cuarta es la ausencia de anclaje: el generador sin diagnóstico, que muestra qué aporta el anclaje.
+
+Los generadores son los de la Sección~\ref{sec:met_generacion}, con los pesos ajustados allí. La cascada no los
+reentrena, de modo que el \emph{grounding} es solo de inferencia. La decodificación es la de esa sección, y los
+reportes se evalúan sin el bloque de razonamiento, con la métrica de la Sección~\ref{sec:met_protocolo}.
 
 \subsection{Grounding por recuperación}
-\pendiente{Se describen la búsqueda de vecinos visuales con DermLIP (kNN, $k=3$) y la construcción del
-contexto.}
+\label{sec:met_recuperacion}
 
-\subsection{Ruteo por incertidumbre en tres niveles}
-\pendiente{Se explica cómo el acuerdo entre clasificador y kNN determina el nivel de cada caso (afirmativo,
-diferencial o abstención con derivación) y se presentan las plantillas de cada nivel.}
+La recuperación usa el mismo kNN de la Sección~\ref{sec:met_clasif_vlm}, pero como índice de casos y no como
+clasificador. Sus vecinos se calculan con \emph{embeddings} de DermLIP normalizados y similitud coseno, con $k = 3$ y
+voto mayoritario. Si los tres vecinos son de clases distintas, el voto cae en el más cercano, y ese es el diagnóstico que el kNN
+registra en el nivel de abstención (Sección~\ref{sec:met_ruteo}). El índice contiene solo imágenes de entrenamiento de la
+partición por lesión (Sección~\ref{sec:met_particiones}), es decir, ni imágenes ni lesiones de test, y tiene 6\,447
+imágenes. Esta restricción importa porque si una foto de test tiene como vecina otra de su misma lesión, el voto mide
+memoria y no generalización (la fuga de información se define en la Sección~\ref{sec:marco_regularizacion}).
+
+El contexto que recibe el generador es una frase fija con los diagnósticos de los tres vecinos y, si el metadato lo
+trae, su localización. Hay dos plantillas. La de recuperación sola no usa clasificador y pide al generador el
+diagnóstico. La de Swin más recuperación incorpora el diagnóstico del ancla y el contexto, sin diferenciales, y
+reemplaza la plantilla \emph{noreasoning}. Por esa razón es un brazo de comparación y no entra en la cascada del ruteo.
+Las corridas con recuperación generan como máximo 384 tokens, con semilla 42. En el ruteo, en cambio, la recuperación
+cumple además la función de segundo predictor (Sección~\ref{sec:met_ruteo}).
+
+\subsection{Ruteo por concordancia en tres niveles}
+\label{sec:met_ruteo}
+
+El ruteo usa la concordancia entre los dos predictores como señal. Toma sus decisiones y no sus probabilidades, así que
+no depende de la calibración de la softmax ni necesita un umbral que ajustar (Sección~\ref{sec:marco_concordancia}). Los
+predictores tienen sesgos distintos: uno ajusta fronteras de decisión sobre \emph{HAM10000}~\cite{tschandl2018ham10000}
+y el otro no es paramétrico sobre una representación preentrenada. Por eso se espera que sus errores no coincidan
+siempre. Si la concordancia separa los aciertos de los errores es una condición que se comprueba en el
+Capítulo~\ref{cp:res_clasif}, no un supuesto. La concordancia se eligió en julio de 2026 con cifras de test a la vista.
+La regla no tiene parámetros que ajustar, así que el test no fijó ningún umbral, pero la elección de la señal queda
+declarada y los resultados del ruteo se leen con ese antecedente.
+
+Sean $a(x)$ la concordancia entre el clasificador y el voto del kNN, y $\kappa(x)$ el consenso de los vecinos
+(Ecuación~\ref{eq:marco_knn}). Con $k = 3$, el consenso vale $1/3$, $2/3$ o $1$. La regla que asigna cada caso a un
+nivel es
+\begin{equation}
+    \pi(x) =
+    \begin{cases}
+        \text{afirmativo} & \text{si } a(x) = 1,\\
+        \text{diferencial} & \text{si } a(x) = 0 \text{ y } \kappa(x) > 1/3,\\
+        \text{abstención} & \text{si } a(x) = 0 \text{ y } \kappa(x) = 1/3.
+    \end{cases}
+    \label{eq:met_politica_ruteo}
+\end{equation}
+Los tres niveles son alternativas excluyentes, con su acción:
+\begin{enumerate}
+    \item \emph{Afirmativo} ($a = 1$): reporte definitivo con el diagnóstico del clasificador y la plantilla
+    \emph{noreasoning}.
+    \item \emph{Diferencial} ($a = 0$ y $\kappa > 1/3$): reporte que enuncia el par formado por el clasificador y el
+    voto del kNN, con la plantilla diferencial.
+    \item \emph{Abstención} ($a = 0$ y $\kappa = 1/3$, es decir, los tres vecinos de clases distintas): no se genera
+    reporte y el caso se deriva a un especialista.
+\end{enumerate}
+Las plantillas están en el Apéndice~\ref{ap:prompts}. La plantilla diferencial atribuye la incertidumbre al
+clasificador, aunque uno de los candidatos venga del kNN, y se describe tal cual está. Como la señal es discreta, no hay
+umbral que ajustar, y los tres niveles cubren todos los casos (Figura~\ref{fig:met_ruteo}).
+
+\input{Figures/Capitulos/03-Materiales-Metodos/ruteo}
+
+Esta regla es la política de tres salidas de la Sección~\ref{sec:marco_tres_salidas}, con la concordancia en lugar de la
+confianza. La abstención es una predicción selectiva (Sección~\ref{sec:marco_pred_selectiva}): en ese nivel el sistema
+no emite reporte. El diferencial presenta como candidatos el diagnóstico del clasificador y el voto del kNN, y no los
+dos primeros del clasificador, porque lo que el ruteo mide es el desacuerdo entre ambos predictores. La regla dice
+qué se emite, pero no cuánto aporta el generador.
+
+La línea base sin generador aísla ese aporte. Usa el mismo ruteo y el mismo clasificador, pero no redacta: el nivel
+afirmativo devuelve el diagnóstico del clasificador, el diferencial devuelve el par de candidatos y el de abstención
+queda igual que en el sistema. La cascada se compara con líneas base que usan el mismo clasificador, y la
+Sección~\ref{sec:met_complementarios} describe las pruebas con que se analiza esa diferencia.
