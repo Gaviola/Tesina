@@ -139,7 +139,8 @@ melanomas») sigue apuntando bien porque habla de la distribución de clases, qu
    VLM y adaptar modelos preentrenados con LoRA por la restricción de cómputo.
 3. **Recibe del Cap. 2** (revisión del 25/09, decisión 14 del historial): las categorías de *HAM10000* (ya
    escrito, pasa a 3.1), los costos asimétricos de confusión (ya escrito, 3.4) y las partes del reporte (ya
-   escrito, 3.7). La prosa ya escrita se conserva y se ajusta al hilo.
+   escrito; pasa a 3.1 como salida de la tarea de generación, y 3.7 lo retoma con `\ref`). La prosa ya escrita
+   se conserva y se ajusta al hilo.
 4. **Lo que la ficha del Cap. 2 manda al Cap. 3:** la versión de McNemar que usa el código, quién escribió los
    textos de referencia de *SkinCaRe* y *MM-Skin*, la distribución de *HAM10000* y la partición.
 5. **Fuente de los números.** Partición disjunta por lesión: `Codigo/docs/resul/split_lesion_resul_20260926.md`
@@ -147,10 +148,18 @@ melanomas») sigue apuntando bien porque habla de la distribución de clases, qu
    `Codigo/docs/resul/revision_experimentacion_20261003.md` (§5, decisiones) y `reanclaje_cascada_resul_20261003.md`.
    `Docs/experimentacion/experimentacion.tex` sirve para la estructura y el argumento, **no** para los números:
    su cuerpo es de la partición aleatoria (ver la nota de actualización al comienzo de ese archivo).
-   Hiperparámetros: `Codigo/configs/*.yaml`. Todo número de una ficha de sección dice de qué archivo sale.
+   Hiperparámetros: los valores efectivos están en `Codigo/src/training/recipes.py` y en los scripts de envío de
+   los barridos, no en `Codigo/configs/*.yaml`, que `train_classifier.py` no lee y que en parte quedaron
+   desactualizados (p. ej. `mini_vlm.yaml` describe CLIP ViT-B/16 + Phi-3-mini, pero el modelo usado es
+   Phi-3.5-vision-instruct, según `src/models/mini_vlm.py`). Todo número de una ficha de sección dice de qué
+   archivo sale.
 6. **Declarado sobre la partición anterior** (no se rehace; el Cap. 3 lo dice donde corresponde): RAG y
-   `full_uncertainty`, métricas por clase y taxonomía de la cascada, ablaciones de la receta, y los VLM generales
-   ajustados (su entrenamiento contiene lesiones del test; la fuga solo podría favorecerlos).
+   `full_uncertainty`, métricas por clase y taxonomía de la cascada, ablaciones de la receta. **Los VLM generales
+   no se ajustaron sobre *HAM10000*** (corrección del 11/10/2026): la estrategia «ajuste fino» de clasificación
+   evalúa sobre *HAM10000* el *checkpoint* de la etapa 2 de generación, entrenado con *SkinCaRe*
+   (`train_vlm_classify.py --checkpoint stage2_*_v2`, `vlm_clasificacion_resul_v3_20260517.md`). No hay fuga en
+   esos modelos. La ficha del Cap. 4 (rama `doc/cap04-resultados-clasificacion`, §4.2, «Declarar») dice lo
+   contrario y hay que corregirla.
 7. **Apéndices.** El detalle que no hace falta para seguir el argumento va al apéndice y se remite: grillas
    completas (A, `ap:hiperparametros`), *prompts* y plantillas (B, `ap:prompts`), reproducibilidad (E,
    `ap:reproducibilidad`), fichas de conjuntos y modelos (F).
@@ -162,24 +171,53 @@ una vez en el Cap. 3.
 
 | Qué | Se define en | Se retoma en |
 |---|---|---|
-| Red neuronal, entropía cruzada, generalización, particiones, fuga de información, regularización, aumento, TTA, desbalance, transferencia | Cap. 2 (`sec:marco_fundamentos`, `sec:marco_regularizacion`, `sec:marco_desbalance`, `sec:marco_transferencia`) | 3.3, 3.5 |
+| Red neuronal, entropía cruzada, generalización, particiones, fuga de información, regularización, aumento, TTA, desbalance, transferencia | Cap. 2 (`sec:marco_fundamentos`, `sec:marco_regularizacion` —ahí están la fuga y el TTA—, `sec:marco_desbalance`, `sec:marco_transferencia`) | 3.3, 3.5 |
 | CNN, ViT, Swin, ConvNeXt | Cap. 2 (`sec:marco_vision`) | 3.5 |
 | LLM, LoRA, CLIP, VLM generativo, clasificación por verosimilitud | Cap. 2 (`sec:marco_llm`, `sec:marco_llm_lora`, `sec:marco_vlm`) | 3.6, 3.7 |
 | Calibración, abstención, predicción selectiva, tres salidas | Cap. 2 (`sec:marco_incertidumbre`) | 3.8, 3.9 |
 | Reporte clínico, alucinación, *hedging*, RAG | Cap. 2 (`sec:marco_reportes`) | 3.7, 3.8 |
 | Métricas (sensibilidad macro, F1, AUC, ECE, BLEU…, McNemar, Grad-CAM), robustez, cambio de dominio | Cap. 2 (`sec:marco_evaluacion`, `sec:marco_generalizacion`) | 3.4, 3.9 |
-| Las tres tareas, las siete clases, la restricción de cómputo | 3.1 | todo el capítulo |
+| Las tres tareas, las siete clases, las dos partes del reporte, la restricción de cómputo | 3.1 | todo el capítulo |
 | Ciclo iterativo, registro, entorno de ejecución | 3.2 | 3.9 (costo) |
 | Composición de *HAM10000*, imágenes por lesión, partición disjunta por lesión, formato de *SkinCoT* | 3.3 | 3.4, 3.5, 3.7 |
-| Métrica principal, de selección y oficial de generación; líneas base y cotas; umbral de melanoma; fidelidad vs validez | 3.4 | 3.5–3.9 |
+| Métrica principal, de selección y oficial de generación; líneas base de clasificación (azar, clasificador mayoritario, supervisados como referencia de los VLM); umbral de melanoma; fidelidad vs validez | 3.4 | 3.5–3.9 |
 | Receta de entrenamiento, búsqueda de hiperparámetros, ensamble de clasificadores | 3.5 | 3.8, 3.9 |
 | Mini-VLM, LLaVA-Med, las cuatro estrategias, DermLIP y sus modos | 3.6 | 3.7, 3.8 |
 | SkinVL, ajuste en dos etapas, separación reporte / razonamiento | 3.7 | 3.8 |
-| Cascada, *grounding*, *noreasoning*, ruteo en tres niveles | 3.8 | 3.9 |
+| Cascada, *grounding*, *noreasoning*, ruteo en tres niveles; *oracle* y línea base sin generador (necesitan la cascada y el ruteo, que se presentan acá) | 3.8 | 3.9 |
 
 **Dependencia con la reescritura del Cap. 2.** Los labels del Cap. 2 se conservan al reescribirlo (su ficha lo
 fija), así que los `\ref` de este capítulo no se rompen. Si al reescribir el Cap. 2 un concepto cambia de
 sección, se corrige el `\ref` acá; no se redefine.
+
+## Revisión cruzada de las fichas de sección (11/10/2026)
+
+Las nueve fichas se prepararon en paralelo. Lo que esta revisión resolvió prevalece sobre lo que diga cada ficha:
+
+1. **Labels del Cap. 2.** La fuga de información y el TTA están en `sec:marco_regularizacion` (2.1), no en
+   `sec:marco_generalizacion` (2.9, sesgo y robustez). Ya corregido en las fichas 3.2, 3.3, 3.4, 3.6, 3.8 y 3.9.
+2. **Claves de cita.** *HIBA* es `riccilara2023dataset`; LLaVA-Med es `li2023llavamed`; LoRA es `hu2021lora`.
+   Mini-VLM (Phi-3.5-vision) y SkinVL no tienen clave en el `.bib`: se proponen en `refs_pendientes.md`.
+3. **Duplicaciones.** Las partes del reporte se definen en 3.1 (3.7 las nombra). El *oracle* y la línea base sin
+   generador se definen en 3.8 (3.4 solo anuncia que el *pipeline* tiene su propia línea base).
+4. **VLM ajustados sin fuga** (ver «Alcance», punto 6). Afecta a 3.6 y a la ficha del Cap. 4.
+5. **Mini-VLM** es Phi-3.5-vision-instruct; los `.yaml` y `experimentacion.tex` que dicen CLIP ViT-B/16 +
+   Phi-3-mini están desactualizados.
+
+Preguntas que cruzan varias secciones y decide el autor (el detalle está en cada ficha):
+
+- **Decisiones tomadas mirando el test.** El paso a F1 macro como criterio de selección (17/09, ficha 3.4), la
+  elección de la concordancia como señal de ruteo (julio, ficha 3.8) y posiblemente la variante *noreasoning*
+  (junio, ficha 3.8, a verificar) se motivaron con cifras de test. La frase «el test no interviene en ninguna
+  decisión» no se puede escribir tal cual: se declara qué decisiones se tomaron así y por qué no invalidan el
+  resultado.
+- **Protocolos mezclados.** DenseNet121 y ViT-B/16 (receta anterior) se evalúan con vista única y pesos por
+  clase; Swin y ConvNeXt, con TTA y sin pesos (fichas 3.5 y 3.9). Hay que declararlo o reevaluar los primeros
+  con TTA (`reeval_tta_probs.py`).
+- **Comparaciones múltiples.** 21 pares de McNemar y 21 de Wilcoxon sin corrección (ficha 3.9).
+- **Evaluación en *HIBA*.** Las 1 616 imágenes o el test de `hiba_splits.json` (243) (fichas 3.3 y 3.9).
+- **Licencias.** *HAM10000* (CC BY-NC 4.0) para reproducir ejemplos por clase; *SkinCaRe* declara dos licencias
+  y prohíbe redistribuir (ficha 3.3).
 
 ## Introducción del capítulo
 
