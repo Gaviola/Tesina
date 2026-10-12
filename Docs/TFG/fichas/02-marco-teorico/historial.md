@@ -640,3 +640,13 @@ quedan sin citar.
 3.9 corrige los p de McNemar con Holm sobre 21 pares, así que 2.8 la define después de McNemar, con su
 ecuación (`eq:marco_holm`) y la relación con Bonferroni. La cita `holm1979simple` no estaba en el `.bib`: se
 propuso en `refs_pendientes.md` y queda indefinida hasta que el autor la incorpore.
+
+## Revisión del autor (2026-10-12): 2.3
+
+- El aprendizaje autosupervisado queda en 2.3, donde aparece su primer ejemplo, y se contrasta con el
+  supervisado de 2.1.
+- Los modelos de lenguaje preentrenados se presentan como dos tipos (solo decodificador y solo codificador);
+  LLM sigue designando al de solo decodificador a gran escala, que es como lo usa el resto del capítulo.
+- Sale de P4 la mención a Mistral 7B, LLaVA-Med 1.5 y Phi-3-mini: los modelos se presentan en el Cap. 3.
+  «Pesos abiertos» abre 2.3.2.
+- 2.3.3 abre conectado con el cierre de 2.3.2, y *zero-shot* se define explícitamente en P12.

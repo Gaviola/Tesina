@@ -44,13 +44,13 @@ P2  Qué es un modelo de lenguaje, con un ejemplo antes de la ecuación: dado «
 P3  El decodificador: los bloques de 2.2 con una máscara que impide a cada token tomar información de los
     posteriores, de modo que en un solo paso se entrena la predicción de todas las posiciones. Esa tarea no
     necesita etiquetas, porque cada token es la respuesta del anterior: **aprendizaje autosupervisado**
-    (*self-supervised learning*). Un **LLM** es un decodificador entrenado así sobre corpus enormes; GPT-3,
-    con 175 mil millones de parámetros, mostró lo que aparece con esa escala. Los de solo codificador, como
-    BERT, no generan; se nombran en una oración porque 2.6 usa uno para evaluar texto       define
-    ↓ ampliación — los LLM que usa el trabajo
-P4  Familias de pesos abiertos, solo las que aparecen en el trabajo: Mistral (el modelo de lenguaje de
-    LLaVA-Med 1.5) y Phi-3, que reduce el tamaño y cuida los datos (3800 millones de parámetros, base de
-    Phi-3.5-vision). Después del preentrenamiento, el ajuste fino sobre pares instrucción–respuesta y la
+    (*self-supervised learning*), en contraste con el supervisado de 2.1. Dos tipos de modelos de lenguaje
+    preentrenados según la mitad del transformer: solo decodificador, que generan (un **LLM** es uno de estos
+    sobre corpus enormes; GPT-3, 175 mil millones de parámetros), y solo codificador, como BERT, que no
+    generan; BERT se nombra porque 2.6 usa uno para evaluar texto                           define
+    ↓ ampliación — de modelo preentrenado a modelo que sigue instrucciones
+P4  Sin nombrar modelos (Mistral y Phi se presentan en el Cap. 3; revisión del autor, 2026-10-12; «pesos
+    abiertos» pasa a abrir 2.3.2). Después del preentrenamiento, el ajuste fino sobre pares instrucción–respuesta y la
     alineación con preferencias humanas (RLHF, una oración) dan un modelo que sigue instrucciones
                                                                           explica lo usado
     ↓ consecuencia — si el modelo sigue instrucciones, el texto de entrada pasa a ser el medio de control
