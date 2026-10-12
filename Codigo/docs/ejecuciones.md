@@ -26,7 +26,11 @@ como limitación.
 python scripts/mendieta/submit.py rag_les --no-sync   # 1179315 (inicio estimado 2026-10-04 15:45)
 ```
 
-**Resul:** pendiente hasta que baje el job.
+**Resul (2026-10-11):** [rag_les_resul](resul/rag_les_resul_20261011.md) — **CUMPLE**. Job COMPLETED (21 h),
+2 × 1503 reportes, bajados con `sync_down.py --reports`; evaluación local con `scripts/rag_les_eval.py`
+(`outputs/results/rag_les_eval.json`). RAG solo 0.669 (+0.506 sobre no anclar, −0.180 frente al *grounding*
+Swin 0.849, −0.112 frente al voto kNN impreso 0.781); Swin + RAG 0.862 (+0.013 [+0.007, +0.019] sobre Swin),
+ganancia que viene de nombrar la clase de los vecinos (consistencia exclusiva −0.055 frente a Swin impreso).
 
 ### Revisión profunda de la experimentación — **Sin jobs SLURM** (local + segunda opinión)
 Resul: [revision_experimentacion](resul/revision_experimentacion_20261003.md) — **CUMPLE con correcciones**.
