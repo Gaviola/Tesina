@@ -39,7 +39,7 @@ CLASSIFIERS = {
 # Referencia para modelos que no cargan local (params en M, VRAM inferencia bf16 en GB).
 REFERENCE = {
     "DermLIP (ViT-B/16)": {"params_m": 150, "vram_gb": 2, "hw": "RTX 4070", "role": "VL-classifier"},
-    "Mini-VLM (Phi-3.5-V)": {"params_m": 4200, "vram_gb": 10, "hw": "A30 / RTX 4080", "role": "VLM-gen"},
+    "Mini-VLM (Phi-3.5-V)": {"params_m": 4147, "vram_gb": 10, "hw": "A30 / RTX 4080", "role": "VLM-gen"},
     "LLaVA-Med v1.5 (7B)": {"params_m": 7000, "vram_gb": 14, "hw": "A30 24GB", "role": "VLM-gen"},
     "SkinVL-MM (7B)": {"params_m": 7000, "vram_gb": 14, "hw": "A30 24GB", "role": "VLM-gen"},
 }
