@@ -186,3 +186,8 @@ Revisión del autor sobre la prosa (2026-10-12):
   salidas con señal discreta, diferencial como par de predictores y abstención como predicción selectiva están
   en la sección. ECE, MCE, Brier, diagramas de confiabilidad, *temperature* y *vector scaling* son de 2.6 (ya
   están en la vieja `08-evaluacion.tex`).
+- Terminología (2026-10-12): «política» pasa a «regla de decisión», que el autor prefiere y que el Cap. 3 ya
+  usa («La regla que asigna cada caso a un nivel»). Se define en negrita en 2.4.4 y después se dice «la
+  regla». El label `eq:marco_politica` y el símbolo $\pi(x)$ se conservan. Pendiente fuera de esta sección: el
+  Cap. 3 (`08-pipeline.tex`, «Esta regla es la política de tres salidas») y la figura de 2.5
+  (`generacion-reportes.tex`, nodo «Política»), que se cambia al reescribir 2.5.

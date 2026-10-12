@@ -75,9 +75,9 @@ mayores que su frecuencia de acierto, y que las más profundas y anchas suelen e
 pequeñas aunque clasifiquen mejor. Las métricas de calibración y las formas de corregirla se presentan en la
 Sección~\ref{sec:marco_eval_calib}.
 
-Calibrar la softmax, sin embargo, no hace visible la incertidumbre epistémica: la probabilidad de un solo
+Calibrar la softmax, sin embargo, no hace visible la incertidumbre epistémica. La probabilidad de un solo
 modelo, aun calibrada, refleja lo que ese modelo aprendió, y esa incertidumbre corresponde justamente a lo que no
-aprendió. Una forma de estimarla es comparar modelos: es esperable
+Una forma de estimarla es mediante la comparación de modelos. Es esperable
 que dos redes entrenadas por separado coincidan donde los datos alcanzaron para fijar la respuesta y difieran
 donde no alcanzaron, de modo que su desacuerdo aproxima la incertidumbre epistémica~\cite{kendall2017uncertainties}.
 Un \textbf{ensamble} aprovecha este principio. Promedia las probabilidades de varios modelos entrenados por
@@ -125,8 +125,8 @@ ser binaria.
 En la práctica clínica, derivar no es la única alternativa a afirmar un diagnóstico: un clínico que duda entre
 dos o tres diagnósticos los enuncia como \textbf{diagnóstico diferencial}. Un sistema puede tener entonces tres
 salidas, que son afirmar un diagnóstico, ofrecer diferenciales, es decir, un conjunto de candidatos, o derivar
-el caso a un especialista. Con dos umbrales $\tau_1 > \tau_2$ sobre la señal, la política que elige entre ellas
-es
+el caso a un especialista. Con dos umbrales $\tau_1 > \tau_2$ sobre la señal, la \textbf{regla de decisión} que elige entre
+ellas es
 \begin{equation}
     \pi(x) =
     \begin{cases}
@@ -150,7 +150,7 @@ conjunto contenga la clase correcta. Derivar no produce diagnóstico y traslada 
 más costoso es un error frente a una derivación, más alto conviene fijar $\tau_1$, y los umbrales se eligen sobre
 el conjunto de validación y no sobre el de test (Sección~\ref{sec:marco_regularizacion}).
 
-Cuando la salida de un sistema es un reporte clínico, la decisión de la política llega al lector a través de un
-texto, y un texto puede deshacerla: afirmar con certeza un diagnóstico que la política dejó abierto entre dos
+Cuando el sistema entrega un reporte clínico, la salida que elige la regla llega al lector a través de un
+texto, y un texto puede deshacerla: afirmar con certeza un diagnóstico que la regla dejó abierto entre dos
 candidatos, o describir hallazgos que contradicen el diagnóstico que recibió. Por eso, generar el reporte
 plantea problemas propios, distintos de los de clasificar.
