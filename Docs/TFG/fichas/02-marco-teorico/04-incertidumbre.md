@@ -109,7 +109,7 @@ Se retoman de antes (solo se nombran, con \ref): softmax (2.1), cambio de distri
 particiones (2.1), kNN y sus ecuaciones (2.3).
 Remisiones hacia adelante: ECE, Brier y *temperature scaling* (2.6); generación condicionada por la
 política (2.5).
-Extensión: 15 párrafos, cuatro ecuaciones (todas existentes), unas 3.5 páginas.
+Extensión: 15 párrafos, cinco ecuaciones (cuatro existentes y la del consenso), unas 3.5 páginas.
 ```
 
 ## Qué cambia respecto del texto actual
@@ -137,7 +137,9 @@ Extensión: 15 párrafos, cuatro ecuaciones (todas existentes), unas 3.5 página
   `sec:marco_senales_confianza` (2.1, 2.5, 2.6, Cap. 3), `sec:marco_concordancia` (Cap. 3),
   `sec:marco_tres_salidas` (2.5, 2.7, Cap. 3), `eq:marco_riesgo_selectivo`, `eq:marco_umbral_confianza`,
   `eq:marco_concordancia` y `eq:marco_politica` (2.5). Las ecuaciones se copian sin reescribirlas (decisión
-  vigente 4). Sale `tab:marco_salidas`, que solo se citaba en la propia sección.
+  vigente 4). Sale `tab:marco_salidas`, que solo se citaba en la propia sección. Nueva `eq:marco_consenso`
+  (revisión del autor): el consenso pasa a ecuación aparte porque en línea el subíndice kNN se leía como
+  parte del $\max_c$. El Cap. 3 lo cita hoy por `eq:marco_knn`; puede pasar a citar `eq:marco_consenso`.
 - Sin figuras.
 - **Pendiente para 2.6** (no se toca ahora, porque una sección solo toca su `.tex`): la vieja 2.8
   (`08-evaluacion.tex`, cierre de la calibración) dice que la propiedad de servir para abstenerse «la mide la
@@ -166,3 +168,21 @@ Respuestas del autor (2026-10-12):
 3. **Oración sobre señales discretas en P12.** Aprobada.
 4. **Ecuación sin tabla.** El autor pidió quedarse con una de las dos. Queda la ecuación, porque la cita la
    vieja 2.7 y el Cap. 3 replica su forma; lo que la tabla decía de los riesgos pasa a P14.
+
+Revisión del autor sobre la prosa (2026-10-12):
+
+- P3 (costos y decisión humana): la oración «La decisión final, por otra parte, la toma una persona» quedaba
+  suelta. Ahora encadena costos → derivar es preferible ante la duda → esa opción existe porque el sistema
+  asiste a quien decide (Groh) → un sistema que deriva puede ser más útil.
+- P8: «Aunque esté calibrada» no decía qué estaba calibrado. Ahora dice «Calibrar la softmax, sin embargo, no
+  hace visible la incertidumbre epistémica».
+- P10: el consenso en línea se leía mal; pasa a `eq:marco_consenso`.
+- P13: sale «hasta que su probabilidad acumulada alcance un umbral», porque ningún experimento arma conjuntos
+  así. Queda «las clases más probables de un modelo», que el Cap. 3 usa como contraste del par
+  clasificador–kNN.
+- Cobertura frente al código (`build_uncertainty_3tier.py`, `build_uncertainty_agreement.py`,
+  `classifier_ensemble.py`, `uncertainty_analysis.py`, `temperature_scaling.py`) y al Cap. 3 (`08-pipeline.tex`,
+  `05-clasificadores-supervisados.tex`): voto suave, concordancia, consenso con $k = 3$, política de tres
+  salidas con señal discreta, diferencial como par de predictores y abstención como predicción selectiva están
+  en la sección. ECE, MCE, Brier, diagramas de confiabilidad, *temperature* y *vector scaling* son de 2.6 (ya
+  están en la vieja `08-evaluacion.tex`).

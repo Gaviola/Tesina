@@ -12,26 +12,26 @@ esa confianza no alcanza.
 La incertidumbre de una predicción tiene dos fuentes, que se distinguen según si reunir más datos la reduce o
 no. La \textbf{incertidumbre aleatoria} proviene de los datos mismos. Una imagen desenfocada, o una lesión cuyo
 aspecto dermatoscópico es compatible tanto con un nevo como con un melanoma, deja la respuesta indeterminada
-aunque el modelo esté bien entrenado, y más ejemplos de entrenamiento no la resuelven. La \textbf{incertidumbre
+aunque el modelo esté bien entrenado, y más ejemplos de entrenamiento no van a resolver esa incertidumbre. La \textbf{incertidumbre
 epistémica} proviene, en cambio, del modelo. Una clase con pocos ejemplos de entrenamiento, como las
 minoritarias de un conjunto desbalanceado (Sección~\ref{sec:marco_desbalance}), queda peor representada en lo
 que el modelo aprende, y esa incertidumbre disminuye a medida que se agregan datos~\cite{kendall2017uncertainties}.
 El cambio de distribución de la Sección~\ref{sec:marco_regularizacion} también produce incertidumbre epistémica,
 porque la imagen proviene de un equipo, un centro o una población que el entrenamiento no cubrió.
 
-Ninguna de las dos fuentes queda a la vista en la salida de un clasificador. La softmax de la
+Ninguna de las dos fuentes queda a la vista en la salida de un clasificador. La función softmax de la
 Ecuación~\ref{eq:marco_softmax} reparte siempre entre las clases conocidas una probabilidad que suma uno, de modo
 que no existe una salida que exprese «este caso no se parece a nada de lo visto». Una imagen de un tipo de lesión
 que el modelo nunca vio recibe igualmente una clase, y la probabilidad de esa clase puede estar cerca de
 uno~\cite{hendrycks2017baseline}.
 
-En dermatología, además, los errores no tienen el mismo costo: no detectar una lesión maligna tiene
-consecuencias más graves que derivar una benigna a un especialista. La decisión final, por otra parte, la toma
-una persona. En un experimento con dermatólogos y médicos de atención primaria, el apoyo de un sistema de
-aprendizaje profundo mejoró la exactitud diagnóstica de los dos grupos~\cite{groh2024learningaided}, de modo
-que la salida del sistema funciona como un insumo de la decisión clínica y no como la decisión misma. Un sistema
-que reconoce su límite y deriva el caso puede ser entonces más útil que uno que siempre responde, y medir cuánto
-se gana al abstenerse requiere formalizar la abstención.
+En el caso concreto de dermatología, además, los errores no tienen el mismo costo. No detectar una lesión
+maligna tiene consecuencias más graves que derivar una benigna a un especialista, de modo que, ante un caso
+dudoso, derivarlo puede ser preferible a arriesgar un diagnóstico. Esa opción existe porque el sistema no toma la
+decisión final, sino que asiste a la persona que la toma. En un experimento con dermatólogos y médicos de
+atención primaria, el apoyo de un sistema de aprendizaje profundo mejoró la exactitud diagnóstica de los dos
+grupos~\cite{groh2024learningaided}. Un sistema que reconoce su límite y deriva el caso puede ser, por lo tanto,
+más útil que uno que siempre responde, y medir cuánto se gana al abstenerse requiere formalizar la abstención.
 
 \subsection{Predicción selectiva y abstención}
 \label{sec:marco_pred_selectiva}
@@ -75,8 +75,9 @@ mayores que su frecuencia de acierto, y que las más profundas y anchas suelen e
 pequeñas aunque clasifiquen mejor. Las métricas de calibración y las formas de corregirla se presentan en la
 Sección~\ref{sec:marco_eval_calib}.
 
-Aunque esté calibrada, la probabilidad de un solo modelo refleja lo que ese modelo aprendió, y la incertidumbre
-epistémica corresponde justamente a lo que no aprendió. Una forma de estimarla es comparar modelos: es esperable
+Calibrar la softmax, sin embargo, no hace visible la incertidumbre epistémica: la probabilidad de un solo
+modelo, aun calibrada, refleja lo que ese modelo aprendió, y esa incertidumbre corresponde justamente a lo que no
+aprendió. Una forma de estimarla es comparar modelos: es esperable
 que dos redes entrenadas por separado coincidan donde los datos alcanzaron para fijar la respuesta y difieran
 donde no alcanzaron, de modo que su desacuerdo aproxima la incertidumbre epistémica~\cite{kendall2017uncertainties}.
 Un \textbf{ensamble} aprovecha este principio. Promedia las probabilidades de varios modelos entrenados por
@@ -100,8 +101,13 @@ las decisiones y no las probabilidades, no depende de que los modelos estén cal
 casos en que los dos predictores cometen el mismo error.
 
 El \textbf{consenso de los vecinos} mide, por su parte, qué tan unánime es el voto de la
-Ecuación~\ref{eq:marco_knn}, $\kappa(x) = \max_c \hat{p}_{\text{kNN}}(c \mid x)$. Vale 1 cuando los $k$
-vecinos pertenecen a la misma clase y disminuye a medida que se reparten entre clases distintas. Su valor
+Ecuación~\ref{eq:marco_knn}. Es la proporción de vecinos que pertenecen a la clase más votada,
+\begin{equation}
+    \kappa(x) = \max_{c}\ \hat{p}_{\text{kNN}}(c \mid x),
+    \label{eq:marco_consenso}
+\end{equation}
+que vale 1 cuando los $k$ vecinos pertenecen a la misma clase y disminuye a medida que se reparten entre clases
+distintas. Su valor
 depende de la representación con que se miden las distancias y de los casos que contiene la base: si la base no
 tiene imágenes parecidas a la consultada, los $k$ vecinos se recuperan igual, y su voto no informa sobre ella.
 
@@ -134,8 +140,7 @@ Si la señal es discreta, como la concordancia o el consenso de unos pocos vecin
 más de sus valores posibles, y no hay umbrales que ajustar.
 
 La salida diferencial es una predicción por conjuntos, $S(x) \subseteq \{1, \dots, C\}$. El conjunto puede
-formarse con las clases más probables de un modelo, hasta que su probabilidad acumulada alcance un umbral, o con
-las predicciones de dos predictores que no coinciden, como el par formado por el nevo y el melanoma del ejemplo
+formarse con las clases más probables de un modelo o con las predicciones de dos predictores que no coinciden, como el par formado por el nevo y el melanoma del ejemplo
 anterior. Cuando $|S(x)| = 1$, la salida coincide con afirmar.
 
 Cada salida tiene un costo distinto. Afirmar entrega la información más concreta, pero si la predicción es
