@@ -1,0 +1,19 @@
+\section{Análisis complementarios}
+\label{sec:met_complementarios}
+
+\subsection{Protocolos de inferencia}
+\pendiente{Una tabla única indica, para cada resultado reportado, si se usa vista única o TTA, qué
+\emph{checkpoint} y qué partición.}
+
+\subsection{Análisis estadístico}
+\pendiente{Se indica qué intervalo o prueba corresponde a cada métrica y comparación: \emph{bootstrap}
+pareado para diferencias de métricas agregadas, McNemar para aciertos por imagen y Wilcoxon para
+\emph{recall} por clase.}
+
+\subsection{Validación externa, perturbaciones, calibración e interpretabilidad}
+\pendiente{Además de las métricas sobre el test, se realizan cuatro análisis que responden preguntas
+distintas de ``cuánto acierta el modelo'': si el desempeño se sostiene en otra población (evaluación en
+HIBA), si se sostiene bajo peores condiciones de captura (perturbaciones de adquisición: ruido, desenfoque,
+compresión JPEG y pérdida de resolución), si las probabilidades que entrega el modelo son confiables
+(calibración post-hoc ajustada en validación) y si el modelo mira la lesión o el contexto de la imagen
+(Grad-CAM). Esta subsección describe el procedimiento de cada uno.}

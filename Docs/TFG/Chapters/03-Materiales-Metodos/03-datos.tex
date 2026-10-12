@@ -1,15 +1,8 @@
-\section{Conjuntos de datos y particiones}
+\section{Conjuntos de datos}
 \label{sec:met_datasets}
 
 \subsection{HAM10000}
 \label{sec:met_ham}
-
-El clasificador asigna cada imagen a una etiqueta de un inventario cerrado, y ese inventario es el de
-HAM10000, con siete categorías: \gls{mel}, \gls{nv}, \gls{bcc}, \gls{akiec}, \gls{bkl}, \gls{df} y
-\gls{vasc}. Según su gravedad, NV, BKL, DF y VASC son benignas, AKIEC reúne lesiones premalignas y
-carcinomas in situ, y MEL y BCC son malignas~\cite{tschandl2018ham10000}. Esa gradación determina
-cuánto cuesta cada confusión del clasificador, y con ello qué métricas se usan para juzgarlo
-(Sección~\ref{sec:met_seleccion}).
 
 \pendiente{Se presentan la composición del conjunto, la distribución de clases y su desbalance.}
 
@@ -31,6 +24,3 @@ recalcularon sobre ella.}
 evaluación con referencia (MM-Skin) y evaluación fuera de distribución (HIBA, solo test). Se indica la
 modalidad de cada uno, en particular que SkinCaRe es de fotografía clínica y HAM10000 dermatoscópico, con
 remisión a la Sección~\ref{sec:marco_generalizacion}.}
-
-\subsection{Preprocesamiento y aumento de datos}
-\pendiente{Se detallan la resolución, la normalización, los aumentos de entrenamiento y el TTA.}

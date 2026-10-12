@@ -1,0 +1,18 @@
+\section{Definición de las tareas}
+\label{sec:met_tareas}
+
+El clasificador asigna cada imagen a una etiqueta de un inventario cerrado, y ese inventario es el de
+HAM10000, con siete categorías: \gls{mel}, \gls{nv}, \gls{bcc}, \gls{akiec}, \gls{bkl}, \gls{df} y
+\gls{vasc}. Según su gravedad, NV, BKL, DF y VASC son benignas, AKIEC reúne lesiones premalignas y
+carcinomas in situ, y MEL y BCC son malignas~\cite{tschandl2018ham10000}. Esa gradación determina
+cuánto cuesta cada confusión del clasificador, y con ello qué métricas se usan para juzgarlo
+(Sección~\ref{sec:met_seleccion}).
+
+El reporte dermatológico deja por escrito la lectura de la lesión, y de sus partes el trabajo se ocupa
+de dos: la descripción de lo que se ve y la impresión diagnóstica. Son las que corresponden a las dos
+tareas del problema, y las que los conjuntos de pares imagen--texto del área anotan junto a cada
+imagen~\cite{shen2025skincare}. El diagnóstico diferencial y la recomendación de manejo, que un reporte
+clínico completo también lleva, quedan fuera del alcance.
+
+\pendiente{Definición formal de las tres tareas (clasificación en siete clases, detección binaria de
+melanoma, generación del reporte), con su entrada, su salida y la restricción de cómputo.}
