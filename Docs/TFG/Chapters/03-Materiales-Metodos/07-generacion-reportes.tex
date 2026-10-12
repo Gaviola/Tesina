@@ -1,7 +1,193 @@
 \section{Generación de reportes}
 \label{sec:met_generacion}
 
-\pendiente{Se describen el ajuste fino del generador sobre SkinCaRe con LoRA, el formato concreto del
-reporte generado y la configuración de decodificación.}
+% Extensión estimada: 3--3.5 páginas, con dos tablas (configuración de LoRA y del entrenamiento; decodificación).
+% Fuentes: Codigo/outputs/checkpoints/stage2_mini_vlm_v2 (lora_config.json y best_model.pt, módulos y épocas);
+% Codigo/slurm/mendieta/v2/train_vlm_s2*.sh (tasa, lote, LoRA); Codigo/src/training/two_stage.py (receta de ambas
+% etapas, freeze, instrucción de entrenamiento); Codigo/scripts/train_vlm_stage1.py y train_vlm_stage2.py;
+% Codigo/scripts/generate_report.py (instrucción de inferencia); Codigo/slurm/mendieta/v3/ y v4/ (384 tokens, semilla);
+% Codigo/slurm/mendieta/pilot_ensemble_v2_llava.sh (motivo de 384); Codigo/data/splits/skincare_*_splits.json;
+% conteo propio sobre Codigo/data/raw/skincare/SkinCoT/EN; Codigo/docs/resul/analisis_pipeline_avanzado_resul_20260908.md
+% (penalización de repetición). Citas: \cite{shen2025skincare}, \cite{zeng2025mmskin}, \cite{abdin2024phi3},
+% \cite{liu2023visual}, \cite{li2023llavamed}, \cite{jiang2023mistral}, \cite{hu2021lora}, \cite{tschandl2018ham10000}.
 
-\pendiente{Se presenta SkinVL y el motivo de incluirlo como generador especializado de comparación.}
+\subsection{Partes del reporte que genera el trabajo}
+
+El generador tiene que producir las dos partes del reporte que la Sección~\ref{sec:met_tareas} define para la tarea
+de generación: la descripción de lo que se ve en la imagen y la impresión diagnóstica. El diagnóstico diferencial y
+la recomendación de manejo quedan fuera. En la Sección~\ref{sec:met_clasif_vlm} los \glspl{vlm} clasifican, es decir,
+eligen una etiqueta de un inventario cerrado. Redactar un texto libre con la estructura de un reporte exige otra forma
+de salida, y por eso los modelos se ajustan para generar.
+\pendiente{dato: en tres o cuatro reportes de una corrida, verificar si la impresión diagnóstica aparece en la
+condición base, sin diagnóstico declarado (Q15). Si no aparece, decirlo aquí y remitir a la Sección~\ref{sec:met_pipeline}.}
+
+\subsection{Generadores}
+
+Los dos \glspl{vlm} generales de la Sección~\ref{sec:met_clasif_vlm} se ajustan para generar. Mini-VLM es
+\texttt{microsoft/Phi-3.5-vision-instruct}~\cite{abdin2024phi3}, y LLaVA-Med v1.5 es un modelo de la familia
+LLaVA~\cite{liu2023visual} adaptado a la biomedicina~\cite{li2023llavamed}, con el modelo de lenguaje Mistral-7B
+\cite{jiang2023mistral}. Son los mismos modelos base que se usan para clasificar, así que el ajuste es lo que cambia su
+salida de una etiqueta a un texto. Ambos son de propósito general, y falta un generador especializado en dermatología
+con el cual compararlos.
+
+\textcite{zeng2025mmskin} presentan SkinVL junto con MM-Skin, un conjunto de pares imagen--texto de dermatología.
+SkinVL es LLaVA-Med v1.5 con Mistral-7B ajustado a dermatología con MM-Skin.
+\pendiente{dato: el Capítulo~2 atribuye a zeng2025mmskin un ajuste con proyección y adaptadores LoRA, mientras que la
+inspección del repositorio dice que los pesos publicados (\texttt{zwq803/SkinVL-MM}) son completos y sin adaptadores
+(Q11). Describir el método según el artículo y anotar la inspección como dato propio.}
+Los pesos publicados están en el formato original de LLaVA-Med y no incluyen el codificador visual, así que se
+convirtieron al formato de Hugging Face: los pesos del modelo de lenguaje y del proyector se trasplantaron sobre la base
+\texttt{chaoyinshe/llava-med-v1.5-mistral-7b-hf}, que aporta el codificador visual. No se ajustó de nuevo. Se incluye
+como generador especializado de comparación, para saber si la especialización en dermatología cambia el texto frente
+a los generales.
+
+\subsection{Ajuste en dos etapas sobre SkinCaRe}
+
+El ajuste tiene dos etapas, y en ambas la instrucción es la misma: «Describe this skin lesion.». En la primera se entrena
+solo el proyector visual, la capa que traduce las características de la imagen al espacio del modelo de lenguaje, con
+pares imagen--caption de \emph{SkinCAP}. El codificador visual y el modelo de lenguaje quedan congelados, de modo que
+esta etapa solo alinea la imagen con el texto. En la segunda se aplica \gls{lora} sobre los pares de \emph{SkinCoT} en
+inglés. Los adaptadores se colocan en los módulos llamados \texttt{q\_proj} y \texttt{v\_proj}, y ese filtro por nombre
+alcanza partes distintas de cada modelo. En LLaVA-Med coincide con las proyecciones de atención del modelo de lenguaje y
+también con las del codificador visual \gls{clip}. En Mini-VLM, cuyo modelo de lenguaje fusiona las tres proyecciones de
+atención en un único módulo (\texttt{qkv\_proj}), el filtro solo coincide con el codificador visual: el adaptador quedó
+en las 24 capas de ese codificador y el modelo de lenguaje no se ajustó.
+\pendiente{decisión del autor: declarar así el ajuste de Mini-VLM o reentrenarlo con LoRA sobre \texttt{qkv\_proj}.
+Verificar los módulos del checkpoint v2 de LLaVA-Med, que no está en la copia local (en la v1: 64 módulos en el modelo
+de lenguaje y 48 en el codificador visual), y si el proyector se entrena en la etapa 2 (Q4).}
+
+El ajuste no usa \emph{HAM10000}, que trae una etiqueta diagnóstica por imagen y no un texto, así que no sirve como
+referencia para entrenar el generador~\cite{tschandl2018ham10000}. Su partición de prueba, de 1\,503 imágenes en la partición por lesión, se reserva
+para medir la fidelidad diagnóstica (Sección~\ref{sec:met_protocolo}). \emph{SkinCaRe} trae, en cambio, un texto de
+clínicos para cada imagen: las descripciones de \emph{SkinCAP}, escritas por dermatólogos, y el razonamiento diagnóstico
+revisado de \emph{SkinCoT}~\cite{shen2025skincare}. De los 4\,000 pares de \emph{SkinCAP}, la partición usa 3\,561.
+\pendiente{dato: motivo de la exclusión de 439 pares (Q10)} \emph{SkinCoT} aporta 3\,041 textos, y la segunda etapa
+ve 23 clases de enfermedades, no las siete de \emph{HAM10000}.
+\pendiente{dato: confirmar qué anota cada subconjunto y si la impresión diagnóstica está en el texto de SkinCoT o se
+obtiene de su conclusión (Q14).}
+Sin embargo, los textos de \emph{SkinCoT} son razonamientos y no reportes, lo que tiene consecuencias para el
+entrenamiento.
+
+Por la restricción de cómputo de la Sección~\ref{sec:met_tareas}, los modelos se adaptan
+con \gls{lora} en lugar de ajustar todos sus parámetros. La técnica congela los pesos originales y entrena matrices de
+bajo rango que se suman a ellos~\cite{hu2021lora}, lo que reduce el número de parámetros entrenados
+(Sección~\ref{sec:marco_llm_lora}). La Tabla~\ref{tab:met_lora} fija, para cada etapa, los valores del entrenamiento:
+rango, escala, dropout y módulos de LoRA, tasa de aprendizaje, optimizador, épocas y tamaño de lote.
+
+\begin{table}[H]
+    \centering
+    \caption{Configuración de LoRA y del entrenamiento en las dos etapas del ajuste.}
+    \label{tab:met_lora}
+    \small
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{4.2cm}
+        >{\raggedright\arraybackslash}X@{}}
+        \toprule
+        \textbf{Parámetro} & \textbf{Valor} \\
+        \midrule
+        \multicolumn{2}{@{}l}{\emph{Etapa 1: proyector visual}} \\
+        \midrule
+        Parámetros entrenables & Proyector visual (LLaVA-Med: \texttt{multi\_modal\_projector}; Mini-VLM: \texttt{img\_projection}, \texttt{glb\_GN} y \texttt{sub\_GN}) \\
+        \filasep
+        Congelados & Codificador visual y modelo de lenguaje \\
+        \filasep
+        Datos & 2\,492 / 534 / 535 (entrenamiento / validación / prueba) \\
+        \filasep
+        Optimizador & AdamW, decaimiento 0, eps $10^{-7}$ \\
+        \filasep
+        Planificador & Coseno \\
+        \filasep
+        Tasa, épocas, lote y paciencia & a verificar \\
+        \midrule
+        \multicolumn{2}{@{}l}{\emph{Etapa 2: LoRA}} \\
+        \midrule
+        Rango ($r$) & 64 \\
+        \filasep
+        Escala ($\alpha$) & 64 \\
+        \filasep
+        Dropout de LoRA & 0.0 \\
+        \filasep
+        Módulos & \texttt{q\_proj}, \texttt{v\_proj} (ver el texto) \\
+        \filasep
+        Proyector & a verificar \\
+        \filasep
+        Datos & 2\,128 / 456 / 457 (entrenamiento / validación / prueba) \\
+        \filasep
+        Instrucción & «Describe this skin lesion.» \\
+        \filasep
+        Tasa de aprendizaje & $2.495 \times 10^{-5}$ \\
+        \filasep
+        Optimizador & Decaimiento 0.01, eps $10^{-7}$ \\
+        \filasep
+        Épocas & 10, paciencia 3 \\
+        \filasep
+        Lote y acumulación & 4 y 8 (32 efectivos) \\
+        \filasep
+        Longitud máxima & 2\,048 \\
+        \filasep
+        Recorte de gradiente & 1.0 \\
+        \filasep
+        Precisión & bf16 en GPU de arquitectura Ampere o posterior \\
+        \filasep
+        Cuantización & a verificar \\
+        \filasep
+        Semilla & 42 \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+\pendiente{Tabla~\ref{tab:met_lora}: completar la tasa, las épocas, el lote y la paciencia de la etapa 1 (Q1), si el
+proyector se entrena en la etapa 2 (Q4), el lote real según el log (Q6) y si hubo cuantización (Q7).}
+
+\subsection{Reporte y razonamiento}
+
+En \emph{SkinCoT} el texto es una narrativa de razonamiento diagnóstico, y sus pasos van entre bloques
+\texttt{\textless think\textgreater} y \texttt{\textless /think\textgreater}. En 2\,942 de los 3\,041 textos aparece al
+menos uno (96.74\,\%). El entrenamiento usa el texto tal cual, así que el modelo aprende también a reproducir esos
+bloques, y su salida mezcla razonamiento y reporte. Los bloques se conservan en el entrenamiento porque el razonamiento
+es auditable: permite ver cómo el modelo llega a su descripción. Ese mismo texto no sirve para medir la calidad del
+reporte, y por eso la separación se hace en la evaluación.
+
+La instrucción de inferencia es la del entrenamiento, «Describe this skin lesion.». Un prompt de inferencia distinto
+cambiaría lo que recibe el modelo respecto de lo que aprendió, así que se conserva la misma. Para medir, los bloques de
+razonamiento se quitan del texto generado y las métricas de generación se calculan solo sobre el reporte, con el
+criterio de la Sección~\ref{sec:met_protocolo}. Si se midiera el texto completo, las menciones de diagnósticos que el
+razonamiento solo hipotetiza contarían como aciertos. La magnitud de ese efecto se presenta en el
+Capítulo~\ref{cp:res_gen}.
+
+\subsection{Decodificación}
+
+La generación es voraz (\emph{greedy decoding}, \texttt{do\_sample=False}): en cada paso elige el token más probable, en
+lugar de muestrear como en la Sección~\ref{sec:marco_llm_grandes}. Cada imagen se procesa en una llamada, con un máximo
+de 384 tokens nuevos y semilla 42 (Tabla~\ref{tab:met_decodificacion}). La decodificación voraz tiende a repetirse en la
+generación abierta, y el trabajo la acepta por reproducibilidad. El límite de 384 tokens reemplazó al de 256 del
+piloto, para reducir el truncamiento antes de que aparezca el diagnóstico. No se usó
+penalización de repetición ni \texttt{no\_repeat\_ngram\_size} en las corridas finales: en Mini-VLM la penalización hace
+fallar la generación, y el posprocesamiento que quita repeticiones se evaluó y no se adopta, con su resultado en el
+Capítulo~\ref{cp:res_gen}. Con esto el generador redacta el texto, pero no decide si la lesión es lo bastante clara para
+afirmar un diagnóstico. Esa decisión, y la evidencia que la sostiene, es la que incorpora el \emph{pipeline} de la
+Sección~\ref{sec:met_pipeline}.
+
+\begin{table}[H]
+    \centering
+    \caption{Decodificación de los tres generadores en las corridas finales.}
+    \label{tab:met_decodificacion}
+    \small
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{4.4cm} >{\raggedright\arraybackslash}X@{}}
+        \toprule
+        \textbf{Parámetro} & \textbf{Valor} \\
+        \midrule
+        Estrategia & Voraz (\texttt{do\_sample=False}) \\
+        \filasep
+        Máximo de tokens nuevos & 384 en las corridas finales; 512 en las dos primeras iteraciones \\
+        \filasep
+        Llamadas & Una imagen por llamada \\
+        \filasep
+        Penalización de repetición & No se usa en las corridas finales \\
+        \filasep
+        Instrucción de inferencia & «Describe this skin lesion.», la misma del entrenamiento \\
+        \filasep
+        Semilla & 42 \\
+        \filasep
+        Posprocesamiento & Se quitan los bloques \texttt{\textless think\textgreater} antes de medir \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
