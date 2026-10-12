@@ -1,6 +1,6 @@
 # Ficha 3.8 — Pipeline propuesto
 
-**Estado: propuesta, sin aprobar.** Archivo: `Chapters/03-Materiales-Metodos/08-pipeline.tex` (sale de `06-pipeline.tex`, que hoy tiene solo tres `\pendiente`). Labels: `sec:met_pipeline` (sección); `sec:met_cascada`, `sec:met_recuperacion`, `sec:met_ruteo` (subsecciones, nombres propuestos; ninguno lo referencia todavía). Figuras: `fig:met_pipeline`, `fig:met_ruteo`. Ecuación: `eq:met_politica_ruteo`.
+**Estado: aprobada por el autor como punto de partida (11/10/2026); prosa redactada en primera versión.** Archivo: `Chapters/03-Materiales-Metodos/08-pipeline.tex` (sale de `06-pipeline.tex`, que hoy tiene solo tres `\pendiente`). Labels: `sec:met_pipeline` (sección); `sec:met_cascada`, `sec:met_recuperacion`, `sec:met_ruteo` (subsecciones, nombres propuestos; ninguno lo referencia todavía). Figuras: `fig:met_pipeline`, `fig:met_ruteo`. Ecuación: `eq:met_politica_ruteo`.
 
 ## Hilo conductor
 

@@ -1,6 +1,6 @@
 # Ficha 3.1 — Definición de las tareas
 
-**Estado: propuesta, sin aprobar.** Archivo: `Chapters/03-Materiales-Metodos/01-tareas.tex` (nuevo). Labels: `sec:met_tareas`.
+**Estado: aprobada por el autor como punto de partida (11/10/2026); prosa redactada en primera versión.** Archivo: `Chapters/03-Materiales-Metodos/01-tareas.tex` (nuevo). Labels: `sec:met_tareas`.
 
 ## Hilo conductor
 

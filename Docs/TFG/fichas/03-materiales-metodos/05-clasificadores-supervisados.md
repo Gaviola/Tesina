@@ -1,6 +1,6 @@
 # Ficha 3.5 — Clasificadores supervisados
 
-**Estado: propuesta, sin aprobar.** Archivo: `Chapters/03-Materiales-Metodos/05-clasificadores-supervisados.tex`. Labels: `sec:met_supervisados` (sección) y `sec:met_supervisados_arquitecturas`, `sec:met_supervisados_preprocesamiento`, `sec:met_supervisados_receta`, `sec:met_supervisados_busqueda`, `sec:met_supervisados_ensamble` (subsecciones; propuestos).
+**Estado: aprobada por el autor como punto de partida (11/10/2026); prosa redactada en primera versión.** Archivo: `Chapters/03-Materiales-Metodos/05-clasificadores-supervisados.tex`. Labels: `sec:met_supervisados` (sección) y `sec:met_supervisados_arquitecturas`, `sec:met_supervisados_preprocesamiento`, `sec:met_supervisados_receta`, `sec:met_supervisados_busqueda`, `sec:met_supervisados_ensamble` (subsecciones; propuestos).
 
 Sale de: la subsección «Clasificadores supervisados» de `03-modelos-evaluados.tex` (solo `\pendiente`, sin prosa que conservar) y la subsección «Preprocesamiento y aumento de datos» de `02-datos-particiones.tex` (`\pendiente`, sin prosa). `sec:met_modelos` desaparece (ningún `\ref` la usa).
 

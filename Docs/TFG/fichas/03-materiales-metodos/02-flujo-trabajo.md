@@ -1,6 +1,6 @@
 # Ficha 3.2 — Flujo de trabajo
 
-**Estado: propuesta, sin aprobar.** Archivo: `Chapters/03-Materiales-Metodos/02-flujo-trabajo.tex` (absorbe `01-metodologia.tex` y `08-infraestructura.tex`). Labels: `sec:met_metodologia` (la sección) y `sec:met_infra` (la subsección 3.2.2). Figura: `fig:met_flujo`. Tabla: `tab:met_entorno`.
+**Estado: aprobada por el autor como punto de partida (11/10/2026); prosa redactada en primera versión.** Archivo: `Chapters/03-Materiales-Metodos/02-flujo-trabajo.tex` (absorbe `01-metodologia.tex` y `08-infraestructura.tex`). Labels: `sec:met_metodologia` (la sección) y `sec:met_infra` (la subsección 3.2.2). Figura: `fig:met_flujo`. Tabla: `tab:met_entorno`.
 
 ## Hilo conductor
 

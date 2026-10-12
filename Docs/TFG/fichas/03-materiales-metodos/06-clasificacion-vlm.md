@@ -1,6 +1,6 @@
 # Ficha 3.6 — Clasificación con modelos visión–lenguaje
 
-**Estado: propuesta, sin aprobar.** Archivo: `Chapters/03-Materiales-Metodos/06-clasificacion-vlm.tex`. Labels: `sec:met_clasif_vlm` (fijo). Propuestos: `sec:met_vlm_generativos`, `sec:met_vlm_estrategias`, `sec:met_dermlip`, `eq:met_likelihood`, `fig:met_zsvslik`.
+**Estado: aprobada por el autor como punto de partida (11/10/2026); prosa redactada en primera versión.** Archivo: `Chapters/03-Materiales-Metodos/06-clasificacion-vlm.tex`. Labels: `sec:met_clasif_vlm` (fijo). Propuestos: `sec:met_vlm_generativos`, `sec:met_vlm_estrategias`, `sec:met_dermlip`, `eq:met_likelihood`, `fig:met_zsvslik`.
 
 ## Hilo conductor
 

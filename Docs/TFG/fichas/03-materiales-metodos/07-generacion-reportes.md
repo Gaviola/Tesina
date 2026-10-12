@@ -1,6 +1,6 @@
 # Ficha 3.7 — Generación de reportes
 
-**Estado: propuesta, sin aprobar.** Archivo: `Chapters/03-Materiales-Metodos/07-generacion-reportes.tex` (sale de `05-generacion-reportes.tex`). Labels: `sec:met_generacion`.
+**Estado: aprobada por el autor como punto de partida (11/10/2026); prosa redactada en primera versión.** Archivo: `Chapters/03-Materiales-Metodos/07-generacion-reportes.tex` (sale de `05-generacion-reportes.tex`). Labels: `sec:met_generacion`.
 
 ## Hilo conductor
 

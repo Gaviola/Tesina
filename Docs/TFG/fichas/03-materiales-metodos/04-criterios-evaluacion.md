@@ -1,6 +1,6 @@
 # Ficha 3.4 — Criterios de evaluación y líneas base
 
-**Estado: propuesta, sin aprobar.** Archivo: `Chapters/03-Materiales-Metodos/04-criterios-evaluacion.tex` (sale de la primera subsección de `07-protocolo-evaluacion.tex`). Labels: `sec:met_protocolo` (la sección), `sec:met_seleccion` (3.4.1). Labels nuevos propuestos: `sec:met_lineas_base` (3.4.2) y `sec:met_eval_generacion` (3.4.3).
+**Estado: aprobada por el autor como punto de partida (11/10/2026); prosa redactada en primera versión.** Archivo: `Chapters/03-Materiales-Metodos/04-criterios-evaluacion.tex` (sale de la primera subsección de `07-protocolo-evaluacion.tex`). Labels: `sec:met_protocolo` (la sección), `sec:met_seleccion` (3.4.1). Labels nuevos propuestos: `sec:met_lineas_base` (3.4.2) y `sec:met_eval_generacion` (3.4.3).
 
 Esta sección no presenta ningún desempeño de clasificadores, VLM, *pipeline* ni generación. El único valor numérico que aparece es el del clasificador trivial, que es propiedad de los datos (test: 1006 imágenes de NV sobre 1503).
 

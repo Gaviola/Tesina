@@ -1,6 +1,6 @@
 # Ficha 3.9 — Análisis complementarios
 
-**Estado: propuesta, sin aprobar.** Archivo: `Chapters/03-Materiales-Metodos/09-analisis-complementarios.tex`. Labels: `sec:met_complementarios` (sección); `sec:met_inferencia`, `sec:met_estadistica` y `sec:met_analisis_compl` (subsecciones, propuestas). Tablas propuestas: `tab:met_protocolos` y `tab:met_pruebas`.
+**Estado: aprobada por el autor como punto de partida (11/10/2026); prosa redactada en primera versión.** Archivo: `Chapters/03-Materiales-Metodos/09-analisis-complementarios.tex`. Labels: `sec:met_complementarios` (sección); `sec:met_inferencia`, `sec:met_estadistica` y `sec:met_analisis_compl` (subsecciones, propuestas). Tablas propuestas: `tab:met_protocolos` y `tab:met_pruebas`.
 
 Fuentes de esta ficha: andamiaje `Chapters/03-Materiales-Metodos/07-protocolo-evaluacion.tex` (las tres subsecciones pendientes); `Codigo/docs/resul/split_lesion_resul_20260926.md` y `revision_experimentacion_20261003.md` (números y protocolo vigentes); los resultados de la partición por lesión en `M\Codigo\outputs\results\` (`lesion_split_report.json`, `statistical_tests_les.json`, `robustness/robustness_summary.json`, `calibration_les/calibration_summary.json`, `cost/cost_comparison.json`, `*_hiba_test_results.json`); y los scripts citados en cada párrafo. Los documentos `tests_estadisticos`, `robustez`, `calibracion`, `interpretabilidad` y `costo` (julio) son anteriores a la partición por lesión: sirven para la idea de cada análisis, no para sus parámetros.
 
