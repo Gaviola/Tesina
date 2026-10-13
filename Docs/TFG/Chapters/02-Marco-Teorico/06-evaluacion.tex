@@ -27,9 +27,9 @@ con la otra recibe imágenes cuyos rasgos visuales se distribuyen de otra manera
 Aun dentro de una misma modalidad, la iluminación, la distancia a la lesión, la resolución del sensor y la
 compresión de la imagen varían entre equipos y centros. Un modelo que se apoya en rasgos que esas variaciones
 alteran, como la textura fina o el color exacto, puede perder desempeño ante imágenes de contenido clínico
-idéntico. Esa pérdida se estima de dos maneras. La \textbf{validación externa} mide el modelo en un conjunto de
-otra fuente, que no intervino en el entrenamiento. Cuando no se dispone de otro conjunto, se degradan las imágenes
-del test de manera controlada (Sección~\ref{sec:marco_eval_robustez}).
+idéntico. Esa pérdida se estima de dos maneras. La \textbf{validación externa} (\emph{external validation}) mide
+el modelo en un conjunto de otra fuente, que no intervino en el entrenamiento. Cuando no se dispone de otro
+conjunto, se degradan las imágenes del test de manera controlada (Sección~\ref{sec:marco_eval_robustez}).
 
 El tono de piel es el ejemplo más estudiado de cambio de subpoblación. Cuando las pieles claras están mucho más
 representadas que las oscuras en el entrenamiento, el modelo clasifica mejor los fototipos parecidos a los que
@@ -73,22 +73,23 @@ que se derivan de ella son las siguientes.
 \input{Figures/Capitulos/02-Marco-Teorico/matriz-confusion}
 
 \begin{itemize}
-    \item \textbf{Exactitud.} Es la fracción de imágenes bien clasificadas, $\sum_c M_{cc} / n$. Es engañosa
+    \item \textbf{Exactitud} (\emph{accuracy}). Es la fracción de imágenes bien clasificadas, $\sum_c M_{cc} / n$.
+    Es engañosa
     cuando las clases están desbalanceadas: si una clase reúne dos tercios de las imágenes, un modelo que responda
     siempre esa clase alcanza una exactitud cercana a 0.67.
 
-    \item \textbf{Sensibilidad macro.} La sensibilidad de la clase $c$, $R_c = M_{cc} / \sum_{j} M_{cj}$, es la
+    \item \textbf{Sensibilidad macro} (\emph{sensitivity}). La sensibilidad de la clase $c$,
+    $R_c = M_{cc} / \sum_{j} M_{cj}$, es la
     fracción de sus imágenes que el modelo acierta, y se lee por fila. La sensibilidad macro promedia esas
     fracciones para que cada clase pese lo mismo, y corrige así el defecto de la exactitud,
     \begin{equation}
         \text{sensibilidad macro} = \frac{1}{C}\sum_{c=1}^{C} R_c.
         \label{eq:marco_acc_bal}
     \end{equation}
-    En el caso binario se la llama exactitud balanceada~\cite{brodersen2010balanced}, y para varias clases es el
-    promedio de las sensibilidades por clase~\cite{sokolova2009systematic}.
+    En el caso binario se la llama exactitud balanceada~\cite{brodersen2010balanced,sokolova2009systematic}.
 
-    \item \textbf{Precisión y F1.} La sensibilidad no dice cuántas de las predicciones de una clase son
-    correctas. Esa es la precisión (\emph{precision}) de la clase $c$, $P_c$, que se lee por columna. El F1 las
+    \item \textbf{Precisión} (\emph{precision}) \textbf{y F1.} La sensibilidad no dice cuántas de las predicciones
+    de una clase son correctas. Esa es la precisión de la clase $c$, $P_c$, que se lee por columna. El F1 las
     combina mediante su media armónica, y su promedio sobre las clases se puede hacer de dos maneras,
     \begin{equation}
         F1_c = \frac{2\,P_c R_c}{P_c + R_c}, \qquad
@@ -99,7 +100,8 @@ que se derivan de ella son las siguientes.
     donde $n_c$ es el número de imágenes de la clase $c$ y $n$ el total. El F1 ponderado queda dominado por la
     clase más frecuente, y el F1 macro da a las $C$ clases el mismo peso.
 
-    \item \textbf{Sensibilidad y especificidad de una clase.} Cuando interesa una sola condición, la salida
+    \item \textbf{Sensibilidad y especificidad} (\emph{specificity}) \textbf{de una clase.} Cuando interesa una
+    sola condición, la salida
     multiclase se colapsa en una binaria: la clase de interés, o un grupo de clases como las malignas, frente a
     las demás, con la probabilidad de la clase o la suma de las del grupo como puntaje. A esa tarea derivada se
     la llama detección, y se evalúa con la sensibilidad $R_c$ y con la especificidad, la fracción de las imágenes
@@ -170,8 +172,8 @@ cuentan cuánto contenido clínico menciona. Estas dos últimas no necesitan tex
 \end{table}
 
 Las métricas textuales, primera familia de la Tabla~\ref{tab:marco_familias_texto}, comparan el texto generado $g$
-con un texto de referencia $r$ escrito para la misma imagen. Las cuatro primeras cuentan coincidencias de $n$-gramas, secuencias de $n$ palabras consecutivas, y la
-quinta compara significados.
+con un texto de referencia $r$ escrito para la misma imagen. Cuatro de estas métricas cuentan coincidencias de
+$n$-gramas, secuencias de $n$ palabras consecutivas, y la quinta compara significados.
 
 \begin{itemize}
     \item \textbf{BLEU.} Calcula, para cada $n$ entre 1 y 4, la precisión $p_n$ de los $n$-gramas de $g$, la
@@ -281,7 +283,7 @@ de confiabilidad hace visible la calibración: las predicciones se agrupan en $M
 para cada intervalo $B_m$ se compara la exactitud $\mathrm{acc}(B_m)$ con la confianza media
 $\mathrm{conf}(B_m)$, que en un modelo calibrado coinciden. El
 \textbf{\gls{ece}} promedia la brecha entre las dos pesándola por la cantidad de predicciones de cada intervalo, y
-el \textbf{error de calibración máximo} (MCE) toma la peor,
+el \textbf{\gls{mce}} toma la peor,
 \begin{equation}
     \mathrm{ECE} = \sum_{m=1}^{M} \frac{|B_m|}{n}\,\bigl|\mathrm{acc}(B_m) - \mathrm{conf}(B_m)\bigr|,
     \qquad
@@ -310,10 +312,10 @@ Ecuación~\ref{eq:marco_entropia}, promediada sobre el test, se usa con el mismo
 real. Ninguna de las dos mide solo la calibración, porque bajan tanto cuando las probabilidades se acercan a las
 frecuencias reales como cuando el modelo concentra más probabilidad en la clase correcta.
 
-La calibración se puede corregir después del entrenamiento con un conjunto de validación. El \emph{temperature
-scaling} divide todos los logits por un único escalar $T>0$ antes de la softmax, como en la
+La calibración se puede corregir después del entrenamiento con un conjunto de validación. El
+\textbf{\emph{temperature scaling}} divide todos los logits por un único escalar $T>0$ antes de la softmax, como en la
 Ecuación~\ref{eq:marco_temperatura}, y ajusta $T$ para minimizar la entropía cruzada en validación. Como no
-cambia el orden de los logits, la clase predicha y la exactitud quedan iguales. El \emph{vector scaling}
+cambia el orden de los logits, la clase predicha y la exactitud quedan iguales. El \textbf{\emph{vector scaling}}
 aprende en cambio un factor y un sesgo para cada clase; corrige más, pero puede cambiar la clase predicha y
 con ello la exactitud~\cite{guo2017calibration}.
 
@@ -321,9 +323,9 @@ con ello la exactitud~\cite{guo2017calibration}.
 \label{sec:marco_eval_estadistica}
 
 Todas las métricas anteriores se calculan sobre el test, que es una muestra de las imágenes posibles. Cuando dos
-modelos difieren en una o dos centésimas de F1 macro, esa diferencia puede deberse a qué imágenes cayeron en el
-test y no a los modelos. Para afirmar que un modelo es mejor que otro hace falta estimar cuánto variaría la
-diferencia de una muestra a otra.
+modelos difieren en una o dos centésimas de F1 macro, esa diferencia puede deberse a la composición de imágenes en
+el conjunto de test y no a los modelos. Para afirmar que un modelo es mejor que otro hace falta estimar cuánto
+variaría la diferencia de una muestra a otra.
 
 El \textbf{\emph{bootstrap}} estima esa variación con los datos disponibles. Se construyen muchas muestras del
 mismo tamaño que el test tomando imágenes al azar con reposición, se calcula la métrica en cada una, y la
@@ -383,7 +385,8 @@ Las métricas anteriores dicen cuánto acierta un clasificador pero no en qué s
 más influyeron en la predicción de una clase. Parte de los mapas de características $A^k$ de la última capa
 convolucional, de $i \times j$ posiciones cada uno, y del puntaje $y^c$ de la clase $c$ antes de la softmax.
 Mide cuánto importa cada mapa promediando el gradiente del puntaje respecto del mapa, suma los mapas pesados
-por esa importancia y conserva solo los valores positivos,
+por esa importancia y aplica la \textbf{ReLU} (\emph{rectified linear unit}), una función de activación que
+conserva solo los valores positivos,
 \begin{equation}
     \alpha_k^c = \frac{1}{Z}\sum_{i}\sum_{j} \frac{\partial y^c}{\partial A^k_{ij}}, \qquad
     L^c_{\text{Grad-CAM}} = \mathrm{ReLU}\!\left(\sum_k \alpha_k^c A^k\right),
