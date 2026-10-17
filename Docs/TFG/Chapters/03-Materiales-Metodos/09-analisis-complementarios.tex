@@ -29,9 +29,9 @@ del test. Aun así, los ganadores y los umbrales se eligen en validación.
 La partición es la disjunta por lesión (Sección~\ref{sec:met_particiones}): el test tiene 1\,503 imágenes, las mismas
 del conjunto original.
 
-Algunos resultados no siguen esta regla, y se declaran en lugar de corregirse. DenseNet121 y ViT-B/16 se entrenaron con
-la receta anterior (Sección~\ref{sec:met_supervisados}), sin TTA y con una sola semilla, así que se evalúan con vista
-única. Los VLM ajustados también se
+Algunos resultados no siguen esta regla, y se declaran en lugar de corregirse. Las corridas de DenseNet121 y ViT-B/16
+con la receta anterior (Sección~\ref{sec:met_supervisados}), que se conservan como antecedente, no usan TTA y tienen una
+sola semilla, así que se evalúan con vista única. Los VLM ajustados también se
 evalúan con vista única. Su ajuste usa \emph{SkinCaRe} y no \emph{HAM10000}, así que el test de este conjunto no
 interviene en el entrenamiento de los VLM (Sección~\ref{sec:met_generacion}). La robustez y el Grad-CAM usan vista única,
 de modo que su línea de base queda por debajo de la de las tablas con TTA, y el costo se mide sin TTA. Estos resultados se
