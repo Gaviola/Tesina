@@ -1,11 +1,12 @@
 \section{Fundamentos del aprendizaje profundo}
 \label{sec:marco_fundamentos}
 
-Los clasificadores de imágenes que se comparan en este trabajo no se programan con reglas
-escritas a mano, sino que aprenden su tarea a partir de ejemplos. Ese es el principio del aprendizaje
-automático (\emph{machine learning}). En lugar de codificar la solución, se elige un modelo con parámetros
-ajustables y se fijan sus valores a partir de datos, de modo que el modelo resuelva la tarea también sobre casos
-que no vio~\cite{goodfellow2016deep}. En el \textbf{aprendizaje supervisado} (\emph{supervised learning}), cada
+Los clasificadores de imágenes analizados en este trabajo se basan en el aprendizaje automático
+(\emph{machine learning}), un enfoque en el que el modelo aprende a realizar una tarea a partir de ejemplos, en
+lugar de seguir reglas definidas explícitamente por un programador. Para ello, el modelo cuenta con parámetros
+ajustables, cuyos valores se fijan durante un proceso de entrenamiento a partir de los datos disponibles. De esta
+manera, el modelo aprende patrones que le permiten predecir también sobre imágenes nuevas, que no formaron parte
+de los datos de entrenamiento~\cite{goodfellow2016deep}. En el \textbf{aprendizaje supervisado} (\emph{supervised learning}), cada
 ejemplo es un par formado por una entrada y la salida esperada, llamada etiqueta. En la clasificación de
 lesiones de piel, por ejemplo, la entrada es la imagen de una lesión y la etiqueta, su diagnóstico, y el modelo
 aprende a predecir el diagnóstico de imágenes nuevas.
@@ -21,11 +22,18 @@ pasa de bordes a contornos y de contornos a partes de objetos. Este enfoque se i
 y capacidad de cómputo para entrenar esos modelos~\cite{goodfellow2016deep}. Los modelos que realizan esta
 cadena de transformaciones son las redes neuronales.
 
+Las redes neuronales son la base de todos los modelos que se estudian en este trabajo, tanto de los
+clasificadores de imágenes como de los que generan texto, y los conceptos de esta sección reaparecen al describir
+cómo se entrenan y cómo se comparan. La sección presenta primero cómo una red aprende a clasificar a partir de
+ejemplos etiquetados (Sección~\ref{sec:marco_redes}). Luego explica por qué lo aprendido puede no trasladarse a
+imágenes nuevas y qué técnicas lo mitigan (Sección~\ref{sec:marco_regularizacion}). Por último, describe cómo se
+reutiliza un modelo ya entrenado cuando los ejemplos de la tarea son pocos (Sección~\ref{sec:marco_transferencia}).
+
 \subsection{Redes neuronales y aprendizaje supervisado}
 \label{sec:marco_redes}
 
-Una \textbf{red neuronal} artificial (\emph{artificial neural network}) es un modelo formado por unidades de
-cálculo simples, las neuronas, organizadas en capas. Cada neurona calcula una suma ponderada de sus entradas, le
+Una \textbf{red neuronal} artificial (\emph{artificial neural network}), el modelo en que se basa el
+aprendizaje profundo, está formada por unidades de cálculo simples, las neuronas, organizadas en capas. Cada neurona calcula una suma ponderada de sus entradas, le
 suma un valor constante llamado sesgo (\emph{bias}) y aplica al resultado una función no lineal, la función de
 activación. Una capa reúne varias neuronas que reciben la misma entrada, y en un perceptrón multicapa
 (\emph{multilayer perceptron}, Figura~\ref{fig:marco_perceptron}) las capas se apilan, de modo que la salida de cada una es la entrada de la
@@ -42,10 +50,10 @@ profunda~\cite{goodfellow2016deep}.
 
 \input{Figures/Capitulos/02-Marco-Teorico/perceptron}
 
-Para usar una red como clasificador, su salida tiene que indicar a qué clase pertenece cada entrada. Un problema
-de clasificación consiste en asignar cada entrada a una clase de un conjunto finito. En el diagnóstico de
-lesiones de piel, las clases son los tipos de lesión, como el melanoma o el nevo, y el modelo recibe la imagen y
-debe indicar a cuál pertenece. Para un problema de $C$ clases, la última capa tiene entonces $C$ salidas, que
+Para usar una red como clasificador, su salida tiene que asignar cada entrada a una clase de un conjunto
+finito. En el diagnóstico de lesiones de piel, las clases son los tipos de lesión, como el melanoma o el nevo, la
+lesión benigna que se conoce comúnmente como lunar, y el modelo recibe la imagen y debe indicar a cuál
+pertenece. Para un problema de $C$ clases, la última capa tiene entonces $C$ salidas, que
 forman un vector de puntajes llamados \emph{logits}, $\mathbf{z}$. Estos puntajes pueden tomar cualquier valor
 real, positivo o negativo, y por eso no se pueden leer como probabilidades. Para convertirlos se les aplica la
 función \emph{softmax}, que produce valores entre cero y uno que suman uno,
@@ -157,8 +165,8 @@ siguientes:
 Aun sin sobreajuste, la pérdida promedio puede ocultar errores en las clases que más interesan. El
 entrenamiento minimiza la pérdida sobre todos los ejemplos, y ese promedio no distingue a qué clase pertenece
 cada uno. Cuando unas clases tienen muchos más ejemplos que otras, hay \textbf{desbalance de clases}
-(\emph{class imbalance})\label{sec:marco_desbalance}. Es lo habitual en dermatoscopía, donde los nevos superan
-varias veces a los melanomas (Sección~\ref{sec:met_ham}).
+(\emph{class imbalance})\label{sec:marco_desbalance}. Es lo habitual en dermatoscopía, donde los nevos, que son
+benignos, superan varias veces a los melanomas (Sección~\ref{sec:met_ham}).
 En ese caso, los ejemplos de las clases más frecuentes dominan la suma de la pérdida, y el modelo puede reducirla
 acertando sobre todo en ellas aunque se equivoque en las raras. El efecto crece con el grado de
 desbalance~\cite{buda2018systematic}. Las correcciones más usadas modifican la entropía cruzada de la

@@ -1,10 +1,11 @@
-\section{Estado del arte}
+\section{Trabajos relacionados}
 \label{sec:estado_arte}
 
 El criterio con que cierra la Sección~\ref{sec:marco_evaluacion} ordena también la revisión de los trabajos más
 cercanos a esta tesina, que pertenecen a tres líneas de investigación: la clasificación de lesiones de piel, los
 \glspl{vlm} especializados en dermatología y la generación de reportes dermatológicos. La revisión se concentra en
-trabajos publicados desde 2020, y los anteriores aparecen solo como hitos, con su fecha. Varios trabajos de 2025 y
+trabajos publicados desde 2020, mientras que los anteriores solo se incluyen cuando constituyen hitos del área, y
+se indica su fecha. Varios trabajos de 2025 y
 2026 están publicados solo en arXiv o medRxiv, sin revisión de pares, y en cada caso se lo indica. De cada grupo de
 trabajos se presentan el problema que comparten, los métodos con que lo abordan, sus resultados y sus
 limitaciones, y los detalles de arquitectura, datos y hardware se resumen en las tablas de cada línea.
@@ -409,7 +410,7 @@ calibra cuántos reportes recuperar con un control estadístico del riesgo, y MM
 similitud cae de forma brusca; los dos ajustan además el generador con optimización directa de preferencias, para que
 use el contexto solo cuando ayuda. En \emph{IU-Xray}, la exactitud de las preguntas sube de 75.47\,\% a 87.84\,\%
 con RULE y a 89.54\,\% con MMed-RAG, pero en la ablación de RULE el contexto recuperado, agregado sin más, empeora
-\emph{MIMIC-CXR} de 75.79\,\% a 67.35\,\%. Ninguno de los dos recupera imágenes, se abstiene, incluye expertos ni
+\emph{MIMIC-CXR} de 75.79\,\% a 67.35\,\%. Ninguno de los dos recupera imágenes, prevé la abstención, incluye expertos ni
 trata la dermatología.
 
 En esta línea, el texto se evalúa de tres maneras que casi no se combinan (Sección~\ref{sec:marco_eval_texto}). Las

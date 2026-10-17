@@ -1,10 +1,10 @@
 \section{Incertidumbre y predicción selectiva}
 \label{sec:marco_incertidumbre}
 
-Decidir cuándo abstenerse requiere responder cuatro preguntas, que ordenan esta sección: por qué un modelo puede
-equivocarse con la misma seguridad con que acierta, cómo se formaliza la decisión de no responder, con qué señal
-se estima la confianza en una predicción y qué puede hacer un sistema, además de responder o abstenerse, cuando
-esa confianza no alcanza.
+Decidir cuándo un modelo no debe emitir una predicción requiere responder cuatro preguntas: por qué un modelo
+puede equivocarse con la misma seguridad con que acierta, cómo se formaliza la decisión de no responder, con qué
+señal se estima la confianza en una predicción y qué puede hacer un sistema, además de responder o no hacerlo,
+cuando esa confianza no alcanza.
 
 \subsection{Incertidumbre en la clasificación diagnóstica}
 \label{sec:marco_incert_fuentes}
@@ -31,14 +31,15 @@ dudoso, derivarlo puede ser preferible a arriesgar un diagnóstico. Esa opción 
 decisión final, sino que asiste a la persona que la toma. En un experimento con dermatólogos y médicos de
 atención primaria, el apoyo de un sistema de aprendizaje profundo mejoró la exactitud diagnóstica de los dos
 grupos~\cite{groh2024learningaided}. Un sistema que reconoce su límite y deriva el caso puede ser, por lo tanto,
-más útil que uno que siempre responde, y medir cuánto se gana al abstenerse requiere formalizar la abstención.
+más útil que uno que siempre responde, y medir cuánto se gana al dejar casos sin responder requiere formalizar
+esa decisión, que se conoce como \textbf{abstención} (\emph{abstention}).
 
 \subsection{Predicción selectiva y abstención}
 \label{sec:marco_pred_selectiva}
 
 Un clasificador con opción de rechazo, o clasificador selectivo, se describe con un par $(f, g)$. La función $f$
-asigna una categoría a cada imagen $x$, y la función $g$ decide si la predicción se acepta ($g(x) = 1$) o si el
-modelo se abstiene ($g(x) = 0$). La \textbf{cobertura} es la fracción de imágenes que el modelo acepta, y el
+asigna una categoría a cada imagen $x$, y la función $g$ decide si la predicción se acepta ($g(x) = 1$) o se
+rechaza y el modelo no responde ($g(x) = 0$). La \textbf{cobertura} es la fracción de imágenes que el modelo acepta, y el
 \textbf{riesgo selectivo} es la tasa de error medida solo sobre las aceptadas,
 \begin{equation}
     \mathrm{cobertura}(g) = \mathbb{E}\bigl[g(x)\bigr], \qquad
@@ -62,7 +63,9 @@ entre ellos, y cuánto baja el riesgo por cada caso que se deja de responder dep
 \subsection{Señales de confianza y calibración}
 \label{sec:marco_senales_confianza}
 
-La señal más simple es la máxima probabilidad de la softmax, $\kappa(x) = \max_c p_c$, que sirve de línea base
+Como la utilidad del umbral depende de la señal, conviene revisar las alternativas para construirla: la
+probabilidad de un solo modelo, el desacuerdo entre varios modelos y el voto de los casos más parecidos. La señal
+más simple es la máxima probabilidad de la softmax, $\kappa(x) = \max_c p_c$, que sirve de línea base
 para detectar predicciones erróneas~\cite{hendrycks2017baseline}. Para que un umbral sobre ella tenga una lectura
 probabilística, el modelo tiene que estar \textbf{calibrado}, es decir, sus probabilidades tienen que coincidir
 con sus frecuencias de acierto. Por ejemplo, si un modelo calibrado predice melanoma con probabilidad 0.9 en cien
@@ -77,7 +80,7 @@ Sección~\ref{sec:marco_eval_calib}.
 
 Calibrar la softmax, sin embargo, no hace visible la incertidumbre epistémica. La probabilidad de un solo
 modelo, aun calibrada, refleja lo que ese modelo aprendió, y esa incertidumbre corresponde justamente a lo que no
-Una forma de estimarla es mediante la comparación de modelos. Es esperable
+aprendió. Una forma de estimarla es mediante la comparación de modelos. Es esperable
 que dos redes entrenadas por separado coincidan donde los datos alcanzaron para fijar la respuesta y difieran
 donde no alcanzaron, de modo que su desacuerdo aproxima la incertidumbre epistémica~\cite{kendall2017uncertainties}.
 Un \textbf{ensamble} aprovecha este principio. Promedia las probabilidades de varios modelos entrenados por
@@ -122,7 +125,7 @@ ser binaria.
 \subsection{Tres salidas: afirmar, ofrecer diferenciales o derivar}
 \label{sec:marco_tres_salidas}
 
-En la práctica clínica, derivar no es la única alternativa a afirmar un diagnóstico: un clínico que duda entre
+En la práctica clínica, derivar el caso a un especialista no es la única alternativa a afirmar un diagnóstico: un clínico que duda entre
 dos o tres diagnósticos los enuncia como \textbf{diagnóstico diferencial}. Un sistema puede tener entonces tres
 salidas, que son afirmar un diagnóstico, ofrecer diferenciales, es decir, un conjunto de candidatos, o derivar
 el caso a un especialista. Con dos umbrales $\tau_1 > \tau_2$ sobre la señal, la \textbf{regla de decisión} que elige entre

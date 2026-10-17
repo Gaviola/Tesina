@@ -59,10 +59,12 @@ estiman lo que la métrica sobre el test no muestra.
 \subsection{Evaluación de la clasificación}
 \label{sec:marco_eval_clasif}
 
-Evaluar un clasificador es averiguar en qué clases acierta y con cuáles las confunde. Con clases desbalanceadas
-(Sección~\ref{sec:marco_desbalance}) y confusiones de distinto costo (Sección~\ref{sec:marco_incertidumbre}), una
-sola cifra no alcanza, porque un modelo puede acertar casi todas las imágenes de la clase mayoritaria y perder los
-melanomas. El resumen más completo de un clasificador es la \textbf{matriz de confusión}
+Evaluar un clasificador es averiguar en qué clases acierta y con cuáles las confunde. Las clases están
+desbalanceadas (Sección~\ref{sec:marco_desbalance}) y no todos los errores tienen la misma gravedad, porque no
+detectar un melanoma es más grave que derivar un nevo (Sección~\ref{sec:marco_incertidumbre}). Por eso una sola
+cifra no alcanza: un modelo puede acertar casi todas las imágenes de la clase mayoritaria y, aun así, clasificar
+de forma errónea la mayoría de los melanomas. La herramienta que describe con más detalle los aciertos y los
+errores de un clasificador es la \textbf{matriz de confusión}
 $M \in \mathbb{N}^{C \times C}$, en la que $M_{ij}$ cuenta las imágenes de la clase real $i$ que el modelo predice
 como $j$, y de la que salen todas las demás métricas. En la tarea binaria, con una clase de interés (la positiva)
 frente al resto, tiene cuatro celdas: los verdaderos positivos ($\mathrm{TP}$), los falsos negativos
@@ -133,9 +135,11 @@ que se derivan de ella son las siguientes.
     áreas es el AUC macro, $\mathrm{AUC}_{\text{macro}} = \frac{1}{C}\sum_{c} \mathrm{AUC}_c$.
 \end{itemize}
 
-Un reporte, en cambio, es un texto, y compararlo con otro exige métricas distintas.
+Estas métricas evalúan una predicción que es una categoría: indican en qué clases acierta el modelo, si
+descuida las minoritarias y qué tan bien separa cada clase del resto. Por otro lado, un reporte es un texto, y
+compararlo con otro exige métricas distintas.
 
-\subsection{Evaluación de la generación}
+\subsection{Evaluación de la generación de reportes}
 \label{sec:marco_eval_texto}
 
 Un reporte se juzga por los dos requisitos de la Sección~\ref{sec:marco_rep_ejes}: que describa lo que la imagen
@@ -147,14 +151,14 @@ cuentan cuánto contenido clínico menciona. Estas dos últimas no necesitan tex
 
 \begin{table}[H]
     \centering
-    \caption{Familias de métricas de generación de reportes: qué comparan, qué miden y qué no ven.}
+    \caption{Familias de métricas de generación de reportes: qué comparan, qué evalúan y qué no evalúan.}
     \label{tab:marco_familias_texto}
     \small
     \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{2.3cm}
         >{\raggedright\arraybackslash\hspace{0pt}}X >{\raggedright\arraybackslash\hspace{0pt}}X
         >{\raggedright\arraybackslash\hspace{0pt}}X >{\raggedright\arraybackslash\hspace{0pt}}X@{}}
         \toprule
-        \textbf{Familia} & \textbf{Métricas} & \textbf{Compara con} & \textbf{Mide} & \textbf{No ve} \\
+        \textbf{Familia} & \textbf{Métricas} & \textbf{Compara con} & \textbf{Evalúa} & \textbf{No evalúa} \\
         \midrule
         Textuales & BLEU, ROUGE-L, METEOR, CIDEr, BERTScore & Un texto de referencia
             & Parecido léxico o de significado con esa referencia

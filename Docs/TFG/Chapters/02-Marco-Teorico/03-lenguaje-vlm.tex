@@ -1,9 +1,9 @@
 \section{Modelos de lenguaje y modelos visión--lenguaje}
 \label{sec:marco_llm}
 
-Generar un reporte a partir de una imagen requiere tres piezas, que ordenan esta sección: un modelo capaz de
+Generar un reporte a partir de una imagen requiere tres piezas: un modelo capaz de
 producir texto, una forma de adaptarlo a la dermatología con la memoria de una GPU de consumo y una forma de
-conectarlo con la imagen. La primera pieza es el modelo de lenguaje.
+conectarlo con la imagen. La primera de esas piezas es el modelo de lenguaje.
 
 \subsection{Grandes modelos de lenguaje}
 \label{sec:marco_llm_grandes}
@@ -109,7 +109,7 @@ parámetros entrenables y unas tres veces la memoria de la GPU. Al terminar, el 
 modelo resultante se ejecuta igual que el original, sin tiempo de cálculo adicional~\cite{hu2021lora}. Un
 \gls{llm} adaptado de este modo, sin embargo, solo recibe texto, y un reporte describe una imagen.
 
-\subsection{Modelos visión--lenguaje contrastivos: CLIP}
+\subsection{Modelo visión--lenguaje contrastivo CLIP}
 \label{sec:marco_vlm}
 \label{sec:marco_vlm_clip}
 
@@ -207,4 +207,4 @@ El problema no es exclusivo de los \glspl{vlm}. Los clasificadores de la Secció
 devuelven una clase para cualquier imagen, incluso cuando se equivocan, y su probabilidad máxima no indica por sí
 sola cuánto confiar en esa respuesta~\cite{guo2017calibration}. Antes de pedirle a un modelo que redacte un
 reporte, entonces, hace falta decidir cuándo una predicción es lo bastante confiable para sostenerla y cuándo
-conviene abstenerse.
+conviene no emitirla.
