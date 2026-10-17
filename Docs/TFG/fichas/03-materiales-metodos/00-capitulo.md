@@ -213,8 +213,9 @@ Preguntas que cruzan varias secciones y decide el autor (el detalle está en cad
   decisión» no se puede escribir tal cual: se declara qué decisiones se tomaron así y por qué no invalidan el
   resultado.
 - **Protocolos mezclados.** DenseNet121 y ViT-B/16 (receta anterior) se evalúan con vista única y pesos por
-  clase; Swin y ConvNeXt, con TTA y sin pesos (fichas 3.5 y 3.9). Hay que declararlo o reevaluar los primeros
-  con TTA (`reeval_tta_probs.py`).
+  clase; Swin y ConvNeXt, con TTA y sin pesos (fichas 3.5 y 3.9). **Resuelto (2026-10-17):** los dos se
+  reentrenaron con la receta moderna (TOKO 99007–99012; `densenet_vit_moderna_resul_20261017.md`) y las corridas
+  anteriores quedan como antecedente.
 - **Comparaciones múltiples.** 21 pares de McNemar y 21 de Wilcoxon sin corrección (ficha 3.9).
 - **Evaluación en *HIBA*.** Las 1 616 imágenes o el test de `hiba_splits.json` (243) (fichas 3.3 y 3.9).
 - **Licencias.** *HAM10000* (CC BY-NC 4.0) para reproducir ejemplos por clase; *SkinCaRe* declara dos licencias
