@@ -4,6 +4,23 @@ Ayuda-memoria cronológico de experimentos enviados a cluster, ordenado de más 
 
 ---
 
+## 2026-10-17
+
+### DenseNet121 y ViT-B/16 moderna: descarga y análisis — **Sin jobs SLURM** (local)
+Resul: [densenet_vit_moderna_resul](resul/densenet_vit_moderna_resul_20261017.md) (cierra el plan del 12/10;
+veredicto **CUMPLE**). Descarga por `scp` de los 18 JSON de las 6 corridas y de los `.out` 99007–99012 (no
+`sync_down`, para no pisar `outputs/results/` local con copias remotas).
+
+- **Tests estadísticos:** `statistical_tests.py --models` con los ganadores `_les`, DenseNet121 t02 y ViT-B/16 t06
+  modernos (semilla 42), DermLIP ZS y VLM ZS → `outputs/results/statistical_tests_les_v2.json` (el `_les` anterior,
+  con los legacy, se conserva). Swin vs ViT p = 0.42; Swin vs DenseNet p = 0.021, ns con Holm.
+- **Informe:** `scripts/densenet_vit_moderna_report.py` (nuevo) → `outputs/results/densenet_vit_moderna_report.json`:
+  media ± sd en test y validación, receta anterior frente a moderna y Holm sobre las dos familias de 21 pares.
+  ViT-B/16 F1m 0.707 ± 0.025 (Swin 0.733 ± 0.026), DenseNet121 0.655 ± 0.017.
+- **Tabla SOTA:** `Docs/tabla_resultados_sota/tablas_comparativas_sota_v34.tex`.
+
+---
+
 ## 2026-10-12
 
 ### DenseNet121 y ViT-B/16 con la receta moderna (split por lesión) — TOKO jobs 99007–99012
@@ -17,7 +34,7 @@ python scripts/toko/submit_sweep.py --model densenet --lesion-split --class-weig
 python scripts/toko/submit_sweep.py --model vit      --lesion-split --class-weights none --trials t06 --seeds 42 43 44
 ```
 
-**Resul:** pendiente hasta que bajen los jobs.
+**Resul:** [densenet_vit_moderna_resul](resul/densenet_vit_moderna_resul_20261017.md). 6/6 OK el 14/10.
 
 ### Mini-VLM v3 (LoRA sobre el LLM) + Nivel 1 sobre las particiones de prueba — Mendieta jobs 1179985–1179991
 Plan: [mini_vlm_lora_llm_plan](ideas/mini_vlm_lora_llm_plan_20261012.md). El LoRA de `stage2_mini_vlm_v2` quedó
