@@ -78,7 +78,7 @@ superaban a los dos legacy con p < 0.001.
 ## 6. Clasificador de referencia de la cascada
 
 El plan pide revisar la elección (sin cambiarla automáticamente) si DenseNet o ViT alcanzan a los ganadores.
-ViT-B/16 la alcanza en test, no la supera. **Propuesta: mantener Swin-Tiny.**
+ViT-B/16 la alcanza en test, no la supera. **Decisión del autor (2026-10-17): se mantiene Swin-Tiny.**
 
 - Sigue teniendo el mejor F1 macro en validación (0.781 frente a 0.740), que es el criterio de selección.
 - ViT-B/16 tiene tres veces más parámetros (85.8 M frente a 27.5 M).
@@ -102,5 +102,5 @@ reabriría la selección sobre el test que la tesina evita.
 
 **CUMPLE.** Las 6 corridas están completas, y los cuatro supervisados se comparan con la misma receta, la misma
 partición y las mismas semillas. Resultado: ViT-B/16 queda empatado con Swin-Tiny y ConvNeXt-Tiny; DenseNet121
-queda por debajo en F1 macro y sensibilidad macro. Swin-Tiny se mantiene como clasificador de referencia,
-**pendiente de confirmación del autor** (§6).
+queda por debajo en F1 macro y sensibilidad macro. Swin-Tiny se mantiene como clasificador de referencia
+(confirmado por el autor el 2026-10-17, §6).
