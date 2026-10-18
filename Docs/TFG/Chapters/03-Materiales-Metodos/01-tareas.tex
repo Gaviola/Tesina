@@ -6,8 +6,8 @@
 \label{sec:met_tareas}
 
 La propuesta de la Sección~\ref{sec:estado_arte_posicion} encadena un clasificador, una recuperación de casos parecidos
-y un generador de reportes. Antes de describir cada componente, conviene fijar qué se le pide al sistema en su
-conjunto. A partir de la revisión realizada, la tarea del trabajo se define de la siguiente manera:
+y un generador de reportes. Antes de describir cada uno de esos componentes, conviene fijar qué se le pide al sistema
+en su conjunto. A partir de la revisión realizada, la tarea del trabajo se define de la siguiente manera:
 \begin{quote}
     \emph{a partir de una imagen dermatoscópica de una lesión de piel, se busca clasificarla en una de siete categorías
     diagnósticas, indicar si se trata de un melanoma y redactar un reporte que describa la lesión y afirme el
@@ -31,27 +31,28 @@ La definición reúne tres tareas, que se distinguen por lo que devuelven:
     devuelve un texto que describe la lesión y enuncia la impresión diagnóstica.
 \end{itemize}
 Las dos primeras responden la primera pregunta de investigación, sobre si un \gls{vlm} clasifica tan bien como un
-clasificador entrenado solo con imágenes, y la tercera responde la segunda, sobre si el reporte afirma el diagnóstico
-correcto (Sección~\ref{sec:intro_objetivos}).
+clasificador entrenado solo con imágenes, mientras que la tercera responde la segunda, sobre si el reporte afirma el
+diagnóstico correcto (Sección~\ref{sec:intro_objetivos}).
 
-El reporte de T3 se limita a dos de las partes de un reporte dermatológico: la descripción de lo que se ve y la
-impresión diagnóstica. Son las que los conjuntos de pares imagen--texto del área anotan junto a cada
-imagen~\cite{shen2025skincare}, y por lo tanto las que un modelo puede aprender de ellos. El diagnóstico diferencial
-completo y la recomendación de manejo quedan fuera del alcance, como también las imágenes de histopatología.
+Con respecto a T3, el reporte se limita a dos de las partes de un reporte dermatológico: la descripción de lo que se
+ve y la impresión diagnóstica. Son las que los conjuntos de pares imagen--texto del área anotan junto a cada
+imagen~\cite{shen2025skincare}, y por lo tanto las que un modelo puede aprender de ellos. En cambio, el diagnóstico
+diferencial completo y la recomendación de manejo quedan fuera del alcance, como también las imágenes de
+histopatología.
 
-La última condición de la definición, una sola GPU de consumo, rige todas las decisiones de modelado. No se
-preentrena ningún modelo: se parte de modelos preentrenados y los \glspl{vlm} se adaptan con \gls{lora}
-(Sección~\ref{sec:marco_llm_lora}), que entrena una fracción pequeña de sus parámetros~\cite{hu2021lora}. Los
-experimentos se ejecutaron en tres GPU: una RTX 4070 de 12~GB, en un equipo personal; una RTX 4080 de 16~GB, en el
-clúster TOKO de la Universidad Nacional de Cuyo, donde se entrenaron los clasificadores; y una A30 de 24~GB, en el
-clúster Mendieta de la Universidad Nacional de Córdoba, donde se ajustaron los \glspl{vlm} y se generaron los
-reportes. Todos los entrenamientos fijan la semilla 42, salvo cuando se indica otra, y el Apéndice~\ref{ap:reproducibilidad}
-reúne lo necesario para repetir cada experimento.
+La última condición de la definición, una sola GPU de consumo, rige todas las decisiones de modelado. Por ello, no se preentrena ningún modelo.
+Se parte de modelos preentrenados y los \glspl{vlm} se adaptan con \gls{lora}
+(Sección~\ref{sec:marco_llm_lora}), que entrena una fracción pequeña de sus parámetros~\cite{hu2021lora}. En cuanto
+al hardware, los experimentos se ejecutaron en tres GPU: una RTX 4070 de 12~GB, en un equipo personal; una RTX 4080 de
+16~GB, en el clúster TOKO de la Universidad Nacional de Cuyo, donde se entrenaron los clasificadores; y una A30 de
+24~GB, en el clúster Mendieta de la Universidad Nacional de Córdoba, donde se ajustaron los \glspl{vlm} y se generaron
+los reportes. Además, todos los entrenamientos fijan la semilla 42, salvo cuando se indica otra, y el
+Apéndice~\ref{ap:reproducibilidad} reúne lo necesario para repetir cada experimento.
 
 Con las tareas definidas, el trabajo sigue el flujo de la Figura~\ref{fig:met_flujo}. Primero se preparan los datos
 y una partición en la que ninguna lesión aparece a la vez en entrenamiento y en prueba, y se fijan los criterios con
 que se juzga cada modelo. Después se entrenan los clasificadores supervisados, que sirven de referencia, y se mide si
-los \glspl{vlm} clasifican igual de bien. Luego se ajustan los \glspl{vlm} para generar reportes. El
+los \glspl{vlm} clasifican igual de bien. A continuación se ajustan los \glspl{vlm} para generar reportes. El
 \emph{pipeline} cierra el recorrido: un clasificador fija el diagnóstico, el generador redacta el reporte y la
 concordancia con los casos recuperados decide si el sistema afirma, ofrece un diagnóstico diferencial o deriva el
 caso. Que el diagnóstico lo fije un clasificador, y no el propio generador, responde a un resultado: los \glspl{vlm}

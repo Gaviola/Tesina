@@ -10,48 +10,49 @@
 \label{sec:met_complementarios}
 
 La prueba de \emph{HAM10000} mide el desempeño en las mismas condiciones en que se entrenaron los modelos: la misma
-población, el mismo equipo de captura y la misma forma de etiquetar. El tercer objetivo específico pide ir más allá y
-evaluar el sistema en escenarios en que esas condiciones cambian (Sección~\ref{sec:marco_generalizacion}). Cada
-análisis de esta sección responde una pregunta distinta. Casi todos se aplican a los clasificadores, que son los que
-fijan el diagnóstico del \emph{pipeline}; el último incluye también a los generadores. Salvo que se indique otra cosa, se usan los modelos elegidos en la
+población, el mismo equipo de captura y la misma forma de etiquetar. Sin embargo, el tercer objetivo específico pide ir
+más allá y evaluar el sistema en escenarios en que esas condiciones cambian (Sección~\ref{sec:marco_generalizacion}).
+Cada análisis de esta sección responde una pregunta distinta. Casi todos se aplican a los
+clasificadores, que son los que fijan el diagnóstico del \emph{pipeline}. El último, en cambio, incluye también a los
+generadores. Además, salvo que se indique otra cosa, se usan los modelos elegidos en la
 Sección~\ref{sec:met_supervisados} con la semilla 42.
 
 La primera pregunta es si el desempeño se sostiene en otra población. Para responderla se evalúan Swin-Tiny y
 ConvNeXt-Tiny sobre las 1\,616 imágenes de \emph{HIBA} (Sección~\ref{sec:met_datasets}), sin ningún ajuste, y se
 compara cada uno con su resultado en la prueba de \emph{HAM10000}. Como \emph{HIBA} mezcla imágenes dermatoscópicas y
-clínicas, el resultado también se separa por modalidad. Parte de la diferencia puede deberse al mapeo de diagnósticos,
-que lleva el carcinoma escamoso a AKIEC, y no al cambio de población; esa fuente de ruido no puede separarse y se
-declara.
+clínicas, el resultado también se separa por modalidad. Además, parte de la diferencia puede deberse al mapeo de diagnósticos,
+que lleva el carcinoma escamoso a AKIEC, y no al cambio de población. Esa fuente de ruido no puede separarse y por ello
+se declara.
 
-La segunda pregunta es qué ocurre si empeoran las condiciones de captura, sin cambiar de conjunto. A las 1\,503
-imágenes de prueba se les aplican cuatro perturbaciones, con cinco niveles de intensidad cada una: compresión JPEG
-(calidad de 70 a 5), ruido gaussiano (desvío de 8 a 64 sobre la escala de 0 a 255), desenfoque gaussiano (radio de 1 a
-6 píxeles) y reducción de la resolución (de 0.75 a 0.15 del tamaño original, y vuelta al tamaño original). Se mide la
-caída relativa de la sensibilidad macro frente a la imagen sin perturbar (Ecuación~\ref{eq:marco_robustez}), como en
-los bancos de prueba de corrupciones de imagen~\cite{hendrycks2019benchmarking}. Este
-análisis, como el de interpretabilidad, usa una sola vista de la imagen, sin \gls{tta}. Las perturbaciones sintéticas
-cubren solo una parte de la variación real entre equipos.
+La segunda pregunta es qué ocurre si empeoran las condiciones de captura, sin cambiar de conjunto. Con este
+propósito, a las 1\,503 imágenes de prueba se les aplican cuatro perturbaciones, con cinco niveles de intensidad cada
+una: compresión JPEG (calidad de 70 a 5), ruido gaussiano (desvío de 8 a 64 sobre la escala de 0 a 255), desenfoque gaussiano (radio de 1 a
+6 píxeles) y reducción de la resolución (de 0.75 a 0.15 del tamaño original, y vuelta al tamaño original). En cada caso
+se mide la caída relativa de la sensibilidad macro frente a la imagen sin perturbar
+(Ecuación~\ref{eq:marco_robustez}), como en los bancos de prueba de corrupciones de imagen~\cite{hendrycks2019benchmarking}.
+Asimismo, este análisis, como el de interpretabilidad, usa una sola vista de la imagen, sin \gls{tta}. Por otra parte,
+las perturbaciones sintéticas cubren solo una parte de la variación real entre equipos.
 
 La tercera pregunta es cuánto se puede confiar en la probabilidad que da el modelo, que fija el umbral de melanoma y
-que un clínico leería como certeza. Se miden el ECE y el Brier (Sección~\ref{sec:marco_eval_calib}) sin calibrar y con
-dos ajustes posteriores, \emph{temperature scaling} y \emph{vector scaling}, que se ajustan en validación y se evalúan en
-la prueba. El primero divide todas las salidas por un mismo valor y no cambia la clase predicha; el segundo aplica un
-factor y un sesgo por clase, y puede cambiarla. Como el modelo guarda las probabilidades promediadas con \gls{tta} y
-no sus salidas previas a la softmax, ambos ajustes se aplican sobre el logaritmo de esas probabilidades, una
-aproximación que se declara. Como los pesos por clase alteran la confianza del modelo, se comparan
-dos versiones de la misma configuración, entrenadas con y sin ellos.
+que un clínico leería como certeza. Para ello, se miden el ECE y el Brier (Sección~\ref{sec:marco_eval_calib}) sin
+calibrar y con dos ajustes posteriores, \emph{temperature scaling} y \emph{vector scaling}, que se ajustan en validación
+y se evalúan en la prueba. El primero divide todas las salidas por un mismo valor y no cambia la clase predicha. En
+cambio, el segundo aplica un factor y un sesgo por clase, y puede cambiarla. Como el modelo guarda las probabilidades
+promediadas con \gls{tta} y no sus salidas previas a la softmax, ambos ajustes se aplican sobre el logaritmo de esas
+probabilidades, una aproximación que se declara. Además, dado que los pesos por clase alteran la confianza del modelo,
+se comparan dos versiones de la misma configuración, entrenadas con y sin ellos.
 
 La cuarta pregunta es en qué parte de la imagen se apoya el modelo. Se aplica Grad-CAM
 (Sección~\ref{sec:marco_eval_gradcam}) a Swin-Tiny, sobre la última etapa de la red y para la clase predicha, en siete
-imágenes de prueba, una por clase. Es una inspección cualitativa: muestra si la activación cae sobre la lesión, pero no
-mide el acierto ni prueba un razonamiento clínico.
+imágenes de prueba, una por clase. Es una inspección cualitativa, que muestra si la activación cae sobre la lesión, pero
+no mide el acierto ni prueba un razonamiento clínico.
 
 La última pregunta es qué cuesta usar el sistema. Para los clasificadores se miden el número de parámetros, el tiempo
 de inferencia de una imagen y las imágenes procesadas por segundo en lotes de 32, sobre la RTX 4070. Para los
-generadores se toma el tiempo por reporte de las ejecuciones en la A30, que comparten instrucción, decodificación y
-límite de tokens, de modo que la diferencia refleja el modelo y la longitud de lo que escribe. No es una medición
-controlada, sino una estimación del orden de magnitud, que permite contrastar el sistema con el cómputo que usa la
-literatura (Tabla~\ref{tab:marco_brechas}).
+generadores, en cambio, se toma el tiempo por reporte de las ejecuciones en la A30, que comparten instrucción,
+decodificación y límite de tokens, de modo que la diferencia refleja el modelo y la longitud de lo que escribe. Sin
+embargo, no es una medición controlada, sino una estimación del orden de magnitud, que permite contrastar el sistema
+con el cómputo que usa la literatura (Tabla~\ref{tab:marco_brechas}).
 
 Con estos análisis queda completo el protocolo. Los resultados de clasificación, incluidos los de esta sección que
 se refieren a los clasificadores, se presentan en el Capítulo~\ref{cp:res_clasif}; los de generación y del

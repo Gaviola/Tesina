@@ -24,8 +24,9 @@ peso.
 
 La sensibilidad macro cumple esa condición: promedia la sensibilidad de las siete clases sin ponderarlas por su
 frecuencia (Sección~\ref{sec:marco_eval_clasif}), y por eso es el resultado principal de clasificación. La exactitud,
-en cambio, no la cumple. En la prueba, un clasificador trivial que responde siempre \gls{nv} alcanza una exactitud de
-0.669, pero una sensibilidad macro de 0.143 (1/7), porque acierta todas las NV y ninguna imagen de las otras seis clases.
+en cambio, no la cumple. Por ejemplo, en la prueba un clasificador trivial que responde siempre \gls{nv} alcanza una
+exactitud de 0.669, pero una sensibilidad macro de 0.143 (1/7), porque acierta todas las NV y ninguna imagen de las
+otras seis clases.
 
 La sensibilidad macro tiene, sin embargo, un punto ciego: no castiga los falsos positivos. Un modelo que asigna
 muchas imágenes a las clases minoritarias sube su sensibilidad en ellas a costa de equivocarse en las demás. El F1 macro
@@ -35,75 +36,79 @@ reporta junto a la sensibilidad macro. Cuando ambas divergen, la diferencia mues
 clase y dar falsas alarmas. El F1 ponderado, en cambio, pondera cada clase por su frecuencia y queda dominado por NV: para
 el clasificador trivial vale 0.537, frente a 0.115 del F1 macro.
 
-La elección de un modelo se hace en dos niveles. Dentro de cada entrenamiento, se guarda la época con mayor F1
-ponderado en validación. Con 14 imágenes de DF y 18 de VASC en ese conjunto (Tabla~\ref{tab:met_tamanos}), el F1 macro
+Con estas métricas definidas, la elección de un modelo se hace en dos niveles. En primer lugar, dentro de cada
+entrenamiento se guarda la época con mayor F1 ponderado en validación. Con 14 imágenes de DF y 18 de VASC en ese conjunto (Tabla~\ref{tab:met_tamanos}), el F1 macro
 cambia mucho de una época a otra por un par de aciertos, mientras que el F1 ponderado, dominado por las clases grandes,
-es más estable para decidir cuándo detener el entrenamiento. Entre configuraciones, en cambio, se elige la de mayor F1
-macro en validación, porque es la comparación en la que pesan las clases minoritarias. La prueba no interviene en
-ninguna de las dos elecciones.
+es más estable para decidir cuándo detener el entrenamiento. En segundo lugar, entre configuraciones se elige la de
+mayor F1 macro en validación, porque es la comparación en la que pesan las clases minoritarias. En ambos casos, la
+prueba no interviene en la elección.
 
-Las métricas de las clases minoritarias cambian bastante de una ejecución a otra, porque dependen de pocas imágenes.
-Por eso cada modelo elegido se entrena con tres semillas (42, 43 y 44), y su resultado se informa como media $\pm$
-desvío estándar muestral. Con tres semillas el desvío es una estimación gruesa, y las comparaciones entre modelos se
-completan con las pruebas estadísticas de la Sección~\ref{sec:met_estadistica}.
+Además, las métricas de las clases minoritarias cambian bastante de una ejecución a otra, porque dependen de pocas
+imágenes. Por eso cada modelo elegido se entrena con tres semillas (42, 43 y 44), y su resultado se informa como media
+$\pm$ desvío estándar muestral. Sin embargo, con tres semillas el desvío es una estimación gruesa, por lo que las
+comparaciones entre modelos se completan con las pruebas estadísticas de la Sección~\ref{sec:met_estadistica}.
 
-Las configuraciones y los umbrales se eligen en validación, y la prueba se usa solo para informar resultados. Tres
+Como principio general, las configuraciones y los umbrales se eligen en validación, y la prueba se usa solo para
+informar resultados. Tres
 decisiones de diseño, sin embargo, no son del todo ajenas a la prueba. El F1 macro como criterio de selección y la
 concordancia entre predictores como señal del ruteo (Sección~\ref{sec:met_ruteo}) se adoptaron con resultados de prueba
 ya conocidos, y la instrucción con que el generador recibe el diagnóstico (Sección~\ref{sec:met_cascada}) se eligió en un
 piloto que incluía 17 imágenes de prueba. Ninguna elige un modelo ni fija un umbral sobre la prueba, y el cambio de
-criterio no mejoró las cifras de prueba de los modelos elegidos; se declaran para que los resultados se lean con ese
-antecedente.
+criterio no mejoró las cifras de prueba de los modelos elegidos. Aun así, se declaran para que los resultados se lean
+con ese antecedente.
 
-La detección de melanoma (T2) necesita un criterio propio. Si se toma como melanoma la clase de mayor probabilidad de
+Además de la clasificación, la detección de melanoma (T2) necesita un criterio propio. Si se toma como melanoma la clase de mayor probabilidad de
 la clasificación, el costo de perder un melanoma no interviene en la decisión. En su lugar, el umbral sobre la
 probabilidad de melanoma se fija en validación como el que da la mayor sensibilidad entre los que mantienen una
-especificidad de al menos 0.85, y se aplica sin cambios a la prueba. Es una decisión de diseño que traduce el costo
-asimétrico: se prioriza no perder melanomas, pero con un tope a las falsas alarmas, de modo que en validación a lo sumo
-el 15\,\% de los casos sin melanoma se señale como sospechoso sin serlo. El \gls{auc} (Ecuación~\ref{eq:marco_auc}) no depende del umbral y
-se informa como resumen de la capacidad de discriminar, sin intervenir en la elección.
+especificidad de al menos 0.85, y se aplica sin cambios a la prueba. Esta decisión de diseño traduce el costo
+asimétrico. Así, se prioriza no perder melanomas, pero con un tope a las falsas alarmas, de modo que en validación a lo
+sumo el 15\,\% de los casos sin melanoma se señale como sospechoso sin serlo. Por otra parte, el \gls{auc}
+(Ecuación~\ref{eq:marco_auc}) no depende del umbral y se informa como resumen de la capacidad de discriminar, sin
+intervenir en la elección.
 
 \subsection{Líneas base}
 \label{sec:met_lineas_base}
 
-Un resultado aislado no dice si un modelo es bueno: hace falta compararlo con algo. Una línea base es un procedimiento
+Un resultado aislado de estas métricas no dice si un modelo es bueno, por lo que hace falta compararlo con algo. Una
+línea base es un procedimiento
 más simple que se aplica al mismo conjunto de prueba, y fija el nivel que un modelo debe superar para que su
 complejidad se justifique. Una cota superior, en el otro extremo, es el mejor resultado alcanzable en condiciones
 ideales, y muestra cuánto margen queda.
 
-Para la clasificación hay tres niveles de referencia. El azar fija el piso de cualquier clasificador de siete clases,
-una sensibilidad macro de 1/7. El clasificador trivial que responde siempre NV muestra lo que se obtiene del desbalance
-sin mirar la imagen. Los clasificadores supervisados de la Sección~\ref{sec:met_supervisados} son la referencia de los
-\glspl{vlm}: la primera pregunta de investigación se responde comparando a estos con aquellos. El \emph{pipeline} tiene
-sus propias referencias, una cota superior que recibe el diagnóstico verdadero y una línea base que no genera texto, y
+Para la clasificación hay tres niveles de referencia. En primer lugar, el azar fija el piso de cualquier clasificador de
+siete clases, una sensibilidad macro de 1/7. En segundo lugar, el clasificador trivial que responde siempre NV muestra lo
+que se obtiene del desbalance sin mirar la imagen. Finalmente, los clasificadores supervisados de la
+Sección~\ref{sec:met_supervisados} son la referencia de los \glspl{vlm}: la primera pregunta de investigación se
+responde comparando a estos con aquellos. Por otra parte, el \emph{pipeline} tiene sus propias referencias, una cota
+superior que recibe el diagnóstico verdadero y una línea base que no genera texto, y
 se definen en la Sección~\ref{sec:met_pipeline}, porque necesitan la cascada y el ruteo que allí se presentan.
 
 \subsection{Evaluación de la generación}
 \label{sec:met_eval_generacion}
 
-El texto generado se evalúa en dos niveles, según haya o no un texto de referencia. El Nivel~1 compara el reporte
-con una referencia mediante BLEU-4, ROUGE-L, METEOR, CIDEr y BERTScore (Sección~\ref{sec:marco_eval_texto}). Solo se
-aplica a \emph{MM-Skin} y a \emph{SkinCoT}, los conjuntos con texto de referencia, y no decide ninguna elección. Esas
-referencias no son diagnósticos clínicos de la lesión, y quién las escribió condiciona lo que mide la comparación,
-como muestra la Tabla~\ref{tab:met_conjuntos}.
+A diferencia de la clasificación, el texto generado se evalúa en dos niveles, según haya o no un texto de referencia. El
+Nivel~1 compara el reporte con una referencia mediante BLEU-4, ROUGE-L, METEOR, CIDEr y BERTScore
+(Sección~\ref{sec:marco_eval_texto}). Solo se aplica a \emph{MM-Skin} y a \emph{SkinCoT}, los conjuntos con texto de
+referencia, y no decide ninguna elección. Por otra parte, esas referencias no son diagnósticos clínicos de la lesión, y quién
+las escribió condiciona lo que mide la comparación, como muestra la Tabla~\ref{tab:met_conjuntos}.
 
-El Nivel~2 no necesita referencia y se aplica a la prueba de \emph{HAM10000}. La cobertura de entidades clínicas
-(\emph{clinical entity recall}) cuenta cuántos términos clínicos relevantes aparecen en el texto, así que mide riqueza y
-no pertinencia. La consistencia diagnóstica (\emph{diagnostic consistency}) comprueba si el reporte nombra el
-diagnóstico verdadero o un sinónimo. Es la métrica principal de generación, porque responde directamente la segunda
-pregunta de investigación: si el reporte afirma el diagnóstico correcto.
+El Nivel~2, en cambio, no necesita referencia y se aplica a la prueba de \emph{HAM10000}. La cobertura de entidades
+clínicas (\emph{clinical entity recall}) cuenta cuántos términos clínicos relevantes aparecen en el texto, así que mide
+riqueza y no pertinencia. Por su parte, la consistencia diagnóstica (\emph{diagnostic consistency}) comprueba si el
+reporte nombra el diagnóstico verdadero o un sinónimo. Es la métrica principal de generación, porque responde
+directamente la segunda pregunta de investigación: si el reporte afirma el diagnóstico correcto.
 
-La consistencia diagnóstica se calcula solo sobre el reporte: los bloques de razonamiento que el generador escribe
-entre etiquetas \texttt{\textless{}think\textgreater{}} se descartan, porque el clínico lee el reporte y no el
+La consistencia diagnóstica se calcula solo sobre el reporte. Para ello, los bloques de razonamiento que el generador
+escribe entre etiquetas \texttt{\textless{}think\textgreater{}} se descartan, porque el clínico lee el reporte y no el
 razonamiento. Además, el diagnóstico se reconoce con una búsqueda estricta, por palabra completa, de los términos
-distintivos de cada clase. Una búsqueda por fragmentos acreditaría diagnósticos que el texto no nombra, como «mel»
+distintivos de cada clase. Una búsqueda por fragmentos, en cambio, acreditaría diagnósticos que el texto no nombra, como «mel»
 dentro de «melanocytic» o «keratosis» dentro de «actinic keratosis».
 
-La consistencia diagnóstica mide fidelidad diagnóstica, no validez clínica. Comprueba que el diagnóstico verdadero
+La consistencia diagnóstica mide fidelidad diagnóstica, no validez clínica. Es decir, comprueba que el diagnóstico verdadero
 aparece en el texto, pero no que la descripción morfológica sea correcta, que no haya afirmaciones falsas junto al
-diagnóstico ni que el texto sea útil o seguro. Por eso ningún resultado se presenta como evidencia de validez clínica;
-la Sección~\ref{sec:marco_rep_fallas} describe el riesgo de alucinación que motiva esa cautela. La
-Tabla~\ref{tab:met_roles} resume el papel de cada métrica en el trabajo.
+diagnóstico ni que el texto sea útil o seguro. Por eso ningún resultado se presenta
+como evidencia de validez clínica. La Sección~\ref{sec:marco_rep_fallas} describe el riesgo de alucinación que motiva
+esa cautela. Finalmente, la Tabla~\ref{tab:met_roles} resume el papel de cada métrica en el trabajo.
 
 \begin{table}[H]
     \caption{Papel de cada métrica en el trabajo: qué decide, qué se presenta como resultado principal y qué solo se informa.}
@@ -139,21 +144,21 @@ Tabla~\ref{tab:met_roles} resume el papel de cada métrica en el trabajo.
 \subsection{Comparación estadística}
 \label{sec:met_estadistica}
 
-Que un modelo tenga una métrica más alta que otro en la prueba no alcanza para afirmar que es mejor: con otra muestra
-de imágenes, el orden podría invertirse. Cada comparación usa la prueba que corresponde a lo que se pregunta
-(Sección~\ref{sec:marco_eval_estadistica}), y la Tabla~\ref{tab:met_pruebas} las resume. Para saber cuánto varía una
-métrica por la composición de la prueba, o si la diferencia entre dos modelos la excede, se usa un \emph{bootstrap}
-sobre las imágenes, pareado cuando se comparan dos modelos. Para saber si un modelo acierta imágenes en las que el otro
-falla, se usa la prueba de McNemar en su versión exacta, sobre los casos en que los dos modelos discrepan.
+Una vez calculadas las métricas, que un modelo tenga una métrica más alta que otro en la prueba no alcanza para afirmar que es
+mejor, ya que con otra muestra de imágenes el orden podría invertirse. Por ello, cada comparación usa la prueba que
+corresponde a lo que se pregunta (Sección~\ref{sec:marco_eval_estadistica}), y la Tabla~\ref{tab:met_pruebas} las
+resume. Para saber cuánto varía una métrica por la composición de la prueba, o si la diferencia entre dos modelos la
+excede, se usa un \emph{bootstrap} sobre las imágenes, pareado cuando se comparan dos modelos. Para
+saber si un modelo acierta imágenes en las que el otro falla, se usa la prueba de McNemar en su versión exacta, sobre los casos en que los dos modelos discrepan.
 
 Como se comparan siete clasificadores (los cuatro supervisados, DermLIP sin ajuste y los dos \glspl{vlm}
 generativos sin ajuste, Sección~\ref{sec:met_clasif_vlm}), que forman 21 pares, los valores p de McNemar se corrigen con el método de Holm
 (Ecuación~\ref{eq:marco_holm}), que controla la probabilidad de declarar al menos una diferencia falsa entre todas. En
-el \emph{bootstrap}, una diferencia se considera real si su intervalo de confianza del 95\,\% no contiene el cero. La
-sensibilidad de cada clase se compara de forma descriptiva, contando en cuántas de las siete clases mejora cada modelo:
-con siete valores, ninguna prueba de rangos podría alcanzar el umbral que Holm exige para 21 comparaciones. Las pruebas
-se calculan sobre la ejecución con semilla 42, y la variación entre semillas se informa como desvío. El
-\emph{bootstrap} remuestrea imágenes y no lesiones, así que trata como independientes las imágenes de una misma
+el \emph{bootstrap}, por su parte, una diferencia se considera real si su intervalo de confianza del 95\,\% no contiene
+el cero. La sensibilidad de cada clase, en cambio, se compara de forma descriptiva, contando en cuántas de las siete
+clases mejora cada modelo, porque con siete valores ninguna prueba de rangos podría alcanzar el umbral que Holm exige
+para 21 comparaciones. Las pruebas se calculan sobre la ejecución con semilla 42, y la variación entre semillas se
+informa como desvío. Además, el \emph{bootstrap} remuestrea imágenes y no lesiones, así que trata como independientes las imágenes de una misma
 lesión; en la prueba hay 1\,503 imágenes de 1\,429 lesiones, y remuestrear por lesión casi no cambia los intervalos.
 
 \begingroup
