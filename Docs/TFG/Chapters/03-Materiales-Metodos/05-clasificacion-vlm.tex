@@ -2,14 +2,16 @@
 % Fuentes: ficha fichas/03-materiales-metodos/06-clasificacion-vlm.md; config.json de Phi-3.5-vision-instruct;
 % src/models/mini_vlm.py, llava_med.py, dermlip.py; src/evaluation/vlm_scoring.py; scripts/train_vlm_classify.py,
 % embeddings_classical.py, dermlip_split_eval.py; docs/resul/split_lesion_resul_20260926.md (§2, §6, §8).
+% Revisión del autor del 18/10/2026: los modelos se nombran al final de la introducción; transición a DermLIP.
 \section{Clasificación con modelos visión--lenguaje}
 \label{sec:met_clasif_vlm}
 
-Los clasificadores supervisados de la Sección~\ref{sec:met_supervisados} devuelven una distribución sobre las siete
-clases y no generan texto. Esa diferencia abre la primera pregunta de investigación, PI1 (Sección~\ref{sec:met_tareas}):
-si un \gls{vlm} clasifica igual de bien. Para responderla se usan dos familias de \glspl{vlm}. Las generativas, Mini-VLM
-y LLaVA-Med, devuelven texto, así que hay que decidir cómo se convierte ese texto en una clase. La contrastiva, DermLIP,
-no genera texto y se usa con cabezas de clasificación sobre su representación.
+La primera pregunta de investigación es si un \gls{vlm} clasifica las lesiones tan bien como los clasificadores de
+la sección anterior. Para responderla se usan dos tipos de \glspl{vlm} (Sección~\ref{sec:marco_vlm}). Los generativos
+responden con texto, así que hay que decidir cómo se convierte una respuesta escrita en una de las siete clases. Los
+contrastivos no generan texto, sino una representación de la imagen, sobre la que se puede clasificar directamente.
+Se evalúan dos generativos de propósito general, uno entrenado con datos generales y otro con datos biomédicos, y un
+contrastivo especializado en dermatología. Los generativos son Mini-VLM y LLaVA-Med.
 
 \subsection{Mini-VLM y LLaVA-Med}
 \label{sec:met_vlm_generativos}
@@ -24,7 +26,8 @@ el de propósito general. Usa el mismo tipo de codificador, \gls{clip} ViT-L/14,
 Mistral-7B, y se entrenó con figuras y leyendas de la literatura biomédica. Con un modelo de lenguaje de unos 7 mil
 millones de parámetros, es el más pesado de los dos. La comparación pone frente a frente un modelo entrenado con datos biomédicos y otro de propósito general.
 
-Ninguno de los dos devuelve siempre una etiqueta, así que hace falta fijar cómo se obtiene una clase con cada uno.
+Ninguno de los dos devuelve siempre una etiqueta válida cuando se le pide un diagnóstico, así que hace falta fijar
+cómo se obtiene una clase con cada uno.
 
 \subsection{Cuatro estrategias para obtener una clase}
 \label{sec:met_vlm_estrategias}
@@ -75,12 +78,12 @@ capítulos de resultados.
 \subsection{DermLIP y sus modos de uso}
 \label{sec:met_dermlip}
 
-Los modelos anteriores generan texto. DermLIP~\cite{yan2025derm1miccv} es otro tipo de modelo: un \gls{vlm} contrastivo
-al estilo de \gls{clip}, con codificadores de imagen y de texto; el de imagen es un \gls{vit} de la variante ViT-B/16.
-Se preentrenó sobre \emph{Derm1M}, un conjunto de 1\,029\,761 pares imagen--texto dermatológicos
-(Sección~\ref{sec:met_datasets}). No genera texto: produce un
-\emph{embedding} de 512 dimensiones por imagen. Se incluye para separar la especialización de dominio de la modalidad
-generativa.
+Con Mini-VLM y LLaVA-Med, la clase sale siempre de un texto, sea leyéndolo o puntuándolo. DermLIP~\cite{yan2025derm1miccv}
+evita ese paso: es un \gls{vlm} contrastivo al estilo de \gls{clip}, con un codificador de imagen ViT-B/16 y uno de
+texto, preentrenado sobre los pares dermatológicos de \emph{Derm1M} (Sección~\ref{sec:met_datasets}). No genera texto,
+sino un \emph{embedding} de 512 dimensiones por imagen. Se incluye porque permite distinguir dos explicaciones de un mal
+resultado de los \glspl{vlm} generales: que les falte especialización en dermatología, o que generar texto sea una mala
+forma de clasificar.
 
 El \emph{embedding} de cada imagen, congelado y normalizado, se usa de cuatro maneras:
 \begin{enumerate}[leftmargin=1.6em]
@@ -103,8 +106,9 @@ Para separar ambos efectos, cabezas clásicas equivalentes (SVM con núcleo RBF 
 \emph{ImageNet}~\cite{liu2021swin}, sin ajuste sobre \emph{HAM10000}. Si la diferencia entre las dos representaciones
 es la misma con cada cabeza, el efecto es de la representación.
 
-Las cabezas y el control se ajustan sobre la partición disjunta por lesión: se descartan del entrenamiento y la
-validación las 776 imágenes de lesiones que aparecen en el test, y quedan 6\,447 imágenes para entrenar y 1\,289 para
-validar, frente a 1\,503 de test, sin lesiones compartidas. La zero-shot de DermLIP no depende de esta partición, porque
-nunca vio \emph{HAM10000}. Los VLM generativos tampoco se ajustaron sobre \emph{HAM10000}: su checkpoint se entrenó con
-\emph{SkinCaRe} (Sección~\ref{sec:met_generacion}), y ese mismo checkpoint es el que aquí se evalúa como clasificador.
+Las cabezas y el control se ajustan sobre el entrenamiento de la partición por lesión
+(Sección~\ref{sec:met_particiones}). El modo \emph{zero-shot} de DermLIP no depende de la partición, porque no se ajusta
+con \emph{HAM10000}, y lo mismo vale para los \glspl{vlm} generativos, cuyo ajuste usa \emph{SkinCaRe}
+(Sección~\ref{sec:met_generacion}). Todos se evalúan, entonces, sobre la misma prueba que los clasificadores
+supervisados. Los \glspl{vlm} generativos, además de clasificar, pueden redactar, y esa es la tarea de la sección
+siguiente.

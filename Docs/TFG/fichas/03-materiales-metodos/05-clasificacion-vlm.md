@@ -1,5 +1,7 @@
 # Ficha 3.6 — Clasificación con modelos visión–lenguaje
 
+**Revisión del autor (18/10/2026), ya aplicada en el `.tex`:** Ahora es 3.5. Los modelos se nombran al final de la introducción, después de presentar los dos tipos de VLM; transición nueva a DermLIP (por qué se incluye); el último párrafo ya no repite los tamaños de la partición.
+
 **Estado: aprobada por el autor como punto de partida (11/10/2026); prosa redactada en primera versión.** Archivo: `Chapters/03-Materiales-Metodos/06-clasificacion-vlm.tex`. Labels: `sec:met_clasif_vlm` (fijo). Propuestos: `sec:met_vlm_generativos`, `sec:met_vlm_estrategias`, `sec:met_dermlip`, `eq:met_likelihood`, `fig:met_zsvslik`.
 
 ## Hilo conductor
