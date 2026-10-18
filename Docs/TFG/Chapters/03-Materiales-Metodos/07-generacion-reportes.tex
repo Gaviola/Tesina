@@ -58,8 +58,6 @@ módulos corregidos y el resto de la configuración sin cambios.
 Con esa configuración, LLaVA-Med entrena 33\,554\,432 parámetros, 27\,262\,976 en el modelo de lenguaje y 6\,291\,456
 en el codificador visual, y Mini-VLM entrena 31\,457\,280, 25\,165\,824 y 6\,291\,456 respectivamente. En la segunda
 etapa el proyector queda congelado.
-\pendiente{confirmar con el log del job 1179985 el número de parámetros entrenables de Mini-VLM y, cuando terminen los
-jobs 1179986 a 1179990, pasar los resultados de Mini-VLM de los Caps.~4 y~5 a la versión reentrenada}
 
 El ajuste no usa \emph{HAM10000}, que trae una etiqueta diagnóstica por imagen y no un texto, así que no sirve como
 referencia para entrenar el generador~\cite{tschandl2018ham10000}. Su partición de prueba, de 1\,503 imágenes en la partición por lesión, se reserva
