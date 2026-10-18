@@ -5,10 +5,9 @@ La red neuronal de la Sección~\ref{sec:marco_fundamentos} recibe su entrada com
 sin tener en cuenta dónde está ubicado. En una imagen, sin embargo, la ubicación es importante: los píxeles vecinos
 suelen pertenecer a un mismo borde o a una misma región, y un mismo patrón, como el borde de una lesión, puede
 aparecer en cualquier lugar. Las arquitecturas para clasificación de imágenes incorporan esta estructura de dos
-maneras, la convolución y la atención. Los cuatro clasificadores que evalúa el trabajo pertenecen a esas dos
-familias: DenseNet y ConvNeXt son redes convolucionales, y el \gls{vit} y el Swin Transformer se basan en la
-atención. La sección presenta estas arquitecturas comenzando con las redes convolucionales y siguiendo con la
-atención, el transformer y sus adaptaciones a imágenes.
+maneras, la convolución y la atención. La sección presenta primero las redes convolucionales, con DenseNet y
+ConvNeXt como representantes, y después la atención, el transformer y sus adaptaciones a imágenes, el \gls{vit} y
+el Swin Transformer.
 
 \subsection{Redes convolucionales}
 \label{sec:marco_cnn}
@@ -51,30 +50,23 @@ promedio de cada canal sobre todas las posiciones convierte los mapas en un vect
 cabeza de clasificación de la Sección~\ref{sec:marco_transferencia} lo convierte en los
 logits~\cite{he2015residual}.
 
-Agregar capas, sin embargo, no siempre mejora la red. A partir de cierta profundidad aparece la degradación
-(\emph{degradation}): el error aumenta al sumar capas. Por ejemplo, una red convolucional de 56 capas obtiene
-más error de entrenamiento que una de 20 sobre el mismo conjunto~\cite{he2015residual}. Como el error crece
-sobre los propios datos de entrenamiento, el problema no es el sobreajuste de la
-Sección~\ref{sec:marco_regularizacion}, sino la dificultad de optimizar la red. En principio, a la red de 56
-capas le bastaría con que sus 36 capas adicionales calcularan la identidad, es decir, devolvieran su entrada
-sin cambios, para igualar a la de 20. Sin embargo, al optimizador le resulta difícil aproximar la identidad con
-varias capas no lineales~\cite{he2015residual}.
+% Revisión del tutor (16/10/26): el detalle de la degradación queda comentado por si se retoma.
+% Agregar capas, sin embargo, no siempre mejora la red. A partir de cierta profundidad aparece la degradación
+% (\emph{degradation}): el error aumenta al sumar capas. Por ejemplo, una red convolucional de 56 capas obtiene
+% más error de entrenamiento que una de 20 sobre el mismo conjunto~\cite{he2015residual}. Como el error crece
+% sobre los propios datos de entrenamiento, el problema no es el sobreajuste de la
+% Sección~\ref{sec:marco_regularizacion}, sino la dificultad de optimizar la red. En principio, a la red de 56
+% capas le bastaría con que sus 36 capas adicionales calcularan la identidad, es decir, devolvieran su entrada
+% sin cambios, para igualar a la de 20. Sin embargo, al optimizador le resulta difícil aproximar la identidad con
+% varias capas no lineales~\cite{he2015residual}.
 
-ResNet resolvió esta dificultad con las \textbf{conexiones residuales} (\emph{residual connections}). Una
-conexión residual suma la entrada de un bloque de capas al resultado de esas capas, de modo que la entrada
-llega a la salida del bloque también por un camino que no la transforma. Así, el bloque ya no tiene que producir su salida completa, sino solo la
-corrección $F$ que hay que agregarle a la entrada,
-\begin{equation}
-    \mathbf{h}^{(l+1)} = \mathbf{h}^{(l)} + F\bigl(\mathbf{h}^{(l)}\bigr),
-    \label{eq:marco_residual}
-\end{equation}
-donde $\mathbf{h}^{(l)}$ es la entrada del bloque $l$. Si lo mejor para un bloque es no modificar su entrada, le
-basta con llevar los pesos de $F$ a cero, y su salida es igual a su entrada. De este modo, en el peor caso un
-bloque nuevo no cambia nada, y en el mejor aporta una corrección útil. Con esta modificación se pudieron entrenar redes de más de cien capas~\cite{he2015residual}, y la misma conexión
-reaparece en el transformer (Sección~\ref{sec:marco_atencion}).
+Agregar capas, sin embargo, no siempre mejora la red, porque a partir de cierta profundidad se vuelve difícil de
+optimizar. ResNet resolvió esta dificultad con las \textbf{conexiones residuales} (\emph{residual connections}),
+que suman la entrada de un bloque de capas a su salida, de modo que el bloque solo tiene que aprender la
+corrección que hay que agregarle a la entrada. Con ellas se pudieron entrenar redes de más de cien
+capas~\cite{he2015residual}.
 
-Las dos redes convolucionales que evalúa el trabajo parten de esta idea y la desarrollan en direcciones
-distintas. DenseNet conecta cada capa con todas las anteriores de su bloque: cada capa recibe, concatenados, los
+DenseNet y ConvNeXt parten de esta idea y la desarrollan en direcciones distintas. DenseNet conecta cada capa con todas las anteriores de su bloque: cada capa recibe, concatenados, los
 mapas de características de las capas previas, de modo que reutiliza los rasgos ya calculados y alcanza una
 exactitud comparable a la de una ResNet con menos parámetros~\cite{huang2018densely}. ConvNeXt, en cambio,
 conserva la estructura de una ResNet y actualiza su diseño con decisiones tomadas de los transformers que se
@@ -86,9 +78,11 @@ que su campo receptivo cubra a ambos.
 \subsection{Atención y arquitectura transformer}
 \label{sec:marco_atencion}
 
-La \textbf{atención} (\emph{attention}), en cambio, relaciona cualquier par de posiciones de la entrada en una
-sola capa, sin importar la distancia entre ellas. Se propuso en 2017 para la traducción de textos, como núcleo
-de una arquitectura llamada transformer~\cite{vaswani2017attention}, y hoy los modelos de lenguaje y buena
+El concepto de \textbf{atención} (\emph{attention}) surge en la traducción automática de textos, donde el
+significado de una palabra puede depender de otra ubicada muchas posiciones antes, y ofrece justamente lo que le
+falta a la convolución: relaciona cualquier par de posiciones de la entrada en una sola capa, sin importar la
+distancia entre ellas. En 2017 se convirtió en el núcleo de una arquitectura llamada
+transformer~\cite{vaswani2017attention}, y hoy los modelos de lenguaje y buena
 parte de los modelos de imagen se construyen sobre ella~\cite{dosovitskiy2021image}. Para aplicarla, la entrada
 se divide en una secuencia de elementos llamados \emph{tokens}. En un texto, cada token es una palabra o
 un fragmento de palabra, y en una imagen, un parche (\emph{patch}), es decir, un pequeño recuadro de píxeles.
@@ -129,13 +123,17 @@ entrenamiento~\cite{vaswani2017attention,dosovitskiy2021image}.
 
 Un transformer apila bloques iguales. Cada bloque aplica primero una capa de atención multicabezal, que combina
 información entre tokens, y después un perceptrón multicapa, que transforma cada token por
-separado. Las dos partes llevan una conexión residual como la de la Ecuación~\ref{eq:marco_residual} y una
+separado. Las dos partes llevan una conexión residual como la de ResNet (Sección~\ref{sec:marco_cnn}) y una
 normalización por capa (\emph{layer normalization}), que lleva los valores de cada token a una escala
-común~\cite{vaswani2017attention}. El transformer original combina dos pilas de bloques: un codificador
-(\emph{encoder}), que procesa la entrada completa y produce una representación de cada token que
-incorpora información de los demás, y un decodificador (\emph{decoder}), que genera la salida de a un
-token por vez y se presenta en la Sección~\ref{sec:marco_llm}. El codificador no depende de qué
-representen los tokens, de modo que también puede procesar una imagen si sus tokens son parches.
+común~\cite{vaswani2017attention}. El transformer original combina dos pilas de bloques
+(Figura~\ref{fig:marco_transformer}): un codificador (\emph{encoder}), que procesa la entrada completa y produce
+una representación de cada token que incorpora información de los demás, y un decodificador (\emph{decoder}), que
+genera la salida de a un token por vez y se presenta en la Sección~\ref{sec:marco_llm}. Cada bloque del
+decodificador agrega una segunda atención, cuyas claves y valores salen del codificador, de modo que cada token
+que genera puede consultar toda la entrada. El codificador no depende de qué representen los tokens, de modo que
+también puede procesar una imagen si sus tokens son parches.
+
+\input{Figures/Capitulos/02-Marco-Teorico/transformer}
 
 \subsection{Vision Transformer}
 \label{sec:marco_vit}
@@ -156,11 +154,11 @@ logits~\cite{dosovitskiy2021image}.
 
 \input{Figures/Capitulos/02-Marco-Teorico/vit-patches}
 
-Esta forma de procesar la imagen supone mucho menos sobre ella que una \gls{cnn}. Los supuestos sobre los datos
-que una arquitectura incorpora de antemano, antes de ver ningún ejemplo, se llaman \textbf{sesgo inductivo}
-(\emph{inductive bias}). En una \gls{cnn}, la localidad y la equivariancia a traslaciones, es decir, que un
-patrón desplazado produzca la misma respuesta desplazada, están presentes en cada capa. En el \gls{vit}, en
-cambio, solo el perceptrón de cada bloque es local, porque opera sobre cada token por separado, mientras
+Los supuestos sobre los datos que una arquitectura incorpora de antemano, antes de ver ningún ejemplo, se
+llaman \textbf{sesgo inductivo} (\emph{inductive bias}). Una \gls{cnn} incorpora dos en cada capa: la localidad,
+porque cada valor depende solo de una región pequeña de la imagen, y la equivariancia a traslaciones, es decir,
+que un patrón desplazado produzca la misma respuesta desplazada. En el \gls{vit}, en cambio, esos supuestos casi
+no están. Solo el perceptrón de cada bloque es local, porque opera sobre cada token por separado, mientras
 que la atención relaciona todos los parches desde la primera capa. Por lo tanto, las relaciones espaciales entre
 parches tienen que aprenderse de los datos, y el \gls{vit} necesita más ejemplos que una \gls{cnn}: preentrenado
 solo sobre \emph{ImageNet}, alcanza una exactitud algo menor que la de \glspl{cnn} de tamaño comparable, y
@@ -190,10 +188,10 @@ de modo que, con $M$ fijo, el segundo crece de forma lineal con el número de pa
 
 \input{Figures/Capitulos/02-Marco-Teorico/swin-ventanas}
 
-Las ventanas fijas, sin embargo, no intercambian información entre sí. Para que la información pase de una
-ventana a otra, los bloques alternan una partición regular en ventanas con otra desplazada en medio tamaño de
-ventana, cuyas ventanas abarcan parches de varias ventanas de la partición anterior
-(Figura~\ref{fig:marco_swin}). Para resolver el segundo problema, entre una etapa y la siguiente, una capa de
+Con una partición fija, sin embargo, cada parche solo se relaciona con los de su propia ventana, y la
+información nunca cruza sus bordes. Por eso los bloques alternan la partición regular con otra desplazada en
+$M/2$ parches en cada dirección, cuyos bordes caen en el medio de los anteriores: cada región nueva reúne parches
+que antes estaban separados (Figura~\ref{fig:marco_swin}). Para resolver el segundo problema, entre una etapa y la siguiente, una capa de
 fusión de parches (\emph{patch merging})
 combina cada grupo de $2 \times 2$ parches vecinos en uno solo, de modo que la resolución se reduce a la mitad
 y la cantidad de canales se duplica. El resultado es una pirámide de mapas de características como la de una
@@ -204,17 +202,18 @@ a su compatibilidad~\cite{liu2021swin}.
 Las arquitecturas presentadas en esta sección se diferencian, en definitiva, por cuánto suponen sobre la
 imagen. Las \glspl{cnn} incorporan la localidad y la jerarquía en su diseño; el \gls{vit} prescinde de esos
 supuestos y compensa su ausencia con más datos de preentrenamiento, y el Swin Transformer recupera la localidad
-y la jerarquía con una operación de atención. La diferencia entre familias, sin embargo, no reside solo en la
-operación de base: ConvNeXt, una red puramente convolucional con un diseño actualizado, alcanza en
-\emph{ImageNet} una exactitud igual o superior a la del Swin Transformer~\cite{liu2022convnet}. Por eso el
-trabajo evalúa representantes de ambas familias.
+y la jerarquía con una operación de atención. Con supuestos parecidos, la operación de base tampoco decide el
+desempeño: ConvNeXt, una red puramente convolucional con un diseño actualizado, alcanza en \emph{ImageNet} una
+exactitud igual o superior a la del Swin Transformer~\cite{liu2022convnet}. Ninguna de las dos familias se
+impone, por lo tanto, de antemano.
 
 Estos clasificadores cumplen, además, un papel de referencia. Una \textbf{línea base} (\emph{baseline}) es un
 modelo establecido contra el que se compara una propuesta nueva, porque un resultado aislado no permite juzgar
 el desempeño de un modelo hasta que se lo contrasta con lo que logra la referencia sobre los mismos datos. Las
 \glspl{cnn} y los transformers visuales entrenados con las etiquetas de la tarea son la línea base de los
 \glspl{vlm} (Sección~\ref{sec:marco_vlm}): son las arquitecturas consolidadas para clasificar imágenes, y un
-modelo de otra familia justifica su costo si iguala su desempeño o si aporta algo que ellas no ofrecen. Sin
-embargo, ninguno de estos clasificadores produce texto, ya que su salida es una probabilidad por clase. Para
-redactar un reporte hace falta un modelo capaz de generar secuencias de palabras, y los modelos de lenguaje
-actuales se construyen sobre el decodificador del transformer.
+modelo de otra familia justifica su costo si iguala su desempeño o si aporta algo que ellas no ofrecen, como un
+reporte. El transformer nació para traducir textos, pero el \gls{vit} y el Swin Transformer usan solo bloques de
+codificador y terminan, como las \glspl{cnn}, en una cabeza de clasificación: su salida es una probabilidad por
+clase, no una secuencia de palabras. Para redactar un reporte hace falta el decodificador, sobre el que se
+construyen los modelos de lenguaje actuales (Sección~\ref{sec:marco_llm}).

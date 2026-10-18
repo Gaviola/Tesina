@@ -1,0 +1,201 @@
+\section{Generación automática de reportes dermatológicos}
+\label{sec:marco_reportes}
+
+Que un texto pueda deshacer la salida elegida por la regla de decisión obliga a estudiar el reporte por sí
+mismo. Esta sección presenta primero qué se le exige a un reporte dermatológico y después cómo lo produce un
+\gls{vlm}, de qué maneras falla el texto generado y qué información adicional puede recibir el generador para
+fallar menos.
+
+\subsection{El reporte clínico dermatológico}
+\label{sec:marco_rep_tarea}
+
+Un reporte clínico dermatológico es el registro escrito del examen de una lesión. Lo redacta el médico que la
+examina, queda en la historia clínica y comunica lo observado a otros profesionales, por ejemplo al
+especialista que recibe una derivación. Tiene dos partes. La \textbf{descripción} enumera los hallazgos
+visibles, y la \textbf{impresión diagnóstica} los resume en una categoría o, si hay duda, en los diferenciales
+de la Sección~\ref{sec:marco_tres_salidas}. La descripción usa un vocabulario estandarizado por consenso, con
+términos para el color, el patrón, la distribución y las estructuras de la lesión~\cite{kittler2016standardization},
+y algunos de esos términos tienen peso diagnóstico propio. En la lista de 7 puntos, por ejemplo, la red de
+pigmento atípica, el velo azul-blanquecino y el patrón vascular atípico son los criterios mayores, los que más
+suman a favor de un melanoma~\cite{argenziano1998checklist}.
+
+La generación automática de reportes tiene una historia corta. Su antecedente es la descripción automática de
+imágenes (\emph{image captioning}), que produce una oración sobre una imagen natural. El reporte médico es más
+largo, sigue una estructura y usa un vocabulario técnico. Su generación con redes neuronales se desarrolló
+primero en radiología, desde 2018, con modelos que predicen etiquetas de hallazgos y redactan el reporte
+oración por oración, y con arquitecturas que recuerdan patrones de redacción entre reportes
+parecidos~\cite{jing2018automatic,chen2020generating}. Con los \glspl{vlm} generativos de la
+Sección~\ref{sec:marco_vlm_generativos}, la tarea pasó a resolverse con un único modelo que recibe la imagen y
+una instrucción~\cite{hartsock2024vision}.
+
+En todos los casos, el entrenamiento requiere pares de imagen y texto clínico, y esos mismos textos sirven
+después de referencia para comparar los reportes generados. En dermatología, estos pares son escasos y
+recientes, y su texto tiene orígenes distintos: según el conjunto, lo redactaron dermatólogos, se tomó de libros
+de la especialidad o lo generó un modelo y lo revisaron especialistas~\cite{shen2025skincare,zeng2025mmskin,yan2025derm1miccv}.
+Ese origen condiciona lo que mide la comparación, porque un texto generado por un modelo, aun revisado, no es el
+reporte que un dermatólogo habría escrito al examinar la lesión.
+
+\subsection{Calidad descriptiva y fidelidad diagnóstica}
+\label{sec:marco_rep_ejes}
+
+Cada parte del reporte da lugar a un requisito para el texto generado. El primero es describir lo que se ve.
+La \textbf{calidad descriptiva} es la correspondencia entre lo que el texto describe y lo que la imagen
+muestra, y el vocabulario estandarizado permite medirla, porque fija los términos con que una descripción
+nombra cada hallazgo (Sección~\ref{sec:marco_eval_texto}).
+
+El segundo requisito es nombrar el diagnóstico correcto. La \textbf{fidelidad diagnóstica} es la coincidencia
+entre el diagnóstico que nombra el texto y el real, y es independiente de la calidad descriptiva. Un texto
+puede describir correctamente una red de pigmento atípica y cerrar en un nevo cuando la lesión es un melanoma,
+y otro puede nombrar el melanoma correcto apoyándose en un velo azul-blanquecino que la imagen no tiene. Un
+reporte es correcto solo si cumple las dos condiciones (Figura~\ref{fig:intro_dos_tareas}).
+
+\input{Figures/Capitulos/02-Marco-Teorico/planteo-problema}
+
+El tercer requisito viene de la Sección~\ref{sec:marco_incertidumbre}: la certeza del texto tiene que
+corresponder a la salida que eligió la regla de decisión. Si la regla afirma un diagnóstico, el reporte lo
+sostiene; si ofrece diferenciales, el reporte enuncia los candidatos sin inclinarse por uno que la evidencia no
+respalda; y si deriva el caso, el sistema no entrega un diagnóstico. Los tres requisitos dependen de cómo se
+produce el texto.
+
+\subsection{Estrategias de generación}
+\label{sec:marco_rep_generacion}
+
+Hay dos estrategias para generar un reporte con un \gls{vlm}. En la generación \textbf{de extremo a extremo},
+el modelo recibe la imagen $x$ y una instrucción, y produce el texto completo, $y \sim p_\theta(\cdot \mid x)$. Describe la lesión e infiere el diagnóstico a partir de lo que
+ve, de modo que un solo modelo tiene que ser a la vez un buen clasificador y un buen redactor.
+
+\input{Figures/Capitulos/02-Marco-Teorico/generacion-reportes}
+
+En la generación \textbf{condicionada en evidencia externa}, que la Figura~\ref{fig:marco_generacion_reportes}
+compara con la anterior, otro componente aporta información que se agrega al prompt del generador,
+\begin{equation}
+    y \sim p_\theta\bigl(\,\cdot \mid x,\ c(x)\bigr),
+    \label{eq:marco_rep_condicionada}
+\end{equation}
+donde $c(x)$ es esa evidencia escrita como texto. Puede ser el diagnóstico que predice un clasificador, los
+diagnósticos de casos parecidos recuperados de una base (Sección~\ref{sec:marco_rep_recuperacion}) o los
+candidatos que deja la regla de la Ecuación~\ref{eq:marco_politica}. El generador conserva la imagen y redacta
+la descripción, pero el diagnóstico le llega como dato. Anclar así el texto en evidencia externa se conoce como
+\emph{grounding} (anclaje), y es el aprendizaje en contexto de la Sección~\ref{sec:marco_llm_grandes}, porque el
+generador no cambia sus pesos~\cite{brown2020language}.
+
+La generación condicionada separa los requisitos: la fidelidad diagnóstica pasa a depender de la evidencia, y
+la calidad descriptiva sigue a cargo del generador. Su costo es que el reporte hereda los errores de la
+evidencia, porque un generador que recibe un diagnóstico equivocado lo afirma con la misma fluidez que uno
+correcto. En las dos estrategias, además, la instrucción forma parte de la configuración, ya que puede pedir
+que el modelo exponga su razonamiento antes de concluir o que entregue solo el reporte. Un razonamiento
+explícito enumera hipótesis que después descarta, de modo que, si se lo lee como parte del reporte, el texto
+parece nombrar diagnósticos que no sostiene. Aun separando el razonamiento del reporte, el texto puede fallar de
+maneras que una métrica de clasificación no detecta.
+
+\subsection{Fallas del texto generado}
+\label{sec:marco_rep_fallas}
+
+Una \textbf{alucinación} es un texto fluido cuyo contenido no está sustentado por la entrada, que en este caso
+es la imagen. El fenómeno se describió primero en la generación de lenguaje natural~\cite{ji2023survey} y en la
+descripción de imágenes, donde los modelos nombran objetos que la imagen no contiene, en parte por el peso de
+los patrones del lenguaje~\cite{rohrbach2018object}, y se documentó después en los
+\glspl{vlm}~\cite{bai2024hallucination}. En los \glspl{vlm} médicos, un estudio sistemático encontró que los
+modelos ajustados al dominio son más propensos a alucinar que los de propósito general, aun cuando rinden
+mejor en las tareas médicas estándar~\cite{gu2024medvh}. En medicina, la alucinación es especialmente costosa,
+porque un hallazgo inventado se redacta igual que uno real y puede cambiar una conducta clínica.
+
+La falla contraria se llama aquí \emph{hedging}. El modelo redacta descripciones genéricas, compatibles con
+casi cualquier lesión, y evita comprometer un diagnóstico, por ejemplo enumerando varias categorías posibles
+sin inclinarse por ninguna. Ese texto no contiene errores visibles, pero tampoco informa nada sobre la lesión
+concreta. Expresar incertidumbre no es en sí una falla. Se convierte en \emph{hedging} cuando es
+indiscriminada, es decir, cuando no depende de cuán incierto sea el caso. Se ha argumentado que los esquemas de
+evaluación que premian acertar y no penalizan adivinar incentivan la alucinación en lugar de la expresión de
+incertidumbre~\cite{kalai2025hallucinate}. Ofrecer diferenciales cuando la regla de decisión lo indica
+(Sección~\ref{sec:marco_tres_salidas}) es, en cambio, lo opuesto al \emph{hedging}.
+
+\begin{table}[H]
+    \centering
+    \caption{Fallas de un reporte generado y su consecuencia para el lector, de mayor a menor gravedad.}
+    \label{tab:marco_fallas}
+    \small
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{3.0cm}
+        >{\raggedright\arraybackslash\hspace{0pt}}X >{\raggedright\arraybackslash\hspace{0pt}}X@{}}
+        \toprule
+        \textbf{Falla} & \textbf{Qué hace el texto} & \textbf{Consecuencia para el lector} \\
+        \midrule
+        Diagnóstico incorrecto & Afirma una categoría distinta de la real
+            & Recibe un error que la fluidez del texto hace parecer confiable \\
+        \filasep
+        Contradicción & Nombra dos o más diagnósticos incompatibles como conclusión
+            & No sabe cuál de ellos sostiene el reporte \\
+        \filasep
+        \emph{Hedging} & Redacta un texto genérico y evita comprometer un diagnóstico
+            & No recibe información y no sabe si el modelo duda o no \\
+        \filasep
+        Repetición & Repite frases en bucle~\cite{holtzman2020curious}
+            & Recibe un texto degenerado, sin información útil \\
+        \filasep
+        Texto insuficiente & Una o dos frases sin descripción de la lesión
+            & No recibe la descripción que el reporte debe contener \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+Además de estas dos, el texto generado puede fallar de otras maneras, y cada reporte se puede asignar a su
+falla principal (Tabla~\ref{tab:marco_fallas}). Afirmar un diagnóstico incorrecto es la más grave, porque el
+lector recibe un error con la forma de un acierto. La contradicción, que nombra dos diagnósticos incompatibles
+en el mismo texto, y el \emph{hedging} dejan la decisión en el lector. La repetición, frecuente con la
+decodificación voraz de la Sección~\ref{sec:marco_llm_grandes}, y el texto insuficiente no aportan
+información. La alucinación queda fuera de esta clasificación, porque puede acompañar a cualquiera de las
+fallas, incluso a un diagnóstico correcto, y no se reconoce por la forma del texto. La taxonomía organiza el
+análisis de los reportes generados del Capítulo~\ref{cp:res_gen}.
+
+Las métricas de solapamiento con un texto de referencia (Sección~\ref{sec:marco_eval_texto}) miden un parecido
+superficial y pueden no detectar si el reporte transmite los hallazgos clínicos
+correctos~\cite{hartsock2024vision}. Por eso la fidelidad diagnóstica y el contenido clínico se miden por
+separado. Para reducir estas fallas se puede dar al generador información que la imagen sola no aporta, y la
+forma más estudiada de obtenerla es la recuperación.
+
+\subsection{La recuperación como fuente de evidencia}
+\label{sec:marco_rep_recuperacion}
+
+\phantomsection\label{sec:marco_rag}%
+La \gls{rag}, propuesta en 2020, agrega un paso de búsqueda antes de generar. Un sistema de este tipo tiene
+tres componentes. El primero es una \textbf{base} de documentos, por ejemplo artículos o reportes anteriores. El
+segundo es un \textbf{recuperador}, que compara la entrada con los documentos de la base y selecciona los más
+parecidos. El tercero es el \textbf{generador}, que produce la salida a partir de la entrada y de los documentos
+seleccionados. Como el conocimiento queda en la base y no en los pesos del generador, la base se puede cambiar o
+ampliar sin reentrenarlo~\cite{lewis2020retrievalaugmented}. En radiología, por ejemplo, el recuperador parte
+de la imagen y selecciona reportes de casos parecidos, y entrenarlo para que prefiera reportes con los mismos
+hallazgos clínicos mejora la corrección de lo generado~\cite{sun2025factaware}.
+
+\phantomsection\label{sec:marco_recuperacion_imagenes}%
+Cuando la base es un conjunto de casos etiquetados, lo que se recupera son imágenes. El recuperador es entonces
+el kNN de la Ecuación~\ref{eq:marco_vecinos}, que selecciona los $k$ casos más parecidos a la consulta en el
+espacio de un codificador visual, y lo que se sabe de cada vecino, como su diagnóstico o su localización, es
+\textbf{evidencia visual}: indica qué casos ya vistos se parecen a la lesión. Para que el generador la use, esa
+información se escribe como texto y se agrega al prompt, es decir, $c(x) = \psi\bigl(\mathcal{N}_k(x)\bigr)$ en
+la Ecuación~\ref{eq:marco_rep_condicionada}, donde $\psi$ convierte en texto la información de los vecinos. Por
+ejemplo, si dos de los tres vecinos de una lesión son melanomas y el tercero es un nevo, el prompt informa esos
+tres diagnósticos. Un antecedente en descripción de imágenes hace lo mismo con las descripciones de imágenes
+parecidas, que entrega como prompt a un modelo de lenguaje~\cite{ramos2023smallcap}.
+
+Esta variante conserva los tres componentes de la \gls{rag}, pero difiere de la formulación original de
+\textcite{lewis2020retrievalaugmented} en tres aspectos. En la original, los documentos son textos, mientras
+que en la variante son etiquetas y atributos de imágenes, de la misma modalidad que la consulta. En la original,
+el codificador con que el recuperador representa la entrada se ajusta junto con el generador, mientras que el
+kNN puede quedar congelado. Por último, en la original el generador produce una salida con cada documento
+recuperado y las combina según la relevancia que les asignó el recuperador, mientras que en la variante recibe
+todos los vecinos a la vez y produce una única salida. Su límite es el que la
+Sección~\ref{sec:marco_senales_confianza} señaló para el consenso de los vecinos: los $k$ vecinos se recuperan
+aunque la base no tenga casos parecidos a la consulta, y entonces la evidencia que aportan no describe la
+lesión.
+
+\phantomsection\label{sec:marco_integracion}%
+La evidencia recuperada y las señales de confianza cumplen, por lo tanto, funciones distintas. La recuperación
+aporta qué diagnosticar y atiende la fidelidad diagnóstica. La señal no agrega información al texto, sino que
+decide cuánto se puede afirmar con la que hay, y atiende el tercer requisito de la
+Sección~\ref{sec:marco_rep_ejes}. Integradas, la evidencia condiciona el texto y la regla de decisión elige si
+el sistema afirma un diagnóstico, ofrece diferenciales o deriva el caso. Un mismo componente puede cumplir las
+dos funciones: los vecinos recuperados son evidencia para el texto y, a la vez, uno de los predictores cuya
+concordancia mide la señal.
+
+Clasificadores, generadores y reglas de decisión producen así salidas de tres tipos: categorías, textos y
+decisiones de abstención. Cada una exige sus propias métricas, y ninguna de ellas, medida sobre datos de la
+misma fuente que los de entrenamiento, garantiza el desempeño del sistema fuera de esa fuente.

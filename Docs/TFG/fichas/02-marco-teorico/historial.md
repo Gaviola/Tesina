@@ -640,3 +640,496 @@ quedan sin citar.
 3.9 corrige los p de McNemar con Holm sobre 21 pares, así que 2.8 la define después de McNemar, con su
 ecuación (`eq:marco_holm`) y la relación con Bonferroni. La cita `holm1979simple` no estaba en el `.bib`: se
 propuso en `refs_pendientes.md` y queda indefinida hasta que el autor la incorpore.
+
+## Revisión del autor (2026-10-12): 2.3
+
+- El aprendizaje autosupervisado queda en 2.3, donde aparece su primer ejemplo, y se contrasta con el
+  supervisado de 2.1.
+- Los modelos de lenguaje preentrenados se presentan como dos tipos (solo decodificador y solo codificador);
+  LLM sigue designando al de solo decodificador a gran escala, que es como lo usa el resto del capítulo.
+- Sale de P4 la mención a Mistral 7B, LLaVA-Med 1.5 y Phi-3-mini: los modelos se presentan en el Cap. 3.
+  «Pesos abiertos» abre 2.3.2.
+- 2.3.3 abre conectado con el cierre de 2.3.2, y *zero-shot* se define explícitamente en P12.
+- Phi-3.5-vision sale de P15: el párrafo trata la receta de LLaVA llevada al dominio médico, y Phi-3.5-vision
+  es un VLM de propósito general que solo usa este trabajo. Lo presenta el Cap. 3 (3.6).
+
+---
+
+# Ficha anterior de 2.6 (reemplazada por `04-incertidumbre.md`, 2026-10-12)
+
+## Ficha 2.6 — Incertidumbre y predicción selectiva
+
+Sección del `.tex`: `Chapters/02-Marco-Teorico/06-incertidumbre.tex`.
+
+Plan movido desde la ficha única del capítulo el 10/10/2026, sin cambios de contenido. Es la historia de la sección; las decisiones posteriores están en `historial.md` y lo vigente, en `00-capitulo.md`. El hilo conductor (§1 de la guía) se agrega arriba de este plan cuando se reescriba la sección.
+
+---
+
+## 2.7 Incertidumbre y predicción selectiva — `sec:marco_incertidumbre`
+
+**Sección nueva (G4).** **Extensión: 3,5 páginas.**
+
+**Mensaje central.** Un clasificador puede abstenerse de decidir cuando su confianza es insuficiente; existen
+señales para estimar esa confianza, y la salida de un sistema clínico puede ser afirmar, ofrecer diferenciales o
+derivar. Esa política es la que hace que el diseño en cascada aparezca como consecuencia del marco.
+
+**Razón de ser.** Sin esta sección, el *pipeline* del Cap. 3 parece una construcción arbitraria (A11). Es el
+puente entre las fallas de 2.6.3 y los mecanismos de 2.6.5–2.6.6.
+
+| Subsección | Razón de ser | Se reutiliza | Nuevo |
+|---|---|---|---|
+| 2.7.1 Incertidumbre en la clasificación diagnóstica — `sec:marco_incert_fuentes` | Por qué un clasificador puede equivocarse con confianza y por qué importa en medicina | — | Ver abajo |
+| 2.7.2 Predicción selectiva y abstención — `sec:marco_pred_selectiva` | Formaliza «no decidir» | — | Ver abajo |
+| 2.7.3 Señales de confianza y calibración — `sec:marco_senales_confianza` | Cómo saber cuándo abstenerse | Se remite a `sec:marco_eval_calib` para las fórmulas | Ver abajo |
+| 2.7.4 Tres salidas: afirmar, ofrecer diferenciales o derivar — `sec:marco_tres_salidas` | Generaliza el rechazo binario a la política clínica | — | Ver abajo |
+
+### 2.7.1 ideas
+
+1. **Dos fuentes.** Incertidumbre por ruido o ambigüedad de los datos (aleatoria) e incertidumbre por falta de
+   conocimiento del modelo (epistémica), que se reduce con más datos. Cita `kendall2017uncertainties` (nueva;
+   verificada: arXiv 1703.04977). Tercera fuente sin cita nueva: cambio de distribución (remite a 2.9).
+2. **Por qué importa en medicina.** Los errores no cuestan igual (falsos negativos frente a falsos positivos) y
+   la decisión final es humana; un sistema que reconoce su límite y deriva puede ser preferible a uno que
+   siempre responde. Enunciado teórico y general, sin cifras de melanoma. Cita `groh2024learningaided`
+   (ya está; el apoyo de IA mejora la exactitud pero amplía diferencias entre grupos; sirve de contexto de
+   colaboración humano–IA). Verificar que respalde exactamente lo dicho antes de usarla.
+
+### 2.7.2 ideas (con fórmulas)
+
+1. **Clasificación con opción de rechazo.** Un clasificador selectivo es un par $(f,g)$: $f$ predice y $g$
+   decide si se acepta. Se define $\text{cobertura}=\mathbb{E}[g(x)]$ y
+   $\text{riesgo selectivo}=\dfrac{\mathbb{E}[\ell(f(x),y)\,g(x)]}{\mathbb{E}[g(x)]}$.
+   Cita `elyaniv2010foundations` (nueva; verificada: JMLR 11:1605–1641, 2010) y `geifman2017selective`
+   (nueva; verificada: arXiv 1705.08500, NeurIPS 2017).
+2. **Compromiso riesgo–cobertura.** Al aumentar el umbral de confianza baja la cobertura y baja el riesgo
+   selectivo (si la señal es informativa). La curva riesgo–cobertura resume el compromiso; su forma es la
+   medida de calidad de la señal. Se define con palabras y una fórmula: $g(x)=\mathbf{1}[\kappa(x)\ge\tau]$,
+   con $\kappa$ la señal de confianza.
+3. **La señal más simple: la máxima probabilidad softmax** $\kappa(x)=\max_c p_c$, línea base para detectar errores
+   (`hendrycks2017baseline`, nueva; verificada: arXiv 1610.02136).
+
+### 2.7.3 ideas
+
+1. **Calibración, definición con palabras.** Un modelo está calibrado si sus probabilidades coinciden con
+   sus frecuencias de acierto; las redes profundas tienden a ser sobreconfiadas (`guo2017calibration`, ya
+   está). Las fórmulas (ECE, MCE, Brier, *temperature scaling*) están en 2.8.3. **Este párrafo reemplaza la
+   introducción de calibración que hoy abre `sec:marco_eval_calib`** (l. 671–676), que se conserva allí como
+   definición formal.
+2. **Tres señales de confianza**, en `enumerate`:
+   - probabilidad softmax (barata, pero puede estar mal calibrada y no ser monótona respecto del error si hay
+     cambio de distribución);
+   - concordancia entre predictores (2.6.6);
+   - consenso entre vecinos recuperados, es decir, el voto y su unanimidad ($\hat p_{\text{kNN}}$, 2.6.5).
+   Se señalan las limitaciones de cada una: la primera confunde confianza con exactitud, la segunda requiere dos
+   modelos, la tercera depende de la cobertura de la base.
+3. **Combinación.** La calibración mejora una señal, pero no crea información que la señal no contiene: una
+   confianza calibrada sigue sin separar los casos difíciles si el modelo no los distingue. Se mide con
+   riesgo–cobertura (2.7.2) y no solo con ECE.
+
+### 2.7.4 ideas — tres salidas y la cascada como consecuencia
+
+1. **De rechazar a tres salidas.** En la práctica clínica no basta aceptar o rechazar. Tres salidas posibles:
+   **afirmar** un diagnóstico, **ofrecer diferenciales** (un conjunto de candidatos) o **derivar** si no se
+   alcanza la confianza. Formalizar: una política $\pi(x)\in\{\text{afirmar},\text{diferencial},\text{derivar}\}$
+   que depende de las señales $\kappa(x)$.
+2. **La salida diferencial es predicción por conjuntos**: $C(x)\subseteq\{1,\dots,C\}$, y $|C(x)|=1$ es afirmar.
+   Se puede citar la predicción conforme como marco teórico (`angelopoulos2021gentle`, nueva; sin verificar;
+   opcional, pregunta 7); si no, sin cita.
+3. **Costos.** Cada salida tiene un costo distinto en el reporte: afirmar arriesga un error; diferencial
+   informa menos pero cubre más; derivar no produce diagnóstico. La política óptima depende de cuánto pesa cada
+   costo (idea de riesgo con opción de rechazo).
+4. **Consecuencia para la generación (retoma eje 3 de 2.6.2).** Cada salida corresponde a un tipo de reporte: uno
+   afirmativo, uno diferencial y ninguno con derivación. Así, un sistema en cascada que primero estima la
+   confianza y después redacta según el resultado es **consecuencia** del problema y no un diseño arbitrario.
+   **No se describe** el *pipeline* concreto ni se nombran modelos (Cap. 3).
+
+**Párrafo de transición a 2.8.** Decidir con confianza, comparar modelos y detectar fallas exige medir bien:
+qué métricas evalúan la clasificación, cuáles la generación y cuáles el comportamiento de ambas de forma
+transversal (calibración, significancia, robustez, interpretabilidad).
+**Citas de 2.7:** existentes: `guo2017calibration`, `groh2024learningaided`. Nuevas: `elyaniv2010foundations`,
+`geifman2017selective`, `hendrycks2017baseline`, `kendall2017uncertainties`, `lakshminarayanan2017simple`
+(compartida con 2.6), `angelopoulos2021gentle` (opcional).
+
+---
+
+# Ficha anterior de 2.7 (reemplazada por `05-generacion-reportes.md`, 2026-10-12)
+
+## Ficha 2.7 — Generación de reportes
+
+Sección del `.tex`: `Chapters/02-Marco-Teorico/07-generacion-reportes.tex`.
+
+Plan movido desde la ficha única del capítulo el 10/10/2026, sin cambios de contenido. Es la historia de la sección; las decisiones posteriores están en `historial.md` y lo vigente, en `00-capitulo.md`. El hilo conductor (§1 de la guía) se agrega arriba de este plan cuando se reescriba la sección.
+
+---
+
+## 2.6 Generación de reportes y recuperación de información — `sec:marco_reportes`
+
+**Sección nueva (G1, G2, G3).** Peso comparable al de la clasificación. **Extensión: 6 páginas.**
+
+**Mensaje central.** Generar un reporte dermatológico implica tres problemas distintos: describir lo que se
+ve, incorporar un diagnóstico y no afirmar más de lo que la evidencia justifica. Los modelos fallan de dos
+maneras opuestas, alucinando o evitando comprometerse, y hay tres mecanismos diferentes de recuperación y
+decisión que pueden ayudar a corregirlos.
+
+**Razón de ser.** El Cap. 1 presenta dos tareas de peso equivalente; el marco tiene que tratarlas de igual
+modo. Los tres ejes son la pregunta de investigación PI2 (fidelidad diagnóstica frente a calidad descriptiva)
+formulada en teoría.
+
+**Apertura.** Una oración sobre qué es un reporte clínico y por qué su generación automática no es una simple
+descripción de imagen.
+
+| Subsección | Razón de ser | Se reutiliza | Nuevo |
+|---|---|---|---|
+| 2.6.1 De la descripción de imágenes al reporte clínico — `sec:marco_rep_tarea` | Definir la tarea y su dificultad | l. 521–537 (*image captioning*, radiología, `jing2018automatic`, `chen2020generating`, texto y referencia) | Recorte: se elimina el detalle de qué escribió cada conjunto (SkinCAP, SkinCoT, MM-Skin, Derm1M; l. 529–537) y se deja la idea general: la referencia proviene de fuentes con distinto grado de curaduría y eso condiciona la evaluación (`shen2025skincare`, `zeng2025mmskin`, `yan2025derm1m` como ejemplos, detalles en Cap. 3). Se elimina «que son las dos partes del reporte de las que se ocupa el trabajo» |
+| 2.6.2 Tres ejes de la generación de reportes — `sec:marco_rep_ejes` | Ordenar el problema (A11) | l. 551–556 (dos condiciones independientes) | **Nuevo**, tres bloques (ver abajo) |
+| 2.6.3 Alucinaciones y *hedging* — `sec:marco_rep_fallas` | G2: desarrollo | l. 539–549 | **Nuevo**, ver abajo |
+| 2.6.4 Recuperar documentos: RAG — `sec:marco_rag` | Mecanismo (a) | l. 561–579 (Lewis, `eq:marco_rag`) | Reescritura según §6 |
+| 2.6.5 Recuperar imágenes similares — `sec:marco_recuperacion_imagenes` | Mecanismo (b) | l. 581–594 (kNN, `khandelwal2020generalization`, `sun2025factaware`) | **Nuevo**: ver abajo |
+| 2.6.6 Concordancia entre predicciones — `sec:marco_concordancia` | Mecanismo (c) | — | **Nuevo**: ver abajo |
+| 2.6.7 Qué aportaría integrar los tres mecanismos — `sec:marco_integracion` | Cierra el eje sin adelantar la implementación | — | **Nuevo**: ver abajo |
+
+### 2.6.2 Tres ejes (A11) — ideas por párrafo
+
+1. **Eje 1: describir lo que se ve.** Producir un texto que refleje rasgos visuales de la lesión (color,
+   patrón, distribución, estructuras). Se reutiliza el vocabulario cerrado, estandarizado por consenso, que hoy
+   está en 2.6.3 (l. 798–804): conviene que aparezca acá porque define qué es una descripción correcta y
+   permite medirla (2.8.2). Citas: `kittler2016standardization`, `argenziano1998checklist`. La **calidad
+   descriptiva** es la correspondencia entre lo dicho y lo que la imagen muestra.
+2. **Eje 2: incorporar información diagnóstica.** El texto necesita nombrar una categoría. Dos formas de lograrlo:
+   que el mismo modelo generativo infiera el diagnóstico de la imagen (de extremo a extremo) o que se lo
+   *condicione* en un diagnóstico o evidencia externos (una predicción de otro modelo, casos recuperados). Se
+   define la **fidelidad diagnóstica** (el diagnóstico que nombra el texto es el correcto) y se establece que es
+   independiente de la calidad descriptiva: puede haber un texto descriptivamente fiel con un diagnóstico
+   erróneo, y un diagnóstico correcto acompañado de hallazgos inventados (retoma la Figura~\ref{fig:intro_dos_tareas} del Cap. 1;
+   ver pregunta 5 sobre la dependencia con Cap. 1). Cita `gu2024medvh` para lo que se sabe de las fallas de
+   los VLM médicos.
+3. **Eje 3: tratar las predicciones inciertas.** Cuando el diagnóstico no está claro, afirmar uno es el peor
+   caso; las alternativas son presentar varios candidatos o no afirmar y derivar. Esto es el tema de 2.7. Este
+   párrafo instala el problema; 2.7 lo resuelve. No se adelanta el ruteo.
+4. **Cómo se relacionan los ejes.** El eje 2 usa lo que el eje 3 decide (qué afirmar) y el eje 1 depende de que
+   el modelo mire la imagen. Ese orden de dependencia justifica el orden de 2.6.3 a 2.7.
+
+### 2.6.3 Alucinaciones y *hedging* (G2) — ideas por párrafo
+
+1. **Alucinación: definición y contexto.** Texto fluido con contenido no sustentado por la imagen (o por la
+   entrada). Se originó en generación de lenguaje natural y en descripción de imágenes: `ji2023survey`
+   (nueva; verificada: arXiv 2202.03629), `rohrbach2018object` (nueva; verificada: arXiv 1809.02156;
+   muestra que las métricas estándar de oraciones no siempre reflejan la alucinación, y que se debe en parte a
+   *priors* del lenguaje). En VLM: `bai2024hallucination` (nueva; verificada: arXiv 2404.18930). En VLM
+   médicos: `gu2024medvh` (ya está; los modelos ajustados al dominio alucinan más, l. 541–543).
+2. **Por qué es especialmente costosa en medicina.** El lector no puede separarla del contenido correcto por la
+   sola forma del texto; introduce hallazgos que pueden cambiar una conducta. No se afirma más que lo que
+   respaldan las fuentes.
+3. ***Hedging*: definición.** Descripciones genéricas, compatibles con casi cualquier lesión, sin comprometer un
+   diagnóstico (l. 545–549). Se mantiene sin cita como falla observada durante la experimentación (decisión
+   15 vigente), pero se puede relacionar con **abstención**: `kalai2025hallucinate` (nueva; verificada: arXiv
+   2509.04664) argumenta que los esquemas de evaluación que premian acertar y no penalizan adivinar
+   incentivan la alucinación; la contracara de expresar incertidumbre es lo que se llama aquí *hedging*
+   cuando es indiscriminado. **No** se afirma que Kalai trate el *hedging* (revisar el PDF antes de citar).
+4. **Ventajas y desventajas de cada comportamiento**, en una tabla o `enumerate` de tres filas: (i) afirmar
+   (útil si acierta, dañino si no; fluidez engañosa); (ii) alucinar (mismas características, con detalles
+   inventados); (iii) *hedging* (no afirma nada falso, pero no informa y es inaccionable; enmascara si el modelo
+   "sabe" o no). El comportamiento deseable es expresar incertidumbre **cuando y solo cuando corresponde**, que
+   conecta con 2.7.
+5. **Qué pasa si no se analizan.** Las métricas de solapamiento con la referencia (2.8.2) pueden premiar un
+   texto genérico, y ninguna detecta por sí sola un hallazgo inventado; un desempeño alto en esas métricas puede
+   coexistir con reportes inutilizables. Por eso hace falta medir la fidelidad diagnóstica y la cobertura
+   clínica por separado y revisar el texto contra la imagen (retoma l. 814–819). Sin números.
+
+### 2.6.5 Recuperar imágenes similares — ideas
+
+1. **Idea.** En vez de documentos, se dispone de una base de casos etiquetados. Para una imagen consulta $x$ se
+   buscan los $k$ casos más cercanos en el espacio de *embeddings* $f$ de un codificador visual:
+   $\mathcal{N}_k(x)=\operatorname{arg\,top\text{-}k}_{j}\,\cos(f(x),f(x_j))$. La información asociada a esos
+   casos (diagnóstico, localización) es **evidencia visual**: qué se ha visto que se parece.
+2. **Clasificador kNN como estimador local.** $\hat p_{\text{kNN}}(c\mid x)=\frac1k\sum_{j\in\mathcal{N}_k(x)}\mathbf{1}[y_j=c]$
+   y predicción por voto mayoritario. Cita `cover1967nearest` (nueva; sin verificar; es la referencia clásica) y
+   `khandelwal2020generalization` (la búsqueda de vecinos mejora la predicción sin entrenamiento adicional, ya en el `.tex`).
+3. **Diferencia con RAG.** No hay documentos ni recuperador entrenado: el codificador ya existe y se usa
+   congelado; lo recuperado son etiquetas de imágenes y no textos. Es una recuperación de la misma
+   modalidad que la consulta (imagen–imagen), no de otra (imagen–documento).
+4. **Antecedentes.** En descripción de imágenes, la recuperación de descripciones de imágenes parecidas como
+   *prompt* (`ramos2023smallcap`, nueva; verificada: arXiv 2209.15323; CLIP + GPT-2 condicionado en captions
+   recuperados). En reportes médicos, `sun2025factaware` (ya en el `.tex`).
+5. **Límites.** La calidad de la evidencia depende de la representación y de la cobertura de la base; los
+   vecinos de una clase rara pueden pertenecer a otra; si no hay casos parecidos, los vecinos igual existen y
+   no son informativos (el $k$ vecinos más cercanos siempre existe). Esa última observación conecta con 2.7.3.
+
+### 2.6.6 Concordancia entre predicciones — ideas
+
+1. **Idea.** Dos predictores con sesgos distintos (por ejemplo, uno supervisado y otro basado en vecinos sobre
+   una representación aprendida de otra forma) pueden coincidir o no sobre la misma imagen. Definir
+   $a(x)=\mathbf{1}[\hat y_1(x)=\hat y_2(x)]$.
+2. **Por qué es una señal.** El desacuerdo entre modelos aproxima la incertidumbre del sistema (ensambles:
+   `lakshminarayanan2017simple`, nueva; verificada: arXiv 1612.01474). La afirmación medible es
+   $P(\text{error}\mid a=1)<P(\text{error}\mid a=0)$; se enuncia como condición que se verifica con datos,
+   nunca como hecho. **Sin cifras del trabajo** (los resultados de acuerdo Swin–kNN van en Cap. 5).
+3. **Qué no es.** No recupera información ni condiciona el texto: es una regla de decisión. Se distingue de los
+   dos mecanismos anteriores por esa razón. La política de decisión se desarrolla en 2.7.3–2.7.4.
+
+### 2.6.7 Integración — ideas (sin adelantar implementación)
+
+1. **Qué aporta cada mecanismo por separado**, en una tabla de tres filas: qué recupera o computa, sobre qué
+   modalidad, qué problema del reporte ayuda a resolver (descripción, diagnóstico, incertidumbre) y qué no
+   resuelve.
+2. **Qué aportaría integrarlos.** La evidencia recuperada puede condicionar el texto (eje 2); la concordancia
+   entre predictores puede decidir cuánta afirmación permite la evidencia (eje 3). Combinados, el texto
+   generado quedaría condicionado por evidencia y por el nivel de acuerdo: afirmaría cuando las señales
+   coinciden y matizaría cuando no. Se formula como **propiedad deseable** y no como diseño.
+3. **Qué queda abierto** (hipótesis para Cap. 3–5, sin nombrarlas hipótesis): si la evidencia recuperada mejora
+   la fidelidad diagnóstica; si el acuerdo entre predictores separa los casos confiables. Esto se estudia con
+   experimentos y se define en Cap. 3. No se menciona Swin, DermLIP ni k=3.
+
+**Párrafo de transición a 2.7.** La integración depende de poder decidir, para cada imagen, cuánta afirmación
+justifica la evidencia; esa decisión es un problema con su propia teoría, la predicción selectiva.
+**Citas de 2.6:** existentes: `jing2018automatic`, `chen2020generating`, `shen2025skincare`, `zeng2025mmskin`,
+`yan2025derm1m`, `gu2024medvh`, `kittler2016standardization`, `argenziano1998checklist`,
+`lewis2020retrievalaugmented`, `khandelwal2020generalization`, `sun2025factaware`, `brown2020language`.
+Nuevas: `ji2023survey`, `rohrbach2018object`, `bai2024hallucination`, `kalai2025hallucinate`,
+`ramos2023smallcap`, `gao2023retrieval` (revisión de RAG; opcional), `cover1967nearest`,
+`lakshminarayanan2017simple`.
+
+## 6. Corrección de RAG (G3, A13)
+
+**Diagnóstico.** La `eq:marco_rag` (l. 574–577) es la formulación original de Lewis et al. (RAG-Sequence):
+$p(y\mid x)\approx\sum_{z\in\text{top-}K}p_\eta(z\mid x)\,p_\theta(y\mid x,z)$, con un recuperador entrenado
+$p_\eta$ y marginalización sobre documentos. La implementación
+(`Codigo/scripts/build_rag_index.py`, `generate_report.py`) hace otra cosa:
+
+- Recupera, para cada imagen de test, los **$k=3$ casos de entrenamiento** más cercanos por **coseno** sobre
+  *embeddings* de **DermLIP ViT-B/16** L2-normalizados, congelado (`sims = Xte @ Xtr.T`, `argpartition`).
+- Con cada vecino arma un texto: diagnóstico completo (por ejemplo «melanoma») y localización entre
+  paréntesis si existe, y lo concatena en una oración fija en inglés: «Retrieved visually similar
+  dermatoscopic cases were diagnosed as: …».
+- Ese texto (`rag_context`) se **pega en el *prompt*** (`RAG_TEMPLATE`, `GROUNDED_RAG_TEMPLATE`), junto con la
+  imagen. El generador produce una sola salida, condicionada en imagen y *prompt*. **No marginaliza**.
+- No entrena el recuperador, no hay índice aproximado (matriz de similitud completa), y lo recuperado **no son
+  documentos**: son diagnóstico y localización de imágenes de la partición de entrenamiento, no textos de
+  reportes ni de literatura.
+- El voto mayoritario de los vecinos (`rag_knn_dx`) se guarda aparte y es una señal de 2.6.6; con tres vecinos
+  todos distintos, `Counter.most_common` resuelve el empate a favor del vecino más cercano (los vecinos se
+  ordenan por similitud descendente). El ruteo de 3 niveles (`build_uncertainty_3tier.py`) usa que los tres
+  vecinos sean distintos como criterio de abstención; el de 2 niveles (`build_uncertainty_agreement.py`) usa solo
+  si Swin y el voto kNN coinciden. Nada de esto va en el Cap. 2; queda para Cap. 3 (verificar).
+
+**Cómo se presenta en 2.6.4 (ideas por párrafo):**
+
+1. **Qué es RAG** (reutiliza l. 561–565): las tres partes (base, recuperador, generador) y la separación entre
+   memoria paramétrica y evidencia. Cita `lewis2020retrievalaugmented`.
+2. **La ecuación original, atribuida a Lewis** (reutiliza `eq:marco_rag` con la explicación de l. 567–579), con la
+   frase explícita: «Esta es la formulación de Lewis et al., que combina un recuperador entrenado y un
+   generador y marginaliza sobre los documentos recuperados». Se aclara que en ella el recuperador es una parte
+   entrenada conjuntamente con el generador y que los documentos son textos.
+3. **La idea general que sobrevive a la formulación**: lo esencial es que el generador condiciona en información
+   recuperada. Se puede escribir en forma simplificada, sin marginalización:
+   $$y\sim p_\theta\!\bigl(\,\cdot\mid x,\ c(x)\bigr),\qquad c(x)=\psi\bigl(\mathcal{N}_k(x)\bigr),$$
+   donde $\mathcal{N}_k(x)$ son los elementos recuperados y $\psi$ los serializa como texto que se agrega al
+   *prompt*. Se lo llama **condicionamiento por contexto** y se apoya en 2.4.1 (contexto y *in-context learning*,
+   `brown2020language`): el modelo no cambia sus pesos, cambia lo que ve.
+4. **Diferencias con RAG original**, en una tabla de tres filas o una oración por diferencia: (i) el recuperador
+   no se entrena junto con el generador; (ii) no se marginaliza sobre los documentos, el generador recibe todo
+   el contexto a la vez; (iii) lo recuperado puede no ser un documento. **El texto dice explícitamente** que el
+   trabajo implementa esta variante y no el modelo de Lewis, sin describir la implementación (eso es Cap. 3).
+   No se usa la sigla «RAG» sin calificar cuando se habla de la variante: se dice «condicionamiento por contexto
+   con recuperación» y, cuando convenga, «variante de RAG por contexto». La sigla con su expansión (Lewis)
+   queda para la formulación original.
+5. **Sin adelantar la implementación:** no se nombra DermLIP, $k=3$, la localización ni el *prompt*.
+
+---
+
+# Ficha anterior de 2.8 (reemplazada por `06-evaluacion.md`, 2026-10-12)
+
+## Ficha 2.8 — Evaluación de modelos
+
+Sección del `.tex`: `Chapters/02-Marco-Teorico/08-evaluacion.tex`.
+
+Plan movido desde la ficha única del capítulo el 10/10/2026, sin cambios de contenido. Es la historia de la sección; las decisiones posteriores están en `historial.md` y lo vigente, en `00-capitulo.md`. El hilo conductor (§1 de la guía) se agrega arriba de este plan cuando se reescriba la sección.
+
+---
+
+## 2.8 Evaluación de modelos — `sec:marco_evaluacion`
+
+**Mensaje central.** Cada salida se evalúa con métricas que ven una parte y no otra: la clasificación, la
+generación y las propiedades transversales (calibración, significancia, robustez, interpretabilidad).
+
+**Razón de ser.** El lector (dermatólogo o informático) necesita saber qué mide cada número que aparece en los
+resultados y qué no mide. **Extensión: 6,5 páginas** (baja 0,5 respecto de hoy por el recorte de lo aplicado).
+
+**Apertura.** Se elimina «Cada componente del *pipeline* entrega una salida distinta…» (l. 605–610). Se abre
+diciendo que las métricas se agrupan por lo que evalúan.
+
+**Verificar que se use (E1).** Cada métrica presentada debe aparecer en los resultados; la que no, sale. El código
+implementa las siguientes: matriz, AUC, sensibilidad/especificidad, exactitud balanceada, F1, ECE, MCE, Brier,
+BLEU, ROUGE, METEOR, CIDEr, BERTScore, McNemar, corrección de Holm, *temperature scaling* y *vector scaling*, Grad-CAM,
+robustez por perturbaciones, entidades clínicas. El autor confirma con los resultados de Cap. 4–5 y se saca lo
+que no se reporte (pregunta 3). Los candidatos más probables de no estar en los resultados son MCE,
+*vector scaling*, METEOR y CIDEr.
+
+| Subsección | Se reutiliza | Se recorta / elimina | Nuevo |
+|---|---|---|---|
+| 2.8.1 Evaluación de la clasificación — `sec:marco_eval_clasif` | l. 615–666, `eq:marco_f1`, `eq:marco_tpr_fpr`, `eq:marco_auc` | **Se elimina** la exactitud «alrededor de dos tercios» de HAM10000 (l. 622–625); se sustituye por un ejemplo hipotético. Se elimina «el trabajo no selecciona modelos por exactitud» y «el trabajo usa el promedio simple… F1 macro» (l. 624–625, 664–666: decisiones propias, van a `sec:met_seleccion`) | **Reordenar (A14):** ver abajo. Se agrega la **exactitud balanceada** (definida) |
+| 2.8.2 Evaluación de la generación — `sec:marco_eval_texto` | l. 718–819, ecuaciones BLEU, ROUGE-L, METEOR, CIDEr, BERTScore (l. 725–785) | **Se recorta** l. 806–812, donde el `.tex` describe «El trabajo usa dos métricas de este tipo». Se convierten en concepto (entidades y consistencia diagnóstica) sin «el trabajo». **Se elimina** el vocabulario finito de l. 798–804 si se traslada a 2.6.2 (queda una remisión) | Tres familias explícitas: textuales, diagnósticas, descriptivas. Ver abajo |
+| 2.8.3 Evaluación transversal — `sec:marco_eval_transversal` (nueva; agrupa 4 sub-temas) | Calibración l. 671–713 (`sec:marco_eval_calib`); inferencia estadística l. 824–868 (`sec:marco_eval_estadistica`); Grad-CAM l. 873–897 (`sec:marco_eval_gradcam`) | La introducción de calibración se acorta porque 2.7.3 ya la presentó. Se elimina «Para el *pipeline* la calibración importa porque…» (l. 712–713). Se elimina «el trabajo usa la versión exacta» (l. 850) y «El trabajo la aplica con las siete clases…» (l. 867–868) → Cap. 3. Se elimina «Su uso en el trabajo es detectar…» (l. 895–897) | **Robustez** (subsección nueva corta): ver abajo. Cierre con remisión a riesgo–cobertura (2.7.2) |
+
+Nota de estructura: 2.8.3 se puede implementar como subsección con cuatro `\subsubsection`
+(`calibración`, `inferencia estadística`, `robustez`, `interpretabilidad`) conservando los labels viejos
+(`sec:marco_eval_calib`, `sec:marco_eval_estadistica`, `sec:marco_eval_gradcam`) y agregando
+`sec:marco_eval_robustez`. Así los `\ref` internos no cambian. Pregunta 2.
+
+### 2.8.1 reordenación (A14) — ideas por párrafo
+
+1. **Matriz de confusión primero.** Definir $M\in\mathbb{N}^{C\times C}$, $M_{ij}$ = imágenes de clase real
+   $i$ predichas $j$; de ella salen todas las métricas. Caso binario con TP, FN, FP, TN (reutiliza l. 615–619).
+   Razón de ser: es lo que el lector inspecciona para ver qué se confunde con qué.
+2. **Sensibilidad y especificidad por clase.** $R_c=M_{cc}/\sum_j M_{cj}$; especificidad de una clase respecto del
+   resto. Tienen una interpretación clínica directa (fracción de casos que se detectan / que se descartan).
+   Definición de **detección**: colapsar la salida multiclase a binaria (clase de interés frente al resto, con
+   $s=p_c$ o $\sum$ de las clases de interés); precisa A1.
+3. **Exactitud y su límite.** Definir exactitud $=\sum_c M_{cc}/n$ y mostrar con un ejemplo hipotético por qué
+   engaña con clases desbalanceadas (retoma 2.1.6 sin repetirlo).
+4. **Exactitud balanceada.** $\text{BA}=\frac1C\sum_c R_c$. Nota: coincide con la sensibilidad macro; se elige
+   un solo nombre según la guía §4 («sensibilidad macro») y se menciona el otro como sinónimo (pregunta 3).
+   Cita `brodersen2010balanced` (nueva; sin verificar) o `sokolova2009systematic`.
+5. **Precisión, F1 y promedios macro y ponderado** (reutiliza l. 627–639, `eq:marco_f1`). Cita
+   `sokolova2009systematic` para la distinción de promedios (nueva; sin verificar; opcional).
+6. **Umbral, ROC y AUC** (reutiliza l. 641–666: `eq:marco_tpr_fpr`, `eq:marco_auc`). El AUC multiclase por
+   clase y su promedio macro; se elimina la justificación de la elección.
+
+### 2.8.2 estructura por familia (A14)
+
+- **Métricas textuales** (con referencia): BLEU, ROUGE-L, METEOR, CIDEr, BERTScore (reutiliza l. 718–788). Se
+  mantiene el límite de las métricas con referencia por la variabilidad entre observadores (l. 790–796,
+  `carrera2016validity`).
+- **Métricas diagnósticas** (sin referencia): **consistencia diagnóstica** (la categoría que nombra el texto es la
+  correcta o un sinónimo reconocido; equivale a la fidelidad diagnóstica de 2.6.2). Fórmula:
+  $\text{FD}=\frac1n\sum_i\mathbf{1}[\text{dx}(g_i)=y_i]$, donde $\text{dx}(\cdot)$ extrae la categoría nombrada.
+- **Métricas descriptivas** (sin referencia): **cobertura de entidades clínicas**, la proporción de las
+  categorías del vocabulario (color, patrón, estructura) que el texto menciona. Fórmula:
+  $\text{cob}(g)=\frac{|\{k:\exists\,e\in V_k,\ e\text{ aparece en } g\}|}{K}$, con $V_k$ el conjunto de
+  términos de la categoría $k$ y $K$ el número de categorías. Se remite a Cap. 3 para la lista y las reglas.
+- **Revisión por especialistas.** Ninguna métrica automática detecta un hallazgo inventado; el estándar de
+  referencia es la lectura de un especialista sobre una rúbrica (concepto general; la rúbrica concreta va
+  en Cap. 3). Sin cita nueva si se dice así; si se afirma algo sobre el método, referenciar.
+
+### 2.8.3 robustez — ideas (nueva)
+
+1. **Definición.** Cuánto cambia una métrica $m$ cuando la entrada se perturba de forma que no altera su
+   contenido clínico (desenfoque, cambios de brillo o compresión, ruido). Se mide como caída
+   $\Delta m=m_{\text{original}}-m_{\text{perturbada}}$ o su cociente.
+2. **Para qué sirve.** Permite anticipar el comportamiento ante variaciones de adquisición (2.9) sin tener otro
+   conjunto. Cita `hendrycks2019benchmarking` (nueva; verificada: arXiv 1903.12261).
+3. **Qué no es**: robustez adversarial.
+
+**Párrafo de transición a 2.9.** Las métricas de esta sección describen el desempeño sobre la distribución
+del test; queda por saber hasta dónde valen fuera de ella.
+**Citas de 2.8:** existentes: `fawcett2006introduction`, `guo2017calibration`, `brier1950verification`,
+`papineni2002bleu`, `lin2004rouge`, `banerjee2005meteor`, `vedantam2015cider`, `zhang2020bertscore`,
+`carrera2016validity`, `efron1979bootstrap`, `mcnemar1947note`,
+`selvaraju2017gradcam`, `adebayo2018sanity`. Nuevas: `hendrycks2019benchmarking`, `holm1979simple`
+(en `refs_pendientes.md`, 2026-10-12), y opcionales
+`brodersen2010balanced`, `sokolova2009systematic`.
+
+
+---
+
+# Ficha anterior de 2.9 (reemplazada por `06-evaluacion.md`, 2026-10-12)
+
+## Ficha 2.9 — Sesgo, robustez y generalización
+
+Sección del `.tex`: `Chapters/02-Marco-Teorico/09-sesgo-robustez.tex`.
+
+Plan movido desde la ficha única del capítulo el 10/10/2026, sin cambios de contenido. Es la historia de la sección; las decisiones posteriores están en `historial.md` y lo vigente, en `00-capitulo.md`. El hilo conductor (§1 de la guía) se agrega arriba de este plan cuando se reescriba la sección.
+
+---
+
+## 2.9 Sesgo, robustez y generalización — `sec:marco_generalizacion`
+
+**Mensaje central.** El desempeño medido en una distribución no se transfiere sin más a otra: cambian los
+dominios, las subpoblaciones y los rasgos espurios, y esas diferencias producen disparidades medibles.
+
+**Razón de ser.** Justifica evaluar fuera de la distribución de entrenamiento y perturbar las imágenes; es el
+fundamento de la robustez de 2.8.3. **Extensión: 2 páginas.**
+
+**Se conserva (l. 902–954):** cambio de distribución (`koh2021wilds`), modalidad, atajos (`kim2024transparent`),
+tono de piel (`groh2021neural`, `daneshjou2022disparities`), disparidad en la colaboración
+(`groh2024learningaided`), población (`jones2022intelligence`).
+
+| Cambio | Ubicación | Razón |
+|---|---|---|
+| Se elimina «HAM10000 es dermatoscópico y SkinCaRe es de fotografía clínica, de modo que toda comparación entre los dos conjuntos arrastra esa diferencia de dominio» | l. 917–919 | Dato práctico de los conjuntos (p43, A1). Queda el principio: la diferencia de modalidad es un cambio de dominio |
+| Se elimina «El trabajo lo usa solo como test… se describen en la Sección~\ref{sec:met_protocolo}» | l. 952–954 | Decisión propia. Se conserva la frase de `riccilara2023dataset` como ejemplo de evidencia local en un país, sin adjetivos de primicia (guía §3: «que sus autores presentan como…») |
+| Se elimina «Un mapa de Grad-CAM que marca la tinta y no la lesión es el síntoma visible de ese atajo» o se deja como ejemplo general | l. 927–928 | Ya está en 2.8.3 |
+| Se elimina el detalle de qué modelo o conjunto: se mantienen Fitzpatrick17k y DDI porque son la evidencia | — | Es literatura, no decisión propia |
+| **Agregar subsección de robustez** (un párrafo, «Robustez frente a variaciones de adquisición») | nuevo | Las causas de la pérdida de desempeño ante perturbaciones (iluminación, resolución, compresión) se explican acá; la medición está en 2.8.3. Cita `hendrycks2019benchmarking` |
+| Título pasa a «Sesgo, robustez y generalización» | — | M2.1 |
+
+**Párrafo de transición a 2.10.** Con los conceptos de clasificación, generación, incertidumbre, evaluación y
+generalización ya presentados, se puede revisar la literatura con un criterio: qué problema aborda cada trabajo,
+con qué datos y protocolo lo evalúa y qué deja sin resolver.
+
+---
+
+# Ficha anterior de 2.10 (reemplazada por `07-estado-arte.md`, 2026-10-12)
+
+## Ficha 2.10 — Estado del arte
+
+Sección del `.tex`: `Chapters/02-Marco-Teorico/10-estado-arte.tex`.
+
+Plan movido desde la ficha única del capítulo el 10/10/2026, sin cambios de contenido. Es la historia de la sección; las decisiones posteriores están en `historial.md` y lo vigente, en `00-capitulo.md`. El hilo conductor (§1 de la guía) se agrega arriba de este plan cuando se reescriba la sección.
+
+---
+
+## 2.10 Estado del arte y posicionamiento del trabajo — `sec:estado_arte`
+
+**Mensaje central.** Cada línea aporta algo y deja algo sin resolver; los huecos combinados son los que
+originan el *pipeline* y los análisis del trabajo, que por eso no repiten trabajos previos.
+
+**Extensión: 9–11 páginas** (tres ejes de 2 páginas cada uno, más tablas, intro y posicionamiento).
+
+**Intro de la sección (p59, S2).** Sin «los tres ejes en el orden del *pipeline*». Dice qué revisa (los
+trabajos más cercanos a la tesina), con qué criterio los agrupa (tres problemas: clasificación de lesiones, modelos
+visión–lenguaje en dermatología, generación de reportes) y el criterio temporal (2020–2026; los anteriores como
+hitos fechados; guía §6). Se mantiene la frase sobre el corte práctico (l. 962–964). Sin figuras.
+
+**Estructura de cada eje** (aplica a los tres):
+
+1. Intro de la subsección (p60): qué problema aborda esta línea, con qué datos y protocolos se suele evaluar,
+   qué se espera de un trabajo.
+2. Hitos anteriores a 2020 (solo si son imprescindibles; A15).
+3. Trabajos existentes, reescritos con el formato de nueve puntos de S3 (objetivo, problema puntual, método y
+   novedad, datos, métricas, con qué se compararon, resultados, evaluación con expertos, limitaciones), verificados
+   contra el PDF.
+4. **Lugar marcado: «Trabajos nuevos: pendiente de S3».** Se agregan a los ya citados hasta llegar a 6–8 por eje.
+5. **Síntesis (S4, A15, A16)**, un párrafo por eje: cómo las familias de enfoques atacan el problema (problema,
+   arquitecturas, datos, protocolo, limitaciones) y qué queda sin resolver.
+6. **Tabla comparativa (S5)**: trabajo, año, arquitectura, datos, métricas, resultado principal, evaluación con
+   expertos.
+
+| Subsección | Se reutiliza | Se elimina | Trabajos citados hoy | Nuevo |
+|---|---|---|---|---|
+| 2.10.1 Clasificación de lesiones — `sec:estado_arte_diagnostico` | l. 966–1036 sin la tabla de conjuntos; hitos de `esteva2017dermatologistlevel` y `tschandl2019comparison` (redactados sin «La línea tiene dos hitos…» → «En 2017…» o una intro) | **`tab:marco_conjuntos` y su párrafo** (l. 978–1019, S1). Se escribe «del conjunto de datos HAM10000» donde corresponda (p60) y se remite a Cap. 3. **Se elimina** el cierre «el trabajo compara cuatro arquitecturas… bajo la misma partición» (l. 1033–1036): pasa al posicionamiento | `magalhaes2024systematic`, `aboulmira2024skinhealthmate`, `khan2025ensemble`, `kreouzi2024learning`, `kim2025skinsavvy2` | S3: ≈ 4 trabajos; tabla `tab:marco_sota_clasificacion` |
+| 2.10.2 VLM en dermatología — `sec:estado_arte_vlm` | l. 1038–1069 | **Se elimina** «El trabajo usa DermLIP…» (l. 1056–1059) y «El trabajo mide LLaVA-Med y Phi-3.5-Vision…» (l. 1068–1069): pasan al posicionamiento | `kim2024transparent`, `codella2024medimageinsight`, `yan2025derm1m`, `yan2025make`, `yan2025vision`, `li2023llavamed`, `moor2023medflamingo`, `he2025pefomed`, `xie2025medtrinity25m`, `zeng2025mmskin`, `abdin2024phi3` | S3: ≈ 4 trabajos; tabla `tab:marco_sota_vlm` |
+| 2.10.3 Generación de reportes — `sec:estado_arte_reportes` | l. 1071–1128, con `tab:marco_generadores` como punto de partida de S5 | Se elimina «como hace este trabajo» (l. 1085); cierre de l. 1130–1134 se convierte en síntesis del eje | `zhou2023skingpt4`, `zhou2024pretrained`, `zeng2025mmskin`, `yilmaz2025resourceefficient`, `liu2025skinr1`, `khan2025ensemble`, `kim2025skinsavvy2`, `chakrabarti2025skin`, `lin2025skingen`, `cao2024mpoxvlm` | S3: ≈ 4 trabajos; tabla ampliada (agregar columnas de datos y expertos) |
+| 2.10.4 Posicionamiento del trabajo — `sec:estado_arte_posicion` | l. 1136–1144 (brecha triple) | Se reformulan las dos excepciones | Los ya citados | **Nuevo**, ver abajo |
+
+**Observación sobre profundidad (A16).** El tutor pide 7–8 artículos por eje, con una carilla y media a dos por
+eje y análisis en los nueve puntos. Hoy hay ≈ 5 en clasificación dentro de la ventana, ≈ 10 en VLM y ≈ 10 en
+reportes, pero la mayoría con 2–3 líneas de descripción. Los ya citados **también** hay que reverificar contra
+el PDF en los nueve puntos (no solo los nuevos). Ver pregunta 11.
+
+### 2.10.4 Posicionamiento (S6) — ideas
+
+1. **Qué dejó sin resolver cada línea** (tres oraciones, una por eje, con la síntesis de arriba): clasificación:
+   métricas que ocultan las clases minoritarias y poca validación externa; VLM: modelos generales medidos
+   sobre todo en radiología y patología, evidencia escasa en dermatología, y especializados
+   contrastivos que clasifican y recuperan pero no redactan; reportes: evaluación por parecido textual, poca
+   fidelidad diagnóstica, hardware fuera de alcance, pocos tratan la incertidumbre.
+2. **Tabla brecha → decisión** (opcional): brecha | evidencia | qué hace el trabajo. Tres filas, sin cifras propias.
+3. **De los huecos al *pipeline*.** La comparación bajo un mismo protocolo responde a la primera brecha; la
+   medición de fidelidad y calidad descriptiva por separado, a la segunda; el ruteo por incertidumbre con
+   recuperación, a la tercera, ligada a 2.6 y 2.7. Se dice que el aporte es el *pipeline* y el análisis
+   conjunto, no la réplica de un modelo previo (A16). Se puede mencionar DermLIP como codificador contrastivo
+   ejecutable en hardware accesible (es la justificación de elección hoy en l. 1056–1059). Descripción
+   completa del *pipeline*: Cap. 3.
+4. **Excepciones reconocidas** (decisión 16 vigente): el ensamble de `khan2025ensemble` ya deriva casos
+   discordantes; `chakrabarti2025skin` mide corrección diagnóstica.

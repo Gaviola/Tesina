@@ -1,0 +1,159 @@
+\section{Incertidumbre y predicción selectiva}
+\label{sec:marco_incertidumbre}
+
+Decidir cuándo un modelo no debe emitir una predicción requiere responder cuatro preguntas: por qué un modelo
+puede equivocarse con la misma seguridad con que acierta, cómo se formaliza la decisión de no responder, con qué
+señal se estima la confianza en una predicción y qué puede hacer un sistema, además de responder o no hacerlo,
+cuando esa confianza no alcanza.
+
+\subsection{Incertidumbre en la clasificación diagnóstica}
+\label{sec:marco_incert_fuentes}
+
+La incertidumbre de una predicción tiene dos fuentes, que se distinguen según si reunir más datos la reduce o
+no. La \textbf{incertidumbre aleatoria} proviene de los datos mismos. Una imagen desenfocada, o una lesión cuyo
+aspecto dermatoscópico es compatible tanto con un nevo como con un melanoma, deja la respuesta indeterminada
+aunque el modelo esté bien entrenado, y más ejemplos de entrenamiento no van a resolver esa incertidumbre. La \textbf{incertidumbre
+epistémica} proviene, en cambio, del modelo. Una clase con pocos ejemplos de entrenamiento, como las
+minoritarias de un conjunto desbalanceado (Sección~\ref{sec:marco_desbalance}), queda peor representada en lo
+que el modelo aprende, y esa incertidumbre disminuye a medida que se agregan datos~\cite{kendall2017uncertainties}.
+El cambio de distribución de la Sección~\ref{sec:marco_regularizacion} también produce incertidumbre epistémica,
+porque la imagen proviene de un equipo, un centro o una población que el entrenamiento no cubrió.
+
+Ninguna de las dos fuentes queda a la vista en la salida de un clasificador. La función softmax de la
+Ecuación~\ref{eq:marco_softmax} reparte siempre entre las clases conocidas una probabilidad que suma uno, de modo
+que no existe una salida que exprese «este caso no se parece a nada de lo visto». Una imagen de un tipo de lesión
+que el modelo nunca vio recibe igualmente una clase, y la probabilidad de esa clase puede estar cerca de
+uno~\cite{hendrycks2017baseline}.
+
+En el caso concreto de dermatología, además, los errores no tienen el mismo costo. No detectar una lesión
+maligna tiene consecuencias más graves que derivar una benigna a un especialista, de modo que, ante un caso
+dudoso, derivarlo puede ser preferible a arriesgar un diagnóstico. Esa opción existe porque el sistema no toma la
+decisión final, sino que asiste a la persona que la toma. En un experimento con dermatólogos y médicos de
+atención primaria, el apoyo de un sistema de aprendizaje profundo mejoró la exactitud diagnóstica de los dos
+grupos~\cite{groh2024learningaided}. Un sistema que reconoce su límite y deriva el caso puede ser, por lo tanto,
+más útil que uno que siempre responde, y medir cuánto se gana al dejar casos sin responder requiere formalizar
+esa decisión, que se conoce como \textbf{abstención} (\emph{abstention}).
+
+\subsection{Predicción selectiva y abstención}
+\label{sec:marco_pred_selectiva}
+
+Un clasificador con opción de rechazo, o clasificador selectivo, se describe con un par $(f, g)$. La función $f$
+asigna una categoría a cada imagen $x$, y la función $g$ decide si la predicción se acepta ($g(x) = 1$) o se
+rechaza y el modelo no responde ($g(x) = 0$). La \textbf{cobertura} es la fracción de imágenes que el modelo acepta, y el
+\textbf{riesgo selectivo} es la tasa de error medida solo sobre las aceptadas,
+\begin{equation}
+    \mathrm{cobertura}(g) = \mathbb{E}\bigl[g(x)\bigr], \qquad
+    \mathrm{riesgo}(f, g) = \frac{\mathbb{E}\bigl[\mathbf{1}[f(x) \neq y]\; g(x)\bigr]}{\mathbb{E}\bigl[g(x)\bigr]},
+    \label{eq:marco_riesgo_selectivo}
+\end{equation}
+donde $y$ es la categoría real. Sobre $n$ imágenes, la cobertura es la proporción de imágenes con
+$g(x_i) = 1$ y el riesgo, la proporción de errores entre ellas~\cite{elyaniv2010foundations,geifman2017selective}.
+
+Una forma habitual de construir $g$ es partir de una señal de confianza $\kappa(x)$, un número que crece con la
+seguridad del modelo en su predicción, y fijar un umbral $\tau$,
+\begin{equation}
+    g(x) = \mathbf{1}\bigl[\kappa(x) \ge \tau\bigr].
+    \label{eq:marco_umbral_confianza}
+\end{equation}
+Subir el umbral reduce la cobertura, porque se aceptan menos imágenes, y reduce también el riesgo selectivo si
+la señal es informativa, es decir, si las imágenes que quedan por debajo del umbral son las que el modelo tiende
+a clasificar mal. El umbral fija así un compromiso entre cuántos casos se responden y cuántos errores se cometen
+entre ellos, y cuánto baja el riesgo por cada caso que se deja de responder depende de la señal elegida.
+
+\subsection{Señales de confianza y calibración}
+\label{sec:marco_senales_confianza}
+
+Como la utilidad del umbral depende de la señal, conviene revisar las alternativas para construirla: la
+probabilidad de un solo modelo, el desacuerdo entre varios modelos y el voto de los casos más parecidos. La señal
+más simple es la máxima probabilidad de la softmax, $\kappa(x) = \max_c p_c$, que sirve de línea base
+para detectar predicciones erróneas~\cite{hendrycks2017baseline}. Para que un umbral sobre ella tenga una lectura
+probabilística, el modelo tiene que estar \textbf{calibrado}, es decir, sus probabilidades tienen que coincidir
+con sus frecuencias de acierto. Por ejemplo, si un modelo calibrado predice melanoma con probabilidad 0.9 en cien
+imágenes, alrededor de noventa de ellas son melanomas. En la notación de \textcite{guo2017calibration}, con
+$\hat{Y}$ la clase predicha y $\hat{P}$ su probabilidad, la condición es $P(\hat{Y} = Y \mid \hat{P} = p) = p$.
+Con un modelo calibrado, un umbral de 0.9 acepta predicciones con al menos 0.9 de probabilidad de ser
+correctas; sin calibración, el umbral no tiene esa lectura. \textcite{guo2017calibration} observaron que las
+redes neuronales modernas tienden a ser sobreconfiadas, es decir, a asignar a sus predicciones probabilidades
+mayores que su frecuencia de acierto, y que las más profundas y anchas suelen estar peor calibradas que las
+pequeñas aunque clasifiquen mejor. Las métricas de calibración y las formas de corregirla se presentan en la
+Sección~\ref{sec:marco_eval_calib}.
+
+Calibrar la softmax, sin embargo, no hace visible la incertidumbre epistémica. La probabilidad de un solo
+modelo, aun calibrada, refleja lo que ese modelo aprendió, y esa incertidumbre corresponde justamente a lo que no
+aprendió. Una forma de estimarla es mediante la comparación de modelos. Es esperable
+que dos redes entrenadas por separado coincidan donde los datos alcanzaron para fijar la respuesta y difieran
+donde no alcanzaron, de modo que su desacuerdo aproxima la incertidumbre epistémica~\cite{kendall2017uncertainties}.
+Un \textbf{ensamble} aprovecha este principio. Promedia las probabilidades de varios modelos entrenados por
+separado, una combinación que se llama \textbf{voto suave}, y suele ser más exacto y estar mejor calibrado que
+cada uno de sus integrantes~\cite{lakshminarayanan2017simple}.
+
+\phantomsection\label{sec:marco_concordancia}%
+El desacuerdo puede medirse también entre dos predictores de naturaleza distinta, como un clasificador
+supervisado y el \gls{knn} de la Sección~\ref{sec:marco_vlm_clip}. Sus sesgos difieren, porque el primero ajusta
+fronteras de decisión entre las clases y el segundo vota con los casos más parecidos a la imagen. Sobre una
+misma imagen, sus predicciones pueden coincidir o no: por ejemplo, el clasificador puede predecir un nevo
+mientras la mayoría de los vecinos recuperados son melanomas. La \textbf{concordancia} entre sus predicciones
+$\hat{y}_1(x)$ y $\hat{y}_2(x)$ es
+\begin{equation}
+    a(x) = \mathbf{1}\bigl[\hat{y}_1(x) = \hat{y}_2(x)\bigr],
+    \label{eq:marco_concordancia}
+\end{equation}
+y sirve como señal solo si los casos en que los predictores coinciden se equivocan menos que aquellos en que
+no, $P(\text{error} \mid a = 1) < P(\text{error} \mid a = 0)$, condición que se verifica con datos. Como usa
+las decisiones y no las probabilidades, no depende de que los modelos estén calibrados, pero no detecta los
+casos en que los dos predictores cometen el mismo error.
+
+El \textbf{consenso de los vecinos} mide, por su parte, qué tan unánime es el voto de la
+Ecuación~\ref{eq:marco_knn}. Es la proporción de vecinos que pertenecen a la clase más votada,
+\begin{equation}
+    \kappa(x) = \max_{c}\ \hat{p}_{\text{kNN}}(c \mid x),
+    \label{eq:marco_consenso}
+\end{equation}
+que vale 1 cuando los $k$ vecinos pertenecen a la misma clase y disminuye a medida que se reparten entre clases
+distintas. Su valor
+depende de la representación con que se miden las distancias y de los casos que contiene la base: si la base no
+tiene imágenes parecidas a la consultada, los $k$ vecinos se recuperan igual, y su voto no informa sobre ella.
+
+Cualquiera de estas señales se juzga por lo mismo, que es si separa las predicciones correctas de las erróneas.
+Una métrica de calibración no mide esa separación, porque la calibración no agrega información que la señal no
+contenga. Un modelo que asigna 0.7 a todas sus predicciones y acierta el 70\,\% de ellas está perfectamente
+calibrado, pero su confianza no distingue los casos fáciles de los difíciles, y un umbral sobre ella acepta todas
+las imágenes o ninguna. Lo que importa de una señal es cuánto menor es la tasa de error entre las predicciones
+que acepta que entre las que rechaza. Con una señal que cumple esa condición, además, la decisión puede dejar de
+ser binaria.
+
+\subsection{Tres salidas: afirmar, ofrecer diferenciales o derivar}
+\label{sec:marco_tres_salidas}
+
+En la práctica clínica, derivar el caso a un especialista no es la única alternativa a afirmar un diagnóstico: un clínico que duda entre
+dos o tres diagnósticos los enuncia como \textbf{diagnóstico diferencial}. Un sistema puede tener entonces tres
+salidas, que son afirmar un diagnóstico, ofrecer diferenciales, es decir, un conjunto de candidatos, o derivar
+el caso a un especialista. Con dos umbrales $\tau_1 > \tau_2$ sobre la señal, la \textbf{regla de decisión} que elige entre
+ellas es
+\begin{equation}
+    \pi(x) =
+    \begin{cases}
+        \text{afirmar} & \text{si } \kappa(x) \ge \tau_1,\\
+        \text{diferencial} & \text{si } \tau_2 \le \kappa(x) < \tau_1,\\
+        \text{derivar} & \text{si } \kappa(x) < \tau_2.
+    \end{cases}
+    \label{eq:marco_politica}
+\end{equation}
+Si la señal es discreta, como la concordancia o el consenso de unos pocos vecinos, cada salida se asigna a uno o
+más de sus valores posibles, y no hay umbrales que ajustar.
+
+La salida diferencial es una predicción por conjuntos, $S(x) \subseteq \{1, \dots, C\}$. El conjunto puede
+formarse con las clases más probables de un modelo o con las predicciones de dos predictores que no coinciden, como el par formado por el nevo y el melanoma del ejemplo
+anterior. Cuando $|S(x)| = 1$, la salida coincide con afirmar.
+
+Cada salida tiene un costo distinto. Afirmar entrega la información más concreta, pero si la predicción es
+errónea, el error llega al lector con la misma forma que un acierto y no puede detectarlo. Ofrecer diferenciales
+informa menos, porque deja al lector la elección entre los candidatos, y a cambio es más probable que el
+conjunto contenga la clase correcta. Derivar no produce diagnóstico y traslada el caso a una consulta. Cuanto
+más costoso es un error frente a una derivación, más alto conviene fijar $\tau_1$, y los umbrales se eligen sobre
+el conjunto de validación y no sobre el de test (Sección~\ref{sec:marco_regularizacion}).
+
+Cuando el sistema entrega un reporte clínico, la salida que elige la regla llega al lector a través de un
+texto, y un texto puede deshacerla: afirmar con certeza un diagnóstico que la regla dejó abierto entre dos
+candidatos, o describir hallazgos que contradicen el diagnóstico que recibió. Por eso, generar el reporte
+plantea problemas propios, distintos de los de clasificar.

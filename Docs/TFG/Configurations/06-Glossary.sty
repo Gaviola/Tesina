@@ -20,6 +20,9 @@
 % Nombre en inglés seguido de coma, si la entrada lo tiene.
 \newcommand*{\glsinglescoma}[1]{%
     \ifglshasfield{useri}{#1}{\emph{\glsentryuseri{#1}}, }{}}
+% Ídem en plural: usa el inglés en plural (campo user2) si la entrada lo declara.
+\newcommand*{\glsinglesplcoma}[1]{%
+    \ifglshasfield{userii}{#1}{\emph{\glsentryuserii{#1}}, }{\glsinglescoma{#1}}}
 
 \newacronymstyle{espanol-ingles-sigla}{%
     \GlsUseAcrEntryDispStyle{long-short}%
@@ -30,9 +33,9 @@
     \renewcommand*{\Genacrfullformat}[2]{%
         \Glsentrylong{##1}##2\space(\glsinglescoma{##1}\firstacronymfont{\glsentryshort{##1}})}%
     \renewcommand*{\genplacrfullformat}[2]{%
-        \glsentrylongpl{##1}##2\space(\glsinglescoma{##1}\firstacronymfont{\glsentryshort{##1}})}%
+        \glsentrylongpl{##1}##2\space(\glsinglesplcoma{##1}\firstacronymfont{\glsentryshort{##1}})}%
     \renewcommand*{\Genplacrfullformat}[2]{%
-        \Glsentrylongpl{##1}##2\space(\glsinglescoma{##1}\firstacronymfont{\glsentryshort{##1}})}%
+        \Glsentrylongpl{##1}##2\space(\glsinglesplcoma{##1}\firstacronymfont{\glsentryshort{##1}})}%
 }
 \setacronymstyle{espanol-ingles-sigla}
 
@@ -40,7 +43,8 @@
 \renewcommand*{\acrpluralsuffix}{}
 
 % \acronimo[opciones]{etiqueta}{SIGLA}{nombre en español}{nombre en inglés}
-% El cuarto argumento puede quedar vacío. Las opciones pasan a \newacronym (por ejemplo, longplural).
+% El cuarto argumento puede quedar vacío. Las opciones pasan a \newacronym (por ejemplo, longplural, y
+% user2 con el nombre en inglés en plural, que se usa si la primera aparición es en plural).
 \newcommand{\acronimo}[5][]{%
     \ifstrempty{#5}%
         {\newacronym[description={#4},#1]{#2}{#3}{#4}}%

@@ -13,17 +13,19 @@
         \draw[figflecha] (a_img) -- (a_vlm);
         \draw[figflecha] (a_vlm) -- (a_rep);
 
-        % (b) Condicionado en evidencia externa.
+        % (b) Condicionado en evidencia externa. Arriba, el componente que aporta la evidencia y la regla de
+        % decisión; abajo, el mismo recorrido de (a) con la evidencia entrando al VLM desde arriba.
         \node[font=\small\bfseries, anchor=west] at (-6, 4) {(b) Condicionado en evidencia externa};
-        \node[figentrada, text width=22mm] (b_img) at (8, -16) {Imagen};
-        \node[figtarea, text width=28mm] (b_ev) at (42, -6) {Clasificador o\\recuperación};
-        \node[figtarea, text width=24mm] (b_pol) at (42, -27) {Política\\(afirmar, diferencial\\o derivar)};
-        \node[figtarea, text width=26mm] (b_vlm) at (88, -16) {\gls{vlm}};
-        \node[figsalida, text width=26mm] (b_rep) at (122, -16) {Reporte};
-        \draw[figflecha] (b_img.east) -- ++(4, 0) |- (b_ev.west);
+        \node[figtarea, text width=28mm] (b_ev) at (38, -8) {Clasificador o\\recuperación};
+        \node[figtarea, text width=34mm] (b_pol) at (84, -8)
+            {Regla de decisión\\[1pt]{\footnotesize afirmar, diferencial\\o derivar}};
+        \node[figentrada, text width=22mm] (b_img) at (8, -34) {Imagen};
+        \node[figtarea, text width=26mm] (b_vlm) at (84, -34) {\gls{vlm}};
+        \node[figsalida, text width=26mm] (b_rep) at (122, -34) {Reporte};
+        \draw[figflecha] (b_img.north) |- (b_ev.west);
         \draw[figflecha] (b_ev) -- (b_pol);
-        \draw[figflecha] (b_pol.east) -| node[figetiqueta, pos=0.25, below] {evidencia $c(x)$} (b_vlm.south);
-        \draw[figflecha] (b_img.south) -- ++(0, -18) -| ([xshift=-6mm]b_vlm.south);
+        \draw[figflecha] (b_pol) -- node[figetiqueta, right=1mm] {evidencia $c(x)$} (b_vlm);
+        \draw[figflecha] (b_img) -- (b_vlm);
         \draw[figflecha] (b_vlm) -- (b_rep);
 
     \end{tikzpicture}
