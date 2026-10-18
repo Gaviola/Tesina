@@ -1,0 +1,34 @@
+% Las dos condiciones de un reporte clínico correcto (clasificar y describir una misma imagen).
+% Se trajo desde el Capítulo 1 a sec:marco_rep_ejes (2.6.2). El nombre del archivo y la etiqueta
+% (fig:intro_dos_tareas) se conservan.
+
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[x=1mm, y=1mm]
+
+        \node[figentrada, text width=27mm] (img) at (12, 0) {Imagen\\dermatoscópica};
+
+        \node[figtarea, text width=36mm] (t1) at (58, 14)
+            {\textbf{Clasificar}\\asignar una categoría};
+        \node[figtarea, text width=36mm] (t2) at (58, -14)
+            {\textbf{Describir}\\redactar el texto\\de la lesión};
+
+        \node[figsalida, text width=34mm] (cat) at (114, 14)
+            {Categoría diagnóstica\\[2pt]{\footnotesize se evalúa con la\\fidelidad diagnóstica}};
+        \node[figsalida, text width=34mm] (txt) at (114, -14)
+            {Reporte clínico\\[2pt]{\footnotesize se evalúa con la\\calidad descriptiva}};
+
+        \draw[figflecha] (img.east) -- ++(6, 0) |- (t1.west);
+        \draw[figflecha] (img.east) -- ++(6, 0) |- (t2.west);
+        \draw[figflecha] (t1.east) -- (cat.west);
+        \draw[figflecha] (t2.east) -- (txt.west);
+
+        \begin{scope}[on background layer]
+            \node[figgrupo={las dos condiciones de un reporte correcto},
+                  fit=(t1) (t2)] {};
+        \end{scope}
+
+    \end{tikzpicture}
+    \caption{Las dos condiciones de un reporte clínico correcto y la métrica de cada una.}
+    \label{fig:intro_dos_tareas}
+\end{figure}

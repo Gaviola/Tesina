@@ -83,6 +83,10 @@
 \addto\extrasenglish{\def\tableautorefname{Table}}
 \addto\extrasenglish{\def\partautorefname{Part}}
 \addto\extrasenglish{\def\appendixautorefname{Appendix}}
+% babel-spanish acentúa los operadores (\min pasa a «mín») y la fuente matemática no tiene la tilde:
+% se imprime un glifo suelto encima del operador. Se usan los operadores sin acento, como en la
+% literatura del área.
+\addto\extrasspanish{\unaccentedoperators}
 \addto\extrasspanish{\def\figureautorefname{Figura}}
 \addto\extrasspanish{\def\chapterautorefname{Capítulo}}
 \addto\extrasspanish{\def\sectionautorefname{Sección}}
@@ -91,6 +95,8 @@
 \addto\extrasspanish{\def\tableautorefname{Tabla}}
 \addto\extrasspanish{\def\partautorefname{Parte}}
 \addto\extrasspanish{\def\appendixautorefname{Apéndice}}
+% babel-spanish rotula las tablas como «Cuadro»; la guía de redacción las llama «Tabla» en el texto.
+\addto\captionsspanish{\def\tablename{Tabla}\def\listtablename{Índice de tablas}}
 
 % Force plain lowercase roman page numbers in Spanish.
 %
@@ -106,6 +112,11 @@
 % \spanishlcroman is babel-spanish's own documented switch for this. It must
 % run after babel's layout hook, hence \AtBeginDocument.
 \ifthenelse{\equal{\LanguageOption}{spanish}}{\AtBeginDocument{\spanishlcroman}}{}
+
+% babel-spanish convierte el punto decimal en coma dentro de las fórmulas ($0.5$ se imprime «0,5»),
+% mientras que el texto queda con punto. La guía de redacción fija el punto decimal en todo el
+% documento, y \decimalpoint desactiva esa conversión.
+\ifthenelse{\equal{\LanguageOption}{spanish}}{\AtBeginDocument{\decimalpoint}}{}
 
 % Command to overwrite the color of a given command.
 \newcommand{\overwritecolor}[2]{%
@@ -143,3 +154,9 @@
 
 \setlength{\parskip}{3mm}% separación entre párrafo
 \setlength{\parindent}{1cm}%identación primera linea de párrafo
+
+%% Sin palabras huérfanas al final de un párrafo (revisión del tutor, 2026-10-05): la última línea de cada
+%% párrafo ocupa al menos 8em (unos 3 cm). TeX elige los cortes de todo el párrafo para cumplirlo; \emergencystretch le da
+%% margen para no generar líneas que desborden. En columnas angostas de tablas la restricción no actúa.
+\AtBeginDocument{\setlength{\parfillskip}{0pt plus \dimexpr\textwidth-8em\relax}}
+\setlength{\emergencystretch}{1.5em}

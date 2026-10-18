@@ -1,0 +1,56 @@
+\section{Objetivos}
+\label{sec:intro_objetivos}
+A partir de las problemáticas planteadas, se establecen los objetivos del presente trabajo, cuya formulación
+se articula en torno a dos preguntas fundamentales que orientan su desarrollo:
+\begin{enumerate}[label=\textbf{PI\arabic*.}]
+  \item ¿Clasifican los \glspl{vlm} las lesiones de piel, y en particular el melanoma, tan bien como los
+  clasificadores entrenados solo con imágenes?
+  \item ¿Los reportes que genera un \gls{vlm} afirman el diagnóstico correcto y describen la lesión que muestra
+  la imagen?
+\end{enumerate}
+
+Para responderlas, el objetivo general es desarrollar y evaluar un sistema basado en modelos de aprendizaje
+profundo y \glspl{vlm}, adaptados a partir de modelos preentrenados, capaz de asistir en el diagnóstico de lesiones de piel y en la
+generación automática de reportes clínicos estructurados a partir de imágenes, con el fin de mejorar la
+exactitud diagnóstica y agilizar el flujo de trabajo. Se analiza cuán bien clasifica, si el reporte afirma el
+diagnóstico correcto y si el sistema puede ejecutarse con recursos computacionales convencionales.
+
+Los objetivos específicos son:
+\begin{enumerate}[label=\textbf{OE\arabic*.}]
+  \item Diseñar, implementar y evaluar clasificadores de lesiones de piel basados en \glspl{cnn}, \glspl{vit}
+  y \glspl{vlm}, generales y especializados en dermatología, para identificar posibles melanomas.
+  \item Diseñar, implementar y evaluar un \gls{vlm}, ajustado a partir de un modelo preentrenado, que integre
+  información visual y textual para producir un diagnóstico preliminar y el reporte de la lesión.
+  \item Evaluar el desempeño del sistema en distintos escenarios, como imágenes de otra población o casos en
+  que no tiene seguridad sobre el diagnóstico, analizando su exactitud diagnóstica, la calidad del texto
+  generado y su utilidad práctica, incluido su costo computacional.
+\end{enumerate}
+
+La Tabla~\ref{tab:intro_objetivos_preguntas} relaciona cada objetivo específico con la pregunta que contribuye a
+responder y con los capítulos donde se lo describe y se lo evalúa.
+
+\begin{table}[H]
+  \centering
+  \caption{Relación entre los objetivos específicos, las preguntas y los capítulos.}
+  \label{tab:intro_objetivos_preguntas}
+  \small
+  \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.29\textwidth}p{0.10\textwidth}
+    >{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
+    \toprule
+    \textbf{Objetivo específico} & \textbf{Pregunta} & \textbf{Se diseña y describe en} & \textbf{Se evalúa y responde en} \\
+    \midrule
+    OE1. Clasificadores de lesiones y de melanoma (\gls{cnn}, \gls{vit}, \gls{vlm}) & PI1 &
+      Capítulo~\ref{cp:metodos}, Materiales y métodos &
+      Capítulo~\ref{cp:res_clasif}, Resultados de clasificación \\
+    \filasep
+    OE2. \gls{vlm} para generar reportes & PI2 &
+      Capítulo~\ref{cp:metodos}, Materiales y métodos &
+      Capítulo~\ref{cp:res_gen}, Resultados de generación \\
+    \filasep
+    OE3. Evaluación en distintos escenarios & PI1 y PI2 &
+      Capítulo~\ref{cp:metodos} (protocolo de evaluación) &
+      Capítulos~\ref{cp:res_clasif} y~\ref{cp:res_gen} (resultados) y Capítulo~\ref{cp:discusion} (discusión y
+      limitaciones) \\
+    \bottomrule
+  \end{tabularx}
+\end{table}

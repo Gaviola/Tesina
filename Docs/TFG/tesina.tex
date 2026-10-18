@@ -42,9 +42,10 @@
 
 \begin{document}
 
-%%% Portadas %%%
+%%% Portada %%%
 \include{Matter/00-Cover}
-\include{Matter/01-Front-Page}
+% Portadilla interior de la plantilla UMU. Las tesinas de la Facultad de Ingeniería llevan una sola carátula.
+% \include{Matter/01-Front-Page}
 
 %%% Declaración de autoría %%%
 % La plantilla incluye la declaración de la UMU. Reemplazar por la que exija la UNCuyo (si corresponde)
@@ -63,6 +64,8 @@
 \include{Chapters/00-Resumen}
 
 %%% Índices %%%
+% El índice muestra capítulos y secciones; las subsecciones siguen numeradas en el texto (tutor, 09/10/2026).
+\setcounter{tocdepth}{1}
 \bookmarktocentry\tableofcontents
 \listoffigures
 \listoftables
@@ -76,19 +79,19 @@
 \pagenumbering{arabic}
 
 %%% Capítulos %%%
-\include{Chapters/01-Introduccion}
-\include{Chapters/02-Marco-Teorico}
-\include{Chapters/03-Materiales-Metodos}
-\include{Chapters/04-Resultados-Clasificacion}
-\include{Chapters/05-Resultados-Generacion}
-\include{Chapters/06-Discusion}
-\include{Chapters/07-Conclusiones}
+\include{Chapters/01-Introduccion/00-capitulo}
+\include{Chapters/02-Marco-Teorico/00-capitulo}
+\include{Chapters/03-Materiales-Metodos/00-capitulo}
+\include{Chapters/04-Resultados-Clasificacion/00-capitulo}
+\include{Chapters/05-Resultados-Generacion/00-capitulo}
+\include{Chapters/06-Discusion/00-capitulo}
+\include{Chapters/07-Conclusiones/00-capitulo}
 
 %%% Bibliografía %%%
 \renewcommand{\refname}{Bibliografía}
 \printbibliography[title={\refname},heading=bibintoc]
 
-%%% Apéndices: material desarrollado por el autor %%%
+%%% Apéndices %%%
 \appendix
 \input{Matter/06-Appendices}
 \input{Chapters/Apendices/A-Hiperparametros}
@@ -96,10 +99,10 @@
 \input{Chapters/Apendices/C-Resultados-Complementarios}
 % \input{Chapters/Apendices/D-Rubrica-Clinica} % Pendiente: se incorpora si se concreta la evaluación con especialistas.
 \input{Chapters/Apendices/E-Reproducibilidad}
+\input{Chapters/Apendices/F-Fichas-Datasets-Modelos}
 
-%%% Anexos: material no desarrollado por el autor %%%
-\input{Matter/07-Annexes}
-\input{Chapters/Anexos/A-Fichas-Datasets-Modelos}
+% Anexos de la plantilla UMU: se unificaron con los apéndices (revisión del tutor, 2026-10-05).
+% \input{Matter/07-Annexes}
 
 %%% Contraportada %%%
 \input{Matter/08-Back-Page}

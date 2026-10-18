@@ -1,0 +1,38 @@
+% Figura: la operación de convolución.
+% Se usa en sec:marco_cnn, después del párrafo que define la convolución.
+% Las tres matrices van separadas y las etiquetas en dos líneas, para que no se toquen (tutor, p36).
+
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[x=1mm, y=1mm]
+
+        % Entrada 6x6 con la ventana de 3x3 resaltada.
+        \fill[fignaranja!30] (5, 10) rectangle (20, 25);
+        \draw[figtrazo!50] (0, 0) grid[step=5] (30, 30);
+        \draw[figtrazo, thick] (0, 0) rectangle (30, 30);
+        \draw[fignaranja!70!black, very thick] (5, 10) rectangle (20, 25);
+        \node[font=\footnotesize, text=figtrazo, align=center, anchor=north] at (15, -2) {entrada\\$6\times 6$};
+
+        % Filtro 3x3.
+        \fill[fignaranja!30] (50, 7.5) rectangle (65, 22.5);
+        \draw[fignaranja!70!black, shift={(50, 7.5)}] (0, 0) grid[step=5] (15, 15);
+        \draw[fignaranja!70!black, very thick] (50, 7.5) rectangle (65, 22.5);
+        \node[font=\footnotesize, text=figtrazo, align=center, anchor=north] at (57.5, -2) {filtro $3\times 3$\\(pesos compartidos)};
+        \node[font=\large, text=figtrazo] at (40, 15) {$\ast$};
+
+        % Salida 4x4 con la celda resultante.
+        \fill[figverde!35] (95, 10) rectangle (100, 15);
+        \draw[figtrazo!50] (90, 0) grid[step=5] (110, 20);
+        \draw[figtrazo, thick] (90, 0) rectangle (110, 20);
+        \draw[figverde!70!black, very thick] (95, 10) rectangle (100, 15);
+        \node[font=\footnotesize, text=figtrazo, align=center, anchor=north] at (100, -2) {mapa de características\\$4\times 4$};
+        \node[font=\large, text=figtrazo] at (77.5, 15) {$=$};
+
+        % De la ventana a la celda.
+        \draw[figflecha, fignaranja!70!black, bend left=25] (20, 25) to
+            node[figetiqueta, above] {producto punto} (95, 15);
+
+    \end{tikzpicture}
+    \caption{Convolución: un mismo filtro recorre la entrada y produce un mapa de características.}
+    \label{fig:marco_convolucion}
+\end{figure}

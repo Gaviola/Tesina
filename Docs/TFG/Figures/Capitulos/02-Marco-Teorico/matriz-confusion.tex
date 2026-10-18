@@ -1,0 +1,55 @@
+% Figura: matriz de confusión binaria y curva ROC ilustrativas, con datos sintéticos (no son resultados del
+% trabajo). Se usa en sec:marco_eval_clasif, al presentar la matriz de confusión y las métricas que salen de ella.
+
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[x=1mm, y=1mm]
+
+        % (a) Matriz de confusión binaria.
+        \begin{scope}
+            \foreach \x/\y/\txt/\col in {0/20/{TP}/figverde, 20/20/{FN}/figbermellon,
+                                         0/0/{FP}/figbermellon, 20/0/{TN}/figverde} {
+                \fill[\col!15] (\x, \y) rectangle ++(20, 20);
+                \draw[figtrazo] (\x, \y) rectangle ++(20, 20);
+                \node[font=\small\bfseries] at (\x + 10, \y + 10) {\txt};
+            }
+            \node[font=\footnotesize] at (10, 43) {positiva};
+            \node[font=\footnotesize] at (30, 43) {negativa};
+            \node[font=\small] at (20, 49) {clase predicha};
+            \node[font=\footnotesize, anchor=east] at (-1.5, 30) {positiva};
+            \node[font=\footnotesize, anchor=east] at (-1.5, 10) {negativa};
+            \node[font=\small, rotate=90] at (-19, 20) {clase real};
+
+            % Lectura por fila (sensibilidad, especificidad) y por columna (precisión).
+            \draw[figflecha] (41, 30) -- (47, 30)
+                node[right, font=\footnotesize, align=left] {sensibilidad\\$\mathrm{TP}/(\mathrm{TP}+\mathrm{FN})$};
+            \draw[figflecha] (41, 10) -- (47, 10)
+                node[right, font=\footnotesize, align=left] {especificidad\\$\mathrm{TN}/(\mathrm{TN}+\mathrm{FP})$};
+            \draw[figflecha] (10, -1) -- (10, -7)
+                node[below, font=\footnotesize, align=center] {precisión\\$\mathrm{TP}/(\mathrm{TP}+\mathrm{FP})$};
+            \node[font=\small] at (20, -24) {(a) Matriz de confusión};
+        \end{scope}
+
+        % (b) Curva ROC.
+        \begin{scope}[xshift=86mm]
+            \fill[figazul!15] (0, 0) -- (0, 22) .. controls (4, 35) and (12, 39) .. (40, 40) -- (40, 0) -- cycle;
+            \draw[figtrazo] (0, 0) rectangle (40, 40);
+            \draw[figtrazo, dashed] (0, 0) -- (40, 40);
+            \draw[figazul!80!black, thick] (0, 0) -- (0, 22) .. controls (4, 35) and (12, 39) .. (40, 40);
+            \fill[fignaranja!80!black] (6.2, 32.4) circle (1.1);
+            \node[figetiqueta, anchor=west] at (8, 28) {umbral $\tau$};
+            \node[font=\footnotesize] at (27, 14) {AUC};
+            \node[font=\footnotesize, rotate=38] at (22, 18.5) {azar};
+            \foreach \t in {0, 0.5, 1} {
+                \node[below, font=\footnotesize] at (\t*40, 0) {\t};
+                \node[left, font=\footnotesize] at (0, \t*40) {\t};
+            }
+            \node[font=\small] at (20, -7) {FPR $= 1 -{}$especificidad};
+            \node[font=\small, rotate=90] at (-8, 20) {TPR $={}$sensibilidad};
+            \node[font=\small] at (20, -24) {(b) Curva ROC};
+        \end{scope}
+
+    \end{tikzpicture}
+    \caption{Matriz de confusión binaria con las métricas que se leen en ella, y curva ROC con su área.}
+    \label{fig:marco_matriz_roc}
+\end{figure}

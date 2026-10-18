@@ -1,0 +1,41 @@
+% Figura: la matriz de pesos de atención.
+% Se usa en sec:marco_atencion, después de la Ecuación de la atención escalada por producto punto.
+% Los pesos son ilustrativos: muestran la forma de la operación, no un modelo entrenado.
+
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[x=1mm, y=1mm]
+
+        % Consultas (filas) y claves (columnas).
+        \foreach \i in {1, 2, 3, 4} {
+            \node[fignodo, minimum height=6mm, minimum width=9mm, inner sep=1pt,
+                  draw=figazul!80!black, fill=figazul!12] (q\i) at (0, 30 - \i*8) {\footnotesize $q_{\i}$};
+            \node[fignodo, minimum height=6mm, minimum width=6.5mm, inner sep=1pt,
+                  draw=fignaranja!70!black, fill=fignaranja!18] (k\i) at (8 + \i*8, 34) {\footnotesize $k_{\i}$};
+        }
+
+        % Pesos softmax(QK^T / sqrt(d_k)); cada fila suma uno.
+        \foreach \row/\vals in {1/{60,20,10,10}, 2/{15,55,20,10}, 3/{10,25,50,15}, 4/{5,10,25,60}} {
+            \foreach \v [count=\col] in \vals {
+                \fill[figceleste!\v!white] (4 + \col*8, 26 - \row*8) rectangle (12 + \col*8, 34 - \row*8);
+                \node[font=\scriptsize] at (8 + \col*8, 30 - \row*8) {0.\ifnum\v<10 0\fi\v};
+            }
+        }
+        \draw[figtrazo, shift={(12, -6)}] (0, 0) grid[step=8] (32, 32);
+
+        % Salida.
+        \foreach \i in {1, 2, 3, 4} {
+            \node[fignodo, minimum height=6mm, minimum width=9mm, inner sep=1pt,
+                  draw=figverde!70!black, fill=figverde!10, densely dashed] (o\i) at (66, 30 - \i*8)
+                  {\footnotesize $o_{\i}$};
+            \draw[figflecha] (45, 30 - \i*8) -- (o\i.west);
+        }
+
+        \node[font=\footnotesize, text=figtrazo] at (66, 32) {$o_i = \sum_j a_{ij} v_j$};
+        \node[font=\footnotesize, text=figtrazo, align=center] at (28, -12)
+            {pesos $a_{ij}$ = $\mathrm{softmax}\!\left(q_i k_j^{\top} / \sqrt{d_k}\right)$};
+
+    \end{tikzpicture}
+    \caption{Pesos de atención entre las posiciones de una secuencia de cuatro tokens (valores ilustrativos).}
+    \label{fig:marco_atencion}
+\end{figure}

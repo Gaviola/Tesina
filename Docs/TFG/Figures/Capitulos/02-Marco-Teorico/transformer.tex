@@ -1,0 +1,83 @@
+% Figura: arquitectura codificador-decodificador del transformer. Adaptada de vaswani2017attention (Figura 1).
+% Se usa en sec:marco_atencion, en el párrafo que presenta el codificador y el decodificador.
+
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[x=1mm, y=1mm,
+            capa/.style={figtarea, minimum width=38mm, minimum height=7mm, font=\footnotesize, inner sep=2pt},
+            norma/.style={fignodo, fill=figrelleno, minimum width=38mm, minimum height=5mm, font=\footnotesize,
+                inner sep=1.5pt},
+            emb/.style={figentrada, minimum width=38mm, minimum height=6mm, font=\footnotesize, inner sep=2pt},
+            suma/.style={circle, draw=figtrazo, fill=white, inner sep=0pt, minimum size=4.5mm, font=\small},
+            texto/.style={font=\footnotesize, text=figtrazo, align=center},
+            grupo/.style={font=\small\itshape, text=figtrazo, rotate=90}]
+
+        % Codificador (izquierda).
+        \node[texto] (ein) at (0, -1) {tokens de entrada};
+        \node[emb] (eemb) at (0, 7) {embedding};
+        \node[suma] (esum) at (0, 16) {$+$};
+        \node[texto] (epos) at (-34, 16) {codificación\\de posición};
+        \node[capa] (eatt) at (0, 31) {atención multicabezal};
+        \node[norma] (en1) at (0, 42) {suma y normalización};
+        \node[capa] (effn) at (0, 53) {perceptrón multicapa};
+        \node[norma] (en2) at (0, 64) {suma y normalización};
+
+        \draw[figflecha] (ein) -- (eemb);
+        \draw[figflecha] (eemb) -- (esum);
+        \draw[figflecha] (epos) -- (esum);
+        \draw[figflecha] (esum) -- (eatt);
+        \draw[figflecha] (eatt) -- (en1);
+        \draw[figflecha] (en1) -- (effn);
+        \draw[figflecha] (effn) -- (en2);
+        % Conexiones residuales, por la izquierda.
+        \draw[figflecha] (0, 25) -| (-24, 42) -- (en1.west);
+        \draw[figflecha] (0, 47.5) -| (-24, 64) -- (en2.west);
+
+        \coordinate (eres) at (-24, 25);
+        \node[figgrupo={}, inner sep=2.5mm, fit=(eatt) (en2) (eres)] (egrupo) {};
+        \node[grupo, anchor=south] at (egrupo.west) {codificador, $N$ bloques};
+
+        % Decodificador (derecha).
+        \node[texto] (din) at (60, -1) {tokens ya generados};
+        \node[emb] (demb) at (60, 7) {embedding};
+        \node[suma] (dsum) at (60, 16) {$+$};
+        \node[texto] (dpos) at (94, 16) {codificación\\de posición};
+        \node[capa] (datt) at (60, 31) {atención multicabezal\\enmascarada};
+        \node[norma] (dn1) at (60, 42) {suma y normalización};
+        \node[capa] (dcross) at (60, 53) {atención multicabezal\\sobre el codificador};
+        \node[norma] (dn2) at (60, 64) {suma y normalización};
+        \node[capa] (dffn) at (60, 75) {perceptrón multicapa};
+        \node[norma] (dn3) at (60, 86) {suma y normalización};
+
+        \draw[figflecha] (din) -- (demb);
+        \draw[figflecha] (demb) -- (dsum);
+        \draw[figflecha] (dpos) -- (dsum);
+        \draw[figflecha] (dsum) -- (datt);
+        \draw[figflecha] (datt) -- (dn1);
+        \draw[figflecha] (dn1) -- (dcross);
+        \draw[figflecha] (dcross) -- (dn2);
+        \draw[figflecha] (dn2) -- (dffn);
+        \draw[figflecha] (dffn) -- (dn3);
+        % Conexiones residuales, por la derecha.
+        \draw[figflecha] (60, 25) -| (84, 42) -- (dn1.east);
+        \draw[figflecha] (60, 47.5) -| (84, 64) -- (dn2.east);
+        \draw[figflecha] (60, 69.5) -| (84, 86) -- (dn3.east);
+
+        \coordinate (dres) at (84, 25);
+        \node[figgrupo={}, inner sep=2.5mm, fit=(datt) (dn3) (dres)] (dgrupo) {};
+        \node[grupo, anchor=north] at (dgrupo.east) {decodificador, $N$ bloques};
+
+        % La salida del codificador entra en la segunda atención de cada bloque del decodificador.
+        \draw[figflecha] (en2.north) -- (0, 71) -| (31, 53) -- (dcross.west);
+
+        % Salida.
+        \node[capa, minimum height=6mm] (dlin) at (60, 99) {capa lineal y softmax};
+        \node[figsalida, minimum width=38mm, minimum height=6mm, font=\footnotesize, inner sep=2pt, inner xsep=4pt] (dout)
+            at (60, 109) {probabilidades del token siguiente};
+        \draw[figflecha] (dn3) -- (dlin);
+        \draw[figflecha] (dlin) -- (dout);
+
+    \end{tikzpicture}
+    \caption{Arquitectura codificador–decodificador del transformer. Adaptada de \textcite{vaswani2017attention}.}
+    \label{fig:marco_transformer}
+\end{figure}

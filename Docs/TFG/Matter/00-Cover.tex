@@ -1,87 +1,48 @@
 % ----------------------------------------
-% Definición del fondo 
-% ----------------------------------------
-  \newcommand\BackgroundPicCover{%
-    \put(0,0){%
-      \parbox[b][\paperheight]{\paperwidth}{%
-        \vfill
-        \centering
-        \includegraphics[width=\paperwidth,height=\paperheight,keepaspectratio]{Figures/Theme/BG_UMU_v2.pdf}%
-        \vfill
-      }%
-    }%
-  } %
-
-\AddToShipoutPictureBG*{\BackgroundPicCover}
-
-% ----------------------------------------
-% Portada con cambio según LanguageOption
+% Carátula: fondo blanco con el isologotipo de la UNCuyo y la Facultad de Ingeniería.
+% El isologotipo es la versión oficial en color descargada de
+% https://cicunc.uncuyo.edu.ar/imagen-institucional (marcas-facu-ingenieria.pdf), recortada a la marca combinada.
 % ----------------------------------------
 \newgeometry{
-  top=1.5cm, bottom=1.77cm,
-  left=2cm, right=1.5cm,
+  top=2cm, bottom=2cm,
+  left=2.5cm, right=2cm,
   bindingoffset=0cm
 }
 \begin{titlepage}
-  \AddToShipoutPictureBG*{\BackgroundPicCover}
   \begingroup
-    \plexsans %  Aplica IBM Plex Sans solo localmente
+    \plexsans % Aplica IBM Plex Sans solo localmente
+    \color{frontpagedark}
 
-    % Color de texto según opción de portada
-    \color{white}
-    
-    \vspace*{\fill}  % empuje vertical
+    \noindent\includegraphics[width=10cm]{Figures/Theme/isologo-uncuyo-fing.pdf}\par
+    \vspace{0.2cm}
+    {\noindent\color{uncuyoazul}\rule{\textwidth}{0.8pt}\par}
+
+    \vspace*{\fill} % empuje vertical
 
     % Selección de portada en inglés vs español
     \ifthenelse{\equal{\LanguageOption}{english}}{%
-      % ======= PORTADA EN INGLÉS =======
-      {\noindent\bfseries\fontsize{12}{14}\selectfont DOCTORAL THESIS\par}
+      {\noindent\bfseries\fontsize{12}{14}\selectfont UNDERGRADUATE THESIS — COMPUTER SCIENCE\par}
       \vspace{0.5cm}
-      {\noindent\raggedright\itshape\fontsize{22}{24}\selectfont \titleesp\par}
+      {\noindent\raggedright\itshape\color{uncuyoazul}\fontsize{22}{26}\selectfont \thetitle\par}
       \vspace{2cm}
-
-      \noindent
-      \begin{minipage}[t]{0.40\textwidth}
-        \raggedright
-        {\itshape\fontsize{14}{20}\selectfont \thetitle\par}
-      \end{minipage}%
-      \begin{minipage}[t]{0.4\textwidth}
-        \raggedright
-        \begin{tabbing}
-          \hspace{4cm}\=\kill
-          \textbf{\fontsize{12}{10}\selectfont AUTHOR:}\> \GetFirstAuthor \\[0.3cm]
-          \textbf{\fontsize{12}{10}\selectfont SUPERVISORS:}\> \GetSupervisor
-        \end{tabbing}
-      \end{minipage}%
-      \begin{minipage}[t]{0.1\textwidth}
-        \vspace{1.5cm}
-        \raggedleft
-        {\fontsize{13}{16}\selectfont \the\year \par}
-      \end{minipage}
+      \def\EtiquetaAutor{AUTHOR:}\def\EtiquetaDirector{SUPERVISOR:}
     }{%
-      % ======= PORTADA EN ESPAÑOL =======
       {\noindent\bfseries\fontsize{12}{14}\selectfont TESINA DE GRADO — LICENCIATURA EN CIENCIAS DE LA COMPUTACIÓN\par}
       \vspace{0.5cm}
-      {\noindent\raggedright\itshape\fontsize{22}{24}\selectfont \titleesp\par}
+      {\noindent\raggedright\itshape\color{uncuyoazul}\fontsize{22}{26}\selectfont \titleesp\par}
       \vspace{2cm}
-
-      \noindent
-      
-      \begin{minipage}[t]{0.4\textwidth}
-        \raggedright
-        \begin{tabbing}
-          \hspace{4cm}\=\kill
-          \textbf{\fontsize{12}{10}\selectfont AUTOR:}\> \GetFirstAuthor \\[0.3cm]
-          \textbf{\fontsize{12}{10}\selectfont DIRECTOR:}\> \GetSupervisor
-        \end{tabbing}
-      \end{minipage}%
-      \begin{minipage}[t]{0.45\textwidth}
-        \vspace{2cm}
-        \raggedleft
-        {\fontsize{13}{16}\selectfont \the\year \par}
-      \end{minipage}
+      \def\EtiquetaAutor{AUTOR:}\def\EtiquetaDirector{DIRECTOR:}
     }
-    % Fin condicional LanguageOption
+
+    \noindent
+    \begin{tabbing}
+      \hspace{3cm}\=\kill
+      \textbf{\fontsize{12}{10}\selectfont \EtiquetaAutor}\> \GetFirstAuthor \\[0.3cm]
+      \textbf{\fontsize{12}{10}\selectfont \EtiquetaDirector}\> \GetSupervisor
+    \end{tabbing}
+
+    \vspace{1cm}
+    {\noindent\hfill\fontsize{13}{16}\selectfont \the\year\par}
 
     \vspace{1cm}
   \endgroup

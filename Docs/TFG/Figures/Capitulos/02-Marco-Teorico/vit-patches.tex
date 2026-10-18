@@ -1,0 +1,46 @@
+% Figura 2.1. Del parche al token en el Vision Transformer.
+% Se usa en sec:marco_vision, subsección "Vision Transformer y Swin Transformer", después del
+% párrafo que define el ViT. Cada parche de la fila superior y su token comparten color, para que se
+% lea la correspondencia; el token de clase va en gris porque no viene de ningún parche.
+
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[x=1mm, y=1mm]
+
+        % Imagen dividida en una rejilla de 4x4 parches; la fila superior va coloreada.
+        \draw[figtrazo, thick, fill=figrelleno] (-26, -12) rectangle (0, 12);
+        \foreach \c [count=\i from 0] in {figazul, fignaranja, figverde, figpurpura} {
+            \fill[\c!35] (-26 + \i*6.5, 6) rectangle (-19.5 + \i*6.5, 12);
+        }
+        \foreach \x in {-19.5, -13, -6.5} { \draw[figtrazo] (\x, -12) -- (\x, 12); }
+        \foreach \y in {-6, 0, 6} { \draw[figtrazo] (-26, \y) -- (0, \y); }
+        \draw[figtrazo, thick] (-26, -12) rectangle (0, 12);
+        \node[font=\small, text=figtrazo, align=center] at (-13, -18) {Imagen dividida\\en parches};
+
+        % Operación de proyección.
+        \node[figtarea, text width=28mm] (proj) at (22, 0)
+            {Proyectar cada parche\\a un token};
+
+        % Token de clase y tokens de los parches, con su embedding de posición.
+        \node[fignodo, minimum width=7mm, minimum height=6mm, inner sep=1pt, fill=figrelleno]
+            (t0) at (50, 6) {\footnotesize[CLS]};
+        \node[font=\footnotesize, text=figtrazo] at (50, -3) {$+$};
+        \node[font=\footnotesize, text=figtrazo] at (50, -9) {$p_{0}$};
+        \foreach \c [count=\i from 1] in {figazul, fignaranja, figverde, figpurpura} {
+            \node[fignodo, draw=\c!70!black, fill=\c!35, minimum width=6mm, minimum height=6mm,
+                  inner sep=1pt] (t\i) at (50 + \i*9, 6) {\footnotesize $x_{\i}$};
+            \node[font=\footnotesize, text=figtrazo] at (50 + \i*9, -3) {$+$};
+            \node[font=\footnotesize, text=figtrazo] at (50 + \i*9, -9) {$p_{\i}$};
+        }
+        \node[font=\small, text=figtrazo] at (95, 6) {$\cdots$};
+        \node[font=\small, text=figtrazo, align=center] at (72, -18)
+            {Secuencia de tokens con\\embedding de posición por parche};
+
+        % Flechas.
+        \draw[figflecha] (0, 0) -- (proj.west);
+        \draw[figflecha] (proj.east) -- (43, 0) |- (t0.west);
+
+    \end{tikzpicture}
+    \caption{Del parche al token en el Vision Transformer, con el token de clase ([CLS]) al inicio.}
+    \label{fig:marco_vit_patches}
+\end{figure}

@@ -1,0 +1,51 @@
+% Figura: perceptrón multicapa, pasada hacia adelante y retropropagación.
+% Se usa en sec:marco_fundamentos, subsección de entrenamiento.
+
+\begin{figure}[!htb]
+    \centering
+    \begin{tikzpicture}[x=1mm, y=1mm,
+        neurona/.style = {circle, draw=figtrazo, minimum size=6mm, inner sep=0pt, font=\footnotesize},
+    ]
+
+        % Capas.
+        \foreach \i in {1, 2, 3} {
+            \node[neurona, fill=figazul!15, draw=figazul!80!black] (x\i) at (0, 16 - \i*8) {$x_{\i}$};
+        }
+        \foreach \i in {1, 2, 3, 4} {
+            \node[neurona, fill=fignaranja!18, draw=fignaranja!70!black] (h\i) at (25, 20 - \i*8) {};
+        }
+        \foreach \i in {1, 2, 3} {
+            \node[neurona, fill=figverde!12, draw=figverde!70!black] (z\i) at (50, 16 - \i*8) {$z_{\i}$};
+        }
+
+        % Conexiones.
+        \foreach \i in {1, 2, 3} { \foreach \j in {1, 2, 3, 4} {
+            \draw[figtrazo!60, thin] (x\i) -- (h\j);
+        } }
+        \foreach \j in {1, 2, 3, 4} { \foreach \k in {1, 2, 3} {
+            \draw[figtrazo!60, thin] (h\j) -- (z\k);
+        } }
+
+        % Softmax y pérdida.
+        \node[figtarea, text width=16mm, minimum height=8mm] (sm) at (72, 0) {softmax};
+        \node[figsalida, text width=20mm, minimum height=8mm] (loss) at (100, 0)
+            {pérdida\\$\mathcal{L} = -\log p_y$};
+        \draw[figflecha] (56, 0) -- (sm.west);
+        \draw[figflecha] (sm.east) -- node[figetiqueta, above] {$p_c$} (loss.west);
+
+        % Rótulos de capas.
+        \node[font=\footnotesize, text=figtrazo] at (0, -22) {entrada};
+        \node[font=\footnotesize, text=figtrazo, align=center] at (25, -22) {capa oculta\\$\phi(W\mathbf{x}+\mathbf{b})$};
+        \node[font=\footnotesize, text=figtrazo] at (50, -22) {\emph{logits}};
+
+        % Pasadas.
+        \draw[figflecha, figazul!80!black, thick] (0, 24) -- node[figetiqueta, above, text=figazul!80!black]
+            {pasada hacia adelante: se calcula la salida} (100, 24);
+        \draw[-{Latex[length=2mm, width=1.6mm]}, thick, densely dashed, figbermellon]
+            (100, -32) -- node[figetiqueta, below, text=figbermellon]
+            {retropropagación: se calcula $\nabla_\theta \mathcal{L}$ capa por capa} (0, -32);
+
+    \end{tikzpicture}
+    \caption{Perceptrón multicapa con una capa oculta: pasada hacia adelante y retropropagación.}
+    \label{fig:marco_perceptron}
+\end{figure}

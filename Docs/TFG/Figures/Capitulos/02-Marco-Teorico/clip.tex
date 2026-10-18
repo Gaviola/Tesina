@@ -1,0 +1,49 @@
+% Figura: entrenamiento contrastivo de CLIP. Adaptada de radford2021learning (Figura 1, panel 1).
+% Se usa en sec:marco_vlm_clip, después del párrafo que define el objetivo contrastivo.
+
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[x=1mm, y=1mm]
+
+        % Codificador de texto (arriba) y sus embeddings T_1..T_4.
+        \node[figentrada, text width=22mm, minimum height=7mm] (txt) at (-26, 44) {textos del lote};
+        \node[figtarea, text width=30mm, minimum height=7mm] (enct) at (22, 44) {codificador de texto};
+        \draw[figflecha] (txt.east) -- (enct.west);
+        \foreach \j in {1,...,4} {
+            \node[draw=figverde!70!black, fill=figverde!10, minimum width=9mm, minimum height=6mm,
+                font=\footnotesize] (T\j) at (\j*10, 33) {$T_{\j}$};
+        }
+        \draw[figflecha] (enct.south) -- ++(0, -3.5);
+
+        % Codificador de imagen (izquierda) y sus embeddings I_1..I_4.
+        \node[figentrada, text width=18mm, minimum height=7mm] (img) at (-40, 15) {imágenes del lote};
+        \node[figtarea, text width=18mm, minimum height=7mm] (enci) at (-17, 15) {codificador de imagen};
+        \draw[figflecha] (img.east) -- (enci.west);
+        \foreach \i in {1,...,4} {
+            \node[draw=figazul!80!black, fill=figazul!12, minimum width=9mm, minimum height=6mm,
+                font=\footnotesize] (I\i) at (0, 33-\i*8) {$I_{\i}$};
+        }
+        \draw[figflecha] (enci.east) -- (I2.west |- enci.east);
+
+        % Matriz de similitudes; la diagonal son los pares correctos.
+        \foreach \i in {1,...,4} {
+            \foreach \j in {1,...,4} {
+                \ifnum\i=\j
+                    \node[draw=fignaranja!70!black, fill=fignaranja!30, thick, minimum width=9mm,
+                        minimum height=6mm, font=\scriptsize] at (\j*10, 33-\i*8)
+                        {$I_{\i}{\cdot}T_{\j}$};
+                \else
+                    \node[draw=figtrazo, fill=figrelleno, minimum width=9mm, minimum height=6mm,
+                        font=\scriptsize, text=figtrazo] at (\j*10, 33-\i*8) {$I_{\i}{\cdot}T_{\j}$};
+                \fi
+            }
+        }
+        \node[figetiqueta, align=left, anchor=west] at (47, 17)
+            {diagonal: pares\\correctos, se acercan};
+        \node[figetiqueta, align=left, anchor=west] at (47, 5)
+            {resto: pares\\distintos, se alejan};
+
+    \end{tikzpicture}
+    \caption{Entrenamiento contrastivo de CLIP. Adaptada de \textcite{radford2021learning}.}
+    \label{fig:marco_clip}
+\end{figure}

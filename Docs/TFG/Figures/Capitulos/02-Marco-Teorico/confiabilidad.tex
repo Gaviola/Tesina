@@ -1,0 +1,41 @@
+% Figura: diagrama de confiabilidad ilustrativo, con datos sintéticos (no son resultados del trabajo).
+% Se usa en sec:marco_eval_calib, después de la definición de ECE y MCE.
+
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[x=6.5mm, y=55mm]
+
+        % Ejes.
+        \draw[figtrazo] (0, 0) rectangle (10, 1);
+        \foreach \t in {0, 0.2, 0.4, 0.6, 0.8, 1.0} {
+            \draw[figtrazo] (\t*10, 0) -- ++(0, -0.02) node[below, font=\footnotesize] {\t};
+            \draw[figtrazo] (0, \t) -- ++(-0.12, 0) node[left, font=\footnotesize] {\t};
+        }
+        \node[font=\small] at (5, -0.14) {confianza de la predicción};
+        \node[font=\small, rotate=90] at (-1.35, 0.5) {exactitud};
+
+        % Barras: exactitud por intervalo (sintética, modelo sobreconfiado).
+        \foreach \b/\acc in {0/0.04, 1/0.12, 2/0.21, 3/0.28, 4/0.36, 5/0.44, 6/0.53, 7/0.61, 8/0.70, 9/0.82} {
+            \pgfmathsetmacro{\medio}{(\b + 0.5)/10}
+            \fill[figazul!35] (\b + 0.05, 0) rectangle (\b + 0.95, \acc);
+            \draw[figazul!80!black] (\b + 0.05, 0) rectangle (\b + 0.95, \acc);
+            % Brecha hasta la diagonal.
+            \fill[figbermellon!30, opacity=0.8] (\b + 0.05, \acc) rectangle (\b + 0.95, \medio);
+            \draw[figbermellon!80!black, densely dashed] (\b + 0.05, \acc) rectangle (\b + 0.95, \medio);
+        }
+
+        % Diagonal de calibración perfecta.
+        \draw[figtrazo, thick, dashed] (0, 0) -- (10, 1);
+
+        % Leyenda.
+        \fill[figazul!35, draw=figazul!80!black] (0.5, 0.90) rectangle (1.1, 0.95);
+        \node[anchor=west, font=\footnotesize] at (1.2, 0.925) {exactitud del intervalo};
+        \fill[figbermellon!30, draw=figbermellon!80!black, densely dashed] (0.5, 0.81) rectangle (1.1, 0.86);
+        \node[anchor=west, font=\footnotesize] at (1.2, 0.835) {brecha con la confianza};
+        \draw[figtrazo, thick, dashed] (0.5, 0.745) -- (1.1, 0.745);
+        \node[anchor=west, font=\footnotesize] at (1.2, 0.745) {calibración perfecta};
+
+    \end{tikzpicture}
+    \caption{Diagrama de confiabilidad de un modelo sobreconfiado, con datos sintéticos ilustrativos.}
+    \label{fig:marco_confiabilidad}
+\end{figure}

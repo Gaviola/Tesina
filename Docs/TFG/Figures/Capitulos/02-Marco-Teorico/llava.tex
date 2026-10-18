@@ -1,0 +1,51 @@
+% Figura: arquitectura de un VLM generativo tipo LLaVA. Adaptada de liu2023visual (Figura 1).
+% Se usa en sec:marco_vlm_generativos, después del párrafo que presenta el esquema.
+% [H]: como flotante saltaba a la página siguiente y cortaba el párrafo que venía después.
+
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[x=1mm, y=1mm]
+
+        % Rama visual.
+        \node[figentrada, text width=18mm] (img) at (0, 0) {imagen};
+        \node[figtarea, text width=22mm] (enc) at (0, 16) {codificador visual\\{\footnotesize (tipo CLIP)}};
+        \node[figtarea, text width=22mm] (proj) at (0, 32) {proyector\\{\footnotesize (capa lineal)}};
+        \draw[figflecha] (img) -- (enc);
+        \draw[figflecha] (enc) -- (proj);
+
+        % Rama de texto.
+        \node[figentrada, text width=22mm] (instr) at (40, 0) {instrucción};
+        \node[fignodo, text width=22mm, fill=figrelleno] (tok) at (40, 16) {tokenizador y\\\emph{embeddings}};
+        \draw[figflecha] (instr) -- (tok);
+
+        % Secuencia de entrada al LLM: cada grupo de tokens queda encima de la rama que lo produce, y un
+        % marco agrupa sus casillas para que la flecha llegue al grupo y no a una casilla suelta.
+        \foreach \k in {0,...,3} {
+            \node[draw=figazul!80!black, fill=figazul!12, minimum width=4.5mm, minimum height=4.5mm]
+                (v\k) at (-8.25+\k*5.5, 47) {};
+            \node[draw=figtrazo, fill=figrelleno, minimum width=4.5mm, minimum height=4.5mm]
+                (t\k) at (31.75+\k*5.5, 47) {};
+        }
+        \node[draw=figtrazo, densely dotted, rounded corners=1pt, inner sep=1.2mm, fit=(v0) (v3)] (vis) {};
+        \node[draw=figtrazo, densely dotted, rounded corners=1pt, inner sep=1.2mm, fit=(t0) (t3)] (txt) {};
+        \node[figetiqueta, anchor=east, align=right] at (vis.west) {tokens\\visuales};
+        \node[figetiqueta, anchor=west, align=left] at (txt.east) {tokens\\de texto};
+        \draw[figflecha] (proj.north) -- (vis.south);
+        \draw[figflecha] (tok.north) -- (txt.south);
+
+        % LLM y salida: los dos grupos entran como una sola secuencia.
+        \node[figtarea, minimum width=66mm] (llm) at (20, 64) {LLM de solo decodificador};
+        \draw[figflecha] (vis.north) -- (vis.north |- llm.south);
+        \draw[figflecha] (txt.north) -- (txt.north |- llm.south);
+        \node[figsalida, text width=30mm] (out) at (20, 80) {texto generado};
+        \draw[figflecha] (llm) -- (out);
+
+        \node[figetiqueta, text=fignaranja!70!black, align=left, anchor=west] at (62, 32)
+            {etapa 1: se entrena\\solo el proyector};
+        \node[figetiqueta, text=fignaranja!70!black, align=left, anchor=west] at (62, 64)
+            {etapa 2: proyector\\y LLM};
+
+    \end{tikzpicture}
+    \caption{Arquitectura de un \gls{vlm} generativo del tipo de LLaVA. Adaptada de \textcite{liu2023visual}.}
+    \label{fig:marco_llava}
+\end{figure}

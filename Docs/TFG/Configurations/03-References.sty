@@ -5,11 +5,27 @@
     style=numeric-comp, % Estilo de citas numérico comprimido.
     sortcites=true,
     natbib=true, % Compatibilidad con natbib.
-    maxnames=1 % Mostrar un autor principal seguido de "et al." si es necesario.
+    maxnames=1, % Mostrar un autor principal seguido de "et al." si es necesario.
+    % Partir cada entrada con los patrones de su propio idioma, tomados del campo 'langid'. Sin esto
+    % los títulos y las revistas en inglés se componen con patrones españoles, no encuentran dónde
+    % cortar y se salen del margen.
+    babel=hyphen
 ]{biblatex}
 
 \setlength\bibitemsep{1.5\itemsep} % Increase spacing between bibliography items.
 \setlength\bibhang{0pt} % Remove hanging indent for bibliography entries.
+
+% Permitir que las URL y los DOI de la bibliografía se partan al final de renglón. Sin esto, un DOI
+% largo no tiene punto de corte y se sale del margen: la bibliografía acumulaba siete cajas
+% desbordadas, una de 46 pt. Solo afecta a las URL impresas por biblatex.
+\setcounter{biburlnumpenalty}{9000}
+\setcounter{biburlucpenalty}{9000}
+\setcounter{biburllcpenalty}{9000}
+
+% Los nombres de revista y de congreso en inglés son largos y a veces no tienen ningún punto de
+% corte («BioMedInformatics», «arXiv:2405.18004», «dermoscopy/dermatoscopy:»). Se le permite a TeX
+% estirar los espacios de la bibliografía antes que dejar que el renglón se salga del margen.
+\AtBeginBibliography{\emergencystretch=4em}
 \addbibresource{Bibliography/Bibliography.bib} % Load the bibliography file.
 
 % Configure citation style to include both author and year prominently.

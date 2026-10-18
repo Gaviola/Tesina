@@ -1,0 +1,250 @@
+\section{Fundamentos del aprendizaje profundo}
+\label{sec:marco_fundamentos}
+
+Los clasificadores de imágenes analizados en este trabajo se basan en el aprendizaje automático
+(\emph{machine learning}), un enfoque en el que el modelo aprende a realizar una tarea a partir de ejemplos, en
+lugar de seguir reglas definidas explícitamente por un programador. Para ello, el modelo cuenta con parámetros
+ajustables, cuyos valores se fijan durante un proceso de entrenamiento a partir de los datos disponibles. De esta
+manera, el modelo aprende patrones que le permiten predecir también sobre imágenes nuevas, que no formaron parte
+de los datos de entrenamiento~\cite{goodfellow2016deep}. En el \textbf{aprendizaje supervisado} (\emph{supervised learning}), cada
+ejemplo es un par formado por una entrada y la salida esperada, llamada etiqueta. En la clasificación de
+lesiones de piel, por ejemplo, la entrada es la imagen de una lesión y la etiqueta, su diagnóstico, y el modelo
+aprende a predecir el diagnóstico de imágenes nuevas.
+
+Lo que distingue a los distintos métodos de aprendizaje automático es cómo describen cada ejemplo. Durante
+décadas, esa descripción, formada por un conjunto de características, la diseñaba un especialista: medidas de
+color o de textura para una imagen, o recuentos de palabras para un texto. El modelo solo aprendía a decidir a
+partir de ellas. El aprendizaje profundo (\emph{deep learning}) aprende también las características,
+directamente de los píxeles o de las palabras. Para ello encadena muchas transformaciones simples, de modo que
+las primeras capturan rasgos elementales y las últimas, conceptos más abstractos. En una imagen, por ejemplo, se
+pasa de bordes a contornos y de contornos a partes de objetos. Este enfoque se impuso a partir de la década de
+2010 en el reconocimiento de imágenes y de voz y en el procesamiento del lenguaje, cuando hubo suficientes datos
+y capacidad de cómputo para entrenar esos modelos~\cite{goodfellow2016deep}. Los modelos que realizan esta
+cadena de transformaciones son las redes neuronales.
+
+Las redes neuronales son la base de todos los modelos que se estudian en este trabajo, tanto de los
+clasificadores de imágenes como de los que generan texto, y los conceptos de esta sección reaparecen al describir
+cómo se entrenan y cómo se comparan. La sección presenta primero cómo una red aprende a clasificar a partir de
+ejemplos etiquetados (Sección~\ref{sec:marco_redes}). Luego explica por qué lo aprendido puede no trasladarse a
+imágenes nuevas y qué técnicas lo mitigan (Sección~\ref{sec:marco_regularizacion}). Por último, describe cómo se
+reutiliza un modelo ya entrenado cuando los ejemplos de la tarea son pocos (Sección~\ref{sec:marco_transferencia}).
+
+\subsection{Redes neuronales y aprendizaje supervisado}
+\label{sec:marco_redes}
+
+Una \textbf{red neuronal} artificial (\emph{artificial neural network}), el modelo en que se basa el
+aprendizaje profundo, está formada por unidades de cálculo simples, las neuronas, organizadas en capas. Cada neurona calcula una suma ponderada de sus entradas, le
+suma un valor constante llamado sesgo (\emph{bias}) y aplica al resultado una función no lineal, la función de
+activación. Una capa reúne varias neuronas que reciben la misma entrada, y en un perceptrón multicapa
+(\emph{multilayer perceptron}, Figura~\ref{fig:marco_perceptron}) las capas se apilan, de modo que la salida de cada una es la entrada de la
+siguiente. La capa $l$ transforma el vector $\mathbf{h}^{(l-1)}$ que recibe en
+\begin{equation}
+    \mathbf{h}^{(l)} = \phi\!\left(W^{(l)} \mathbf{h}^{(l-1)} + \mathbf{b}^{(l)}\right),
+    \label{eq:marco_capa}
+\end{equation}
+donde $W^{(l)}$ es la matriz de pesos, $\mathbf{b}^{(l)}$ el vector de sesgos y $\phi$ la función de activación,
+aplicada a cada elemento. La activación permite que la red represente relaciones no lineales, porque sin ella
+la red entera se reduciría a una sola transformación lineal. Los pesos y los sesgos de todas las capas son los
+parámetros de la red, que se agrupan en $\theta$, y una red con muchas capas se llama
+profunda~\cite{goodfellow2016deep}.
+
+\input{Figures/Capitulos/02-Marco-Teorico/perceptron}
+
+Para usar una red como clasificador, su salida tiene que asignar cada entrada a una clase de un conjunto
+finito. En el diagnóstico de lesiones de piel, las clases son los tipos de lesión, como el melanoma o el nevo, la
+lesión benigna que se conoce comúnmente como lunar, y el modelo recibe la imagen y debe indicar a cuál
+pertenece. Para un problema de $C$ clases, la última capa tiene entonces $C$ salidas, que
+forman un vector de puntajes llamados \emph{logits}, $\mathbf{z}$. Estos puntajes pueden tomar cualquier valor
+real, positivo o negativo, y por eso no se pueden leer como probabilidades. Para convertirlos se les aplica la
+función \emph{softmax}, que produce valores entre cero y uno que suman uno,
+\begin{equation}
+    p_c = \frac{\exp(z_c)}{\sum_{j=1}^{C} \exp(z_j)}, \qquad c = 1, \dots, C.
+    \label{eq:marco_softmax}
+\end{equation}
+La clase predicha es la de mayor probabilidad, y esa probabilidad suele leerse como la confianza del modelo en
+su predicción, una lectura que solo es válida si el modelo está calibrado
+(Sección~\ref{sec:marco_senales_confianza}).
+
+Para que esas probabilidades sean útiles, los parámetros de la red tienen que ajustarse a los datos, y para eso
+hace falta medir cuánto se equivoca la red en cada ejemplo. Esa medida es la función de pérdida (\emph{loss
+function}), $\mathcal{L}$. En clasificación, la pérdida habitual es la entropía cruzada (\emph{cross-entropy}),
+que compara la distribución que predice el modelo, $\mathbf{p}$, con la de la etiqueta, $\mathbf{q}$. Como la
+etiqueta pone toda la probabilidad en la clase correcta $y$, $q_c$ vale uno para esa clase y cero para las
+demás, y la suma se reduce a un solo término,
+\begin{equation}
+    \mathcal{L} = -\sum_{c=1}^{C} q_c \log p_c = -\log p_y.
+    \label{eq:marco_entropia}
+\end{equation}
+Por cómo está definida, la pérdida vale cero cuando el modelo asigna toda la probabilidad a la clase correcta y
+crece sin límite a medida que esa probabilidad se acerca a cero. Así, un error cometido con mucha confianza pesa
+más que uno cometido con duda, y minimizar la pérdida equivale a maximizar la probabilidad que el modelo asigna a
+las respuestas correctas~\cite{goodfellow2016deep}.
+
+Entrenar la red consiste entonces en buscar los parámetros $\theta$ que minimizan la pérdida promedio sobre los
+ejemplos de entrenamiento. El método básico es el descenso del gradiente (\emph{gradient descent}). El gradiente
+de la pérdida respecto de los parámetros indica en qué dirección crece la pérdida, y en cada paso los parámetros
+se desplazan una pequeña distancia en la dirección opuesta. Esa distancia la fija la tasa de aprendizaje
+(\emph{learning rate}), $\eta$. Cada paso estima el gradiente sobre un lote (\emph{batch}) de ejemplos y no
+sobre el conjunto completo, y una época es una pasada por todos los lotes~\cite{goodfellow2016deep}. El gradiente
+de todos los parámetros se obtiene con la retropropagación (\emph{backpropagation}), que recorre la red desde la
+pérdida hacia la entrada aplicando la regla de la cadena (Figura~\ref{fig:marco_perceptron})~\cite{rumelhart1986learning}.
+
+Sobre esta regla básica se construyen optimizadores más eficientes, como Adam, que adapta el tamaño del paso de
+cada parámetro a partir de promedios del gradiente y de su cuadrado acumulados durante el
+entrenamiento~\cite{kingma2015adam}. Esos promedios ocupan memoria adicional por cada parámetro que se entrena,
+un costo que limita la adaptación de los modelos grandes (Sección~\ref{sec:marco_llm_lora}). La tasa de
+aprendizaje, además, no suele mantenerse fija. Es habitual que crezca de forma lineal durante las primeras
+épocas, un calentamiento (\emph{warmup}) que evita pasos grandes mientras la red todavía cambia
+rápido~\cite{goyal2017accurate}, y que después disminuya hasta cerca de cero siguiendo medio ciclo de
+coseno~\cite{loshchilov2017sgdr}. Una vez entrenada, la red predice la salida para una entrada nueva con los
+parámetros fijos, y esa etapa se llama inferencia.
+
+\subsection{Generalización y desafíos del aprendizaje}
+\label{sec:marco_regularizacion}
+
+Que la pérdida disminuya sobre los ejemplos de entrenamiento no garantiza que la red clasifique bien casos
+nuevos, que es lo que interesa de un modelo. Esa capacidad se llama generalización. Una red con muchos parámetros
+puede ajustarse a los ejemplos de entrenamiento con tanto detalle que aprende también sus particularidades y su
+ruido, como una regla o una marca de tinta que aparece junto a ciertas lesiones, en lugar de los rasgos que
+distinguen a las clases. En ese caso, la pérdida de entrenamiento sigue bajando mientras el error sobre datos
+nuevos aumenta, un fenómeno llamado \textbf{sobreajuste} (\emph{overfitting})~\cite{goodfellow2016deep}. La
+generalización supone, además, que los casos nuevos se parecen a los de entrenamiento. Cuando cambian las
+condiciones en que se obtienen los datos, por ejemplo el equipo, el centro o la población, se produce un cambio
+de distribución (\emph{distribution shift}), y el desempeño puede caer aunque el modelo no esté sobreajustado
+(Sección~\ref{sec:marco_generalizacion}).
+
+Para detectar el sobreajuste, el error se estima con datos que no se utilizaron durante el ajuste del modelo. Con
+este propósito, el conjunto de datos se divide en tres particiones disjuntas: entrenamiento, validación y prueba.
+El conjunto de entrenamiento se usa para ajustar los parámetros del modelo, mientras que el de
+validación permite elegir las configuraciones y los hiperparámetros, es decir, los valores que no se aprenden
+durante el entrenamiento, como la tasa de aprendizaje. Finalmente, el conjunto de prueba se emplea una sola vez,
+para estimar el desempeño sobre datos no utilizados durante las etapas anteriores. Es importante que este último no
+intervenga en ninguna decisión, ya que una elección hecha mirando el conjunto de prueba vuelve optimista la
+estimación~\cite{goodfellow2016deep}.
+
+Una situación a evitar es que, al dividir los datos, las imágenes de un mismo paciente o de una misma lesión queden repartidas entre el
+entrenamiento y el conjunto de prueba. En ese caso, el modelo puede acertar las imágenes de prueba por haber visto otras casi
+iguales durante el entrenamiento, y no porque generalice correctamente. Esta fuga de información entre particiones
+(\emph{data leakage}) hace que la estimación sea más favorable que el desempeño real del modelo.
+
+Además de detectar el sobreajuste, es posible reducirlo. La \textbf{regularización} (\emph{regularization})
+reúne las técnicas o modificaciones que buscan evitar que la red aprenda detalles excesivamente específicos de los ejemplos de
+entrenamiento, incluido su ruido, para que pueda hacer buenas predicciones sobre datos que nunca
+vio~\cite{goodfellow2016deep}. Las más usadas en el entrenamiento de clasificadores de imágenes son las
+siguientes:
+\begin{itemize}
+    \item \textbf{Decaimiento de pesos} (\emph{weight decay}). En cada paso reduce los parámetros en una pequeña
+    proporción, lo que favorece soluciones con pesos pequeños, menos propensas a ajustarse al
+    ruido~\cite{goodfellow2016deep}. Con el descenso del gradiente, este decaimiento equivale a sumar a la
+    pérdida una penalización proporcional a la suma de los cuadrados de los pesos. En Adam, en cambio, el
+    gradiente de esa penalización se divide, como el resto del gradiente, por la magnitud de los gradientes
+    recientes de cada parámetro, de modo que los parámetros con gradientes grandes reciben menos
+    regularización que la prevista. AdamW evita este efecto: en lugar de sumar la penalización a la pérdida,
+    resta en cada paso una fracción fija de cada parámetro, fuera del reescalado de Adam, y así todos los pesos
+    decaen en la misma proporción~\cite{loshchilov2019decoupled}.
+    \item \textbf{Detención temprana} (\emph{early stopping}). Evalúa el modelo en validación al final de cada
+    época y conserva los parámetros de la época con mejor desempeño, en lugar de los de la
+    última~\cite{goodfellow2016deep}.
+    \item \textbf{Suavizado de etiquetas} (\emph{label smoothing}). Reemplaza la etiqueta que pone toda la
+    probabilidad en la clase correcta por una que reserva una pequeña fracción para las demás clases. El modelo
+    deja así de empujar la probabilidad de la clase correcta hasta uno, lo que reduce su exceso de confianza y
+    suele mejorar su calibración (Sección~\ref{sec:marco_senales_confianza})~\cite{szegedy2016rethinking,muller2019does}.
+    \item \textbf{Aumento de datos} (\emph{data augmentation}). Aplica a cada imagen, cada vez que se usa en el
+    entrenamiento, una transformación aleatoria que conserva su clase, como una rotación, un recorte o un
+    cambio de brillo, de modo que la red ve más variedad que la que contiene el conjunto de entrenamiento.
+    RandAugment es un método de aumento que sortea, para cada imagen, $N$ transformaciones de una lista fija y
+    las aplica con una misma intensidad $M$~\cite{cubuk2020randaugment}, y el borrado aleatorio (\emph{random
+    erasing}) cubre un rectángulo elegido al azar para simular oclusiones~\cite{zhong2020random}. Cuando el
+    color es uno de los rasgos que distinguen a las clases, como en dermatoscopía~\cite{kittler2016standardization},
+    una transformación de color intensa puede borrar la información que las define~\cite{shorten2019survey}.
+    El aumento de datos también puede aplicarse durante la inferencia. El \gls{tta} promedia las
+    probabilidades que el modelo asigna a la imagen original y a algunas versiones transformadas de ella, como
+    su reflejo horizontal~\cite{krizhevsky2012imagenet}.
+\end{itemize}
+
+Aun sin sobreajuste, la pérdida promedio puede ocultar errores en las clases que más interesan. El
+entrenamiento minimiza la pérdida sobre todos los ejemplos, y ese promedio no distingue a qué clase pertenece
+cada uno. Cuando unas clases tienen muchos más ejemplos que otras, hay \textbf{desbalance de clases}
+(\emph{class imbalance})\label{sec:marco_desbalance}. Es lo habitual en dermatoscopía, donde los nevos, que son
+benignos, superan varias veces a los melanomas (Sección~\ref{sec:met_ham}).
+En ese caso, los ejemplos de las clases más frecuentes dominan la suma de la pérdida, y el modelo puede reducirla
+acertando sobre todo en ellas aunque se equivoque en las raras. El efecto crece con el grado de
+desbalance~\cite{buda2018systematic}. Las correcciones más usadas modifican la entropía cruzada de la
+Ecuación~\ref{eq:marco_entropia} para que las clases con pocos ejemplos pesen más. Si $n$ es la cantidad total
+de ejemplos de entrenamiento, $n_c$ la de la clase $c$ e $y$ la clase correcta de un ejemplo, las tres más
+comunes son:
+\begin{enumerate}
+    \item la \textbf{pérdida ponderada}, $-w_y \log p_y$, que multiplica la pérdida de cada ejemplo por un peso
+    inversamente proporcional a la frecuencia de su clase, $w_y = n/(C\,n_y)$, de modo que todas las clases
+    aportan en total el mismo peso;
+    \item la \textbf{pérdida focal} (\emph{focal loss}), $-(1-p_y)^{\gamma}\log p_y$, que agrega un factor que se
+    acerca a cero en los ejemplos que el modelo ya clasifica con confianza, con $p_y$ cerca de uno, y concentra
+    así el entrenamiento en los difíciles. El parámetro $\gamma \ge 0$ regula esa atenuación, y con $\gamma = 0$
+    se recupera la entropía cruzada~\cite{lin2017focal};
+    \item el \textbf{\emph{balanced softmax}}, que multiplica en la softmax de la Ecuación~\ref{eq:marco_softmax}
+    la exponencial de cada logit por la cantidad de ejemplos de su clase,
+    $p_c = n_c \exp(z_c) / \sum_{j} n_j \exp(z_j)$. Durante el entrenamiento, las clases frecuentes reciben así
+    una ventaja que el modelo no necesita aprender en sus logits, y al predecir se usa la softmax
+    común~\cite{ren2020balanced}.
+\end{enumerate}
+Una alternativa es entrenar sin corrección y ajustar la regla de decisión, por ejemplo eligiendo en validación
+un umbral de probabilidad para una clase poco frecuente~\cite{buda2018systematic}. Ninguna de estas estrategias
+agrega información sobre las clases raras: solo cambian cuánto pesan en el entrenamiento o en la decisión.
+Además, la exactitud global depende sobre todo de las clases frecuentes y puede no reflejar los errores en las
+raras, de modo que la evaluación usa métricas que promedian por clase (Sección~\ref{sec:marco_eval_clasif}).
+
+\subsection{Modelos preentrenados y transferencia de aprendizaje}
+\label{sec:marco_transferencia}
+
+Las técnicas anteriores aprovechan mejor los datos disponibles, pero no los reemplazan. Cuando los ejemplos
+etiquetados son pocos, como ocurre con frecuencia en imágenes médicas, entrenar una red desde cero favorece el
+sobreajuste. La \textbf{transferencia de aprendizaje} (\emph{transfer learning}) reutiliza lo que un modelo
+aprendió en una tarea de origen con muchos datos para mejorar el aprendizaje en la tarea de
+destino~\cite{pan2010survey}. El modelo entrenado en la tarea de origen se llama preentrenado. En reconocimiento
+visual, el preentrenamiento se hace habitualmente sobre \emph{ImageNet}, un conjunto de referencia de imágenes
+naturales etiquetadas~\cite{russakovsky2015imagenet}. Las primeras capas de una red visual aprenden rasgos
+generales, parecidos a detectores de bordes y de color, que se reutilizan bien en otras tareas, mientras que las
+últimas aprenden rasgos específicos de la tarea de origen~\cite{yosinski2014transferable}. En imágenes médicas el
+beneficio puede ser menor que el esperado, por la distancia entre esas imágenes y las
+naturales~\cite{raghu2019transfusion}, y esa distancia motiva los modelos preentrenados sobre imágenes del propio
+dominio, como DermLIP (Sección~\ref{sec:marco_vlm_clip}).
+
+Para reutilizar un modelo preentrenado en una clasificación nueva, la red se divide en dos partes. El
+\emph{backbone}, formado por casi todas las capas, convierte la imagen en un vector de características, y la
+cabeza de clasificación (\emph{head}) es la capa final, de la forma de la Ecuación~\ref{eq:marco_capa}, que
+convierte ese vector en los logits. La cabeza original se reemplaza por una nueva, con una salida por cada clase
+de la tarea de destino, y a partir de ahí hay dos opciones. La primera, la \textbf{extracción de
+características} (\emph{feature extraction}), congela el \emph{backbone}, es decir, mantiene fijos sus
+parámetros, y entrena solo la cabeza. Cuando la cabeza es lineal, esta adaptación se conoce como \emph{linear
+probe}, y sirve también para medir cuánto de la tarea nueva ya resuelven las características preentrenadas.
+
+La segunda opción, el \textbf{ajuste fino} (\emph{fine-tuning}), actualiza además el \emph{backbone}, completo o
+solo sus últimas capas. Entrenar más parámetros da más libertad para adaptarse a la tarea nueva, pero con pocos
+datos aumenta el riesgo de sobreajuste y de olvido catastrófico (\emph{catastrophic forgetting}), es decir, que
+el modelo pierda parte de lo que aprendió en el preentrenamiento. Cuando el modelo tiene miles de millones de
+parámetros, como los modelos de lenguaje, incluso el ajuste fino requiere más memoria de la que ofrece una GPU
+de consumo, y se recurre a métodos que entrenan solo una pequeña cantidad de parámetros adicionales
+(Sección~\ref{sec:marco_llm_lora}).
+
+Entre la extracción de características y el ajuste fino completo hay estrategias que adaptan el \emph{backbone}
+sin deformar lo que aprendió. La primera es el ajuste en dos etapas: primero se entrena solo la cabeza, con el
+\emph{backbone} congelado, y después la red completa. Si el ajuste fino empieza con una cabeza inicializada al
+azar, los gradientes que llegan al \emph{backbone} mientras la cabeza todavía aprende deforman las
+características preentrenadas. Con la cabeza ya entrenada, en cambio, la secuencia rinde más que cada una de sus
+dos partes por separado, sobre todo ante datos de una distribución distinta de la del
+entrenamiento~\cite{kumar2022finetuning}. La segunda estrategia asigna a cada capa su propia tasa de aprendizaje,
+decreciente hacia la entrada, porque las capas capturan información de distinto grado de
+generalidad~\cite{howard2018universal}. Con $L$ capas numeradas desde la entrada y un factor $\xi < 1$, la capa
+$l$ se entrena con la tasa
+\begin{equation}
+    \eta_l = \eta \, \xi^{\,L-l}, \qquad l = 1, \dots, L,
+    \label{eq:marco_llrd}
+\end{equation}
+de modo que la cabeza recibe la tasa completa y las primeras capas, que guardan los rasgos más generales,
+cambian menos. Esta técnica se conoce como decaimiento de la tasa de aprendizaje por capa (\emph{layer-wise
+learning rate decay}).
+
+La red descrita hasta aquí trata su entrada como un vector y no aprovecha que, en una imagen, los píxeles
+vecinos están relacionados entre sí. Las arquitecturas para imágenes incorporan esa estructura, y la primera en
+hacerlo fue la red convolucional.
+

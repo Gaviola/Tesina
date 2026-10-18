@@ -21,6 +21,10 @@ Docs/**/*
 # Plantilla UMU (referencia, no forma parte del documento vivo).
 # Tiene que ir después de las negaciones: si va antes, !Docs/**/ la re-incluye.
 Docs/TFG/Tesis_Universidad_de_Murcia__UMU_/
+# Devoluciones del tutor (transcripciones y PDFs comentados): temporales, no se versionan.
+Docs/TFG/feedback/
+# Tesina de referencia de otro autor: se consulta, no se versiona.
+Docs/tesinamaglione_ejemplo.pdf
 
 # VS Code LaTeX Workshop output folders
 Docs/**/${workspaceFolder}/
@@ -47,3 +51,7 @@ Codigo/.env
 
 # Jupyter
 .ipynb_checkpoints/
+# Documentos de trabajo temporales de la revisión de los capítulos 1 y 2.
+Docs/TFG/tareas_revision_cap1-2.md
+Docs/TFG/candidatos_estado_arte.md
+Docs/TFG/lecturas_estado_arte_*.md

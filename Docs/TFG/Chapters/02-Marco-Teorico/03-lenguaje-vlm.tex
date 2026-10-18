@@ -1,0 +1,210 @@
+\section{Modelos de lenguaje y modelos visión--lenguaje}
+\label{sec:marco_llm}
+
+Generar un reporte a partir de una imagen requiere tres piezas: un modelo capaz de
+producir texto, una forma de adaptarlo a la dermatología con la memoria de una GPU de consumo y una forma de
+conectarlo con la imagen. La primera de esas piezas es el modelo de lenguaje.
+
+\subsection{Grandes modelos de lenguaje}
+\label{sec:marco_llm_grandes}
+
+Un \textbf{modelo de lenguaje} asigna a cada token del vocabulario la probabilidad de continuar un texto dado.
+Por ejemplo, después de «La lesión presenta una red de pigmento», una continuación como «atípica» recibe más
+probabilidad que una palabra sin relación con la frase, como «ventana». Con esas probabilidades, el modelo también evalúa un texto completo: la probabilidad
+de una secuencia es el producto de las probabilidades de cada token dados los anteriores,
+\begin{equation}
+    p(x_1, \dots, x_n) = \prod_{t=1}^{n} p(x_t \mid x_1, \dots, x_{t-1}),
+    \label{eq:marco_lm}
+\end{equation}
+donde $x_t$ es el token de la posición $t$ y $n$, la longitud de la secuencia~\cite{brown2020language}.
+
+Esas probabilidades se calculan con el decodificador del transformer, que apila los bloques de la
+Sección~\ref{sec:marco_atencion} con una diferencia: una máscara en la atención impide que cada token tome
+información de los que vienen después. Así, la salida de cada posición depende solo de los tokens anteriores, y
+el modelo aprende a predecir el token siguiente en todas las posiciones de un texto a la vez. A diferencia del
+aprendizaje supervisado de la Sección~\ref{sec:marco_fundamentos}, esta tarea no necesita que una persona anote
+cada ejemplo, porque la etiqueta de cada posición es el token que sigue en el propio texto. Un entrenamiento en el que las etiquetas se obtienen de los mismos datos se llama \textbf{aprendizaje
+autosupervisado} (\emph{self-supervised learning}), y permite usar como ejemplo de entrenamiento cualquier texto
+disponible~\cite{vaswani2017attention,brown2020language}.
+
+Según la parte del transformer que conservan, los modelos de lenguaje preentrenados son de dos tipos. Los de
+solo decodificador se entrenan como se acaba de describir y generan texto. Un \textbf{\gls{llm}} es un modelo de
+este tipo preentrenado sobre cientos de miles de millones de tokens, y GPT-3, de 2020, llevó el esquema a 175 mil
+millones de parámetros~\cite{brown2020language}. Los de solo codificador, como BERT, conservan la otra mitad:
+cada token toma información de los anteriores y de los posteriores, y el modelo se preentrena adivinando tokens
+ocultos al azar en medio del texto, también sin anotación manual. Por eso no generan texto, pero representan su
+significado, y la Sección~\ref{sec:marco_eval_texto} usa uno para comparar reportes~\cite{devlin2019bert}.
+
+Un \gls{llm} preentrenado, sin embargo, solo continúa textos. Para que responda a pedidos, se le aplica el ajuste fino de la Sección~\ref{sec:marco_transferencia} sobre pares
+instrucción--respuesta, y después una alineación con \gls{rlhf}, que lo entrena a preferir las respuestas que
+evaluadores humanos marcan como mejores~\cite{ouyang2022training}.
+
+Un modelo que sigue instrucciones se controla con el texto que recibe. Todo lo que se le entrega antes de
+generar, la instrucción y cualquier información adicional, se llama \emph{prompt}. Como la probabilidad de la
+Ecuación~\ref{eq:marco_lm} está condicionada a los tokens anteriores, cambiar el prompt cambia lo que el modelo
+genera sin modificar sus pesos. Los modelos grandes aprovechan además la información y los ejemplos incluidos en
+el prompt para resolver una tarea sin ningún paso de entrenamiento, lo que se conoce como aprendizaje en
+contexto (\emph{in-context learning})~\cite{brown2020language}. Agregar evidencia al prompt es, por lo tanto, una
+forma de condicionar lo que el modelo genera, y la Sección~\ref{sec:marco_rep_generacion} la usa para anclar el
+reporte.
+
+Dado un prompt, el texto se genera token a token y en cada paso el modelo devuelve una distribución sobre el
+vocabulario, se elige un token y se lo agrega al prompt. La regla con que se elige es la \textbf{estrategia de
+decodificación}. La decodificación voraz (\emph{greedy decoding}) toma siempre el token más probable, y en la
+generación de texto libre, como los demás métodos que buscan el texto más probable, tiende a repetir
+frases~\cite{holtzman2020curious}. Los métodos de muestreo (\emph{sampling}), en cambio, sortean el token
+siguiente según la distribución del modelo. La temperatura $T$ divide los logits antes de la softmax de la
+Ecuación~\ref{eq:marco_softmax},
+\begin{equation}
+    p_i = \frac{\exp(z_i / T)}{\sum_{j} \exp(z_j / T)},
+    \label{eq:marco_temperatura}
+\end{equation}
+de modo que con $T<1$ la probabilidad se concentra en los tokens más probables y con $T>1$ se reparte entre más
+candidatos. La Sección~\ref{sec:marco_eval_calib} usa la misma operación para calibrar un clasificador. El
+muestreo \emph{top-p} sortea solo entre el conjunto más chico de tokens cuya probabilidad acumulada alcanza un
+umbral $p$, de modo que la cantidad de candidatos crece cuando la distribución está repartida y se achica cuando
+está concentrada. Así evita tanto la repetición de la decodificación voraz como las palabras incoherentes que
+aparecen al muestrear de la distribución completa~\cite{holtzman2020curious}. Como la estrategia de
+decodificación cambia el texto generado, forma parte de la configuración de un generador.
+
+\subsection{Ajuste eficiente de parámetros: LoRA}
+\label{sec:marco_llm_lora}
+
+Para adaptar a la dermatología un modelo de pesos abiertos, es decir, uno cuyos pesos se pueden descargar y
+modificar, el ajuste fino de la Sección~\ref{sec:marco_transferencia} necesita más memoria de la que ofrece una
+GPU de consumo. Un modelo de 7 mil millones de parámetros ocupa 14~GB solo para almacenar sus pesos con 16 bits, es decir, 2 bytes por parámetro. El ajuste
+fino completo agrega un gradiente por parámetro, del mismo tamaño que los pesos, y los dos promedios que Adam
+guarda por cada parámetro (Sección~\ref{sec:marco_redes}), de modo que la memoria necesaria llega al menos a
+cuatro veces la del modelo, unos 56~GB, sin contar los valores intermedios de la red. Esa cifra es más del
+doble de los 24~GB de una GPU de consumo de gama alta. Los métodos de \gls{peft} resuelven este problema:
+congelan el modelo preentrenado y entrenan solo un conjunto pequeño de parámetros, de modo que el gradiente y
+los promedios de Adam se guardan solo para ellos~\cite{hu2021lora}.
+
+\emph{\Gls{lora}} es uno de esos métodos. Parte de la hipótesis de que el cambio que el ajuste fino introduce en una
+matriz de pesos tiene rango bajo, es decir, se puede escribir como el producto de dos matrices delgadas. Sobre
+cada matriz congelada $W$, de tamaño $d \times k$, que se elige adaptar, entrena entonces un incremento de bajo
+rango,
+\begin{equation}
+    W' = W + \frac{\alpha}{r}\,BA, \qquad B \in \mathbb{R}^{d\times r},\quad A \in \mathbb{R}^{r\times k},\quad
+    r \ll \min(d, k),
+    \label{eq:marco_lora}
+\end{equation}
+y solo actualiza $A$ y $B$. Por ejemplo, para una matriz de $4096 \times 4096$
+y $r = 8$, el incremento tiene 65\,536 parámetros, 256 veces menos que la matriz. $A$ se inicializa con valores
+aleatorios y $B$ en cero, de modo que el incremento vale cero al empezar y el modelo parte exactamente del
+preentrenado. El rango $r$ fija cuántos parámetros tiene el incremento y, con ello, su capacidad de adaptación,
+y el factor $\alpha$ escala su efecto, de modo que se puede cambiar $r$ sin volver a ajustar la tasa de
+aprendizaje~\cite{hu2021lora}.
+
+\input{Figures/Capitulos/02-Marco-Teorico/lora}
+
+La Figura~\ref{fig:marco_lora} muestra cómo el incremento $BA$ se suma a la salida de la matriz congelada. El
+método no fija qué matrices adaptar. En un transformer, casi todos los parámetros están en las matrices de
+proyección de la atención y del perceptrón de cada bloque~\cite{kaplan2020scaling}, y son esas las candidatas.
+El trabajo original aplicó \gls{lora} solo a las de la atención (Sección~\ref{sec:marco_atencion}), en la
+mayoría de los experimentos a las proyecciones de la consulta y del valor, aunque señala que se puede aplicar a
+cualquier subconjunto de matrices. Cuantas más matrices se adaptan y mayor es $r$, más parámetros se entrenan,
+pero siguen siendo una fracción mínima del modelo: en GPT-3, \gls{lora} redujo unas 10\,000 veces los
+parámetros entrenables y unas tres veces la memoria de la GPU. Al terminar, el incremento se suma a $W$, y el
+modelo resultante se ejecuta igual que el original, sin tiempo de cálculo adicional~\cite{hu2021lora}. Un
+\gls{llm} adaptado de este modo, sin embargo, solo recibe texto, y un reporte describe una imagen.
+
+\subsection{Modelo visión--lenguaje contrastivo CLIP}
+\label{sec:marco_vlm}
+\label{sec:marco_vlm_clip}
+
+Para que el modelo reciba también la imagen hace falta un \gls{vlm}, un modelo que procesa imagen y texto. Hay
+dos formas de construirlo. La primera entrena un
+codificador de imagen y uno de texto para que representen las dos modalidades en un mismo espacio de
+embeddings, en el que el embedding de una imagen se puede comparar con el de un texto. El resultado sirve para
+clasificar imágenes y para buscar casos parecidos. La segunda conecta un codificador de
+imagen a la entrada de un \gls{llm}, que entonces genera texto a partir de la imagen. En ambas, el codificador
+de imagen suele ser un \gls{vit} como el de la Sección~\ref{sec:marco_vit}~\cite{radford2021learning,liu2023visual}.
+
+El \gls{clip} es el método de referencia de la primera forma. Entrena un codificador de imagen y uno de texto
+sobre pares imagen--texto, cada uno con una proyección final al espacio común. La comparación entre el
+embedding de una imagen, $\mathbf{u}$, y el de un texto, $\mathbf{v}$, se mide con la similitud coseno.
+\begin{equation}
+    \cos(\mathbf{u}, \mathbf{v}) = \frac{\mathbf{u}^{\top}\mathbf{v}}{\lVert\mathbf{u}\rVert\,\lVert\mathbf{v}\rVert},
+    \label{eq:marco_cos}
+\end{equation}
+Esta fórmula es igual a 1 si los vectores apuntan en la misma dirección, 0 si son ortogonales y $-1$ si son opuestos. En cada
+lote de $N$ pares, el modelo calcula la similitud entre cada imagen y cada texto, y aprende a distinguir los $N$
+pares correctos entre las $N^2$ combinaciones posibles (Figura~\ref{fig:marco_clip}). Para ello, aumenta la
+similitud de cada imagen con su propio texto respecto de la que tiene con los textos de los demás pares, y en
+ese sentido imagen y texto quedan alineados. El modelo original se entrenó así sobre 400 millones de pares
+recogidos de internet, sin ninguna etiqueta de clase~\cite{radford2021learning}.
+
+\input{Figures/Capitulos/02-Marco-Teorico/clip}
+
+Ese espacio compartido permite clasificar sin entrenar un clasificador. Cada clase se escribe como un texto, por
+ejemplo «una imagen dermatoscópica de un melanoma», y la imagen se asigna a la clase cuyo embedding de texto
+tiene mayor similitud coseno con el suyo. Clasificar sin ningún ejemplo etiquetado de la tarea se llama
+clasificación \textbf{\emph{zero-shot}}, y su resultado depende de cómo se redacten esos textos: cambiar la plantilla del prompt cambia la
+exactitud~\cite{radford2021learning}.
+
+Cuando hay ejemplos etiquetados, el codificador de imagen congelado se puede usar como extractor de
+características, con el linear probe de la Sección~\ref{sec:marco_transferencia}, o sin entrenar ningún
+parámetro, con el método de los \gls{knn}. Con una base de $m$ casos etiquetados, para una imagen consulta $x$,
+este método busca los $k$ casos cuyo embedding $f(x_j)$ tiene mayor similitud coseno con el suyo,
+\begin{equation}
+    \mathcal{N}_k(x) = \operatorname*{arg\,max}_{S \subseteq \{1,\dots,m\},\ |S| = k}\ \sum_{j \in S}
+    \cos\bigl(f(x),\, f(x_j)\bigr),
+    \label{eq:marco_vecinos}
+\end{equation}
+y estima la probabilidad de cada clase $c$ como la proporción de vecinos que la tienen,
+\begin{equation}
+    \hat{p}_{\text{kNN}}(c \mid x) = \frac{1}{k}\sum_{j \in \mathcal{N}_k(x)} \mathbf{1}[\,y_j = c\,],
+    \label{eq:marco_knn}
+\end{equation}
+donde $y_j$ es la etiqueta del caso $j$. La predicción es la clase de mayor proporción, el voto mayoritario, que
+extiende a $k$ vecinos la regla del vecino más cercano~\cite{cover1967nearest}. Así, el espacio contrastivo
+sirve también de índice de casos parecidos, que la Sección~\ref{sec:marco_rep_recuperacion} usa como evidencia
+para el texto.
+
+Un modelo contrastivo solo relaciona lo que vio en sus pares de entrenamiento, y los pares recogidos de internet
+casi no contienen imágenes dermatoscópicas. DermLIP, de 2025, aplica el mismo esquema a alrededor de un millón
+de pares imagen--texto dermatológicos, y en clasificación zero-shot de enfermedades de la piel supera a los
+modelos biomédicos de propósito general~\cite{yan2025derm1miccv}. Un modelo contrastivo, sin embargo, no genera
+texto: compara una imagen con textos dados, pero no puede escribir uno nuevo. Para eso hace falta la segunda
+forma de construir un \gls{vlm}.
+
+\subsection{Modelos visión--lenguaje generativos}
+\label{sec:marco_vlm_generativos}
+
+LLaVA, de 2023, es un esquema representativo de los \glspl{vlm} generativos abiertos. Un codificador visual del
+tipo de \gls{clip} extrae los rasgos de la imagen, y un proyector, en LLaVA una capa lineal, los lleva a la
+dimensión de los embeddings de token del \gls{llm}. Los tokens visuales resultantes se concatenan con la
+instrucción en el prompt de un \gls{llm} de solo decodificador, que genera la respuesta token a
+token. La imagen entra así como una parte más del prompt~\cite{liu2023visual}.
+
+LLaVA se entrena en dos etapas. En la primera, con el codificador visual y el \gls{llm} congelados, solo se
+ajusta el proyector sobre pares imagen--leyenda, para que los tokens visuales se parezcan a los embeddings de
+palabras que el \gls{llm} ya sabe procesar. En la segunda, el ajuste por instrucciones visuales (\emph{visual
+instruction tuning}), se ajustan el proyector y el \gls{llm} sobre conversaciones en las que se pide describir
+una imagen, razonar sobre ella o responder preguntas~\cite{liu2023visual}. Como el \gls{llm} concentra la
+mayoría de los parámetros, en esa segunda etapa se le puede aplicar \gls{lora}
+(Sección~\ref{sec:marco_llm_lora}) en lugar del ajuste completo, mientras el codificador visual sigue congelado
+y el proyector se entrena entero.
+
+\input{Figures/Capitulos/02-Marco-Teorico/llava}
+
+La Figura~\ref{fig:marco_llava} resume la arquitectura y qué componentes se entrenan en cada etapa. La misma
+receta se llevó después al dominio médico cambiando los datos. LLaVA-Med, de 2023, la repite con
+figuras y leyendas de artículos biomédicos, y se entrena en menos de quince horas con ocho
+GPU~\cite{li2023llavamed}. Su versión 1.5 usa Mistral~7B como modelo de lenguaje~\cite{jiang2023mistral,zeng2025mmskin}. SkinVL,
+de 2025, repite la receta con conjuntos dermatológicos, entre ellos uno construido a partir de libros de texto de
+la especialidad~\cite{zeng2025mmskin}.
+
+Un \gls{vlm} generativo, en cualquiera de estas variantes, devuelve texto y no una probabilidad por clase. Para
+clasificar con él, se puede buscar el nombre de la clase en la respuesta generada o, sin generar, calcular con la
+Ecuación~\ref{eq:marco_lm} la probabilidad que el modelo asigna al nombre de cada clase como continuación del
+prompt y elegir la mayor. Esa probabilidad se normaliza por la cantidad de tokens del nombre, porque cada token
+agrega al producto un factor menor que uno, y sin normalizar se favorecerían los nombres cortos. Los puntajes
+que se obtienen ordenan las clases, pero nada garantiza que reflejen la probabilidad de acertar.
+
+El problema no es exclusivo de los \glspl{vlm}. Los clasificadores de la Sección~\ref{sec:marco_vision} también
+devuelven una clase para cualquier imagen, incluso cuando se equivocan, y su probabilidad máxima no indica por sí
+sola cuánto confiar en esa respuesta~\cite{guo2017calibration}. Antes de pedirle a un modelo que redacte un
+reporte, entonces, hace falta decidir cuándo una predicción es lo bastante confiable para sostenerla y cuándo
+conviene no emitirla.
