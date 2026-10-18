@@ -1,5 +1,7 @@
 # Ficha 3.8 — Pipeline propuesto
 
+**Revisión del autor (18/10/2026), ya aplicada en el `.tex`:** Ahora es 3.7. Se presenta como la propuesta central; sin fechas; el piloto de noreasoning en una oración y la declaración de la concordancia remitida a 3.3; cierre que enlaza con las líneas base de 3.3 y con 3.8.
+
 **Estado: aprobada por el autor como punto de partida (11/10/2026); prosa redactada en primera versión.** Archivo: `Chapters/03-Materiales-Metodos/08-pipeline.tex` (sale de `06-pipeline.tex`, que hoy tiene solo tres `\pendiente`). Labels: `sec:met_pipeline` (sección); `sec:met_cascada`, `sec:met_recuperacion`, `sec:met_ruteo` (subsecciones, nombres propuestos; ninguno lo referencia todavía). Figuras: `fig:met_pipeline`, `fig:met_ruteo`. Ecuación: `eq:met_politica_ruteo`.
 
 ## Hilo conductor

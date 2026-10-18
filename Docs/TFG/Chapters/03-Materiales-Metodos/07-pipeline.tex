@@ -5,15 +5,17 @@
 % (ancla Swin, índice por lesión, ruteo); Codigo/docs/ideas/rag_les_plan_20261003.md (decodificación de la recuperación);
 % Codigo/docs/resul/ensamble_resul_20260607.md (piloto de noreasoning); Capítulo 2, Sección 2.5 (concordancia, consenso y
 % política de tres salidas) y Sección 2.4 (kNN, Ecuación de vecinos); Figuras de Docs/experimentacion (sin cifras).
+% Revisión del autor del 18/10/2026: sin fechas; las decisiones tomadas con la prueba a la vista se declaran una vez en 3.3.
 \section{Pipeline propuesto}
 \label{sec:met_pipeline}
 
 Los generadores de la Sección~\ref{sec:met_generacion} son \glspl{vlm} generativos y presentan dos limitaciones que este
 trabajo evalúa por separado. Cuando clasifican, no discriminan bien las lesiones; sus resultados están en el
 Capítulo~\ref{cp:res_clasif}. Cuando redactan, suelen no comprometerse con un diagnóstico y recurrir a
-reservas (\emph{hedging}; Sección~\ref{sec:marco_rep_fallas}). Para atender ambas, el \emph{pipeline} separa las tareas: un
-clasificador decide el diagnóstico y el generador redacta el reporte. Así, el \emph{pipeline} atiende la clasificación (T1) y la
-generación del reporte (T3). La detección de melanoma (T2) queda fuera, porque el ruteo no emite una decisión binaria.
+reservas (\emph{hedging}; Sección~\ref{sec:marco_rep_fallas}). El \emph{pipeline} es la propuesta central del trabajo y
+atiende ambas limitaciones separando las tareas: un clasificador decide el diagnóstico y el generador redacta el reporte.
+Así resuelve juntas la clasificación (T1) y la generación del reporte (T3); la detección de melanoma (T2) queda fuera,
+porque el ruteo no emite una decisión binaria.
 
 Una forma de separar las tareas es la cascada clasificador--generador. El clasificador entrega una clase, que se
 inyecta en el \emph{prompt} junto con la imagen, y el generador redacta un reporte que la afirma. A esa inyección se
@@ -33,12 +35,9 @@ una señal de concordancia con el clasificador (Sección~\ref{sec:marco_concorda
 La cascada depende de la instrucción con que el generador recibe el diagnóstico. La variante \emph{noreasoning} pide
 solo el reporte final, prohíbe los bloques de razonamiento y prohíbe mencionar diagnósticos alternativos. El motivo es
 que los generadores suelen razonar en voz alta y contradecir el diagnóstico que reciben, y prohibirles el razonamiento
-de manera explícita los obliga a comprometerse con él. El \emph{grounding} en general se describe en la
-Sección~\ref{sec:marco_rep_generacion}, y la plantilla completa está en el Apéndice~\ref{ap:prompts}.
-La variante se eligió en un piloto con las primeras 100 imágenes de \emph{HAM10000} por orden de nombre, sin
-distinguir particiones: 67 son de entrenamiento, 10 de validación, 17 de prueba y 6 quedaron fuera de la partición por
-lesión. La elección se basó en la consistencia de los reportes con el diagnóstico verdadero inyectado, no en la
-exactitud de ningún clasificador, y las 17 imágenes de prueba son el 1.13\,\% del test.
+de manera explícita los obliga a comprometerse con él. La plantilla completa está en el Apéndice~\ref{ap:prompts}.
+La variante se eligió en un piloto de 100 imágenes de \emph{HAM10000}, con el diagnóstico verdadero inyectado,
+midiendo en cuántos reportes se afirmaba; 17 de esas imágenes pertenecen a la prueba (Sección~\ref{sec:met_seleccion}).
 
 El diagnóstico que recibe el generador puede venir de cuatro fuentes, comparadas con el mismo generador. La primera es
 Swin-Tiny, la predicción \emph{argmax} del modelo con semilla 42, que se usa como ancla principal y se entrena con la
@@ -66,8 +65,7 @@ El contexto que recibe el generador es una frase fija con los diagnósticos de l
 trae, su localización. Hay dos plantillas. La de recuperación sola no usa clasificador y pide al generador el
 diagnóstico. La de Swin más recuperación incorpora el diagnóstico del ancla y el contexto, sin diferenciales, y
 reemplaza la plantilla \emph{noreasoning}. Por esa razón es un brazo de comparación y no entra en la cascada del ruteo.
-Las corridas con recuperación generan como máximo 384 tokens, con semilla 42. En el ruteo, en cambio, la recuperación
-cumple además la función de segundo predictor (Sección~\ref{sec:met_ruteo}).
+En el ruteo, la recuperación cumple además la función de segundo predictor (Sección~\ref{sec:met_ruteo}).
 
 \subsection{Ruteo por concordancia en tres niveles}
 \label{sec:met_ruteo}
@@ -76,10 +74,9 @@ El ruteo usa la concordancia entre los dos predictores como señal. Toma sus dec
 no depende de la calibración de la softmax ni necesita un umbral que ajustar (Sección~\ref{sec:marco_concordancia}). Los
 predictores tienen sesgos distintos: uno ajusta fronteras de decisión sobre \emph{HAM10000}~\cite{tschandl2018ham10000}
 y el otro no es paramétrico sobre una representación preentrenada. Por eso se espera que sus errores no coincidan
-siempre. Si la concordancia separa los aciertos de los errores es una condición que se comprueba en el
-Capítulo~\ref{cp:res_clasif}, no un supuesto. La concordancia se eligió en julio de 2026 con cifras de test a la vista.
-La regla no tiene parámetros que ajustar, así que el test no fijó ningún umbral, pero la elección de la señal queda
-declarada y los resultados del ruteo se leen con ese antecedente.
+siempre. Si la concordancia separa los aciertos de los errores es algo que se comprueba en el
+Capítulo~\ref{cp:res_clasif}, no un supuesto, y la elección de esta señal se declara en la
+Sección~\ref{sec:met_seleccion}.
 
 Sean $a(x)$ la concordancia entre el clasificador y el voto del kNN, y $\kappa(x)$ el consenso de los vecinos
 (Ecuación~\ref{eq:marco_knn}). Con $k = 3$, el consenso vale $1/3$, $2/3$ o $1$. La regla que asigna cada caso a un
@@ -116,5 +113,7 @@ qué se emite, pero no cuánto aporta el generador.
 
 La línea base sin generador aísla ese aporte. Usa el mismo ruteo y el mismo clasificador, pero no redacta: el nivel
 afirmativo devuelve el diagnóstico del clasificador, el diferencial devuelve el par de candidatos y el de abstención
-queda igual que en el sistema. La cascada se compara con líneas base que usan el mismo clasificador, y la
-Sección~\ref{sec:met_complementarios} describe las pruebas con que se analiza esa diferencia.
+queda igual que en el sistema. Junto con el \emph{oracle}, que fija la cota superior, completa las referencias del
+\emph{pipeline} anunciadas en la Sección~\ref{sec:met_lineas_base}; las diferencias con ellas se analizan con las pruebas
+de la Sección~\ref{sec:met_estadistica}. Con el \emph{pipeline} queda descrito el sistema completo; falta ver cómo se
+evalúa fuera de las condiciones en que se entrenó.
