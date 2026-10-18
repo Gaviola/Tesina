@@ -41,14 +41,14 @@ origen del texto de referencia.
             & Razonamiento escrito por un modelo de lenguaje con la etiqueta a la vista y revisado por dermatólogos \\
         \filasep
         \emph{MM-Skin} & Clínica, dermatoscópica y patológica
-            & 11\,015 imágenes; 9\,369 con descripción
+            & 11\,039 imágenes; 9\,369 pares imagen--texto
             & Evaluación de la generación con referencia
             & Descripciones de libros de texto de dermatología \\
         \filasep
         \emph{HIBA} & Dermatoscópica y clínica
             & 1\,616 imágenes; 1\,246 lesiones
             & Evaluación con otra población (solo prueba)
-            & Diagnóstico de dermatólogos del hospital \\
+            & Diagnóstico de dermatólogos del hospital, con histopatología en las lesiones extirpadas \\
         \filasep
         \emph{Derm1M} & Dermatoscópica y clínica & 1\,029\,761 pares imagen--texto
             & Preentrenamiento de DermLIP (no se usa en este trabajo)
@@ -60,8 +60,8 @@ origen del texto de referencia.
 \subsection{HAM10000: composición y análisis exploratorio}
 \label{sec:met_ham}
 
-\emph{HAM10000} contiene 10\,015 imágenes dermatoscópicas de 7\,470 lesiones, tomadas en Viena y en
-Queensland~\cite{tschandl2018ham10000}. El conjunto no identifica a los pacientes, así que la lesión es la agrupación
+\emph{HAM10000} contiene 10\,015 imágenes dermatoscópicas tomadas en Viena y en
+Queensland~\cite{tschandl2018ham10000}, que según sus metadatos corresponden a 7\,470 lesiones. El conjunto no identifica a los pacientes, así que la lesión es la agrupación
 más fina disponible. Tres de sus propiedades condicionan cómo se entrena y se evalúa un clasificador: cómo se reparten
 las clases, cuántas imágenes tiene cada lesión y con qué respaldo se asignó cada etiqueta.
 

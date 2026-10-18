@@ -25,11 +25,11 @@ que lleva el carcinoma escamoso a AKIEC, y no al cambio de población. Esa fuent
 se declara.
 
 La segunda pregunta es qué ocurre si empeoran las condiciones de captura, sin cambiar de conjunto. Con este
-propósito, a las 1\,503 imágenes de prueba se les aplican cuatro perturbaciones, con cinco niveles de intensidad cada
-una: compresión JPEG (calidad de 70 a 5), ruido gaussiano (desvío de 8 a 64 sobre la escala de 0 a 255), desenfoque gaussiano (radio de 1 a
+propósito, y siguiendo el esquema de los bancos de prueba de corrupciones de imagen~\cite{hendrycks2019benchmarking},
+a las 1\,503 imágenes de prueba se les aplican cuatro perturbaciones, con cinco niveles de intensidad cada una: compresión JPEG (calidad de 70 a 5), ruido gaussiano (desvío de 8 a 64 sobre la escala de 0 a 255), desenfoque gaussiano (radio de 1 a
 6 píxeles) y reducción de la resolución (de 0.75 a 0.15 del tamaño original, y vuelta al tamaño original). En cada caso
 se mide la caída relativa de la sensibilidad macro frente a la imagen sin perturbar
-(Ecuación~\ref{eq:marco_robustez}), como en los bancos de prueba de corrupciones de imagen~\cite{hendrycks2019benchmarking}.
+(Ecuación~\ref{eq:marco_robustez}).
 Asimismo, este análisis, como el de interpretabilidad, usa una sola vista de la imagen, sin \gls{tta}. Por otra parte,
 las perturbaciones sintéticas cubren solo una parte de la variación real entre equipos.
 

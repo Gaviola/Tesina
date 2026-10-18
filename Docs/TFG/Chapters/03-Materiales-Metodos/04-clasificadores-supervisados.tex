@@ -61,7 +61,8 @@ magnitud $M$ de la Tabla~\ref{tab:met_barrido}, y se borra un rectángulo al aza
 
 En cambio, en validación y en prueba la imagen se redimensiona a $256 \times 256$ y se recorta el centro de
 $224 \times 224$. En ambas particiones, las probabilidades se obtienen con \gls{tta} (Sección~\ref{sec:marco_regularizacion}), que
-promedia las de la imagen y las de su reflejo horizontal~\cite{krizhevsky2012imagenet}. Así, la salida de cada clasificador es una probabilidad por
+promedia las de la imagen y las de su reflejo horizontal, una versión reducida del promedio sobre recortes y sus
+reflejos que usan \textcite{krizhevsky2012imagenet}. Así, la salida de cada clasificador es una probabilidad por
 clase, de la que se calculan las métricas de la Sección~\ref{sec:met_protocolo}.
 
 \subsection{Entrenamiento e hiperparámetros}

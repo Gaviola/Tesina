@@ -21,7 +21,7 @@ codificador de imagen \gls{clip} ViT-L/14 a 336 píxeles con una proyección de 
 decodificador, Phi-3.5-mini, de 32 capas y 3\,072 dimensiones, para un total de unos 4\,150 millones de parámetros.
 Se eligió por dos motivos: sus pesos son abiertos y su tamaño permite aplicarle \gls{lora} en una GPU de consumo.
 
-El segundo generador, LLaVA-Med~\cite{li2023llavamed}, en su versión 1.5 con Mistral-7B, es el \gls{vlm} biomédico con el que se contrasta
+El segundo generador, LLaVA-Med~\cite{li2023llavamed}, en su versión 1.5 con Mistral-7B~\cite{zeng2025mmskin}, es el \gls{vlm} biomédico con el que se contrasta
 Mini-VLM. Usa el mismo tipo de codificador, \gls{clip} ViT-L/14, una proyección y el modelo de lenguaje
 Mistral-7B, pero se entrenó con figuras y leyendas de la literatura biomédica. Además, con un modelo de lenguaje de unos 7 mil
 millones de parámetros, es el más pesado de los dos. De este modo, la comparación pone frente a frente un modelo

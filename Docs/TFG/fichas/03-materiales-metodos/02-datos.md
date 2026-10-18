@@ -215,16 +215,16 @@ Se marca el estado respecto de la revisión del 18/10/2026.
 1. **Licencia de HAM10000 y ejemplos por clase (resuelta).** El `.tex` incluye la figura `fig:met_ham_ejemplos` con la licencia CC BY-NC 4.0 en el epígrafe. Falta verificar la licencia de la versión descargada en Harvard Dataverse (la tabla 1 del paper indica CC BY-NC 4.0 para la mayoría de sus fuentes y CC-0 para una).
 2. **`ej_skincot_human.jpg` (resuelta).** No se usa; el ejemplo de SkinCoT es un fragmento de texto.
 3. **Traducción del ejemplo de SkinCoT (resuelta).** Se cita en inglés con traducción propia marcada como tal.
-4. **Origen de las imágenes de SkinCoT (abierta).** El `.tex` dice «atlas DermNet» (paper). El README y el acuerdo de uso de SkinCaRe mencionan Fitzpatrick 17k, DDI y SKINCON. Verificar.
+4. **Origen de las imágenes de SkinCoT (resuelta, 18/10).** El paper dice «images sourced from the public DermNet atlas» (§2.3) y aclara que SkinCAP y SkinCoT no comparten imágenes; Fitzpatrick 17k, DDI y SKINCON son el origen de SkinCAP. La Tabla 4 del paper agrupa SkinCoT en 23 grupos de enfermedades (3.6 dice «23 grupos»).
 5. **Licencia y uso de SkinCaRe (abierta).** El README tiene dos licencias (CC-BY-4.0 en el cuerpo, cc-by-nc-sa-4.0 en el YAML); el acuerdo exige investigación no comercial y prohíbe redistribuir copias. El fragmento de SkinCoT es una cita corta.
-6. **MM-Skin (parcialmente resuelta).** El archivo local tiene 11 090 filas (11 015 imágenes) y el paper dice «casi 10 000» pares; la tabla del `.tex` dice «11 015 imágenes; 9 369 con descripción» y la ficha anterior no tenía esa segunda cifra. Verificar la fuente de «9 369» y qué significa «derm» en `modality`.
+6. **MM-Skin (resuelta, 18/10).** La Tabla 2 del paper da 11 039 imágenes y 9 369 pares imagen–texto (1 039 dermatoscópicas, 3 016 patológicas, 6 984 clínicas); la tabla del `.tex` usa ahora esas cifras del paper. El archivo local tiene 11 015 imágenes únicas; la prueba de 1 653 es del split local.
 7. **MM-Skin, partición (resuelta).** La evaluación con referencia usa el test de `mmskin_splits.json` (1 653 imágenes), solo con las imágenes que tienen descripción propia.
 8. **HIBA, cuántas imágenes (resuelta).** El `.tex` usa las 1 616 completas como prueba externa. `hiba_splits.json` (243 de prueba) y `phase0_data.yaml` no se mencionan.
 9. **HIBA, fototipos (obsoleta tras la revisión del 18/10).** El `.tex` ya no reporta fototipos.
 10. **HIBA, mapeo (resuelta).** El `.tex` declara que SCC pasa a AKIEC como aproximación que agrega ruido, y remite a 3.8 (`sec:met_complementarios`). Falta confirmar si también se declara en la tabla SOTA.
 11. **Derm1M no está en el repo (abierta).** Las cifras son del paper (1 029 761 pares). Verificar la variante de DermLIP que usa 3.5 (`vit-b-16` según `dermlip.py`).
 12. **«DermLIP nunca vio HAM10000» (resuelta).** El `.tex` redacta «entre las fuentes declaradas no figura HAM10000, aunque no puede descartarse…».
-13. **SkinCAP, las 439 marcas (reformulada, a verificar).** El `.tex` dice que «sus anotadores originales las marcaron como descartables por mala calidad» y cita `daneshjou2022skincon`. La ficha anterior decía que el motivo no estaba documentado en el repo: verificar que la atribución a SKINCON y «por mala calidad» están respaldadas por la fuente.
+13. **SkinCAP, las 439 marcas (resuelta, 18/10).** SkinCon §2.2: «A label of "Do not use" was allowed to remove any images that were poor quality». La columna local «Do not consider this image» la hereda; el `.tex` lo dice así.
 14. **Referencias que faltan (obsoleta tras la revisión del 18/10).** Gemini 2.5 Pro, GPT-o4-mini y Llama-3.1 ya no se nombran en el texto; DermNet se nombra sin cita.
 15. **Clave de HIBA (resuelta).** `riccilara2023dataset`.
 16. **Clave de Derm1M (resuelta).** `yan2025derm1miccv`.
