@@ -13,8 +13,9 @@ Pregunta que responde el capítulo: ¿puede un VLM clasificar una lesión dermat
 *HAM10000* tan bien como un clasificador supervisado, y qué explica que los VLM generales no lo logren? (PI1, OE1,
 y la parte del OE3 que toca a la clasificación: población externa, perturbaciones, calibración.)
 
-Viene de: el Cap. 3 deja el protocolo completo. La regla de cada número (vista única o TTA, *checkpoint*,
-partición, prueba) está en `sec:met_complementarios`, y su última oración remite a este capítulo.
+Viene de: el Cap. 3 deja el protocolo completo: métricas, selección y pruebas en `sec:met_protocolo` (3.3),
+configuración de los modelos en 3.4–3.6 y los análisis en otros escenarios en `sec:met_complementarios` (3.8), cuya
+última oración remite a este capítulo.
 Deja instalado: el clasificador de referencia (Swin-Tiny) y la conclusión de que un VLM general no aporta el
 diagnóstico. El Cap. 5 los usa para justificar la cascada.
 
@@ -22,8 +23,8 @@ diagnóstico. El Cap. 5 los usa para justificar la cascada.
 Intro    Qué responde el capítulo (PI1), qué hipótesis contrasta; todo número sale de la partición por lesión,
          se elige en validación y se reporta en test (media ± sd cuando hay tres semillas)
           ↓ necesidad: antes de juzgar a un VLM hace falta saber cuánto rinde un clasificador supervisado
-4.1      Clasificadores supervisados: el ganador en validación, los cuatro con la misma receta, recall por
-         clase y dispersión, ensamble, efecto de la fuga, desbalance, receta anterior frente a la moderna
+4.1      Clasificadores supervisados: el ganador en validación, los cuatro con el mismo procedimiento, recall
+         por clase y dispersión, ensamble, desbalance y efecto de la fuga
           ↓ contraste: con esa referencia, ¿clasifica igual un VLM médico general?
 4.2      VLM generales: cuatro estrategias, sensibilidad macro en el nivel del azar, colapso hacia una o dos
          clases. H1 refutada
@@ -68,14 +69,15 @@ Total orientativo: 24–26 páginas.
 
 | # | Cambio | Motivo |
 |---|---|---|
-| C1 | DenseNet121 y ViT-B/16 entran a 4.1 **con la receta moderna y tres semillas**; las corridas legacy quedan como antecedente (un párrafo y la comparación de recetas) | Decisión del 12/10; TOKO 99007–99012, `densenet_vit_moderna_resul_20261017.md` |
-| C2 | La conclusión «Swin y ConvNeXt superan a DenseNet y ViT» pasa a «con la misma receta, ViT-B/16 empata con Swin y ConvNeXt, y DenseNet121 queda abajo en F1 macro y sensibilidad macro (bootstrap), sin diferencia en McNemar con Holm» | ídem, §5 |
-| C3 | Se quita Wilcoxon de 4.6. El recall por clase se compara de forma descriptiva, contando en cuántas clases mejora cada modelo, y McNemar se corrige con Holm sobre 21 pares | Decisión del 12/10; así lo fija 3.9 (`09-analisis-complementarios.tex`, l. 145–149) |
+| C1 | DenseNet121 y ViT-B/16 entran a 4.1 **con la configuración de su familia y tres semillas**. Las corridas con la receta anterior no aparecen en el capítulo (revisión del autor del 18/10, D-B y R2 de la ficha del Cap. 3); sus números siguen en `densenet_vit_moderna_resul_20261017.md` §4 | Decisión del 12/10; TOKO 99007–99012 |
+| C2 | La conclusión «Swin y ConvNeXt superan a DenseNet y ViT» pasa a «con el mismo procedimiento, ViT-B/16 empata con Swin y ConvNeXt, y DenseNet121 queda abajo en F1 macro y sensibilidad macro (bootstrap), sin diferencia en McNemar con Holm» | ídem, §5 |
+| C3 | Se quita Wilcoxon de 4.6. El recall por clase se compara de forma descriptiva, contando en cuántas clases mejora cada modelo, y McNemar se corrige con Holm sobre 21 pares | Decisión del 12/10; así lo fija 3.3 (`sec:met_estadistica`) |
 | C4 | Se quita maligno-vs-benigno de 4.9 | Decisión del 12/10 («sin maligno/benigno»); 3.1 define la detección solo como MEL frente al resto |
 | C5 | 4.2: **los VLM generales no se ajustaron sobre *HAM10000***. La estrategia «ajuste fino» evalúa el *checkpoint* de generación de la etapa 2, entrenado con *SkinCaRe*. No hay fuga que declarar; la nota «Declarar» de la ficha vieja era falsa | Corrección del 11/10 (ficha 3.0, punto 6) |
-| C6 | 4.2: Mini-VLM ajustado se reporta con **v3** (LoRA sobre el modelo de lenguaje). El *checkpoint* v2 tenía el adaptador solo en CLIP (3.7) | Decisión del 12/10; job 1179985 completo el 18/10 |
+| C6 | 4.2: Mini-VLM ajustado se reporta con **v3** (LoRA sobre el modelo de lenguaje). El *checkpoint* v2 tenía el adaptador solo en CLIP; el texto de 3.6 describe solo la configuración v3 | Decisión del 12/10; job 1179985 completo el 18/10 |
 | C7 | 4.6: con la familia nueva, 15 de 21 pares son significativos con Holm, todos los que incluyen un modelo *zero-shot*; ningún par entre supervisados lo es | `densenet_vit_moderna_resul_20261017.md` §3 |
 | C8 | Las fichas pasan a una por sección (`fichas/04-resultados-clasificacion/NN-seccion.md`) | Guía §1, desde el 10/10 |
+| C9 | Rigen las reglas R1–R5 de la revisión del Cap. 3 (18/10): sin fechas, revisiones del tutor ni iteraciones viejas; solo resultados finales con su justificación; teoría y método se nombran con `\ref` | Pedido del autor: valen también para los Caps. 4 y 5 |
 
 ## Alcance y decisiones heredadas
 
@@ -83,11 +85,12 @@ Total orientativo: 24–26 páginas.
    fuga) y en 4.4 (inflación de los métodos locales sobre DermLIP). `experimentacion.tex` sirve para el argumento,
    no para los números.
 2. **El Cap. 4 no explica cómo se obtuvo nada.** Receta, barrido, umbral, protocolo de cada número y pruebas se
-   nombran con `\ref` al Cap. 3. Si un número necesita su regla, se cita la fila de `tab:met_protocolos`.
-3. **Media ± sd de tres semillas** cuando existen (los cuatro supervisados y el ensamble). Desbalance, legacy y VLM
+   nombran con `\ref` al Cap. 3 (las tablas de protocolo por resultado se quitaron en la revisión del 18/10; si un
+   número necesita su regla, se dice en una oración con `\ref` a la sección del Cap. 3 que la define).
+3. **Media ± sd de tres semillas** cuando existen (los cuatro supervisados y el ensamble). Desbalance y VLM
    tienen una semilla y se reportan sin desvío.
 4. **Selección en validación, lectura en test.** Ninguna conclusión elige un modelo mirando el test; cuando un
-   número de test motivó algo, se dice (como 3.4 hace con la regla de selección).
+   número de test motivó algo, ya está declarado una vez en 3.3 (`sec:met_seleccion`) y no se repite.
 5. **Swin-Tiny es el clasificador de referencia** (confirmado por el autor el 17/10): mejor F1 macro en validación,
    un tercio de los parámetros de ViT-B/16 y la cascada ya anclada en él. El ensamble sigue siendo Swin + ConvNeXt.
 6. **Terminología** (guía §4): «exactitud», no «precisión»; «reporte» solo para el informe clínico; decimales con
@@ -98,10 +101,9 @@ Total orientativo: 24–26 páginas.
 | Qué | Para | Estado |
 |---|---|---|
 | Clasificación de Mini-VLM v3 por verosimilitud y CoT | 4.2 (filas de ajuste fino), figura por enfoque de 4.4 | Mendieta 1179988–1179989, en cola |
-| Ablaciones de la receta (sin MixUp, sin RandAugment, sin focal, etc.) | 3.5 dice que se presentan en el Cap. 4 «como análisis de mecanismo» | **Sin fuente local.** `scripts/toko/submit.py` define `cls_abl_*` sobre ConvNeXt-Tiny, pero no hay salidas ni en `outputs/results/` local ni en TOKO (verificado el 18/10), ni resul doc. Ver pregunta 2 |
+| Ablaciones de la receta (sin MixUp, sin RandAugment, sin focal, etc.) | — | **Resuelto (18/10):** sin resultados ni local ni en TOKO; se quitó de 3.4 la oración que las prometía (D-E de la ficha del Cap. 3). No van al Cap. 4 |
 
 ## Preguntas abiertas
 
 1. **Extensión:** ¿24–26 páginas o las 25–30 de la guía?
-2. **Ablaciones de la receta:** no encontré sus resultados. Opciones: (a) correrlas ahora sobre la partición por lesión; (b) sacar de
-   3.5 la oración que las promete. Recomiendo (b): eran sobre la partición con fuga y no cambian ninguna conclusión.
+2. ~~Ablaciones de la receta~~ (resuelta el 18/10: se quitaron de 3.4).
