@@ -104,13 +104,14 @@ corta el entrenamiento si el F1 ponderado de validación no mejora en cinco épo
         \filasep
         Precisión numérica & bf16 (\emph{bfloat16}) \\
         \filasep
-        Semillas & 42, 43 y 44 \\
+        Semillas & 42 en la búsqueda; 42, 43 y 44 en la configuración elegida de cada modelo \\
         \bottomrule
     \end{tabularx}
 \end{table}
 
-Tres hiperparámetros se eligieron por búsqueda en grilla: la tasa de aprendizaje, el decaimiento de pesos y la magnitud
-de RandAugment (Tabla~\ref{tab:met_barrido}). Las 15 combinaciones se entrenaron con y sin pesos por clase en la
+Tres hiperparámetros se eligieron por búsqueda: la tasa de aprendizaje, el decaimiento de pesos y la magnitud de
+RandAugment (Tabla~\ref{tab:met_barrido}). Las cinco tasas se cruzaron con los tres decaimientos, y cada magnitud se
+asignó a cinco de esas 15 combinaciones. Todas se entrenaron con la semilla 42, con y sin pesos por clase en la
 pérdida, que dan más importancia a los errores en las clases raras, lo que suma 30 configuraciones por modelo. La
 búsqueda se hizo sobre Swin-Tiny y ConvNeXt-Tiny, y en ambos ganó, por F1 macro en validación, una configuración sin
 pesos por clase. DenseNet121 y ViT-B/16 no tuvieron búsqueda propia: cada uno usa la configuración ganadora del modelo
@@ -157,4 +158,4 @@ otra combinación exigiría mirar la prueba para elegirla. Para la detección de
 de melanoma de cada modelo o del ensamble, con el umbral de la Sección~\ref{sec:met_seleccion}.
 
 Estos clasificadores devuelven una probabilidad por clase, pero no generan texto. Para saber si un \gls{vlm}, que sí lo
-genera, clasifica tan bien como ellos, se los compara con las mismas métricas.
+genera, clasifica tan bien como ellos, se los compara con las mismas métricas (Sección~\ref{sec:met_clasif_vlm}).

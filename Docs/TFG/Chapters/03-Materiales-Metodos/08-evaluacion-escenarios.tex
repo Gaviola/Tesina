@@ -27,7 +27,8 @@ La segunda pregunta es qué ocurre si empeoran las condiciones de captura, sin c
 imágenes de prueba se les aplican cuatro perturbaciones, con cinco niveles de intensidad cada una: compresión JPEG
 (calidad de 70 a 5), ruido gaussiano (desvío de 8 a 64 sobre la escala de 0 a 255), desenfoque gaussiano (radio de 1 a
 6 píxeles) y reducción de la resolución (de 0.75 a 0.15 del tamaño original, y vuelta al tamaño original). Se mide la
-caída relativa de la sensibilidad macro frente a la imagen sin perturbar (Ecuación~\ref{eq:marco_robustez}). Este
+caída relativa de la sensibilidad macro frente a la imagen sin perturbar (Ecuación~\ref{eq:marco_robustez}), como en
+los bancos de prueba de corrupciones de imagen~\cite{hendrycks2019benchmarking}. Este
 análisis, como el de interpretabilidad, usa una sola vista de la imagen, sin \gls{tta}. Las perturbaciones sintéticas
 cubren solo una parte de la variación real entre equipos.
 
@@ -35,7 +36,9 @@ La tercera pregunta es cuánto se puede confiar en la probabilidad que da el mod
 que un clínico leería como certeza. Se miden el ECE y el Brier (Sección~\ref{sec:marco_eval_calib}) sin calibrar y con
 dos ajustes posteriores, \emph{temperature scaling} y \emph{vector scaling}, que se ajustan en validación y se evalúan en
 la prueba. El primero divide todas las salidas por un mismo valor y no cambia la clase predicha; el segundo aplica un
-factor y un sesgo por clase, y puede cambiarla. Como los pesos por clase alteran la confianza del modelo, se comparan
+factor y un sesgo por clase, y puede cambiarla. Como el modelo guarda las probabilidades promediadas con \gls{tta} y
+no sus salidas previas a la softmax, ambos ajustes se aplican sobre el logaritmo de esas probabilidades, una
+aproximación que se declara. Como los pesos por clase alteran la confianza del modelo, se comparan
 dos versiones de la misma configuración, entrenadas con y sin ellos.
 
 La cuarta pregunta es en qué parte de la imagen se apoya el modelo. Se aplica Grad-CAM
@@ -50,6 +53,6 @@ límite de tokens, de modo que la diferencia refleja el modelo y la longitud de 
 controlada, sino una estimación del orden de magnitud, que permite contrastar el sistema con el cómputo que usa la
 literatura (Tabla~\ref{tab:marco_brechas}).
 
-Con estos análisis queda completo el protocolo. Los resultados de clasificación, incluidos los de esta sección, se
-presentan en el Capítulo~\ref{cp:res_clasif}, y los de generación y del \emph{pipeline}, en el
-Capítulo~\ref{cp:res_gen}.
+Con estos análisis queda completo el protocolo. Los resultados de clasificación, incluidos los de esta sección que
+se refieren a los clasificadores, se presentan en el Capítulo~\ref{cp:res_clasif}; los de generación y del
+\emph{pipeline}, junto con el costo de los generadores, en el Capítulo~\ref{cp:res_gen}.

@@ -1,5 +1,5 @@
-% Extensión estimada: unas 3.5 páginas, 10 párrafos y tres subsecciones (ficha 3.6).
-% Fuentes: ficha fichas/03-materiales-metodos/06-clasificacion-vlm.md; config.json de Phi-3.5-vision-instruct;
+% Extensión estimada: unas 3.5 páginas, 10 párrafos y tres subsecciones (ficha 3.5).
+% Fuentes: ficha fichas/03-materiales-metodos/05-clasificacion-vlm.md; config.json de Phi-3.5-vision-instruct;
 % src/models/mini_vlm.py, llava_med.py, dermlip.py; src/evaluation/vlm_scoring.py; scripts/train_vlm_classify.py,
 % embeddings_classical.py, dermlip_split_eval.py; docs/resul/split_lesion_resul_20260926.md (§2, §6, §8).
 % Revisión del autor del 18/10/2026: los modelos se nombran al final de la introducción; transición a DermLIP.
@@ -10,8 +10,8 @@ La primera pregunta de investigación es si un \gls{vlm} clasifica las lesiones 
 la sección anterior. Para responderla se usan dos tipos de \glspl{vlm} (Sección~\ref{sec:marco_vlm}). Los generativos
 responden con texto, así que hay que decidir cómo se convierte una respuesta escrita en una de las siete clases. Los
 contrastivos no generan texto, sino una representación de la imagen, sobre la que se puede clasificar directamente.
-Se evalúan dos generativos de propósito general, uno entrenado con datos generales y otro con datos biomédicos, y un
-contrastivo especializado en dermatología. Los generativos son Mini-VLM y LLaVA-Med.
+Se evalúan dos generativos que no están especializados en dermatología, uno de dominio general y otro biomédico, y
+un contrastivo que sí lo está. Los generativos son Mini-VLM y LLaVA-Med.
 
 \subsection{Mini-VLM y LLaVA-Med}
 \label{sec:met_vlm_generativos}

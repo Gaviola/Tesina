@@ -1,4 +1,4 @@
-% Extensión estimada: 4--4.5 páginas (once párrafos, dos tablas, tres figuras y un fragmento de texto).
+% Extensión estimada: 4.5--5 páginas (catorce párrafos, dos tablas, tres figuras y un fragmento de texto).
 % Fuentes: conteos propios sobre Codigo/data/raw/HAM10000/HAM10000_metadata, Codigo/data/splits/ham10000_splits.json
 % y ham10000_splits_lesion.json (solo lectura, 2026-10-11); Codigo/outputs/results/leakage_analysis.json;
 % Codigo/scripts/make_lesion_disjoint_split.py; Codigo/scripts/prepare_data.py (splits de SkinCaRe);
@@ -153,8 +153,9 @@ porque cada uno trae su propia división o se usa completo como prueba.
 (Sección~\ref{sec:met_generacion}), en dos partes. \emph{SkinCAP} tiene 4\,000 imágenes clínicas tomadas de
 \emph{Fitzpatrick 17k} y de \emph{DDI}~\cite{groh2021neural,daneshjou2022disparities}, con descripciones que
 escribieron cuatro dermatólogos en chino y que luego se tradujeron al inglés y se revisaron~\cite{shen2025skincare}.
-De ellas se excluyen 439 que sus anotadores originales marcaron como descartables por mala
-calidad~\cite{daneshjou2022skincon}, y las 3\,561 restantes se parten por imagen en 70/15/15.
+De ellas se excluyen 439 que llevan la marca de descarte que \emph{SKINCON} daba a sus anotadores
+para las imágenes de mala calidad~\cite{daneshjou2022skincon}, y las 3\,561 restantes se parten por imagen en
+70/15/15.
 
 \emph{SkinCoT} aporta 3\,041 imágenes clínicas del atlas DermNet con un razonamiento diagnóstico escrito para cada
 una~\cite{shen2025skincare}. El texto lo produce un modelo de lenguaje que recibe la etiqueta verdadera, y

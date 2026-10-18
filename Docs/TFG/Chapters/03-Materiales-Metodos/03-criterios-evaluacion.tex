@@ -146,12 +146,15 @@ métrica por la composición de la prueba, o si la diferencia entre dos modelos 
 sobre las imágenes, pareado cuando se comparan dos modelos. Para saber si un modelo acierta imágenes en las que el otro
 falla, se usa la prueba de McNemar en su versión exacta, sobre los casos en que los dos modelos discrepan.
 
-Como se comparan siete modelos, que forman 21 pares, los valores p de McNemar se corrigen con el método de Holm
+Como se comparan siete clasificadores (los cuatro supervisados, DermLIP sin ajuste y los dos \glspl{vlm}
+generativos sin ajuste, Sección~\ref{sec:met_clasif_vlm}), que forman 21 pares, los valores p de McNemar se corrigen con el método de Holm
 (Ecuación~\ref{eq:marco_holm}), que controla la probabilidad de declarar al menos una diferencia falsa entre todas. En
 el \emph{bootstrap}, una diferencia se considera real si su intervalo de confianza del 95\,\% no contiene el cero. La
 sensibilidad de cada clase se compara de forma descriptiva, contando en cuántas de las siete clases mejora cada modelo:
 con siete valores, ninguna prueba de rangos podría alcanzar el umbral que Holm exige para 21 comparaciones. Las pruebas
-se calculan sobre la ejecución con semilla 42, y la variación entre semillas se informa como desvío.
+se calculan sobre la ejecución con semilla 42, y la variación entre semillas se informa como desvío. El
+\emph{bootstrap} remuestrea imágenes y no lesiones, así que trata como independientes las imágenes de una misma
+lesión; en la prueba hay 1\,503 imágenes de 1\,429 lesiones, y remuestrear por lesión casi no cambia los intervalos.
 
 \begingroup
 \small
