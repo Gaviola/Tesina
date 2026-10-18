@@ -1,7 +1,51 @@
 # Ficha del Capítulo 3 — Materiales y métodos
 
-**Estado (11/10/2026): aprobada por el autor como punto de partida; se ajusta a medida que surjan detalles.** Contrato del capítulo. Ninguna sección se redacta hasta que
+**Estado (11/10/2026): aprobada por el autor como punto de partida; revisada el 18/10/2026 (ver abajo).** Contrato del capítulo. Ninguna sección se redacta hasta que
 el autor apruebe esta ficha y la ficha de la sección (guía §1).
+
+## Revisión del autor del 18/10/2026 (prevalece sobre lo que sigue)
+
+El autor revisó el capítulo redactado y pidió acercarlo a la tesina de ejemplo: menos extensión, mejor hilo entre
+secciones, solo la configuración final y nada que importe al equipo pero no al lector. Se aplicó así:
+
+| Nueva | Título | Archivo | Qué cambió |
+|---|---|---|---|
+| Intro | — | `00-capitulo.tex` | Anuncia cada sección por número, como la tesina de ejemplo |
+| 3.1 | Definición de las tareas y flujo de trabajo | `01-tareas.tex` | Absorbe la antigua 3.2; definición formal de la tarea; figura del flujo como etapas del método |
+| 3.2 | Conjuntos de datos | `02-datos.tex` | Menos cifras en el texto |
+| 3.3 | Criterios de evaluación | `03-criterios-evaluacion.tex` | Justificación de cada métrica; líneas base explicadas; recibe la comparación estadística |
+| 3.4 | Clasificadores supervisados | `04-clasificadores-supervisados.tex` | Solo la configuración final; sin receta anterior ni búsqueda vieja |
+| 3.5 | Clasificación con VLM | `05-clasificacion-vlm.tex` | Orden de presentación y transiciones |
+| 3.6 | Generación de reportes | `06-generacion-reportes.tex` | Sin repeticiones ni historia de LoRA; «Inferencia» une razonamiento y decodificación |
+| 3.7 | Pipeline propuesto | `07-pipeline.tex` | Presentado como propuesta central; sin fechas |
+| 3.8 | Evaluación en otros escenarios | `08-evaluacion-escenarios.tex` | Reemplaza a «Análisis complementarios»; sin tablas de protocolo |
+
+Resultado: el capítulo tiene unas 12 páginas menos (el documento pasó de 155 a 143).
+
+**Reglas que fijó el autor (valen también para los Caps. 4 y 5):**
+- R1. Separar lo que importa al lector de lo que importa al equipo. No van: fechas de decisiones, revisiones del
+  tutor, cambios durante el proceso, versiones de los resultados, Weights & Biases, versiones de CUDA, el registro
+  de experimentos. Sí van: la configuración que produjo los resultados y la justificación de cada decisión.
+- R2. Describir solo la configuración final, no las iteraciones viejas; el énfasis está en el *pipeline*.
+- R3. No repetir teoría del Cap. 2: nombrarla con `\ref`. No repetir lo que otra sección ya presentó.
+- R4. Cada métrica o umbral lleva su justificación.
+- R5. Mismo hilo que los Caps. 1 y 2: cada sección retoma la anterior y deja instalada la siguiente.
+
+**Decisiones del autor (18/10/2026):**
+- D-A. La antigua 3.9 se disuelve: las pruebas estadísticas pasan a 3.3 (`sec:met_estadistica`); HIBA,
+  perturbaciones, calibración, Grad-CAM y costo quedan en 3.8, un párrafo por pregunta. Se quitan
+  `tab:met_protocolos`, `tab:met_protocolos_vlm`, `tab:met_protocolos_analisis`, `sec:met_inferencia` y
+  `sec:met_analisis_compl`.
+- D-B. Las corridas de DenseNet121 y ViT-B/16 con la receta anterior salen del Cap. 3 (y su búsqueda aleatoria de
+  28 corridas). En el Cap. 4 se decide después si aparecen.
+- D-C. Las decisiones tomadas con la prueba a la vista (F1 macro como criterio, concordancia como señal de ruteo,
+  plantilla *noreasoning* elegida en un piloto con 17 imágenes de prueba) se declaran una sola vez, en 3.3.
+- D-D. La especificidad ≥ 0.85 del umbral de melanoma se justifica como decisión de diseño (tope de 15 % de falsas
+  alarmas en validación), sin atribuirla a una guía clínica.
+- D-E. Se quitan las ablaciones de la receta de 3.4: no tienen resultados ni en local ni en TOKO.
+
+**Pendientes:** la Etapa 1 de LLaVA-Med y la clasificación de Mini-VLM v3 no cambian el texto del Cap. 3. El Cap. 3
+no tiene `\pendiente`.
 
 Fuentes de esta ficha: el andamiaje actual de `Chapters/03-Materiales-Metodos/` (con el feedback del tutor del
 14/09 y la revisión del 25/09 en sus comentarios), la ficha del Cap. 2 (`fichas/02-marco-teorico/00-capitulo.md`),
