@@ -1,113 +1,153 @@
-# Ficha 3.1 — Definición de las tareas
+# Ficha 3.1 — Definición de las tareas y flujo de trabajo
 
-**Revisión del autor (18/10/2026), ya aplicada en el `.tex`:** Absorbe la antigua 3.2 (flujo de trabajo): definición formal de la tarea en el formato de la tesina de ejemplo, lista T1–T3 sin el detalle de PI/OE, «gradación» → «no tienen la misma gravedad», HAM10000 presentado con remisión a 3.2, GPUs en una oración (sin tabla, sin CUDA, sin W&B ni versionado), figura del flujo redibujada como etapas del método (sin historia de hipótesis ni ciclo de iteración). Título: «Definición de las tareas y flujo de trabajo».
+**Revisión del autor (18/10/2026):** ficha puesta al día con el `.tex`. Absorbe la antigua 3.2 (flujo de trabajo): definición formal de la tarea en el formato de la tesina de ejemplo, lista T1–T3 sin el detalle de PI/OE, «gradación» → «no tienen la misma gravedad», HAM10000 presentado con remisión a 3.2, GPUs en una oración (sin tabla, sin CUDA, sin W&B ni versionado), figura del flujo redibujada como etapas del método (sin historia de hipótesis ni ciclo de iteración). Título: «Definición de las tareas y flujo de trabajo».
 
-**Estado: aprobada por el autor como punto de partida (11/10/2026); prosa redactada en primera versión.** Archivo: `Chapters/03-Materiales-Metodos/01-tareas.tex` (nuevo). Labels: `sec:met_tareas`.
+**Estado: aprobada por el autor como punto de partida (11/10/2026); prosa reescrita el 18/10/2026 y ficha actualizada a esa versión.** Archivo: `Chapters/03-Materiales-Metodos/01-tareas.tex`. Figura: `Figures/Capitulos/03-Materiales-Metodos/flujo_trabajo.tex`. Labels: `sec:met_tareas`, `fig:met_flujo`. Los labels `sec:met_metodologia` y `sec:met_infra` de la antigua 3.2 ya no existen y nadie los referencia (verificado con `grep` sobre los `.tex`).
 
 ## Hilo conductor
 
-Pregunta que responde la sección: ¿qué le pide el trabajo a cada modelo, con qué entrada y qué salida, y bajo qué restricción de cómputo?
-Viene de: la introducción del Cap. 3, que retoma las limitaciones del estado del arte (`sec:estado_arte_posicion`, `tab:marco_brechas` del Cap. 2). De las cuatro brechas de esa tabla, tres se convierten en tareas o en restricciones de esta sección: la comparación sin protocolo común (→ PI1), el texto evaluado por su parecido con una referencia (→ PI2) y el cómputo fuera del alcance de un equipo sin infraestructura (→ restricción). La cuarta, la incertidumbre sin integrar, no es una tarea: es la decisión de afirmar o derivar, que corresponde al *pipeline* (3.8).
-Deja instalado: tres tareas con sus identificadores (T1 clasificación, T2 detección de melanoma, T3 generación del reporte), con entrada, salida, pregunta y objetivo; las siete clases y su gravedad; la restricción de una GPU de consumo y la decisión de adaptar modelos preentrenados con LoRA en lugar de preentrenar un VLM. 3.2 (flujo de trabajo) usa las tres tareas para ordenar las etapas; 3.3 usa las clases para describir el conjunto; 3.4 usa la gravedad para justificar las métricas.
+Pregunta que responde la sección: ¿qué le pide el trabajo al sistema en su conjunto (entrada, salida, restricción de cómputo), cómo se reparte en tres tareas y en qué orden se recorre el método?
+Viene de: la introducción del Cap. 3 y la propuesta del Cap. 2 (`sec:estado_arte_posicion`): un *pipeline* que encadena un clasificador, una recuperación de casos parecidos y un generador de reportes. La sección no abre con la tabla de brechas (`tab:marco_brechas`): retoma solo la propuesta.
+Deja instalado: para 3.2, las siete categorías de *HAM10000* con su gravedad, la primera etapa del flujo (los datos: qué conjuntos, qué papel cumple cada uno, cómo se parte el que entrena a los clasificadores) y la restricción de una GPU de consumo. Para 3.3, que no todos los errores cuestan lo mismo (`sec:met_protocolo`). Para 3.4–3.7, las tres tareas con su entrada y salida (T1, T2, T3), la decisión de adaptar modelos preentrenados con LoRA y el orden de las etapas (Figura `fig:met_flujo`). Para 3.8, que el tercer objetivo específico no agrega una tarea: se aplica a clasificadores y *pipeline*.
 
 ```
-(sin subsecciones: un párrafo de entrada, una lista de tres tareas y tres párrafos; P1–P5 en total)
-P1  Las tres tareas salen de las dos preguntas de la introducción y de las brechas del estado del arte.
-    Primera oración: lo orienta y lo retoma (Viene de)                                   función: define
-    ↓ necesidad — cada tarea necesita una definición formal: qué entra, qué sale, qué pregunta responde
-P2  Lista de tres ítems, alternativas paralelas (guía §3): T1 clasificación; T2 detección de melanoma,
-    derivada de T1; T3 generación del reporte. Cada ítem: entrada, salida, PI y OE           función: define
-    ↓ necesidad — la salida de T1 y la base de T2 son siete categorías: cuáles son y cuánto pesa cada una
-P3  Inventario de HAM10000: siete categorías, agrupadas por gravedad (benignas; AKIEC; malignas). Es el
-    párrafo ya escrito que se mueve de 3.3. Cierra con el enlace a 3.4 (el costo de cada confusión)   define · justifica
-    ↓ consecuencia — las tres tareas corren en un equipo de una GPU de consumo: esa restricción las condiciona
-P4  Restricción de cómputo: una GPU de consumo para entrenar y ejecutar todo. Por eso no se preentrena
-    un VLM: se adaptan modelos preentrenados con LoRA (`hu2021lora`)                     justifica
-    ↓ limitación — ninguna de las tres tareas cubre la histopatología
-P5  Fuera de alcance: histopatología. Cierre: las tres tareas se resuelven con un plan de trabajo
-    que se itera (transición a 3.2)                                                       limita
-→ Transición a 3.2: «Las tres tareas no se resolvieron en un orden fijo: cada resultado obligó a
-  revisar la siguiente decisión, y la Sección~\ref{sec:met_metodologia} describe ese ciclo.»
+(sin subsecciones: P1–P8; una cita en bloque, una lista de tres ítems y una figura)
+P1  La propuesta del Cap. 2 encadena clasificador, recuperación y generador; antes de describir cada
+    componente hay que fijar qué se le pide al sistema. Definición formal de la tarea, en una cita en
+    bloque: imagen dermatoscópica → una de siete categorías, indicar si es melanoma, redactar un
+    reporte que describa la lesión y afirme el diagnóstico, con modelos que corran en una GPU de
+    consumo                                                                              función: define
+    ↓ necesidad — la definición nombra «siete categorías»: hace falta decir cuáles son
+P2  Las siete categorías son las de HAM10000 (`tschandl2018ham10000`, composición en
+    `sec:met_datasets`): MEL, NV, BCC, AKIEC, BKL, DF y VASC; no tienen la misma gravedad (benignas:
+    NV, BKL, DF, VASC; AKIEC: premalignas y carcinomas in situ; malignas: MEL y BCC). Por eso no todos
+    los errores cuestan lo mismo, y eso decide las métricas (`sec:met_protocolo`)      función: define · justifica
+    ↓ ampliación — con las categorías definidas, se desglosa la definición en las tareas que la componen
+P3  Lista de tres ítems (alternativas paralelas): T1 clasificación (imagen → una de las siete
+    categorías, con una probabilidad para cada una); T2 detección de melanoma (misma imagen → decisión
+    binaria, derivada de la probabilidad de melanoma de T1; no localiza, dice qué es); T3 generación
+    del reporte (imagen y diagnóstico del clasificador → texto con la descripción de la lesión y la
+    impresión diagnóstica)                                                               función: define
+    ↓ consecuencia — cada tarea responde una de las preguntas de investigación
+P4  T1 y T2 responden la primera pregunta (si un VLM clasifica tan bien como un clasificador entrenado
+    solo con imágenes) y T3 la segunda (si el reporte afirma el diagnóstico correcto);
+    `sec:intro_objetivos`                                                                función: justifica
+    ↓ limitación — T3 produce un texto: falta decir qué partes del reporte cubre y cuáles quedan fuera
+P5  El reporte de T3 se limita a dos partes (descripción de lo que se ve e impresión diagnóstica),
+    las que los conjuntos de pares imagen–texto anotan (`shen2025skincare`) y por lo tanto las que un
+    modelo puede aprender. Quedan fuera el diagnóstico diferencial completo, la recomendación de manejo
+    y las imágenes de histopatología                                                     función: limita
+    ↓ necesidad — queda la última condición de la definición, una sola GPU de consumo
+P6  La restricción de cómputo rige las decisiones de modelado: no se preentrena ningún modelo; los
+    VLM se adaptan con LoRA (`sec:marco_llm_lora`, `hu2021lora`). Tres GPU: RTX 4070 de 12 GB (equipo
+    personal), RTX 4080 de 16 GB (clúster TOKO, UNCuyo; clasificadores) y A30 de 24 GB (clúster
+    Mendieta, UNC; ajuste de VLM y generación de reportes). Semilla 42 salvo indicación;
+    `ap:reproducibilidad`                                                                función: justifica · describe
+    ↓ necesidad — con tareas y restricción fijadas, falta el orden en que se recorre el método
+P7  Flujo de trabajo (Figura `fig:met_flujo`): datos y partición por lesión y criterios de evaluación;
+    clasificadores supervisados como referencia; clasificación con VLM; ajuste de VLM para generar
+    reportes; *pipeline* (clasificador fija el diagnóstico, generador redacta, concordancia con los
+    casos recuperados decide afirmar, ofrecer diagnóstico diferencial o derivar). Que el diagnóstico lo
+    fije un clasificador responde a un resultado (los VLM generales no discriminan,
+    `cp:res_clasif`). El tercer objetivo específico no agrega una tarea: se aplica a clasificadores y
+    *pipeline* con los análisis de `sec:met_complementarios`                    función: describe · justifica
+    ↓ necesidad — la primera etapa del flujo son los datos
+P8  Cierre de una oración: la primera etapa son los datos (qué conjuntos, qué papel cumple cada uno,
+    cómo se parte el que entrena a los clasificadores)                                  función: transición
+→ Transición a 3.2: el propio P8 («La primera etapa del flujo son los datos: qué conjuntos se usan, qué
+  papel cumple cada uno y cómo se parte el que entrena a los clasificadores.»)
 
-Se definen acá (y no se vuelven a definir): T1, T2, T3 (con sus entradas, salidas, PI y OE); las siete
-categorías de *HAM10000* y su gravedad; la detección de melanoma como binario derivado de T1 (no localización ni segmentación); la restricción de una GPU de consumo; la
-decisión de no preentrenar un VLM y de adaptar modelos con LoRA; la exclusión de histopatología.
-(El contenido de la gravedad de las siete categorías se define acá; los nombres de las siglas, en 05-Acronyms.)
-Se retoman de antes (solo se nombran, con \ref): PI1 y PI2 y OE1–OE3 (`sec:intro_objetivos`); las
-brechas (`sec:estado_arte_posicion`); CNN, ViT, VLM y LoRA (`sec:marco_vision`, `sec:marco_vlm`,
-`sec:marco_llm_lora`); fidelidad diagnóstica y calidad descriptiva (`sec:marco_rep_ejes`).
-Remisiones hacia adelante: métricas y costos asimétricos (`sec:met_seleccion`, 3.4); partes del reporte
-(`sec:met_generacion`, 3.7); hardware (3.2); conjuntos y partición (3.3).
-Extensión: cuatro párrafos (P1, P3, P4, P5) y una lista de tres ítems (P2), unas 2 páginas (orientativo 1.5–2 p., ficha del Cap. 3).
+Se definen acá (y no se vuelven a definir): la tarea del trabajo (definición formal) y T1, T2, T3 con su entrada y salida; las siete categorías de *HAM10000* y su gravedad; la detección de melanoma como binario derivado de T1 (no localización); las dos partes del reporte de T3 y lo que queda fuera (diagnóstico diferencial completo, manejo, histopatología); la restricción de una GPU de consumo y la decisión de no preentrenar y adaptar con LoRA; las tres GPU; el orden del flujo (Figura `fig:met_flujo`).
+Se retoman de antes (solo se nombran, con \ref): PI1, PI2 y el tercer objetivo específico (`sec:intro_objetivos`); la propuesta (`sec:estado_arte_posicion`); LoRA (`sec:marco_llm_lora`); VLM (`\gls{vlm}`).
+Remisiones hacia adelante: composición de HAM10000 (`sec:met_datasets`, 3.2); métricas y costos de confusión (`sec:met_protocolo`, 3.3); cada etapa del flujo en la Figura `fig:met_flujo` (3.2 `sec:met_datasets`, 3.3 `sec:met_protocolo`, 3.4 `sec:met_supervisados`, 3.5 `sec:met_clasif_vlm`, 3.6 `sec:met_generacion`, 3.7 `sec:met_pipeline`, 3.8 `sec:met_complementarios`); generación de reportes (`sec:met_generacion`); resultados de clasificación (`cp:res_clasif`); reproducibilidad (`ap:reproducibilidad`).
+Extensión: ocho párrafos (con una cita en bloque, una lista y una figura), unas 2–2.5 páginas (el encabezado del `.tex` dice 2–2.5 p.).
 ```
 
 ## Subsecciones
 
-Ninguna. La sección es un bloque, como la definición formal del ejemplo (pp. 37–38 del PDF de la tesina de ejemplo, págs. impresas 37–38).
+Ninguna. La sección es un bloque, como la definición formal del ejemplo (pp. 37–38 del PDF de la tesina de ejemplo).
 
 ## Contenido por párrafo
 
 | P | Qué dice | Datos y su fuente exacta | Citas (claves verificadas) |
 |---|---|---|---|
-| P1 | Las tres tareas del trabajo, derivadas de PI1 y PI2 y de tres brechas del estado del arte. Primera oración propuesta: «Las limitaciones de la Sección~\ref{sec:estado_arte_posicion} se traducen en tres tareas que el trabajo define de manera formal.» | PI1 y PI2: `Chapters/01-Introduccion/02-objetivos.tex` líneas 5–10. Brechas: `Chapters/02-Marco-Teorico/10-estado-arte.tex`, `tab:marco_brechas` (después de la línea 590). Conexión PI1 con «en particular el melanoma»: misma fuente, PI1. | ninguna |
-| P2 | Lista de tres ítems. Cada ítem: nombre en negrita al comienzo; entrada; salida; pregunta; objetivo. **T1 Clasificación** (entrada: imagen dermatoscópica; salida: una de las siete categorías de HAM10000; PI1; OE1). **T2 Detección de melanoma** (entrada: la misma imagen; salida: decisión binaria melanoma frente a resto, derivada de la salida de T1; PI1, en particular el melanoma; OE1, «identificar posibles melanomas»). **T3 Generación del reporte** (entrada: imagen de la lesión; salida: texto con descripción de la lesión e impresión diagnóstica; PI2; OE2). La detección no es localización ni segmentación: la lesión ya es el objeto de la imagen. | OE1, OE2: `02-objetivos.tex` líneas 19–27. «Identificar posibles melanomas»: OE1 (misma fuente). T2 derivada y «no localización»: `planes`: `Codigo/docs/ideas/cierre_experimentacion_plan_20260805.md` §1.8, líneas 30–39 (screening = binario melanoma-vs-resto, cierra el gap terminológico) y §2 B1, líneas 59–61. «Dermatoscópicas ya recortadas y centradas en una única lesión»: mismo plan §1.8, líneas 33–36; **a verificar** con la documentación de HAM10000 (no se leyó en esta ficha). Partes del reporte: `Chapters/03-Materiales-Metodos/05-generacion-reportes.tex` líneas 4–5 (solo se nombran aquí; el texto se mueve a 3.7). | `tschandl2018ham10000` (verificada, `Bibliography.bib` línea 760) para HAM10000 como conjunto de referencia. |
-| P3 | Inventario: siete categorías de HAM10000 (MEL, NV, BCC, AKIEC, BKL, DF, VASC), con la gravedad (benignas: NV, BKL, DF, VASC; AKIEC: premalignas y carcinomas in situ; malignas: MEL y BCC). Cierra con el enlace a 3.4: la gravedad determina el costo de cada confusión (`\ref{sec:met_seleccion}`). Se mueve el párrafo ya escrito. | Prosa ya escrita: `Chapters/03-Materiales-Metodos/02-datos-particiones.tex` líneas 7–12 (subsección HAM10000, párrafo único). Siglas y nombres en español: `Matter/05-Acronyms.tex` líneas 22–28. Gravedad: misma prosa, con la cita de Tschandl. | `tschandl2018ham10000` (verificada). |
-| P4 | Restricción de cómputo: cada modelo se entrena y se ejecuta en una GPU de consumo, sin infraestructura de alto rendimiento. Como uno de los objetivos es ejecutar todo en esa GPU, no se preentrena un VLM: se adaptan modelos preentrenados con LoRA, que entrena un número reducido de parámetros. Los detalles de la GPU van en 3.2 (`\ref`). | Restricción: `Chapters/01-Introduccion/01-contexto-motivacion.tex` líneas 75–79 («una sola GPU», «commodity hardware»). Decisión LoRA y no preentrenar: `fichas/01-introduccion/01-contexto-motivacion.md` líneas 201–205 («restricción de cómputo y no pre-entrenar; LoRA → Cap. 3»). Brecha de cómputo: `tab:marco_brechas` (Cap. 2, última fila). Objetivo general: `02-objetivos.tex` línea 13 («adaptados a partir de modelos preentrenados»). | `hu2021lora` (verificada, línea 310). LoRA en el marco: `sec:marco_llm_lora` (Cap. 2, sin cita nueva). |
-| P5 | Fuera de alcance: la histopatología (cortes de tejido), que las tres tareas no cubren. Cierre: las tres tareas se resuelven con un plan iterativo (transición a 3.2). | Histopatología fuera: `Chapters/03-Materiales-Metodos/00-capitulo.tex` línea 32 (`\pendiente`, handoff del Cap. 1, commit f520295). Ninguna mención en el texto actual del Cap. 1; el Cap. 6 limita la extensión a histopatología (`Chapters/06-Discusion/07-limitaciones.tex` línea 15). | ninguna |
+| P1 | La propuesta del Cap. 2 (clasificador, recuperación de casos parecidos, generador) y la definición formal de la tarea del trabajo en una cita en bloque en cursiva: clasificar en siete categorías, indicar si es melanoma, redactar un reporte que describa y afirme el diagnóstico, en una sola GPU de consumo. | Propuesta: `Chapters/02-Marco-Teorico/10-estado-arte.tex` (`sec:estado_arte_posicion`). Formato: tesina de ejemplo, §3.1. | ninguna |
+| P2 | Las siete categorías son las de *HAM10000*; siglas con `\gls{}` (primera aparición en el documento); gravedad: benignas NV, BKL, DF, VASC; AKIEC reúne premalignas y carcinomas in situ; malignas MEL y BCC. Remisión a la composición (3.2) y a las métricas (3.3). | Siglas y nombres: `Matter/05-Acronyms.tex` líneas 22–28. Gravedad: prosa de la antigua `02-datos-particiones.tex` líneas 7–12, con la cita de Tschandl. | `tschandl2018ham10000` (`Bibliography.bib` línea 760) |
+| P3 | Lista de tres ítems en cursiva. T1: entrada imagen, salida una de las siete categorías con una probabilidad para cada una. T2: misma imagen, salida binaria melanoma o no, obtenida de la probabilidad de melanoma de T1; no busca dónde está la lesión sino qué es. T3: entrada imagen y diagnóstico que propone el clasificador; salida texto que describe la lesión y enuncia la impresión diagnóstica. | T2 derivada y «no localización»: `Codigo/docs/ideas/cierre_experimentacion_plan_20260805.md` §1.8 (líneas 30–39) y §2 B1 (líneas 59–61). Entrada de T3 con el diagnóstico del clasificador: coincide con la cascada de 3.7 (`07-pipeline.tex`). | ninguna |
+| P4 | T1 y T2 → primera pregunta de investigación (si un VLM clasifica tan bien como un clasificador entrenado solo con imágenes); T3 → segunda (si el reporte afirma el diagnóstico correcto). Sin OE por ítem. | PI1 y PI2: `Chapters/01-Introduccion/02-objetivos.tex` líneas 5–10. | ninguna |
+| P5 | El reporte de T3 se limita a descripción e impresión diagnóstica: son las partes que los conjuntos de pares imagen–texto anotan junto a cada imagen y, por lo tanto, las que un modelo puede aprender. Fuera de alcance: diagnóstico diferencial completo, recomendación de manejo e histopatología. | Partes del reporte: texto del encabezado del `.tex` (`shen2025skincare`). Histopatología fuera: handoff del Cap. 1 (commit f520295); `Chapters/06-Discusion/07-limitaciones.tex` línea 15. | `shen2025skincare` |
+| P6 | La restricción de una GPU rige el modelado: no se preentrena nada, los VLM se adaptan con LoRA (entrena una fracción pequeña de sus parámetros). Tres GPU: RTX 4070 de 12 GB, equipo personal; RTX 4080 de 16 GB, TOKO (UNCuyo), clasificadores; A30 de 24 GB, Mendieta (UNC), ajuste de VLM y generación. Semilla 42 salvo indicación. Apéndice E reúne lo necesario para repetir cada experimento. | Restricción: `Chapters/01-Introduccion/01-contexto-motivacion.tex` líneas 75–79. GPU y clústeres: `Codigo/CLAUDE.md` (según el encabezado del `.tex`); memoria del proyecto: TOKO es RTX 4080 de 16 GB. Semilla 42: afirmación del `.tex`; no verificada contra `Codigo/` al poner al día la ficha. Apéndice: `ap:reproducibilidad` (`Chapters/Apendices/E-Reproducibilidad.tex`). | `hu2021lora` (línea 310 del `.bib`) |
+| P7 | Flujo de la Figura `fig:met_flujo`: (1) datos y partición, (2) criterios, (3) clasificadores supervisados como referencia, (4) VLM, (5) generación, (6) *pipeline*. Descripción del *pipeline*. La decisión de que el diagnóstico lo fije un clasificador se justifica con un resultado del Cap. 4. El tercer objetivo específico (evaluar en distintos escenarios) no agrega tarea: se aplica a clasificadores y *pipeline* en 3.8. | Orden: el de las secciones 3.2–3.8 del capítulo. Resultado: Cap. 4 (`cp:res_clasif`). Figura: `Figures/Capitulos/03-Materiales-Metodos/flujo_trabajo.tex`. | ninguna |
+| P8 | Cierre: la primera etapa del flujo son los datos y su partición. | — | ninguna |
 
 ## Figuras y tablas
 
-| Elemento | Qué muestra | De dónde sale | Estado (existe / a adaptar / a generar) |
+| Elemento | Qué muestra | De dónde sale | Estado |
 |---|---|---|---|
-| — | Ninguna. La sección no lleva figura. Si se quiere un cuadro con T1–T3 (entrada, salida, PI, OE), ver pregunta 7. | — | — |
+| Figura `fig:met_flujo` | Seis etapas en escalera, cada una con la sección que la describe (1. Datos y partición por lesión; 2. Criterios de evaluación; 3. Clasificadores supervisados; 4. Clasificación con VLM; 5. Generación de reportes; 6. *Pipeline*: cascada y ruteo) y un nodo «Evaluación en otros escenarios» con flechas punteadas desde los clasificadores y el *pipeline*. Sin cifras ni fechas | `Figures/Capitulos/03-Materiales-Metodos/flujo_trabajo.tex` (estilos de `13-Figuras.sty`) | existe; se cita en P7 |
+
+No hay tablas. El cuadro resumen de T1–T3 se descartó (no repetir la lista).
 
 ## Prosa ya escrita que se conserva
 
-- **Párrafo de HAM10000** (`Chapters/03-Materiales-Metodos/02-datos-particiones.tex` líneas 7–12): se mueve a P3 de 3.1 casi tal cual. Cambios: (a) `HAM10000` en cursiva (`\emph{HAM10000}`, guía §3, conjuntos de datos); (b) la primera oración se conserva porque ya dice de qué trata («El clasificador asigna cada imagen a una etiqueta de un inventario cerrado…»), pero conviene que mencione T1 para que el párrafo quede atado a la lista; (c) `\gls{mel}` … `\gls{vasc}`: es la primera aparición de estas siglas en el documento (verificado: ni los Caps. 1 y 2 las usan), así que el `\gls{}` va acá; (d) la última oración («Esa gradación determina cuánto cuesta cada confusión…») se conserva con su `\ref{sec:met_seleccion}`.
-- **En 02-datos-particiones.tex** queda solo el `\subsection{HAM10000}` con su label `sec:met_ham` y el `\pendiente` de composición y distribución (eso es 3.3). **El label `sec:met_ham` no se mueve**: el `\ref` del Cap. 2 (`01-fundamentos.tex:161`, «los nevos superan varias veces a los melanomas») apunta a la distribución de clases, que queda en 3.3.
-- **No se mueve** el párrafo de `05-generacion-reportes.tex` (partes del reporte): va a 3.7 (`07-generacion-reportes.tex`). En 3.1 solo se nombra la tarea.
+- **Párrafo de HAM10000** (antes en `02-datos-particiones.tex`): ahora es P2, ajustado: «gradación» → «no tienen la misma gravedad», remisión a 3.2 (`sec:met_datasets`) y a 3.3 (`sec:met_protocolo`, antes `sec:met_seleccion`). `HAM10000` va en cursiva. El label `sec:met_ham` se queda en 3.2.
+- **No se mueve** a 3.1 el texto de `06-generacion-reportes.tex`: P5 formula las dos partes del reporte con sus propias palabras y `shen2025skincare`.
 
 ## Lo que va al apéndice
 
-Nada. El inventario de clases con su tamaño va en 3.3 (tabla de tamaños por clase y partición). Las grillas de hiperparámetros y los *prompts* van a los apéndices A y B, fuera de esta sección.
+Reproducibilidad (versiones, semillas, comandos): Apéndice E (`ap:reproducibilidad`), citado en P6. El inventario de clases con su tamaño va en la tabla de 3.2.
 
 ## Lo que NO va en esta sección (y dónde está)
 
-- Partes del reporte (descripción e impresión diagnóstica, con su fundamento): **3.7**.
-- Composición de HAM10000, distribución de clases, desbalance, imágenes por lesión, partición disjunta por lesión: **3.3**.
-- Rol de cada conjunto (HAM10000 para entrenar y medir fidelidad, SkinCaRe solo como fuente de pares imagen–texto, HIBA para generalización): **3.3**. Es el handoff del Cap. 1 que el `\pendiente` de `00-capitulo.tex` menciona, y se resuelve en 3.3.
-- Costos asimétricos de confusión, métrica principal, de selección y oficial de generación, fidelidad diagnóstica frente a validez clínica: **3.4**.
-- Hardware concreto (RTX 4070 local, TOKO con RTX 4080, Mendieta con A30, SLURM) y, si se aprueba, las cifras de memoria: **3.2**.
-- Definiciones de CNN, ViT, VLM, LoRA, CLIP, fidelidad diagnóstica y calidad descriptiva: **Cap. 2**, solo con `\ref`.
-- Resultados o desempeños de ningún tipo (guía del Cap. 3, regla 3).
-- Evaluación en escenarios distintos (OE3): **3.4 y 3.9**; no es una tarea.
+- Composición de HAM10000, distribución de clases, imágenes por lesión, partición disjunta por lesión y rol de cada conjunto: **3.2**.
+- Costos asimétricos de confusión, métrica principal, de selección y oficial de generación, fidelidad diagnóstica frente a validez clínica: **3.3**.
+- Detalles del tipo de modelo, receta y búsqueda: **3.4**; estrategias de los VLM: **3.5**; ajuste en dos etapas y LoRA: **3.6**; cascada y ruteo: **3.7**; HIBA, perturbaciones, calibración, Grad-CAM y costo: **3.8**.
+- Definiciones de CNN, ViT, VLM, LoRA, fidelidad diagnóstica y calidad descriptiva: **Cap. 2**, solo con `\ref`.
+- Resultados o desempeños (regla del capítulo): ver la inconsistencia anotada en «Preguntas abiertas», punto 9.
 
 ## Preguntas abiertas para el autor
 
-1. **Mapeo maligno/benigno (AKIEC).** El plan de cierre (`cierre_experimentacion_plan_20260805.md` §2 B1, líneas 59–61) define maligno = {MEL, BCC, AKIEC} y benigno = {NV, BKL, DF, VASC}, y marca «confirmar mapeo con el tutor». La prosa existente dice que AKIEC reúne lesiones premalignas y carcinomas in situ, y que solo MEL y BCC son malignas. Propuesta: 3.1 define solo el binario melanoma frente a resto. El binario maligno/benigno, con AKIEC incluido o no, se define en 3.4 cuando el tutor confirme el mapeo.
-2. **Entrada de T3.** ¿Entra solo la imagen, o también la salida del clasificador (grounding por recuperación y diagnóstico de la cascada de 3.8)? OE2 dice «integre información visual y textual para producir un diagnóstico preliminar y el reporte»; la definición formal de T3 depende de que se resuelva esto.
-3. **Salida de T1.** ¿La clase predicha, o la clase con un vector de probabilidades? Propuesta: la clase predicha en la definición formal, y las probabilidades (y la calibración) en 3.4 y 3.5, donde se usan.
-4. **Dónde se define «detección».** El Cap. 1 (`fichas/01-introduccion/01-contexto-motivacion.md` líneas 191–194) dejó la definición operativa para «Cap. 2 §2.8 o Cap. 3». Propuesta: 3.1, como definición formal de T2; el Cap. 2 solo menciona la binarización como concepto (`08-evaluacion.tex` línea 48). Confirmar. La justificación del desfase entre el título de la tesina («detección») y lo desarrollado («clasificación») (plan §1.8) va en P4, o se omite si el tutor lo considera innecesario.
-5. **Cifras de hardware.** La ficha del Cap. 1 (línea 185–186) manda al Cap. 3 «los 12–36 GB, la clase de GPU y el argumento…». Propuesta: 3.1 dice solo «una GPU de consumo»; las cifras van en 3.2. Confirmar.
-6. **Histopatología.** La exclusión viene del `\pendiente` del Cap. 3, no de un párrafo del Cap. 1. Confirmar que se afirma en 3.1 y no en la introducción del Cap. 1 (que ya no tiene alcance; ficha del Cap. 1, línea 169).
-7. **Cuadro resumen de T1–T3.** ¿Se agrega una tabla (tarea, entrada, salida, PI, OE) además de la lista? El ejemplo no la tiene. Propuesta: no, para no repetir la lista (guía §3, «Concisión»).
-8. **Test externo HIBA y espacio de clases.** El plan (A5, líneas 53–55) mapea SCC→AKIEC y se evalúa HIBA en el espacio de clases común. ¿Se dice en 3.1 (una oración en P3) o en 3.3? Propuesta: 3.3.
+Las preguntas 1–8 de la versión anterior de la ficha quedaron resueltas por la revisión del 18/10 (se conservan para registro).
+
+1. **Mapeo maligno/benigno (AKIEC)** (sigue abierta, pasa a 3.3). El plan de cierre define maligno = {MEL, BCC, AKIEC}; la prosa dice que AKIEC reúne premalignas y carcinomas in situ. 3.1 define solo el binario melanoma frente a resto (T2); el binario maligno/benigno, si se usa, lo define 3.3.
+2. **Entrada de T3 (resuelta).** El `.tex` define la entrada como la imagen y el diagnóstico que propone el clasificador (coherente con la cascada de 3.7).
+3. **Salida de T1 (resuelta).** El `.tex` define la salida como una de las siete categorías con una probabilidad para cada una (la ficha anterior proponía solo la clase).
+4. **Dónde se define «detección» (resuelta).** En 3.1, como T2 derivada de T1. El desfase entre el título de la tesina («detección») y lo desarrollado («clasificación») no se explica en el texto; sigue a decisión del autor.
+5. **Cifras de hardware (resuelta).** La sección da las tres GPU con su memoria (12, 16 y 24 GB) en una oración; no hay tabla.
+6. **Histopatología (resuelta).** Se afirma como fuera de alcance en 3.1 (P5).
+7. **Cuadro resumen de T1–T3 (resuelta).** No hay tabla.
+8. **HIBA y espacio de clases (resuelta).** Se trata en 3.2, no en 3.1.
+9. **Resultado citado en P7 (nueva).** P7 dice que los VLM generales no discriminan entre las siete categorías (`cp:res_clasif`). Es un resultado, y la regla del capítulo es que el Cap. 3 no presenta resultados; está justificado como razón de diseño del *pipeline* y remite al Cap. 4. A confirmar por el autor.
 
 ## Números que no pude verificar
 
-- «Dermatoscópicas ya recortadas y centradas en una única lesión» (HAM10000 y HIBA): viene del plan §1.8. No se leyó la documentación de los conjuntos. **A verificar.**
-- Ningún otro número nuevo. «Siete clases» y la gravedad se leen de la prosa existente (`02-datos-particiones.tex`) y de `05-Acronyms.tex`.
+- «Dermatoscópicas ya recortadas y centradas en una única lesión»: **ya no aparece** en el `.tex` (obsoleta tras la revisión del 18/10).
+- Los nombres institucionales de los clústeres (UNCuyo para TOKO, UNC para Mendieta) y las memorias de GPU (12, 16, 24 GB) salen de `Codigo/CLAUDE.md` según el encabezado del `.tex`; no se volvieron a verificar al poner al día la ficha.
 
 ## Decisiones tomadas por cuenta propia
 
-- **D1 — Formato de la definición formal.** Lista de tres ítems con el nombre en negrita al comienzo (guía §3, «Alternativas paralelas en lista»), en lugar de la frase destacada en cursiva del ejemplo. La guía prohíbe los títulos de párrafo en negrita, y la lista tiene la misma función de forma sin romper la guía.
-- **D2 — Orden.** Tareas → inventario de clases → restricción de cómputo → exclusión y transición. El inventario va después de la lista porque T1 se define con esas clases; la restricción va después porque es la razón de la decisión de LoRA, no de las tareas.
-- **D3 — T2 es el binario melanoma frente a resto.** El binario maligno/benigno no se define acá (pregunta 1).
-- **D4 — Relación con los objetivos.** T1 → PI1 y OE1; T2 → PI1 (en particular el melanoma) y OE1 («identificar posibles melanomas»); T3 → PI2 y OE2. OE3 (evaluación en escenarios) no es una tarea: se remite a 3.4 y 3.9.
-- **D5 — Labels.** `sec:met_tareas` es nuevo en `01-tareas.tex`. `sec:met_ham` se queda en 3.3 (ver «Prosa ya escrita»).
-- **D6 — Commit de la sección.** El párrafo se quita de `02-datos-particiones.tex` en el mismo commit que escribe 3.1, porque es la única forma de no tener dos copias (guía §1, «No hay borradores en archivos aparte»; §8, «quitar de otra sección una definición repetida» debe decirlo el mensaje del commit).
-- **D7 — Número de párrafos.** Cuatro párrafos más la lista de tres ítems (P1–P5), dentro de las 1.5–2 páginas previstas. Alcanza para las tres definiciones, el inventario y la restricción sin repetir la motivación de la Introducción.
-- **D8 — Preguntas abiertas aplicadas.** Se aplicaron las propuestas de las preguntas 1 (solo el binario melanoma frente a resto en 3.1), 3 (clase predicha en T1; probabilidades en 3.4 y 3.5), 4 (detección = T2 derivada, definida en 3.1), 5 (solo «una sola GPU de consumo» en 3.1; detalle en 3.2.1, `sec:met_infra`), 6 (histopatología afirmada en 3.1) y 7 (sin tabla T1–T3). La pregunta 2 (entrada de T3) no tiene propuesta y queda como `\pendiente`. La pregunta 8 (HIBA) no se toca en 3.1.
-- **D9 — Dato no verificado.** La oración «dermatoscópicas ya recortadas y centradas en una única lesión» (HAM10000 y HIBA) no se escribió: queda como `\pendiente` en T2 hasta confirmarla en la documentación del conjunto.
-- **D10 — Desfase título y clasificación.** La pregunta 4 propone explicar el desfase entre «detección» (título) y «clasificación» (lo desarrollado) en P4, pero el plan de P4 no lo incluye. No se agregó; queda a decisión del autor.
-- **D11 — Ajustes de la prosa conservada.** En el párrafo de las partes del reporte se cambió «las dos tareas del problema» por «lo que T3 debe producir», porque la sección define tres tareas. En el párrafo de HAM10000 se agregó el `\emph{}` al conjunto y se mantuvo el resto. LoRA se nombra sin `\gls{}` porque ya se declaró en el Capítulo 2 (`sec:marco_llm_lora`); VLM tampoco se vuelve a declarar porque lo hace el Capítulo 1.
+- **D1 — Formato de la definición formal.** Cita en bloque en cursiva (como el ejemplo) con la definición de la tarea, y después una lista de tres ítems (guía §3, «Alternativas paralelas en lista»). Los ítems llevan el nombre en cursiva, no en negrita ni como título de párrafo.
+- **D2 — Orden.** Definición → siete categorías → desglose en T1–T3 → mapeo con las preguntas → partes del reporte y alcance → restricción de cómputo → flujo → transición.
+- **D3 — T2 es el binario melanoma frente a resto,** derivado de la probabilidad de melanoma de T1.
+- **D4 — Relación con los objetivos.** Solo PI1 y PI2 (T1 y T2 → primera pregunta; T3 → segunda), sin OE por ítem; el tercer objetivo específico se resuelve en P7 como análisis aplicado, no como tarea.
+- **D5 — Labels.** `sec:met_tareas` y `fig:met_flujo`. `sec:met_ham` se queda en 3.2.
+- **D6 — Flujo como etapas del método (nuevo).** La figura y P7 presentan el método como seis etapas encadenadas en el orden del capítulo, sin ciclo de iteración ni hipótesis refutadas (R1, R2).
+- **D7 — Partes del reporte en 3.1 (nuevo).** El alcance de T3 (qué partes del reporte se generan y cuáles quedan fuera) se declara acá (P5), con `shen2025skincare`; la versión anterior de esta ficha lo mandaba a la antigua 3.7. 3.6 puede retomarlo con `\ref`.
+- **D8 — Hardware en 3.1 (nuevo).** Las tres GPU se dicen una vez, en P6 (R1: sin CUDA, sin W&B, sin versionado).
+
+## Quitado en la revisión del 18/10/2026
+
+Una línea por ítem. El contenido de fuentes sigue disponible en las fichas antiguas del historial de git.
+
+- Ciclo hipótesis → ejecución → análisis → decisión como estructura del flujo (R1, R2: historia del proceso; el flujo es ahora una secuencia de etapas del método).
+- Figura con «dónde una hipótesis refutada cambió el rumbo» (desbalance → especialización de dominio → cascada) (R1, R2).
+- Registro de cada corrida y los documentos de cada iteración (`docs/ideas/`, `docs/ejecuciones.md`, `docs/resul/`) como parte de la sección (R1: importa al equipo, no al lector).
+- Orden de los Caps. 4 y 5 como reflejo del orden de las decisiones (R1).
+- Tabla de entorno de ejecución con CUDA, versiones, SLURM, seguimiento de experimentos (Weights & Biases) y versionado (R1); quedan solo las tres GPU en una oración y el Apéndice E.
+- Los «12–36 GB» y el argumento de hardware que la ficha del Cap. 1 mandaba al Cap. 3, y el uso de memoria por modelo (R1); quedan una GPU de consumo y las tres capacidades.
+- Detalle de PI y OE por ítem de la lista (OE1, OE2 y la cita de «identificar posibles melanomas») (R3: no repetir lo que el Cap. 1 ya presentó); queda solo el mapeo con PI1 y PI2.
+- La palabra «gradación» de la gravedad de las categorías (se reemplaza por «no tienen la misma gravedad»).
+- Transición original a 3.2 («Las tres tareas no se resolvieron en un orden fijo: cada resultado obligó a revisar la siguiente decisión…», `sec:met_metodologia`) (R1: historia del proceso); 3.2 ya no es el flujo.
+- Aclaración de que 3.2 ordena las etapas con las tres tareas; esa función ahora la cumple P7 de esta misma sección.
+- Brechas del estado del arte y su relación con las tareas (`tab:marco_brechas`) en «Viene de» (R3: el Cap. 2 ya lo presentó); queda solo la propuesta.
+- Línea «dermatoscópicas ya recortadas y centradas en una única lesión» (nunca verificada; no está en el texto).

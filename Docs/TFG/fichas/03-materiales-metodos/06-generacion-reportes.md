@@ -1,72 +1,70 @@
-# Ficha 3.7 — Generación de reportes
+# Ficha 3.6 — Generación de reportes
 
-**Revisión del autor (18/10/2026), ya aplicada en el `.tex`:** Ahora es 3.6. Sin repetir la presentación de Mini-VLM y LLaVA-Med; sin la historia de la primera configuración de LoRA (queda solo la v3: 31 457 280 entrenables); primero por qué SkinCaRe y después las dos etapas; «Reporte y razonamiento» y «Decodificación» se unen en «Inferencia»; sin «corridas finales» ni el límite de tokens del piloto.
+**Revisión del autor (18/10/2026):** ficha puesta al día con el `.tex`. Antes era 3.7 y su archivo era `07-generacion-reportes.tex`. Sin repetir la presentación de Mini-VLM y LLaVA-Med; sin la historia de la primera configuración de LoRA (queda solo la v3: 31 457 280 entrenables); primero por qué SkinCaRe y después las dos etapas; «Reporte y razonamiento» y «Decodificación» se unen en «Inferencia»; sin «corridas finales» ni el límite de tokens del piloto. Lo que la revisión quitó del texto está en la sección final «Quitado en la revisión del 18/10/2026».
 
-**Estado: aprobada por el autor como punto de partida (11/10/2026); prosa redactada en primera versión.** Archivo: `Chapters/03-Materiales-Metodos/07-generacion-reportes.tex` (sale de `05-generacion-reportes.tex`). Labels: `sec:met_generacion`.
+**Estado: aprobada por el autor como punto de partida (11/10/2026); prosa redactada y revisada el 18/10/2026.** Archivo: `Chapters/03-Materiales-Metodos/06-generacion-reportes.tex`. Labels: `sec:met_generacion`, `tab:met_lora`, `tab:met_decodificacion`. Las subsecciones no llevan label.
 
 ## Hilo conductor
 
 Pregunta que responde la sección: ¿con qué modelos, qué ajuste, qué instrucción y qué decodificación se genera el reporte, y cómo se separa el texto del reporte del razonamiento que traen los datos de entrenamiento?
 
-Viene de: 3.6 presentó Mini-VLM y LLaVA-Med como VLM generales, con cuatro estrategias de clasificación, y DermLIP como VLM especializado en clasificación. Dejó abierto que PI2 pide un reporte, y ningún clasificador lo produce. Los dos VLM generativos se ajustan para generarlo; en 3.6 no se vuelven a describir.
-Deja instalado: para 3.8, dos generadores ajustados y un generador dermatológico sin ajuste propio, cada uno con su instrucción de inferencia y su decodificación fija; la regla de medir solo el reporte; y la configuración de LoRA y de entrenamiento de la Tabla de esta sección. Un generador que redacta a partir de la imagen y de la instrucción necesita que el diagnóstico venga de afuera cuando se lo quiere afirmar con fidelidad: eso lo resuelve 3.8.
+Viene de: 3.5 presentó Mini-VLM y LLaVA-Med como VLM de clasificación, con cuatro estrategias, y DermLIP como VLM especializado; en 3.5 los VLM clasifican, es decir, eligen una etiqueta de un inventario cerrado. Dejó abierto que la tarea de generación (T3, `sec:met_tareas`, 3.1) pide un texto libre con las dos partes del reporte, y que ningún clasificador lo produce. Antes: 3.4 clasificadores supervisados, 3.3 criterios de evaluación, 3.2 datos, 3.1 tareas y flujo de trabajo.
+Deja instalado: para 3.7, tres generadores (dos ajustados y uno dermatológico sin ajuste propio), cada uno con su instrucción de inferencia y su decodificación fija; la regla de medir solo el reporte; y la configuración de LoRA y de entrenamiento de la Tabla~\ref{tab:met_lora}. Un generador que redacta a partir de la imagen y de la instrucción no decide si la lesión es lo bastante clara para afirmar un diagnóstico: eso lo incorpora el *pipeline* de 3.7.
 
 ```
-P1  Qué genera el modelo: descripción de lo que se ve e impresión diagnóstica; el diagnóstico    define
-    diferencial y la recomendación quedan fuera (prosa ya escrita, se conserva)
-    ↓ necesidad — 3.6 usa estos VLM para clasificar; para redactar hace falta ajustarlos
-P2  Los dos VLM generales de 3.6, ajustados: Mini-VLM (Phi-3.5-vision-instruct) y LLaVA-Med v1.5    justifica
-    (Mistral-7B). Son los mismos modelos base, con el ajuste que genera texto
-    ↓ contraste — ambos son de propósito general; falta un generador de dermatología
-P3  SkinVL: qué es, de dónde sale, por qué se incluye y cómo se usó (conversión a formato HF,        define · justifica
-    sin ajuste propio)
-    ↓ necesidad — antes de ajustar, el ajuste en dos etapas tiene que decir con qué datos
-P4  Ajuste en dos etapas: etapa 1 alinea el proyector con SkinCAP; etapa 2 ajusta el LLM con LoRA     describe
-    sobre SkinCoT. La instrucción es la misma en ambas etapas
-    ↓ necesidad — con qué datos: los del área tienen texto de clínicos y HAM10000 no tiene reportes
-P5  Por qué SkinCaRe y no HAM10000: HAM10000 trae etiquetas, no reportes; SkinCaRe trae un texto por   justifica
-    imagen. La partición de prueba de HAM10000 queda para evaluar la fidelidad (3.4), no para entrenar
-    ↓ contraste — pero los textos de SkinCoT son razonamientos, no reportes
-P6  La configuración de LoRA y del entrenamiento, con la razón desde el objetivo de una GPU de consumo  describe · justifica
-    (Tabla 3.7.a)
-    ↓ consecuencia — el texto de entrenamiento lleva el razonamiento, y eso condiciona la evaluación
-P7  Reporte y razonamiento en SkinCoT: los bloques <think>...</think>, qué aprende el modelo al           describe · limita
-    entrenar con el texto completo, y por qué el razonamiento tiene valor para auditar (y no para medir)
-    ↓ necesidad — si el razonamiento se mide como reporte, la métrica se infla
-P8  Qué se le pide y qué se mide: la instrucción de inferencia coincide con la de entrenamiento; los     justifica
-    bloques se quitan antes de medir y las métricas se computan sobre el reporte (criterio de 3.4)
-    ↓ ampliación — con qué decodificación se genera ese texto
-P9  Decodificación: voraz, 384 tokens, un reporte por imagen; sin penalización de repetición en las       describe · limita
-    corridas finales; el posprocesamiento de repeticiones se descartó (resultado en el Cap. 5 si
-    corresponde)
-→ Transición a 3.8: «…el generador redacta el texto, pero no decide si la lesión es lo bastante clara
-  para afirmar un diagnóstico; esa decisión y la evidencia que la sostiene se incorporan en 3.8.»
-  (ajustar; no anunciar, §3 de la guía: la transición debe ser una afirmación sobre el generador)
+P1  De clasificar a generar: en 3.5 los VLM eligen una etiqueta; la tarea T3 pide un texto libre con las  justifica
+    dos partes del reporte (descripción e impresión diagnóstica, sec:met_tareas). Esa forma de salida no
+    se obtiene con una instrucción: los modelos se ajustan con textos clínicos antes de usarlos
+    ↓ presentación — qué modelos se ajustan y cuál se agrega
+P2  Generadores ajustados = Mini-VLM y LLaVA-Med, los mismos que se evalúan como clasificadores
+    (sec:met_vlm_generativos, sin repetir su presentación); el ajuste cambia su salida de etiqueta a
+    texto. Ninguno está especializado en dermatología: se agrega un tercero            describe · justifica
+    ↓ contraste — falta un generador de dermatología
+P3  SkinVL: lo presentan zeng2025mmskin junto con MM-Skin; parte de LLaVA-Med v1.5 con Mistral-7B y
+    ajusta con LoRA (rango 128) el modelo de lenguaje y la proyección visual, con el codificador visual
+    congelado, en una sola etapa. Se usa SkinVL-MM (zwq803/SkinVL-MM), combinada con la versión de
+    LLaVA-Med que trae el codificador visual, sin ajuste adicional. Sirve para saber si un generador
+    especializado escribe reportes distintos de los generales                          define · justifica
+    ↓ necesidad — antes de las dos etapas, con qué datos se ajusta y por qué esos
+P4  Por qué SkinCaRe y no HAM10000: HAM10000 trae una etiqueta por imagen y no un texto que aprender a
+    escribir; su prueba queda reservada para medir la fidelidad diagnóstica (sec:met_eval_generacion).
+    Las dos partes de SkinCaRe enseñan cosas distintas: SkinCAP, descripciones observacionales; SkinCoT,
+    de 23 enfermedades, siempre con impresión diagnóstica explícita. De ahí las dos etapas, con una
+    parte cada una y la misma instrucción «Describe this skin lesion.»                  justifica · describe
+    ↓ desarrollo — qué se entrena en cada etapa
+P5  Etapa 1: SkinCAP alinea imagen y texto; solo se entrena el proyector visual, con codificador visual
+    y LLM congelados. Etapa 2: SkinCoT enseña a redactar hasta el diagnóstico; LoRA (sec:marco_llm_lora)
+    sobre las proyecciones de atención del LLM y del codificador visual, proyector congelado; q_proj y
+    v_proj, salvo en el LLM de Mini-VLM, que usa qkv_proj. LLaVA-Med entrena 33 554 432 parámetros y
+    Mini-VLM 31 457 280, menos del 1 % de cada modelo. Remite a la Tabla tab:met_lora    describe · justifica
+    ↓ ampliación — cómo se eligieron y conservaron los valores de la tabla
+P6  (tras la tabla) La tasa de la etapa 1 se eligió con una búsqueda sobre validación; en la etapa 2 la
+    pérdida de validación siguió bajando hasta la última época, que es la que se conserva  justifica
+    ↓ consecuencia — el texto de entrenamiento lleva razonamiento y eso condiciona la inferencia y la medición
+P7  Reporte y razonamiento: casi todos los textos de SkinCoT intercalan bloques <think>; el modelo
+    aprende a reproducirlos y su salida mezcla razonamiento y reporte. Se conservan al entrenar (permiten
+    ver cómo llega a su descripción) y se quitan antes de medir (si no, los diagnósticos que el
+    razonamiento solo menciona como hipótesis contarían como aciertos, sec:met_eval_generacion)
+                                                                                        describe · limita
+    ↓ ampliación — con qué instrucción y decodificación se genera ese texto
+P8  Inferencia: misma instrucción del entrenamiento; decodificación voraz (sec:marco_llm_grandes) para
+    que la generación sea reproducible; una imagen por vez; máximo de 384 tokens nuevos, suficiente
+    para llegar al diagnóstico (Tabla tab:met_decodificacion); sin penalización de repetición porque en
+    Mini-VLM hace fallar la generación. Cierre: el generador redacta pero no decide si la lesión es
+    lo bastante clara para afirmar un diagnóstico; esa decisión la incorpora el pipeline  describe · limita
+→ Transición a 3.7: «Con esto el generador redacta el reporte, pero no decide si la lesión es lo bastante clara para afirmar un diagnóstico; esa decisión es la que incorpora el *pipeline*.» (última oración de P8; es una afirmación sobre el generador, no un anuncio)
 
-Se definen acá (y no se vuelven a definir): los tres generadores tal como se usan en el trabajo;
-la instrucción de inferencia («Describe this skin lesion.») y su coincidencia con el entrenamiento;
-la configuración de LoRA y de entrenamiento de las dos etapas; la separación reporte / razonamiento
-para entrenamiento y evaluación; la decodificación del trabajo (voraz, 384 tokens, sin penalización).
-Se retoman de antes (solo se nombran, con \ref): LLM, aprendizaje en contexto, decodificación voraz,
-muestreo, *top-p* y temperatura (`sec:marco_llm_grandes`, `eq:marco_temperatura`); LoRA
-(`sec:marco_llm_lora`, `eq:marco_lora`); VLM generativo y LLaVA (`sec:marco_vlm_generativos`);
-clasificación por verosimilitud (`sec:marco_vlm`); reporte clínico, descripción e impresión
-(`sec:marco_rep_tarea`, `tab:marco_partes_reporte`); generación condicionada y *grounding*
-(`sec:marco_rep_generacion`, `eq:marco_rep_condicionada`); alucinación, *hedging* y repetición
-(`sec:marco_rep_fallas`, `tab:marco_fallas`); RAG (`sec:marco_rag`); métrica oficial y criterios de
-generación (`sec:met_protocolo`); SkinCaRe, SkinCoT y HAM10000 (`sec:met_datasets`, `sec:met_ham`,
-`sec:met_particiones`); DermLIP y los VLM de clasificación (`sec:met_clasif_vlm`).
-Extensión: 9 párrafos, unas 3 a 3.5 páginas, con una tabla de configuración (media página) y una
-tabla breve de decodificación.
+Se definen acá (y no se vuelven a definir): los tres generadores tal como se usan en el trabajo (sin repetir la presentación de Mini-VLM y LLaVA-Med de 3.5); la instrucción de inferencia («Describe this skin lesion.») y su coincidencia con el entrenamiento; la configuración de LoRA y de entrenamiento de las dos etapas; la separación reporte / razonamiento para entrenamiento y evaluación; la decodificación del trabajo (voraz, 384 tokens, sin penalización).
+Se retoman de antes (solo se nombran, con \ref): las dos partes del reporte y la tarea T3 (`sec:met_tareas`, 3.1); Mini-VLM y LLaVA-Med (`sec:met_vlm_generativos`, 3.5); LoRA (`sec:marco_llm_lora`); decodificación voraz y muestreo (`sec:marco_llm_grandes`); métrica oficial y criterio de medición del reporte (`sec:met_eval_generacion`, 3.3); SkinCaRe, SkinCoT, MM-Skin y HAM10000 se presentan en 3.2 (`sec:met_datasets`, `sec:met_particiones`); el `.tex` los nombra sin `\ref` a esa sección.
+Extensión: 8 párrafos de prosa, tres subsecciones y dos tablas (configuración de LoRA y del entrenamiento; decodificación); el encabezado del `.tex` estima 3 a 3.5 páginas.
 
 ## Subsecciones
 
-- **3.7.1 Partes del reporte que genera el trabajo.** P1.
-- **3.7.2 Generadores.** P2 y P3. Mini-VLM y LLaVA-Med se presentan como generadores (no como clasificadores,
-  eso es 3.6); SkinVL, como generador dermatológico de comparación.
-- **3.7.3 Ajuste en dos etapas sobre SkinCaRe.** P4, P5 y P6, con la Tabla 3.7.a.
-- **3.7.4 Reporte y razonamiento.** P7 y P8.
-- **3.7.5 Decodificación.** P9, con la Tabla 3.7.b.
+- **3.6.1 Generadores.** P2 y P3. Mini-VLM y LLaVA-Med como generadores (sin repetir su presentación); SkinVL como generador dermatológico de comparación.
+- **3.6.2 Ajuste en dos etapas sobre SkinCaRe.** P4, P5 y P6, con la Tabla~\ref{tab:met_lora}.
+- **3.6.3 Inferencia.** P7 y P8, con la Tabla~\ref{tab:met_decodificacion}. Une las antiguas «Reporte y razonamiento» y «Decodificación».
+
+P1 queda fuera de subsección. La transición a 3.7 es la última oración de P8.
 
 ## Contenido por párrafo
 
@@ -74,129 +72,153 @@ Rutas de `Codigo/outputs/`, `Codigo/data/` y `Codigo/mejores_params.txt`: no est
 
 | P | Qué dice | Datos y su fuente exacta | Citas (claves verificadas) |
 |---|---|---|---|
-| P1 | El reporte tiene dos partes que el trabajo genera: la descripción de lo visible y la impresión diagnóstica. Diferencial y recomendación quedan fuera. | Prosa ya escrita (`05-generacion-reportes.tex`, párrafo 1). Las dos partes coinciden con `reportes_mejoras_v2_plan` (instrucción a alinear con el entrenamiento) y con `tab:marco_partes_reporte` del Cap. 2 | `shen2025skincare` (la prosa ya la usa; ver Q14) |
-| P2 | Mini-VLM y LLaVA-Med, los mismos modelos base de 3.6, se ajustan para generar. Son de propósito general, por eso se usan como línea de comparación del resto de los generadores. | Mini-VLM = `microsoft/Phi-3.5-vision-instruct` (`Codigo/src/models/mini_vlm.py:78`). LLaVA-Med = `chaoyinshe/llava-med-v1.5-mistral-7b-hf` (`Codigo/src/models/llava_med.py:22`). Los dos YAML de `Codigo/configs/models/` están desactualizados (Q9, Q10) | `abdin2024phi3` (Phi-3), `li2023llavamed`, `liu2023visual` (LLaVA), `jiang2023mistral` (Mistral 7B, base de LLaVA-Med v1.5) |
-| P3 | SkinVL: LLaVA-Med v1.5 con Mistral-7B ajustado a dermatología con MM-Skin. Los pesos publicados (`zwq803/SkinVL-MM`) están en el formato original de LLaVA-Med y no traen el codificador visual. Se convirtió a formato HF trasplantando sus pesos de lenguaje y proyector sobre la base `chaoyinshe/llava-med-v1.5-mistral-7b-hf`, que aporta el codificador visual. No se lo ajustó. Se incluye como generador especializado de comparación: ¿la especialización de dominio cambia el texto frente a los generales? | `Codigo/src/models/skinvl.py` (subclase de LLaVA-Med; `MODEL_NAME = data/checkpoints/skinvl-mm-hf`); `Codigo/scripts/convert_skinvl_to_hf.py` (docstring: el repo trae 295 tensores sin el vision tower; la base aporta `vision_tower`); `Codigo/docs/ideas/skinvl_ensemble_plan_20260705.md` (pesos completos, sin LoRA, según la inspección del repo). Corrida sin ajuste propio: `slurm/mendieta/v3/generate_reports_skinvl.sh` (sin `--checkpoint`, 384 tokens) | `zeng2025mmskin` (MM-Skin y SkinVL, ver Q11) |
-| P4 | Etapa 1: se entrena solo el proyector visual con pares imagen–caption de SkinCAP (vision encoder y LLM congelados). Etapa 2: LoRA sobre el LLM con los pares de SkinCoT EN (vision encoder congelado). La instrucción es «Describe this skin lesion.» en ambas etapas. | `Codigo/scripts/train_vlm_stage1.py`, `train_vlm_stage2.py`; `Codigo/src/training/two_stage.py` (`_freeze_for_stage1` l.374; `_freeze_vision_encoder` l.522; `run_stage2` l.1196); `VLMTrainCollator.CAPTION_INSTRUCTION` (`two_stage.py` l.111). Proyector en etapa 2: Q4 | `hu2021lora`, `liu2023visual` |
-| P5 | HAM10000 tiene etiquetas diagnósticas y no reportes; por eso no sirve como texto de referencia ni de entrenamiento del generador, y su partición de prueba (1503 imágenes) se usa para medir la fidelidad diagnóstica (3.4). SkinCaRe trae, para cada imagen, un texto de clínicos: captions de SkinCAP (dermatólogos) y razonamiento diagnóstico revisado de SkinCoT. La etapa 2 ve 23 clases tipo DermNet, no las 7 de HAM10000. | `Codigo/data/raw/skincare/README.md` (SkinCAP: 4000 imágenes; SkinCoT: 3041 pares, revisados por clínicos en seis ejes; 7041 en total). `Codigo/data/raw/skincare/SkinCoT/EN/` tiene 23 carpetas (conteo propio). HAM: 1503 en la partición por lesión (`Codigo/docs/resul/split_lesion_resul_20260926.md`, §1) | `shen2025skincare`, `tschandl2018ham10000` |
-| P6 | Como uno de los objetivos es ejecutar todo en una GPU de consumo (3.2), los modelos se adaptan con LoRA en lugar de ajustar todos sus parámetros. Se fijan rango, escala, dropout, módulos y tasa de aprendizaje (Tabla 3.7.a). La cifra de memoria que lo justifica no está en las fuentes leídas (Q17). | Tabla 3.7.a (abajo). Valores de la etapa 2 del checkpoint final: `Codigo/outputs/checkpoints/stage2_mini_vlm_v2/lora_config.json` (r 64, alpha 64, dropout 0.0, `q_proj` y `v_proj`); `Codigo/slurm/mendieta/v2/train_vlm_s2.sh` y `train_vlm_s2_mini.sh` (lr 2.495e-5, lote 4, acumulación 8, 10 épocas, sin `--lora_*` adicional); `two_stage.py` l.1196–1290 (AdamW, decaimiento 0.01, eps 1e-7, sin planificador, detención temprana con paciencia 3, recorte de norma 1.0). Los VRAM de `Codigo/configs/models/*.yaml` son estimaciones, no se citan | `hu2021lora` |
-| P7 | En SkinCoT el texto es una narrativa de razonamiento diagnóstico; los pasos van entre bloques `<think>...</think>`. El modelo aprende a reproducirlos, incluidos los bloques, y su salida mezcla razonamiento y reporte. El razonamiento tiene valor para auditar el proceso (interpretabilidad), por eso no se quita del entrenamiento. | Conteo propio sobre `Codigo/data/raw/skincare/SkinCoT/EN/*.txt` (copia en `M`): 3041 textos, 2942 con `<think>` (96.7 %), 3.25 bloques en promedio por texto; 537 empiezan con la frase «To analyze the case…». El entrenamiento usa el texto tal cual (`skincare.py` l.173, sin quitar bloques). Quitar los bloques ocurre solo en la referencia de evaluación (`generate_report.py` `_strip_cot`, `fix_reports.py`) | `shen2025skincare` |
-| P8 | La instrucción de inferencia es la de entrenamiento («Describe this skin lesion.»): una instrucción distinta de la usada en el entrenamiento cambia el prompt que recibe el modelo respecto de lo que aprendió. Las métricas de generación se calculan sobre el reporte, sin los bloques `<think>`: si se midieran sobre el texto completo, las menciones de diagnósticos hipotetizados dentro del razonamiento contarían como aciertos. La magnitud del efecto va al Cap. 5, sin cifras acá. | `generate_report.py` l.52 (`REPORT_PROMPT`); `evaluate_reports.py` l.184–207 (`--strip-reasoning`); criterio de métrica oficial en `Codigo/docs/resul/revision_experimentacion_20261003.md` (§5, «solo reporte + matcher estricto»). Efecto del razonamiento: solo referencia a `Codigo/docs/experimentacion` (números viejos, no usar) | — (los criterios son del trabajo) |
-| P9 | Decodificación voraz (`do_sample=False`), una imagen por llamada, 384 tokens nuevos, semilla 42. Voraz tiende a repetirse en la generación abierta (ya dicho en el Cap. 2), y el trabajo lo acepta por reproducibilidad. El límite de 384 tokens reemplazó al de 256 del piloto, para reducir el truncamiento antes de enunciar el diagnóstico (comentario del piloto). No se usó penalización de repetición ni `no_repeat_ngram_size` en las corridas finales (la penalización falla en Mini-VLM; el posprocesamiento post-hoc de repeticiones se evaluó y no se adopta). | `llava_med.py` l.195 y `mini_vlm.py` l.255 (`do_sample=False`); `Codigo/slurm/mendieta/pilot_ensemble_v2_llava.sh` l.20 (motivo de 384); 512 por defecto en `generate_report.py` l.218 y en las corridas v1–v2 (`slurm/mendieta/v1` y `v2`); 384 en `ensemble_full_*.sh` y en `v3/`, `v4/`; `slurm/mendieta/v3/rag_generation.sh` l.18–20 (P5.5 quitado); `Codigo/scripts/repetition_postprocess.py` y `Codigo/docs/resul/analisis_pipeline_avanzado_resul_20260908.md` (addendum: no se adopta) | `holtzman2020curious` |
+| P1 | En 3.5 los VLM eligen una etiqueta; la tarea de generación (T3) pide un texto libre con descripción de la lesión e impresión diagnóstica (`sec:met_tareas`). Esa forma de salida no se obtiene con una instrucción, y por eso los modelos se ajustan con textos clínicos antes de usarlos. | Las dos partes coinciden con `reportes_mejoras_v2_plan` (instrucción a alinear con el entrenamiento) y con `tab:marco_partes_reporte` del Cap. 2; la definición está en 3.1. | Ninguna nueva |
+| P2 | Mini-VLM y LLaVA-Med, los mismos modelos que se evalúan como clasificadores, son los generadores ajustados; el ajuste cambia su salida de una etiqueta a un texto. Ninguno está especializado en dermatología, así que se agrega un tercer generador. | Mini-VLM = `microsoft/Phi-3.5-vision-instruct` (`Codigo/src/models/mini_vlm.py:78`). LLaVA-Med = `chaoyinshe/llava-med-v1.5-mistral-7b-hf` (`Codigo/src/models/llava_med.py:22`). | Ninguna nueva (se remite a `sec:met_vlm_generativos`) |
+| P3 | SkinVL, presentado junto con MM-Skin: parte de LLaVA-Med v1.5 con Mistral-7B y ajusta con LoRA (rango 128) el modelo de lenguaje y la proyección visual, con el codificador visual congelado, en una sola etapa de instrucciones. Se usa la variante SkinVL-MM (solo MM-Skin), con los pesos publicados (`zwq803/SkinVL-MM`); como no incluyen el codificador visual, se combinaron con los de la versión de LLaVA-Med que sí lo trae, sin ajuste adicional. Sirve para saber si un generador especializado en dermatología escribe reportes distintos de los generales. | `Codigo/src/models/skinvl.py` (subclase de LLaVA-Med; `MODEL_NAME = data/checkpoints/skinvl-mm-hf`); `Codigo/scripts/convert_skinvl_to_hf.py` (el repo trae 295 tensores sin el vision tower; la base aporta `vision_tower`); `Codigo/docs/ideas/skinvl_ensemble_plan_20260705.md` (pesos completos, sin LoRA, según la inspección del repo: ver Preguntas abiertas 11). Corrida sin ajuste propio: `slurm/mendieta/v3/generate_reports_skinvl.sh` (sin `--checkpoint`, 384 tokens). | `zeng2025mmskin` (MM-Skin y SkinVL) |
+| P4 | HAM10000 trae una etiqueta por imagen y no un texto que el generador pueda aprender a escribir; su prueba queda reservada para medir la fidelidad diagnóstica. SkinCAP son descripciones observacionales (sitio, morfología, color, distribución); SkinCoT, de 23 enfermedades y no de las siete de HAM10000, termina siempre con una impresión diagnóstica explícita. Por eso el ajuste va en dos etapas, una con cada parte, y en ambas la instrucción es «Describe this skin lesion.». | `Codigo/data/raw/skincare/README.md` (SkinCAP: 4000 imágenes; SkinCoT: 3041 pares, revisados por clínicos en seis ejes; 7041 en total). `Codigo/data/raw/skincare/SkinCoT/EN/` tiene 23 carpetas (conteo propio). Instrucción: `VLMTrainCollator.CAPTION_INSTRUCTION` (`two_stage.py` l.111). El «siempre» de la impresión diagnóstica no está verificado (Preguntas abiertas 15). | `shen2025skincare`, `tschandl2018ham10000` |
+| P5 | Etapa 1: se entrena solo el proyector visual con SkinCAP (codificador visual y LLM congelados). Etapa 2: LoRA sobre las proyecciones de atención del LLM y del codificador visual con SkinCoT, proyector congelado; `q_proj` y `v_proj` en ambos, salvo el LLM de Mini-VLM, que reúne las tres proyecciones en `qkv_proj`. Entrenables: 33 554 432 en LLaVA-Med y 31 457 280 en Mini-VLM, menos del 1 % de cada modelo. La Tabla~\ref{tab:met_lora} reúne la configuración. | `Codigo/scripts/train_vlm_stage1.py`, `train_vlm_stage2.py`; `Codigo/src/training/two_stage.py` (`_freeze_for_stage1` l.374; `_freeze_vision_encoder` l.522; `run_stage2` l.1196). Mini-VLM v3: job Mendieta 1179985, log `outputs/slurm_logs/mini_vlm/1179985.out` (LoRA en `qkv_proj` del modelo de lenguaje y `q_proj`/`v_proj` del codificador visual; 31 457 280 entrenables = 0.75 % de 4 178 078 720; mejor época 10, `val_loss` 0.9598). El 33 554 432 de LLaVA-Med no tiene fuente en esta ficha (ver «Números sin verificar»). | `hu2021lora` (solo \ref a `sec:marco_llm_lora`) |
+| P6 | La tasa de aprendizaje de la etapa 1 se eligió con una búsqueda sobre validación. En la etapa 2 la pérdida de validación siguió bajando hasta la última época, que es la que se conserva. | `Codigo/outputs/mejores_params.txt` (barrido de la etapa 1, 1.09e-4); `two_stage.py` (detención temprana con paciencia 3; mejor época 10 en Mini-VLM v3, log 1179985). | Ninguna |
+| P7 | Casi todos los textos de SkinCoT intercalan bloques `<think>`; el modelo aprende a reproducirlos y su salida mezcla razonamiento y reporte. Se conservan al entrenar (permiten ver cómo llega a su descripción) y se quitan antes de medir: si se midiera el texto completo, los diagnósticos que el razonamiento solo menciona como hipótesis contarían como aciertos. | Conteo propio sobre `Codigo/data/raw/skincare/SkinCoT/EN/*.txt` (copia en `M`): 3041 textos, 2942 con `<think>` (96.7 %), 3.25 bloques en promedio; el `.tex` dice «casi todos» sin cifra. Entrenamiento con el texto tal cual (`skincare.py` l.173). Quitar los bloques ocurre solo en la referencia de evaluación (`generate_report.py` `_strip_cot`, `fix_reports.py`; `evaluate_reports.py --strip-reasoning`). Criterio: `Codigo/docs/resul/revision_experimentacion_20261003.md` (§5, «solo reporte + matcher estricto»), `sec:met_eval_generacion`. | `shen2025skincare` (solo contexto) |
+| P8 | En inferencia: misma instrucción del entrenamiento y decodificación voraz (elegir el token más probable en cada paso), lo que hace la generación reproducible. Una imagen por vez, máximo de 384 tokens nuevos, suficiente para que el texto llegue al diagnóstico. La voraz tiende a repetir frases, pero no se usa penalización de repetición porque en Mini-VLM hace fallar la generación. Cierre: el generador redacta el reporte pero no decide si la lesión es lo bastante clara para afirmar un diagnóstico; esa decisión la incorpora el pipeline. | `generate_report.py` l.52 (`REPORT_PROMPT`); `llava_med.py` l.195 y `mini_vlm.py` l.255 (`do_sample=False`); 384 en `ensemble_full_*.sh` y en `slurm/mendieta/v3/` y `v4/`; `slurm/mendieta/v3/rag_generation.sh` l.18–20; la falla de la penalización en Mini-VLM: `Codigo/docs/resul/analisis_pipeline_avanzado_resul_20260908.md`. | `sec:marco_llm_grandes` (solo \ref); `holtzman2020curious` no se cita en el `.tex` |
 
 ## Figuras y tablas
 
 | Elemento | Qué muestra | De dónde sale | Estado |
 |---|---|---|---|
-| Tabla 3.7.a — Configuración de LoRA y del entrenamiento (etapa 1 y etapa 2) | Parámetro, descripción breve y valor; filas agrupadas por etapa (formato de la tesina de ejemplo, Tabla 3.6) | Ver filas abajo | a armar, con las preguntas Q1, Q2, Q5, Q6 resueltas |
-| Tabla 3.7.b — Decodificación | Estrategia, máximo de tokens, instrucción, semilla, posprocesamiento | Ver filas abajo | a armar |
-| (sin figura) | Ejemplo de texto de SkinCoT: ya está en 3.3 (`ej_skincot_human.jpg`), no se repite acá | — | no corresponde |
+| `tab:met_lora` — Configuración de LoRA y del entrenamiento (dos etapas) | Parámetro y valor; filas agrupadas por etapa | Ver filas abajo | hecha (en P5) |
+| `tab:met_decodificacion` — Decodificación de los tres generadores | Parámetro y valor | Ver filas abajo | hecha (en P8) |
+| (sin figura) | Ejemplo de texto de SkinCoT: ya está en 3.2 (`ej_skincot_human.jpg`), no se repite acá | — | no corresponde |
 
-**Tabla 3.7.a (propuesta):**
+**`tab:met_lora` (dos columnas, parámetro y valor, como está en el `.tex`):**
 
 | Parámetro | Valor | Fuente |
 |---|---|---|
 | *Etapa 1 (proyector)* | | |
-| Parámetros entrenables | Proyector visual (LLaVA-Med: `multi_modal_projector`; Mini-VLM: `img_projection`, `glb_GN`, `sub_GN`) | `two_stage.py` `_freeze_for_stage1` l.374 |
-| Congelado | Codificador visual y LLM | idem |
-| Datos | SkinCAP: 2492 / 534 / 535 (entrenamiento / validación / prueba) | `Codigo/data/splits/skincare_skincap_splits.json` (suma 3561; Q10) |
-| Optimizador y planificador | AdamW, decaimiento 0, eps 1e-7; coseno (`CosineAnnealingLR`) | `two_stage.py` l.1158–1174 |
-| Tasa de aprendizaje, épocas, lote | a definir (Q1): 1.09e-4 y 2 épocas (mejor del barrido), o 1e-3 y 5 épocas con paciencia 2 (Mendieta), o 2e-3 y 1 época (TOKO) | `Codigo/outputs/mejores_params.txt`; `slurm/mendieta/train_vlm_s1_*.sh`; `slurm/toko/train_vlm_s1_llava.sh` |
-| *Etapa 2 (LoRA sobre el LLM; checkpoints finales `stage2_*_v2`)* | | |
-| Rango $r$ | 64 | `lora_config.json` del checkpoint Mini-VLM; `train_vlm_s2*.sh` v2 |
-| Escala $\alpha$ | 64 ($\alpha/r = 1$) | idem |
+| Parámetros entrenables | Proyector visual (LLaVA-Med: `multi_modal_projector`; Mini-VLM: `img_projection`, `glb_GN` y `sub_GN`) | `two_stage.py` `_freeze_for_stage1` l.374 |
+| Congelados | Codificador visual y modelo de lenguaje | idem |
+| Datos | 2 492 / 534 / 535 (entrenamiento / validación / prueba) | `Codigo/data/splits/skincare_skincap_splits.json` (suma 3561; ver Preguntas abiertas 10) |
+| Optimizador | AdamW, decaimiento 0, eps $10^{-7}$ | `two_stage.py` l.1158–1174 |
+| Planificador | Coseno (`CosineAnnealingLR`) | idem |
+| Tasa de aprendizaje | $1.09 \times 10^{-4}$ | `Codigo/outputs/mejores_params.txt` (barrido; ver Preguntas abiertas 1) |
+| Épocas | 2, sin detención temprana | idem |
+| Lote | 16 (15 en LLaVA-Med, reducido por memoria) | sin fuente en esta ficha (ver «Números sin verificar») |
+| *Etapa 2 (LoRA)* | | |
+| Rango $r$ | 64 | `lora_config.json` de `stage2_mini_vlm_v2`; `train_vlm_s2*.sh` v2 |
+| Escala $\alpha$ | 64 | idem |
 | Dropout de LoRA | 0.0 | idem |
-| Módulos | `q_proj`, `v_proj` del LLM (Q2) | idem; `train_vlm_stage2.py` l.232 |
-| Tasa de aprendizaje | $2.495 \times 10^{-5}$, constante (sin planificador) | `slurm/mendieta/v2/train_vlm_s2*.sh`; `two_stage.py` `run_stage2` (`scheduler=None`) |
-| Optimizador | AdamW, decaimiento 0.01, eps 1e-7 | `two_stage.py` `run_stage2` |
-| Épocas | máximo 10, detención temprana sobre `val_loss` con paciencia 3 | `slurm/mendieta/v2/`; `train_vlm_stage2.py` l.227 |
-| Lote y acumulación | 4 y 8 (efectivo 32), reducción automática si hay falta de memoria (Q6) | `slurm/mendieta/v2/`; `train_vlm_stage2.py` (OOM) |
-| Longitud máxima | 2048 tokens | `train_vlm_stage2.py` l.213 |
-| Recorte de gradiente | norma 1.0 | `two_stage.py` l.782 |
-| Precisión | bf16 en GPU Ampere o posterior | `Codigo/src/utils/device.py` `get_training_dtype` |
+| Módulos | `q_proj`, `v_proj`; en Mini-VLM, además `qkv_proj` | idem; log del job 1179985 (v3 de Mini-VLM) |
+| Proyector | Congelado | `get_peft_model` congela los parámetros no adaptadores (ver Preguntas abiertas 4) |
+| Datos | 2 128 / 456 / 457 (entrenamiento / validación / prueba) | `Codigo/data/splits/skincare_skincot_splits.json` |
+| Instrucción | «Describe this skin lesion.» | `CAPTION_INSTRUCTION` |
+| Tasa de aprendizaje | $2.495 \times 10^{-5}$ | `slurm/mendieta/v2/train_vlm_s2*.sh` |
+| Optimizador | Decaimiento 0.01, eps $10^{-7}$ (AdamW) | `two_stage.py` `run_stage2` |
+| Épocas | 10, paciencia 3 | `slurm/mendieta/v2/`; `train_vlm_stage2.py` l.227 |
+| Lote y acumulación | 4 y 8 (32 efectivos) | `slurm/mendieta/v2/` (ver Preguntas abiertas 6) |
+| Longitud máxima | 2 048 | `train_vlm_stage2.py` l.213 |
+| Recorte de gradiente | 1.0 | `two_stage.py` l.782 |
+| Precisión | bf16 en GPU de arquitectura Ampere o posterior | `Codigo/src/utils/device.py` `get_training_dtype` |
+| Cuantización | No | sin verificar (ver Preguntas abiertas 7) |
 | Semilla | 42 | `slurm/mendieta/v2/` |
-| Datos | SkinCoT EN: 2128 / 456 / 457 (entrenamiento / validación / prueba) | `Codigo/data/splits/skincare_skincot_splits.json` |
-| Instrucción | «Describe this skin lesion.» en todos los pares | `CAPTION_INSTRUCTION` |
 
-**Tabla 3.7.b (propuesta):**
+**`tab:met_decodificacion`:**
 
 | Parámetro | Valor | Fuente |
 |---|---|---|
-| Estrategia | voraz (`do_sample=False`) en ambos VLM | `llava_med.py` l.195; `mini_vlm.py` l.255 |
-| Máximo de tokens nuevos | 384 (512 en v1 y v2) | slurm, ver P9 |
-| Llamadas | una imagen por llamada | `generate_report.py` `_generate_single` |
-| Penalización de repetición | no usada en corridas finales (disponible por CLI) | `rag_generation.sh` l.18–20 |
-| Instrucción de inferencia | «Describe this skin lesion.» en la condición base | `generate_report.py` l.52 |
+| Estrategia | Voraz (`do_sample=False`) | `llava_med.py` l.195; `mini_vlm.py` l.255 |
+| Máximo de tokens nuevos | 384 | `slurm/mendieta/v3/`, `v4/`, `ensemble_full_*.sh` |
+| Llamadas | Una imagen por llamada | `generate_report.py` `_generate_single` |
+| Penalización de repetición | No se usa | `rag_generation.sh` l.18–20 |
+| Instrucción de inferencia | «Describe this skin lesion.», la misma del entrenamiento | `generate_report.py` l.52 |
 | Semilla | 42 | slurm |
-| Posprocesamiento | se quitan los bloques `<think>` antes de medir | `evaluate_reports.py --strip-reasoning` |
+| Posprocesamiento | Se quitan los bloques `<think>` antes de medir | `evaluate_reports.py --strip-reasoning` |
 
-**Valores de `Codigo/configs/phase2_generation.yaml` (r 64, alpha 128, dropout 0.05, siete módulos, 3 épocas, lr 2e-5) no se usan en esta tabla**: el código no lee ese YAML (ver Q3).
+**Valores de `Codigo/configs/phase2_generation.yaml` (r 64, alpha 128, dropout 0.05, siete módulos, 3 épocas, lr 2e-5) no se usan en las tablas**: el código no lee ese YAML (ver Preguntas abiertas 3).
 
 ## Prosa ya escrita que se conserva
 
-- **Párrafo 1** de `05-generacion-reportes.tex` (desde «El reporte dermatológico deja por escrito…» hasta «…quedan fuera del alcance.») pasa a P1, sin cambios de contenido.
-  Revisar en la pasada de estilo: (a) la frase «las que los conjuntos de pares imagen–texto del área anotan junto a cada imagen» apoya la afirmación en `shen2025skincare`; el README dice que SkinCAP anota descripciones y SkinCoT, razonamiento diagnóstico. Conviene precisar qué anota cada subconjunto (Q14). (b) La primera oración abre con «El reporte…» y no con su función en el capítulo: aceptable, la guía no lo prohíbe.
-- El `\pendiente{}` del final se reemplaza por las subsecciones 3.7.2–3.7.5. No quedan `\pendiente` en el archivo salvo los que dependan de Q1.
+Nada de la versión anterior a la revisión. El párrafo 1 original («El reporte dermatológico deja por escrito…») se movió a 3.1 (`sec:met_tareas`), donde se definen las dos partes del reporte (R3); P1 de esta sección lo retoma con `\ref`.
 
 ## Lo que va al apéndice
 
-- **Apéndice B (`ap:prompts`):** `REPORT_PROMPT`, las plantillas condicionadas por diagnóstico (`confirmed`, `noreasoning`, RAG, incertidumbre, las de SkinVL) y la lista de instrucciones de SkinVL. En 3.7 solo se nombra la instrucción base y la regla «sin bloques <think>».
+- **Apéndice B (`ap:prompts`):** `REPORT_PROMPT`, las plantillas condicionadas por diagnóstico (`confirmed`, `noreasoning`, RAG, incertidumbre, las de SkinVL) y la lista de instrucciones de SkinVL. En 3.6 solo se nombra la instrucción base y la regla «sin bloques <think>».
 - **Apéndice E (`ap:reproducibilidad`):** comandos exactos de entrenamiento y generación (`slurm/mendieta/v2/`, `v3/`, `v4/`) y el conteo de bloques `<think>` como script reproducible.
-- **Apéndice F (fichas de conjuntos y modelos):** ficha de SkinVL (origen de los pesos, conversión, licencia) si el texto de P3 resulta largo.
+- **Apéndice F (fichas de conjuntos y modelos):** ficha de SkinVL (origen de los pesos, conversión, licencia) con el detalle de la conversión que el texto ya no trae.
 
 ## Lo que NO va en esta sección (y dónde está)
 
 - **Resultados de cualquier generador:** consistencia diagnóstica, recall de entidades, BLEU, ROUGE, BERTScore, hedging, dx incorrecto, repetición, ablaciones (imagen frente a diagnóstico, diagnóstico erróneo), comparación con SkinVL, variantes de prompt de SkinVL, posprocesamiento de repeticiones: Cap. 5 (`cp:res_gen`, `sec:res_gen_skinvl` ya existe).
-- **Razonamiento de la cascada, plantillas con diagnóstico, *noreasoning*, *grounding* por recuperación, ruteo:** 3.8.
-- **Clasificación de los VLM por verosimilitud, DermLIP, *linear probe*, kNN y SVM:** 3.6 (`sec:met_clasif_vlm`).
-- **Costo de entrenamiento y de generación (horas de GPU):** 3.9 (costo computacional, `sec:met_complementarios`). `ejecuciones.md` tiene la medición, no es un desempeño.
+- **Razonamiento de la cascada, plantillas con diagnóstico, *noreasoning*, *grounding* por recuperación, ruteo:** 3.7.
+- **Clasificación de los VLM por verosimilitud, DermLIP, *linear probe*, kNN y SVM, y la presentación de Mini-VLM y LLaVA-Med:** 3.5 (`sec:met_clasif_vlm`, `sec:met_vlm_generativos`).
+- **Costo de entrenamiento y de generación (horas de GPU):** 3.8 (costo computacional, `sec:met_complementarios`). `ejecuciones.md` tiene la medición, no es un desempeño.
 - **Definiciones** de LLM, LoRA, decodificación, alucinación, *hedging*, RAG, reporte clínico y VLM generativo: Cap. 2. Solo `\ref`.
 - **Fundamentos de AdamW y del planificador coseno** (`loshchilov2019decoupled`, `loshchilov2017sgdr`): Cap. 2 (2.1, optimización), solo se nombran acá.
-- **Formato del `<think>` de SkinCoT y ejemplo de texto:** 3.3.
+- **Formato del `<think>` de SkinCoT y ejemplo de texto:** 3.2.
 - **Planes que se anularon** (`reportes_mejoras_v3_class_weights_plan_20260525.md`, focal loss, *commitment-line* en los objetivos de entrenamiento): no entran; la anulación consta en el encabezado del plan.
 
 ## Preguntas abiertas para el autor
 
-1. **Etapa 1: ¿qué configuración produjo `stage1_llava_med/best_model.pt` y `stage1_mini_vlm/best_model.pt`?** Hay tres candidatos: lr 1.094512e-04 y 2 épocas (`Codigo/outputs/mejores_params.txt`, barrido en Mendieta), lr 1e-3 y 5 épocas con paciencia 2 (`slurm/mendieta/train_vlm_s1_*.sh`), o lr 2e-3 y 1 época (`slurm/toko/train_vlm_s1_llava.sh`, `USAGE.md`). El checkpoint no trae `sweep_config.json`. Sin esto la fila de la etapa 1 no se puede completar.
-2. **LoRA en Mini-VLM (Phi-3.5-vision): ¿existen los módulos `q_proj` y `v_proj`?** En la implementación de Phi-3 que conozco, la atención usa un proyector combinado `qkv_proj` (y el MLP, `gate_up_proj`); hay que verificarlo en el código remoto de Phi-3.5-vision. Si no existen, PEFT no aplica el adaptador a la atención o falla, y `generate_report.py` carga el checkpoint con `load_state_dict(strict=False)`, que no avisa de claves faltantes. Verificar las claves del adaptador en `best_model.pt` sin cargar el modelo. Si el nombre no coincide, la Tabla 3.7.a y la descripción de P6 cambian.
-3. **`phase2_generation.yaml` no se lee en ningún script** (`grep` de `phase2_generation` en `src` y `scripts` vacío). Sus valores (r 64, alpha 128, dropout 0.05, siete módulos, 3 épocas, lr 2e-5) no son los de las corridas finales. Decidir: actualizarlo a lo que se corrió, o declarar que las corridas se lanzaron con argumentos de línea de comando. `AGENTS.md` dice que `configs/` es la fuente de verdad de hiperparámetros, así que la discrepancia tiene que resolverse antes de cerrar el capítulo.
-4. **Proyector en la etapa 2.** `train_mlp: true` en el YAML y el comentario de `_freeze_vision_encoder` dicen que el proyector se entrena. Pero `get_peft_model` congela los parámetros no adaptadores, así que, si nadie los marca en `modules_to_save`, el proyector queda congelado en la etapa 2. La descripción de P4 y el párrafo de LLaVA del Cap. 2 (`05-vlm.tex`, «el proyector se entrena entero») dependen de esto. Verificar con `print_trainable_parameters` del log de un job.
-5. **Relación con el Cap. 2:** el texto de `05-vlm.tex` describe la segunda etapa de LLaVA como «se ajustan el proyector y el LLM». Si la respuesta a Q4 es que el proyector queda congelado, el Cap. 2 no debe presentarlo como parte del ajuste de este trabajo.
-6. **Tamaño de lote efectivo de la etapa 2 v2.** El SLURM pide lote 4 y acumulación 8 (32). `train_vlm_stage2.py` reduce el lote a la mitad ante falta de memoria y duplica la acumulación, así que el efectivo se mantiene, pero el lote real puede haber cambiado. Confirmar en el log de los jobs `stage2_*_v2` (línea «Iniciando entrenamiento | batch_size | grad_accum»).
-7. **Cuantización.** `USAGE.md` dice que LLaVA-Med se carga en 4 bits si la VRAM libre es menor que 14 GB; en el entrenamiento (`train_vlm_stage2.py`) el umbral es el requisito más 4 GB. Confirmar que las corridas de A30 (24 GB) no cuantizaron. Si alguna lo hizo, la Tabla 3.7.a tiene que decirlo.
-8. **Número de épocas del modelo final.** Uso `stage2_*_v2` (10 épocas), porque es el checkpoint que consumen las corridas de ensamble, RAG, incertidumbre y reanclaje (`ensemble_full_*.sh`, `v3/`, `v4/`). Las épocas 3 (v1) y 5 (barrido) quedan como historia de iteraciones; no se mencionan como resultados en 3.7. Confirmar.
-9. **LLaVA-Med base.** El código usa `chaoyinshe/llava-med-v1.5-mistral-7b-hf` (Mistral-7B, v1.5). `Codigo/configs/models/llava_med.yaml` dice «llm: meta-llama/Llama-2-7b-chat-hf» y `pretrained_weights: microsoft/llava-med-v1.5-mistral-7b`; `Codigo/CLAUDE.md` dice «LLaMA-2 7B». La tesina tiene que decir Mistral-7B (ver `jiang2023mistral`). Los YAML y `CLAUDE.md` están desactualizados.
-10. **Mini-VLM y SkinCAP.** (a) `Codigo/configs/models/mini_vlm.yaml` describe «CLIP ViT-B/16 + Phi-3-mini»; el código carga `microsoft/Phi-3.5-vision-instruct`, que es lo que dicen 2.3 y 3.6 (`fichas/`). Decidir y corregir el YAML. (b) SkinCAP: el README dice 4000 imágenes, pero los splits suman 3561 (2492 + 534 + 535). ¿Qué pares se excluyen y por qué? Afecta la Tabla 3.7.a y la 3.3.
-11. **SkinVL: pesos y cita.** La inspección del repo (`skinvl_ensemble_plan_20260705.md`) dice que los pesos publicados son completos, sin adaptador LoRA. El Cap. 2 (`10-estado-arte.tex`, l.351) atribuye a `zeng2025mmskin` un ajuste con proyección y adaptadores LoRA. Las dos cosas pueden ser ciertas (el repo publica los pesos ya fusionados); conviene escribir P3 según lo que dice el artículo y anotar la inspección como dato propio. Propuesta de cita: `zeng2025mmskin` (el mismo que usa el Cap. 2 para SkinVL). Si el autor prefiere una referencia dedicada al repo `zwq803/SkinVL-MM`, va a `refs_pendientes.md`. Confirmar que `zeng2025mmskin` es el artículo que presenta SkinVL.
-12. **Declaración sobre la fuga en el Cap. 3 (§Alcance 6 de la ficha del capítulo).** Dice que «los VLM generales ajustados (su entrenamiento contiene lesiones del test)». Con lo que leí: SkinCAP y SkinCoT vienen de Fitzpatrick 17k y DDI (README de SkinCaRe), y MM-SkinQA son imágenes de libros de histopatología (`VQA.csv`). No encontré solapamiento con HAM10000. Puede venir del preentrenamiento de LLaVA-Med o del corpus de MM-Skin (SkinVL), que no verifiqué. Antes de declararlo en P3 o P5, verificar qué fuente lo produce. Si no hay solapamiento, la declaración se quita.
-13. **Duplicación con 3.1.** La ficha 3.1 (Tabla de secciones) dice que «generación = descripción + impresión diagnóstica» se define en 3.1. P1 define las mismas dos partes. Propongo que 3.1 las nombre y remita a `sec:met_generacion`, y que 3.7 conserve la prosa ya escrita. Decisión del autor (guía §2.1 y §3).
-14. **Qué anota cada subconjunto de SkinCaRe.** Para la frase de P1 sobre los conjuntos de pares: SkinCAP tiene captions de dermatólogos; SkinCoT, razonamiento diagnóstico revisado. Confirmar si «impresión diagnóstica» está en el texto de SkinCoT o si el texto del reporte se construye a partir de él (la conclusión del razonamiento).
-15. **Impresión diagnóstica en la condición base.** La instrucción «Describe this skin lesion.» no pide un diagnóstico. El modelo, entrenado con SkinCoT, produce una conclusión por el razonamiento. ¿La impresión diagnóstica de la condición base está en el texto generado? Verificar con 3 o 4 reportes de una corrida (no hace falta una métrica). Si no aparece, P1 tiene que decir que la impresión solo se obtiene con diagnóstico declarado (3.8).
-16. **Premisa del último párrafo de la transición.** La ficha del capítulo dice «un generador que no discrimina necesita que el diagnóstico venga de afuera». Es una conclusión de resultados (Cap. 4 y 5). En 3.7 puede aparecer como motivo, con `\ref` al capítulo de resultados y sin cifras. Confirmar que el autor quiere esa formulación.
-17. **Memoria que justifica LoRA (P6).** La razón «una GPU de consumo» necesita una cifra. Las estimaciones de `Codigo/configs/models/*.yaml` (14 GB con LoRA para LLaVA-Med, 8 GB para Mini-VLM) y las de `USAGE.md` son estimaciones, no mediciones, y no hay medición del ajuste completo en el repositorio. Opciones: citar a `hu2021lora` para la reducción de memoria (es lo que ya afirma el Cap. 2) y decir que el trabajo usa LoRA por su costo de memoria, sin cifra propia; o medir la VRAM de un ajuste completo y citarla como dato del trabajo.
+1. **Etapa 1: ¿qué configuración produjo `stage1_llava_med/best_model.pt` y `stage1_mini_vlm/best_model.pt`? (resuelta en el `.tex`, a verificar)** El `.tex` y la tabla adoptan lr 1.094512e-04 y 2 épocas (`Codigo/outputs/mejores_params.txt`, barrido en Mendieta), sin detención temprana, lote 16 (15 en LLaVA-Med). Siguen sin coincidir: `slurm/mendieta/train_vlm_s1_*.sh` (lr 1e-3, 5 épocas, paciencia 2) y `slurm/toko/train_vlm_s1_llava.sh` (lr 2e-3, 1 época). El checkpoint no trae `sweep_config.json`. Ver D14.
+2. **LoRA en Mini-VLM: ¿existen los módulos `q_proj` y `v_proj`? (resuelta por el reentrenamiento v3)** El `.tex` y la tabla ya describen la configuración v3 (`qkv_proj` en el modelo de lenguaje; `q_proj` y `v_proj` en el codificador visual; 31 457 280 entrenables, job 1179985).
+3. **`phase2_generation.yaml` no se lee en ningún script** (`grep` de `phase2_generation` en `src` y `scripts` vacío). Sus valores (r 64, alpha 128, dropout 0.05, siete módulos, 3 épocas, lr 2e-5) no son los de las corridas finales. **Abierta**: actualizarlo a lo que se corrió, o declarar que las corridas se lanzaron con argumentos de línea de comando (`AGENTS.md` dice que `configs/` es la fuente de verdad de hiperparámetros).
+4. **Proyector en la etapa 2 (resuelta en el `.tex`, a verificar).** El `.tex` y la tabla dicen «Proyector: Congelado». Es coherente con que `get_peft_model` congele lo que no es adaptador y con el conteo de Mini-VLM v3 (31 457 280 = el LoRA), pero para LLaVA-Med no se verificó con `print_trainable_parameters` de un job.
+5. **Relación con el Cap. 2.** `05-vlm.tex` describe la segunda etapa de LLaVA como «se ajustan el proyector y el LLM». Con el proyector congelado en la etapa 2, el Cap. 2 no debe presentarlo como parte del ajuste de este trabajo. **Abierta**, a corregir en el Cap. 2.
+6. **Tamaño de lote efectivo de la etapa 2 v2.** El SLURM pide lote 4 y acumulación 8 (32); `train_vlm_stage2.py` reduce el lote a la mitad ante falta de memoria y duplica la acumulación. Confirmar en el log de los jobs `stage2_*_v2` (línea «Iniciando entrenamiento | batch_size | grad_accum»). **Abierta.**
+7. **Cuantización.** La tabla dice «No»; `USAGE.md` dice que LLaVA-Med se carga en 4 bits si la VRAM libre es menor que 14 GB. Confirmar que las corridas de A30 (24 GB) no cuantizaron. **Abierta.**
+8. **Número de épocas del modelo final (resuelta).** Se usa `stage2_*_v2` (10 épocas), que consumen el ensamble, RAG, incertidumbre y reanclaje; el `.tex` dice «10, paciencia 3». Mini-VLM tiene además v3 (mejor época 10).
+9. **LLaVA-Med base (resuelta en el `.tex`).** El `.tex` dice Mistral-7B. Siguen desactualizados `Codigo/configs/models/llava_med.yaml` («Llama-2-7b-chat») y `Codigo/CLAUDE.md` («LLaMA-2 7B»).
+10. **Mini-VLM y SkinCAP.** (a) `Codigo/configs/models/mini_vlm.yaml` describe «CLIP ViT-B/16 + Phi-3-mini» y debe corregirse (el código carga Phi-3.5-vision). (b) SkinCAP: `02-datos.tex` dice 4 000 imágenes, pero los splits suman 3 561 (2 492 + 534 + 535) y la tabla del `.tex` usa esos tamaños. **Abierta**: ¿qué pares se excluyen y por qué?
+11. **SkinVL: pesos y cita (resuelta en el `.tex`).** El `.tex` sigue al artículo (`zeng2025mmskin`: LoRA de rango 128 sobre el modelo de lenguaje y la proyección, una sola etapa) y no menciona la inspección propia del repo (pesos ya fusionados, sin adaptador). Falta confirmar que `zeng2025mmskin` es el artículo que presenta SkinVL.
+12. **Declaración sobre la fuga (obsoleta tras la revisión del 18/10).** El `.tex` no declara solapamiento entre SkinCAP/SkinCoT y HAM10000, y la corrección del 11/10 establece que los VLM generales no se ajustaron sobre HAM10000.
+13. **Duplicación con 3.1 (resuelta).** 3.1 define las dos partes del reporte; P1 las nombra y remite a `sec:met_tareas`.
+14. **Qué anota cada subconjunto de SkinCaRe (resuelta en el `.tex`).** P4 dice: SkinCAP, descripciones observacionales; SkinCoT, razonamiento terminado en impresión diagnóstica.
+15. **Impresión diagnóstica en la condición base (a verificar).** P4 afirma que los textos de SkinCoT «terminan siempre» con una impresión diagnóstica explícita; la ficha no lo contrastó (conteo de `<think>` sí, el de la conclusión no). La instrucción «Describe this skin lesion.» no pide un diagnóstico: verificar con 3 o 4 reportes de una corrida que la impresión aparece en el texto generado.
+16. **Premisa del último párrafo de la transición (obsoleta tras la revisión del 18/10).** La transición ya es una afirmación sobre el generador («no decide si la lesión es lo bastante clara…»), sin remitir a resultados.
+17. **Memoria que justifica LoRA (resuelta).** El `.tex` dice «Por la restricción de cómputo» y remite a `sec:marco_llm_lora`, sin cifra de memoria.
 
 ## Decisiones tomadas por cuenta propia
 
-- **D1. Mini-VLM = `microsoft/Phi-3.5-vision-instruct`** (código, `mini_vlm.py`, y lo que dicen 2.3 y 3.6). El YAML queda como discrepancia (Q10).
-- **D2. Configuración de LoRA y entrenamiento de la etapa 2 = la del checkpoint final (`stage2_*_v2`)**, tomada de `lora_config.json` y de los SLURM v2, no del YAML (Q3).
-- **D3. Generadores finales = los checkpoints `stage2_*_v2`.** Los usan `ensemble_full_*.sh` y los scripts de `v3/` y `v4/`. Las generaciones v1 y v2 (512 tokens; la v1 con el checkpoint de 3 épocas) quedan como iteraciones previas y no son el modelo final.
-- **D4. Instrucción de inferencia = la de entrenamiento** («Describe this skin lesion.»). Justificación desde el objetivo: que el prompt de inferencia no se aleje de lo que vio el modelo. La versión anterior del prompt, más larga, se abandonó por esa razón; no se describe acá.
-- **D5. Entrenamiento con el texto completo de SkinCoT, incluidos los bloques `<think>`.** Coincide con el código. Se justifica porque el razonamiento es auditable; la separación se hace en la evaluación, no en el entrenamiento.
-- **D6. Decodificación voraz, 384 tokens, una imagen por llamada, semilla 42.** 384 por el piloto con 256 (`pilot_ensemble_v2_llava.sh`, l.20).
-- **D7. SkinVL sin ajuste propio**, convertido a HF sobre la base `chaoyinshe/llava-med-v1.5-mistral-7b-hf`, con el mismo `REPORT_PROMPT` y la misma decodificación que los otros dos generadores. Así la comparación cambia solo el generador.
-- **D8. La penalización de repetición y `no_repeat_ngram_size` no se usan en las corridas finales.** La de Mini-VLM falla (Phi-3.5, tokens de imagen fuera del rango del vocabulario, según `analisis_pipeline_avanzado_resul_20260908.md`). Para LLaVA-Med quedó diferida (`mejoras_resultados_p5_plan_20260713.md`). Se declara en 3.7, sin cifras.
-- **D9. El posprocesamiento de repeticiones (`repetition_postprocess.py`) no se adopta.** Se descarta por su resultado (addendum del 2026-09-08). El resultado va al Cap. 5, no acá.
-- **D10. Tablas de configuración en el cuerpo, grillas no** (la búsqueda de LoRA completa va a `ap:hiperparametros`). Sigue el ejemplo (§3.6).
-- **D11. Cita de SkinVL = `zeng2025mmskin`** (corrección del coordinador, 11/10). `skinvl` no tiene clave en el `.bib`. Mini-VLM se cita con `abdin2024phi3`.
-- **D12. Referencia a 3.6 = `sec:met_clasif_vlm`**, la etiqueta que existe. `sec:met_vlm_generativos` no existe en el Cap. 3.
-- **D13. Hallazgo sobre los módulos de LoRA de Mini-VLM (Q2, resuelta en parte).** `stage2_mini_vlm_v2/best_model.pt` tiene 48 adaptadores (`q_proj`, `v_proj`) en el codificador visual (`img_processor`) y ninguno en el modelo de lenguaje. En LLaVA-Med, `stage2_llava_med/best_model_firts.pt` (v1) tiene adaptadores en ambos (64 en el modelo de lenguaje, 48 en el `vision_tower`); el checkpoint v2 no está en la copia local. El texto no afirma dónde caen los adaptadores de Mini-VLM: queda `\pendiente` en 3.7.3 y en la Tabla 3.7.a. Se reporta al coordinador. Decidir si se reentrena, se corrige el objetivo de módulos o se describe tal cual.
-- **D16. Mini-VLM v3 verificado (2026-10-18).** Se reentrenó con `qkv_proj q_proj v_proj` (job 1179985, 9 h 51 min). El log confirma 31 457 280 parámetros entrenables (0.75 % de 4 178 078 720); mejor época 10, `val_loss` 0.9598. Sale el `\pendiente` del conteo en 3.7; el paso de los Caps. 4 y 5 a v3 queda en sus fichas.
-- **D14. Etapa 1 no resuelta (Q1).** `stage1_llava_med/best_model.pt` registra época 1 con `val_loss` 1.82, que no coincide con el barrido (mejor en época 2 de 2, `val_loss` 1.34). `stage1_mini_vlm/best_model.pt` no es un zip legible (archivo truncado de 2.6 GB), y `stage1_mini_vlm/best_model_firts.pt` registra época 3 con `val_loss` 1.84. La stage 2 v2 de Mini-VLM se entrenó desde `stage1_mini_vlm/best_model.pt`, así que ese archivo hay que revisarlo. Tasa, épocas y lote de la etapa 1 quedan `\pendiente`.
-- **D15. Proyector y cuantización (Q4, Q7) y lote real (Q6) quedan `\pendiente` en la Tabla 3.7.a.** Sin dato en la copia local.
+- **D1. Mini-VLM = `microsoft/Phi-3.5-vision-instruct`** (código, `mini_vlm.py`, y lo que dicen 2.3 y 3.5). El YAML queda como discrepancia (pregunta 10).
+- **D2. Configuración de LoRA y entrenamiento de la etapa 2 = la del checkpoint final (`stage2_*_v2`)**, tomada de `lora_config.json` y de los SLURM v2, no del YAML (pregunta 3). Mini-VLM: configuración de módulos de v3.
+- **D3. Generadores finales = los checkpoints `stage2_*_v2`** (Mini-VLM, además, v3). Los usan `ensemble_full_*.sh` y los scripts de `v3/` y `v4/`. Las generaciones v1 y v2 (512 tokens) son iteraciones previas y no figuran en el `.tex` (R2).
+- **D4. Instrucción de inferencia = la de entrenamiento** («Describe this skin lesion.»). La versión anterior del prompt, más larga, se abandonó; no se describe acá.
+- **D5. Entrenamiento con el texto completo de SkinCoT, incluidos los bloques `<think>`.** Se justifica porque el razonamiento permite ver cómo llega el modelo a su descripción; la separación se hace en la evaluación, no en el entrenamiento.
+- **D6. Decodificación voraz, 384 tokens, una imagen por llamada, semilla 42.** El `.tex` justifica los 384 como «suficiente para que el texto llegue al diagnóstico», sin mencionar el piloto de 256 (R1).
+- **D7. SkinVL sin ajuste propio**, con el mismo `REPORT_PROMPT` y la misma decodificación que los otros dos generadores. Así la comparación cambia solo el generador.
+- **D8. La penalización de repetición y `no_repeat_ngram_size` no se usan.** La de Mini-VLM falla (Phi-3.5, tokens de imagen fuera del rango del vocabulario, según `analisis_pipeline_avanzado_resul_20260908.md`). Se declara sin cifras.
+- **D9. El posprocesamiento de repeticiones (`repetition_postprocess.py`) no se adopta** y ya no se menciona en el `.tex`; el resultado va al Cap. 5.
+- **D10. Tablas de configuración en el cuerpo, grillas no** (la búsqueda completa va a `ap:hiperparametros`).
+- **D11. Cita de SkinVL = `zeng2025mmskin`.** Mini-VLM se cita con `abdin2024phi3` en 3.5; esta sección ya no lo cita.
+- **D12. Referencia a 3.5 = `sec:met_vlm_generativos`** (existe en `05-clasificacion-vlm.tex`; la ficha anterior decía `sec:met_clasif_vlm` porque aún no existía).
+- **D13. (resuelta por el reentrenamiento v3 de Mini-VLM)** El hallazgo de que `stage2_mini_vlm_v2/best_model.pt` tenía 48 adaptadores (`q_proj`, `v_proj`) en el codificador visual y ninguno en el modelo de lenguaje quedó superado: Mini-VLM se reentrenó con adaptadores en el LLM. El texto ya no describe la primera configuración (R2).
+- **D14. Etapa 1 parcialmente resuelta (pregunta 1).** El `.tex` adopta el valor del barrido (1.09e-4, 2 épocas), pero `stage1_llava_med/best_model.pt` registra época 1 con `val_loss` 1.82 (el barrido: mejor en época 2 de 2, 1.34) y `stage1_mini_vlm/best_model.pt` no es un zip legible (archivo truncado de 2.6 GB; `best_model_firts.pt` registra época 3 con `val_loss` 1.84). La etapa 2 v2 de Mini-VLM se entrenó desde `stage1_mini_vlm/best_model.pt`: conviene revisar ese archivo.
+- **D15. Proyector y cuantización (preguntas 4 y 7) y lote real (pregunta 6)**: la tabla del `.tex` ya los fija (congelado; no; 4 y 8), sin verificación en la copia local.
+- **D16. Mini-VLM v3 verificado (2026-10-18).** Se reentrenó con `qkv_proj q_proj v_proj` (job 1179985, 9 h 51 min). El log confirma 31 457 280 parámetros entrenables (0.75 % de 4 178 078 720); mejor época 10, `val_loss` 0.9598. El `.tex` usa el conteo; el paso de los Caps. 4 y 5 a v3 queda en sus fichas. **Resuelta** (cierra D13 y la pregunta 2).
 
 ## Números sin verificar
 
-- Duración del entrenamiento y del procesamiento de generación (`ejecuciones.md`): no se usan en 3.7.
-- «trasplantados ≈ 291» del runbook de SkinVL: es lo que espera el runbook; no encontré el log real de la conversión. No se cita como dato.
-- Tamaño exacto de los conjuntos de SkinCAP (Q10).
-- Lote efectivo y cuantización reales de la etapa 2 v2 (Q6, Q7).
+- Duración del entrenamiento y del procesamiento de generación (`ejecuciones.md`): no se usan.
+- «trasplantados ≈ 291» del runbook de SkinVL: ya no figura en el `.tex`.
+- Tamaño exacto de los conjuntos de SkinCAP (pregunta 10).
+- Lote efectivo y cuantización reales de la etapa 2 v2 (preguntas 6 y 7).
+- 33 554 432 parámetros entrenables de LLaVA-Med y «menos del 1 %»: sin fuente en la ficha; falta el log del job de LLaVA-Med.
+- Lote de la etapa 1 («16, 15 en LLaVA-Med»): sin fuente en la ficha.
+- Rango 128 de SkinVL: viene del artículo, no se contrastó.
+
+## Quitado en la revisión del 18/10/2026
+
+Lo que la ficha anterior fijaba y el `.tex` actual ya no dice. Se conserva acá para no perder la fuente.
+
+- Presentación repetida de Mini-VLM y LLaVA-Med como generadores (modelos base, `abdin2024phi3`, `li2023llavamed`, `liu2023visual`, `jiang2023mistral`): R3, ya están en 3.5; el `.tex` remite con `\ref{sec:met_vlm_generativos}`. Fuente: `mini_vlm.py:78`, `llava_med.py:22`.
+- Historia de la primera configuración de LoRA de Mini-VLM (48 adaptadores `q_proj`/`v_proj` en el codificador visual, ninguno en el modelo de lenguaje; `\pendiente` de la tabla): R2, solo se describe la v3 (D13, D16). Fuente: `Codigo/outputs/checkpoints/stage2_mini_vlm_v2/best_model.pt`, `lora_config.json`.
+- Desglose de parámetros entrenables por componente: R1/R2, el `.tex` da solo el total por modelo. Fuente: log 1179985.
+- Límite de 256 tokens del piloto y su motivo para subir a 384 (`slurm/mendieta/pilot_ensemble_v2_llava.sh` l.20; 512 por defecto en `generate_report.py` l.218 y en las corridas `slurm/mendieta/v1` y `v2`): R1/R2, historia del proceso.
+- «Corridas finales» (sin penalización de repetición en las corridas finales; la tabla decía «512 en v1 y v2»): R1/R2.
+- Detalles de conversión de SkinVL (pesos en formato original de LLaVA-Med con 295 tensores y sin `vision_tower`, trasplante a formato HF sobre `chaoyinshe/llava-med-v1.5-mistral-7b-hf`, script `convert_skinvl_to_hf.py`, ≈ 291 tensores del runbook): R1; el `.tex` dice que los pesos «no incluyen el codificador visual» y se combinaron con los de la versión de LLaVA-Med que sí lo trae. Va al Apéndice F si hace falta.
+- Posprocesamiento de repeticiones (`repetition_postprocess.py`, addendum de `analisis_pipeline_avanzado_resul_20260908.md`, «no se adopta») y la mención a `holtzman2020curious`: R1/R2.
+- Antigua subsección «Partes del reporte que genera el trabajo» (3.7.1, prosa original): R3, la definición está en 3.1 (`sec:met_tareas`).
+- Subsecciones separadas «Reporte y razonamiento» (3.7.4) y «Decodificación» (3.7.5): se unen en «Inferencia» (3.6.3).
+- Cifras del conteo de `<think>` (3041 textos, 2942 con `<think>`, 96.7 %, 3.25 bloques por texto, 537 empiezan con «To analyze the case…»): R1; el `.tex` dice «casi todos». Fuente conservada en la tabla de P7.
+- Cifras de test de HAM10000 (1 503 imágenes) en el párrafo del porqué de SkinCaRe: R3, están en 3.2.
+- Justificación explícita de LoRA por memoria con cifra y la opción de medir la VRAM de un ajuste completo (pregunta 17 anterior): el `.tex` justifica con «la restricción de cómputo» (R3, `sec:marco_llm_lora`).
+- Detalle de la instrucción del mismo prompt con la versión larga abandonada (D4): R2.
+- Tasas alternativas de la etapa 1 (1e-3 con 5 épocas en Mendieta; 2e-3 con 1 época en TOKO): R2; solo queda el valor del barrido.

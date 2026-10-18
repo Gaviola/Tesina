@@ -88,58 +88,57 @@ Viene de: el Cap. 2 dejó los conceptos y, en el estado del arte, las limitacion
 posicionamiento del *pipeline* (`sec:estado_arte_posicion`).
 Deja instalado: todo lo que los Caps. 4 y 5 necesitan para presentar un resultado sin explicar cómo se obtuvo.
 
+Estructura vigente desde la revisión del 18/10/2026:
+
 ```
-Intro    A partir de las limitaciones del estado del arte, el capítulo describe cómo se diseñó el trabajo
-          ↓ necesidad: antes de cualquier experimento, qué se le pide exactamente a los modelos
-3.1      Definición de las tareas: clasificación en siete clases, detección de melanoma, generación del
-         reporte; entrada, salida y restricción de cómputo de cada una
-          ↓ necesidad: tres tareas y dos preguntas requieren un plan de trabajo
-3.2      Flujo de trabajo: ciclo hipótesis → ejecución → análisis → decisión (figura), registro de cada
-         corrida, entorno de ejecución
+Intro    Retoma la propuesta del Cap. 2 y anuncia qué hace cada sección, por número
+          ↓ necesidad: antes de describir cada componente, qué se le pide al sistema
+3.1      Tareas y flujo: definición formal de la tarea; siete categorías de HAM10000 y su gravedad; T1–T3;
+         partes del reporte; una GPU de consumo y las tres GPU usadas; flujo en etapas (figura)
           ↓ necesidad: la primera etapa del flujo son los datos
-3.3      Conjuntos de datos: tabla de conjuntos; análisis exploratorio de HAM10000; partición disjunta por
-         lesión; SkinCaRe, MM-Skin, Derm1M e HIBA
-          ↓ consecuencia: datos desbalanceados y confusiones de costo desigual obligan a fijar cómo se decide
-3.4      Criterios de evaluación y líneas base: métrica principal y de selección, líneas base y cotas,
-         umbral de melanoma, métrica oficial de generación, fidelidad diagnóstica vs validez clínica
-          ↓ aplicación: con esos criterios se entrenan y seleccionan los clasificadores
-3.5      Clasificadores supervisados: arquitecturas, preprocesamiento, receta, desbalance, hiperparámetros y
-         búsqueda, ensamble, detección de melanoma
-          ↓ contraste: los clasificadores no generan texto; PI1 pregunta si un VLM clasifica igual de bien
-3.6      Clasificación con VLM: generales (Mini-VLM, LLaVA-Med) con cuatro estrategias; DermLIP y sus modos
-          ↓ necesidad: PI2 pide un reporte; los VLM generativos se ajustan para generarlo
-3.7      Generación de reportes: formato, generadores, ajuste en dos etapas, configuración de LoRA,
-         decodificación
-          ↓ consecuencia: un generador que no discrimina necesita que el diagnóstico venga de afuera
-3.8      Pipeline: cascada clasificador → generador, grounding por recuperación, ruteo en tres niveles
-          ↓ necesidad: el test de la misma fuente no alcanza para sostener un resultado (Sección 2.6)
-3.9      Análisis complementarios: protocolos de inferencia, pruebas estadísticas, validación externa,
-         perturbaciones, calibración, Grad-CAM y costo computacional
-→ Cierre: el capítulo deja definido el protocolo; los resultados de clasificación abren el Cap. 4.
+3.2      Datos: tabla de conjuntos; HAM10000 (distribución, imágenes por lesión, respaldo de etiquetas);
+         partición por lesión y medición de la fuga; SkinCaRe; MM-Skin, HIBA y Derm1M
+          ↓ consecuencia: desbalance y costo desigual de las confusiones obligan a fijar cómo se juzga
+3.3      Criterios: métricas de clasificación y su justificación, selección en dos niveles, semillas,
+         decisiones con la prueba a la vista, umbral de melanoma; líneas base; evaluación de la generación;
+         comparación estadística
+          ↓ aplicación: con esos criterios se entrenan y eligen los clasificadores
+3.4      Clasificadores supervisados: arquitecturas, preprocesamiento y TTA, entrenamiento e hiperparámetros,
+         comparación de pérdidas para el desbalance, ensamble y detección de melanoma
+          ↓ contraste: no generan texto; PI1 pregunta si un VLM clasifica igual de bien
+3.5      Clasificación con VLM: Mini-VLM y LLaVA-Med con cuatro estrategias; DermLIP y sus modos; control
+          ↓ ampliación: los VLM generativos además pueden redactar
+3.6      Generación: generadores (incluido SkinVL), ajuste en dos etapas sobre SkinCaRe, inferencia
+          ↓ consecuencia: el generador no decide si afirmar un diagnóstico
+3.7      Pipeline (propuesta central): cascada con grounding, recuperación, ruteo en tres niveles, oracle y
+         línea base sin generador
+          ↓ necesidad: la prueba de HAM10000 no cambia las condiciones de entrenamiento (OE3)
+3.8      Evaluación en otros escenarios: HIBA, perturbaciones, calibración, Grad-CAM, costo
+→ Cierre: los resultados de clasificación abren el Cap. 4, y los de generación, el Cap. 5.
 ```
 
 ## Secciones, origen y archivos
 
-| Nueva | Título | Contenido | Archivo | Labels | Ext. |
-|---|---|---|---|---|---|
-| 3.1 | Definición de las tareas | Las tres tareas en el formato de «definición formal» del ejemplo; inventario de siete clases de *HAM10000* con su gravedad (prosa ya escrita en `sec:met_ham`, se mueve acá); «detección» = binaria derivada, no localización; generación = descripción + impresión diagnóstica; restricción: una GPU de consumo; relación tarea → PI → OE | `01-tareas.tex` (nuevo) | `sec:met_tareas` | 1.5–2 p. |
-| 3.2 | Flujo de trabajo | Figura del flujo iterativo; ciclo con registro (plan, ejecución, resultado con veredicto); el orden de los Caps. 4 y 5 sigue el de las decisiones; entorno: RTX 4070 local, TOKO (RTX 4080), Mendieta (A30), SLURM, seguimiento de experimentos; reproducibilidad → Apéndice E | `02-flujo-trabajo.tex` (absorbe `01-metodologia` y `08-infraestructura`) | `sec:met_metodologia`, `sec:met_infra` | 2–2.5 p. |
-| 3.3 | Conjuntos de datos | Tabla de conjuntos; análisis exploratorio de *HAM10000* (distribución de clases, imágenes por lesión, ejemplos por clase); partición disjunta por lesión (fuga cuantificada, reevaluación sobre el subconjunto limpio, `StratifiedGroupKFold`, tabla de tamaños por clase y partición); *SkinCaRe* (*SkinCAP*, *SkinCoT* y su formato de razonamiento, con un ejemplo de texto), *MM-Skin*, *Derm1M* (solo como preentrenamiento de DermLIP), *HIBA* (solo test; 346 de sus 1616 imágenes son clínicas) | `03-datos.tex` (sale de `02-datos-particiones`) | `sec:met_datasets`, `sec:met_ham`, `sec:met_particiones` | 5–6 p. |
-| 3.4 | Criterios de evaluación y líneas base | Costos asimétricos (ya escrito) → sensibilidad macro como resultado principal; líneas base y cotas (azar, clasificador mayoritario, *oracle*, línea base sin generador); F1 macro para elegir la corrida y F1 ponderado para el *checkpoint*; el test no decide nada; umbral de melanoma con especificidad ≥ 0.85 fijado en validación; métrica oficial de generación (solo el reporte, *matcher* estricto) y los dos niveles; fidelidad diagnóstica ≠ validez clínica; media ± desvío de tres semillas | `04-criterios-evaluacion.tex` (sale de `07-protocolo-evaluacion`) | `sec:met_protocolo`, `sec:met_seleccion` | 3 p. |
-| 3.5 | Clasificadores supervisados | DenseNet121, ViT-B/16, Swin-Tiny, ConvNeXt-Tiny y por qué esas cuatro; preprocesamiento, aumento y TTA; receta (AdamW, *cosine*, detención temprana con su paciencia); pérdidas para desbalance; tabla de hiperparámetros explorados y fijos, estrategia de búsqueda y número de corridas; semillas; ensamble Swin + ConvNeXt; detección de melanoma | `05-clasificadores-supervisados.tex` (sale de `03-modelos-evaluados`) | `sec:met_supervisados` | 4–5 p. |
-| 3.6 | Clasificación con modelos visión–lenguaje | Mini-VLM y LLaVA-Med: arquitectura, tamaño, motivo; las cuatro estrategias (figura de *zero-shot* frente a *likelihood*), *prompts* (Apéndice B) y parseo; DermLIP: *zero-shot*, *linear probe*, kNN y SVM sobre *embeddings*, y el control con las mismas cabezas sobre Swin-*ImageNet* congelado | `06-clasificacion-vlm.tex` (sale de `04-clasificacion-vlm`) | `sec:met_clasif_vlm` | 3.5 p. |
-| 3.7 | Generación de reportes | Partes del reporte (ya escrito); generadores (Mini-VLM y LLaVA-Med ajustados; SkinVL como generador especializado); ajuste en dos etapas sobre *SkinCaRe*; tabla de configuración de LoRA; separación reporte / razonamiento; decodificación | `07-generacion-reportes.tex` (sale de `05-generacion-reportes`) | `sec:met_generacion` | 3 p. |
-| 3.8 | Pipeline propuesto | Por qué separar diagnóstico y redacción; cascada con *grounding* y variante *noreasoning*; *grounding* por recuperación (kNN DermLIP, k = 3); ruteo en tres niveles por acuerdo Swin–kNN y sus plantillas (Apéndice B). Diagrama del *pipeline* y del ruteo | `08-pipeline.tex` (sale de `06-pipeline`) | `sec:met_pipeline` | 3.5 p. |
-| 3.9 | Análisis complementarios | Tabla de protocolos de inferencia (vista única o TTA, *checkpoint*, partición por resultado); *bootstrap* pareado, McNemar y Wilcoxon (cuál corresponde a qué comparación); *HIBA*; perturbaciones de adquisición; calibración *post-hoc* ajustada en validación; Grad-CAM; medición del costo computacional | `09-analisis-complementarios.tex` (sale de `07-protocolo-evaluacion`) | `sec:met_complementarios` | 3 p. |
+Ver la tabla del bloque «Revisión del autor del 18/10/2026» al comienzo de esta ficha. Lo que sigue es la
+correspondencia con la estructura de nueve secciones del 11/10, que se conserva para leer las fichas viejas:
 
-Total orientativo: 29–32 páginas (el ejemplo ocupa 22 sin la aplicación web; este trabajo tiene dos tareas y un
-*pipeline*). Los archivos se renombran en el commit de la sección que los reescribe.
+| Antes (11/10) | Ahora (18/10) |
+|---|---|
+| 3.1 Definición de las tareas + 3.2 Flujo de trabajo | 3.1 Definición de las tareas y flujo de trabajo (`01-tareas.tex`) |
+| 3.3 Conjuntos de datos | 3.2 (`02-datos.tex`) |
+| 3.4 Criterios de evaluación y líneas base | 3.3 Criterios de evaluación (`03-criterios-evaluacion.tex`), con la comparación estadística |
+| 3.5 Clasificadores supervisados | 3.4 (`04-clasificadores-supervisados.tex`) |
+| 3.6 Clasificación con VLM | 3.5 (`05-clasificacion-vlm.tex`) |
+| 3.7 Generación de reportes | 3.6 (`06-generacion-reportes.tex`) |
+| 3.8 Pipeline propuesto | 3.7 (`07-pipeline.tex`) |
+| 3.9 Análisis complementarios | 3.8 Evaluación en otros escenarios (`08-evaluacion-escenarios.tex`); la estadística pasó a 3.3 |
 
-**Labels que no pueden cambiar** (los usan otros capítulos o la ficha del Cap. 4): `cp:metodos`, `sec:met_ham`,
-`sec:met_seleccion`, `sec:met_particiones`, `sec:met_protocolo`, `sec:met_clasif_vlm`. `sec:met_modelos`
-desaparece (nadie lo referencia). `sec:met_ham` queda en 3.3 sobre el análisis de *HAM10000*; las categorías
-pasan a 3.1, y el `\ref` del Cap. 2 (`01-fundamentos.tex:161`, «los nevos superan varias veces a los
-melanomas») sigue apuntando bien porque habla de la distribución de clases, que queda en 3.3.
+**Labels que no pueden cambiar** (los usan otros capítulos o las fichas del Cap. 4): `cp:metodos`, `sec:met_ham`,
+`sec:met_seleccion`, `sec:met_particiones`, `sec:met_protocolo`, `sec:met_clasif_vlm`, `sec:met_estadistica`,
+`sec:met_complementarios`. Desaparecieron en la revisión: `sec:met_metodologia`, `sec:met_infra`,
+`tab:met_entorno`, `sec:met_supervisados_busqueda`, `sec:met_inferencia`, `sec:met_analisis_compl`,
+`tab:met_protocolos`, `tab:met_protocolos_vlm`, `tab:met_protocolos_analisis` (ninguno se referenciaba fuera del
+capítulo).
 
 ## Figuras y tablas previstas
 
@@ -215,26 +214,25 @@ una vez en el Cap. 3.
 
 | Qué | Se define en | Se retoma en |
 |---|---|---|
-| Red neuronal, entropía cruzada, generalización, particiones, fuga de información, regularización, aumento, TTA, desbalance, transferencia | Cap. 2 (`sec:marco_fundamentos`, `sec:marco_regularizacion` —ahí están la fuga y el TTA—, `sec:marco_desbalance`, `sec:marco_transferencia`) | 3.3, 3.5 |
-| CNN, ViT, Swin, ConvNeXt | Cap. 2 (`sec:marco_vision`) | 3.5 |
-| LLM, LoRA, CLIP, VLM generativo, clasificación por verosimilitud | Cap. 2 (`sec:marco_llm`, `sec:marco_llm_lora`, `sec:marco_vlm`) | 3.6, 3.7 |
-| Calibración, abstención, predicción selectiva, tres salidas | Cap. 2 (`sec:marco_incertidumbre`) | 3.8, 3.9 |
-| Reporte clínico, alucinación, *hedging*, RAG | Cap. 2 (`sec:marco_reportes`) | 3.7, 3.8 |
-| Métricas (sensibilidad macro, F1, AUC, ECE, BLEU…, McNemar, Grad-CAM), robustez, cambio de dominio | Cap. 2 (`sec:marco_evaluacion`, `sec:marco_generalizacion`) | 3.4, 3.9 |
-| Las tres tareas, las siete clases, las dos partes del reporte, la restricción de cómputo | 3.1 | todo el capítulo |
-| Ciclo iterativo, registro, entorno de ejecución | 3.2 | 3.9 (costo) |
-| Composición de *HAM10000*, imágenes por lesión, partición disjunta por lesión, formato de *SkinCoT* | 3.3 | 3.4, 3.5, 3.7 |
-| Métrica principal, de selección y oficial de generación; líneas base de clasificación (azar, clasificador mayoritario, supervisados como referencia de los VLM); umbral de melanoma; fidelidad vs validez | 3.4 | 3.5–3.9 |
-| Receta de entrenamiento, búsqueda de hiperparámetros, ensamble de clasificadores | 3.5 | 3.8, 3.9 |
-| Mini-VLM, LLaVA-Med, las cuatro estrategias, DermLIP y sus modos | 3.6 | 3.7, 3.8 |
-| SkinVL, ajuste en dos etapas, separación reporte / razonamiento | 3.7 | 3.8 |
-| Cascada, *grounding*, *noreasoning*, ruteo en tres niveles; *oracle* y línea base sin generador (necesitan la cascada y el ruteo, que se presentan acá) | 3.8 | 3.9 |
+| Red neuronal, entropía cruzada, generalización, particiones, fuga de información, regularización, aumento, TTA, desbalance, transferencia | Cap. 2 (`sec:marco_fundamentos`, `sec:marco_regularizacion` —ahí están la fuga y el TTA—, `sec:marco_desbalance`, `sec:marco_transferencia`) | 3.2, 3.4 |
+| CNN, ViT, Swin, ConvNeXt | Cap. 2 (`sec:marco_vision`) | 3.4 |
+| LLM, LoRA, CLIP, VLM generativo, clasificación por verosimilitud | Cap. 2 (`sec:marco_llm`, `sec:marco_llm_lora`, `sec:marco_vlm`) | 3.5, 3.6 |
+| Calibración, abstención, predicción selectiva, tres salidas | Cap. 2 (`sec:marco_incertidumbre`) | 3.7, 3.8 |
+| Reporte clínico, alucinación, *hedging*, RAG | Cap. 2 (`sec:marco_reportes`) | 3.6, 3.7 |
+| Métricas (sensibilidad macro, F1, AUC, ECE, BLEU…, McNemar, Holm, Grad-CAM), robustez, cambio de dominio | Cap. 2 (`sec:marco_evaluacion`, `sec:marco_generalizacion`) | 3.3, 3.8 |
+| Las tres tareas, las siete clases y su gravedad, las dos partes del reporte, la restricción de cómputo, el flujo | 3.1 | todo el capítulo |
+| Composición de *HAM10000*, imágenes por lesión, partición disjunta por lesión, formato de *SkinCoT* | 3.2 | 3.3, 3.4, 3.6 |
+| Métrica principal, de selección y de generación; líneas base; umbral de melanoma; fidelidad vs validez; pruebas estadísticas; decisiones con la prueba a la vista | 3.3 | 3.4–3.8 |
+| Configuración de entrenamiento, hiperparámetros, ensamble de clasificadores | 3.4 | 3.7, 3.8 |
+| Mini-VLM, LLaVA-Med, las cuatro estrategias, DermLIP y sus modos | 3.5 | 3.6, 3.7 |
+| SkinVL, ajuste en dos etapas, separación reporte / razonamiento | 3.6 | 3.7 |
+| Cascada, *grounding*, *noreasoning*, ruteo en tres niveles; *oracle* y línea base sin generador | 3.7 | 3.8 |
 
 **Dependencia con la reescritura del Cap. 2.** Los labels del Cap. 2 se conservan al reescribirlo (su ficha lo
 fija), así que los `\ref` de este capítulo no se rompen. Si al reescribir el Cap. 2 un concepto cambia de
 sección, se corrige el `\ref` acá; no se redefine.
 
-## Revisión cruzada de las fichas de sección (11/10/2026)
+## Revisión cruzada de las fichas de sección (11/10/2026; numeración vieja, ver la correspondencia arriba)
 
 Las nueve fichas se prepararon en paralelo. Lo que esta revisión resolvió prevalece sobre lo que diga cada ficha:
 
@@ -251,7 +249,7 @@ Las nueve fichas se prepararon en paralelo. Lo que esta revisión resolvió prev
 
 Preguntas que cruzan varias secciones y decide el autor (el detalle está en cada ficha):
 
-- **Decisiones tomadas mirando el test.** El paso a F1 macro como criterio de selección (17/09, ficha 3.4), la
+- **Decisiones tomadas mirando el test.** *(Resuelta el 18/10: se declaran una sola vez en 3.3, D-C.)* El paso a F1 macro como criterio de selección (17/09, ficha 3.4), la
   elección de la concordancia como señal de ruteo (julio, ficha 3.8) y posiblemente la variante *noreasoning*
   (junio, ficha 3.8, a verificar) se motivaron con cifras de test. La frase «el test no interviene en ninguna
   decisión» no se puede escribir tal cual: se declara qué decisiones se tomaron así y por qué no invalidan el
@@ -259,24 +257,18 @@ Preguntas que cruzan varias secciones y decide el autor (el detalle está en cad
 - **Protocolos mezclados.** DenseNet121 y ViT-B/16 (receta anterior) se evalúan con vista única y pesos por
   clase; Swin y ConvNeXt, con TTA y sin pesos (fichas 3.5 y 3.9). **Resuelto (2026-10-17):** los dos se
   reentrenaron con la receta moderna (TOKO 99007–99012; `densenet_vit_moderna_resul_20261017.md`) y las corridas
-  anteriores quedan como antecedente.
-- **Comparaciones múltiples.** 21 pares de McNemar y 21 de Wilcoxon sin corrección (ficha 3.9).
-- **Evaluación en *HIBA*.** Las 1 616 imágenes o el test de `hiba_splits.json` (243) (fichas 3.3 y 3.9).
+  anteriores quedan como antecedente. **Revisión del 18/10:** salen del Cap. 3 (D-B).
+- **Comparaciones múltiples.** *(Resuelta el 12/10: Holm sobre McNemar; recall por clase descriptivo, sin Wilcoxon; 3.3.)*
+- **Evaluación en *HIBA*.** *(Resuelta: las 1 616 imágenes; 3.2 y 3.8.)*
 - **Licencias.** *HAM10000* (CC BY-NC 4.0) para reproducir ejemplos por clase; *SkinCaRe* declara dos licencias
   y prohíbe redistribuir (ficha 3.3).
 
 ## Introducción del capítulo
 
-Un párrafo, sin detalle técnico ni figuras: qué describe el capítulo (todo lo necesario para reproducir los
-experimentos) y en qué orden. Se escribe al final, como en el Cap. 2.
+Escrita el 18/10/2026 en el formato de la tesina de ejemplo: retoma la propuesta del Cap. 2 y anuncia,
+por número, qué hace cada sección.
 
 ## Orden de trabajo
 
-1. El autor aprueba esta ficha (estructura, D1–D8).
-2. Fichas de sección 3.1–3.9 con su hilo conductor (`fichas/03-materiales-metodos/<NN-seccion>.md`). Se pueden
-   preparar en paralelo porque la tabla «Dónde se define cada cosa» fija qué define cada una; el autor las
-   aprueba.
-3. Figuras que dependen de datos (imágenes por lesión, ejemplos por clase, tamaños de la partición): un script
-   en `Codigo/scripts/` antes de redactar 3.3.
-4. Prosa en el `.tex` de cada sección, pasada de estilo y un commit por sección.
-5. Introducción del capítulo (`00-capitulo.tex`) al final.
+Cumplido hasta el paso 5 (prosa de las ocho secciones e introducción, revisada el 18/10/2026). Falta la
+aprobación del autor sobre la revisión y la pasada de estilo final.
