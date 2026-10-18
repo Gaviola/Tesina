@@ -1,5 +1,7 @@
 # Ficha 3.7 — Generación de reportes
 
+**Revisión del autor (18/10/2026), ya aplicada en el `.tex`:** Ahora es 3.6. Sin repetir la presentación de Mini-VLM y LLaVA-Med; sin la historia de la primera configuración de LoRA (queda solo la v3: 31 457 280 entrenables); primero por qué SkinCaRe y después las dos etapas; «Reporte y razonamiento» y «Decodificación» se unen en «Inferencia»; sin «corridas finales» ni el límite de tokens del piloto.
+
 **Estado: aprobada por el autor como punto de partida (11/10/2026); prosa redactada en primera versión.** Archivo: `Chapters/03-Materiales-Metodos/07-generacion-reportes.tex` (sale de `05-generacion-reportes.tex`). Labels: `sec:met_generacion`.
 
 ## Hilo conductor
