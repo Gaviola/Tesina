@@ -1,52 +1,65 @@
-% Extensión estimada: 1.5--2 páginas (cinco párrafos y una lista de tres tareas).
-% Fuentes: objetivos PI1, PI2 y OE1--OE3 (Capítulo 1, sección de objetivos); contexto de la restricción de una
-% sola GPU (Capítulo 1, sección de contexto); brechas del estado del arte (Capítulo 2, tabla de brechas);
-% HAM10000 (\cite{tschandl2018ham10000}), partes del reporte (\cite{shen2025skincare}) y LoRA (\cite{hu2021lora}).
-\section{Definición de las tareas}
+% Extensión estimada: 2--2.5 páginas, con la definición formal, la lista de tareas y la figura del flujo.
+% Fuentes: objetivos PI1, PI2 y OE1--OE3 (Capítulo 1); propuesta del Capítulo 2 (sec:estado_arte_posicion);
+% HAM10000 (\cite{tschandl2018ham10000}), partes del reporte (\cite{shen2025skincare}) y LoRA (\cite{hu2021lora});
+% GPUs: Codigo/CLAUDE.md. Revisión del autor del 18/10/2026: absorbe la antigua Sección 3.2 (flujo de trabajo).
+\section{Definición de las tareas y flujo de trabajo}
 \label{sec:met_tareas}
 
-Las limitaciones de la Sección~\ref{sec:estado_arte_posicion} se traducen en tres tareas que el trabajo define de
-manera formal. Tres de las cuatro brechas de la Tabla~\ref{tab:marco_brechas} se convierten en tareas o en
-restricciones: la comparación de clasificadores sin un protocolo común da lugar a la primera pregunta de
-investigación (PI1, Sección~\ref{sec:intro_objetivos}); la evaluación del texto por su parecido con una referencia
-da lugar a la segunda (PI2); y el cómputo fuera del alcance de un equipo sin infraestructura impone una restricción
-a ambas. La cuarta brecha, la incertidumbre sin integrar, no es una tarea: la decisión de afirmar o derivar
-corresponde al \emph{pipeline} (Sección~\ref{sec:met_pipeline}).
+La propuesta de la Sección~\ref{sec:estado_arte_posicion} encadena un clasificador, una recuperación de casos parecidos
+y un generador de reportes. Antes de describir cada componente, conviene fijar qué se le pide al sistema en su
+conjunto. A partir de la revisión realizada, la tarea del trabajo se define de la siguiente manera:
+\begin{quote}
+    \emph{a partir de una imagen dermatoscópica de una lesión de piel, se busca clasificarla en una de siete categorías
+    diagnósticas, indicar si se trata de un melanoma y redactar un reporte que describa la lesión y afirme el
+    diagnóstico, con modelos que puedan entrenarse y ejecutarse en una sola GPU de consumo.}
+\end{quote}
 
-Las tres tareas se definen con la misma forma: una entrada, una salida, la pregunta de investigación que responden
-y el objetivo específico que cumplen (Sección~\ref{sec:intro_objetivos}).
+Las siete categorías son las de \emph{HAM10000}, el conjunto de imágenes dermatoscópicas con diagnóstico confirmado
+con el que se entrenan y evalúan los clasificadores~\cite{tschandl2018ham10000}; su composición se analiza en la
+Sección~\ref{sec:met_datasets}. Las categorías son \gls{mel}, \gls{nv}, \gls{bcc}, \gls{akiec}, \gls{bkl}, \gls{df} y
+\gls{vasc}, y no tienen la misma gravedad: NV, BKL, DF y VASC son benignas, AKIEC reúne lesiones premalignas y
+carcinomas in situ, y MEL y BCC son malignas. Por eso no todos los errores cuestan lo mismo, y esa diferencia decide
+con qué métricas se juzga a los modelos (Sección~\ref{sec:met_protocolo}).
+
+La definición reúne tres tareas, que se distinguen por lo que devuelven:
 \begin{itemize}
-    \item \emph{Clasificación (T1).} Recibe una imagen dermatoscópica y devuelve la clase predicha entre las siete
-    categorías de \emph{HAM10000}. Responde PI1 y cumple OE1. T1 produce además probabilidades por clase, que se usan
-    en las Secciones~\ref{sec:met_protocolo} y~\ref{sec:met_supervisados}.
-    \item \emph{Detección de melanoma (T2).} Recibe la misma imagen y devuelve una decisión binaria, melanoma frente
-    al resto de las clases, derivada de la clase predicha por T1. Responde PI1, en particular para el melanoma, y
-    cumple OE1 (identificar posibles melanomas). Es una tarea binaria y no una localización ni una segmentación: no
-    se busca dónde está la lesión, sino si es un melanoma.
-    \item \emph{Generación del reporte (T3).} Recibe una imagen de la lesión y, dentro del \emph{pipeline}, el diagnóstico
-    que propone el clasificador (Sección~\ref{sec:met_pipeline}), y devuelve un texto con la descripción de la lesión y la impresión diagnóstica. Responde PI2 y cumple OE2, que pide integrar
-    información visual y textual para producir un diagnóstico preliminar y el reporte.
+    \item \emph{Clasificación (T1).} Recibe la imagen y devuelve una de las siete categorías, junto con una
+    probabilidad para cada una.
+    \item \emph{Detección de melanoma (T2).} Recibe la misma imagen y devuelve una decisión binaria: melanoma o no.
+    Se obtiene de la probabilidad de melanoma que da T1, así que no busca dónde está la lesión, sino qué es.
+    \item \emph{Generación del reporte (T3).} Recibe la imagen y el diagnóstico que propone el clasificador, y
+    devuelve un texto que describe la lesión y enuncia la impresión diagnóstica.
 \end{itemize}
+Las dos primeras responden la primera pregunta de investigación, sobre si un \gls{vlm} clasifica tan bien como un
+clasificador entrenado solo con imágenes, y la tercera responde la segunda, sobre si el reporte afirma el diagnóstico
+correcto (Sección~\ref{sec:intro_objetivos}).
 
-La salida de T1 es una etiqueta de un inventario cerrado, el de \emph{HAM10000}, con siete categorías:
-\gls{mel}, \gls{nv}, \gls{bcc}, \gls{akiec}, \gls{bkl}, \gls{df} y \gls{vasc}. Según su gravedad, NV, BKL, DF y VASC
-son benignas, AKIEC reúne lesiones premalignas y carcinomas in situ, y MEL y BCC son malignas~\cite{tschandl2018ham10000}.
-Esa gradación determina cuánto cuesta cada confusión del clasificador, y con ello qué métricas se usan para juzgarlo
-(Sección~\ref{sec:met_seleccion}).
+El reporte de T3 se limita a dos de las partes de un reporte dermatológico: la descripción de lo que se ve y la
+impresión diagnóstica. Son las que los conjuntos de pares imagen--texto del área anotan junto a cada
+imagen~\cite{shen2025skincare}, y por lo tanto las que un modelo puede aprender de ellos. El diagnóstico diferencial
+completo y la recomendación de manejo quedan fuera del alcance, como también las imágenes de histopatología.
 
-El reporte dermatológico deja por escrito la lectura de la lesión, y de sus partes el trabajo se ocupa de dos: la
-descripción de lo que se ve y la impresión diagnóstica. Ambas son lo que T3 debe producir, y son las que los
-conjuntos de pares imagen--texto del área anotan junto a cada imagen~\cite{shen2025skincare}. El
-diagnóstico diferencial y la recomendación de manejo, que un reporte clínico completo también lleva, quedan fuera
-del alcance.
+La última condición de la definición, una sola GPU de consumo, rige todas las decisiones de modelado. No se
+preentrena ningún modelo: se parte de modelos preentrenados y los \glspl{vlm} se adaptan con \gls{lora}
+(Sección~\ref{sec:marco_llm_lora}), que entrena una fracción pequeña de sus parámetros~\cite{hu2021lora}. Los
+experimentos se ejecutaron en tres GPU: una RTX 4070 de 12~GB, en un equipo personal; una RTX 4080 de 16~GB, en el
+clúster TOKO de la Universidad Nacional de Cuyo, donde se entrenaron los clasificadores; y una A30 de 24~GB, en el
+clúster Mendieta de la Universidad Nacional de Córdoba, donde se ajustaron los \glspl{vlm} y se generaron los
+reportes. Todos los entrenamientos fijan la semilla 42, salvo cuando se indica otra, y el Apéndice~\ref{ap:reproducibilidad}
+reúne lo necesario para repetir cada experimento.
 
-Las tres tareas tienen en común una restricción de cómputo: cada modelo se entrena y se ejecuta en una sola GPU,
-sin entrenamiento distribuido ni infraestructura de alto rendimiento, y el objetivo general pide que el sistema
-funcione con recursos convencionales. Por eso no se preentrena un \gls{vlm}: se adaptan modelos preentrenados con LoRA (Sección~\ref{sec:marco_llm_lora}), que entrena solo un
-número reducido de parámetros~\cite{hu2021lora}. El equipo se describe en la Sección~\ref{sec:met_infra}.
+Con las tareas definidas, el trabajo sigue el flujo de la Figura~\ref{fig:met_flujo}. Primero se preparan los datos
+y una partición en la que ninguna lesión aparece a la vez en entrenamiento y en prueba, y se fijan los criterios con
+que se juzga cada modelo. Después se entrenan los clasificadores supervisados, que sirven de referencia, y se mide si
+los \glspl{vlm} clasifican igual de bien. Luego se ajustan los \glspl{vlm} para generar reportes. El
+\emph{pipeline} cierra el recorrido: un clasificador fija el diagnóstico, el generador redacta el reporte y la
+concordancia con los casos recuperados decide si el sistema afirma, ofrece un diagnóstico diferencial o deriva el
+caso. Que el diagnóstico lo fije un clasificador, y no el propio generador, responde a un resultado: los \glspl{vlm}
+generales no discriminan entre las siete categorías (Capítulo~\ref{cp:res_clasif}). Por último, el tercer objetivo
+específico, evaluar el sistema en distintos escenarios, no agrega una tarea: se aplica a los clasificadores y al
+\emph{pipeline} con los análisis de la Sección~\ref{sec:met_complementarios}.
 
-El tercer objetivo específico, la evaluación en distintos escenarios, no define una tarea nueva: se aplica sobre las
-tareas anteriores con el protocolo de la Sección~\ref{sec:met_protocolo} y los análisis de la
-Sección~\ref{sec:met_complementarios}. Quedan fuera de alcance las imágenes de histopatología (cortes de tejido), que
-ninguna de las tres tareas cubre. Las tres tareas no se resolvieron en un orden fijo: cada resultado obligó a revisar
-la siguiente decisión, y la Sección~\ref{sec:met_metodologia} describe ese ciclo.
+\input{Figures/Capitulos/03-Materiales-Metodos/flujo_trabajo}
+
+La primera etapa del flujo son los datos: qué conjuntos se usan, qué papel cumple cada uno y cómo se parte el que
+entrena a los clasificadores.

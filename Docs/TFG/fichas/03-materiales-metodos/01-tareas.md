@@ -1,5 +1,7 @@
 # Ficha 3.1 — Definición de las tareas
 
+**Revisión del autor (18/10/2026), ya aplicada en el `.tex`:** Absorbe la antigua 3.2 (flujo de trabajo): definición formal de la tarea en el formato de la tesina de ejemplo, lista T1–T3 sin el detalle de PI/OE, «gradación» → «no tienen la misma gravedad», HAM10000 presentado con remisión a 3.2, GPUs en una oración (sin tabla, sin CUDA, sin W&B ni versionado), figura del flujo redibujada como etapas del método (sin historia de hipótesis ni ciclo de iteración). Título: «Definición de las tareas y flujo de trabajo».
+
 **Estado: aprobada por el autor como punto de partida (11/10/2026); prosa redactada en primera versión.** Archivo: `Chapters/03-Materiales-Metodos/01-tareas.tex` (nuevo). Labels: `sec:met_tareas`.
 
 ## Hilo conductor
