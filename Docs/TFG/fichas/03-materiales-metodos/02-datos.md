@@ -1,5 +1,7 @@
 # Ficha 3.3 — Conjuntos de datos
 
+**Revisión del autor (18/10/2026), ya aplicada en el `.tex`:** Ahora es 3.2. Menos cifras en el texto: porcentajes de clase, fuentes de etiqueta, conteos del archivo local de MM-Skin, fototipos de HIBA y fuentes de Derm1M se resumen o se quitan; los conteos completos quedan en las tablas y figuras. Se quitan las 66 imágenes que solo comparten lesión con validación y el detalle de SKINCON.
+
 **Estado: aprobada por el autor como punto de partida (11/10/2026); prosa redactada en primera versión.** Archivo: `Chapters/03-Materiales-Metodos/03-datos.tex` (sale de `02-datos-particiones.tex`). Labels: `sec:met_datasets`, `sec:met_ham`, `sec:met_particiones`. Labels nuevos propuestos: `tab:met_conjuntos` (tabla de conjuntos), `tab:met_tamanos` (tamaños por clase y partición), `fig:met_ham_dist`, `fig:met_ham_lesiones`.
 
 Las cifras de HAM10000, de la partición, de SkinCAP, de SkinCoT, de HIBA y de MM-Skin se contaron sobre los archivos locales (solo lectura, 2026-10-11) y se cruzaron con los papers del conjunto que están en `Papers/derma/`. Cada cifra dice de dónde sale.
