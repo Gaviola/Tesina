@@ -1,36 +1,31 @@
 \section{Clasificadores supervisados}
 \label{sec:met_supervisados}
-% Extensión estimada: 4.5--5 páginas, con tres tablas, en cinco subsecciones.
+% Extensión estimada: 3.5--4 páginas, con tres tablas, en cuatro subsecciones.
 % Fuentes: src/models/classifiers.py; src/data/transforms.py; src/training/recipes.py, optim_groups.py,
 % schedulers.py, losses.py; src/evaluation/tta.py; scripts/train_classifier.py; scripts/toko/submit_sweep.py
 % y submit.py (valores efectivos); scripts/sweep_utils.py y configs/sweeps/phase1_modern_sweep_grid.yaml
-% (grilla moderna), configs/sweeps/phase1_sweep.yaml y wandb_sweep_phase1.csv (búsqueda legacy);
-% logs de entrenamiento (parámetros); docs/resul/split_lesion_resul_20260926.md (ganadores, semillas,
-% réplica del desbalance); scripts/lesion_split_report.py, classifier_ensemble.py, melanoma_detection.py.
-% No se usan como fuente los configs/*.yaml de clasificación, porque train_classifier.py no los lee.
+% (grilla); logs de entrenamiento (parámetros); docs/resul/split_lesion_resul_20260926.md (ganadores, semillas,
+% réplica del desbalance); docs/resul/densenet_vit_moderna_resul_20261017.md (DenseNet121 y ViT-B/16 con la
+% configuración de su familia, tres semillas); scripts/lesion_split_report.py, classifier_ensemble.py,
+% melanoma_detection.py. No se usan como fuente los configs/*.yaml de clasificación, porque train_classifier.py no los lee.
+% Revisión del autor del 18/10/2026: solo la configuración final; sin comparar recetas ni describir la búsqueda
+% anterior de DenseNet121 y ViT-B/16, cuyas corridas quedan fuera del capítulo.
 
-\subsection{Arquitecturas y cabezas}
+Los clasificadores supervisados cumplen dos funciones: son la referencia con la que se juzga si un \gls{vlm} clasifica
+bien (Sección~\ref{sec:met_lineas_base}) y, dentro del \emph{pipeline}, son los que fijan el diagnóstico. En esta
+sección se describen las arquitecturas, el preprocesamiento, el entrenamiento y los hiperparámetros, y cómo se combinan
+los modelos para detectar melanoma.
+
+\subsection{Arquitecturas}
 \label{sec:met_supervisados_arquitecturas}
 
-Los criterios de la Sección~\ref{sec:met_seleccion} se aplican a cuatro clasificadores supervisados, que sirven de
-referencia para juzgar la clasificación de los modelos visión--lenguaje. Dos son redes convolucionales, DenseNet121 y
-ConvNeXt-Tiny (Sección~\ref{sec:marco_cnn}), y dos son transformers visuales, ViT-B/16 y Swin-Tiny (Secciones~\ref{sec:marco_vit}
-y~\ref{sec:marco_swin}). Los cuatro parten de pesos preentrenados en \emph{ImageNet}-1K y reemplazan su última capa por
-una cabeza de clasificación de siete salidas, precedida por una capa de \emph{dropout} con probabilidad 0.3. La
-Tabla~\ref{tab:met_modelos_sup} resume sus características. Las variantes Tiny tienen unos 27.5 millones de parámetros,
-un tercio de los que tiene ViT-B/16, y encajan en la restricción de cómputo de la Sección~\ref{sec:met_tareas}: se
-entrenan en una GPU de consumo.
-
-Los cuatro modelos se entrenan con la receta moderna, que incluye un ajuste en dos etapas y aumentos más fuertes. El
-barrido de hiperparámetros se hizo solo sobre ConvNeXt-Tiny y Swin-Tiny. En lugar de repetirlo, DenseNet121 y ViT-B/16
-toman el trial ganador del modelo de su familia: DenseNet121, el de ConvNeXt-Tiny, que también es convolucional, y
-ViT-B/16, el de Swin-Tiny, que también es un transformer. Con hiperparámetros transferidos, un resultado peor indica que
-el modelo rinde menos con esa configuración, no que no pueda rendir más con otra. Antes, DenseNet121 y ViT-B/16 se habían
-entrenado con una receta anterior, que reproduce el entrenamiento previo a la receta moderna, y esas corridas se conservan
-para medir el efecto de la receta.
-Ambas recetas se comparan lado a lado en la Tabla~\ref{tab:met_receta}. La réplica del experimento de desbalance
-(Sección~\ref{sec:met_supervisados_receta}) usa la receta moderna en ConvNeXt-Tiny, Swin-Tiny y DenseNet121. Todos los
-modelos reciben la misma entrada.
+Se comparan cuatro arquitecturas, dos convolucionales, DenseNet121 y ConvNeXt-Tiny (Sección~\ref{sec:marco_cnn}), y
+dos basadas en transformers, ViT-B/16 y Swin-Tiny (Secciones~\ref{sec:marco_vit} y~\ref{sec:marco_swin}). En cada
+familia hay un modelo anterior y uno más reciente, lo que permite comparar no solo los dos tipos de arquitectura sino
+también dos generaciones de cada uno. Los cuatro parten de pesos preentrenados en \emph{ImageNet}-1K, y su última capa se reemplaza por
+una cabeza de siete salidas precedida por un \emph{dropout} de 0.3 (Tabla~\ref{tab:met_modelos_sup}). Todos se
+entrenan en una GPU de consumo; las variantes Tiny, con unos 27.5 millones de parámetros, tienen un tercio de los de
+ViT-B/16.
 
 \begin{table}[H]
     \centering
@@ -52,194 +47,114 @@ modelos reciben la misma entrada.
     \end{tabularx}
 \end{table}
 
-\subsection{Preprocesamiento, aumento de datos y TTA}
+\subsection{Preprocesamiento y aumento de datos}
 \label{sec:met_supervisados_preprocesamiento}
 
-Todos los modelos reciben imágenes de $224 \times 224$ píxeles, normalizadas con la media y el desvío de \emph{ImageNet}.
-Al preprocesarse, las imágenes de \emph{HAM10000} se redimensionan a ese tamaño sin preservar su proporción, lo que puede
-deformar la lesión. En entrenamiento, los aumentos parten de esa misma imagen. En validación y en test, la receta moderna
-redimensiona a $256 \times 256$ y recorta el centro de $224 \times 224$; la anterior no recorta y usa la imagen de
-$224 \times 224$ tal como está. Con las 6\,447 imágenes de entrenamiento de la partición por lesión
-(Sección~\ref{sec:met_particiones}), el riesgo principal es el sobreajuste (Sección~\ref{sec:marco_regularizacion}): la red
-puede memorizar esas imágenes y dejar de generalizar.
+Todos los modelos reciben imágenes de $224 \times 224$ píxeles normalizadas con la media y el desvío de \emph{ImageNet}.
+Con 6\,447 imágenes de entrenamiento (Sección~\ref{sec:met_particiones}), el riesgo principal es el sobreajuste
+(Sección~\ref{sec:marco_regularizacion}), y para reducirlo el entrenamiento aplica aumentos de datos que cambian la
+imagen sin cambiar su clase, ya que una misma lesión puede fotografiarse con otro encuadre, otra orientación u otra
+iluminación. Se toma un recorte aleatorio de entre el 70\,\% y el 100\,\% del área, se voltea la imagen
+horizontalmente con probabilidad 0.5, se aplican dos transformaciones de RandAugment~\cite{cubuk2020randaugment} con la
+magnitud $M$ de la Tabla~\ref{tab:met_barrido}, y se borra un rectángulo al azar con probabilidad
+0.25~\cite{zhong2020random}.
 
-Para reducir ese riesgo, el entrenamiento aplica aumentos de datos que cambian la imagen sin cambiar su clase, porque una
-misma lesión aparece con otro encuadre, otra orientación u otra iluminación. Las dos recetas usan aumentos distintos. La
-anterior aplica una rotación de hasta $30^\circ$, un volteo horizontal y variaciones de brillo, contraste, saturación y tono
-(\emph{color jitter}), con intensidad 0.2 para brillo, contraste y saturación, y 0.1 para el tono. La moderna reemplaza la
-rotación y las variaciones de color por RandAugment, que \textcite{cubuk2020randaugment} proponen para elegir al azar $N$
-transformaciones de un catálogo fijo y aplicarlas con una magnitud común $M$; así, el aumento queda controlado por dos
-números. Además, aplica un recorte aleatorio que toma entre el 70\,\% y el 100\,\% del área de la imagen, un volteo
-horizontal con probabilidad 0.5 y un borrado aleatorio (\emph{random erasing}, \cite{zhong2020random}) con probabilidad
-0.25. La receta moderna usa $N = 2$, y los valores de $M$ se barren en la Sección~\ref{sec:met_supervisados_busqueda}.
+En validación y en prueba la imagen se redimensiona a $256 \times 256$ y se recorta el centro de $224 \times 224$. Las
+probabilidades se obtienen con \gls{tta} (Sección~\ref{sec:marco_regularizacion}): se promedian las de la imagen y las
+de su reflejo horizontal~\cite{krizhevsky2012imagenet}. Así, la salida de cada clasificador es una probabilidad por
+clase, de la que se calculan las métricas de la Sección~\ref{sec:met_protocolo}.
 
-En inferencia, el \gls{tta} promedia las probabilidades que el modelo asigna a la imagen original y a su reflejo
-horizontal~\cite{krizhevsky2012imagenet} (Sección~\ref{sec:marco_regularizacion}). La receta moderna lo aplica en test y,
-en las corridas que guardan predicciones, también en validación, porque el umbral de la
-Sección~\ref{sec:met_supervisados_ensamble} y la calibración de la Sección~\ref{sec:met_complementarios} se fijan con esas
-predicciones. Así, la salida de cada clasificador es una probabilidad por clase, a partir de la cual se calculan las
-métricas de la Sección~\ref{sec:met_seleccion}. La receta anterior no usa TTA y evalúa una sola vista
-(Sección~\ref{sec:met_supervisados_receta}).
-
-\subsection{Receta de entrenamiento y pérdidas}
+\subsection{Entrenamiento e hiperparámetros}
 \label{sec:met_supervisados_receta}
 
-La receta moderna ajusta cada modelo en dos etapas, una forma de transferencia con ajuste fino
-(Sección~\ref{sec:marco_transferencia}). En la primera, con el resto de la red congelado, se entrena solo la cabeza durante
-una época, con la tasa del trial y sin planificador. En la segunda, se descongela toda la red y se aplica un decaimiento de
-la tasa por capa (\emph{layer-wise learning rate decay}) de factor 0.85 (Ecuación~\ref{eq:marco_llrd}): cada capa recibe
-0.85 veces la tasa de la capa que le sigue, de modo que las capas más cercanas a la entrada cambian menos. En Swin-Tiny se
-definen diez grupos de capas, y la de entrada recibe $0.85^{9} \approx 0.23$ de la tasa de la cabeza. Esta segunda etapa
-dura 39 épocas: tres de calentamiento lineal desde una décima parte de la tasa y 36 de decaimiento coseno
-(\emph{cosine annealing}) \cite{goyal2017accurate,loshchilov2017sgdr}, de modo que la receta suma 40 épocas. El optimizador
-es AdamW \cite{loshchilov2019decoupled}, con el decaimiento de pesos del trial, y el suavizado de etiquetas
-(\emph{label smoothing}) vale 0.1 \cite{szegedy2016rethinking,muller2019does}. No se usan MixUp ni CutMix. Todos estos
-componentes buscan evitar que la red memorice el conjunto de entrenamiento.
-
-La detención temprana (\emph{early stopping}, \cite{goodfellow2016deep}) interrumpe el entrenamiento cuando el F1 ponderado
-de validación no mejora durante cinco épocas. El contador es único y cruza las dos etapas. El checkpoint que se guarda es el
-de la época con mejor F1 ponderado, y el test se evalúa recargando ese checkpoint. La regla de la
-Sección~\ref{sec:met_seleccion} se aplica a cada trial y no a cada época, así que el checkpoint sigue el F1 ponderado:
-cambiarlo habría obligado a reentrenar todas las corridas. La pérdida de entrenamiento no sirve para comparar modelos,
-porque cada variante de la pérdida del párrafo siguiente la calcula de otra manera. En GPU Ampere o posteriores, el
-entrenamiento usa precisión mixta con bf16 (\emph{bfloat16}).
-
-La pérdida base es la entropía cruzada sobre las probabilidades de la softmax (Ecuaciones~\ref{eq:marco_entropia}
-y~\ref{eq:marco_softmax}). Para el desbalance de clases (Sección~\ref{sec:marco_desbalance}) se comparan cuatro variantes de
-la pérdida, que comparten la receta y difieren solo en cómo tratan a cada clase:
-\begin{enumerate}
-    \item \emph{Entropía cruzada sin pesos}: la pérdida base, sin ajuste por clase.
-    \item \emph{Entropía cruzada ponderada}: cada ejemplo pesa según la inversa de la frecuencia de su clase en el
-    entrenamiento, así que los errores sobre las clases raras cuentan más.
-    \item \emph{Pérdida focal} (\emph{focal loss}, \cite{lin2017focal}), con $\gamma = 2$: reduce el peso de los ejemplos
-    que el modelo ya clasifica con confianza.
-    \item \emph{Balanced softmax} \cite{ren2020balanced}: suma a cada logit el logaritmo de la frecuencia de su
-    clase antes de la softmax, sin pesos por clase.
-\end{enumerate}
-El barrido moderno compara solo las dos primeras; la focal queda con $\gamma = 0$, que equivale a la entropía cruzada. La
-réplica del desbalance compara las cuatro sobre ConvNeXt-Tiny, Swin-Tiny y DenseNet121, con la receta moderna, su
-decaimiento de pesos por defecto (0.05) y su magnitud de RandAugment por defecto ($M = 9$), y no con los valores del trial
-ganador. La tasa también es fija en la réplica: $10^{-4}$ para Swin-Tiny y ConvNeXt-Tiny, y $7.91 \times 10^{-5}$ para
-DenseNet121. No hubo búsqueda para cada pérdida; las cuatro se comparan con los mismos valores.
-
-La receta anterior entrena DenseNet121 y ViT-B/16 con una sola etapa de AdamW, sin suavizado de etiquetas ni
-calentamiento, con hasta 30 épocas, paciencia de cinco épocas y decaimiento de pesos de 0.01, que es el valor por defecto.
-Usa pesos por clase automáticos, que son el valor por defecto de la interfaz de entrenamiento, y no usa TTA. Su tasa y su
-planificador salen de la búsqueda de la Sección~\ref{sec:met_supervisados_busqueda}. Esas corridas se evalúan con una sola vista
-y pesos por clase, así que compararlas con la receta moderna, que usa TTA y no usa pesos por clase, mezcla dos factores: la
-receta misma y el manejo del desbalance y del TTA. Por eso las arquitecturas se comparan entre sí con la receta moderna, y
-las corridas con la receta anterior se presentan como antecedente. Las ablaciones de la receta
-(sin MixUp, sin TTA, sin pérdida focal, sin dos etapas, sin suavizado de etiquetas y sin RandAugment) se hicieron sobre la
-partición aleatoria anterior, que tenía fuga de información (Sección~\ref{sec:met_particiones}). Se presentan en el
-Capítulo~\ref{cp:res_clasif} como análisis de mecanismo, no de magnitud.
+Cada modelo se ajusta en dos etapas, una forma de transferencia con ajuste fino (Sección~\ref{sec:marco_transferencia}).
+En la primera, con el resto de la red congelado, se entrena solo la cabeza durante una época. En la segunda se
+descongela toda la red y cada capa recibe 0.85 veces la tasa de aprendizaje de la capa siguiente
+(Ecuación~\ref{eq:marco_llrd}), de modo que las capas cercanas a la entrada, que ya codifican rasgos generales, cambian
+menos. Esta etapa dura hasta 39 épocas, con tres de calentamiento lineal y decaimiento coseno de la tasa
+\cite{goyal2017accurate,loshchilov2017sgdr}. El optimizador es AdamW~\cite{loshchilov2019decoupled} y la pérdida es la
+entropía cruzada con suavizado de etiquetas de 0.1~\cite{szegedy2016rethinking,muller2019does}. La detención temprana
+corta el entrenamiento si el F1 ponderado de validación no mejora en cinco épocas, y se conserva la mejor época
+(Sección~\ref{sec:met_seleccion}). La Tabla~\ref{tab:met_receta} reúne estos valores.
 
 \begin{table}[H]
     \centering
-    \caption{Receta moderna y anterior: valores efectivos de entrenamiento.}
+    \caption{Parámetros de entrenamiento comunes a los cuatro clasificadores.}
     \label{tab:met_receta}
-    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{3.2cm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
+    \small
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{4.2cm}>{\raggedright\arraybackslash}X@{}}
         \toprule
-        \textbf{Componente} & \textbf{Receta moderna} & \textbf{Receta anterior} \\
+        \textbf{Parámetro} & \textbf{Valor} \\
         \midrule
-        Optimizador & AdamW & AdamW \\
+        Optimizador & AdamW \\
         \filasep
-        Tasa de aprendizaje & Según el trial (Tabla~\ref{tab:met_barrido}); réplica: $10^{-4}$ (Swin-Tiny, ConvNeXt-Tiny) y $7.91 \times 10^{-5}$ (DenseNet121) & $7.91 \times 10^{-5}$ (DenseNet121); $1.56 \times 10^{-5}$ (ViT-B/16) \\
+        Épocas & Hasta 40: una de cabeza y hasta 39 de red completa \\
         \filasep
-        Decaimiento de pesos & Según el trial (0.01, 0.05 o 0.10) & 0.01 \\
+        Decaimiento de la tasa por capa & 0.85 \\
         \filasep
-        Épocas & 40 (1 de cabeza y 39 de red completa) & Hasta 30, con detención temprana \\
+        Planificador & Calentamiento lineal de tres épocas desde 0.1 de la tasa; luego coseno \\
         \filasep
-        Etapas & Dos & Una \\
+        Pérdida & Entropía cruzada, con suavizado de etiquetas de 0.1 \\
         \filasep
-        Decaimiento por capa & 0.85 & No \\
+        Detención temprana & Paciencia de cinco épocas sobre el F1 ponderado de validación \\
         \filasep
-        Calentamiento & Tres épocas, desde $0.1$ de la tasa & No \\
+        Aumento de datos & Recorte aleatorio (70--100\,\% del área), volteo horizontal, RandAugment ($N = 2$) y borrado aleatorio ($p = 0.25$) \\
         \filasep
-        Planificador & Coseno & Coseno (DenseNet121); ninguno (ViT-B/16) \\
+        Inferencia & \gls{tta} con la imagen y su reflejo horizontal \\
         \filasep
-        Suavizado de etiquetas & 0.1 & 0 \\
+        Precisión numérica & bf16 (\emph{bfloat16}) \\
         \filasep
-        Pesos por clase & Ninguno en los ganadores; ambas variantes en el barrido & Automáticos, inversos a la frecuencia \\
-        \filasep
-        Pérdida & Entropía cruzada (focal con $\gamma = 0$) & Entropía cruzada \\
-        \filasep
-        Aumentos & Recorte aleatorio (70--100\,\% del área), volteo, RandAugment ($N = 2$, $M$ del barrido) y borrado aleatorio ($p = 0.25$) & Rotación de hasta $30^\circ$, volteo y variaciones de brillo, contraste, saturación y tono \\
-        \filasep
-        TTA & Original y volteo horizontal & No \\
-        \filasep
-        Paciencia & 5 épocas sobre el F1 ponderado de validación & 5 épocas, con el mismo criterio \\
-        \filasep
-        Red preentrenada & Descongelada & Descongelada \\
+        Semillas & 42, 43 y 44 \\
         \bottomrule
     \end{tabularx}
 \end{table}
 
-\subsection{Búsqueda de hiperparámetros y semillas}
-\label{sec:met_supervisados_busqueda}
-
-El barrido moderno explora tres hiperparámetros: la tasa de aprendizaje, el decaimiento de pesos y la magnitud $M$ de
-RandAugment (Tabla~\ref{tab:met_barrido}). Cinco tasas cruzadas con tres decaimientos dan 15 combinaciones, y a cada una se
-le asigna una magnitud en rotación, de modo que cada $M$ aparece en cinco combinaciones; no se trata de un producto
-cartesiano. Cada combinación se entrena con pesos por clase automáticos y sin ellos, lo que da 30 corridas por modelo y 60
-en total. Los demás valores quedan fijos. La grilla completa, con los identificadores de trial, está en el
-Apéndice~\ref{ap:hiperparametros}. La lista de combinaciones se predefine porque los nodos de TOKO no tienen acceso a
-internet y no pueden consultar un agente de W\&B. El trial ganador es el de mayor F1 macro en validación entre las 30
-corridas de cada modelo, y la variante de pesos forma parte del trial. En validación, el paso del F1 ponderado al F1 macro
-solo cambia el ganador de ConvNeXt-Tiny. La selección se hace en validación y el test no elige ningún
-trial, pero la elección de la regla sí se motivó con cifras de test (Sección~\ref{sec:met_seleccion}).
+Tres hiperparámetros se eligieron por búsqueda en grilla: la tasa de aprendizaje, el decaimiento de pesos y la magnitud
+de RandAugment (Tabla~\ref{tab:met_barrido}). Las 15 combinaciones se entrenaron con y sin pesos por clase en la
+pérdida, que dan más importancia a los errores en las clases raras, lo que suma 30 configuraciones por modelo. La
+búsqueda se hizo sobre Swin-Tiny y ConvNeXt-Tiny, y en ambos ganó, por F1 macro en validación, una configuración sin
+pesos por clase. DenseNet121 y ViT-B/16 no tuvieron búsqueda propia: cada uno usa la configuración ganadora del modelo
+de su misma familia, la de ConvNeXt-Tiny en el caso de DenseNet121 y la de Swin-Tiny en el de ViT-B/16. Así los cuatro
+se comparan con el mismo procedimiento, aunque con una salvedad: si DenseNet121 o ViT-B/16 rinden menos, puede deberse a
+que la configuración heredada no es la mejor para ellos. La grilla completa está en el Apéndice~\ref{ap:hiperparametros}.
 
 \begin{table}[H]
     \centering
-    \caption{Barrido moderno: parámetros explorados, forma de asignación y valores fijos.}
+    \caption{Hiperparámetros explorados en la búsqueda y valores elegidos. DenseNet121 usa los de ConvNeXt-Tiny, y ViT-B/16, los de Swin-Tiny.}
     \label{tab:met_barrido}
-    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{3.4cm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
+    \small
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{3.4cm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{2.0cm}>{\raggedright\arraybackslash}p{2.2cm}@{}}
         \toprule
-        \textbf{Parámetro} & \textbf{Valores explorados} & \textbf{Forma de asignación} \\
+        \textbf{Parámetro} & \textbf{Valores explorados} & \textbf{Swin-Tiny} & \textbf{ConvNeXt-Tiny} \\
         \midrule
-        Tasa de aprendizaje & $3.0 \times 10^{-5}$; $7.5 \times 10^{-5}$; $1.5 \times 10^{-4}$; $2.5 \times 10^{-4}$; $5.0 \times 10^{-4}$ & Cinco valores, cruzados con los de decaimiento \\
+        Tasa de aprendizaje & $3.0 \times 10^{-5}$; $7.5 \times 10^{-5}$; $1.5 \times 10^{-4}$; $2.5 \times 10^{-4}$; $5.0 \times 10^{-4}$ & $7.5 \times 10^{-5}$ & $3.0 \times 10^{-5}$ \\
         \filasep
-        Decaimiento de pesos & 0.01; 0.05; 0.10 & Tres valores, cruzados con los de tasa \\
+        Decaimiento de pesos & 0.01; 0.05; 0.10 & 0.10 & 0.05 \\
         \filasep
-        Magnitud de RandAugment ($M$) & 6; 9; 12 & Rotación: cada valor en cinco combinaciones \\
+        Magnitud de RandAugment ($M$) & 6; 9; 12, cada valor en cinco de las 15 combinaciones & 6 & 9 \\
         \filasep
-        Pesos por clase & Automáticos; ninguno & Las dos variantes en cada combinación, con 30 corridas por modelo \\
-        \filasep
-        Valores fijos & 40 épocas; semilla 42; focal con $\gamma = 0$; suavizado 0.1; decaimiento por capa 0.85; dos etapas; TTA & Iguales en todas las corridas \\
+        Pesos por clase & Inversos a la frecuencia; ninguno & Ninguno & Ninguno \\
         \bottomrule
     \end{tabularx}
 \end{table}
 
-La búsqueda de DenseNet121 y ViT-B/16 es anterior y usa otro criterio. Se hizo con 28 corridas aleatorias (15 de DenseNet121
-y 13 de ViT-B/16), muestreadas con semilla 42 dentro de rangos amplios. La tasa de aprendizaje se muestrea en escala
-logarítmica entre $10^{-5}$ y $10^{-3}$; el decaimiento de pesos, en $\{0, 0.001, 0.01, 0.1\}$; el planificador, en coseno o
-ninguno; el suavizado de etiquetas, en $\{0, 0.05, 0.1\}$; y el congelamiento de la red preentrenada, sí o no. Cada corrida tiene hasta
-30 épocas. Se eligió por el mayor F1 ponderado en validación, que es el criterio anterior al de la
-Sección~\ref{sec:met_seleccion}; el barrido moderno usa F1 macro, y esa diferencia se declara aquí. Las configuraciones
-ganadoras son una tasa de $7.91 \times 10^{-5}$, decaimiento 0.01, sin suavizado, coseno y red preentrenada sin congelar para
-DenseNet121, y una tasa de $1.56 \times 10^{-5}$, decaimiento 0.01, sin suavizado, sin planificador y red preentrenada sin congelar
-para ViT-B/16.
-
-Los ganadores de la búsqueda moderna son Swin-Tiny, con el trial t06 (tasa $7.5 \times 10^{-5}$, decaimiento 0.10 y $M = 6$),
-y ConvNeXt-Tiny, con el trial t02 (tasa $3.0 \times 10^{-5}$, decaimiento 0.05 y $M = 9$). Ambos prescinden de pesos por
-clase. Cada uno se entrena con las semillas 42, 43 y 44, y sus resultados se presentan como media ± desvío
-(Sección~\ref{sec:met_seleccion}). DenseNet121, con el trial t02, y ViT-B/16, con el t06, se entrenan con las mismas tres
-semillas. Las corridas con la receta anterior y las de la réplica del desbalance usan una sola semilla (42): su desvío no se
-estimó, y por eso no se presenta como media ± desvío.
+El tratamiento del desbalance merece una comparación aparte, porque los pesos por clase no son la única forma de
+abordarlo (Sección~\ref{sec:marco_desbalance}). Sobre Swin-Tiny, ConvNeXt-Tiny y DenseNet121 se comparan cuatro
+pérdidas con el mismo procedimiento: la entropía cruzada sin pesos; la entropía cruzada con pesos inversos a la
+frecuencia de cada clase; la pérdida focal con $\gamma = 2$~\cite{lin2017focal}, que resta peso a los ejemplos que el
+modelo ya clasifica con confianza; y \emph{balanced softmax}~\cite{ren2020balanced}, que suma a cada logit el logaritmo
+de la frecuencia de su clase. Para que la pérdida sea lo único que cambia, esta comparación fija el resto de los
+hiperparámetros (decaimiento de pesos 0.05, $M = 9$ y una tasa de $10^{-4}$, o de $7.91 \times 10^{-5}$ en DenseNet121)
+y usa una sola semilla.
 
 \subsection{Ensamble y detección de melanoma}
 \label{sec:met_supervisados_ensamble}
 
-Con los dos ganadores, el paso siguiente es combinarlos por voto suave (Sección~\ref{sec:marco_senales_confianza}): la
-probabilidad de cada clase es el promedio aritmético de las que dan Swin-Tiny y ConvNeXt-Tiny, ambas con TTA, y la clase
-predicha es la de mayor promedio. Solo se combinan estos dos modelos porque la validación los eligió como ganadores;
-cualquier otro conjunto exigiría mirar el test para elegirlo. El mismo promedio sirve para la detección de melanoma, y el
-ruteo de la Sección~\ref{sec:met_pipeline} usa solo Swin-Tiny junto con el \gls{knn} sobre los embeddings de DermLIP.
+Los dos modelos de la búsqueda, Swin-Tiny y ConvNeXt-Tiny, se combinan por voto suave
+(Sección~\ref{sec:marco_senales_confianza}): la probabilidad de cada clase es el promedio de las que dan ambos, y la
+clase predicha es la de mayor promedio. Solo se combinan esos dos porque son los que eligió la validación; cualquier
+otra combinación exigiría mirar la prueba para elegirla. Para la detección de melanoma, el puntaje es la probabilidad
+de melanoma de cada modelo o del ensamble, con el umbral de la Sección~\ref{sec:met_seleccion}.
 
-La detección de melanoma es una tarea binaria derivada de la clasificación: MEL frente al resto de las clases
-(Sección~\ref{sec:met_tareas}). El puntaje es la probabilidad de MEL, del modelo o del ensamble. El umbral se fija en
-validación como el que da la mayor sensibilidad entre los puntos de la curva ROC con especificidad de al menos 0.85, el
-valor que fija la Sección~\ref{sec:met_seleccion}, y se aplica sin cambios al test. El \gls{auc} (Ecuación~\ref{eq:marco_auc})
-no depende del umbral, así que no interviene en su elección.
-
-Estos clasificadores devuelven una probabilidad por clase y no generan texto. Para saber si un \gls{vlm}, que sí genera
-texto, clasifica tan bien como ellos, se comparan ambos con las mismas métricas (Sección~\ref{sec:met_clasif_vlm}).
+Estos clasificadores devuelven una probabilidad por clase, pero no generan texto. Para saber si un \gls{vlm}, que sí lo
+genera, clasifica tan bien como ellos, se los compara con las mismas métricas.

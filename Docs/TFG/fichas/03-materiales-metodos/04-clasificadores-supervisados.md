@@ -1,5 +1,7 @@
 # Ficha 3.5 — Clasificadores supervisados
 
+**Revisión del autor (18/10/2026), ya aplicada en el `.tex`:** Ahora es 3.4. Solo la configuración final: sin «receta moderna/anterior», sin las corridas legacy de DenseNet121 y ViT-B/16 ni su búsqueda aleatoria, sin la subsección de búsqueda (queda un párrafo y la tabla de valores explorados y elegidos), sin la oración que prometía las ablaciones de la receta (no tienen fuente). DenseNet121 y ViT-B/16 usan la configuración ganadora de su familia, explicado en una oración.
+
 **Estado: aprobada por el autor como punto de partida (11/10/2026); prosa redactada en primera versión.** Archivo: `Chapters/03-Materiales-Metodos/05-clasificadores-supervisados.tex`. Labels: `sec:met_supervisados` (sección) y `sec:met_supervisados_arquitecturas`, `sec:met_supervisados_preprocesamiento`, `sec:met_supervisados_receta`, `sec:met_supervisados_busqueda`, `sec:met_supervisados_ensamble` (subsecciones; propuestos).
 
 Sale de: la subsección «Clasificadores supervisados» de `03-modelos-evaluados.tex` (solo `\pendiente`, sin prosa que conservar) y la subsección «Preprocesamiento y aumento de datos» de `02-datos-particiones.tex` (`\pendiente`, sin prosa). `sec:met_modelos` desaparece (ningún `\ref` la usa).
