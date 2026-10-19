@@ -54,6 +54,9 @@ de lenguaje de Mini-VLM, que reúne las tres proyecciones en un único módulo, 
 adaptador. Así,
 LLaVA-Med entrena 33\,554\,432 parámetros y Mini-VLM 31\,457\,280, menos del 1\,\% de cada modelo. La
 Tabla~\ref{tab:met_lora} reúne la configuración de ambas etapas.
+\pendiente{Mini-VLM se describe en su versión v3 (LoRA también en \texttt{qkv\_proj}), pero los resultados de
+los Caps. 4 y 5 son todavía de la v2 (LoRA solo en el codificador visual). Reemplazarlos cuando bajen los jobs de
+Mendieta 1179986--1179989 (cascada, recuperación y clasificación por verosimilitud y CoT con v3).}
 
 \begin{table}[H]
     \centering
@@ -95,7 +98,7 @@ Tabla~\ref{tab:met_lora} reúne la configuración de ambas etapas.
         \filasep
         Proyector & Congelado \\
         \filasep
-        Datos & 2\,128 / 456 / 457 (entrenamiento / validación / prueba) \\
+        Datos & 2\,136 / 463 / 460 pares (entrenamiento / validación / prueba) \\
         \filasep
         Instrucción & «Describe this skin lesion.» \\
         \filasep
