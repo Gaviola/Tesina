@@ -105,7 +105,8 @@ principal de generación, porque responde directamente la segunda pregunta de in
 diagnóstico correcto de la imagen que recibe.
 
 La consistencia diagnóstica se calcula solo sobre el reporte. Para ello, los bloques de razonamiento que el generador
-escribe entre etiquetas \texttt{\textless{}think\textgreater{}} se descartan, porque el clínico lee el reporte y no el
+escribe entre etiquetas \texttt{\textless{}think\textgreater{}} se descartan, incluido el que queda abierto cuando
+el límite de tokens corta el texto, porque el clínico lee el reporte y no el
 razonamiento. Además, el diagnóstico se reconoce con una búsqueda estricta, que solo acepta los términos
 distintivos de cada clase, como «melanoma» o «basal cell», y exige palabra completa en las abreviaturas, como «BCC».
 Una búsqueda que aceptara abreviaturas o términos genéricos, en cambio, acreditaría diagnósticos que el texto no

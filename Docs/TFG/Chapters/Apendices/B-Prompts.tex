@@ -1,5 +1,209 @@
 \chapter{Prompts y plantillas}
 \label{ap:prompts}
-\pendiente{Este apéndice reúne los prompts de clasificación con VLMs (\emph{zero-shot}, \emph{likelihood},
-CoT), los prompts de generación, las plantillas de \emph{grounding} para los niveles afirmativo y diferencial,
-y el diccionario de entidades clínicas usado en las métricas de Nivel 2.}
+% Fuentes: Codigo/scripts/train_vlm_classify.py (CLASSIFICATION_PROMPT); Codigo/src/evaluation/vlm_scoring.py
+% (CLASS_SYNONYMS, PROMPT_TEMPLATES, COT_PROMPT); Codigo/src/models/dermlip.py (DEFAULT_TEMPLATES);
+% Codigo/scripts/generate_report.py (REPORT_PROMPT, GROUNDED_TEMPLATES, RAG_TEMPLATE, GROUNDED_RAG_TEMPLATE,
+% DIFFERENTIAL_TEMPLATE); Codigo/scripts/dermlip_split_eval.py (frase de recuperación);
+% Codigo/src/evaluation/clinical_ner.py (DERMATOLOGY_TERMS, CLASS_TERMS).
+
+Este apéndice reúne los textos que reciben los modelos, en inglés y tal como aparecen en el código. Los campos
+entre llaves se completan en cada imagen: \texttt{\{dx\}} con el nombre completo de la clase, como
+«melanoma», \texttt{\{candidates\}} con los dos candidatos separados por punto y coma, y
+\texttt{\{rag\_context\}} con la frase de los casos recuperados.
+
+\section{Clasificación con modelos visión--lenguaje generativos}
+
+La estrategia \emph{zero-shot} por generación (Sección~\ref{sec:met_vlm_estrategias}) usa una sola instrucción,
+que pide responder con el código de la clase:
+\begin{minted}[linenos=false]{text}
+Classify this dermoscopic image into one of the following categories: MEL, NV,
+BCC, AKIEC, BKL, DF, VASC. Respond with only the category label.
+\end{minted}
+
+En cambio, la estrategia de verosimilitud promedia cuatro \emph{prompts} (Ecuación~\ref{eq:met_likelihood}). Los
+dos primeros son abiertos, porque no nombran las clases, y los dos últimos las enumeran y terminan justo donde
+debería ir el nombre de la clase:
+\begin{minted}[linenos=false]{text}
+O1:
+    What is the most likely diagnosis for this dermoscopic image?
+O2:
+    Identify the type of skin lesion shown in this image.
+C1:
+    Given this dermoscopic image, the diagnosis among melanoma, melanocytic
+    nevus, basal cell carcinoma, actinic keratosis, benign keratosis,
+    dermatofibroma, or vascular lesion is
+C2:
+    Select the correct diagnosis from: melanoma, melanocytic nevus, basal cell
+    carcinoma, actinic keratosis, benign keratosis, dermatofibroma, vascular
+    lesion. Answer:
+\end{minted}
+Cada clase se puntúa con tres sinónimos, y su puntaje es el máximo entre ellos (Tabla~\ref{tab:ap_sinonimos}).
+
+\begin{table}[H]
+    \centering
+    \caption{Sinónimos con que se puntúa cada clase en la estrategia de verosimilitud.}
+    \label{tab:ap_sinonimos}
+    \small
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{2.2cm}>{\raggedright\arraybackslash}X@{}}
+        \toprule
+        \textbf{Clase} & \textbf{Sinónimos} \\
+        \midrule
+        MEL & melanoma; malignant melanoma; MEL \\
+        \filasep
+        NV & melanocytic nevus; nevus; mole \\
+        \filasep
+        BCC & basal cell carcinoma; basal cell; BCC \\
+        \filasep
+        AKIEC & actinic keratosis; intraepithelial carcinoma; AKIEC \\
+        \filasep
+        BKL & benign keratosis; seborrheic keratosis; solar lentigo \\
+        \filasep
+        DF & dermatofibroma; fibrous histiocytoma; DF \\
+        \filasep
+        VASC & vascular lesion; angioma; VASC \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+Por último, el razonamiento paso a paso fija un formato de tres campos, y la clase se lee de la línea final:
+\begin{minted}[linenos=false]{text}
+You are a dermatology expert analyzing a dermoscopic image. Think step by step
+and use the following format exactly:
+Features: [describe asymmetry, borders, colors, diameter, special structures]
+Differential: [list the most likely diagnoses with brief reasoning]
+Final diagnosis: [one of: MEL, NV, BCC, AKIEC, BKL, DF, VASC]
+\end{minted}
+
+\section{Clasificación con DermLIP}
+
+El modo \emph{zero-shot} de DermLIP (Sección~\ref{sec:met_dermlip}) promedia, para cada clase, los
+\emph{embeddings} de texto de cuatro plantillas, en las que \texttt{\{c\}} es el nombre completo de la clase:
+\begin{minted}[linenos=false]{text}
+This is a skin image of {c}
+A dermatoscopic image of {c}
+A clinical photograph of {c}
+An image showing {c}
+\end{minted}
+
+\section{Generación de reportes}
+
+Tanto el ajuste en dos etapas como la generación sin diagnóstico usan la misma instrucción
+(Sección~\ref{sec:met_generacion}):
+\begin{minted}[linenos=false]{text}
+Describe this skin lesion.
+\end{minted}
+
+En la cascada y en el nivel afirmativo del ruteo, el generador recibe el diagnóstico con la plantilla
+\emph{noreasoning} (Secciones~\ref{sec:met_cascada} y~\ref{sec:met_ruteo}):
+\begin{minted}[linenos=false]{text}
+The confirmed diagnosis is {dx}. Output ONLY the final clinical report — do NOT
+include any reasoning, thinking steps, or <think> blocks. The report must
+explicitly state the diagnosis ({dx}) and describe the supporting morphological
+and dermatoscopic features. Do not mention alternative or differential
+diagnoses.
+\end{minted}
+
+Las otras cuatro variantes comparadas en el piloto con que se eligió la anterior son las siguientes:
+\begin{minted}[linenos=false]{text}
+soft:
+    The most likely diagnosis for this skin lesion is {dx}. Write a structured
+    clinical report describing the lesion's morphology, dermatoscopic features
+    and findings consistent with this diagnosis.
+dxfirst:
+    Diagnosis: {dx}. Write a clinical report that begins by stating this
+    diagnosis ({dx}), then describes the dermatoscopic and morphological
+    features that support it.
+conclude:
+    Write a structured clinical report for this skin lesion. You must end the
+    report with this exact line: 'Most likely diagnosis: {dx}.'
+confirmed:
+    The confirmed diagnosis is {dx}. Write a concise clinical report that
+    explicitly names this diagnosis ({dx}) and describes the supporting
+    morphological and dermatoscopic features. Do not list alternative or
+    differential diagnoses.
+\end{minted}
+
+En el nivel diferencial del ruteo, la plantilla presenta los dos candidatos, el diagnóstico del clasificador y el
+voto del kNN, aunque atribuye la incertidumbre al clasificador:
+\begin{minted}[linenos=false]{text}
+The classifier is uncertain about this lesion; its most likely diagnoses are:
+{candidates}. Output ONLY the final clinical report — no reasoning or <think>
+blocks. Describe the morphological and dermatoscopic features, and present these
+as a differential diagnosis (discuss the candidates) rather than committing to a
+single one.
+\end{minted}
+
+Por su parte, las dos plantillas de recuperación (Sección~\ref{sec:met_recuperacion}) reciben como contexto una frase
+con el diagnóstico de los tres vecinos y, entre paréntesis, su localización cuando el metadato la trae, por
+ejemplo:
+\begin{minted}[linenos=false]{text}
+Retrieved visually similar dermatoscopic cases were diagnosed as: melanoma
+(face); melanoma (face); actinic keratosis (face).
+\end{minted}
+La plantilla de recuperación sola pide el diagnóstico al generador, mientras que la de Swin más recuperación
+le entrega el diagnóstico del clasificador:
+\begin{minted}[linenos=false]{text}
+rag:
+    {rag_context} Based on this dermatoscopic image and the retrieved similar
+    cases, write a clinical report describing the lesion's morphology and
+    dermatoscopic features, and state the single most likely diagnosis.
+grounded_rag:
+    The confirmed diagnosis is {dx}. {rag_context} Output ONLY the final
+    clinical report — no reasoning or <think> blocks. The report must explicitly
+    state the diagnosis ({dx}) and describe the supporting morphological and
+    dermatoscopic features. Do not list differential diagnoses.
+\end{minted}
+
+\section{Términos de las métricas de Nivel 2}
+
+La consistencia diagnóstica reconoce cada clase con los términos de la Tabla~\ref{tab:ap_terminos_dx}
+(Sección~\ref{sec:met_eval_generacion}). Las abreviaturas exigen palabra completa, y los demás términos se
+buscan sin distinguir mayúsculas.
+
+\begin{table}[H]
+    \centering
+    \caption{Términos con que la búsqueda estricta reconoce el diagnóstico de cada clase.}
+    \label{tab:ap_terminos_dx}
+    \small
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{2.2cm}>{\raggedright\arraybackslash}X@{}}
+        \toprule
+        \textbf{Clase} & \textbf{Términos} \\
+        \midrule
+        MEL & melanoma \\
+        \filasep
+        NV & nevus; nevi; mole (palabra completa) \\
+        \filasep
+        BCC & basal cell; basalioma; BCC (palabra completa) \\
+        \filasep
+        AKIEC & actinic kerato…; solar kerato…; AKIEC (palabra completa) \\
+        \filasep
+        BKL & benign kerato…; seborrh… kerato…; BKL (palabra completa) \\
+        \filasep
+        DF & dermatofibroma \\
+        \filasep
+        VASC & vascular lesion; hemangioma; angioma; pyogenic granuloma \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+La cobertura de entidades clínicas, en cambio, usa las tres categorías de la Tabla~\ref{tab:ap_entidades}, y cada
+término se busca como palabra completa (Ecuación~\ref{eq:marco_cobertura_ent}).
+
+\begin{table}[H]
+    \centering
+    \caption{Categorías y términos de la cobertura de entidades clínicas.}
+    \label{tab:ap_entidades}
+    \small
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{3.2cm}>{\raggedright\arraybackslash}X@{}}
+        \toprule
+        \textbf{Categoría} & \textbf{Términos} \\
+        \midrule
+        Criterios ABCDE & asymmetry; border; color; diameter; evolution \\
+        \filasep
+        Tipos de lesión & melanoma; nevus; basal cell carcinoma; actinic keratosis; benign keratosis;
+            dermatofibroma; vascular lesion; papule; nodule; macule; plaque; patch \\
+        \filasep
+        Rasgos clínicos & pigmentation; ulceration; scaling; erythema; telangiectasia; regression; dermoscopic \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
