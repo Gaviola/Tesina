@@ -65,7 +65,7 @@ con ese antecedente.
 Además de la clasificación, la detección de melanoma (T2) necesita un criterio propio. Si se toma como melanoma la clase de mayor probabilidad de
 la clasificación, el costo de perder un melanoma no interviene en la decisión. En su lugar, el umbral sobre la
 probabilidad de melanoma se fija en validación como el que da la mayor sensibilidad entre los que mantienen una
-especificidad de al menos 0.85, y se aplica sin cambios a la prueba. Esta decisión de diseño traduce el costo
+especificidad de al menos 0.850, y se aplica sin cambios a la prueba. Esta decisión de diseño traduce el costo
 asimétrico. Así, se prioriza no perder melanomas, pero con un tope a las falsas alarmas, de modo que en validación a lo
 sumo el 15\,\% de los casos sin melanoma se señale como sospechoso sin serlo. Por otra parte, el \gls{auc}
 (Ecuación~\ref{eq:marco_auc}) no depende del umbral y se informa como resumen de la capacidad de discriminar, sin
@@ -131,7 +131,7 @@ esa cautela. Finalmente, la Tabla~\ref{tab:met_roles} resume el papel de cada m�
         \filasep
         Exactitud & Se informa; no decide & Sección~\ref{sec:marco_eval_clasif} \\
         \filasep
-        Sensibilidad y especificidad de melanoma & Umbral fijado en validación (especificidad de al menos 0.85); resultado en la prueba & Sección~\ref{sec:marco_eval_clasif} \\
+        Sensibilidad y especificidad de melanoma & Umbral fijado en validación (especificidad de al menos 0.850); resultado en la prueba & Sección~\ref{sec:marco_eval_clasif} \\
         \filasep
         AUC de melanoma & Se informa; no decide & Sección~\ref{sec:marco_eval_clasif} \\
         \filasep
