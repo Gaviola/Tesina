@@ -268,7 +268,31 @@ Preguntas que cruzan varias secciones y decide el autor (el detalle está en cad
 Escrita el 18/10/2026 en el formato de la tesina de ejemplo: retoma la propuesta del Cap. 2 y anuncia,
 por número, qué hace cada sección.
 
+## Pasada de estilo (18/10/2026)
+
+Revisión de las ocho secciones contra la lista de control de la guía §3 (hilo, conectores, legibilidad y estilo),
+aplicada en cuatro grupos de cambios —legibilidad, reglas de la guía, tipografía y siglas, mecánica— más este
+registro. Los grupos quedan separados para commitear por separado cuando el autor apruebe el diff.
+
+| Qué se corrigió | Dónde |
+|---|---|
+| Oraciones ambiguas (la Figura 3.5, las decisiones del ruteo, «no es paramétrico», «su prueba», la prueba estadística frente al conjunto de prueba) | 3.3, 3.5, 3.6, 3.7 |
+| Elipsis nominales y verbos figurados («mirar», «razonar en voz alta», «se describe tal cual está») | 3.2–3.7 |
+| Las cuatro pérdidas del desbalance y las cuatro fuentes del anclaje pasan a lista, con los nombres en negrita | 3.4, 3.7 |
+| Terminología: «test» → «prueba»; «se reporta» → «se informa»; «el intercambio» → *trade-off* | 3.3, 3.7 |
+| SVM y MLP declaradas en el glosario; RGB se escribe por extenso; \emph{bfloat16} (bf16) al revés de antes | 3.5, 3.6, `Matter/05-Acronyms.tex` |
+| Cursiva solo en la primera mención del capítulo de cada término en inglés (*prompt*, *tokens*, *checkpoint*, *zero-shot*, *oracle*), redonda después; nombres de lista en negrita también en T1–T3 | 3.1, 3.5, 3.7 |
+| 3.3 abre con encuadre propio; 3.4 deja de anunciar su contenido (guía §3) | 3.3, 3.4 |
+| Tablas de 3.2 y de 3.6 con `[H]`, como el resto; epígrafes recortados y su explicación movida al párrafo que los cita | 3.2, 3.3, 3.6 |
+| `check_huerfanas 3`: 0 huérfanas. `check_floats 3`: los 8 flags que quedan son flotantes `[H]` cuyo `\input` va después de la mención | todo el capítulo |
+
+**Decisiones:** la cursiva de un término en inglés marca su primera mención en el capítulo y después va en redonda
+(como se hizo en el Cap. 2); las listas de alternativas nombran cada opción en negrita (guía §3, «Alternativas
+paralelas en lista»). *Temperature scaling* y *vector scaling* ya estaban en cursiva; no hubo que tocarlos.
+
 ## Orden de trabajo
 
-Cumplido hasta el paso 5 (prosa de las ocho secciones e introducción, revisada el 18/10/2026). Falta la
-aprobación del autor sobre la revisión y la pasada de estilo final.
+Cumplido hasta el paso 5 (prosa de las ocho secciones e introducción, revisada el 18/10/2026). La pasada de estilo
+está aplicada (ver arriba); falta la aprobación del autor sobre el diff y los commits por grupos.
+
+
