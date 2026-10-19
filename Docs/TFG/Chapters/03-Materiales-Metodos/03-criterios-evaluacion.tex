@@ -79,7 +79,7 @@ Para la clasificación hay tres niveles de referencia. En primer lugar, el azar 
 siete clases, una sensibilidad macro de 1/7. En segundo lugar, el clasificador trivial que responde siempre NV muestra lo
 que se obtiene del desbalance sin mirar la imagen. Finalmente, los clasificadores supervisados de la
 Sección~\ref{sec:met_supervisados} son la referencia de los \glspl{vlm}: la primera pregunta de investigación se
-responde comparando a estos con aquellos. Por otra parte, el \emph{pipeline} tiene sus propias referencias, una cota
+responde comparando los \glspl{vlm} con los clasificadores supervisados. Por otra parte, el \emph{pipeline} tiene sus propias referencias, una cota
 superior que recibe el diagnóstico verdadero y una línea base que no genera texto, y
 se definen en la Sección~\ref{sec:met_pipeline}, porque necesitan la cascada y el ruteo que allí se presentan.
 
@@ -145,7 +145,7 @@ esa cautela. Finalmente, la Tabla~\ref{tab:met_roles} resume el papel de cada m�
 \label{sec:met_estadistica}
 
 Una vez calculadas las métricas, que un modelo tenga una métrica más alta que otro en la prueba no alcanza para afirmar que es
-mejor, ya que con otra muestra de imágenes el orden podría invertirse. Por ello, cada comparación usa la prueba que
+mejor, ya que con otra muestra de imágenes el orden podría invertirse. Por ello, cada comparación usa la prueba estadística que
 corresponde a lo que se pregunta (Sección~\ref{sec:marco_eval_estadistica}), y la Tabla~\ref{tab:met_pruebas} las
 resume. Para saber cuánto varía una métrica por la composición de la prueba, o si la diferencia entre dos modelos la
 excede, se usa un \emph{bootstrap} sobre las imágenes, pareado cuando se comparan dos modelos. Para

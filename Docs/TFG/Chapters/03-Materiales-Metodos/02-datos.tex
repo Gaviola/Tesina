@@ -10,10 +10,11 @@
 \section{Conjuntos de datos}
 \label{sec:met_datasets}
 
-Cinco conjuntos de datos cumplen papeles distintos en el flujo. \emph{HAM10000} es el único que entrena y evalúa los
+Cinco conjuntos de datos cumplen papeles distintos en el flujo: \emph{SkinCaRe}, con sus partes \emph{SkinCAP} y
+\emph{SkinCoT}, \emph{MM-Skin}, \emph{HIBA}, \emph{Derm1M} y \emph{HAM10000}. Este último es el único que entrena y evalúa los
 clasificadores de las siete categorías, y por eso sus propiedades deciden la métrica y la partición. En cambio, los
 demás entrenan la generación de texto, la evalúan contra un texto de referencia, ponen a prueba a los clasificadores con
-otra población o sirvieron para preentrenar DermLIP, el modelo especializado de la Sección~\ref{sec:met_clasif_vlm}.
+otra población o sirven para preentrenar DermLIP, el modelo especializado de la Sección~\ref{sec:met_clasif_vlm}.
 La Tabla~\ref{tab:met_conjuntos} resume, para cada uno, la modalidad, el tamaño, el papel en el trabajo y el
 origen del texto de referencia.
 
@@ -110,7 +111,7 @@ una imagen de cada clase.
 Aunque las imágenes de cada lesión deberían quedar juntas, la forma habitual de partir un conjunto es estratificar
 por imagen, y así está hecha la
 partición de 70/15/15 de la que parte este trabajo. Con ella, el 36\,\% de las 1\,503 imágenes de prueba comparte
-lesión con alguna de entrenamiento, y en melanoma la proporción sube al 63\,\%. Esta coincidencia es una fuga de
+lesión con alguna imagen de entrenamiento, y en melanoma la proporción sube al 63\,\%. Esta coincidencia es una fuga de
 información entre particiones (\emph{data leakage}; Sección~\ref{sec:marco_regularizacion}), por lo que la prueba ya
 no mide el desempeño sobre lesiones nuevas. Además, las clases minoritarias, que son las que más importan, son las más
 afectadas.

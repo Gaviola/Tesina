@@ -23,7 +23,7 @@ Se eligió por dos motivos: sus pesos son abiertos y su tamaño permite aplicarl
 
 El segundo generador, LLaVA-Med~\cite{li2023llavamed}, en su versión 1.5 con Mistral-7B~\cite{zeng2025mmskin}, es el \gls{vlm} biomédico con el que se contrasta
 Mini-VLM. Usa el mismo tipo de codificador, \gls{clip} ViT-L/14, una proyección y el modelo de lenguaje
-Mistral-7B, pero se entrenó con figuras y leyendas de la literatura biomédica. Además, con un modelo de lenguaje de unos 7 mil
+Mistral-7B, pero se entrenó con figuras y leyendas de la literatura biomédica. Además, con un modelo de lenguaje de unos 7 000
 millones de parámetros, es el más pesado de los dos. De este modo, la comparación pone frente a frente un modelo
 entrenado con datos biomédicos y otro de propósito general.
 
@@ -34,7 +34,7 @@ cómo se obtiene una clase con cada uno.
 \label{sec:met_vlm_estrategias}
 
 Las cuatro estrategias usan el mismo conjunto de siete categorías y se diferencian en cómo se obtiene la clase. La
-Figura~\ref{fig:met_zsvslik} contrasta las dos primeras, que son las que leen la respuesta frente a las que puntúan las
+Figura~\ref{fig:met_zsvslik} contrasta las dos primeras: la que lee la respuesta frente a la que puntúa las
 clases. Los \emph{prompts} completos están en el Apéndice~\ref{ap:prompts}.
 
 \begin{enumerate}[leftmargin=1.6em]

@@ -10,7 +10,7 @@
 \label{sec:met_pipeline}
 
 Los generadores de la Sección~\ref{sec:met_generacion} son \glspl{vlm} generativos y presentan dos limitaciones que este
-trabajo evalúa por separado. Cuando clasifican, no discriminan bien las lesiones. Sus resultados están en el
+trabajo aborda por separado. Cuando clasifican, no discriminan bien las lesiones, como muestra el
 Capítulo~\ref{cp:res_clasif}. Además, cuando redactan, suelen no comprometerse con un diagnóstico y recurrir a
 reservas (\emph{hedging}; Sección~\ref{sec:marco_rep_fallas}). Por ello, el \emph{pipeline}, que es la propuesta central
 del trabajo, atiende ambas limitaciones separando las tareas: un clasificador decide el diagnóstico y el generador
@@ -52,8 +52,8 @@ se conoce de antemano. Finalmente, la cuarta es la ausencia de anclaje: el gener
 aporta el anclaje.
 
 En los cuatro casos, los generadores son los de la Sección~\ref{sec:met_generacion}, con los pesos
-ajustados allí. La cascada no los reentrena, de modo que el \emph{grounding} es solo de inferencia. Asimismo, la
-decodificación es la de esa sección, y los reportes se evalúan sin el bloque de razonamiento, con la métrica de la
+ajustados allí. La cascada no los reentrena, de modo que el \emph{grounding} es solo de inferencia. Asimismo, se usa la
+decodificación de esa sección, y los reportes se evalúan sin el bloque de razonamiento, con la métrica de la
 Sección~\ref{sec:met_protocolo}.
 
 \subsection{Grounding por recuperación}
@@ -77,9 +77,9 @@ En el ruteo, la recuperación cumple además la función de segundo predictor (S
 \label{sec:met_ruteo}
 
 Además de aportar evidencia al generador, el kNN permite que el ruteo use la concordancia entre los dos predictores
-como señal. El ruteo toma sus decisiones y no sus probabilidades, así que no depende de la calibración de la softmax ni
+como señal. El ruteo usa las decisiones de los dos predictores y no sus probabilidades, así que no depende de la calibración de la softmax ni
 necesita un umbral que ajustar (Sección~\ref{sec:marco_concordancia}). Los predictores tienen sesgos distintos: uno
-ajusta fronteras de decisión sobre \emph{HAM10000}~\cite{tschandl2018ham10000} y el otro no es paramétrico sobre una
+ajusta fronteras de decisión sobre \emph{HAM10000}~\cite{tschandl2018ham10000} y el otro es no paramétrico y opera sobre una
 representación preentrenada. Por eso se espera que sus errores no coincidan siempre. Sin embargo, que la concordancia
 separe los aciertos de los errores no se da por supuesto, sino que se comprueba en el Capítulo~\ref{cp:res_clasif}, y la
 elección de esta señal se declara en la Sección~\ref{sec:met_seleccion}.
@@ -106,7 +106,7 @@ Los tres niveles son alternativas excluyentes, con su acción:
     reporte y el caso se deriva a un especialista.
 \end{enumerate}
 Las plantillas están en el Apéndice~\ref{ap:prompts}. La plantilla diferencial atribuye la incertidumbre al
-clasificador, aunque uno de los candidatos venga del kNN, y se describe tal cual está. Como la señal es discreta, no hay
+clasificador, aunque uno de los candidatos venga del kNN, y se incluye sin cambios. Como la señal es discreta, no hay
 umbral que ajustar, y los tres niveles cubren todos los casos (Figura~\ref{fig:met_ruteo}).
 
 \input{Figures/Capitulos/03-Materiales-Metodos/ruteo}
@@ -114,11 +114,11 @@ umbral que ajustar, y los tres niveles cubren todos los casos (Figura~\ref{fig:m
 Esta regla es la política de tres salidas de la Sección~\ref{sec:marco_tres_salidas}, con la concordancia en lugar de la
 confianza. La abstención es una predicción selectiva (Sección~\ref{sec:marco_pred_selectiva}): en ese nivel el sistema
 no emite reporte. El diferencial presenta como candidatos el diagnóstico del clasificador y el voto del kNN, y no los
-dos primeros del clasificador, porque lo que el ruteo mide es el desacuerdo entre ambos predictores. La regla dice
+dos primeros candidatos del clasificador, porque lo que el ruteo mide es el desacuerdo entre ambos predictores. La regla dice
 qué se emite, pero no cuánto aporta el generador.
 
 La línea base sin generador aísla ese aporte. Usa el mismo ruteo y el mismo clasificador, pero no redacta: el nivel
-afirmativo devuelve el diagnóstico del clasificador, el diferencial devuelve el par de candidatos y el de abstención
+afirmativo devuelve el diagnóstico del clasificador, el diferencial devuelve el par de candidatos y el nivel de abstención
 queda igual que en el sistema. Junto con el \emph{oracle}, que fija la cota superior, completa las referencias del
 \emph{pipeline} anunciadas en la Sección~\ref{sec:met_lineas_base}; las diferencias con ellas se analizan con las pruebas
 de la Sección~\ref{sec:met_estadistica}. Con el \emph{pipeline} queda descrito el sistema completo. Sin embargo, falta

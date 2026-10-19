@@ -29,15 +29,14 @@ El tercer generador es SkinVL, que \textcite{zeng2025mmskin} presentan junto con
 SkinVL parte de LLaVA-Med v1.5 con Mistral-7B y ajusta con \gls{lora} (rango 128) el modelo de lenguaje y la
 proyección visual, con el codificador visual congelado, en una sola etapa de instrucciones. Se usa la variante
 SkinVL-MM, ajustada solo con \emph{MM-Skin}, con sus pesos publicados (\texttt{zwq803/SkinVL-MM}). Como esos pesos
-no incluyen el codificador visual, se combinaron con los de la versión de LLaVA-Med que sí lo trae, sin ningún ajuste
-adicional. Así, SkinVL sirve para saber si un generador especializado en dermatología escribe reportes distintos de los de
-los generales.
+no incluyen el codificador visual, se combinaron con los pesos de la versión de LLaVA-Med que sí lo incluye, sin ningún ajuste
+adicional. Así, SkinVL sirve para saber si la especialización en dermatología cambia lo que escribe un generador.
 
 \subsection{Ajuste en dos etapas sobre SkinCaRe}
 
 El ajuste usa \emph{SkinCaRe} y no \emph{HAM10000}, porque este trae una etiqueta por imagen y no un texto que el
-generador pueda aprender a escribir~\cite{tschandl2018ham10000}. Por otra parte, su prueba queda reservada para medir la
-fidelidad diagnóstica de los reportes (Sección~\ref{sec:met_eval_generacion}). Las dos partes de \emph{SkinCaRe} enseñan cosas
+generador pueda aprender a escribir~\cite{tschandl2018ham10000}. Por otra parte, la prueba de \emph{HAM10000} queda
+reservada para medir la fidelidad diagnóstica de los reportes (Sección~\ref{sec:met_eval_generacion}). Las dos partes de \emph{SkinCaRe} enseñan cosas
 distintas. Las descripciones de \emph{SkinCAP} son observacionales: sitio, morfología, color y distribución. En cambio,
 los textos de \emph{SkinCoT}, de 23 grupos de enfermedades y no de las siete de \emph{HAM10000}, terminan siempre con una impresión
 diagnóstica explícita~\cite{shen2025skincare}. Por eso el ajuste se hace en dos etapas, una con cada parte, y en ambas
@@ -136,8 +135,8 @@ paso se elige el token más probable, en lugar de muestrear (Sección~\ref{sec:m
 generación reproducible. Cada imagen se procesa por separado, con un máximo de 384 tokens nuevos, suficiente para que
 el texto llegue al diagnóstico (Tabla~\ref{tab:met_decodificacion}). La decodificación voraz tiende a repetir frases,
 pero no se usa penalización de repetición, porque en Mini-VLM hace fallar la generación. Con esta configuración el generador redacta
-el reporte, pero no decide si la lesión es lo bastante clara para afirmar un diagnóstico. Esa decisión es la que
-incorpora el \emph{pipeline}.
+el reporte, pero no decide si la lesión es lo bastante clara para afirmar un diagnóstico. El \emph{pipeline} incorpora
+esa decisión.
 
 \begin{table}[H]
     \centering
