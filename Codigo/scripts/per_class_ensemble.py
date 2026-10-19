@@ -47,7 +47,7 @@ HAM_CLASSES = ["melanoma", "nevus", "basal cell carcinoma", "actinic keratosis",
 COND_LABEL = {"full_baseline": "baseline", "full_dermlip": "DermLIP (0.38)",
               "full_swin": "Swin (0.80)", "full_swin_les": "Swin lesión (0.85)",
               "full_oracle": "oracle (gt)"}
-THINK_RE = re.compile(r"<think>.*?</think>", re.DOTALL | re.IGNORECASE)
+THINK_RE = re.compile(r"<think>.*?(?:</think>|$)", re.DOTALL | re.IGNORECASE)
 
 
 def _strip_reasoning(t: str) -> str:

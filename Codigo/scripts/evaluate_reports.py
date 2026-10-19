@@ -204,7 +204,7 @@ def main():
 
     if args.strip_reasoning:
         import re as _re
-        _TAG = _re.compile(r"<think>.*?</think>", _re.DOTALL)
+        _TAG = _re.compile(r"<think>.*?(?:</think>|$)", _re.DOTALL)
         for r in reports:
             if r.get("report"):
                 r["report"] = _TAG.sub(" ", r["report"]).strip()

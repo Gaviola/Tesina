@@ -23,6 +23,19 @@ Sale de contrastar el Cap. 3 con el código y los registros. Mendieta: 1179986�
 - **`<think>` sin cerrar** (`THINK_RE` exige el cierre): solo afecta a LLaVA-Med. En `full_differential_les`, 144 de
   248 reportes; la consistencia estricta pasaría de 0.677 a 0.407 si se quitara hasta el final. En los demás brazos
   de LLaVA-Med son 8–30 de 1 503 (diferencias ≤ 0.006). Mini-VLM y SkinVL-MM: ninguno.
+- **`THINK_RE` corregido y LLaVA-Med re-evaluado.** La expresión de los siete scripts de medición
+  (`ensemble_bootstrap`, `per_class_ensemble`, `error_taxonomy`, `rag_les_eval`, `level1_mmskin_recalc`,
+  `generate_template_report`, `evaluate_reports --strip-reasoning`) pasa a `<think>.*?(?:</think>|$)`: un bloque que
+  el límite de 384 tokens dejó abierto se quita hasta el final. Copias previas en
+  `outputs/results/_pre_think_fix_20261018/`. Re-ejecutados `ensemble_bootstrap.py --model llava_med --anchor les
+  --report_only --strict`, `per_class_ensemble.py --strict` (3 generadores → `per_class_les_strict/`),
+  `uncertainty_analysis.py --model llava_med --anchor les` y `error_taxonomy.py --models llava_med`
+  (→ `error_taxonomy_les/llava_med/`). Cambios (LLaVA-Med): Swin 0.749 → 0.745, oracle 0.860 → 0.854, DermLIP
+  0.345 → 0.340, sin anclaje igual (0.582). **Pipeline frente a grounding simple (n = 1452): +0.034 [+0.020,
+  +0.048] → −0.011 [−0.025, +0.003], n. s.**; diferencial frente a forzado (n = 248): +0.198 → −0.065 [−0.141,
+  +0.016], n. s.; pipeline − sin generador −0.110 → −0.160. Con LLaVA-Med el ruteo deja de mejorar el reporte:
+  la ganancia anterior venía de razonamiento sin cerrar que nombraba los candidatos. Mini-VLM y SkinVL-MM sin
+  cambios. Pendiente: `experimentacion.tex:82` conserva la cifra anterior (+0.056).
 - **Partición de SkinCoT:** 18 imágenes figuran en dos carpetas de enfermedad con textos distintos; el split por id
   deja 2 136 / 463 / 460 pares (lo que cargó el entrenamiento) y 3 ids de prueba también en train o val
   (`lichen-planus-89`, `molluscum-contagiosum-144`, `alopecia-areata-23`).

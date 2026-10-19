@@ -35,7 +35,7 @@ DATA_DIR = Path("data/raw/HAM10000")
 REPORTS_DIR = Path("outputs/generated_reports/mini_vlm")
 RAG_CSV = Path("outputs/rag/rag_context_les.csv")
 OUTPUT = Path("outputs/results/rag_les_eval.json")
-THINK_RE = re.compile(r"<think>.*?</think>", re.DOTALL | re.IGNORECASE)
+THINK_RE = re.compile(r"<think>.*?(?:</think>|$)", re.DOTALL | re.IGNORECASE)
 
 DX_TO_FULL = {
     "mel": "melanoma", "nv": "nevus", "bcc": "basal cell carcinoma",

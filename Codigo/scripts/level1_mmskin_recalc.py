@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 REPORTS = Path("outputs/generated_reports")
 SPLITS = Path("data/splits/mmskin_splits.json")
 OUTPUT = Path("outputs/results/level1_mmskin_recalc.json")
-THINK_RE = re.compile(r"<think>.*?</think>", re.DOTALL | re.IGNORECASE)
+THINK_RE = re.compile(r"<think>.*?(?:</think>|$)", re.DOTALL | re.IGNORECASE)
 MODELS = ["mini_vlm", "llava_med"]
 
 
