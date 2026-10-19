@@ -53,8 +53,8 @@ desvío de \emph{ImageNet}. Además, con 6\,447 imágenes de entrenamiento (Secc
 principal es el sobreajuste (Sección~\ref{sec:marco_regularizacion}), y para reducirlo el entrenamiento aplica aumentos
 de datos que cambian la imagen sin cambiar su clase, ya que una misma lesión puede fotografiarse con otro encuadre, otra
 orientación u otra iluminación. En concreto, se toma un recorte aleatorio de entre el 70\,\% y el 100\,\% del área, se voltea la imagen
-horizontalmente con probabilidad 0.5, se aplican dos transformaciones de RandAugment~\cite{cubuk2020randaugment} con la
-magnitud $M$ de la Tabla~\ref{tab:met_barrido}, y se borra un rectángulo al azar con probabilidad
+horizontalmente con probabilidad 0.5, se aplican dos transformaciones de RandAugment~\cite{cubuk2020randaugment} con una
+magnitud $M$ que se eligió por búsqueda, y se borra un rectángulo al azar con probabilidad
 0.25~\cite{zhong2020random}.
 
 En cambio, en validación y en prueba la imagen se redimensiona a $256 \times 256$ y se recorta el centro de

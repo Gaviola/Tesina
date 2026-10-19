@@ -51,7 +51,8 @@ prueba no interviene en la elección.
 Además, las métricas de las clases minoritarias cambian bastante de una ejecución a otra, porque dependen de pocas
 imágenes. Por eso cada modelo elegido se entrena con tres semillas (42, 43 y 44), y su resultado se informa como media
 $\pm$ desvío estándar muestral. Sin embargo, con tres semillas el desvío es una estimación gruesa, por lo que las
-comparaciones entre modelos se completan con las pruebas estadísticas de la Sección~\ref{sec:met_estadistica}.
+comparaciones entre modelos se sostienen en las pruebas estadísticas de la Sección~\ref{sec:met_estadistica} y no en
+el desvío entre semillas.
 
 Como principio general, las configuraciones y los umbrales se eligen en validación, y la prueba se usa solo para
 informar resultados. Tres
@@ -101,7 +102,7 @@ El Nivel~2, en cambio, no necesita referencia y se aplica a la prueba de \emph{H
 clínicas (\emph{clinical entity recall}) cuenta cuántos términos clínicos relevantes aparecen en el texto, así que mide
 riqueza y no pertinencia. Por su parte, la consistencia diagnóstica (\emph{diagnostic consistency}) comprueba si el
 reporte nombra el diagnóstico verdadero o un sinónimo. Es la métrica principal de generación, porque responde
-directamente la segunda pregunta de investigación: si el reporte afirma el diagnóstico correcto.
+directamente la segunda pregunta de investigación: si el reporte afirma el diagnóstico correcto de la imagen que recibe.
 
 La consistencia diagnóstica se calcula solo sobre el reporte. Para ello, los bloques de razonamiento que el generador
 escribe entre etiquetas \texttt{\textless{}think\textgreater{}} se descartan, porque el clínico lee el reporte y no el
@@ -116,7 +117,7 @@ como evidencia de validez clínica. La Sección~\ref{sec:marco_rep_fallas} descr
 esa cautela. Finalmente, la Tabla~\ref{tab:met_roles} resume el papel de cada métrica en el trabajo.
 
 \begin{table}[H]
-    \caption{Papel de cada métrica en el trabajo: qué decide, qué se presenta como resultado principal y qué solo se informa.}
+    \caption{Papel de cada métrica en el trabajo.}
     \label{tab:met_roles}
     \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{4.6cm}
         >{\raggedright\arraybackslash\hspace{0pt}}X >{\raggedright\arraybackslash\hspace{0pt}}p{3.6cm}@{}}
@@ -160,7 +161,7 @@ Como se comparan siete clasificadores (los cuatro supervisados, DermLIP sin ajus
 generativos sin ajuste, Sección~\ref{sec:met_clasif_vlm}), que forman 21 pares, los valores p de McNemar se corrigen con el método de Holm
 (Ecuación~\ref{eq:marco_holm}), que controla la probabilidad de declarar al menos una diferencia falsa entre todas. En
 el \emph{bootstrap}, por su parte, una diferencia se considera real si su intervalo de confianza del 95\,\% no contiene
-el cero. La sensibilidad de cada clase, en cambio, se compara de forma descriptiva, contando en cuántas de las siete
+el cero. Todos los \emph{bootstrap} usan 2\,000 remuestreos de las imágenes de prueba, con semilla 42. La sensibilidad de cada clase, en cambio, se compara de forma descriptiva, contando en cuántas de las siete
 clases mejora cada modelo, porque con siete valores ninguna prueba de rangos podría alcanzar el umbral que Holm exige
 para 21 comparaciones. Las pruebas se calculan sobre la ejecución con semilla 42, y la variación entre semillas se
 informa como desvío. Además, el \emph{bootstrap} remuestrea imágenes y no lesiones, así que trata como independientes las imágenes de una misma
@@ -171,7 +172,7 @@ lesión; en la prueba hay 1\,503 imágenes de 1\,429 lesiones, y remuestrear por
 \setlength{\tabcolsep}{3pt}
 \begin{table}[H]
     \centering
-    \caption{Pruebas estadísticas según la comparación. Todos los \emph{bootstrap} usan 2\,000 remuestreos de las imágenes de prueba, con semilla 42.}
+    \caption{Pruebas estadísticas según la comparación.}
     \label{tab:met_pruebas}
     \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{3.4cm}
         >{\raggedright\arraybackslash\hspace{0pt}}X

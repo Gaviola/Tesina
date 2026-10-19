@@ -55,7 +55,7 @@ adaptador. Así,
 LLaVA-Med entrena 33\,554\,432 parámetros y Mini-VLM 31\,457\,280, menos del 1\,\% de cada modelo. La
 Tabla~\ref{tab:met_lora} reúne la configuración de ambas etapas.
 
-\begin{table}[tbp]
+\begin{table}[H]
     \centering
     \caption{Configuración de LoRA y del entrenamiento en las dos etapas del ajuste.}
     \label{tab:met_lora}
@@ -119,6 +119,7 @@ Tabla~\ref{tab:met_lora} reúne la configuración de ambas etapas.
         \bottomrule
     \end{tabularx}
 \end{table}
+
 La tasa de aprendizaje de la primera etapa se eligió con una búsqueda sobre validación. Además, en la segunda, la pérdida de
 validación siguió bajando hasta la última época, que es la que se conserva.
 

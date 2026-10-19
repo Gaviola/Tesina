@@ -18,10 +18,10 @@ otra población o sirven para preentrenar DermLIP, el modelo especializado de la
 La Tabla~\ref{tab:met_conjuntos} resume, para cada uno, la modalidad, el tamaño, el papel en el trabajo y el
 origen del texto de referencia.
 
-\begin{table}[tbp]
+\begin{table}[H]
     \centering
     \small
-    \caption{Conjuntos de datos, su modalidad, su tamaño, su papel en el trabajo y el origen de su texto de referencia.}
+    \caption{Conjuntos de datos: modalidad, tamaño, papel en el trabajo y origen del texto de referencia.}
     \label{tab:met_conjuntos}
     \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{1.8cm}
         >{\raggedright\arraybackslash}p{2.5cm} >{\raggedright\arraybackslash}p{2.2cm}
@@ -101,7 +101,7 @@ una imagen de cada clase.
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{Figures/Capitulos/03-Materiales-Metodos/ham-ejemplos.pdf}
-    \caption{Una imagen dermatoscópica por clase, en el orden MEL, NV, BCC, AKIEC, BKL, DF y VASC: la primera confirmada por histopatología de cada una. Imágenes de \emph{HAM10000}~\cite{tschandl2018ham10000}, licencia CC BY-NC 4.0.}
+    \caption{Una imagen dermatoscópica por clase, la primera confirmada por histopatología de cada una. Imágenes de \emph{HAM10000}~\cite{tschandl2018ham10000}, licencia CC BY-NC 4.0. El orden es MEL, NV, BCC, AKIEC, BKL, DF y VASC, las siglas del conjunto.}
     \label{fig:met_ham_ejemplos}
 \end{figure}
 
@@ -126,7 +126,7 @@ quedan con menos de 20 imágenes, así que sus métricas por clase en ese conjun
 
 \begin{table}[H]
     \centering
-    \caption{Imágenes por clase y partición de \emph{HAM10000}. La última columna cuenta las imágenes de entrenamiento y validación originales que se descartaron, porque su lesión aparece en prueba.}
+    \caption{Imágenes por clase y partición de \emph{HAM10000}.}
     \label{tab:met_tamanos}
     \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X r r r r@{}}
         \toprule
