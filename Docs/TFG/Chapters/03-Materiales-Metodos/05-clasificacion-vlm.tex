@@ -39,8 +39,9 @@ clases. Los \emph{prompts} completos están en el Apéndice~\ref{ap:prompts}.
 
 \begin{enumerate}[leftmargin=1.6em]
   \item \textbf{\emph{Zero-shot} por generación.} El modelo recibe la imagen y un prompt con las clases posibles, y la
-  clase se extrae del texto que genera con decodificación voraz (Sección~\ref{sec:marco_llm}). Se acepta la coincidencia
-  exacta con una etiqueta o la primera que aparece como palabra completa. Si no hay etiqueta válida, la respuesta cuenta
+  clase se extrae del texto que genera con decodificación voraz (Sección~\ref{sec:marco_llm}). Se acepta la respuesta
+  que es exactamente uno de los siete códigos de clase (MEL, NV, BCC, AKIEC, BKL, DF y VASC) y, si no, el primer código
+  de esa lista que aparece en ella como palabra completa. Si no hay etiqueta válida, la respuesta cuenta
   como «desconocido».
   \item \textbf{\emph{Likelihood scoring}.} En lugar de leer la respuesta, se compara la probabilidad que el modelo asigna al
   nombre de cada clase dada la imagen. La puntuación se define en la Ecuación~\ref{eq:met_likelihood}.
@@ -103,12 +104,13 @@ Los valores de las cabezas son fijos, es decir, no hubo búsqueda de $C$ ni de $
 Sin embargo, con cuatro cabezas sobre la misma representación, un resultado mezcla el efecto de la representación y el
 de la cabeza.
 
-Para separar ambos efectos, cabezas clásicas equivalentes (SVM con núcleo RBF y $C = 10$, regresión logística y un
-\emph{random forest} de 300 árboles, todas con pesos balanceados) se ajustan sobre el \emph{embedding} de Swin congelado, preentrenado en
+Para separar ambos efectos, tres cabezas clásicas (SVM con núcleo RBF y $C = 10$, regresión logística y un
+\emph{random forest} de 300 árboles, todas con pesos balanceados y sobre \emph{embeddings} estandarizados) se ajustan
+con el mismo procedimiento sobre el \emph{embedding} de DermLIP y sobre el de Swin congelado, preentrenado en
 \emph{ImageNet}~\cite{liu2021swin}, sin ajuste sobre \emph{HAM10000}. Así, si la diferencia entre las dos
 representaciones es la misma con cada cabeza, el efecto es de la representación.
 
-En cuanto a los datos, las cabezas y el control se ajustan sobre el entrenamiento de la partición por lesión
+En cuanto a los datos, todas las cabezas, sobre DermLIP y sobre Swin, se ajustan sobre el entrenamiento de la partición por lesión
 (Sección~\ref{sec:met_particiones}). El modo zero-shot de DermLIP, en cambio, no depende de la partición, porque
 no se ajusta con \emph{HAM10000}, y lo mismo vale para los \glspl{vlm} generativos, cuyo ajuste usa \emph{SkinCaRe}
 (Sección~\ref{sec:met_generacion}). Todos se evalúan, entonces, sobre la misma prueba que los clasificadores

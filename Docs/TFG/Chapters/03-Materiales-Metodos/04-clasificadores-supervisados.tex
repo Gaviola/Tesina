@@ -48,8 +48,9 @@ unos 27.5 millones de parámetros, tienen un tercio de los de ViT-B/16.
 \subsection{Preprocesamiento y aumento de datos}
 \label{sec:met_supervisados_preprocesamiento}
 
-En cuanto a la entrada, todos los modelos reciben imágenes de $224 \times 224$ píxeles normalizadas con la media y el
-desvío de \emph{ImageNet}. Además, con 6\,447 imágenes de entrenamiento (Sección~\ref{sec:met_particiones}), el riesgo
+En cuanto a la entrada, las imágenes de \emph{HAM10000} se reducen una sola vez a $224 \times 224$ píxeles, sin
+conservar su proporción, y todos los modelos de este capítulo parten de esa versión. Los clasificadores, además, las
+reciben normalizadas con la media y el desvío de \emph{ImageNet}. Además, con 6\,447 imágenes de entrenamiento (Sección~\ref{sec:met_particiones}), el riesgo
 principal es el sobreajuste (Sección~\ref{sec:marco_regularizacion}), y para reducirlo el entrenamiento aplica aumentos
 de datos que cambian la imagen sin cambiar su clase, ya que una misma lesión puede fotografiarse con otro encuadre, otra
 orientación u otra iluminación. En concreto, se toma un recorte aleatorio de entre el 70\,\% y el 100\,\% del área, se voltea la imagen
@@ -58,9 +59,9 @@ magnitud $M$ que se eligió por búsqueda, y se borra un rectángulo al azar con
 0.25~\cite{zhong2020random}.
 
 En cambio, en validación y en prueba la imagen se redimensiona a $256 \times 256$ y se recorta el centro de
-$224 \times 224$. En ambas particiones, las probabilidades se obtienen con \gls{tta} (Sección~\ref{sec:marco_regularizacion}), que
-promedia las de la imagen y las de su reflejo horizontal, una versión reducida del promedio sobre recortes y sus
-reflejos que usan \textcite{krizhevsky2012imagenet}. Así, la salida de cada clasificador es una probabilidad por
+$224 \times 224$. Las probabilidades finales de ambas particiones se obtienen con \gls{tta}
+(Sección~\ref{sec:marco_regularizacion}), con la imagen y su reflejo horizontal, mientras que la validación de cada
+época, que decide la detención temprana, usa una sola vista. Así, la salida de cada clasificador es una probabilidad por
 clase, de la que se calculan las métricas de la Sección~\ref{sec:met_protocolo}.
 
 \subsection{Entrenamiento e hiperparámetros}
@@ -70,8 +71,7 @@ Una vez fijadas las entradas, cada modelo se ajusta en dos etapas, una forma de 
 (Sección~\ref{sec:marco_transferencia}).
 En la primera, con el resto de la red congelado, se entrena solo la cabeza durante una época. En la segunda se
 descongela toda la red y cada capa recibe 0.85 veces la tasa de aprendizaje de la capa siguiente
-(Ecuación~\ref{eq:marco_llrd}), de modo que las capas cercanas a la entrada, que ya codifican rasgos generales, cambian
-menos. Esta etapa dura hasta 39 épocas, con tres de calentamiento lineal y decaimiento coseno de la tasa
+(Ecuación~\ref{eq:marco_llrd}). Esta etapa dura hasta 39 épocas, con tres de calentamiento lineal y decaimiento coseno de la tasa
 \cite{goyal2017accurate,loshchilov2017sgdr}. Por otra parte, el optimizador es AdamW~\cite{loshchilov2019decoupled} y la
 pérdida es la entropía cruzada con suavizado de etiquetas de 0.1~\cite{szegedy2016rethinking,muller2019does}.
 Finalmente, la detención temprana corta el entrenamiento si el F1 ponderado de validación no mejora en cinco épocas, y se
@@ -112,7 +112,7 @@ conserva la mejor época (Sección~\ref{sec:met_seleccion}). La Tabla~\ref{tab:m
 Además de estos valores comunes, tres hiperparámetros se eligieron por búsqueda: la tasa de aprendizaje, el decaimiento
 de pesos y la magnitud de RandAugment (Tabla~\ref{tab:met_barrido}). Las cinco tasas se cruzaron con los tres decaimientos, y cada magnitud se
 asignó a cinco de esas 15 combinaciones. Todas se entrenaron con la semilla 42, con y sin pesos por clase en la
-pérdida, que dan más importancia a los errores en las clases raras, lo que suma 30 configuraciones por modelo. La
+pérdida (Sección~\ref{sec:marco_desbalance}), lo que suma 30 configuraciones por modelo. La
 búsqueda se hizo sobre Swin-Tiny y ConvNeXt-Tiny, y en ambos ganó, por F1 macro en validación, una configuración sin
 pesos por clase. En cambio, DenseNet121 y ViT-B/16 no tuvieron búsqueda propia, sino que cada uno usa la configuración
 ganadora del modelo de su misma familia, la de ConvNeXt-Tiny en el caso de DenseNet121 y la de Swin-Tiny en el de ViT-B/16. Así los cuatro
@@ -141,15 +141,9 @@ que la configuración heredada no es la mejor para ellos. La grilla completa est
 
 El tratamiento del desbalance merece una comparación aparte, porque los pesos por clase no son la única forma de
 abordarlo (Sección~\ref{sec:marco_desbalance}). Para ello, sobre Swin-Tiny, ConvNeXt-Tiny y DenseNet121 se comparan
-cuatro pérdidas que difieren en cómo ponderan los errores:
-\begin{itemize}[leftmargin=1.6em]
-    \item \textbf{Entropía cruzada sin pesos.}
-    \item \textbf{Entropía cruzada con pesos inversos a la frecuencia de cada clase.}
-    \item \textbf{Pérdida focal} con $\gamma = 2$~\cite{lin2017focal}, que resta peso a los ejemplos que el modelo ya
-        clasifica con confianza.
-    \item \textbf{\emph{Balanced softmax}}~\cite{ren2020balanced}, que suma a cada logit el logaritmo de la frecuencia de
-        su clase en el conjunto de entrenamiento.
-\end{itemize}
+cuatro pérdidas: la entropía cruzada sin pesos, la ponderada con pesos inversos a la frecuencia de cada clase, la
+pérdida focal con $\gamma = 2$~\cite{lin2017focal}, que se combina con esos mismos pesos, y el \emph{balanced
+softmax}~\cite{ren2020balanced}, sin pesos.
 Para que la pérdida sea lo único que cambia, esta comparación fija el resto de los
 hiperparámetros (decaimiento de pesos 0.05, $M = 9$ y una tasa de $10^{-4}$, o de $7.91 \times 10^{-5}$ en DenseNet121)
 y usa una sola semilla.
@@ -158,8 +152,7 @@ y usa una sola semilla.
 \label{sec:met_supervisados_ensamble}
 
 Además de usarse por separado, los dos modelos de la búsqueda, Swin-Tiny y ConvNeXt-Tiny, se combinan por voto suave
-(Sección~\ref{sec:marco_senales_confianza}): la probabilidad de cada clase es el promedio de las que dan ambos, y la
-clase predicha es la de mayor promedio. Solo se combinan esos dos porque son los que eligió la validación. Elegir otra
+(Sección~\ref{sec:marco_senales_confianza}). Solo se combinan esos dos porque son los que eligió la validación. Elegir otra
 combinación exigiría consultar la prueba. Por otra parte, para la detección de melanoma, el puntaje es la
 probabilidad de melanoma de cada modelo o del ensamble, con el umbral de la Sección~\ref{sec:met_seleccion}.
 

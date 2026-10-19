@@ -113,8 +113,9 @@ por imagen, y así está hecha la
 partición de 70/15/15 de la que parte este trabajo. Con ella, el 36\,\% de las 1\,503 imágenes de prueba comparte
 lesión con alguna imagen de entrenamiento, y en melanoma la proporción sube al 63\,\%. Esta coincidencia es una fuga de
 información entre particiones (\emph{data leakage}; Sección~\ref{sec:marco_regularizacion}), por lo que la prueba ya
-no mide el desempeño sobre lesiones nuevas. Además, las clases minoritarias, que son las que más importan, son las más
-afectadas.
+no mide el desempeño sobre lesiones nuevas. Además, la fuga no
+se reparte por igual: en NV es del 27\,\%, mientras que en BCC llega al 70\,\%, de modo que las dos clases malignas,
+que son las que más importan, son las más afectadas.
 
 Para corregirla, la partición nueva conserva la prueba original completa, de modo que los resultados de los
 \glspl{vlm} y del \emph{pipeline}, medidos sobre ella, siguen siendo comparables. Del entrenamiento y la validación

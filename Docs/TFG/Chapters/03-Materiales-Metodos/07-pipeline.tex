@@ -36,11 +36,12 @@ una señal de concordancia con el clasificador (Sección~\ref{sec:marco_concorda
 \label{sec:met_cascada}
 
 La cascada depende de la instrucción con que el generador recibe el diagnóstico. La variante \emph{noreasoning} pide
-solo el reporte final, prohíbe los bloques de razonamiento y prohíbe mencionar diagnósticos alternativos. El motivo es
-que los generadores suelen escribir el razonamiento antes que el reporte y contradecir el diagnóstico que reciben, y
-prohibirlo de manera explícita los obliga a comprometerse con él. La plantilla completa está en el Apéndice~\ref{ap:prompts}.
-La variante se eligió en un piloto de 100 imágenes de \emph{HAM10000}, con el diagnóstico verdadero inyectado,
-midiendo en cuántos reportes se afirmaba. De esas imágenes, 17 pertenecen a la prueba (Sección~\ref{sec:met_seleccion}).
+solo el reporte final, prohíbe los bloques de razonamiento y prohíbe mencionar diagnósticos alternativos. La plantilla
+completa está en el Apéndice~\ref{ap:prompts}. La variante se eligió en un piloto con LLaVA-Med sobre 100 imágenes de
+\emph{HAM10000}, con el diagnóstico verdadero inyectado. Con instrucciones menos restrictivas, el generador escribía el
+razonamiento antes que el reporte y el diagnóstico quedaba sobre todo en el razonamiento, mientras que
+\emph{noreasoning} fue la variante cuyo reporte, sin los bloques de razonamiento, nombraba el diagnóstico en más
+casos. De esas imágenes, 17 pertenecen a la prueba (Sección~\ref{sec:met_seleccion}).
 
 Una vez fijada la instrucción, el diagnóstico que recibe el generador puede venir de cuatro fuentes, comparadas con el
 mismo generador:
@@ -55,8 +56,8 @@ mismo generador:
         reporte.
 \end{itemize}
 
-En los cuatro casos, los generadores son los de la Sección~\ref{sec:met_generacion}, con los pesos
-ajustados allí. La cascada no los reentrena, de modo que el \emph{grounding} es solo de inferencia. Asimismo, se usa la
+En los cuatro casos se usan los tres generadores de la Sección~\ref{sec:met_generacion}: Mini-VLM y LLaVA-Med con los
+pesos ajustados allí, y SkinVL con sus pesos publicados. La cascada no los reentrena, de modo que el \emph{grounding} es solo de inferencia. Asimismo, se usa la
 decodificación de esa sección, y los reportes se evalúan sin el bloque de razonamiento, con la métrica de la
 Sección~\ref{sec:met_protocolo}.
 
@@ -66,7 +67,7 @@ Sección~\ref{sec:met_protocolo}.
 La recuperación, en lugar de inyectar una clase, aporta como contexto los casos más parecidos a la imagen. Para ello
 usa el mismo kNN de la Sección~\ref{sec:met_clasif_vlm}, pero como índice de casos y no como clasificador. Si los tres
 vecinos son de clases distintas, el voto cae en el más cercano, y ese es el diagnóstico que el kNN
-registra en el nivel de abstención (Sección~\ref{sec:met_ruteo}). El índice contiene solo imágenes de entrenamiento de la
+registra en el nivel de derivación (Sección~\ref{sec:met_ruteo}). El índice contiene solo imágenes de entrenamiento de la
 partición por lesión (Sección~\ref{sec:met_particiones}), es decir, ni imágenes ni lesiones de prueba, y tiene 6\,447
 imágenes. Esta restricción importa porque si una imagen de prueba tiene como vecina otra de su misma lesión, el voto
 mide memoria y no generalización (fuga de información, Sección~\ref{sec:met_particiones}).
@@ -75,6 +76,7 @@ Una vez definido el índice, el contexto que recibe el generador es una frase fi
 vecinos y, si el metadato lo trae, su localización. Hay dos plantillas. La de recuperación sola no usa clasificador y pide al generador el
 diagnóstico. La de Swin más recuperación incorpora el diagnóstico del ancla y el contexto, sin diferenciales, y
 reemplaza la plantilla \emph{noreasoning}. Por esa razón es un brazo de comparación y no entra en la cascada del ruteo.
+Ambas plantillas se evalúan con Mini-VLM.
 En el ruteo, la recuperación cumple además la función de segundo predictor (Sección~\ref{sec:met_ruteo}).
 
 \subsection{Ruteo por concordancia en tres niveles}
@@ -94,9 +96,9 @@ regla que asigna cada caso a un nivel es
 \begin{equation}
     \pi(x) =
     \begin{cases}
-        \text{afirmativo} & \text{si } a(x) = 1,\\
+        \text{afirmar} & \text{si } a(x) = 1,\\
         \text{diferencial} & \text{si } a(x) = 0 \text{ y } \kappa(x) > 1/3,\\
-        \text{abstención} & \text{si } a(x) = 0 \text{ y } \kappa(x) = 1/3.
+        \text{derivar} & \text{si } a(x) = 0 \text{ y } \kappa(x) = 1/3.
     \end{cases}
     \label{eq:met_politica_ruteo}
 \end{equation}
@@ -106,23 +108,24 @@ Los tres niveles son alternativas excluyentes, con su acción:
     \emph{noreasoning}.
     \item \textbf{Diferencial} ($a = 0$ y $\kappa > 1/3$): reporte que enuncia el par formado por el clasificador y el
     voto del kNN, con la plantilla diferencial.
-    \item \textbf{Abstención} ($a = 0$ y $\kappa = 1/3$, es decir, los tres vecinos de clases distintas): no se genera
+    \item \textbf{Derivación} ($a = 0$ y $\kappa = 1/3$, es decir, los tres vecinos de clases distintas): no se genera
     reporte y el caso se deriva a un especialista.
 \end{enumerate}
 Las plantillas están en el Apéndice~\ref{ap:prompts}. La plantilla diferencial atribuye la incertidumbre al
-clasificador, aunque uno de los candidatos venga del kNN, y se incluye sin cambios. Como la señal es discreta, no hay
+clasificador, aunque uno de los candidatos venga del kNN, y se incluye sin cambios. El clasificador del ruteo es
+Swin-Tiny, y los reportes de los dos primeros niveles se generan con Mini-VLM y LLaVA-Med. Como la señal es discreta, no hay
 umbral que ajustar, y los tres niveles cubren todos los casos (Figura~\ref{fig:met_ruteo}).
 
 \input{Figures/Capitulos/03-Materiales-Metodos/ruteo}
 
 Esta regla es la política de tres salidas de la Sección~\ref{sec:marco_tres_salidas}, con la concordancia en lugar de la
-confianza. La abstención es una predicción selectiva (Sección~\ref{sec:marco_pred_selectiva}): en ese nivel el sistema
-no emite reporte. El diferencial presenta como candidatos el diagnóstico del clasificador y el voto del kNN, y no los
+confianza. Derivar el caso es la abstención de la predicción selectiva (Sección~\ref{sec:marco_pred_selectiva}): en
+ese nivel el sistema no emite reporte. El diferencial presenta como candidatos el diagnóstico del clasificador y el voto del kNN, y no los
 dos primeros candidatos del clasificador, porque lo que el ruteo mide es el desacuerdo entre ambos predictores. La regla dice
 qué se emite, pero no cuánto aporta el generador.
 
 La línea base sin generador aísla ese aporte. Usa el mismo ruteo y el mismo clasificador, pero no redacta: el nivel
-afirmativo devuelve el diagnóstico del clasificador, el diferencial devuelve el par de candidatos y el nivel de abstención
+afirmativo devuelve el diagnóstico del clasificador, el diferencial devuelve el par de candidatos y el nivel de derivación
 queda igual que en el sistema. Junto con el oracle, que fija la cota superior, completa las referencias del
 \emph{pipeline} anunciadas en la Sección~\ref{sec:met_lineas_base}. Las diferencias con ellas se analizan con las pruebas
 estadísticas de la Sección~\ref{sec:met_estadistica}. Con el \emph{pipeline} queda descrito el sistema completo. Sin embargo, falta

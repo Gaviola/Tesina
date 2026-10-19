@@ -30,14 +30,12 @@ a las 1\,503 imágenes de prueba se les aplican cuatro perturbaciones, con cinco
 6 píxeles) y reducción de la resolución (de 0.75 a 0.15 del tamaño original, y vuelta al tamaño original). En cada caso
 se mide la caída relativa de la sensibilidad macro frente a la imagen sin perturbar
 (Ecuación~\ref{eq:marco_robustez}).
-Asimismo, este análisis, como el de interpretabilidad, usa una sola vista de la imagen, sin \gls{tta}. Por otra parte,
-las perturbaciones sintéticas cubren solo una parte de la variación real entre equipos.
+Asimismo, este análisis, como el de interpretabilidad, usa una sola vista de la imagen, sin \gls{tta}.
 
 La tercera pregunta es cuánto se puede confiar en la probabilidad que da el modelo, que fija el umbral de melanoma y
 que un clínico leería como certeza. Para ello, se miden el ECE y el Brier (Sección~\ref{sec:marco_eval_calib}) sin
 calibrar y con dos ajustes posteriores, \emph{temperature scaling} y \emph{vector scaling}, que se ajustan en validación
-y se evalúan en la prueba. El primero divide todas las salidas por un mismo valor y no cambia la clase predicha. En
-cambio, el segundo aplica un factor y un sesgo por clase, y puede cambiarla. Como el modelo guarda las probabilidades
+y se evalúan en la prueba. Como el modelo guarda las probabilidades
 promediadas con \gls{tta} y no sus salidas previas a la softmax, ambos ajustes se aplican sobre el logaritmo de esas
 probabilidades, una aproximación que se declara. Dado que los pesos por clase alteran la confianza del modelo,
 se comparan dos versiones de la misma configuración, entrenadas con y sin ellos.
