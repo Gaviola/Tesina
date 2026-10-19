@@ -4,6 +4,31 @@ Ayuda-memoria cronológico de experimentos enviados a cluster, ordenado de más 
 
 ---
 
+## 2026-10-18
+
+### Verificaciones del Cap. 3 contra el código — **Sin jobs SLURM** (local)
+Sale de contrastar el Cap. 3 con el código y los registros. Mendieta: 1179986–1179990 siguen `PENDING`
+(Priority) y 1179991 corre hace 21 h; el Cap. 3 describe Mini-VLM v3 y lo marca con `\pendiente`.
+
+- **Calibración post-hoc del split por lesión regenerada** (`posthoc_calibration.py --glob-lesion` →
+  `outputs/results/calibration/posthoc_calibration.json`; no estaba en local ni en TOKO/Mendieta). Reproduce el
+  registro del 26/09: Swin t06 ECE 0.040 → TS 0.027 (T = 0.85) → VS 0.014; ConvNeXt t02 0.040 → 0.027 → 0.033.
+- **HIBA por modalidad versionado** (`scripts/hiba_por_modalidad.py`, nuevo → `outputs/results/hiba_por_modalidad.json`).
+  Las 1 616 imágenes se alinean por posición con `metadata.csv` (verificado con `y_true`). Swin 0.624 / 0.263 de
+  exactitud (dermoscópica / clínica), ConvNeXt 0.632 / 0.283: coincide con la revisión del 03/10. Todas las
+  corridas `*_predictions_hiba.json` usan las mismas 1 616 imágenes.
+- **Piloto de plantillas recalculado con el matcher estricto** (LLaVA-Med, 100 imágenes, sin `<think>`):
+  noreasoning 0.86, confirmed 0.69, conclude 0.58, dxfirst 0.50, baseline 0.46. El orden no cambia; si además se
+  quita el `<think>` sin cerrar, noreasoning sigue en 0.86 y las demás caen a 0.05–0.47.
+- **`<think>` sin cerrar** (`THINK_RE` exige el cierre): solo afecta a LLaVA-Med. En `full_differential_les`, 144 de
+  248 reportes; la consistencia estricta pasaría de 0.677 a 0.407 si se quitara hasta el final. En los demás brazos
+  de LLaVA-Med son 8–30 de 1 503 (diferencias ≤ 0.006). Mini-VLM y SkinVL-MM: ninguno.
+- **Partición de SkinCoT:** 18 imágenes figuran en dos carpetas de enfermedad con textos distintos; el split por id
+  deja 2 136 / 463 / 460 pares (lo que cargó el entrenamiento) y 3 ids de prueba también en train o val
+  (`lichen-planus-89`, `molluscum-contagiosum-144`, `alopecia-areata-23`).
+
+---
+
 ## 2026-10-17
 
 ### DenseNet121 y ViT-B/16 moderna: descarga y análisis — **Sin jobs SLURM** (local)
