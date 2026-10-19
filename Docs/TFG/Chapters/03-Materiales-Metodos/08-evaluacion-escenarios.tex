@@ -14,7 +14,7 @@ población, el mismo equipo de captura y la misma forma de etiquetar. Sin embarg
 más allá y evaluar el sistema en escenarios en que esas condiciones cambian (Sección~\ref{sec:marco_generalizacion}).
 Cada análisis de esta sección responde una pregunta distinta. Casi todos se aplican a los
 clasificadores, que son los que fijan el diagnóstico del \emph{pipeline}. El último, en cambio, incluye también a los
-generadores. Además, salvo que se indique otra cosa, se usan los modelos elegidos en la
+generadores. Salvo que se indique otra cosa, se usan los modelos elegidos en la
 Sección~\ref{sec:met_supervisados} con la semilla 42.
 
 La primera pregunta es si el desempeño se sostiene en otra población. Para responderla se evalúan Swin-Tiny y
@@ -39,7 +39,7 @@ calibrar y con dos ajustes posteriores, \emph{temperature scaling} y \emph{vecto
 y se evalúan en la prueba. El primero divide todas las salidas por un mismo valor y no cambia la clase predicha. En
 cambio, el segundo aplica un factor y un sesgo por clase, y puede cambiarla. Como el modelo guarda las probabilidades
 promediadas con \gls{tta} y no sus salidas previas a la softmax, ambos ajustes se aplican sobre el logaritmo de esas
-probabilidades, una aproximación que se declara. Además, dado que los pesos por clase alteran la confianza del modelo,
+probabilidades, una aproximación que se declara. Dado que los pesos por clase alteran la confianza del modelo,
 se comparan dos versiones de la misma configuración, entrenadas con y sin ellos.
 
 La cuarta pregunta es en qué parte de la imagen se apoya el modelo. Se aplica Grad-CAM

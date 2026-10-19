@@ -12,9 +12,7 @@
 % anterior de DenseNet121 y ViT-B/16, cuyas corridas quedan fuera del capítulo.
 
 Los clasificadores supervisados cumplen dos funciones: son la referencia con la que se juzga si un \gls{vlm} clasifica
-bien (Sección~\ref{sec:met_lineas_base}) y, dentro del \emph{pipeline}, son los que fijan el diagnóstico. En esta
-sección se describen las arquitecturas, el preprocesamiento, el entrenamiento y los hiperparámetros, y cómo se combinan
-los modelos para detectar melanoma.
+bien (Sección~\ref{sec:met_lineas_base}) y, dentro del \emph{pipeline}, son los que fijan el diagnóstico.
 
 \subsection{Arquitecturas}
 \label{sec:met_supervisados_arquitecturas}
@@ -143,10 +141,16 @@ que la configuración heredada no es la mejor para ellos. La grilla completa est
 
 El tratamiento del desbalance merece una comparación aparte, porque los pesos por clase no son la única forma de
 abordarlo (Sección~\ref{sec:marco_desbalance}). Para ello, sobre Swin-Tiny, ConvNeXt-Tiny y DenseNet121 se comparan
-cuatro pérdidas con el mismo procedimiento: la entropía cruzada sin pesos; la entropía cruzada con pesos inversos a la
-frecuencia de cada clase; la pérdida focal con $\gamma = 2$~\cite{lin2017focal}, que resta peso a los ejemplos que el
-modelo ya clasifica con confianza; y \emph{balanced softmax}~\cite{ren2020balanced}, que suma a cada logit el logaritmo
-de la frecuencia de su clase. Para que la pérdida sea lo único que cambia, esta comparación fija el resto de los
+cuatro pérdidas que difieren en cómo ponderan los errores:
+\begin{itemize}[leftmargin=1.6em]
+    \item \textbf{Entropía cruzada sin pesos.}
+    \item \textbf{Entropía cruzada con pesos inversos a la frecuencia de cada clase.}
+    \item \textbf{Pérdida focal} con $\gamma = 2$~\cite{lin2017focal}, que resta peso a los ejemplos que el modelo ya
+        clasifica con confianza.
+    \item \textbf{\emph{Balanced softmax}}~\cite{ren2020balanced}, que suma a cada logit el logaritmo de la frecuencia de
+        su clase en el conjunto de entrenamiento.
+\end{itemize}
+Para que la pérdida sea lo único que cambia, esta comparación fija el resto de los
 hiperparámetros (decaimiento de pesos 0.05, $M = 9$ y una tasa de $10^{-4}$, o de $7.91 \times 10^{-5}$ en DenseNet121)
 y usa una sola semilla.
 
@@ -155,8 +159,8 @@ y usa una sola semilla.
 
 Además de usarse por separado, los dos modelos de la búsqueda, Swin-Tiny y ConvNeXt-Tiny, se combinan por voto suave
 (Sección~\ref{sec:marco_senales_confianza}): la probabilidad de cada clase es el promedio de las que dan ambos, y la
-clase predicha es la de mayor promedio. Solo se combinan esos dos porque son los que eligió la validación; cualquier
-otra combinación exigiría mirar la prueba para elegirla. Por otra parte, para la detección de melanoma, el puntaje es la
+clase predicha es la de mayor promedio. Solo se combinan esos dos porque son los que eligió la validación. Elegir otra
+combinación exigiría consultar la prueba. Por otra parte, para la detección de melanoma, el puntaje es la
 probabilidad de melanoma de cada modelo o del ensamble, con el umbral de la Sección~\ref{sec:met_seleccion}.
 
 Estos clasificadores devuelven una probabilidad por clase, pero no generan texto. Para saber si un \gls{vlm}, que sí lo

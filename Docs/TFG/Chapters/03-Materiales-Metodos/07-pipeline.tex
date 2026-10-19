@@ -37,19 +37,23 @@ una señal de concordancia con el clasificador (Sección~\ref{sec:marco_concorda
 
 La cascada depende de la instrucción con que el generador recibe el diagnóstico. La variante \emph{noreasoning} pide
 solo el reporte final, prohíbe los bloques de razonamiento y prohíbe mencionar diagnósticos alternativos. El motivo es
-que los generadores suelen razonar en voz alta y contradecir el diagnóstico que reciben, y prohibirles el razonamiento
-de manera explícita los obliga a comprometerse con él. La plantilla completa está en el Apéndice~\ref{ap:prompts}.
+que los generadores suelen escribir el razonamiento antes que el reporte y contradecir el diagnóstico que reciben, y
+prohibirlo de manera explícita los obliga a comprometerse con él. La plantilla completa está en el Apéndice~\ref{ap:prompts}.
 La variante se eligió en un piloto de 100 imágenes de \emph{HAM10000}, con el diagnóstico verdadero inyectado,
-midiendo en cuántos reportes se afirmaba; 17 de esas imágenes pertenecen a la prueba (Sección~\ref{sec:met_seleccion}).
+midiendo en cuántos reportes se afirmaba. De esas imágenes, 17 pertenecen a la prueba (Sección~\ref{sec:met_seleccion}).
 
 Una vez fijada la instrucción, el diagnóstico que recibe el generador puede venir de cuatro fuentes, comparadas con el
-mismo generador. La primera es
-Swin-Tiny, la predicción \emph{argmax} del modelo con semilla 42, que se usa como ancla principal y se entrena con la
-partición por lesión (Sección~\ref{sec:met_supervisados}). La segunda es DermLIP en modo \emph{zero-shot}, una
-alternativa sin entrenamiento sobre \emph{HAM10000} (Sección~\ref{sec:met_clasif_vlm}). La tercera es el \emph{oracle},
-que entrega el diagnóstico verdadero: es una cota superior y no un sistema usable, porque en la práctica la etiqueta no
-se conoce de antemano. Finalmente, la cuarta es la ausencia de anclaje: el generador sin diagnóstico, que muestra qué
-aporta el anclaje.
+mismo generador:
+\begin{itemize}[leftmargin=1.6em]
+    \item \textbf{Swin-Tiny}, la predicción \emph{argmax} del modelo con semilla 42, que se usa como ancla principal y se
+        entrena con la partición por lesión (Sección~\ref{sec:met_supervisados}).
+    \item \textbf{DermLIP en modo zero-shot}, una alternativa sin entrenamiento sobre \emph{HAM10000}
+        (Sección~\ref{sec:met_clasif_vlm}).
+    \item \textbf{\emph{Oracle}}, que entrega el diagnóstico verdadero: es una cota superior y no un sistema usable,
+        porque en la práctica la etiqueta no se conoce de antemano.
+    \item \textbf{La ausencia de anclaje}, es decir, el generador sin diagnóstico, que muestra qué aporta el anclaje al
+        reporte.
+\end{itemize}
 
 En los cuatro casos, los generadores son los de la Sección~\ref{sec:met_generacion}, con los pesos
 ajustados allí. La cascada no los reentrena, de modo que el \emph{grounding} es solo de inferencia. Asimismo, se usa la
@@ -60,12 +64,12 @@ Sección~\ref{sec:met_protocolo}.
 \label{sec:met_recuperacion}
 
 La recuperación, en lugar de inyectar una clase, aporta como contexto los casos más parecidos a la imagen. Para ello
-usa el mismo kNN de la Sección~\ref{sec:met_clasif_vlm}, pero como índice de casos y no como clasificador. Sus vecinos se calculan con \emph{embeddings} de DermLIP normalizados y similitud coseno, con $k = 3$ y
-voto mayoritario. Si los tres vecinos son de clases distintas, el voto cae en el más cercano, y ese es el diagnóstico que el kNN
+usa el mismo kNN de la Sección~\ref{sec:met_clasif_vlm}, pero como índice de casos y no como clasificador. Si los tres
+vecinos son de clases distintas, el voto cae en el más cercano, y ese es el diagnóstico que el kNN
 registra en el nivel de abstención (Sección~\ref{sec:met_ruteo}). El índice contiene solo imágenes de entrenamiento de la
-partición por lesión (Sección~\ref{sec:met_particiones}), es decir, ni imágenes ni lesiones de test, y tiene 6\,447
-imágenes. Esta restricción importa porque si una foto de test tiene como vecina otra de su misma lesión, el voto mide
-memoria y no generalización (la fuga de información se define en la Sección~\ref{sec:marco_regularizacion}).
+partición por lesión (Sección~\ref{sec:met_particiones}), es decir, ni imágenes ni lesiones de prueba, y tiene 6\,447
+imágenes. Esta restricción importa porque si una imagen de prueba tiene como vecina otra de su misma lesión, el voto
+mide memoria y no generalización (fuga de información, Sección~\ref{sec:met_particiones}).
 
 Una vez definido el índice, el contexto que recibe el generador es una frase fija con los diagnósticos de los tres
 vecinos y, si el metadato lo trae, su localización. Hay dos plantillas. La de recuperación sola no usa clasificador y pide al generador el
@@ -120,6 +124,6 @@ qué se emite, pero no cuánto aporta el generador.
 La línea base sin generador aísla ese aporte. Usa el mismo ruteo y el mismo clasificador, pero no redacta: el nivel
 afirmativo devuelve el diagnóstico del clasificador, el diferencial devuelve el par de candidatos y el nivel de abstención
 queda igual que en el sistema. Junto con el \emph{oracle}, que fija la cota superior, completa las referencias del
-\emph{pipeline} anunciadas en la Sección~\ref{sec:met_lineas_base}; las diferencias con ellas se analizan con las pruebas
-de la Sección~\ref{sec:met_estadistica}. Con el \emph{pipeline} queda descrito el sistema completo. Sin embargo, falta
+\emph{pipeline} anunciadas en la Sección~\ref{sec:met_lineas_base}. Las diferencias con ellas se analizan con las pruebas
+estadísticas de la Sección~\ref{sec:met_estadistica}. Con el \emph{pipeline} queda descrito el sistema completo. Sin embargo, falta
 ver cómo se evalúa fuera de las condiciones en que se entrenó.

@@ -11,6 +11,11 @@
 \section{Criterios de evaluación}
 \label{sec:met_protocolo}
 
+Fijados los datos y la partición, quedan las reglas con que se juzga cada modelo: qué métricas resumen su desempeño,
+contra qué referencias se leen y con qué pruebas se sostienen las diferencias. La clasificación y la generación de texto
+no se miden igual, así que cada tarea justifica sus métricas por separado, junto con las referencias y las pruebas que
+las acompañan.
+
 \subsection{Métricas de clasificación}
 \label{sec:met_seleccion}
 
@@ -19,7 +24,7 @@ Confundir \gls{mel} con \gls{nv} retrasa la extirpación de una lesión cuya let
 diagnostica; confundir \gls{nv} con \gls{mel} lleva a extirpar una lesión benigna sin necesidad; y las confusiones
 entre clases benignas tienen menos consecuencias~\cite{tschandl2018ham10000,nci2026melanoma}. Como además \gls{nv}
 reúne dos tercios de \emph{HAM10000} (Sección~\ref{sec:met_ham}), un buen resultado global puede esconder un mal
-desempeño en las clases que más importan. Las métricas, entonces, tienen que mirar cada clase y darles a todas el mismo
+desempeño en las clases que más importan. Las métricas, entonces, tienen que considerar cada clase y darles a todas el mismo
 peso.
 
 La sensibilidad macro cumple esa condición: promedia la sensibilidad de las siete clases sin ponderarlas por su
@@ -32,7 +37,7 @@ La sensibilidad macro tiene, sin embargo, un punto ciego: no castiga los falsos 
 muchas imágenes a las clases minoritarias sube su sensibilidad en ellas a costa de equivocarse en las demás. El F1 macro
 corrige ese sesgo, porque combina sensibilidad y precisión en cada clase y también las pondera por igual
 (Ecuación~\ref{eq:marco_f1}). Por eso es el criterio con el que se elige la mejor configuración de cada modelo, y se
-reporta junto a la sensibilidad macro. Cuando ambas divergen, la diferencia muestra el intercambio entre detectar cada
+informa junto a la sensibilidad macro. Cuando ambas divergen, la diferencia muestra el \emph{trade-off} entre detectar cada
 clase y dar falsas alarmas. El F1 ponderado, en cambio, pondera cada clase por su frecuencia y queda dominado por NV: para
 el clasificador trivial vale 0.537, frente a 0.115 del F1 macro.
 
@@ -77,7 +82,7 @@ ideales, y muestra cuánto margen queda.
 
 Para la clasificación hay tres niveles de referencia. En primer lugar, el azar fija el piso de cualquier clasificador de
 siete clases, una sensibilidad macro de 1/7. En segundo lugar, el clasificador trivial que responde siempre NV muestra lo
-que se obtiene del desbalance sin mirar la imagen. Finalmente, los clasificadores supervisados de la
+que se obtiene del desbalance sin usar la imagen. Finalmente, los clasificadores supervisados de la
 Sección~\ref{sec:met_supervisados} son la referencia de los \glspl{vlm}: la primera pregunta de investigación se
 responde comparando los \glspl{vlm} con los clasificadores supervisados. Por otra parte, el \emph{pipeline} tiene sus propias referencias, una cota
 superior que recibe el diagnóstico verdadero y una línea base que no genera texto, y
