@@ -93,9 +93,13 @@ Nivel~1 compara el reporte con una referencia mediante BLEU-4, ROUGE-L, METEOR, 
 (Sección~\ref{sec:marco_eval_texto}). Solo se aplica a \emph{MM-Skin} y a \emph{SkinCoT}, los conjuntos con texto de
 referencia, y no decide ninguna elección. Por otra parte, esas referencias no son diagnósticos clínicos de la lesión, y quién
 las escribió condiciona lo que mide la comparación, como muestra la Tabla~\ref{tab:met_conjuntos}.
-\pendiente{Nivel 1 sobre las particiones de prueba de \emph{MM-Skin} (1\,653) y \emph{SkinCoT}: faltan los jobs
-de Mendieta 1179990 (Mini-VLM v3) y 1179991 (LLaVA-Med v2). Hasta entonces solo hay Nivel 1 sobre el archivo
-completo de \emph{MM-Skin} cortado por tiempo.}
+El Nivel~1 se mide sobre las particiones de prueba, 457 imágenes de \emph{SkinCoT} y 1\,650 de \emph{MM-Skin}, y
+compara solo el reporte, sin los bloques de razonamiento, por el mismo motivo que la consistencia diagnóstica, que se
+explica más abajo. Se descartan los pares sin referencia: las imágenes de \emph{MM-Skin} sin descripción y los textos de
+\emph{SkinCoT} que están enteros dentro de bloques de razonamiento, de modo que quedan 1\,414 y 426 pares. Por otra
+parte, cuando el límite de tokens llega mientras el generador todavía razona, el reporte queda vacío. Esos reportes no
+entran en las métricas, porque no hay texto que comparar con la referencia, pero su proporción se informa junto a
+ellas, para que la falla no quede oculta.
 
 El Nivel~2, en cambio, no necesita referencia y se aplica a la prueba de \emph{HAM10000}, con las dos métricas sin
 referencia de la Sección~\ref{sec:marco_eval_texto}. La cobertura de entidades clínicas (\emph{clinical entity
