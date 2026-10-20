@@ -54,9 +54,9 @@ de lenguaje de Mini-VLM, que reúne las tres proyecciones en un único módulo, 
 adaptador. Así,
 LLaVA-Med entrena 33\,554\,432 parámetros y Mini-VLM 31\,457\,280, menos del 1\,\% de cada modelo. La
 Tabla~\ref{tab:met_lora} reúne la configuración de ambas etapas.
-\pendiente{Mini-VLM se describe en su versión v3 (LoRA también en \texttt{qkv\_proj}), pero los resultados de
-los Caps. 4 y 5 son todavía de la v2 (LoRA solo en el codificador visual). Reemplazarlos cuando bajen los jobs de
-Mendieta 1179986--1179989 (cascada, recuperación y clasificación por verosimilitud y CoT con v3).}
+% Tarea de los Caps. 4 y 5 (no del 3): Mini-VLM se describe en su versión v3 (LoRA también en qkv_proj), pero
+% los resultados de los Caps. 4 y 5 son todavía de la v2 (LoRA solo en el codificador visual). Reemplazarlos con los
+% de v3 (cascada, recuperación y clasificación por verosimilitud y CoT; Mendieta short y 1179986--1179989).
 
 \begin{table}[H]
     \centering
@@ -132,7 +132,7 @@ etapa, la pérdida de validación siguió bajando hasta la última época, que e
 \subsection{Inferencia}
 
 Como casi todos los textos de \emph{SkinCoT} intercalan bloques \texttt{\textless think\textgreater}, un generador
-ajustado con ellos puede reproducirlos y mezclar razonamiento y reporte, algo que ocurre sobre todo en LLaVA-Med. Por
+ajustado con ellos puede reproducirlos y mezclar razonamiento y reporte, algo que hacen los dos generadores ajustados. Por
 eso los bloques se quitan antes de medir, ya que, si se midiera el texto completo,
 los diagnósticos que el razonamiento solo menciona como hipótesis contarían como aciertos
 (Sección~\ref{sec:met_eval_generacion}).
@@ -141,7 +141,9 @@ Sin diagnóstico, en inferencia se usa la misma instrucción del entrenamiento, 
 reemplazan por sus propias plantillas (Sección~\ref{sec:met_pipeline}). En todos los casos se usa decodificación voraz
 (Sección~\ref{sec:marco_llm_grandes}), que hace la generación reproducible. Cada imagen se procesa por separado, con
 un máximo de 384 tokens nuevos (Tabla~\ref{tab:met_decodificacion}). Ese límite alcanza para que casi todos los
-reportes con diagnóstico inyectado terminen, pero corta la mayoría de los que LLaVA-Med escribe sin diagnóstico. La decodificación voraz tiende a repetir frases,
+reportes con diagnóstico inyectado terminen, pero corta la mayoría de los que LLaVA-Med escribe sin diagnóstico. Además,
+si el corte llega mientras el generador todavía razona, el reporte queda vacío, y la
+Sección~\ref{sec:met_eval_generacion} fija cómo se cuentan esos casos. La decodificación voraz tiende a repetir frases,
 pero no se usa penalización de repetición, porque en Mini-VLM hace fallar la generación. Con esta configuración el generador redacta
 el reporte, pero no decide si la lesión es lo bastante clara para afirmar un diagnóstico. El \emph{pipeline} incorpora
 esa decisión.
