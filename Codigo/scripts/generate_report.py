@@ -260,6 +260,9 @@ def main():
                              "restringe la generación a las imágenes de ese split.")
     parser.add_argument("--split", type=str, default=None,
                         help="Split a usar (train|val|test) si se pasa --splits_file.")
+    parser.add_argument("--shard", type=str, default=None,
+                        help="K/N: procesa solo el tramo K (desde 0) de N, tras --limit. Para partir un brazo en "
+                             "jobs cortos (partición short de Mendieta) sobre el mismo --output_dir.")
     args = parser.parse_args()
 
     if args.image is None and args.images_dir is None:
@@ -342,6 +345,13 @@ def main():
         if args.limit is not None:
             image_paths = image_paths[: args.limit]
             logger.info("Limit: procesando a lo sumo %d imágenes", len(image_paths))
+
+        if args.shard:
+            k, n = (int(x) for x in args.shard.split("/"))
+            if not 0 <= k < n:
+                parser.error(f"--shard {args.shard}: se espera K/N con 0 <= K < N")
+            image_paths = image_paths[k::n]
+            logger.info("Shard %d/%d: %d imágenes", k, n, len(image_paths))
 
         def _is_valid_report(path: Path) -> bool:
             """True si el archivo existe y tiene un reporte no vacío (resume defensivo)."""

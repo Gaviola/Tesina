@@ -6,6 +6,22 @@ Ayuda-memoria cronológico de experimentos enviados a cluster, ordenado de más 
 
 ## 2026-10-19
 
+### Mini-VLM v3 troceado en la partición short — Mendieta jobs 1180803–1180818
+Los jobs de `multi` de v3 (1179986–1179990) siguen `PENDING` (Priority) desde el 18/10; `sbatch --test-only`
+estima el arranque de la cascada en `multi` para el 28/10 y el de un job de 1 h en `short` para la misma noche
+(`short` tiene `PriorityJobFactor=100`, `multi` 0). Cambios: `generate_report.py --shard K/N` (procesa el tramo K
+de N tras `--limit`) y `slurm/mendieta/v5/gen_short_mini_v3.sh` (un tramo de un brazo de generación de v3, mismos
+argumentos que cascade/extra/level1_test, 5 CPU y 32 GB en vez del nodo entero; Mini-VLM usa ~25 GB). Subidos por
+`scp` (md5 verificado; copia `generate_report.py.bak_20261019` en remoto). Prueba con el primer brazo:
+`full_baseline` en 16 tramos de ~94 imágenes (~16–38 s por reporte en las corridas anteriores).
+
+```
+for k in $(seq 0 15); do sbatch --export=ALL,ARM=full_baseline,SHARD=$k/16 slurm/mendieta/v5/gen_short_mini_v3.sh; done
+```
+
+Los jobs de `multi` quedan en cola: si arrancan después, saltean los reportes ya válidos. Si un tramo se corta a la
+hora, se reenvía igual. **Resul:** pendiente.
+
 ### Nivel 1 de LLaVA-Med v2 sobre las particiones de prueba — descarga de Mendieta job 1179991 (local)
 1179991 termina `FAILED` tras 30 h, pero la generación está completa: SkinCoT 457/457 y MM-Skin 1 650/1 653. Las 3
 que «faltan» son entradas `bk7_.DS_Store`, `bk8_.DS_Store` y `bk10_.DS_Store` de `mmskin_splits.json` (basura de
