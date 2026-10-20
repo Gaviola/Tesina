@@ -44,6 +44,20 @@ razonado y ~50 s por reporte, así que 94 imágenes no entran en 1 h. El resto d
 (1/28 a 9/28, jobs 1180970–1180978); un tramo cortado se completa con cualquier partición posterior porque se
 saltean los reportes ya válidos. La clasificación (1179988–1179989) no se trocea. **Resul:** pendiente.
 
+**Prioridad para el Cap. 3 (decisión del autor).** Lo indispensable es confirmar que v3 es la configuración final:
+la pérdida de validación de la etapa 2 baja de 1.334 (v2, 1153597) a 0.960 (v3, 1179985; LLaVA-Med 0.939). Se
+envían primero SkinCoT test (Nivel 1, 9 tramos, 1181026–1181034), el nivel diferencial (5, 1181035–1181039) y
+Swin por lesión (25, 1181040–1181064); los 9 tramos de `full_baseline` pasan a `nice=500`. El resto (baseline,
+recuperación, ablaciones, MM-Skin) queda para los Caps. 4–5; para el Nivel 1 de MM-Skin y, si hace falta, para la
+recuperación alcanza un subconjunto fijo de ~500 imágenes.
+
+**TOKO** (`slurm/toko/v5/gen_mini_v3.sh`, nuevo): oracle y dermlip completos (1 503 c/u), brazos que Mendieta no
+tiene asignados. Partición `gpu`, límite 12 h, así que se encadenan dos envíos (`afterany`). Subidos
+`generate_report.py`, `lora_config.py` y `clinical_ner.py` (los únicos distintos del local; copias
+`*.bak_20261019`), `full_dx_{oracle,dermlip}.csv` y la configuración LoRA. El checkpoint (8.7 GB, md5
+`de25b7e4…`) va de Mendieta a TOKO por la máquina local (Mendieta no tiene clave para TOKO), con un script que
+verifica el md5 y recién entonces envía los dos jobs.
+
 ### Nivel 1 de LLaVA-Med v2 sobre las particiones de prueba — descarga de Mendieta job 1179991 (local)
 1179991 termina `FAILED` tras 30 h, pero la generación está completa: SkinCoT 457/457 y MM-Skin 1 650/1 653. Las 3
 que «faltan» son entradas `bk7_.DS_Store`, `bk8_.DS_Store` y `bk10_.DS_Store` de `mmskin_splits.json` (basura de
