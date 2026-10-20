@@ -32,7 +32,9 @@ brazos de HAM10000 el `<think>` aparece en 25 % (swin_les) y 21 % (baseline) de 
 
 **TOKO:** la copia del checkpoint se retoma por la máquina local en tramos de 1 GiB que se saltean si ya están
 completos (borrador `toko_chunks.sh`, fuera del repo); al terminar arma el archivo, verifica el md5 y envía
-`slurm/toko/v5/gen_mini_v3.sh` dos veces con `afterany`.
+`slurm/toko/v5/gen_mini_v3.sh` dos veces con `afterany`. Copia completa a las 18:51 (9 tramos, ~50 min, md5
+`de25b7e4…` igual en origen y destino). **TOKO jobs 99257** (en gpu1 desde las 18:54, empieza por oracle) **y
+99258** (`afterany:99257`). **Resul:** pendiente.
 
 ## 2026-10-19
 
