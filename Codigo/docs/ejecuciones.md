@@ -6,32 +6,27 @@ Ayuda-memoria cronológico de experimentos enviados a cluster, ordenado de más 
 
 ## 2026-10-19
 
-### Mini-VLM v3 troceado en la partición short — Mendieta jobs 1180803–1180818
+### Mini-VLM v3 troceado en la partición short (prueba de 10 tramos) — Mendieta jobs 1180951–1180960
 Los jobs de `multi` de v3 (1179986–1179990) siguen `PENDING` (Priority) desde el 18/10; `sbatch --test-only`
 estima el arranque de la cascada en `multi` para el 28/10 y el de un job de 1 h en `short` para la misma noche
 (`short` tiene `PriorityJobFactor=100`, `multi` 0). Cambios: `generate_report.py --shard K/N` (procesa el tramo K
 de N tras `--limit`) y `slurm/mendieta/v5/gen_short_mini_v3.sh` (un tramo de un brazo de generación de v3, mismos
 argumentos que cascade/extra/level1_test, 5 CPU y 32 GB en vez del nodo entero; Mini-VLM usa ~25 GB). Subidos por
-`scp` (md5 verificado; copia `generate_report.py.bak_20261019` en remoto). Prueba con el primer brazo:
-`full_baseline` en 16 tramos de ~94 imágenes (~16–38 s por reporte en las corridas anteriores).
+`scp` (md5 verificado; copia `generate_report.py.bak_20261019` en remoto).
+
+Un primer envío de todos los brazos en 148 tramos (1180803–1180950) se canceló entero antes de generar nada: el
+autor pidió probar con 10, y los que arrancaron fallaron con `user env retrieval failed requeued held`. La causa es
+el nodo ivb11 (en ivb10 e ivb12 arrancan bien), así que el script lo excluye (`#SBATCH --exclude=ivb11`). Prueba
+vigente: tramos 0–9 de 16 de `full_baseline` (~94 imágenes cada uno), enviados como `submit.py`, con
+`. /etc/profile` antes de `sbatch`:
 
 ```
-for k in $(seq 0 15); do sbatch --export=ALL,ARM=full_baseline,SHARD=$k/16 slurm/mendieta/v5/gen_short_mini_v3.sh; done
+for k in $(seq 0 9); do sbatch --export=ALL,ARM=full_baseline,SHARD=$k/16 slurm/mendieta/v5/gen_short_mini_v3.sh; done
 ```
 
-Mismo día, el resto de los brazos de generación (132 jobs más, 148 en total). Tramos de ~94 imágenes; los de
-recuperación en 24, por su prompt más largo (~38 s por reporte en 1179315):
-
-| Brazo | Tramos | Jobs |
-|---|---|---|
-| full_swin_les / full_oracle / full_dermlip | 16 c/u | 1180819–1180866 |
-| full_differential_les | 3 | 1180867–1180869 |
-| skincot_test / mmskin_test | 5 / 18 | 1180870–1180892 |
-| full_rag_les / full_swin_rag_les | 24 c/u | 1180893–1180940 |
-| full_oracle_noimage / full_wrong_swap | 5 c/u | 1180941–1180950 |
-
-Los jobs de `multi` quedan en cola: si arrancan después, saltean los reportes ya válidos. Si un tramo se corta a la
-hora, se reenvía igual. La clasificación (1179988–1179989) no se trocea y sigue en `multi`. **Resul:** pendiente.
+Primeros tramos: ~3 min de carga y ~6 s por reporte (94 imágenes en ~13 min). Los jobs de `multi` quedan en
+cola: si arrancan después, saltean los reportes ya válidos. La clasificación (1179988–1179989) no se trocea.
+**Resul:** pendiente.
 
 ### Nivel 1 de LLaVA-Med v2 sobre las particiones de prueba — descarga de Mendieta job 1179991 (local)
 1179991 termina `FAILED` tras 30 h, pero la generación está completa: SkinCoT 457/457 y MM-Skin 1 650/1 653. Las 3
