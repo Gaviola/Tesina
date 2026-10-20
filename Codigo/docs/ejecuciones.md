@@ -4,6 +4,33 @@ Ayuda-memoria cronológico de experimentos enviados a cluster, ordenado de más 
 
 ---
 
+## 2026-10-19
+
+### Nivel 1 de LLaVA-Med v2 sobre las particiones de prueba — descarga de Mendieta job 1179991 (local)
+1179991 termina `FAILED` tras 30 h, pero la generación está completa: SkinCoT 457/457 y MM-Skin 1 650/1 653. Las 3
+que «faltan» son entradas `bk7_.DS_Store`, `bk8_.DS_Store` y `bk10_.DS_Store` de `mmskin_splits.json` (basura de
+`caption.csv`), así que el control final del script falla en falso. Corregido en `slurm/mendieta/v5/level1_test.sh`
+(espera 1 650); 1179990 (Mini-VLM v3) ya se envió con la copia anterior y terminará igual. Reportes bajados por
+`tar` sobre ssh a `generated_reports/llava_med/v2/{skincot,mmskin}_test`, log en `outputs/slurm_logs/level1/`.
+
+```
+python scripts/evaluate_reports.py --model llava_med --level 1 --dataset v2/skincot_test --strip-reasoning --output_dir outputs/results/level1_test/skincot_test
+python scripts/evaluate_reports.py --model llava_med --level 1 --dataset v2/mmskin_test  --strip-reasoning --output_dir outputs/results/level1_test/mmskin_test
+```
+
+Se descartan los pares sin referencia: en SkinCoT, 31 textos que están enteros dentro de `<think>` y no dejan
+referencia al quitarlo (quedan 426); en MM-Skin, 236 filas de `caption.csv` sin descripción (quedan 1 414).
+
+| LLaVA-Med v2 | n | BLEU-4 | ROUGE-L | METEOR | CIDEr | BERTScore F1 |
+|---|---|---|---|---|---|---|
+| SkinCoT test | 426 | 0.102 | 0.191 | 0.329 | 0.054 | 0.797 |
+| MM-Skin test | 1 414 | 0.001 | 0.037 | 0.088 | 0.009 | 0.669 |
+
+MM-Skin coincide con el subconjunto de prueba del recálculo del 12/10 (n = 381, BERTScore 0.670). Falta Mini-VLM
+v3 (1179990, `PENDING`).
+
+---
+
 ## 2026-10-18
 
 ### Verificaciones del Cap. 3 contra el código — **Sin jobs SLURM** (local)

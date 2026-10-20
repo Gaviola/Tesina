@@ -24,8 +24,8 @@ echo "=== (1) SkinCoT test (n=457) ==="
 run_arm ${OUT}/skincot_test 457 ${COMMON} --images_dir data/raw/skincare/skincare/SkinCoT/images \
     --reference_dir data/raw/skincare/skincare/SkinCoT/EN \
     --splits_file data/splits/skincare_skincot_splits.json --split test
-echo "=== (2) MM-Skin test (n=1653) ==="
-run_arm ${OUT}/mmskin_test 1653 ${COMMON} --images_dir data/processed/MM-SkinQA \
+echo "=== (2) MM-Skin test (n=1650; el split trae 3 entradas .DS_Store) ==="
+run_arm ${OUT}/mmskin_test 1650 ${COMMON} --images_dir data/processed/MM-SkinQA \
     --reference_csv data/processed/MM-SkinQA/caption.csv \
     --splits_file data/splits/mmskin_splits.json --split test
 finish
