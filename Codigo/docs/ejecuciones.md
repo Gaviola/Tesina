@@ -56,7 +56,8 @@ tiene asignados. Partición `gpu`, límite 12 h, así que se encadenan dos enví
 `generate_report.py`, `lora_config.py` y `clinical_ner.py` (los únicos distintos del local; copias
 `*.bak_20261019`), `full_dx_{oracle,dermlip}.csv` y la configuración LoRA. El checkpoint (8.7 GB, md5
 `de25b7e4…`) va de Mendieta a TOKO por la máquina local (Mendieta no tiene clave para TOKO), con un script que
-verifica el md5 y recién entonces envía los dos jobs.
+verifica el md5 y recién entonces envía los dos jobs. **Postergado:** la copia se cortó a 1.4 GB porque había que
+apagar la máquina local; se borró el `.part` y no se envió nada a TOKO (oracle y dermlip son para el Cap. 5).
 
 ### Nivel 1 de LLaVA-Med v2 sobre las particiones de prueba — descarga de Mendieta job 1179991 (local)
 1179991 termina `FAILED` tras 30 h, pero la generación está completa: SkinCoT 457/457 y MM-Skin 1 650/1 653. Las 3
