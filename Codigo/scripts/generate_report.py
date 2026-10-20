@@ -30,7 +30,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from PIL import Image
 
 from src.models.factory import build_model
-from src.training.lora_config import apply_lora, get_lora_config
+from src.training.lora_config import apply_lora, get_lora_config, load_finetuned_state_dict
 from src.utils.device import get_vram_gb
 from src.utils.io import save_results
 from src.utils.logging import log_time, setup_logger
@@ -102,10 +102,12 @@ def _load_model_with_checkpoint(args):
             )
             model.model = apply_lora(model.model, lora_config)
 
-        model.load_state_dict(ckpt["model_state_dict"], strict=False)
+            result = load_finetuned_state_dict(model, ckpt["model_state_dict"], strict=False)
+        else:
+            result = model.load_state_dict(ckpt["model_state_dict"], strict=False)
         logger.info(
-            "Checkpoint cargado desde %s (época %d)",
-            args.checkpoint, ckpt.get("epoch", "?"),
+            "Checkpoint cargado desde %s (época %d; %d claves faltantes, %d sobrantes)",
+            args.checkpoint, ckpt.get("epoch", "?"), len(result.missing_keys), len(result.unexpected_keys),
         )
 
     return model

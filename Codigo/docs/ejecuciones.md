@@ -6,7 +6,7 @@ Ayuda-memoria cronológico de experimentos enviados a cluster, ordenado de más 
 
 ## 2026-10-19
 
-### Mini-VLM v3 troceado en la partición short (prueba de 10 tramos) — Mendieta jobs 1180951–1180960
+### Mini-VLM v3 troceado en la partición short (prueba de 10 tramos) — Mendieta jobs 1180951–1180978
 Los jobs de `multi` de v3 (1179986–1179990) siguen `PENDING` (Priority) desde el 18/10; `sbatch --test-only`
 estima el arranque de la cascada en `multi` para el 28/10 y el de un job de 1 h en `short` para la misma noche
 (`short` tiene `PriorityJobFactor=100`, `multi` 0). Cambios: `generate_report.py --shard K/N` (procesa el tramo K
@@ -24,9 +24,25 @@ vigente: tramos 0–9 de 16 de `full_baseline` (~94 imágenes cada uno), enviado
 for k in $(seq 0 9); do sbatch --export=ALL,ARM=full_baseline,SHARD=$k/16 slurm/mendieta/v5/gen_short_mini_v3.sh; done
 ```
 
-Primeros tramos: ~3 min de carga y ~6 s por reporte (94 imágenes en ~13 min). Los jobs de `multi` quedan en
-cola: si arrancan después, saltean los reportes ya válidos. La clasificación (1179988–1179989) no se trocea.
-**Resul:** pendiente.
+**Checkpoint v3 sin cargar (bug, corregido).** Esos 10 tramos (7 completos, 742 reportes) iban a ~6 s por reporte
+con textos de ~34 palabras y sin diagnóstico, frente a 160 en v2: era Phi-3.5-vision base. El reintento por OOM
+de 1179985 reusó el modelo ya envuelto por PEFT y el checkpoint guardó las claves como
+`model.base_model.model.base_model.model.…`; `generate_report.py` cargaba con `strict=False`, así que ninguna de
+las 753 claves entraba y no avisaba. Los adaptadores son uno solo (160 tensores LoRA = 96 de CLIP + 64 de
+`qkv_proj`; 31 457 280 entrenables), así que el entrenamiento vale: solo cambia el nombre. v2 no tiene el prefijo
+doble y sus resultados no cambian. Arreglo: `src/training/lora_config.py` (`normalize_peft_keys`,
+`load_finetuned_state_dict`: colapsa el prefijo y falla si queda un adaptador sin cargar), usado por
+`generate_report.py` y `train_vlm_classify.py` (este cargaba estricto, así que 1179988–1179989 habrían fallado
+con error). Verificado sin GPU: las claves normalizadas de v3 = las de v2 + 64 LoRA de `qkv_proj`, con
+`qkv_proj.weight` → `qkv_proj.base_layer.weight`. Subidos por `scp` (md5 verificado; copias `*.bak_20261019` y
+`generate_report.py.bak_20261019b`). Los 742 reportes inválidos quedan apartados en
+`generated_reports/mini_vlm_v3/_invalido_ckpt_sin_cargar_full_baseline/` (remoto). Los jobs de `multi`
+estuvieron retenidos (`scontrol hold`) mientras tanto y se liberaron con el código corregido.
+
+Con el arreglo (1180965, tramo 0/16): «0 claves faltantes, 0 sobrantes», reportes de ~200 palabras con diferencial
+razonado y ~50 s por reporte, así que 94 imágenes no entran en 1 h. El resto de la prueba va en tramos de ~54
+(1/28 a 9/28, jobs 1180970–1180978); un tramo cortado se completa con cualquier partición posterior porque se
+saltean los reportes ya válidos. La clasificación (1179988–1179989) no se trocea. **Resul:** pendiente.
 
 ### Nivel 1 de LLaVA-Med v2 sobre las particiones de prueba — descarga de Mendieta job 1179991 (local)
 1179991 termina `FAILED` tras 30 h, pero la generación está completa: SkinCoT 457/457 y MM-Skin 1 650/1 653. Las 3
