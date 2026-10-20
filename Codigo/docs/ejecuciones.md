@@ -19,8 +19,19 @@ argumentos que cascade/extra/level1_test, 5 CPU y 32 GB en vez del nodo entero; 
 for k in $(seq 0 15); do sbatch --export=ALL,ARM=full_baseline,SHARD=$k/16 slurm/mendieta/v5/gen_short_mini_v3.sh; done
 ```
 
+Mismo día, el resto de los brazos de generación (132 jobs más, 148 en total). Tramos de ~94 imágenes; los de
+recuperación en 24, por su prompt más largo (~38 s por reporte en 1179315):
+
+| Brazo | Tramos | Jobs |
+|---|---|---|
+| full_swin_les / full_oracle / full_dermlip | 16 c/u | 1180819–1180866 |
+| full_differential_les | 3 | 1180867–1180869 |
+| skincot_test / mmskin_test | 5 / 18 | 1180870–1180892 |
+| full_rag_les / full_swin_rag_les | 24 c/u | 1180893–1180940 |
+| full_oracle_noimage / full_wrong_swap | 5 c/u | 1180941–1180950 |
+
 Los jobs de `multi` quedan en cola: si arrancan después, saltean los reportes ya válidos. Si un tramo se corta a la
-hora, se reenvía igual. **Resul:** pendiente.
+hora, se reenvía igual. La clasificación (1179988–1179989) no se trocea y sigue en `multi`. **Resul:** pendiente.
 
 ### Nivel 1 de LLaVA-Med v2 sobre las particiones de prueba — descarga de Mendieta job 1179991 (local)
 1179991 termina `FAILED` tras 30 h, pero la generación está completa: SkinCoT 457/457 y MM-Skin 1 650/1 653. Las 3
