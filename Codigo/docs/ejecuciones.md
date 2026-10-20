@@ -4,6 +4,36 @@ Ayuda-memoria cronológico de experimentos enviados a cluster, ordenado de más 
 
 ---
 
+## 2026-10-20
+
+### Mini-VLM v3 en short: nodo ivb02 excluido y primer vistazo parcial — Mendieta jobs 1180970–1181064 (local)
+Durante la noche terminaron 16 tramos (todos `COMPLETED`; 1180965 `TIMEOUT` con lo que llegó a generar) y desde
+~01:17 no arrancó ninguno más: 38 quedaron `user_env_retrieval_failed_requeued_held`, 33 de los 40 reintentos
+fallidos en ivb02 y 7 en ivb11. El script pasa a `#SBATCH --exclude=ivb02,ivb11` (local y remoto) y a los jobs
+encolados se les aplicó `scontrol update ExcNodeList=ivb02,ivb11` + `scontrol release` (también a 1179986–1179990).
+
+Reportes al cortar (remoto y bajados a `generated_reports/mini_vlm/v3/<brazo>`): `skincot_test` 255/457,
+`full_differential_les` 50, `full_swin_les` 300/1 503, `full_baseline` 283/1 503. Mediana de ~207 palabras (34 con
+el checkpoint sin cargar), así que el modelo cargado es v3. Comparación preliminar sobre las mismas imágenes
+(script de borrador fuera del repo; métrica oficial: solo el reporte, matcher estricto, bootstrap pareado 2 000):
+
+| Brazo | n | v3 | v2 | Δ [IC 95 %] |
+|---|---|---|---|---|
+| `full_swin_les` | 300 | 0.840 | 0.860 | −0.020 [−0.043, +0.003] |
+| `full_differential_les` | 50 | 0.840 | 0.840 | 0.000 [−0.060, +0.060] |
+| `full_baseline` | 283 | 0.194 | 0.187 | +0.007 [−0.053, +0.071] |
+
+Nivel 1 en SkinCoT test (solo el reporte): v3 imita el formato de SkinCoT y abre `<think>` en 164/255 reportes;
+con 384 tokens, **50/255 (20 %) quedan solo con razonamiento** (cortado o en bucle de `<think>`) y el reporte queda
+vacío. LLaVA-Med v2, con el mismo presupuesto: 11/457 con `<think>`, 0 vacíos. Sobre los 193 pares con referencia y
+reporte no vacío en ambos: v3 BLEU-4 0.061, ROUGE-L 0.145, BERTScore F1 0.780; LLaVA-Med 0.108, 0.193, 0.797. En los
+brazos de HAM10000 el `<think>` aparece en 25 % (swin_les) y 21 % (baseline) de los reportes, sin dejar ninguno vacío.
+**Resul:** pendiente (faltan tramos; la decisión sobre v3 es del autor).
+
+**TOKO:** la copia del checkpoint se retoma por la máquina local en tramos de 1 GiB que se saltean si ya están
+completos (borrador `toko_chunks.sh`, fuera del repo); al terminar arma el archivo, verifica el md5 y envía
+`slurm/toko/v5/gen_mini_v3.sh` dos veces con `afterany`.
+
 ## 2026-10-19
 
 ### Mini-VLM v3 troceado en la partición short (prueba de 10 tramos) — Mendieta jobs 1180951–1180978

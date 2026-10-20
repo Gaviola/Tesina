@@ -10,7 +10,7 @@
 #SBATCH --gres=gpu:1
 #SBATCH --time=01:00:00
 ## ivb11 falla al arrancar con «user env retrieval failed» (19/10); se excluye.
-#SBATCH --exclude=ivb11
+#SBATCH --exclude=ivb02,ivb11
 
 ## Un tramo de un brazo de generación de Mini-VLM v3 en la partición short (1 h), para entrar por backfill mientras
 ## los jobs de multi siguen en cola. Mismos argumentos que cascade/extra/level1_test de v5; generate_report.py
