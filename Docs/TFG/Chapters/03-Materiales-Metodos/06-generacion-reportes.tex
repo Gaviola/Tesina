@@ -34,10 +34,8 @@ adicional. Así, SkinVL sirve para saber si la especialización en dermatología
 
 \subsection{Ajuste en dos etapas sobre SkinCaRe}
 
-El ajuste usa \emph{SkinCaRe} y no \emph{HAM10000}, porque este trae una etiqueta por imagen y no un texto que el
-generador pueda aprender a escribir~\cite{tschandl2018ham10000}. Por otra parte, la prueba de \emph{HAM10000} queda
-reservada para medir la fidelidad diagnóstica de los reportes (Sección~\ref{sec:met_eval_generacion}). Las dos partes de \emph{SkinCaRe} enseñan cosas
-distintas. Las descripciones de \emph{SkinCAP} son sobre todo observacionales (sitio, morfología, color y distribución), y la
+El ajuste usa los pares imagen--texto de \emph{SkinCaRe} (Sección~\ref{sec:met_datasets}), cuyas dos partes enseñan
+cosas distintas. Las descripciones de \emph{SkinCAP} son sobre todo observacionales (sitio, morfología, color y distribución), y la
 mayoría cierra con una sugerencia breve de diagnóstico o de biopsia, como «A skin biopsy is recommended to confirm the
 diagnosis». En cambio, los textos de \emph{SkinCoT}, de 23 grupos de enfermedades y no de las siete de
 \emph{HAM10000}, razonan sobre la imagen hasta una impresión diagnóstica explícita~\cite{shen2025skincare}. Por eso el ajuste se hace en dos etapas, una con cada parte, y en ambas
@@ -131,11 +129,11 @@ etapa, la pérdida de validación siguió bajando hasta la última época, que e
 
 \subsection{Inferencia}
 
-Como casi todos los textos de \emph{SkinCoT} intercalan bloques \texttt{\textless think\textgreater}, un generador
-ajustado con ellos puede reproducirlos y mezclar razonamiento y reporte, algo que hacen los dos generadores ajustados. Por
-eso los bloques se quitan antes de medir, ya que, si se midiera el texto completo,
-los diagnósticos que el razonamiento solo menciona como hipótesis contarían como aciertos
-(Sección~\ref{sec:met_eval_generacion}).
+La segunda etapa enseña al generador el formato de \emph{SkinCoT}, en el que casi todos los textos intercalan bloques
+de razonamiento \texttt{\textless think\textgreater} entre las oraciones del reporte (Sección~\ref{sec:met_datasets}).
+Como el generador aprende a escribir con ese formato, en inferencia también abre bloques de razonamiento, y su salida
+contiene a la vez el razonamiento y el reporte. Les ocurre a los dos generadores ajustados, y por eso la evaluación
+separa ambas partes y mide solo el reporte (Sección~\ref{sec:met_eval_generacion}).
 
 Sin diagnóstico, en inferencia se usa la misma instrucción del entrenamiento, y las variantes del \emph{pipeline} la
 reemplazan por sus propias plantillas (Sección~\ref{sec:met_pipeline}). En todos los casos se usa decodificación voraz
@@ -143,8 +141,13 @@ reemplazan por sus propias plantillas (Sección~\ref{sec:met_pipeline}). En todo
 un máximo de 384 tokens nuevos (Tabla~\ref{tab:met_decodificacion}). Ese límite alcanza para que casi todos los
 reportes con diagnóstico inyectado terminen, pero corta la mayoría de los que LLaVA-Med escribe sin diagnóstico. Además,
 si el corte llega mientras el generador todavía razona, el reporte queda vacío, y la
-Sección~\ref{sec:met_eval_generacion} fija cómo se cuentan esos casos. La decodificación voraz tiende a repetir frases,
-pero no se usa penalización de repetición, porque en Mini-VLM hace fallar la generación. Con esta configuración el generador redacta
+Sección~\ref{sec:met_eval_generacion} fija cómo se cuentan esos casos.
+
+La decodificación voraz tiende a repetir frases, y la forma habitual de evitarlo es una penalización de repetición, que
+reduce la probabilidad de los tokens ya presentes en la entrada. Sin embargo, la implementación disponible no es
+compatible con Mini-VLM: la penalización busca en el vocabulario cada token de la entrada, y los que representan la
+imagen en Mini-VLM tienen identificadores fuera de él, de modo que la generación se interrumpe con un error. Por eso
+no se usa en ninguno de los tres generadores, que así comparten la misma decodificación. Con esta configuración el generador redacta
 el reporte, pero no decide si la lesión es lo bastante clara para afirmar un diagnóstico. El \emph{pipeline} incorpora
 esa decisión.
 

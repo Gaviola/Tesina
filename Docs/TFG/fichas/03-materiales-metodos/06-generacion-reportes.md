@@ -1,5 +1,7 @@
 # Ficha 3.6 — Generación de reportes
 
+**Revisión del autor (20/10/2026):** el ajuste «usa SkinCaRe» sin el contraste con HAM10000 ni la reserva de su prueba (ya dicha en 3.3); P7 explica por qué se mezclan razonamiento y reporte (el generador aprende el formato de SkinCoT y en inferencia también abre bloques `<think>`) y remite a 3.3 para cómo se evalúa; la penalización de repetición se explica por la causa real (la implementación de `transformers` indexa el vocabulario con los ids de la entrada y los tokens de imagen de Phi-3.5-vision caen fuera: `docs/ideas/mejoras_resultados_p5_plan_20260713.md` P5.5) y por qué tampoco se usa en los otros dos generadores (misma decodificación).
+
 **Revisión del autor (18/10/2026):** ficha puesta al día con el `.tex`. Antes era 3.7 y su archivo era `07-generacion-reportes.tex`. Sin repetir la presentación de Mini-VLM y LLaVA-Med; sin la historia de la primera configuración de LoRA (queda solo la v3: 31 457 280 entrenables); primero por qué SkinCaRe y después las dos etapas; «Reporte y razonamiento» y «Decodificación» se unen en «Inferencia»; sin «corridas finales» ni el límite de tokens del piloto. Lo que la revisión quitó del texto está en la sección final «Quitado en la revisión del 18/10/2026».
 
 **Estado: aprobada por el autor como punto de partida (11/10/2026); prosa redactada y revisada el 18/10/2026.** Archivo: `Chapters/03-Materiales-Metodos/06-generacion-reportes.tex`. Labels: `sec:met_generacion`, `tab:met_lora`, `tab:met_decodificacion`. Las subsecciones no llevan label.
