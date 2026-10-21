@@ -1,5 +1,7 @@
 # Ficha 3.5 — Clasificación con modelos visión–lenguaje
 
+**Revisión del autor (20/10/2026):** la estrategia 4 ya no habla del «checkpoint de la etapa 2» (el lector no lo conoce): dice que se repiten la verosimilitud y el CoT con los modelos ajustados con LoRA para generar reportes (3.6), sin HAM10000; sale la oración meta «Este control se describe aquí como procedimiento…»; se acorta la repetición de que DermLIP zero-shot y los VLM generativos no usan HAM10000.
+
 **Revisión del autor (18/10/2026):** ficha puesta al día con el `.tex`. Antes era 3.6 y se llamaba `06-clasificacion-vlm`. Los modelos se nombran al final de la introducción, después de presentar los dos tipos de VLM; transición nueva a DermLIP (por qué se incluye); el último párrafo ya no repite los tamaños de la partición. Lo que la revisión quitó del texto está en la sección final «Quitado en la revisión del 18/10/2026».
 
 **Estado: aprobada por el autor como punto de partida (11/10/2026); prosa redactada y revisada el 18/10/2026.** Archivo: `Chapters/03-Materiales-Metodos/05-clasificacion-vlm.tex`. Labels: `sec:met_clasif_vlm` (fijo), `sec:met_vlm_generativos`, `sec:met_vlm_estrategias`, `sec:met_dermlip`, `eq:met_likelihood`, `fig:met_zsvslik` (la figura está en `Figures/Capitulos/03-Materiales-Metodos/zsvslik.tex`).

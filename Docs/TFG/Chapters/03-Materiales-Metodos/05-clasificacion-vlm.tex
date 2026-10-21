@@ -50,10 +50,10 @@ clases. Los \emph{prompts} completos están en el Apéndice~\ref{ap:prompts}.
   falta, se usa el parseo de la primera estrategia, y sin etiqueta válida la respuesta cuenta como «desconocido».
   Además, la respuesta se limita a 32 \emph{tokens} nuevos en la primera estrategia y a 200 en esta, que necesita espacio para el
   razonamiento.
-  \item \textbf{Ajuste fino con \gls{lora}.} Se evalúa el \emph{checkpoint} de la etapa 2 de generación, ajustado con LoRA~\cite{hu2021lora}
-  sobre \emph{SkinCaRe}~\cite{shen2025skincare}, por verosimilitud o por \gls{cot}.
-  Este checkpoint no se ajustó sobre \emph{HAM10000}. El procedimiento en dos etapas se describe en la
-  Sección~\ref{sec:met_generacion}.
+  \item \textbf{Ajuste fino con \gls{lora}.} Se repiten la verosimilitud y el \gls{cot} con los modelos ya ajustados
+  con LoRA~\cite{hu2021lora} para generar reportes, sobre los textos clínicos de \emph{SkinCaRe}~\cite{shen2025skincare}
+  (Sección~\ref{sec:met_generacion}). Ese ajuste no usa \emph{HAM10000}, así que muestra si el ajuste con textos
+  clínicos cambia la clasificación sin que el modelo haya visto las siete categorías.
 \end{enumerate}
 
 \input{Figures/Capitulos/03-Materiales-Metodos/zsvslik}
@@ -74,8 +74,7 @@ Ecuación~\ref{eq:marco_lm}, y $|s|$ la cantidad de tokens de $s$. Como la compa
 
 Una vez definido el puntaje, para comprobar si depende de la imagen, el mismo cálculo se repite con cada imagen
 reemplazada por una gris neutra de $224 \times 224$ píxeles, con el valor 128 en cada canal. Si el modelo sigue dando la misma distribución de
-puntajes, el prompt y no la imagen guía la respuesta. Este control se describe aquí como procedimiento, mientras
-que sus resultados se presentan en los capítulos de resultados.
+puntajes, el prompt y no la imagen guía la respuesta.
 
 \subsection{DermLIP y sus modos de uso}
 \label{sec:met_dermlip}
@@ -111,8 +110,7 @@ con el mismo procedimiento sobre el \emph{embedding} de DermLIP y sobre el de Sw
 representaciones es la misma con cada cabeza, el efecto es de la representación.
 
 En cuanto a los datos, todas las cabezas, sobre DermLIP y sobre Swin, se ajustan sobre el entrenamiento de la partición por lesión
-(Sección~\ref{sec:met_particiones}). El modo zero-shot de DermLIP, en cambio, no depende de la partición, porque
-no se ajusta con \emph{HAM10000}, y lo mismo vale para los \glspl{vlm} generativos, cuyo ajuste usa \emph{SkinCaRe}
-(Sección~\ref{sec:met_generacion}). Todos se evalúan, entonces, sobre la misma prueba que los clasificadores
-supervisados. Por último, los \glspl{vlm} generativos, además de clasificar, pueden redactar, y esa es la tarea de la
+(Sección~\ref{sec:met_particiones}). El modo zero-shot de DermLIP y los \glspl{vlm} generativos, en cambio, no se
+ajustan con \emph{HAM10000}, así que no dependen de la partición. Todos se evalúan, entonces, sobre la misma prueba que
+los clasificadores supervisados. Por último, los \glspl{vlm} generativos, además de clasificar, pueden redactar, y esa es la tarea de la
 sección siguiente.
