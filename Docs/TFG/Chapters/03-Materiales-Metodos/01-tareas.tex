@@ -11,7 +11,7 @@ en su conjunto. A partir de la revisión realizada, la tarea del trabajo se defi
 \begin{quote}
     \emph{a partir de una imagen dermatoscópica de una lesión de piel, se busca clasificarla en una de siete categorías
     diagnósticas, indicar si se trata de un melanoma y redactar un reporte que describa la lesión y afirme el
-    diagnóstico, con modelos que puedan entrenarse y ejecutarse en una sola GPU de consumo.}
+    diagnóstico, con modelos que puedan entrenarse y ejecutarse en una GPU de consumo.}
 \end{quote}
 
 Las siete categorías son las de \emph{HAM10000}, el conjunto de imágenes dermatoscópicas con diagnóstico confirmado
@@ -19,7 +19,7 @@ con el que se entrenan y evalúan los clasificadores~\cite{tschandl2018ham10000}
 Sección~\ref{sec:met_datasets}. Las categorías son \gls{mel}, \gls{nv}, \gls{bcc}, \gls{akiec}, \gls{bkl}, \gls{df} y
 \gls{vasc}, y no tienen la misma gravedad: NV, BKL, DF y VASC son benignas, AKIEC reúne lesiones premalignas y
 carcinomas in situ, y MEL y BCC son malignas. Por eso no todos los errores cuestan lo mismo, y esa diferencia decide
-con qué métricas se juzga a los modelos (Sección~\ref{sec:met_protocolo}).
+con qué métricas se evalúa a los modelos (Sección~\ref{sec:met_protocolo}).
 
 La definición reúne tres tareas, que se distinguen por lo que devuelven:
 \begin{itemize}
@@ -28,7 +28,7 @@ La definición reúne tres tareas, que se distinguen por lo que devuelven:
     \item \textbf{Detección de melanoma (T2).} Recibe la misma imagen y devuelve una decisión binaria: melanoma o no.
     Se obtiene de la probabilidad de melanoma que da T1, así que no busca dónde está la lesión, sino qué es.
     \item \textbf{Generación del reporte (T3).} Recibe la imagen y el diagnóstico que propone el clasificador, y
-    devuelve un texto que describe la lesión y enuncia la impresión diagnóstica.
+    devuelve un texto con sus dos partes, la descripción de la lesión y la impresión diagnóstica.
 \end{itemize}
 Las dos primeras responden la primera pregunta de investigación, sobre si un \gls{vlm} clasifica tan bien como un
 clasificador entrenado solo con imágenes, mientras que la tercera responde la segunda, sobre si el reporte afirma el
@@ -51,12 +51,11 @@ Apéndice~\ref{ap:reproducibilidad} reúne lo necesario para repetir cada experi
 
 Con las tareas definidas, el trabajo sigue el flujo de la Figura~\ref{fig:met_flujo}. Primero se preparan los datos
 y una partición en la que ninguna lesión aparece a la vez en entrenamiento y en prueba, y se fijan los criterios con
-que se juzga cada modelo. Después se entrenan los clasificadores supervisados, que sirven de referencia, y se mide si
+que se evalúa cada modelo. Después se entrenan los clasificadores supervisados, que sirven de referencia, y se mide si
 los \glspl{vlm} clasifican igual de bien. A continuación se ajustan los \glspl{vlm} para generar reportes. El
 \emph{pipeline} cierra el recorrido: un clasificador fija el diagnóstico, el generador redacta el reporte y la
 concordancia con los casos recuperados decide si el sistema afirma, ofrece un diagnóstico diferencial o deriva el
-caso. Que el diagnóstico lo fije un clasificador, y no el propio generador, responde a un resultado: los \glspl{vlm}
-generales no discriminan entre las siete categorías (Capítulo~\ref{cp:res_clasif}). Por último, el tercer objetivo
+caso. Por último, el tercer objetivo
 específico, evaluar el sistema en distintos escenarios, no agrega una tarea: se aplica a los clasificadores y al
 \emph{pipeline} con los análisis de la Sección~\ref{sec:met_complementarios}.
 

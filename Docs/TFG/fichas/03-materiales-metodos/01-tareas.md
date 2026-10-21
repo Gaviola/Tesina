@@ -1,5 +1,7 @@
 # Ficha 3.1 — Definición de las tareas y flujo de trabajo
 
+**Revisión del autor (20/10/2026):** «se juzga» → «se evalúa» (guía §3, verbos literales); sale de P de flujo la oración «Que el diagnóstico lo fije un clasificador… responde a un resultado», que repetía la apertura de 3.7; T3 reformulado para evitar una línea huérfana.
+
 **Revisión del autor (18/10/2026):** ficha puesta al día con el `.tex`. Absorbe la antigua 3.2 (flujo de trabajo): definición formal de la tarea en el formato de la tesina de ejemplo, lista T1–T3 sin el detalle de PI/OE, «gradación» → «no tienen la misma gravedad», HAM10000 presentado con remisión a 3.2, GPUs en una oración (sin tabla, sin CUDA, sin W&B ni versionado), figura del flujo redibujada como etapas del método (sin historia de hipótesis ni ciclo de iteración). Título: «Definición de las tareas y flujo de trabajo».
 
 **Estado: aprobada por el autor como punto de partida (11/10/2026); prosa reescrita el 18/10/2026 y ficha actualizada a esa versión.** Archivo: `Chapters/03-Materiales-Metodos/01-tareas.tex`. Figura: `Figures/Capitulos/03-Materiales-Metodos/flujo_trabajo.tex`. Labels: `sec:met_tareas`, `fig:met_flujo`. Los labels `sec:met_metodologia` y `sec:met_infra` de la antigua 3.2 ya no existen y nadie los referencia (verificado con `grep` sobre los `.tex`).
