@@ -1,8 +1,10 @@
 # Ficha 3.3 — Criterios de evaluación
 
+**Revisión del autor (20/10/2026):** 3.3.1 reescrita para ir al criterio y justificarlo, sin repetir el comienzo de los párrafos; la subsección «Líneas base» desaparece: sus referencias de clasificación (azar, trivial, supervisados como línea base de los VLM) pasan a 3.3.1 (P3) y las del *pipeline* (oracle y línea base sin generador) se definen solo en 3.7. Se conserva «línea base», el término que define el Cap. 2 (`sec:marco_swin`). Sin *trade-off*: la divergencia entre sensibilidad y F1 macro se dice con palabras. El F1 ponderado de la época se justifica con el cálculo (un acierto en DF mueve su sensibilidad 0.07) y con su costo, y se dice dónde entran las prioridades clínicas. De las tres decisiones con la prueba a la vista solo queda acá la del F1 macro (con el dato de `split_lesion_resul_20260926.md` §4: elegir por F1 ponderado solo cambia ConvNeXt); las otras dos se declaran en 3.7. En 3.3.3, el descarte de `<think>` se dice una vez para los dos niveles, y el Nivel 1 explica qué significa que no decida y a qué textos se refiere «quién las escribió».
+
 **Revisión del autor (18/10/2026):** ficha puesta al día con el `.tex`. Ahora es 3.3 (antes 3.4). Sin fechas. Cada métrica con su justificación: F1 ponderado para la época por estabilidad con DF y VASC chicos en validación; F1 macro entre configuraciones; especificidad ≥ 0.85 como decisión de diseño (tope de 15 % de falsas alarmas en validación). Las decisiones tomadas con la prueba a la vista se declaran una sola vez acá. «Líneas base» explica qué es una línea base y una cota. Recibe de la antigua 3.9 la comparación estadística (`sec:met_estadistica`, `tab:met_pruebas` simplificada).
 
-**Estado: aprobada por el autor como punto de partida (11/10/2026); prosa reescrita en la revisión del 18/10/2026.** Archivo: `Chapters/03-Materiales-Metodos/03-criterios-evaluacion.tex` (antes `04-criterios-evaluacion.tex`; sale de la primera subsección de `07-protocolo-evaluacion.tex`). Labels: `sec:met_protocolo` (la sección), `sec:met_seleccion` (3.3.1, «Métricas de clasificación»), `sec:met_lineas_base` (3.3.2), `sec:met_eval_generacion` (3.3.3) y `sec:met_estadistica` (3.3.4, «Comparación estadística», que antes era la subsección de la 3.9). Tablas: `tab:met_roles` (papel de cada métrica) y `tab:met_pruebas` (pruebas estadísticas según la comparación). La sección no tiene párrafo propio antes de la primera subsección.
+**Estado: aprobada por el autor como punto de partida (11/10/2026); prosa reescrita en la revisión del 18/10/2026.** Archivo: `Chapters/03-Materiales-Metodos/03-criterios-evaluacion.tex` (antes `04-criterios-evaluacion.tex`; sale de la primera subsección de `07-protocolo-evaluacion.tex`). Labels: `sec:met_protocolo` (la sección), `sec:met_seleccion` (3.3.1, «Métricas de clasificación»), `sec:met_eval_generacion` (3.3.2) y `sec:met_estadistica` (3.3.3, «Comparación estadística», que antes era la subsección de la 3.9). Tablas: `tab:met_roles` (papel de cada métrica) y `tab:met_pruebas` (pruebas estadísticas según la comparación). La sección no tiene párrafo propio antes de la primera subsección.
 
 Esta sección no presenta ningún desempeño de clasificadores, VLM, *pipeline* ni generación. Los únicos valores numéricos que aparecen son los del clasificador trivial, que son propiedad de los datos (test: 1006 imágenes de NV sobre 1503), y los parámetros de las pruebas estadísticas.
 
@@ -15,60 +17,52 @@ Deja instalado: para 3.4, la métrica de selección de la época y de la configu
 
 ```
 3.3.1 Métricas de clasificación (sec:met_seleccion)
-P1  Costos asimétricos de las confusiones y NV al 67 %: un buen resultado global puede esconder un mal
-    desempeño en las clases que importan; las métricas tienen que mirar cada clase con el mismo peso   función: justifica
-    ↓ necesidad — una medida que cumpla esa condición
-P2  Sensibilidad macro como resultado principal; la exactitud no cumple la condición (clasificador
-    trivial: exactitud 0.669, sensibilidad macro 0.143)                                                función: define · justifica
-    ↓ limitación — la sensibilidad macro no castiga los falsos positivos
-P3  F1 macro corrige ese sesgo: criterio con que se elige la mejor configuración de cada modelo y se
-    reporta junto a la sensibilidad macro; el F1 ponderado queda dominado por NV (trivial: 0.537 frente
-    a 0.115 del F1 macro)                                                                              función: justifica
-    ↓ consecuencia — hay dos métricas de selección y hay que decir cuál elige qué
-P4  Elección en dos niveles: la época por F1 ponderado (estabilidad, con 14 DF y 18 VASC en validación,
-    `tab:met_tamanos`) y la configuración por F1 macro; la prueba no interviene en ninguna             función: define · justifica
-    ↓ problema — las métricas de clases minoritarias dependen de pocas imágenes y cambian entre ejecuciones
-P5  Tres semillas (42, 43 y 44), media ± desvío muestral; el desvío con tres semillas es una estimación
-    gruesa y las comparaciones se completan con las pruebas de 3.3.4                                   función: define · limita
-    ↓ excepción — «la prueba no interviene» tiene tres matices que hay que declarar
-P6  Configuraciones y umbrales se eligen en validación; tres decisiones no son ajenas a la prueba (F1
-    macro como criterio, concordancia como señal del ruteo, instrucción del generador elegida en un
-    piloto con 17 imágenes de prueba); ninguna elige un modelo ni fija un umbral sobre la prueba       función: limita
-    ↓ ampliación — la detección de melanoma (T2) necesita un criterio propio
-P7  Umbral de melanoma: mayor sensibilidad con especificidad ≥ 0.85 fijado en validación y aplicado sin
-    cambios a la prueba; decisión de diseño (tope de 15 % de falsas alarmas); AUC se informa sin
-    intervenir                                                                                         función: define · justifica
+P1  Las confusiones no cuestan lo mismo y NV reúne dos tercios: las métricas tienen que evaluar cada
+    clase por separado y con el mismo peso                                                             función: justifica
+    ↓ consecuencia — qué métricas cumplen esa condición y qué hace cada una
+P2  Sensibilidad macro = resultado principal (fracción de cada clase reconocida; métrica principal del
+    estado del arte, sec:estado_arte_diagnostico); F1 macro = criterio de configuración (penaliza a
+    través de la precisión al modelo que sobrepredice minoritarias); cuando divergen, la diferencia
+    muestra cuánto se gana en detectar a costa de falsas alarmas                                       función: define · justifica
+    ↓ necesidad — un valor aislado no dice nada sin referencias
+P3  Tres referencias: azar (1/7); trivial siempre NV (exactitud 0.669, F1 ponderado 0.537 frente a
+    sensibilidad macro 0.143 y F1 macro 0.115: por eso exactitud y F1 ponderado se informan pero no son
+    el resultado principal); supervisados = línea base de los VLM (PI1)                                función: define
+    ↓ aplicación — cómo se usan las métricas para elegir
+P4  Dos niveles en validación, sin la prueba: configuración por F1 macro; época y detención temprana por
+    F1 ponderado porque con 14 DF y 18 VASC un acierto mueve la sensibilidad de DF 0.07 y el F1 macro
+    saltaría entre épocas; costo: la época puede no ser la mejor para las minoritarias, y las
+    prioridades clínicas se aplican en las otras decisiones                                            función: define · justifica · limita
+    ↓ excepción — el criterio de configuración no es del todo ajeno a la prueba
+P5  F1 macro adoptado con resultados de prueba conocidos; elegir por F1 ponderado solo cambia
+    ConvNeXt-Tiny, con diferencias en la prueba menores que el desvío entre semillas                   función: limita
+    ↓ problema — una misma configuración varía entre ejecuciones
+P6  Tres semillas, media ± desvío muestral; estimación gruesa, las comparaciones van por 3.3.3          función: define · limita
+    ↓ ampliación — T2 necesita su propio criterio
+P7  Umbral de melanoma (especificidad ≥ 0.850 en validación, tope de 15 % de falsas alarmas); AUC se
+    informa                                                                                            función: define · justifica
 
-3.3.2 Líneas base (sec:met_lineas_base)
-    ↓ contraste — las métricas dicen cómo medir; falta decir contra qué se compara
-P8  Qué es una línea base (procedimiento más simple, mismo conjunto de prueba, nivel que hay que superar)
-    y qué es una cota superior (mejor resultado alcanzable en condiciones ideales)                      función: define · justifica
-    ↓ aplicación — cuáles son las referencias del trabajo
-P9  Tres niveles para la clasificación: azar (1/7), clasificador trivial (siempre NV) y clasificadores
-    supervisados como referencia de los VLM (PI1); las referencias del pipeline (cota con diagnóstico
-    verdadero y línea base sin generador) se definen en 3.7 (`sec:met_pipeline`)                       función: define
+3.3.2 Evaluación de la generación (sec:met_eval_generacion)
+    ↓ contraste — un reporte no tiene una única respuesta correcta
+P8  Dos niveles según haya referencia; en los dos se mide solo el reporte (se descartan los bloques
+    `<think>`, incluido el abierto: el clínico lee el reporte y, si no, las hipótesis del razonamiento
+    contarían como aciertos)                                                                           función: define · justifica
+    ↓ ampliación — el nivel con referencia
+P9  Nivel 1: métricas, solo MM-Skin y SkinCoT, particiones de prueba (1650 / 457), pares sin
+    referencia fuera (1414 / 426), reportes vacíos fuera de las métricas con su proporción informada   función: define
+    ↓ limitación — qué significa un valor de Nivel 1
+P10 Se informa pero no elige ningún modelo ni configuración, porque las referencias no son diagnósticos
+    clínicos; lo que mide depende de quién escribió los textos de referencia (libro de texto en
+    MM-Skin; razonamiento escrito por un modelo de lenguaje con el diagnóstico a la vista en SkinCoT)   función: limita
+    ↓ contraste — el nivel sin referencia
+P11 Nivel 2 en la prueba de HAM10000: cobertura de entidades (complemento) y consistencia diagnóstica
+    (métrica principal, PI2)                                                                           función: define · justifica
+    ↓ precisión — cómo se reconoce el diagnóstico
+P12 Búsqueda estricta por palabra completa                                                             función: define · justifica
+    ↓ limitación
+P13 Fidelidad diagnóstica no es validez clínica; `tab:met_roles`                                       función: limita
 
-3.3.3 Evaluación de la generación (sec:met_eval_generacion)
-    ↓ contraste — un texto no se evalúa como una clase: hay o no un texto de referencia
-P10 Dos niveles según haya o no referencia; Nivel 1 (BLEU-4, ROUGE-L, METEOR, CIDEr, BERTScore) solo
-    para MM-Skin y SkinCoT, no decide; esas referencias no son diagnósticos clínicos de la lesión y
-    quién las escribió condiciona lo que mide (`tab:met_conjuntos`)                                    función: define · limita
-    Particiones de prueba (457 / 1650), solo el reporte; sin pares sin referencia (426 / 1414);
-    reportes vacíos fuera de las métricas, con su proporción informada                                función: define · limita
-    ↓ ampliación — el Nivel 2 no necesita referencia
-P11 Nivel 2 en la prueba de HAM10000: cobertura de entidades clínicas (riqueza, no pertinencia) y
-    consistencia diagnóstica (nombra el diagnóstico verdadero o un sinónimo); esta última es la métrica
-    principal de generación porque responde la segunda pregunta de investigación (PI2)                  función: define · justifica
-    ↓ precisión — cómo se calcula la consistencia diagnóstica
-P12 Solo sobre el reporte (se descartan los bloques `<think>`, porque el clínico lee el reporte) y con
-    búsqueda estricta por palabra completa (una búsqueda por fragmentos acreditaría «mel» dentro de
-    «melanocytic»)                                                                                      función: define · justifica
-    ↓ limitación — que el diagnóstico aparezca no garantiza que el texto sea correcto
-P13 Fidelidad diagnóstica no es validez clínica; ningún resultado se presenta como evidencia de validez
-    clínica; remite a `sec:marco_rep_fallas` y presenta `tab:met_roles`                                función: limita
-    → `tab:met_roles` (papel de cada métrica: decide, resultado principal, complemento, solo se informa)
-
-3.3.4 Comparación estadística (sec:met_estadistica)
+3.3.3 Comparación estadística (sec:met_estadistica)
     ↓ necesidad — las métricas dan un número; falta decidir cuándo una diferencia es real
 P14 Una métrica más alta en la prueba no alcanza (con otra muestra el orden podría invertirse); cada
     comparación usa la prueba que corresponde (`tab:met_pruebas`): bootstrap sobre las imágenes (pareado
@@ -83,21 +77,22 @@ P15 Holm sobre los valores p de McNemar; en el bootstrap, diferencia real si el 
 → Transición a la sección siguiente: «Con estos criterios se entrenan y se eligen los clasificadores supervisados de la sección siguiente.»
 ```
 
-Se definen acá (y no se vuelven a definir): criterio de selección en dos niveles (época y configuración); umbral de melanoma; qué es una línea base y una cota; azar y clasificador trivial como líneas base de clasificación; Nivel 1 y Nivel 2 como métricas del trabajo; consistencia diagnóstica solo sobre el reporte y con búsqueda estricta; media ± desvío muestral de tres semillas; la prueba que corresponde a cada comparación, Holm sobre McNemar y el criterio de IC sin el cero; las tres decisiones tomadas con la prueba a la vista.
+Se definen acá (y no se vuelven a definir): criterio de selección en dos niveles (época y configuración); umbral de melanoma; qué es una línea base y una cota; azar y clasificador trivial como líneas base de clasificación; Nivel 1 y Nivel 2 como métricas del trabajo; consistencia diagnóstica solo sobre el reporte y con búsqueda estricta; media ± desvío muestral de tres semillas; la prueba que corresponde a cada comparación, Holm sobre McNemar y el criterio de IC sin el cero; la decisión del F1 macro tomada con la prueba a la vista (las otras dos, en 3.7).
 Se retoman de antes (solo se nombran, con `\ref`): sensibilidad macro, F1, AUC, sensibilidad y especificidad (`sec:marco_eval_clasif`, `eq:marco_f1`, `eq:marco_auc`); BLEU-4, ROUGE-L, METEOR, CIDEr, BERTScore, cobertura de entidades y consistencia diagnóstica (`sec:marco_eval_texto`); bootstrap, McNemar y Holm (`sec:marco_eval_estadistica`, `eq:marco_holm`); alucinación (`sec:marco_rep_fallas`); calibración (`sec:marco_eval_calib`); gravedad de las categorías (`sec:met_tareas`), distribución de clases (`sec:met_ham`), tamaños de validación (`tab:met_tamanos`) y origen de los textos de referencia (`tab:met_conjuntos`) de 3.1 y 3.2.
 Se anuncian y se definen después: cota superior con diagnóstico verdadero y línea base sin generador (3.7, `sec:met_pipeline`); concordancia como señal de ruteo (`sec:met_ruteo`) e instrucción *noreasoning* (`sec:met_cascada`), que acá solo se declaran como decisiones con la prueba a la vista; análisis de calibración (3.8, `sec:met_complementarios`).
 Extensión: 15 párrafos más la transición, unas 4–4.5 páginas, repartidas en cuatro subsecciones y dos tablas.
 
 ## Subsecciones
 
-- **3.3.1 Métricas de clasificación** (`sec:met_seleccion`): P1 a P7. Costos de las confusiones, sensibilidad macro y F1 macro, los dos niveles de selección, las semillas, las decisiones con la prueba a la vista y el umbral de melanoma.
-- **3.3.2 Líneas base** (`sec:met_lineas_base`): P8 y P9. Qué es una línea base y una cota; las referencias de clasificación.
-- **3.3.3 Evaluación de la generación** (`sec:met_eval_generacion`): P10 a P13, con `tab:met_roles`. Los dos niveles, la métrica oficial y la distinción entre fidelidad y validez clínica.
-- **3.3.4 Comparación estadística** (`sec:met_estadistica`): P14 y P15, con `tab:met_pruebas`. Antes era la subsección de pruebas de la antigua 3.9.
+- **3.3.1 Métricas de clasificación** (`sec:met_seleccion`): P1 a P7. Costos de las confusiones, sensibilidad macro y F1 macro, las referencias de clasificación, los dos niveles de selección, la decisión del F1 macro con la prueba a la vista, las semillas y el umbral de melanoma.
+- **3.3.2 Evaluación de la generación** (`sec:met_eval_generacion`): P8 a P13, con `tab:met_roles`. Los dos niveles, la métrica oficial y la distinción entre fidelidad y validez clínica.
+- **3.3.3 Comparación estadística** (`sec:met_estadistica`): P14 y P15, con `tab:met_pruebas`. Antes era la subsección de pruebas de la antigua 3.9.
 
 Sin títulos de párrafo (guía §3).
 
 ## Contenido por párrafo
+
+La tabla conserva la numeración anterior a la revisión del 20/10/2026 (P8 y P9 eran «Líneas base»; P6 tenía las tres decisiones con la prueba a la vista). Las fuentes siguen valiendo; el orden vigente es el del hilo.
 
 | P | Qué dice | Datos y su fuente exacta | Citas (claves verificadas) |
 |---|---|---|---|
@@ -184,7 +179,7 @@ Contenido de la versión anterior de la ficha y del `.tex` que ya no está en el
 
 ## Decisiones tomadas por cuenta propia
 
-- **D1. Cuatro subsecciones** (3.3.1 con `sec:met_seleccion`, 3.3.2 con `sec:met_lineas_base`, 3.3.3 con `sec:met_eval_generacion` y 3.3.4 con `sec:met_estadistica`). La sección se lee como criterio, después líneas base, después generación y después pruebas, y 3.4 encuentra el criterio antes de usarlo.
+- **D1. Tres subsecciones** (3.3.1 con `sec:met_seleccion`, 3.3.2 con `sec:met_eval_generacion` y 3.3.3 con `sec:met_estadistica`; hasta el 20/10 había una 3.3.2 «Líneas base», `sec:met_lineas_base`, absorbida por 3.3.1). La sección se lee como criterio, después generación y después pruebas, y 3.4 encuentra el criterio antes de usarlo.
 - **D2. El clasificador trivial es el único valor numérico de desempeño**, porque es propiedad de los datos y no de un modelo. Verificado con el test de 1503 imágenes (`revision_experimentacion_20261003.md` §1).
 - **D3. El umbral de melanoma** se define como «el que en validación maximiza la sensibilidad con especificidad ≥ 0.85», que es lo que hace `_thr_at_spec`. El ensamble usa la media de probabilidades (3.4).
 - **D4. El desvío es muestral** (`ddof=1`), como en `lesion_split_report.py`.
