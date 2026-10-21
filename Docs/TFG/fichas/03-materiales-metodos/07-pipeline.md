@@ -1,5 +1,7 @@
 # Ficha 3.7 — Pipeline propuesto
 
+**Revisión del autor (21/10/2026):** el autor quitó la oración que declaraba que la concordancia se eligió como señal con resultados de prueba conocidos; queda declarado solo el piloto de *noreasoning* (17 imágenes de prueba).
+
 **Revisión del autor (20/10/2026):** T2 se justifica en vez de «queda fuera»: no necesita del generador, la resuelve el clasificador con el umbral de 3.3; las dos decisiones con la prueba a la vista (17 imágenes del piloto de *noreasoning*, concordancia como señal) se declaran acá, donde se describen, y no en 3.3; el oracle define «cota superior» (ya no la define 3.3); salen repeticiones (fuga de información en el índice, «la recuperación es el segundo predictor», «no hay umbral que ajustar» dicho dos veces, «sin el bloque de razonamiento»); «no redacta» → «no genera texto»; la línea base sin generador ya no remite a `sec:met_lineas_base`.
 
 **Revisión del autor (18/10/2026):** ficha puesta al día con el `.tex`. Ahora es 3.7 (antes 3.8). Se presenta como la propuesta central; sin fechas; el piloto de noreasoning en una oración y la declaración de la concordancia elegida remitida a 3.3; cierre que enlaza con las líneas base de 3.3 y con 3.8.

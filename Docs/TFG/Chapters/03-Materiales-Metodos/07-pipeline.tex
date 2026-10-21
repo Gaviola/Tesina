@@ -89,8 +89,6 @@ necesita un umbral que ajustar (Sección~\ref{sec:marco_concordancia}). Los pred
 ajusta fronteras de decisión sobre \emph{HAM10000}~\cite{tschandl2018ham10000} y el otro es no paramétrico y opera sobre una
 representación preentrenada. Por eso se espera que sus errores no coincidan siempre. Sin embargo, que la concordancia
 separe los aciertos de los errores no se da por supuesto, sino que se comprueba en el Capítulo~\ref{cp:res_clasif}.
-Además, la concordancia se eligió como señal cuando ya se conocían resultados de prueba, aunque la regla no tiene
-ningún umbral ajustado sobre ellos.
 
 Para formalizar la señal, sean $a(x)$ la concordancia entre el clasificador y el voto del kNN, y $\kappa(x)$ el consenso
 de los vecinos (Ecuación~\ref{eq:marco_knn}). Con $k = 3$, el consenso vale $1/3$, $2/3$ o $1$. A partir de ambos, la
