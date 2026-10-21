@@ -1,5 +1,7 @@
 # Ficha 3.2 — Conjuntos de datos
 
+**Revisión del autor (20/10/2026):** el costo de la partición por lesión se dice en imágenes («un 8 % menos de imágenes de entrenamiento que la partición original, 6 447 frente a 7 010»; `ham10000_splits.json` tiene 7 010 en train); MM-Skin ya no da el tamaño de su prueba (1 653 contaba 3 entradas `.DS_Store`): remite a 3.3, que da 1 650; «se juzgan» → «se evalúan».
+
 **Revisión del autor (18/10/2026):** ficha puesta al día con el `.tex`. Ahora es 3.2 (antes 3.3). Menos cifras en el texto: porcentajes de clase, fuentes de etiqueta, conteos del archivo local de MM-Skin, fototipos de HIBA y fuentes de Derm1M se resumen o se quitan; los conteos completos quedan en las tablas y figuras. Se quitan las 66 imágenes que solo comparten lesión con validación y el detalle de SKINCON.
 
 **Estado: aprobada por el autor como punto de partida (11/10/2026); prosa reescrita el 18/10/2026 y ficha actualizada a esa versión.** Archivo: `Chapters/03-Materiales-Metodos/02-datos.tex`. Labels: `sec:met_datasets`, `sec:met_ham`, `sec:met_particiones`, `tab:met_conjuntos` (tabla de conjuntos), `tab:met_tamanos` (tamaños por clase y partición), `fig:met_ham_dist`, `fig:met_ham_lesiones`, `fig:met_ham_ejemplos`. Las subsecciones «SkinCaRe: SkinCAP y SkinCoT» y «MM-Skin, HIBA y Derm1M» no tienen label.
