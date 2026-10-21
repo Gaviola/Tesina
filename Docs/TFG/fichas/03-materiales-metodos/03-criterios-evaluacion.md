@@ -1,5 +1,7 @@
 # Ficha 3.3 — Criterios de evaluación
 
+**Revisión del autor (21/10/2026):** el autor quitó el párrafo que declaraba que el F1 macro se adoptó con resultados de prueba conocidos (P5 del hilo del 20/10).
+
 **Revisión del autor (20/10/2026):** 3.3.1 reescrita para ir al criterio y justificarlo, sin repetir el comienzo de los párrafos; la subsección «Líneas base» desaparece: sus referencias de clasificación (azar, trivial, supervisados como línea base de los VLM) pasan a 3.3.1 (P3) y las del *pipeline* (oracle y línea base sin generador) se definen solo en 3.7. Se conserva «línea base», el término que define el Cap. 2 (`sec:marco_swin`). Sin *trade-off*: la divergencia entre sensibilidad y F1 macro se dice con palabras. El F1 ponderado de la época se justifica con el cálculo (un acierto en DF mueve su sensibilidad 0.07) y con su costo, y se dice dónde entran las prioridades clínicas. De las tres decisiones con la prueba a la vista solo queda acá la del F1 macro (con el dato de `split_lesion_resul_20260926.md` §4: elegir por F1 ponderado solo cambia ConvNeXt); las otras dos se declaran en 3.7. En 3.3.3, el descarte de `<think>` se dice una vez para los dos niveles, y el Nivel 1 explica qué significa que no decida y a qué textos se refiere «quién las escribió».
 
 **Revisión del autor (18/10/2026):** ficha puesta al día con el `.tex`. Ahora es 3.3 (antes 3.4). Sin fechas. Cada métrica con su justificación: F1 ponderado para la época por estabilidad con DF y VASC chicos en validación; F1 macro entre configuraciones; especificidad ≥ 0.85 como decisión de diseño (tope de 15 % de falsas alarmas en validación). Las decisiones tomadas con la prueba a la vista se declaran una sola vez acá. «Líneas base» explica qué es una línea base y una cota. Recibe de la antigua 3.9 la comparación estadística (`sec:met_estadistica`, `tab:met_pruebas` simplificada).
@@ -33,9 +35,6 @@ P4  Dos niveles en validación, sin la prueba: configuración por F1 macro; épo
     F1 ponderado porque con 14 DF y 18 VASC un acierto mueve la sensibilidad de DF 0.07 y el F1 macro
     saltaría entre épocas; costo: la época puede no ser la mejor para las minoritarias, y las
     prioridades clínicas se aplican en las otras decisiones                                            función: define · justifica · limita
-    ↓ excepción — el criterio de configuración no es del todo ajeno a la prueba
-P5  F1 macro adoptado con resultados de prueba conocidos; elegir por F1 ponderado solo cambia
-    ConvNeXt-Tiny, con diferencias en la prueba menores que el desvío entre semillas                   función: limita
     ↓ problema — una misma configuración varía entre ejecuciones
 P6  Tres semillas, media ± desvío muestral; estimación gruesa, las comparaciones van por 3.3.3          función: define · limita
     ↓ ampliación — T2 necesita su propio criterio
@@ -77,7 +76,7 @@ P15 Holm sobre los valores p de McNemar; en el bootstrap, diferencia real si el 
 → Transición a la sección siguiente: «Con estos criterios se entrenan y se eligen los clasificadores supervisados de la sección siguiente.»
 ```
 
-Se definen acá (y no se vuelven a definir): criterio de selección en dos niveles (época y configuración); umbral de melanoma; qué es una línea base y una cota; azar y clasificador trivial como líneas base de clasificación; Nivel 1 y Nivel 2 como métricas del trabajo; consistencia diagnóstica solo sobre el reporte y con búsqueda estricta; media ± desvío muestral de tres semillas; la prueba que corresponde a cada comparación, Holm sobre McNemar y el criterio de IC sin el cero; la decisión del F1 macro tomada con la prueba a la vista (las otras dos, en 3.7).
+Se definen acá (y no se vuelven a definir): criterio de selección en dos niveles (época y configuración); umbral de melanoma; qué es una línea base y una cota; azar y clasificador trivial como líneas base de clasificación; Nivel 1 y Nivel 2 como métricas del trabajo; consistencia diagnóstica solo sobre el reporte y con búsqueda estricta; media ± desvío muestral de tres semillas; la prueba que corresponde a cada comparación, Holm sobre McNemar y el criterio de IC sin el cero; ninguna decisión con la prueba a la vista (el autor quitó la del F1 macro el 21/10/2026).
 Se retoman de antes (solo se nombran, con `\ref`): sensibilidad macro, F1, AUC, sensibilidad y especificidad (`sec:marco_eval_clasif`, `eq:marco_f1`, `eq:marco_auc`); BLEU-4, ROUGE-L, METEOR, CIDEr, BERTScore, cobertura de entidades y consistencia diagnóstica (`sec:marco_eval_texto`); bootstrap, McNemar y Holm (`sec:marco_eval_estadistica`, `eq:marco_holm`); alucinación (`sec:marco_rep_fallas`); calibración (`sec:marco_eval_calib`); gravedad de las categorías (`sec:met_tareas`), distribución de clases (`sec:met_ham`), tamaños de validación (`tab:met_tamanos`) y origen de los textos de referencia (`tab:met_conjuntos`) de 3.1 y 3.2.
 Se anuncian y se definen después: cota superior con diagnóstico verdadero y línea base sin generador (3.7, `sec:met_pipeline`); concordancia como señal de ruteo (`sec:met_ruteo`) e instrucción *noreasoning* (`sec:met_cascada`), que acá solo se declaran como decisiones con la prueba a la vista; análisis de calibración (3.8, `sec:met_complementarios`).
 Extensión: 15 párrafos más la transición, unas 4–4.5 páginas, repartidas en cuatro subsecciones y dos tablas.

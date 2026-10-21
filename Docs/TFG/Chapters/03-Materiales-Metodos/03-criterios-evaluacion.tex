@@ -53,10 +53,6 @@ clases con más imágenes, varía menos. Su costo es que la época conservada pu
 minoritarias, y por eso las prioridades clínicas se aplican en las demás decisiones: la configuración se elige por F1
 macro, el resultado principal es la sensibilidad macro y el melanoma tiene su propio umbral.
 
-El F1 macro se adoptó como criterio de configuración cuando ya se conocían resultados de prueba, así que esa
-elección no es del todo ajena a ella. Sin embargo, elegir por F1 ponderado solo cambiaría la configuración de
-ConvNeXt-Tiny, y las dos configuraciones difieren en la prueba menos que el desvío entre semillas.
-
 Una misma configuración tampoco da siempre el mismo resultado, porque las métricas de las clases minoritarias dependen
 de pocas imágenes. Para estimar esa variación, cada modelo elegido se entrena con tres semillas (42, 43 y 44), y su
 resultado se informa como media $\pm$ desvío estándar muestral. Con tres semillas, sin embargo, el desvío es una
