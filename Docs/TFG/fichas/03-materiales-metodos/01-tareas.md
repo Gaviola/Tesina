@@ -1,5 +1,7 @@
 # Ficha 3.1 — Definición de las tareas y flujo de trabajo
 
+**Revisión del tutor (21/10/2026), aplicada el 22/10:** Abre con «la propuesta de este trabajo se basa en integrar…» (comentario 5). El hardware pasa a 3.9; la restricción de cómputo queda como alcance (una sola GPU de hasta 24 GB, sin varias GPU ni GPU de última generación). El flujo cierra la sección con una oración por etapa y es el único lugar donde se describe el *pipeline* antes de 3.6. Figura `flujo_trabajo.tex` redibujada con el orden nuevo (datos → componentes → *pipeline* → evaluación). La introducción del capítulo (`00-capitulo.tex`) presenta primero la lógica metodológica y después la organización, en presente.
+
 **Revisión del autor (20/10/2026):** «se juzga» → «se evalúa» (guía §3, verbos literales); sale de P de flujo la oración «Que el diagnóstico lo fije un clasificador… responde a un resultado», que repetía la apertura de 3.7; T3 reformulado para evitar una línea huérfana.
 
 **Revisión del autor (18/10/2026):** ficha puesta al día con el `.tex`. Absorbe la antigua 3.2 (flujo de trabajo): definición formal de la tarea en el formato de la tesina de ejemplo, lista T1–T3 sin el detalle de PI/OE, «gradación» → «no tienen la misma gravedad», HAM10000 presentado con remisión a 3.2, GPUs en una oración (sin tabla, sin CUDA, sin W&B ni versionado), figura del flujo redibujada como etapas del método (sin historia de hipótesis ni ciclo de iteración). Título: «Definición de las tareas y flujo de trabajo».

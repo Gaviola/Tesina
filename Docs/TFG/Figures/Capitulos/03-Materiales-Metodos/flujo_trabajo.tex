@@ -1,39 +1,37 @@
 % Figura: flujo de trabajo del proyecto, fig:met_flujo. Usada en sec:met_tareas (3.1).
-% Seis etapas en escalera, cada una con la sección que la describe. Sin cifras ni fechas.
-% Ancho total del dibujo: 140 mm (el ancho de texto es de 150 mm).
+% Orden de la revisión del tutor del 21/10/2026: datos → componentes → pipeline → evaluación. Cada etapa lleva la
+% sección que la describe. Sin cifras ni fechas. Ancho total del dibujo: unos 140 mm (el ancho de texto es de 150 mm).
 
 \begin{figure}[H]
     \centering
     \hyphenpenalty=10000 \exhyphenpenalty=10000
     \begin{tikzpicture}[x=1mm, y=1mm]
-        \tikzset{etapa/.style={text width=44mm, minimum height=9mm}}
 
-        \node[figentrada, etapa] (datos) at (22, 0)
-            {1. Datos y partición por lesión (Sección~\ref{sec:met_datasets})};
-        \node[figentrada, etapa] (crit) at (41, -13)
-            {2. Criterios de evaluación (Sección~\ref{sec:met_protocolo})};
-        \node[figtarea, etapa] (sup) at (60, -26)
-            {3. Clasificadores supervisados (Sección~\ref{sec:met_supervisados})};
-        \node[figtarea, etapa] (vlm) at (79, -39)
-            {4. Clasificación con \glspl{vlm} (Sección~\ref{sec:met_clasif_vlm})};
-        \node[figtarea, etapa] (gen) at (98, -52)
-            {5. Generación de reportes (Sección~\ref{sec:met_generacion})};
-        \node[figsalida, etapa, solid, thick] (pip) at (117, -65)
-            {6. \emph{Pipeline}: cascada y ruteo (Sección~\ref{sec:met_pipeline})};
+        \node[figentrada, text width=24mm] (datos) at (13, 0)
+            {1. Datos y partición por lesión\\{\footnotesize (Sección~\ref{sec:met_datasets})}};
 
-        \draw[figflecha] (datos.south) -- (datos.south |- crit.north);
-        \draw[figflecha] (crit.south) -- (crit.south |- sup.north);
-        \draw[figflecha] (sup.south) -- (sup.south |- vlm.north);
-        \draw[figflecha] (vlm.south) -- (vlm.south |- gen.north);
-        \draw[figflecha] (gen.south) -- (gen.south |- pip.north);
+        \node[figtarea, text width=40mm] (sup) at (63, 15)
+            {2. Clasificadores supervisados\\{\footnotesize (Sección~\ref{sec:met_supervisados})}};
+        \node[figtarea, text width=40mm] (vlm) at (63, 0)
+            {3. Clasificación con \glspl{vlm}\\{\footnotesize (Sección~\ref{sec:met_clasif_vlm})}};
+        \node[figtarea, text width=40mm] (gen) at (63, -15)
+            {4. Generación de reportes\\{\footnotesize (Sección~\ref{sec:met_generacion})}};
+        \node[figgrupo=componentes, inner sep=3mm, fit=(sup) (vlm) (gen)] (comp) {};
 
-        % Evaluación en otros escenarios: se aplica a los clasificadores y al pipeline.
-        \node[fignodo, text width=44mm, minimum height=9mm, draw=figceleste!80!black, fill=figceleste!18]
-            (esc) at (22, -65) {Evaluación en otros escenarios (Sección~\ref{sec:met_complementarios})};
-        \draw[figflecha, densely dashed] (sup.west) -| (esc.north);
-        \draw[figflecha, densely dashed] (pip.west) -- (esc.east);
+        \node[figsalida, solid, thick, text width=26mm] (pip) at (122, 0)
+            {5. \emph{Pipeline}: integración y ruteo\\{\footnotesize (Sección~\ref{sec:met_pipeline})}};
+
+        \node[fignodo, text width=118mm, draw=figceleste!80!black, fill=figceleste!18] (eval) at (72, -38)
+            {6. Evaluación de los componentes y del \emph{pipeline}: criterios y métricas
+            (Sección~\ref{sec:met_protocolo}) y evaluaciones complementarias (Sección~\ref{sec:met_complementarios})};
+
+        \draw[figflecha] (datos.east) -- (comp.west);
+        \draw[figflecha] (comp.east) -- (pip.west);
+        \draw[figflecha] (comp.south) -- (comp.south |- eval.north);
+        \draw[figflecha] (pip.south) -- (pip.south |- eval.north);
+
     \end{tikzpicture}
-    \caption{Flujo de trabajo. Las etapas se encadenan en el orden en que se presentan en este capítulo; la
-    evaluación en otros escenarios se aplica a los clasificadores y al \emph{pipeline}.}
+    \caption{Flujo de trabajo: los componentes se presentan por separado, el \emph{pipeline} los integra y la
+    evaluación se aplica a ambos.}
     \label{fig:met_flujo}
 \end{figure}

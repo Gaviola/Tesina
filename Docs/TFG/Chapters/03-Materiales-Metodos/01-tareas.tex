@@ -2,12 +2,14 @@
 % Fuentes: objetivos PI1, PI2 y OE1--OE3 (Capítulo 1); propuesta del Capítulo 2 (sec:estado_arte_posicion);
 % HAM10000 (\cite{tschandl2018ham10000}), partes del reporte (\cite{shen2025skincare}) y LoRA (\cite{hu2021lora});
 % GPUs: Codigo/CLAUDE.md. Revisión del autor del 18/10/2026: absorbe la antigua Sección 3.2 (flujo de trabajo).
+% Revisión del tutor del 21/10/2026: el hardware pasa a 3.9; la restricción de cómputo queda como alcance; el flujo
+% cierra la sección con una oración por etapa y es el único lugar donde se describe el pipeline antes de 3.6.
 \section{Definición de las tareas y flujo de trabajo}
 \label{sec:met_tareas}
 
-La propuesta de la Sección~\ref{sec:estado_arte_posicion} encadena un clasificador, una recuperación de casos parecidos
-y un generador de reportes. Antes de describir cada uno de esos componentes, conviene fijar qué se le pide al sistema
-en su conjunto. A partir de la revisión realizada, la tarea del trabajo se define de la siguiente manera:
+La propuesta de este trabajo se basa en integrar un clasificador, una recuperación de casos parecidos y un generador
+de reportes (Sección~\ref{sec:estado_arte_posicion}). A partir de la revisión realizada, la tarea que esa propuesta
+resuelve se define de la siguiente manera:
 \begin{quote}
     \emph{a partir de una imagen dermatoscópica de una lesión de piel, se busca clasificarla en una de siete categorías
     diagnósticas, indicar si se trata de un melanoma y redactar un reporte que describa la lesión y afirme el
@@ -40,26 +42,24 @@ imagen~\cite{shen2025skincare}, y por lo tanto las que un modelo puede aprender 
 diferencial completo y la recomendación de manejo quedan fuera del alcance, como también las imágenes de
 histopatología.
 
-La última condición de la definición, una sola GPU de consumo, rige todas las decisiones de modelado. Por ello, no se preentrena ningún modelo.
-Se parte de modelos preentrenados y los \glspl{vlm} se adaptan con \gls{lora}
-(Sección~\ref{sec:marco_llm_lora}), que entrena una fracción pequeña de sus parámetros~\cite{hu2021lora}. En cuanto
-al hardware, los experimentos se ejecutaron en tres GPU: una RTX 4070 de 12~GB, en un equipo personal; una RTX 4080 de
-16~GB, en el clúster TOKO de la Universidad Nacional de Cuyo, donde se entrenaron los clasificadores; y una A30 de
-24~GB, en el clúster Mendieta de la Universidad Nacional de Córdoba, donde se ajustaron los \glspl{vlm} y se generaron
-los reportes. Además, todos los entrenamientos fijan la semilla 42, salvo cuando se indica otra, y el
-Apéndice~\ref{ap:reproducibilidad} reúne lo necesario para repetir cada experimento.
+La última condición de la definición, una GPU de consumo, forma parte del alcance de la propuesta. El trabajo no
+recurre a varias GPU en paralelo ni a GPU de última generación: cada entrenamiento y cada ejecución usan una sola GPU,
+con 24~GB de memoria como máximo. Debido a esta restricción, no se preentrena ningún modelo. Se parte de modelos ya
+preentrenados, y los \glspl{vlm} se adaptan con \gls{lora} (Sección~\ref{sec:marco_llm_lora}), que entrena una
+fracción pequeña de sus parámetros~\cite{hu2021lora}. Las GPU concretas en que se ejecutaron los experimentos se
+detallan en la Sección~\ref{sec:met_entorno}.
 
-Con las tareas definidas, el trabajo sigue el flujo de la Figura~\ref{fig:met_flujo}. Primero se preparan los datos
-y una partición en la que ninguna lesión aparece a la vez en entrenamiento y en prueba, y se fijan los criterios con
-que se evalúa cada modelo. Después se entrenan los clasificadores supervisados, que sirven de referencia, y se mide si
-los \glspl{vlm} clasifican igual de bien. A continuación se ajustan los \glspl{vlm} para generar reportes. El
-\emph{pipeline} cierra el recorrido: un clasificador fija el diagnóstico, el generador redacta el reporte y la
-concordancia con los casos recuperados decide si el sistema afirma, ofrece un diagnóstico diferencial o deriva el
-caso. Por último, el tercer objetivo
-específico, evaluar el sistema en distintos escenarios, no agrega una tarea: se aplica a los clasificadores y al
-\emph{pipeline} con los análisis de la Sección~\ref{sec:met_complementarios}.
+Con las tareas y el alcance definidos, el trabajo sigue el flujo de la Figura~\ref{fig:met_flujo}, en el que cada
+etapa corresponde a una sección de este capítulo. En primer lugar, se describen los datos y se construye una
+partición en la que ninguna lesión aparece a la vez en entrenamiento y en prueba. A continuación, se eligen y se
+configuran tres tipos de componentes: los clasificadores supervisados, que resuelven T1 y T2; los \glspl{vlm} usados
+como clasificadores, que permiten comparar ambos enfoques; y los generadores, que resuelven T3. Luego, el
+\emph{pipeline} integra esos componentes: un clasificador fija el diagnóstico, una búsqueda de casos parecidos aporta
+una segunda opinión y, según coincidan o no, el generador redacta un reporte que afirma el diagnóstico, uno que
+presenta dos candidatos, o el caso se deriva a un especialista. Finalmente, la evaluación compara los componentes y el
+\emph{pipeline} sobre la prueba y en escenarios en que cambian las condiciones de entrenamiento, que es lo que pide el
+tercer objetivo específico.
 
 \input{Figures/Capitulos/03-Materiales-Metodos/flujo_trabajo}
 
-La primera etapa del flujo son los datos: qué conjuntos se usan, qué papel cumple cada uno y cómo se parte el que
-entrena a los clasificadores.
+La primera etapa del flujo son los datos, que condicionan tanto la partición como la elección de los modelos.
