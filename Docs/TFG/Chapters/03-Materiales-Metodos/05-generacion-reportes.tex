@@ -1,7 +1,7 @@
 \section{Generación de reportes}
 \label{sec:met_generacion}
 
-% Extensión estimada: 3--3.5 páginas, con dos tablas (configuración de LoRA y del entrenamiento; decodificación).
+% Extensión estimada: 3.5--4 páginas, con dos tablas (configuración de LoRA y del entrenamiento; decodificación).
 % Fuentes: Codigo/outputs/checkpoints/stage2_mini_vlm_v2 (lora_config.json y best_model.pt, módulos y épocas);
 % Codigo/slurm/mendieta/v2/train_vlm_s2*.sh (tasa, lote, LoRA); Codigo/src/training/two_stage.py (receta de ambas
 % etapas, freeze, instrucción de entrenamiento); Codigo/scripts/train_vlm_stage1.py y train_vlm_stage2.py;
@@ -12,49 +12,83 @@
 % \cite{liu2023visual}, \cite{li2023llavamed}, \cite{jiang2023mistral}, \cite{hu2021lora}, \cite{tschandl2018ham10000}.
 % Mini-VLM v3 (LoRA también en el modelo de lenguaje): job Mendieta 1179985, log en outputs/slurm_logs/mini_vlm/1179985.out
 % (31 457 280 parámetros entrenables, mejor época 10). Revisión del autor del 18/10/2026: sin repetir la presentación
-% de los modelos (Sección 3.5) ni la historia de la primera configuración de LoRA.
+% de los modelos (Sección 3.4) ni la historia de la primera configuración de LoRA.
+% Revisión del tutor del 21/10/2026: abre con qué necesita un reporte y qué limita a cada componente por separado; las
+% dos tablas de configuración van juntas al final; cierra con por qué la generación aislada lleva al pipeline.
 
-En la sección anterior los \glspl{vlm} clasifican, es decir, eligen una etiqueta de un inventario cerrado. En cambio, la
-tarea de generación (T3) les pide otra cosa: un texto libre con las dos partes del reporte, la descripción de la lesión y la
-impresión diagnóstica (Sección~\ref{sec:met_tareas}). Esa forma de salida no se obtiene con una instrucción, y por eso
-los modelos se ajustan con textos clínicos antes de usarlos como generadores.
+Un reporte, tal como lo define la tarea T3 (Sección~\ref{sec:met_tareas}), describe la lesión y termina en una
+impresión diagnóstica. Para redactarlo, un modelo necesita reconocer en la imagen los rasgos que describe y escribir
+con el vocabulario y la estructura de un texto clínico. Ninguno de los componentes presentados hasta aquí cumple por sí
+solo ambas condiciones. Los clasificadores supervisados no generan texto, y los \glspl{vlm} generativos, aunque sí lo
+generan, no producen la forma de un reporte clínico a partir de una instrucción. Por ello, los \glspl{vlm} generativos
+se ajustan con textos clínicos antes de usarlos como generadores.
 
 \subsection{Generadores}
 
-Los generadores ajustados son Mini-VLM y LLaVA-Med, los mismos modelos que se evalúan como clasificadores en la
-Sección~\ref{sec:met_vlm_generativos}. El ajuste es lo que cambia su salida de una etiqueta a un texto. Como ninguno de
-los dos está especializado en dermatología, se agrega un tercer generador que sí lo está.
+Como generadores se usan Mini-VLM y LLaVA-Med, los mismos modelos que se evalúan como clasificadores
+(Sección~\ref{sec:met_vlm_generativos}), de modo que la clasificación y la generación se comparan sobre los mismos
+modelos. El ajuste es lo que cambia su salida de una etiqueta a un texto. Sin embargo, ninguno de los dos está
+especializado en dermatología, y por eso se agrega un tercer generador que sí lo está.
 
-El tercer generador es SkinVL, que \textcite{zeng2025mmskin} presentan junto con MM-Skin, un conjunto de pares imagen--texto de dermatología.
-SkinVL parte de LLaVA-Med v1.5 con Mistral-7B y ajusta con \gls{lora} (rango 128) el modelo de lenguaje y la
-proyección visual, con el codificador visual congelado, en una sola etapa de instrucciones. Se usa la variante
-SkinVL-MM, ajustada solo con \emph{MM-Skin}, con sus pesos publicados (\texttt{zwq803/SkinVL-MM}). Como esos pesos
-no incluyen el codificador visual, se combinaron con los pesos de la versión de LLaVA-Med que sí lo incluye, sin ningún ajuste
-adicional. Así, SkinVL sirve para saber si la especialización en dermatología cambia lo que escribe un generador.
+El tercer generador permite saber si la especialización en dermatología cambia lo que escribe un modelo. Para ello se
+usa SkinVL, que \textcite{zeng2025mmskin} presentan junto con \emph{MM-Skin}. SkinVL parte de LLaVA-Med v1.5 con
+Mistral-7B y ajusta con \gls{lora} (rango 128) el modelo de lenguaje y la proyección visual, con el codificador visual
+congelado, en una sola etapa de instrucciones. Se usa la variante SkinVL-MM, ajustada solo con \emph{MM-Skin}, con sus
+pesos publicados (\texttt{zwq803/SkinVL-MM}). Como esos pesos no incluyen el codificador visual, se combinaron con los
+de la versión de LLaVA-Med que sí lo incluye, sin ningún ajuste adicional.
 
 \subsection{Ajuste en dos etapas sobre SkinCaRe}
 
-El ajuste usa los pares imagen--texto de \emph{SkinCaRe} (Sección~\ref{sec:met_datasets}), cuyas dos partes enseñan
-cosas distintas. Las descripciones de \emph{SkinCAP} son sobre todo observacionales (sitio, morfología, color y distribución), y la
-mayoría cierra con una sugerencia breve de diagnóstico o de biopsia, como «A skin biopsy is recommended to confirm the
-diagnosis». En cambio, los textos de \emph{SkinCoT}, de 23 grupos de enfermedades y no de las siete de
-\emph{HAM10000}, razonan sobre la imagen hasta una impresión diagnóstica explícita~\cite{shen2025skincare}. Por eso el ajuste se hace en dos etapas, una con cada parte, y en ambas
-la instrucción es la misma: «Describe this skin lesion.».
+Mini-VLM y LLaVA-Med se ajustan con los pares imagen--texto de \emph{SkinCaRe} (Sección~\ref{sec:met_datasets}), cuyos
+dos subconjuntos enseñan cosas distintas. Las descripciones de \emph{SkinCAP} son sobre todo observacionales (sitio,
+morfología, color y distribución), y la mayoría cierra con una sugerencia breve de diagnóstico o de biopsia, como «A
+skin biopsy is recommended to confirm the diagnosis». En cambio, los textos de \emph{SkinCoT}, de 23 grupos de
+enfermedades y no de las siete de \emph{HAM10000}, razonan sobre la imagen hasta una impresión diagnóstica
+explícita~\cite{shen2025skincare}. Por eso el ajuste se hace en dos etapas, una con cada subconjunto, y en ambas la
+instrucción es la misma: «Describe this skin lesion.».
 
-La primera etapa usa \emph{SkinCAP} para alinear la imagen con el texto. Para ello, se entrena solo el proyector visual, y el codificador visual
-y el modelo de lenguaje quedan congelados. La segunda etapa usa \emph{SkinCoT} para que el modelo aprenda a redactar hasta el
-diagnóstico. Por la restricción de cómputo, en lugar de ajustar todos los parámetros se aplica \gls{lora}
-(Sección~\ref{sec:marco_llm_lora}) sobre las proyecciones de atención del modelo de lenguaje y del codificador visual,
-con el proyector congelado. Es decir, a diferencia de la receta de LLaVA
-(Sección~\ref{sec:marco_vlm_generativos}), el proyector no se vuelve a ajustar y el codificador visual sí se adapta.
-En ambos componentes son los módulos \texttt{q\_proj} y \texttt{v\_proj}, salvo en el modelo
-de lenguaje de Mini-VLM, que reúne las tres proyecciones en un único módulo, \texttt{qkv\_proj}, donde se coloca el
-adaptador. Así,
-LLaVA-Med entrena 33\,554\,432 parámetros y Mini-VLM 31\,457\,280, menos del 1\,\% de cada modelo. La
-Tabla~\ref{tab:met_lora} reúne la configuración de ambas etapas.
+La primera etapa usa \emph{SkinCAP} para alinear la imagen con el texto. Para ello, se entrena solo el proyector
+visual, y el codificador visual y el modelo de lenguaje quedan congelados. La segunda etapa usa \emph{SkinCoT} para
+que el modelo aprenda a redactar hasta el diagnóstico. Debido a la restricción de cómputo, en lugar de ajustar todos
+los parámetros se aplica \gls{lora} (Sección~\ref{sec:marco_llm_lora}) sobre las proyecciones de atención del modelo
+de lenguaje y del codificador visual, con el proyector congelado. Es decir, a diferencia de la receta de LLaVA
+(Sección~\ref{sec:marco_vlm_generativos}), el proyector no se vuelve a ajustar y el codificador visual sí se adapta. En
+ambos componentes, el adaptador se coloca en los módulos \texttt{q\_proj} y \texttt{v\_proj}, salvo en el modelo de
+lenguaje de Mini-VLM, que reúne las tres proyecciones en un único módulo, \texttt{qkv\_proj}. Así, LLaVA-Med entrena
+33\,554\,432 parámetros y Mini-VLM 31\,457\,280, menos del 1\,\% de cada modelo. La Figura~\ref{fig:met_ajuste} resume
+qué se entrena en cada etapa.
 % Tarea de los Caps. 4 y 5 (no del 3): Mini-VLM se describe en su versión v3 (LoRA también en qkv_proj), pero
 % los resultados de los Caps. 4 y 5 son todavía de la v2 (LoRA solo en el codificador visual). Reemplazarlos con los
 % de v3 (cascada, recuperación y clasificación por verosimilitud y CoT; Mendieta short y 1179986--1179989).
+
+\input{Figures/Capitulos/03-Materiales-Metodos/ajuste}
+
+Los valores del ajuste se eligieron por búsqueda. Las tasas de aprendizaje de las dos etapas y la configuración de LoRA
+salen de una búsqueda aleatoria de cuatro configuraciones por modelo, con la pérdida de validación de la segunda etapa
+como criterio. Además, en la segunda etapa, la pérdida de validación siguió bajando hasta la última época, que es la que
+se conserva. La Tabla~\ref{tab:met_lora} reúne la configuración de ambas etapas.
+
+\subsection{Generación del texto}
+
+Una vez ajustado, el generador conserva el formato de \emph{SkinCoT}, en el que casi todos los textos intercalan
+bloques de razonamiento \texttt{\textless think\textgreater} entre las oraciones del reporte
+(Sección~\ref{sec:met_datasets}). Como aprende a escribir con ese formato, en la generación también abre bloques de
+razonamiento, y su salida contiene a la vez el razonamiento y el reporte. Les ocurre a los dos generadores ajustados, y
+por eso la evaluación separa ambas partes y mide solo el reporte (Sección~\ref{sec:met_eval_generacion}).
+
+Sin diagnóstico, la generación usa la misma instrucción del entrenamiento, y las variantes del \emph{pipeline} la
+reemplazan por sus propias plantillas (Sección~\ref{sec:met_pipeline}). En todos los casos se usa decodificación voraz
+(Sección~\ref{sec:marco_llm_grandes}), que hace la generación reproducible. Cada imagen se procesa por separado, con
+un máximo de 384 tokens nuevos. Ese límite alcanza para que casi todos los reportes con diagnóstico inyectado terminen,
+pero corta la mayoría de los que LLaVA-Med escribe sin diagnóstico. Además, si el corte llega mientras el generador
+todavía razona, el reporte queda vacío, y la Sección~\ref{sec:met_eval_generacion} fija cómo se cuentan esos casos.
+
+La decodificación voraz tiende a repetir frases, y la forma habitual de evitarlo es una penalización de repetición, que
+reduce la probabilidad de los tokens ya presentes en la entrada. Sin embargo, la implementación disponible no es
+compatible con Mini-VLM: la penalización busca en el vocabulario cada token de la entrada, y los que representan la
+imagen en Mini-VLM tienen identificadores fuera de él, de modo que la generación se interrumpe con un error. Por eso
+no se usa en ninguno de los tres generadores, que así comparten la misma decodificación
+(Tabla~\ref{tab:met_decodificacion}).
 
 \begin{table}[H]
     \centering
@@ -114,7 +148,7 @@ Tabla~\ref{tab:met_lora} reúne la configuración de ambas etapas.
         \filasep
         Recorte de gradiente & 1.0 \\
         \filasep
-        Precisión & bf16 en GPU de arquitectura Ampere o posterior \\
+        Precisión numérica & bf16 \\
         \filasep
         Cuantización & No \\
         \filasep
@@ -122,34 +156,6 @@ Tabla~\ref{tab:met_lora} reúne la configuración de ambas etapas.
         \bottomrule
     \end{tabularx}
 \end{table}
-
-Las tasas de aprendizaje de las dos etapas y la configuración de LoRA se eligieron en una búsqueda aleatoria de cuatro
-configuraciones por modelo, con la pérdida de validación de la segunda etapa como criterio. Además, en la segunda
-etapa, la pérdida de validación siguió bajando hasta la última época, que es la que se conserva.
-
-\subsection{Inferencia}
-
-La segunda etapa enseña al generador el formato de \emph{SkinCoT}, en el que casi todos los textos intercalan bloques
-de razonamiento \texttt{\textless think\textgreater} entre las oraciones del reporte (Sección~\ref{sec:met_datasets}).
-Como el generador aprende a escribir con ese formato, en inferencia también abre bloques de razonamiento, y su salida
-contiene a la vez el razonamiento y el reporte. Les ocurre a los dos generadores ajustados, y por eso la evaluación
-separa ambas partes y mide solo el reporte (Sección~\ref{sec:met_eval_generacion}).
-
-Sin diagnóstico, en inferencia se usa la misma instrucción del entrenamiento, y las variantes del \emph{pipeline} la
-reemplazan por sus propias plantillas (Sección~\ref{sec:met_pipeline}). En todos los casos se usa decodificación voraz
-(Sección~\ref{sec:marco_llm_grandes}), que hace la generación reproducible. Cada imagen se procesa por separado, con
-un máximo de 384 tokens nuevos (Tabla~\ref{tab:met_decodificacion}). Ese límite alcanza para que casi todos los
-reportes con diagnóstico inyectado terminen, pero corta la mayoría de los que LLaVA-Med escribe sin diagnóstico. Además,
-si el corte llega mientras el generador todavía razona, el reporte queda vacío, y la
-Sección~\ref{sec:met_eval_generacion} fija cómo se cuentan esos casos.
-
-La decodificación voraz tiende a repetir frases, y la forma habitual de evitarlo es una penalización de repetición, que
-reduce la probabilidad de los tokens ya presentes en la entrada. Sin embargo, la implementación disponible no es
-compatible con Mini-VLM: la penalización busca en el vocabulario cada token de la entrada, y los que representan la
-imagen en Mini-VLM tienen identificadores fuera de él, de modo que la generación se interrumpe con un error. Por eso
-no se usa en ninguno de los tres generadores, que así comparten la misma decodificación. Con esta configuración el generador redacta
-el reporte, pero no decide si la lesión es lo bastante clara para afirmar un diagnóstico. El \emph{pipeline} incorpora
-esa decisión.
 
 \begin{table}[H]
     \centering
@@ -168,8 +174,8 @@ esa decisión.
         \filasep
         Penalización de repetición & No se usa \\
         \filasep
-        Instrucción de inferencia & Sin diagnóstico, «Describe this skin lesion.», la del entrenamiento; con
-            diagnóstico, las plantillas de la Sección~\ref{sec:met_pipeline} \\
+        Instrucción & Sin diagnóstico, «Describe this skin lesion.», la del
+            entrenamiento; con diagnóstico, las plantillas de la Sección~\ref{sec:met_pipeline} \\
         \filasep
         Semilla & 42 \\
         \filasep
@@ -178,3 +184,10 @@ esa decisión.
         \bottomrule
     \end{tabularx}
 \end{table}
+
+Con esta configuración, cada generador redacta un reporte a partir de la imagen, pero el diagnóstico que afirma
+depende solo de lo que el propio generador reconoce en ella. Los generadores no se ajustaron con las siete categorías
+de \emph{HAM10000}, y un \gls{vlm} generativo puede eludir el diagnóstico con reservas o afirmar uno que la imagen no
+sustenta (Sección~\ref{sec:marco_rep_fallas}). Además, el generador no indica cuándo la lesión es lo bastante clara
+para afirmar un diagnóstico. Para abordar estas limitaciones, la sección siguiente integra el generador con un
+clasificador y con la recuperación de casos parecidos.
