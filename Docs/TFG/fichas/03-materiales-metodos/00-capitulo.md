@@ -3,7 +3,66 @@
 **Estado (11/10/2026): aprobada por el autor como punto de partida; revisada el 18/10/2026 (ver abajo).** Contrato del capítulo. Ninguna sección se redacta hasta que
 el autor apruebe esta ficha y la ficha de la sección (guía §1).
 
-## Revisión del autor del 18/10/2026 (prevalece sobre lo que sigue)
+## Revisión del tutor del 21/10/2026 (prevalece sobre todo lo que sigue) — PROPUESTA, a aprobar
+
+Fuente: `feedback/cap_3/feedback_cap3.md` (mensaje, tres audios y 31 comentarios del PDF transcritos al final).
+Las reglas generales que deja pasaron a la guía (§3, «Capítulo de metodología», y entradas nuevas en «Léxico
+preciso», «Voz y estilo» y la lista de control). Mensaje del tutor: el capítulo no está mal, pero hay que
+reordenarlo para que se lea como las decisiones que llevan del problema al *pipeline* y a su evaluación.
+Revierte la decisión D2 del 11/10 (criterios antes de los modelos).
+
+### Estructura nueva
+
+| Nueva | Título | Archivo (renombrado) | Viene de | Qué cambia |
+|---|---|---|---|---|
+| Intro | — | `00-capitulo.tex` | Intro | Primero la lógica metodológica (problema → componentes → integración → evaluación), después la organización en dos o tres oraciones; sin describir el *pipeline* (lo hace 3.1) ni sección por sección; presente |
+| 3.1 | Definición de las tareas y flujo de trabajo | `01-tareas.tex` | 3.1 | Problema y tareas juntos; la restricción de cómputo queda como alcance, sin GPU ni clústeres; la Figura 3.1 (redibujada con el orden nuevo) culmina la sección con una oración por etapa; abre con «la propuesta de este trabajo integra…» |
+| 3.2 | Conjuntos de datos | `02-datos.tex` | 3.2 | P1 describe los conjuntos; P2 explica su papel por uso (entrenamiento, validación, prueba, evaluación externa, preentrenamiento de terceros) y por qué *HAM10000* pesa más; la tabla agrupa por uso. Partición reescrita: 70/15/15 explicado, la fuga dicha sin «inflar», sin «así está hecha». *SkinCaRe* sin «en dos partes». Cierre: cómo los datos condicionan la elección de los modelos |
+| 3.3 | Clasificadores supervisados | `03-clasificadores-supervisados.tex` | 3.4 | Estructura común: propósito → modelos seleccionados (por qué, luego características) → figura de uso → configuración (entrada, entrenamiento) → procedimiento experimental (búsqueda, semillas, funciones de pérdida, ensamble). Los criterios se nombran con `\ref` a 3.7. «Función de pérdida» en la tabla; «voto suave (*soft voting*)». Conserva el párrafo de cierre hacia los VLM |
+| 3.4 | Clasificación con modelos visión–lenguaje | `04-clasificacion-vlm.tex` | 3.5 | La misma estructura que 3.3; figura de uso de Mini-VLM/LLaVA-Med y de DermLIP; sin repetir arquitectura del Cap. 2 |
+| 3.5 | Generación de reportes | `05-generacion-reportes.tex` | 3.6 | Abre con qué información necesita un reporte y qué limitaciones tienen los modelos por separado; configuración de entrenamiento y de generación agrupadas; cierra con por qué la generación aislada lleva a integrar los componentes. Sin «inventario cerrado»; LoRA solo se nombra |
+| 3.6 | Pipeline propuesto | `06-pipeline.tex` | 3.7 | Componentes disponibles (qué aporta cada uno) → necesidad de integrarlos (debilidades conocidas por el marco y el estado del arte, sin resultados propios) → arquitectura (figura) → funcionamiento (cascada, recuperación) → decisiones de salida (ruteo en tres niveles). Sale «como muestra el Capítulo 4». Arquitectura general separada de las reglas de decisión |
+| 3.7 | Protocolo y criterios de evaluación | `07-criterios-evaluacion.tex` | 3.3 | Criterios generales (selección en validación, referencias, semillas) → métricas de clasificación y umbral de melanoma → evaluación de la generación de reportes → comparación estadística. Tabla experimento → qué se busca → métrica. Recibe el *oracle* y la línea base sin generador como referencias del *pipeline* |
+| 3.8 | Evaluaciones complementarias | `08-evaluaciones-complementarias.tex` | 3.8 | Una subsección por tipo: generalización a otra población, robustez, calibración, interpretabilidad, costo computacional; cada una con objetivo, procedimiento y métrica. Sin GPU ni lotes («el costo computacional de los modelos y del *pipeline*»); la Tabla 2.8 citada con su capítulo |
+| 3.9 | Entorno experimental y recursos computacionales | `09-entorno-experimental.tex` (nuevo) | dispersa en 3.1, 3.3, 3.6, 3.8 | GPU y clústeres y qué se ejecutó en cada uno, precisión numérica, tamaños de lote, semillas, bibliotecas, cómo se midió el costo y remisión al apéndice de reproducibilidad |
+
+Los labels se mueven con su contenido, así que los `\ref` de otros capítulos no se rompen (`sec:met_seleccion`,
+`sec:met_protocolo`, `sec:met_estadistica`, `sec:met_complementarios` siguen existiendo).
+
+### Comentarios puntuales y dónde se resuelven
+
+| # (feedback) | Qué | Dónde |
+|---|---|---|
+| 1, 2 | Presente en la intro; «pruebas diseñadas» | Intro |
+| 3, 4, 20 | Modelos y *pipeline* antes que métricas y pruebas | Estructura nueva |
+| 5 | «encadena» → «integra» | 3.1 |
+| 6, 28, 29 | Hardware, GPU y lotes a una sección propia | 3.9 |
+| 7 | Flujo con una oración por etapa | 3.1 |
+| 8–10 | Papel de los conjuntos explicado en dos párrafos | 3.2 |
+| 11–14 | Partición: 70/15/15, fuga, «inflaba» | 3.2 |
+| 15 | «en dos partes» | 3.2 |
+| 16 | Quitar «(Sección 3.2.1)» | 3.7 |
+| 17 | «Evaluación de la generación de reportes» | 3.7 |
+| 18 | «tenga un valor más alto de una métrica» | 3.7 |
+| 19 | Tabla de pruebas citada junto a ella | 3.7 |
+| 21 | «Función de pérdida» | 3.3 |
+| 22 | «voto suave (*soft voting*)» | 3.3 |
+| 23 | Figuras de los modelos | 3.3, 3.4, 3.5 |
+| 24 | «inventario cerrado» | 3.5 |
+| 25, 26 | Sin resultados en la motivación del *pipeline* | 3.6 |
+| 27, 30, 31 | «sistema», Tabla 2.8, «protocolo» | 3.8 |
+
+### Figuras nuevas (TikZ, estilos de `13-Figuras.sty`)
+
+- 3.1: flujo de trabajo con el orden nuevo (reemplaza `flujo_trabajo.tex`).
+- 3.3: clasificador supervisado en este trabajo: *backbone* preentrenado → *dropout* → capa lineal de siete
+  salidas → probabilidades; qué se entrena en cada etapa.
+- 3.4: Mini-VLM y LLaVA-Med (codificador visual → proyector → modelo de lenguaje, con el *prompt*) y DermLIP
+  (codificador de imagen → *embedding* → cuatro cabezas). La Figura 3.5 (*zero-shot* frente a verosimilitud) se
+  conserva o se integra.
+- 3.5: el ajuste en dos etapas, con qué se entrena y qué queda congelado en cada una.
+
+## Revisión del autor del 18/10/2026 (reemplazada en la estructura por la del 21/10)
 
 El autor revisó el capítulo redactado y pidió acercarlo a la tesina de ejemplo: menos extensión, mejor hilo entre
 secciones, solo la configuración final y nada que importe al equipo pero no al lector. Se aplicó así:
