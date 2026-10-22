@@ -1,5 +1,7 @@
 # Ficha 3.8 — Evaluación en otros escenarios
 
+**Revisión del tutor (21/10/2026), aplicada el 22/10:** Antes «Evaluación en otros escenarios». Una subsección por tipo (generalización, robustez, calibración, interpretabilidad, costo computacional), cada una con objetivo, procedimiento y métrica. Sin «sistema» ni «protocolo» sin referente (27, 31); la Tabla 2.8 citada con su capítulo (30); GPU y lotes pasan a 3.9 (28, 29). Cierra con `tab:met_experimentos` (*longtable*), que relaciona cada experimento con lo que busca, sus datos y su métrica.
+
 **Revisión del autor (18/10/2026):** ficha puesta al día con el `.tex`. Reemplaza a la antigua 3.9 «Análisis complementarios» con el título «Evaluación en otros escenarios» (OE3). Sin las tres tablas de protocolo; las pruebas estadísticas pasaron a 3.3; un párrafo y una pregunta por análisis (HIBA, perturbaciones, calibración, Grad-CAM, costo).
 
 **Estado: aprobada por el autor como punto de partida (11/10/2026); prosa reescrita el 18/10/2026.** Archivo: `Chapters/03-Materiales-Metodos/08-evaluacion-escenarios.tex` (antes `09-analisis-complementarios.tex`). Label: `sec:met_complementarios` (se conserva el nombre de la sección anterior porque lo referencian 3.1, 3.2, 3.3 y el `00-capitulo.tex`, y la figura `flujo_trabajo.tex`). Sin subsecciones. Desaparecen `sec:met_inferencia`, `sec:met_analisis_compl`, `tab:met_protocolos`, `tab:met_protocolos_vlm`, `tab:met_protocolos_analisis` y `tab:met_pruebas` (esta última vive ahora en 3.3); `sec:met_estadistica` pasó a 3.3.
