@@ -1,5 +1,7 @@
 # Ficha 3.7 — Pipeline propuesto
 
+**Revisión del tutor (21/10/2026), aplicada el 22/10:** Antes era 3.7. Orden pedido por el tutor: componentes disponibles → necesidad de integrarlos (desde el estado del arte, `sec:marco_rep_fallas` y `sec:marco_senales_confianza`; sale «como muestra el Capítulo 4», 25) → arquitectura (figura) → funcionamiento (cascada, recuperación) → decisiones de salida (ruteo). En la cascada, el diseño de la instrucción va antes del piloto. Las cuatro fuentes de diagnóstico, el *oracle* y la línea base sin generador pasan a 3.7 (decisión del autor del 22/10). La concordancia como señal se presenta como hipótesis del diseño.
+
 **Revisión del autor (21/10/2026):** el autor quitó la oración que declaraba que la concordancia se eligió como señal con resultados de prueba conocidos; queda declarado solo el piloto de *noreasoning* (17 imágenes de prueba).
 
 **Revisión del autor (20/10/2026):** T2 se justifica en vez de «queda fuera»: no necesita del generador, la resuelve el clasificador con el umbral de 3.3; las dos decisiones con la prueba a la vista (17 imágenes del piloto de *noreasoning*, concordancia como señal) se declaran acá, donde se describen, y no en 3.3; el oracle define «cota superior» (ya no la define 3.3); salen repeticiones (fuga de información en el índice, «la recuperación es el segundo predictor», «no hay umbral que ajustar» dicho dos veces, «sin el bloque de razonamiento»); «no redacta» → «no genera texto»; la línea base sin generador ya no remite a `sec:met_lineas_base`.
