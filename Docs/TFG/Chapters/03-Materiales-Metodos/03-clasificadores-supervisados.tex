@@ -1,6 +1,6 @@
 \section{Clasificadores supervisados}
 \label{sec:met_supervisados}
-% Extensión estimada: 3.5--4 páginas, con tres tablas, en cuatro subsecciones.
+% Extensión estimada: 4--4.5 páginas, con una figura y tres tablas, en tres subsecciones.
 % Fuentes: src/models/classifiers.py; src/data/transforms.py; src/training/recipes.py, optim_groups.py,
 % schedulers.py, losses.py; src/evaluation/tta.py; scripts/train_classifier.py; scripts/toko/submit_sweep.py
 % y submit.py (valores efectivos); scripts/sweep_utils.py y configs/sweeps/phase1_modern_sweep_grid.yaml
@@ -10,18 +10,34 @@
 % melanoma_detection.py. No se usan como fuente los configs/*.yaml de clasificación, porque train_classifier.py no los lee.
 % Revisión del autor del 18/10/2026: solo la configuración final; sin comparar recetas ni describir la búsqueda
 % anterior de DenseNet121 y ViT-B/16, cuyas corridas quedan fuera del capítulo.
+% Revisión del tutor del 21/10/2026: estructura común con 3.4 (propósito → modelos seleccionados → configuración →
+% procedimiento experimental); el motivo de la elección antes de las características; figura de uso; los criterios
+% de selección se definen en 3.7 y acá solo se nombran.
 
-Los clasificadores supervisados cumplen dos funciones: son la línea base con la que se evalúa si un \gls{vlm} clasifica
-bien (Sección~\ref{sec:met_seleccion}) y, dentro del \emph{pipeline}, son los que fijan el diagnóstico.
+Los clasificadores supervisados cumplen dos funciones en el trabajo. Por un lado, resuelven la clasificación (T1) y la
+detección de melanoma (T2) con modelos entrenados solo con imágenes, y son la línea base
+(Sección~\ref{sec:marco_swin}) con la que se mide si un \gls{vlm} clasifica igual de bien. Por otro lado, dentro del
+\emph{pipeline}, son los que fijan el diagnóstico que recibe el generador. Para cumplir ambas funciones hacen falta
+modelos que aprendan de unas 6\,400 imágenes y que puedan entrenarse en una GPU de consumo.
 
-\subsection{Arquitecturas}
+\subsection{Modelos seleccionados}
 \label{sec:met_supervisados_arquitecturas}
 
-Se comparan cuatro arquitecturas, dos convolucionales, DenseNet121 y ConvNeXt-Tiny (Sección~\ref{sec:marco_cnn}), y
-dos basadas en transformers, ViT-B/16 y Swin-Tiny (Secciones~\ref{sec:marco_vit} y~\ref{sec:marco_swin}). Los cuatro
-parten de pesos preentrenados en \emph{ImageNet}-1K, y su última capa se reemplaza por una cabeza de siete salidas
-precedida por un \emph{dropout} de 0.3 (Tabla~\ref{tab:met_modelos_sup}). Respecto del tamaño, las variantes Tiny, con
-unos 27.5 millones de parámetros, tienen un tercio de los de ViT-B/16.
+Las dos familias de arquitecturas de visión, las convolucionales y las basadas en transformers, parten de supuestos
+distintos sobre la imagen, y ninguna se impone de antemano (Sección~\ref{sec:marco_vision}). A su vez, los trabajos de
+clasificación dermatológica revisados evalúan casi solo redes convolucionales (Sección~\ref{sec:estado_arte_diagnostico}).
+Por ello, el trabajo compara las dos familias con el mismo procedimiento, y de cada una toma dos de los modelos
+presentados en el Capítulo~\ref{cp:marco}: DenseNet121 y ConvNeXt-Tiny entre las convolucionales, y ViT-B/16 y
+Swin-Tiny entre las basadas en transformers. Las variantes Tiny, con unos 27.5 millones de parámetros, tienen un tercio
+de los de ViT-B/16 (Tabla~\ref{tab:met_modelos_sup}).
+
+Los cuatro modelos se usan de la misma manera, que muestra la Figura~\ref{fig:met_clasificador}. Cada uno parte de
+pesos preentrenados en \emph{ImageNet}-1K, y su última capa se reemplaza por una cabeza de siete salidas, precedida
+por un \emph{dropout} de 0.3. La softmax convierte esas salidas en una probabilidad por clase, de la que se obtienen
+las dos respuestas del clasificador: la clase de mayor probabilidad, para T1, y la probabilidad de melanoma, que se
+compara con un umbral para T2.
+
+\input{Figures/Capitulos/03-Materiales-Metodos/clasificador}
 
 \begin{table}[H]
     \centering
@@ -43,38 +59,36 @@ unos 27.5 millones de parámetros, tienen un tercio de los de ViT-B/16.
     \end{tabularx}
 \end{table}
 
-\subsection{Preprocesamiento y aumento de datos}
-\label{sec:met_supervisados_preprocesamiento}
-
-En cuanto a la entrada, las imágenes de \emph{HAM10000} se reducen una sola vez a $224 \times 224$ píxeles, sin
-conservar su proporción, y todos los modelos de este capítulo parten de esa versión. Los clasificadores, además, las
-reciben normalizadas con la media y el desvío de \emph{ImageNet}. Por otra parte, con 6\,447 imágenes de entrenamiento (Sección~\ref{sec:met_particiones}), el riesgo
-principal es el sobreajuste (Sección~\ref{sec:marco_regularizacion}), y para reducirlo el entrenamiento aplica aumentos
-de datos que cambian la imagen sin cambiar su clase, ya que una misma lesión puede fotografiarse con otro encuadre, otra
-orientación u otra iluminación. En concreto, se toma un recorte aleatorio de entre el 70\,\% y el 100\,\% del área, se voltea la imagen
-horizontalmente con probabilidad 0.5, se aplican dos transformaciones de RandAugment~\cite{cubuk2020randaugment} con una
-magnitud $M$ que se eligió por búsqueda, y se borra un rectángulo al azar con probabilidad
-0.25~\cite{zhong2020random}.
-
-En cambio, en validación y en prueba la imagen se redimensiona a $256 \times 256$ y se recorta el centro de
-$224 \times 224$. Las probabilidades finales de ambas particiones se obtienen con \gls{tta}
-(Sección~\ref{sec:marco_regularizacion}), con la imagen y su reflejo horizontal, mientras que la validación de cada
-época, que decide la detención temprana, usa una sola vista. Así, la salida de cada clasificador es una probabilidad por
-clase, de la que se calculan las métricas de la Sección~\ref{sec:met_protocolo}.
-
-\subsection{Entrenamiento e hiperparámetros}
+\subsection{Configuración del entrenamiento}
 \label{sec:met_supervisados_receta}
 
-Una vez fijadas las entradas, cada modelo se adapta a \emph{HAM10000} en dos etapas, que encadenan las dos opciones de
-la Sección~\ref{sec:marco_transferencia}: primero la extracción de características y después el ajuste fino. En la
-primera etapa, con el \emph{backbone} congelado, se entrena solo la cabeza nueva durante una época, de modo que el ajuste
-fino no parta de una cabeza inicializada al azar. En la segunda se
-descongela toda la red y cada capa recibe 0.85 veces la tasa de aprendizaje de la capa siguiente
-(Ecuación~\ref{eq:marco_llrd}). Esta etapa dura hasta 39 épocas, con tres de calentamiento lineal y decaimiento coseno de la tasa
-\cite{goyal2017accurate,loshchilov2017sgdr}. Por otra parte, el optimizador es AdamW~\cite{loshchilov2019decoupled} y la
-pérdida es la entropía cruzada con suavizado de etiquetas de 0.1~\cite{szegedy2016rethinking,muller2019does}.
-Finalmente, la detención temprana corta el entrenamiento si el F1 ponderado de validación no mejora en cinco épocas, y se
-conserva la mejor época (Sección~\ref{sec:met_seleccion}). La Tabla~\ref{tab:met_receta} reúne estos valores.
+La configuración parte de la entrada. Las imágenes de \emph{HAM10000} se reducen una sola vez a $224 \times 224$
+píxeles, sin conservar su proporción, y todos los modelos de este capítulo parten de esa versión. Los clasificadores,
+además, las reciben normalizadas con la media y el desvío de \emph{ImageNet}. Como el entrenamiento cuenta con 6\,447
+imágenes (Sección~\ref{sec:met_particiones}), el riesgo principal es el sobreajuste
+(Sección~\ref{sec:marco_regularizacion}). Para reducirlo se aplican aumentos de datos que cambian la imagen sin
+cambiar su clase, ya que una misma lesión puede fotografiarse con otro encuadre, otra orientación u otra iluminación.
+En concreto, se toma un recorte aleatorio de entre el 70\,\% y el 100\,\% del área, se voltea la imagen horizontalmente
+con probabilidad 0.5, se aplican dos transformaciones de RandAugment~\cite{cubuk2020randaugment} con una magnitud $M$
+que se elige por búsqueda, y se borra un rectángulo al azar con probabilidad 0.25~\cite{zhong2020random}.
+
+En validación y en prueba, en cambio, no hay aumento. La imagen se redimensiona a $256 \times 256$ y se recorta el
+centro de $224 \times 224$. Las probabilidades finales de ambas particiones se obtienen con \gls{tta}
+(Sección~\ref{sec:marco_regularizacion}), que promedia las de la imagen y su reflejo horizontal, mientras que la
+validación de cada época usa una sola vista.
+
+Con las entradas fijadas, cada modelo se adapta a \emph{HAM10000} en dos etapas, que corresponden a las dos opciones
+de la Sección~\ref{sec:marco_transferencia}: primero la extracción de características y después el ajuste fino. En la
+primera etapa, con el resto de la red congelado, se entrena solo la cabeza nueva durante una época, de modo que el
+ajuste fino no parta de una cabeza inicializada al azar. En la segunda se descongela toda la red, y cada capa recibe
+0.85 veces la tasa de aprendizaje de la capa siguiente (Ecuación~\ref{eq:marco_llrd}). Esta etapa dura hasta 39
+épocas, con tres de calentamiento lineal y decaimiento coseno de la tasa~\cite{goyal2017accurate,loshchilov2017sgdr}.
+
+Los demás elementos del entrenamiento son comunes a los cuatro modelos. El optimizador es
+AdamW~\cite{loshchilov2019decoupled}, y la función de pérdida es la entropía cruzada con suavizado de etiquetas de
+0.1~\cite{szegedy2016rethinking,muller2019does}. Finalmente, la detención temprana corta el entrenamiento si el F1
+ponderado de validación no mejora en cinco épocas, y se conserva la mejor época; la
+Sección~\ref{sec:met_seleccion} justifica ese criterio. La Tabla~\ref{tab:met_receta} reúne estos valores.
 
 \begin{table}[H]
     \centering
@@ -93,7 +107,7 @@ conserva la mejor época (Sección~\ref{sec:met_seleccion}). La Tabla~\ref{tab:m
         \filasep
         Planificador & Calentamiento lineal de tres épocas desde 0.1 de la tasa; luego coseno \\
         \filasep
-        Pérdida & Entropía cruzada, con suavizado de etiquetas de 0.1 \\
+        Función de pérdida & Entropía cruzada, con suavizado de etiquetas de 0.1 \\
         \filasep
         Detención temprana & Paciencia de cinco épocas sobre el F1 ponderado de validación \\
         \filasep
@@ -102,21 +116,23 @@ conserva la mejor época (Sección~\ref{sec:met_seleccion}). La Tabla~\ref{tab:m
         Inferencia & \gls{tta} con la imagen y su reflejo horizontal \\
         \filasep
         Precisión numérica & \emph{bfloat16} (bf16) \\
-        \filasep
-        Semillas & 42 en la búsqueda; 42, 43 y 44 en la configuración elegida de cada modelo \\
         \bottomrule
     \end{tabularx}
 \end{table}
 
-Además de estos valores comunes, tres hiperparámetros se eligieron por búsqueda: la tasa de aprendizaje, el decaimiento
-de pesos y la magnitud de RandAugment (Tabla~\ref{tab:met_barrido}). Las cinco tasas se cruzaron con los tres decaimientos, y cada magnitud se
-asignó a cinco de esas 15 combinaciones. Todas se entrenaron con la semilla 42, con y sin pesos por clase en la
-pérdida (Sección~\ref{sec:marco_desbalance}), lo que suma 30 configuraciones por modelo. La
-búsqueda se hizo sobre Swin-Tiny y ConvNeXt-Tiny, y en ambos ganó, por F1 macro en validación, una configuración sin
-pesos por clase. En cambio, DenseNet121 y ViT-B/16 no tuvieron búsqueda propia, sino que cada uno usa la configuración
-ganadora del modelo de su misma familia, la de ConvNeXt-Tiny en el caso de DenseNet121 y la de Swin-Tiny en el de ViT-B/16. Así los cuatro
-se comparan con el mismo procedimiento, aunque con una salvedad: si DenseNet121 o ViT-B/16 rinden menos, puede deberse a
-que la configuración heredada no es la mejor para ellos. La grilla completa está en el Apéndice~\ref{ap:hiperparametros}.
+\subsection{Procedimiento experimental}
+\label{sec:met_supervisados_ensamble}
+
+Además de los valores comunes, tres hiperparámetros se eligen por búsqueda: la tasa de aprendizaje, el decaimiento de
+pesos y la magnitud de RandAugment (Tabla~\ref{tab:met_barrido}). Las cinco tasas se cruzan con los tres
+decaimientos, y cada magnitud se asigna a cinco de esas 15 combinaciones. Cada combinación se entrena con y sin pesos
+por clase en la función de pérdida (Sección~\ref{sec:marco_desbalance}), lo que suma 30 configuraciones por modelo,
+todas con la semilla 42. La búsqueda se hizo sobre Swin-Tiny y ConvNeXt-Tiny, y en ambos ganó, con el criterio de la
+Sección~\ref{sec:met_seleccion}, una configuración sin pesos por clase. DenseNet121 y ViT-B/16, en cambio, usan la
+configuración ganadora del modelo de su misma familia: la de ConvNeXt-Tiny en el caso de DenseNet121 y la de Swin-Tiny
+en el de ViT-B/16. Así los cuatro se comparan con el mismo procedimiento, aunque si DenseNet121 o ViT-B/16 rinden
+menos, puede deberse a que la configuración heredada no es la mejor para ellos. La grilla completa está en el
+Apéndice~\ref{ap:hiperparametros}.
 
 \begin{table}[H]
     \centering
@@ -138,22 +154,26 @@ que la configuración heredada no es la mejor para ellos. La grilla completa est
     \end{tabularx}
 \end{table}
 
-El tratamiento del desbalance merece una comparación aparte, porque los pesos por clase no son la única forma de
-abordarlo (Sección~\ref{sec:marco_desbalance}). Para ello, sobre Swin-Tiny, ConvNeXt-Tiny y DenseNet121 se comparan
-cuatro pérdidas: la entropía cruzada sin pesos, la ponderada con pesos inversos a la frecuencia de cada clase, la
-pérdida focal con $\gamma = 2$~\cite{lin2017focal}, que se combina con esos mismos pesos, y el \emph{balanced
-softmax}~\cite{ren2020balanced}, sin pesos.
-Para que la pérdida sea lo único que cambia, esta comparación fija el resto de los
-hiperparámetros (decaimiento de pesos 0.05, $M = 9$ y una tasa de $10^{-4}$, o de $7.91 \times 10^{-5}$ en DenseNet121)
-y usa una sola semilla.
+Una vez elegida la configuración, cada modelo se entrena con tres semillas (42, 43 y 44), porque las métricas de las
+clases minoritarias dependen de pocas imágenes y una sola ejecución no muestra cuánto varía el resultado.
 
-\subsection{Ensamble y detección de melanoma}
-\label{sec:met_supervisados_ensamble}
+Los pesos por clase no son la única forma de abordar el desbalance (Sección~\ref{sec:marco_desbalance}), y por eso se
+comparan aparte cuatro funciones de pérdida sobre Swin-Tiny, ConvNeXt-Tiny y DenseNet121:
+\begin{itemize}
+    \item \textbf{Entropía cruzada sin pesos}, la de la configuración común.
+    \item \textbf{Entropía cruzada ponderada}, con pesos inversos a la frecuencia de cada clase.
+    \item \textbf{Pérdida focal} con $\gamma = 2$~\cite{lin2017focal}, combinada con esos mismos pesos.
+    \item \textbf{\emph{Balanced softmax}}~\cite{ren2020balanced}, sin pesos.
+\end{itemize}
+Para que la función de pérdida sea lo único que cambia, esta comparación fija el resto de los hiperparámetros
+(decaimiento de pesos 0.05, $M = 9$ y una tasa de $10^{-4}$, o de $7.91 \times 10^{-5}$ en DenseNet121) y usa una sola
+semilla.
 
-Además de usarse por separado, los dos modelos de la búsqueda, Swin-Tiny y ConvNeXt-Tiny, se combinan por voto suave
-(Sección~\ref{sec:marco_senales_confianza}). Solo se combinan esos dos porque son los que eligió la validación. Elegir otra
-combinación exigiría consultar la prueba. Por otra parte, para la detección de melanoma, el puntaje es la
-probabilidad de melanoma de cada modelo o del ensamble, con el umbral de la Sección~\ref{sec:met_seleccion}.
+Por último, los dos modelos de la búsqueda, Swin-Tiny y ConvNeXt-Tiny, también se combinan por voto suave
+(\emph{soft voting}; Sección~\ref{sec:marco_senales_confianza}), que promedia sus probabilidades. Solo se combinan esos
+dos porque son los que eligió la validación, y elegir otra combinación exigiría consultar la prueba. Para la detección
+de melanoma, el puntaje es la probabilidad de melanoma de cada modelo o del ensamble, con el umbral que fija la
+Sección~\ref{sec:met_seleccion}.
 
 Estos clasificadores devuelven una probabilidad por clase, pero no generan texto. Para saber si un \gls{vlm}, que sí lo
 genera, clasifica tan bien como ellos, se los compara con las mismas métricas (Sección~\ref{sec:met_clasif_vlm}).

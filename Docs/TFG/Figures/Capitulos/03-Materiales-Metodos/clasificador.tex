@@ -1,0 +1,34 @@
+% Figura: uso de un clasificador supervisado en este trabajo, fig:met_clasificador. Usada en sec:met_supervisados (3.3).
+% No redibuja la arquitectura (Cap. 2): muestra entrada, red preentrenada, cabeza nueva, salidas para T1 y T2 y qué se
+% entrena en cada etapa. Revisión del tutor del 21/10/2026 (figuras de los modelos). Ancho: unos 148 mm.
+
+\begin{figure}[H]
+    \centering
+    \hyphenpenalty=10000 \exhyphenpenalty=10000
+    \begin{tikzpicture}[x=1mm, y=1mm]
+
+        \node[figentrada, text width=15mm] (img) at (9, 0) {imagen\\{\footnotesize $224 \times 224$}};
+        \node[figtarea, text width=32mm] (red) at (42, 0)
+            {red preentrenada\\{\footnotesize DenseNet121, ConvNeXt-Tiny, ViT-B/16 o Swin-Tiny}};
+        \node[figtarea, text width=21mm] (cab) at (79, 0) {cabeza nueva\\{\footnotesize \emph{dropout} y lineal de 7 salidas}};
+        \node[fignodo, text width=17mm, fill=figrelleno] (sm) at (105, 0) {softmax\\{\footnotesize $p_c$ por clase}};
+        \node[figsalida, text width=21mm] (t1) at (135, 9) {T1: clase de mayor $p_c$};
+        \node[figsalida, text width=21mm] (t2) at (135, -9) {T2: $p_{\text{MEL}}$ frente a un umbral};
+
+        \draw[figflecha] (img) -- (red);
+        \draw[figflecha] (red) -- (cab);
+        \draw[figflecha] (cab) -- (sm);
+        \draw[figflecha] (sm.east) -- ++(4, 0) |- (t1.west);
+        \draw[figflecha] (sm.east) -- ++(4, 0) |- (t2.west);
+
+        \node[figetiqueta, align=center, text=fignaranja!70!black, anchor=north] at ([yshift=-2mm]red.south)
+            {etapa 1: congelada\\etapa 2: se ajusta toda};
+        \node[figetiqueta, align=center, text=fignaranja!70!black, anchor=north] at ([yshift=-2mm]cab.south)
+            {se entrena en\\las dos etapas};
+        \node[figetiqueta, anchor=south] at ([yshift=2mm]red.north) {pesos de \emph{ImageNet}-1K};
+
+    \end{tikzpicture}
+    \caption{Uso de los clasificadores supervisados: la red preentrenada recibe una cabeza nueva, y la probabilidad por
+    clase resuelve T1 y T2.}
+    \label{fig:met_clasificador}
+\end{figure}
