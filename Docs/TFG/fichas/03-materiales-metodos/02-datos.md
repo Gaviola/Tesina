@@ -1,5 +1,7 @@
 # Ficha 3.2 — Conjuntos de datos
 
+**Revisión del tutor (21/10/2026), aplicada el 22/10:** P1 describe los cinco conjuntos; P2 explica su uso en la experimentación y por qué *HAM10000* es el central (comentarios 8–10); la columna de la tabla pasa a «Uso». Partición reescrita: 70/15/15 explicado con palabras, la fuga en un párrafo propio, sin «así está hecha» (11–13). «Cuánto inflaba la fuga los resultados» → «cuánto sobreestimaba la fuga el desempeño» (14). *SkinCaRe*: los «dos subconjuntos con textos de distinto tipo» en lugar de «en dos partes» (15). Cierre nuevo: cómo los datos orientan la elección de los modelos (opción elegida por el autor el 22/10).
+
 **Revisión del autor (20/10/2026):** el costo de la partición por lesión se dice en imágenes («un 8 % menos de imágenes de entrenamiento que la partición original, 6 447 frente a 7 010»; `ham10000_splits.json` tiene 7 010 en train); MM-Skin ya no da el tamaño de su prueba (1 653 contaba 3 entradas `.DS_Store`): remite a 3.3, que da 1 650; «se juzgan» → «se evalúan».
 
 **Revisión del autor (18/10/2026):** ficha puesta al día con el `.tex`. Ahora es 3.2 (antes 3.3). Menos cifras en el texto: porcentajes de clase, fuentes de etiqueta, conteos del archivo local de MM-Skin, fototipos de HIBA y fuentes de Derm1M se resumen o se quitan; los conteos completos quedan en las tablas y figuras. Se quitan las 66 imágenes que solo comparten lesión con validación y el detalle de SKINCON.

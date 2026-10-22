@@ -10,49 +10,59 @@
 \section{Conjuntos de datos}
 \label{sec:met_datasets}
 
-Cinco conjuntos de datos cumplen papeles distintos en el flujo: \emph{SkinCaRe}, con sus partes \emph{SkinCAP} y
-\emph{SkinCoT}, \emph{MM-Skin}, \emph{HIBA}, \emph{Derm1M} y \emph{HAM10000}. Este último es el único que entrena y evalúa los
-clasificadores de las siete categorías, y por eso sus propiedades deciden la métrica y la partición. En cambio, los
-demás entrenan la generación de texto, la evalúan contra un texto de referencia, ponen a prueba a los clasificadores con
-otra población o sirven para preentrenar DermLIP, el modelo especializado de la Sección~\ref{sec:met_clasif_vlm}.
-La Tabla~\ref{tab:met_conjuntos} resume, para cada uno, la modalidad, el tamaño, el papel en el trabajo y el
-origen del texto de referencia.
+El trabajo usa cinco conjuntos de datos de dermatología, que se diferencian por la modalidad de sus imágenes y por
+el tipo de anotación que acompaña a cada una. \emph{HAM10000} reúne imágenes dermatoscópicas con un diagnóstico
+confirmado y sin texto. \emph{SkinCaRe} y \emph{MM-Skin}, en cambio, asocian cada imagen a un texto clínico escrito
+por dermatólogos, por un modelo de lenguaje o tomado de libros de dermatología. \emph{HIBA} aporta imágenes
+dermatoscópicas y clínicas de un hospital argentino, y \emph{Derm1M} es un corpus de más de un millón de pares
+imagen--texto. La Tabla~\ref{tab:met_conjuntos} resume, para cada uno, la modalidad, el tamaño, el uso en el trabajo y
+el origen del texto de referencia.
+
+Cada conjunto cumple un papel distinto en la experimentación, según sirva para entrenar, para evaluar o solo de forma
+indirecta. \emph{HAM10000} es el único etiquetado con las siete categorías de la tarea, de modo que con él se entrenan
+los clasificadores, se eligen sus configuraciones en validación y se evalúan en prueba todos los modelos de
+clasificación y el \emph{pipeline}. Por esa razón es el conjunto central del trabajo, y sus propiedades, que se
+analizan a continuación, determinan cómo se parte y con qué métricas se evalúa. \emph{SkinCaRe}, en cambio, se usa
+para entrenar a los generadores de reportes, y \emph{MM-Skin}, para evaluarlos contra un texto de referencia.
+\emph{HIBA} se usa solo como prueba externa, para comprobar si los clasificadores mantienen su desempeño en otra
+población. Por último, \emph{Derm1M} no se usa de forma directa: es el conjunto con el que sus autores preentrenaron
+DermLIP, uno de los modelos de la Sección~\ref{sec:met_clasif_vlm}.
 
 \begin{table}[H]
     \centering
     \small
-    \caption{Conjuntos de datos: modalidad, tamaño, papel en el trabajo y origen del texto de referencia.}
+    \caption{Conjuntos de datos: modalidad, tamaño, uso en el trabajo y origen del texto de referencia.}
     \label{tab:met_conjuntos}
     \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{1.8cm}
         >{\raggedright\arraybackslash}p{2.5cm} >{\raggedright\arraybackslash}p{2.2cm}
         >{\raggedright\arraybackslash\hspace{0pt}}p{2.4cm} >{\raggedright\arraybackslash\hspace{0pt}}X@{}}
         \toprule
-        \textbf{Conjunto} & \textbf{Modalidad} & \textbf{Tamaño} & \textbf{Papel} & \textbf{Origen del texto de referencia} \\
+        \textbf{Conjunto} & \textbf{Modalidad} & \textbf{Tamaño} & \textbf{Uso} & \textbf{Origen del texto de referencia} \\
         \midrule
         \emph{HAM10000} & Dermatoscópica & 10\,015 imágenes; 7\,470 lesiones
             & Clasificación (entrenamiento, validación y prueba)
             & Sin texto; etiqueta confirmada por histopatología, seguimiento, consenso o microscopía confocal \\
         \filasep
         \emph{SkinCAP} (\emph{SkinCaRe}) & Clínica (fotografía) & 3\,561 imágenes
-            & Entrenamiento de la generación
+            & Entrenamiento de los generadores
             & Descripciones de cuatro dermatólogos, escritas en chino y traducidas al inglés \\
         \filasep
         \emph{SkinCoT} (\emph{SkinCaRe}) & Clínica (fotografía) & 3\,041 imágenes
-            & Entrenamiento de la generación (razonamiento)
+            & Entrenamiento de los generadores; su prueba, evaluación con referencia
             & Razonamiento escrito por un modelo de lenguaje con la etiqueta a la vista y revisado por dermatólogos \\
         \filasep
         \emph{MM-Skin} & Clínica, dermatoscópica y patológica
             & 11\,039 imágenes; 9\,369 pares imagen--texto
-            & Evaluación de la generación con referencia
+            & Evaluación de los generadores con referencia
             & Descripciones de libros de texto de dermatología \\
         \filasep
         \emph{HIBA} & Dermatoscópica y clínica
             & 1\,616 imágenes; 1\,246 lesiones
-            & Evaluación con otra población (solo prueba)
+            & Evaluación externa de los clasificadores (solo prueba)
             & Diagnóstico de dermatólogos del hospital, con histopatología en las lesiones extirpadas \\
         \filasep
         \emph{Derm1M} & Dermatoscópica y clínica & 1\,029\,761 pares imagen--texto
-            & Preentrenamiento de DermLIP (no se usa en este trabajo)
+            & Preentrenamiento de DermLIP por sus autores (no se usa de forma directa)
             & Fuentes web, educativas y bases públicas; texto procesado con un \gls{llm} \\
         \bottomrule
     \end{tabularx}
@@ -108,16 +118,21 @@ una imagen de cada clase.
 \subsection{Partición disjunta por lesión}
 \label{sec:met_particiones}
 
-Aunque las imágenes de cada lesión deberían quedar juntas, la forma habitual de partir un conjunto es estratificar
-por imagen, y así está hecha la
-partición de 70/15/15 de la que parte este trabajo. Con ella, el 36\,\% de las 1\,503 imágenes de prueba comparte
-lesión con alguna imagen de entrenamiento, y en melanoma la proporción sube al 63\,\%. Esta coincidencia es una fuga de
-información entre particiones (\emph{data leakage}; Sección~\ref{sec:marco_regularizacion}), por lo que la prueba ya
-no mide el desempeño sobre lesiones nuevas. Además, la fuga no
-se reparte por igual: en NV es del 27\,\%, mientras que en BCC llega al 70\,\%, de modo que las dos clases malignas,
-que son las que más importan, son las más afectadas.
+La forma habitual de partir un conjunto es asignar cada imagen al azar a una partición, manteniendo en cada una la
+proporción de las clases. Con ese procedimiento, una partición frecuente destina el 70\,\% de las imágenes a
+entrenamiento, el 15\,\% a validación y el 15\,\% a prueba, y así está construida la partición original de
+\emph{HAM10000} con la que comenzó este trabajo. Sin embargo, como la asignación se hace imagen por imagen, dos
+imágenes de una misma lesión pueden quedar en particiones distintas. En la partición original, 36 de cada 100
+imágenes de prueba tienen otra imagen de su misma lesión en entrenamiento, y entre los melanomas la proporción es de
+63 de cada 100.
 
-Para corregirla, la partición nueva conserva la prueba original completa, de modo que los resultados de los
+Esta coincidencia es una fuga de información entre particiones (\emph{data leakage};
+Sección~\ref{sec:marco_regularizacion}): el modelo pudo ver en el entrenamiento la misma lesión que se le pide
+clasificar, de modo que la prueba ya no mide el desempeño sobre lesiones nuevas. Además, la fuga no afecta a todas las
+clases por igual. En NV alcanza al 27\,\% de las imágenes de prueba, mientras que en BCC llega al 70\,\%, así que las
+dos clases malignas, que son las que más importan, son las más afectadas.
+
+Para eliminar la fuga, la partición nueva conserva completa la prueba original, de modo que los resultados de los
 \glspl{vlm} y del \emph{pipeline}, medidos sobre ella, siguen siendo comparables. Del entrenamiento y la validación
 originales se descartan las 776 imágenes cuya lesión aparece en la prueba, y las restantes se reparten con
 \texttt{StratifiedGroupKFold} de scikit-learn, con la lesión como grupo, el diagnóstico como estrato y la semilla 42.
@@ -147,21 +162,24 @@ por clase en ese conjunto cambian mucho con pocos aciertos.
     \end{tabularx}
 \end{table}
 
-Para dimensionar cuánto inflaba la fuga los resultados, el Capítulo~\ref{cp:res_clasif} compara la prueba completa con
-el subconjunto limpio: las 894 imágenes de prueba cuya lesión no aparece ni en entrenamiento ni en validación. Como
-control se usa DermLIP sin ajuste, que no vio \emph{HAM10000}: si su desempeño también cambia entre ambos conjuntos, el
-cambio se debe a la composición del subconjunto y no a la fuga. A diferencia de \emph{HAM10000}, los demás conjuntos no pasan por esta
+Además de corregirla, interesa saber cuánto sobreestimaba la fuga el desempeño de los clasificadores. Para estimarlo,
+el Capítulo~\ref{cp:res_clasif} compara el resultado sobre la prueba completa con el que se obtiene sobre sus 894
+imágenes cuya lesión no aparecía ni en entrenamiento ni en validación de la partición original. Como control se usa
+DermLIP sin ajuste, que no vio \emph{HAM10000}: si su desempeño también cambia entre ambos conjuntos, el cambio se debe
+a la composición del subconjunto y no a la fuga. A diferencia de \emph{HAM10000}, los demás conjuntos no pasan por esta
 partición, porque cada uno trae su propia división o se usa completo como prueba.
 
 \subsection{SkinCaRe: SkinCAP y SkinCoT}
 
-En cuanto a la generación de texto, \emph{SkinCaRe} reúne los pares imagen--texto con que se entrena la generación de
-reportes (Sección~\ref{sec:met_generacion}), en dos partes. \emph{SkinCAP} tiene 4\,000 imágenes clínicas tomadas de
+En cuanto a la generación de texto, \emph{SkinCaRe} reúne los pares imagen--texto con que se entrenan los generadores
+de reportes (Sección~\ref{sec:met_generacion}). Está formado por dos subconjuntos con textos de distinto tipo:
+\emph{SkinCAP}, con descripciones escritas por dermatólogos, y \emph{SkinCoT}, con razonamientos diagnósticos.
+\emph{SkinCAP} tiene 4\,000 imágenes clínicas tomadas de
 \emph{Fitzpatrick 17k} y de \emph{DDI}~\cite{groh2021neural,daneshjou2022disparities}, con descripciones que
 escribieron cuatro dermatólogos en chino y que luego se tradujeron al inglés y se revisaron~\cite{shen2025skincare}.
 De ellas se excluyen 439 que llevan la marca de descarte que \emph{SKINCON} daba a sus anotadores
-para las imágenes de mala calidad~\cite{daneshjou2022skincon}, y las 3\,561 restantes se parten por imagen en
-70/15/15.
+para las imágenes de mala calidad~\cite{daneshjou2022skincon}, y las 3\,561 restantes se reparten por imagen con las
+mismas proporciones de 70, 15 y 15\,\%.
 
 Por su parte, \emph{SkinCoT} aporta 3\,041 imágenes clínicas del atlas DermNet con un razonamiento diagnóstico escrito para cada
 una~\cite{shen2025skincare}. El texto lo produce un modelo de lenguaje que recibe la etiqueta verdadera, y
@@ -205,4 +223,9 @@ textos se limpiaron y resumieron con un \gls{llm}. Entre las fuentes declaradas 
 puede descartarse que alguna publicación reproduzca imágenes de ese conjunto. El trabajo usa los pesos publicados de
 DermLIP sin reentrenarlo, así que \emph{Derm1M} no se usa para entrenar ni para evaluar.
 
-Con los datos y la partición fijados, falta decidir con qué métricas se evalúan los modelos y contra qué se los compara.
+Las características de estos conjuntos orientan la elección de los modelos que se presentan a continuación. Con unas
+6\,400 imágenes etiquetadas para siete clases, entrenar un clasificador desde cero no es viable, y por eso los
+clasificadores supervisados parten de pesos preentrenados. Por la misma razón, la clasificación con \glspl{vlm} incluye
+a DermLIP, que llega preentrenado sobre imágenes de dermatología. Por otra parte, como los textos clínicos disponibles
+no usan las siete categorías de \emph{HAM10000}, los generadores aprenden a redactar con \emph{SkinCaRe} y reciben el
+diagnóstico de un clasificador, como se describe en la Sección~\ref{sec:met_pipeline}.
