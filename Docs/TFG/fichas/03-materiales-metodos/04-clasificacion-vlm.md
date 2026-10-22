@@ -1,5 +1,7 @@
 # Ficha 3.5 — Clasificación con modelos visión–lenguaje
 
+**Revisión del tutor (21/10/2026), aplicada el 22/10:** Antes era 3.5. La misma estructura que 3.3: el propósito (separar especialización de generación de texto) justifica los tres modelos; cada modelo con su motivo antes de sus características; figura de uso nueva (`vlms.tex`) con los generativos y las cuatro cabezas de DermLIP (23). Los controles (imagen gris y cabezas clásicas sobre DermLIP y Swin) pasan a «Procedimiento experimental». `sec:met_dermlip` queda como label dentro de 3.4.2.
+
 **Revisión del autor (20/10/2026):** la estrategia 4 ya no habla del «checkpoint de la etapa 2» (el lector no lo conoce): dice que se repiten la verosimilitud y el CoT con los modelos ajustados con LoRA para generar reportes (3.6), sin HAM10000; sale la oración meta «Este control se describe aquí como procedimiento…»; se acorta la repetición de que DermLIP zero-shot y los VLM generativos no usan HAM10000.
 
 **Revisión del autor (18/10/2026):** ficha puesta al día con el `.tex`. Antes era 3.6 y se llamaba `06-clasificacion-vlm`. Los modelos se nombran al final de la introducción, después de presentar los dos tipos de VLM; transición nueva a DermLIP (por qué se incluye); el último párrafo ya no repite los tamaños de la partición. Lo que la revisión quitó del texto está en la sección final «Quitado en la revisión del 18/10/2026».

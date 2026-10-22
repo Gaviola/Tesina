@@ -1,0 +1,48 @@
+% Figura: uso de los tres VLM en la clasificación, fig:met_vlms. Usada en sec:met_clasif_vlm (3.4).
+% No redibuja las arquitecturas del Cap. 2 (fig:marco_llava, fig:marco_clip): muestra qué entra, qué sale y, en
+% DermLIP, las cuatro cabezas. Revisión del tutor del 21/10/2026 (figuras de los modelos). Ancho: unos 148 mm.
+
+\begin{figure}[H]
+    \centering
+    \hyphenpenalty=10000 \exhyphenpenalty=10000
+    \begin{tikzpicture}[x=1mm, y=1mm]
+        \tikzset{cabeza/.style={fignodo, text width=36mm, minimum height=6mm, inner sep=2pt, font=\footnotesize,
+            fill=figrelleno}}
+
+        % (a) VLM generativos.
+        \node[font=\small, anchor=west] at (0, 16) {(a) Mini-VLM y LLaVA-Med};
+        \node[figentrada, text width=12mm] (ai) at (8, 0) {imagen};
+        \node[figtarea, text width=25mm] (aenc) at (34, 0) {codificador visual\\{\footnotesize \gls{clip} ViT-L/14}};
+        \node[figtarea, text width=15mm] (aproj) at (61, 0) {proyector};
+        \node[figtarea, text width=29mm] (allm) at (92, 0) {\gls{llm}\\{\footnotesize Phi-3.5-mini o Mistral-7B}};
+        \node[figentrada, text width=16mm, minimum height=6mm] (ap) at (92, 15) {\emph{prompt}};
+        \node[figsalida, text width=23mm] (ao) at (134, 0) {texto o puntaje por clase};
+        \draw[figflecha] (ai) -- (aenc);
+        \draw[figflecha] (aenc) -- (aproj);
+        \draw[figflecha] (aproj) -- (allm);
+        \draw[figflecha] (ap) -- (allm);
+        \draw[figflecha] (allm) -- (ao);
+
+        % (b) DermLIP.
+        \node[font=\small, anchor=west] at (0, -20) {(b) DermLIP};
+        \node[figentrada, text width=12mm] (bi) at (8, -38) {imagen};
+        \node[figtarea, text width=25mm] (benc) at (34, -38) {codificador de imagen\\{\footnotesize ViT-B/16}};
+        \node[fignodo, text width=15mm, fill=figrelleno] (bemb) at (61, -38) {\emph{embedding}\\{\footnotesize 512}};
+        \node[cabeza] (h1) at (98, -26) {zero-shot};
+        \node[cabeza] (h2) at (98, -34) {\emph{linear probe}};
+        \node[cabeza] (h3) at (98, -42) {kNN ($k = 3$)};
+        \node[cabeza] (h4) at (98, -50) {SVM con núcleo RBF};
+        \node[figsalida, text width=19mm] (bo) at (136, -38) {clase};
+        \draw[figflecha] (bi) -- (benc);
+        \draw[figflecha] (benc) -- (bemb);
+        \foreach \h in {h1, h2, h3, h4} {
+            \draw[figflecha] (bemb.east) -- ++(4, 0) |- (\h.west);
+            \draw[figflecha] (\h.east) -- ++(4, 0) |- (bo.west);
+        }
+        \node[figetiqueta, text=fignaranja!70!black, anchor=north] at ([yshift=-2mm]benc.south) {congelado};
+
+    \end{tikzpicture}
+    \caption{Uso de los \glspl{vlm} en la clasificación: los generativos responden con texto o puntúan cada clase (a), y
+    DermLIP clasifica sobre su \emph{embedding} con cuatro cabezas (b).}
+    \label{fig:met_vlms}
+\end{figure}
