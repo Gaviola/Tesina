@@ -54,11 +54,10 @@ etapa corresponde a una sección de este capítulo. En primer lugar, se describe
 partición en la que ninguna lesión aparece a la vez en entrenamiento y en prueba. A continuación, se eligen y se
 configuran tres tipos de componentes: los clasificadores supervisados, que resuelven T1 y T2; los \glspl{vlm} usados
 como clasificadores, que permiten comparar ambos enfoques; y los generadores, que resuelven T3. Luego, el
-\emph{pipeline} integra esos componentes: un clasificador fija el diagnóstico, una búsqueda de casos parecidos aporta
-una segunda opinión y, según coincidan o no, el generador redacta un reporte que afirma el diagnóstico, uno que
-presenta dos candidatos, o el caso se deriva a un especialista. Finalmente, la evaluación compara los componentes y el
-\emph{pipeline} sobre la prueba y en escenarios en que cambian las condiciones de entrenamiento, que es lo que pide el
-tercer objetivo específico.
+\emph{pipeline} integra esos componentes y decide, para cada caso, entre tres salidas: un reporte que afirma el
+diagnóstico, uno que presenta dos candidatos o la derivación a un especialista. Finalmente, la evaluación compara los
+componentes y el \emph{pipeline} sobre la prueba y en escenarios en que cambian las condiciones de entrenamiento,
+que es lo que pide el tercer objetivo específico.
 
 \input{Figures/Capitulos/03-Materiales-Metodos/flujo_trabajo}
 
