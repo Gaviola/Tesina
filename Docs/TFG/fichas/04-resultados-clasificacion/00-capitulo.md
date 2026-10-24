@@ -1,6 +1,6 @@
 # Ficha del Capítulo 4 — Resultados: clasificación diagnóstica y detección de melanoma
 
-**Estado (24/10/2026): borrador para aprobar.** Contrato del capítulo. Ninguna sección se redacta hasta que el
+**Estado (24/10/2026): aprobada por el autor.** Contrato del capítulo. Ninguna sección se redacta hasta que el
 autor apruebe esta ficha y la ficha de la sección (guía §1).
 
 Reemplaza la ficha del 18/10. La estructura sigue la revisión del tutor del Cap. 3 (21/10, guía §3, «Capítulo de
@@ -54,7 +54,7 @@ Intro    Qué contiene el capítulo y cómo se organiza (por contenido, sin «re
 | 4.4 | Evaluaciones complementarias de la clasificación | `04-evaluaciones-complementarias.tex` | `sec:res_complementarios` | 5–6 p. | HIBA: `hiba_por_modalidad.json`, `*_hiba` de los ganadores; robustez: `robustness/robustness_summary.json`, `robustness_examples_les.png`; calibración: `lesion_split_report.json` (`calibracion`), `calibration_les/`; interpretabilidad: `interpretability_les/interpretability_swin.png`; costo: `cost/cost_comparison_v2.json` |
 | 4.5 | Discusión de los resultados de clasificación | `05-discusion.tex` | `sec:res_clasif_discusion` | 1 p. | secciones anteriores |
 
-Total orientativo: unas 21 páginas. Los archivos actuales (`01`…`10`) se renombran al aprobar esta ficha.
+Total orientativo: unas 21 páginas. Archivos renombrados al aprobarse la ficha (24/10).
 
 Todas las fuentes de la tabla están en `Codigo/outputs/results/` o `Codigo/docs/resul/`. La prueba de la partición
 por lesión es la misma de 1 503 imágenes que la de la partición aleatoria (`split_lesion_resul_20260926.md` §2), así

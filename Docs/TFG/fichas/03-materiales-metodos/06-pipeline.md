@@ -254,3 +254,9 @@ Ninguna del andamiaje. Se conservan los títulos de subsección.
 - **Transición a la antigua 3.9 («La Sección `sec:met_complementarios` describe las pruebas con que se analiza esa diferencia»):** D-A. Las pruebas pasaron a 3.3 (`sec:met_estadistica`); la transición ahora es a 3.8 y plantea la pregunta de la evaluación fuera de las condiciones de entrenamiento.
 - **Ablación de diagnóstico sustituido por una clase confundible (`make_wrong_dx.py`), que la ficha anterior proponía listar en 3.9:** D-A. 3.8 no la incluye; queda sin lugar en el Cap. 3 (decisión del autor si se conserva).
 - **Mención del ancla anterior (partición por imagen) y de RAG/`full_uncertainty` declarados sobre la partición anterior:** R2. No se describe la configuración vieja.
+
+## Corrección del 24/10/2026: elección de Swin-Tiny
+
+P3 decía «el de mayor F1 macro en validación». Vale con la media de las tres semillas (Swin 0.781 ± 0.018, ConvNeXt
+0.740 ± 0.027) y no con la semilla 42 sola (0.766 frente a 0.770; `lesion_split_report.json`, `ganadores`). P3 pasa a
+«promediado sobre las tres semillas», aprobado por el autor. Los dos valores se dan en 4.1.
