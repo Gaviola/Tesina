@@ -1,0 +1,36 @@
+% Extensión estimada: una página, cuatro párrafos (ficha 4.6).
+% Fuentes: secciones 4.1 a 4.5. Sin números nuevos.
+% Feedback del tutor (14/09/2026): el cierre se llama "Discusión"; la discusión que cruza clasificación y generación
+% queda en el Capítulo 6.
+\section{Discusión de los resultados de clasificación}
+\label{sec:res_clasif_discusion}
+
+Los resultados del capítulo permiten responder la primera pregunta de investigación
+(Sección~\ref{sec:intro_objetivos}): en la prueba de \emph{HAM10000}, ningún \gls{vlm} clasifica las lesiones tan bien
+como un clasificador supervisado. Los \glspl{vlm} generativos de propósito general quedan en el nivel del azar y
+colapsan hacia una clase que depende del modelo y de la estrategia, y los controles muestran que ese comportamiento no
+se explica por el desbalance de las clases ni por la modalidad de la imagen. DermLIP, en cambio, muestra que la
+especialización en dermatología aporta una representación útil, pero solo se acerca a los supervisados con una cabeza
+entrenada sobre \emph{HAM10000}. Las diferencias entre los supervisados y los modelos sin ajuste son, además,
+significativas, y coinciden con lo que informa la literatura.
+
+Entre los clasificadores supervisados, en cambio, la arquitectura pesa menos que otros factores. Con el mismo
+procedimiento, Swin-Tiny, ConvNeXt-Tiny y ViT-B/16 no se distinguen entre sí, mientras que la semilla cambia la
+sensibilidad de las clases minoritarias y del melanoma en más de una décima. En melanoma, la regla de decisión pesa más
+que el modelo: el umbral fijado en validación lleva la detección de tres a cuatro de cada cinco casos sin cambiar el
+\gls{auc}. Del mismo modo, la partición cambia el resultado, ya que una partición por imagen sobreestima la
+sensibilidad macro en unas 0.07. Por ello, una comparación con otros trabajos tiene sentido solo cuando se conocen
+su partición y su regla de decisión.
+
+Estos resultados valen dentro de la fuente de entrenamiento. En \emph{HIBA}, Swin-Tiny pierde cerca del 40\,\% de su
+sensibilidad macro, también en las imágenes dermatoscópicas, y el ruido de la imagen lo afecta más que la compresión
+o la pérdida de resolución. Sus probabilidades, en cambio, están bien calibradas cuando se entrena sin pesos por clase.
+En consecuencia, Swin-Tiny es la referencia del trabajo dentro de \emph{HAM10000}, pero no una herramienta validada
+para otra población, y las limitaciones que eso implica, junto con las de evaluar las pruebas con una sola semilla, se
+retoman en el Capítulo~\ref{cp:discusion}.
+
+Estos resultados determinan también de dónde sale el diagnóstico del \emph{pipeline}. Como un \gls{vlm} generativo no
+distingue las siete clases, el diagnóstico no puede salir del generador, y por eso lo fija Swin-Tiny, que se lo
+entrega al generador a través de la cascada (Sección~\ref{sec:met_cascada}). El Capítulo~\ref{cp:res_gen} evalúa si,
+con ese diagnóstico, el reporte generado afirma la clase correcta, y la discusión que cruza ambos resultados queda para
+el Capítulo~\ref{cp:discusion}.

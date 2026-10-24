@@ -199,3 +199,25 @@ Lo que la ficha anterior fijaba y el `.tex` actual ya no dice. Se conserva acá 
 - Nombre del checkpoint de DermLIP (`redlessone/DermLIP_ViT-B-16`), carga con open_clip y cifra de Derm1M («alrededor de un millón de pares»): R1/R3; el `.tex` dice «los pares dermatológicos de *Derm1M*» y remite a `sec:met_datasets`.
 - Párrafo P10 anterior con la declaración de qué quedó sobre la partición anterior: obsoleto tras D11 y la corrección del 11/10 (los VLM generales no se ajustaron sobre HAM10000); P11 es la versión corta (R2, R3).
 - Tabla de la ficha anterior que mencionaba «Decisión 6» como fuente de P10: se conserva solo en P11.
+
+## Agregado del 24/10/2026: control con fotografías clínicas
+
+Aprobado por el autor al planificar el Cap. 4: el resultado de `vlm_domain_gap_clinica_resul_20260604.md` (si los
+VLM generativos clasifican mejor fotografías clínicas que dermatoscópicas) entra a 4.3 del Cap. 4, y por eso su
+procedimiento tiene que estar acá.
+
+- **P nuevo (segundo control de `sec:met_vlm_procedimiento`):** verosimilitud sin ajuste sobre las 624 imágenes de
+  *SkinCAP* cuyo diagnóstico corresponde a una de las siete clases (`SKINCAP_TO_HAM` en `src/data/skincare.py`), sin
+  partición porque los modelos no se ajustan. Criterio: si clasifican mejor las fotografías clínicas, la dificultad
+  está en la modalidad. Sin resultados.
+- El control con Swin-ImageNet pasa a ser el tercero; el párrafo de datos exceptúa este control de «la misma prueba».
+- `tab:met_experimentos` (3.8): la fila de clasificación con VLM agrega *SkinCAP* como control en «Datos».
+
+## Agregado del 24/10/2026 (revisión del Cap. 4)
+
+El segundo control suma una oración: DermLIP sin ajuste clasifica las mismas 624 fotografías de *SkinCAP* como
+contraste de un modelo especializado. Lo pidió el autor al revisar 4.3, que informa ese resultado.
+
+**Cambio del 24/10/2026 (decisión del autor):** el zero-shot de DermLIP usa el protocolo de sus autores (ocho
+plantillas y sus nombres de clase); el ítem «Zero-shot» de `sec:met_dermlip` y el Apéndice B (`ap:prompts`) lo dicen.
+Motivo: `Codigo/docs/resul/dermlip_zs_protocolo_resul_20261024.md`.

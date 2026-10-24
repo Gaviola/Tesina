@@ -9,18 +9,25 @@
 % capítulo". La discusión transversal, que cruza este capítulo con el de generación, queda en el
 % Capítulo~\ref{cp:discusion}.
 
-\pendiente{Este capítulo responde la PI1 y evalúa el OE1, junto con la parte del OE3 que corresponde a la
-clasificación (generalización a otra población, calibración y costo computacional). Los resultados se presentan
-en el orden en que se tomaron las decisiones: cada sección presenta un resultado, lo interpreta y justifica
-el paso siguiente.}
+% Introducción redactada el 24/10/2026 (ficha 00-capitulo.md): por contenido, sin «responde la PI1», con las
+% convenciones que valen para todas las cifras del capítulo.
+
+Este capítulo presenta los resultados de la clasificación de lesiones de piel y de la detección de melanoma. Primero
+se comparan las cuatro arquitecturas supervisadas y se analiza en detalle la que elige la validación, Swin-Tiny: sus
+errores por clase, la detección de melanoma con un umbral fijado en validación, el tratamiento del desbalance y el
+efecto de la fuga de información. Las evaluaciones complementarias examinan después a ese clasificador fuera de las
+condiciones de su entrenamiento. Con esa referencia, se evalúan los \glspl{vlm} generativos y contrastivos sobre las
+mismas imágenes, y una sección compara las tres familias y su costo. Por último, los resultados se comparan con los
+de la literatura y el capítulo cierra con una discusión de lo que responden.
+
+Salvo que se indique otra cosa, todas las cifras corresponden a las 1\,503 imágenes de prueba de la partición
+disjunta por lesión (Sección~\ref{sec:met_particiones}), con la configuración que eligió la validación. Los modelos
+entrenados con tres semillas se informan como media $\pm$ desvío estándar, y las pruebas estadísticas, el umbral de
+melanoma y las evaluaciones complementarias usan la ejecución con semilla 42.
 
 \input{Chapters/04-Resultados-Clasificacion/01-clasificadores-supervisados}
-\input{Chapters/04-Resultados-Clasificacion/02-vlm-generales}
-\input{Chapters/04-Resultados-Clasificacion/03-rediagnostico-colapso}
-\input{Chapters/04-Resultados-Clasificacion/04-especializacion-dominio}
-\input{Chapters/04-Resultados-Clasificacion/05-comparacion-sota}
-\input{Chapters/04-Resultados-Clasificacion/06-calibracion-significancia}
-\input{Chapters/04-Resultados-Clasificacion/07-robustez}
-\input{Chapters/04-Resultados-Clasificacion/08-interpretabilidad}
-\input{Chapters/04-Resultados-Clasificacion/09-deteccion-melanoma}
-\input{Chapters/04-Resultados-Clasificacion/10-discusion}
+\input{Chapters/04-Resultados-Clasificacion/02-evaluaciones-complementarias}
+\input{Chapters/04-Resultados-Clasificacion/03-clasificacion-vlm}
+\input{Chapters/04-Resultados-Clasificacion/04-comparacion-modelos}
+\input{Chapters/04-Resultados-Clasificacion/05-estado-del-arte}
+\input{Chapters/04-Resultados-Clasificacion/06-discusion}

@@ -69,17 +69,18 @@ las cifras vigentes, que son las de la tesina, son las de esta tabla.
 Swin-Tiny: exactitud / F1 macro / sens.\ macro & 0.868 / --- / 0.870 & 0.846 / 0.733 / 0.692 ($\pm$0.025) \\
 ConvNeXt-Tiny: exactitud / sens.\ macro & 0.827 / 0.849 & 0.843 / 0.691 \\
 Ensamble Swin$+$ConvNeXt: exactitud / sens.\ macro & --- & 0.855 / 0.706 \\
-DenseNet121 / ViT-B/16: exactitud & 0.846 / 0.858 & 0.812 / 0.814 \\
+DenseNet121 / ViT-B/16: exactitud (receta de su familia, 3 semillas) & 0.846 / 0.858 & 0.822 / 0.836 \\
 Pesos por clase (Swin): sens.\ macro con CE simple $\to$ con pesos & sin ganancia & 0.707 $\to$ 0.783 \\
 ECE de Swin-Tiny (sin calibrar) & 0.380 (subconfiado) & 0.040 (sin pesos por clase) \\
 Melanoma, Swin: AUC / sens.\ con esp.\ $\geq$0.85 & 0.931 / 0.862 & 0.921 / 0.796 \\
 Melanoma, ensamble: AUC / sens.\ con esp.\ $\geq$0.85 & --- & 0.926 / 0.828 \\
+DermLIP zero-shot: exactitud / sens.\ macro$^{\dagger}$ & 0.377 / 0.510 & 0.716 / 0.544 \\
 DermLIP SVM vs Swin-ImageNet congelado: sens.\ macro & 0.788 vs 0.579 & 0.673 vs 0.466 \\
 HIBA, Swin: exactitud / sens.\ macro & 0.585 / 0.532 & 0.546 / 0.424 \\
 Ruteo de 3 niveles: cobertura de lo presentado & 0.934 & 0.904 \\
-Cascada, consistencia con Swin: Mini-VLM / LLaVA-Med / SkinVL & 0.812 / 0.696 / 0.80 & 0.864 / 0.752 / 0.847 \\
-Pipeline avanzado, Mini-VLM: simple $\to$ avanzado & 0.82 $\to$ 0.94 ($+$0.118) & 0.873 $\to$ 0.916 ($+$0.043) \\
-Pipeline avanzado, LLaVA-Med: simple $\to$ avanzado & 0.706 $\to$ 0.831 ($+$0.125) & 0.760 $\to$ 0.816 ($+$0.056) \\
+Cascada, consistencia con Swin$^{\ast}$: Mini-VLM / LLaVA-Med / SkinVL & 0.812 / 0.696 / 0.80 & 0.849 / 0.745 / 0.846 \\
+Pipeline avanzado$^{\ast}$, Mini-VLM: simple $\to$ avanzado & 0.82 $\to$ 0.94 ($+$0.118) & 0.858 $\to$ 0.901 ($+$0.043) \\
+Pipeline avanzado$^{\ast}$, LLaVA-Med: simple $\to$ avanzado & 0.706 $\to$ 0.831 ($+$0.125) & 0.755 $\to$ 0.744 ($-$0.011, n.\,s.) \\
 \bottomrule
 \end{tabular}
 
@@ -88,9 +89,13 @@ Pipeline avanzado, LLaVA-Med: simple $\to$ avanzado & 0.706 $\to$ 0.831 ($+$0.12
 Cambios de interpretación: (1) las pérdidas para desbalance sí suben la sensibilidad macro, a costa de
 exactitud y F1 macro; (2) la subconfianza de la calibración venía de los pesos por clase y de ajustar la
 temperatura sobre un val solapado con train; (3) la ganancia del pipeline avanzado es menor porque el
-clasificador nuevo deja menos casos inciertos (248 en vez de 334). Las conclusiones centrales se
-sostienen. \texttt{full\_uncertainty} y la taxonomía por clase quedan con el anclaje anterior; RAG se
-regeneró con el índice por lesión (11/10/2026, Sección~\ref{sec:rag}).
+clasificador nuevo deja menos casos inciertos (248 en vez de 334); (4) con la métrica oficial, el
+pipeline avanzado no mejora el reporte de LLaVA-Med: su ganancia anterior venía de razonamiento
+\texttt{<think>} sin cerrar que nombraba los candidatos. $^{\ast}$Métrica oficial: consistencia solo sobre el
+reporte (sin \texttt{<think>}, también el que queda abierto), con \emph{matcher} estricto
+(\texttt{ensemble\_bootstrap*\_les\_report\_only\_strict.json}, actualizado el 18/10/2026). Las conclusiones
+centrales se sostienen. \texttt{full\_uncertainty} y la taxonomía por clase quedan con el anclaje anterior; RAG se
+regeneró con el índice por lesión (11/10/2026, Sección~\ref{sec:rag}). $^{\dagger}$Protocolo oficial de Derm1M (ocho plantillas y nombres de clase de los autores, p.\,ej.\ ``nevus''); con ``melanocytic nevus'' los nevos se clasificaban como MEL (24/10/2026, \texttt{resul/dermlip\_zs\_protocolo\_resul\_20261024.md}). La condición de la cascada con diagnóstico de DermLIP (``0.38'') usa las predicciones anteriores.
 \end{minipage}}
 \bigskip
 
@@ -418,8 +423,9 @@ patrón de concentración en pocas clases.
 \paragraph{Evidencia del colapso.} La métrica baja no es el único indicio. La Figura~\ref{fig:colapso}
 muestra, para cada combinación VLM/método, la distribución de las clases \emph{predichas} frente a la
 distribución verdadera. Cada combinación concentra casi todas sus predicciones en \emph{una sola} clase
-—pero en una clase \emph{distinta} en cada caso (LLaVA en likelihood predice mayoritariamente MEL; en
-CoT, VASC; Mini en likelihood, NV; en CoT, MEL)—. Es decir, la predicción depende mucho más de la
+—pero en una clase \emph{distinta} en cada caso (LLaVA en likelihood predice mayoritariamente MEL; Mini
+en likelihood, NV; en CoT, MEL)—. En LLaVA con CoT, el 81\% de las respuestas no tiene etiqueta válida
+(«desconocido»), y la figura lo muestra como VASC porque el código $-1$ indexó la última clase de la lista. Es decir, la predicción depende mucho más de la
 configuración que de la lesión: el contenido de la imagen apenas la mueve, y el modelo tiende a responder
 una clase casi constante.
 
@@ -808,7 +814,7 @@ porque cambia la \emph{población} de pacientes o porque cambia la \emph{calidad
 Ambas se evaluaron por separado.
 
 \paragraph{Cambio de población (HIBA).} Se re-evaluaron los clasificadores —sin reentrenar— sobre
-\textbf{HIBA} (Sección~\ref{sec:datasets}): $1616$ imágenes dermatoscópicas de pacientes argentinos con
+\textbf{HIBA} (Sección~\ref{sec:datasets}): $1616$ imágenes ($1270$ dermatoscópicas y $346$ clínicas) de pacientes argentinos con
 fototipos III--VI, una población distinta a la de HAM10000 (mayoritariamente europea). Es una prueba
 \emph{out-of-distribution} (OOD): mide cuánto cae el modelo cuando la piel y las condiciones de
 adquisición no coinciden con las del entrenamiento.

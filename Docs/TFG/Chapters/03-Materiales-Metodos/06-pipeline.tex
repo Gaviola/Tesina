@@ -34,8 +34,8 @@ y el generador redacta el reporte.
 
 La Figura~\ref{fig:met_pipeline} muestra la arquitectura general. La imagen entra en paralelo a dos predictores. El
 primero es Swin-Tiny, el clasificador del \emph{pipeline}: de los dos modelos sobre los que se hizo la búsqueda de
-hiperparámetros (Sección~\ref{sec:met_supervisados_ensamble}), es el de mayor F1 macro en validación, el criterio con
-que se eligen las configuraciones (Sección~\ref{sec:met_seleccion}). El segundo es el \gls{knn} sobre los
+hiperparámetros (Sección~\ref{sec:met_supervisados_ensamble}), es el de mayor F1 macro en validación, promediado sobre las tres
+semillas, el criterio con que se eligen las configuraciones (Sección~\ref{sec:met_seleccion}). El segundo es el \gls{knn} sobre los
 \emph{embeddings} de DermLIP. Un módulo de ruteo compara las dos decisiones y, según coincidan o no, determina si el
 generador redacta un reporte y con qué instrucción, o si el caso se deriva a un especialista. Así, la arquitectura
 separa dos decisiones: qué diagnóstico se afirma, que depende del clasificador, y si corresponde afirmarlo, que

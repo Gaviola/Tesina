@@ -76,13 +76,19 @@ Final diagnosis: [one of: MEL, NV, BCC, AKIEC, BKL, DF, VASC]
 
 \section{Clasificación con DermLIP}
 
-El modo \emph{zero-shot} de DermLIP (Sección~\ref{sec:met_dermlip}) promedia, para cada clase, los
-\emph{embeddings} de texto de cuatro plantillas, en las que \texttt{\{c\}} es el nombre completo de la clase:
+El modo \emph{zero-shot} de DermLIP (Sección~\ref{sec:met_dermlip}) sigue el protocolo de sus
+autores~\cite{yan2025derm1miccv}: promedia, para cada clase, los \emph{embeddings} de texto de ocho plantillas, en las
+que \texttt{\{c\}} es el nombre de la clase (melanoma, nevus, basal cell carcinoma, actinic keratosis, benign keratosis,
+dermatofibroma y vascular):
 \begin{minted}[linenos=false]{text}
 This is a skin image of {c}
-A dermatoscopic image of {c}
-A clinical photograph of {c}
-An image showing {c}
+This is a skin image of {c}.
+A skin image of {c}.
+An image of {c}, a skin condition.
+{c}, a skin disorder, is shown in this image.
+The skin lesion depicted is {c}.
+The skin cancer in this image is {c}.
+This image depicts {c}, a type of skin cancer.
 \end{minted}
 
 \section{Generación de reportes}

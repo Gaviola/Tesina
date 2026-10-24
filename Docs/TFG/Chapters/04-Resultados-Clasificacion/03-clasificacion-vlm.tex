@@ -1,0 +1,174 @@
+% Extensión estimada: unas 5 páginas, cuatro tablas y una figura (ficha 4.3).
+% Fuentes: ficha fichas/04-resultados-clasificacion/03-clasificacion-vlm.md; Codigo/outputs/results/
+% mini_vlm/{v1,v2}, llava_med/{v1,v2} (predicciones, recalculadas sobre las 1503 imágenes con «desconocido» como
+% error), *_likelihood_noimage_*, *_likelihood_clinical_*, dermlip/dermlip_split_eval.json,
+% embeddings/embeddings_classical_les.json, statistical_tests_les_v2.json, densenet_vit_moderna_report.json (holm).
+% Mini-VLM ajustado: checkpoint de generación v2, la configuración principal de la Sección 3.5 (LoRA solo en el
+% codificador visual). La clasificación de la variante de control v3 no se usa (decisión del autor del 24/10/2026).
+% Las pruebas contra los supervisados pasaron a sec:res_comparacion y la literatura a sec:res_estado_arte
+% (revisión del autor, 24/10/2026). Figura de distribución: scripts/figuras_cap4.py.
+\section{Clasificación con modelos visión--lenguaje}
+\label{sec:res_vlm}
+
+Si un \gls{vlm} clasificara las lesiones tan bien como Swin-Tiny, el diagnóstico podría salir del mismo modelo que
+genera el reporte. La Tabla~\ref{tab:res_vlm_generativos} reúne las diez combinaciones de los dos \glspl{vlm}
+generativos con las estrategias de la Sección~\ref{sec:met_vlm_estrategias}, y la
+Figura~\ref{fig:res_vlm_distribucion} muestra a qué clases asigna las imágenes cada una. En todas, la sensibilidad
+macro queda alrededor del 1/7 del azar, y cada combinación concentra casi todas sus predicciones en una sola clase,
+cualquiera sea la lesión. Este comportamiento se denomina en este trabajo \textbf{colapso hacia una clase}
+(\emph{class collapse}).
+
+\begin{table}[H]
+    \centering
+    \caption{\glspl{vlm} generativos en la prueba de \emph{HAM10000}, con la proporción de imágenes asignadas a la clase más predicha.}
+    \label{tab:res_vlm_generativos}
+    \small
+    \setlength{\tabcolsep}{3pt}
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X
+        >{\centering\arraybackslash}p{1.6cm}>{\centering\arraybackslash}p{1.3cm}>{\centering\arraybackslash}p{2.15cm}>{\centering\arraybackslash}p{1.4cm}>{\centering\arraybackslash}p{2.4cm}@{}}
+        \toprule
+        \textbf{Estrategia} & \textbf{Exactitud} & \textbf{F1 macro} & \textbf{Sensibilidad macro}
+            & \textbf{Sin etiqueta} & \textbf{Clase más predicha} \\
+        \midrule
+        \multicolumn{6}{@{}l}{\textit{Mini-VLM}} \\
+        Generación & 0.051 & 0.019 & 0.144 & 0 & \gls{bcc} (0.987) \\
+        Verosimilitud & 0.189 & 0.061 & 0.181 & 0 & \gls{df} (0.780) \\
+        \gls{cot} & 0.092 & 0.030 & 0.123 & 7 & \gls{mel} (0.874) \\
+        Ajuste y verosimilitud & 0.660 & 0.114 & 0.141 & 0 & \gls{nv} (0.991) \\
+        Ajuste y \gls{cot} & 0.111 & 0.036 & 0.145 & 1 & \gls{mel} (0.971) \\
+        \filasep
+        \multicolumn{6}{@{}l}{\textit{LLaVA-Med}} \\
+        Generación & 0.114 & 0.049 & 0.156 & 0 & \gls{mel} (0.967) \\
+        Verosimilitud & 0.037 & 0.036 & 0.157 & 0 & \gls{vasc} (0.365) \\
+        \gls{cot} & 0.087 & 0.026 & 0.112 & 223 & \gls{mel} (0.852) \\
+        Ajuste y verosimilitud & 0.179 & 0.079 & 0.137 & 0 & \gls{mel} (0.586) \\
+        Ajuste y \gls{cot} & 0.031 & 0.042 & 0.045 & 1\,223 & \gls{mel} (0.154) \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.92\textwidth]{Figures/Capitulos/04-Resultados-Clasificacion/distribucion-vlm-generativos.pdf}
+    \caption{Clases reales de la prueba y clases que predice cada \gls{vlm} generativo con cada estrategia.}
+    \label{fig:res_vlm_distribucion}
+\end{figure}
+
+El colapso explica también los valores que, a primera vista, parecen mejores. Mini-VLM ajustado y con verosimilitud
+alcanza la mayor exactitud de la tabla, pero porque responde \gls{nv} en casi todas las imágenes, igual que el
+clasificador que responde siempre \gls{nv} (Sección~\ref{sec:met_referencias}). En el otro extremo, LLaVA-Med ajustado
+y con \gls{cot} no produce una etiqueta válida en cuatro de cada cinco imágenes, porque sus respuestas ya no terminan
+en la línea de diagnóstico que pide el \emph{prompt}. En ninguno de los dos modelos el ajuste con los textos clínicos
+de \emph{SkinCaRe} mejora la sensibilidad macro.
+
+Una primera explicación posible del colapso es el desbalance de \emph{HAM10000}, en el que \gls{nv} reúne dos tercios
+de las imágenes. Sin embargo, los resultados no son compatibles con esa explicación. Los \glspl{vlm} generativos no se
+ajustaron con \emph{HAM10000}, de modo que no pudieron aprender su distribución de clases, y el colapso aparece ya sin
+ningún ajuste. Además, la clase hacia la que colapsan cambia con el modelo y con la estrategia, y solo una de las diez
+combinaciones colapsa hacia \gls{nv} (Figura~\ref{fig:res_vlm_distribucion}). Un sesgo por la frecuencia de \gls{nv}
+llevaría a todas las combinaciones hacia esa misma clase.
+
+Si la frecuencia de las clases no guía la predicción, el control con la imagen gris de la
+Sección~\ref{sec:met_vlm_procedimiento} permite ver cuánto la guía el \emph{prompt}. Sin imagen, los dos modelos
+asignan todas las imágenes a una misma clase, de modo que su sensibilidad macro es exactamente 1/7
+(Tabla~\ref{tab:res_vlm_controles}). Con la imagen, las predicciones se reparten algo más, pero la sensibilidad macro
+apenas sube. Por lo tanto, el \emph{prompt} fija una respuesta por defecto y la imagen la desplaza muy poco.
+
+\begin{table}[H]
+    \centering
+    \caption{Controles de los \glspl{vlm} generativos (verosimilitud, sin ajuste) y contraste con DermLIP.}
+    \label{tab:res_vlm_controles}
+    \small
+    \setlength{\tabcolsep}{4pt}
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X
+        >{\raggedleft\arraybackslash}p{1.5cm}>{\centering\arraybackslash}p{1.6cm}>{\centering\arraybackslash}p{2.15cm}>{\centering\arraybackslash}p{2.4cm}@{}}
+        \toprule
+        \textbf{Condición} & \textbf{Imágenes} & \textbf{Exactitud} & \textbf{Sensibilidad macro}
+            & \textbf{Clase más predicha} \\
+        \midrule
+        \multicolumn{5}{@{}l}{\textit{Mini-VLM}} \\
+        Prueba de \emph{HAM10000} & 1\,503 & 0.189 & 0.181 & \gls{df} (0.780) \\
+        Imagen gris & 1\,503 & 0.111 & 0.143 & \gls{mel} (1.000) \\
+        Fotografías clínicas de \emph{SkinCAP} & 624 & 0.181 & 0.176 & \gls{df} (0.635) \\
+        \filasep
+        \multicolumn{5}{@{}l}{\textit{LLaVA-Med}} \\
+        Prueba de \emph{HAM10000} & 1\,503 & 0.037 & 0.157 & \gls{vasc} (0.365) \\
+        Imagen gris & 1\,503 & 0.011 & 0.143 & \gls{df} (1.000) \\
+        Fotografías clínicas de \emph{SkinCAP} & 624 & 0.071 & 0.106 & \gls{df} (0.428) \\
+        \filasep
+        \multicolumn{5}{@{}l}{\textit{DermLIP (contraste)}} \\
+        Prueba de \emph{HAM10000} & 1\,503 & 0.716 & 0.544 & \gls{nv} (0.655) \\
+        Fotografías clínicas de \emph{SkinCAP} & 624 & 0.397 & 0.460 & \gls{df} (0.351) \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+Otra explicación posible es la modalidad, porque la dermatoscopía requiere un equipo específico, mientras que la
+fotografía clínica se parece más a las imágenes de uso general. El control con las 624 fotografías clínicas de
+\emph{SkinCAP} descarta también esa explicación. Sobre esas imágenes, los dos generativos no mejoran su resultado en
+\emph{HAM10000} y vuelven a colapsar, mientras que DermLIP sin ajuste obtiene una sensibilidad macro algo menor que
+en la dermatoscopía, pero muy por encima de la de ellos. Las fotografías permiten, entonces, distinguir las clases, y la dificultad está en la
+capacidad de los \glspl{vlm} generativos para hacerlo, sea cual sea la forma en que se obtiene la clase.
+
+Queda por saber si un \gls{vlm} especializado en dermatología resuelve esa limitación, y DermLIP permite verlo sin
+generar texto, con los cuatro usos de la Sección~\ref{sec:met_dermlip} (Tabla~\ref{tab:res_dermlip}). Sin ningún
+ajuste y sin haber visto imágenes de \emph{HAM10000}, DermLIP alcanza una sensibilidad macro de 0.544, tres veces
+la del mejor \gls{vlm} generativo. Con una cabeza entrenada sobre su \emph{embedding} se acerca a los
+supervisados: la \gls{svm} obtiene el mayor F1 macro de los cuatro usos, y el \emph{linear probe}, una sensibilidad
+macro algo mayor que la de Swin-Tiny, aunque con un F1 macro bastante menor. Es la divergencia que anticipa la
+Sección~\ref{sec:met_seleccion}: con pesos balanceados, la regresión logística asigna más imágenes a las clases
+minoritarias y gana sensibilidad a costa de falsas alarmas.
+
+\begin{table}[H]
+    \centering
+    \caption{DermLIP en la prueba de \emph{HAM10000}, sin ajuste y con tres cabezas.}
+    \label{tab:res_dermlip}
+    \small
+    \setlength{\tabcolsep}{4pt}
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X
+        >{\centering\arraybackslash}p{2.1cm}>{\centering\arraybackslash}p{2.1cm}
+        >{\centering\arraybackslash}p{2.1cm}>{\centering\arraybackslash}p{2.3cm}@{}}
+        \toprule
+        \textbf{Uso} & \textbf{Exactitud} & \textbf{F1 macro} & \textbf{Sensibilidad macro}
+            & \textbf{Sensibilidad de \gls{mel}} \\
+        \midrule
+        \emph{Zero-shot} & 0.716 & 0.475 & 0.544 & 0.503 \\
+        \emph{Linear probe} & 0.738 & 0.618 & 0.729 & 0.593 \\
+        \gls{knn} ($k = 3$) & 0.781 & 0.601 & 0.568 & 0.437 \\
+        \gls{svm} con núcleo RBF & 0.832 & 0.705 & 0.673 & 0.569 \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+Como DermLIP combina una representación especializada con una cabeza distinta en cada uso, falta separar el aporte de
+cada parte, y para ello sirve el control con Swin preentrenado en \emph{ImageNet} (Tabla~\ref{tab:res_dermlip_swin}).
+Con las mismas tres cabezas, DermLIP supera a Swin congelado en todas, por entre 0.15 y 0.35 de sensibilidad macro y
+por márgenes parecidos de F1 macro. Su ventaja se debe, entonces, a la representación aprendida sobre imágenes
+dermatológicas y no a la cabeza. La regresión logística de este control da valores distintos de los del \emph{linear
+probe} porque usa \emph{embeddings} estandarizados en lugar de normalizados.
+
+\begin{table}[H]
+    \centering
+    \caption{Control de la representación: tres cabezas sobre el \emph{embedding} de DermLIP y de Swin preentrenado en \emph{ImageNet}, sin ajuste.}
+    \label{tab:res_dermlip_swin}
+    \small
+    \setlength{\tabcolsep}{4pt}
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X
+        >{\centering\arraybackslash}p{1.9cm}>{\centering\arraybackslash}p{2.1cm}
+        >{\centering\arraybackslash}p{1.9cm}>{\centering\arraybackslash}p{2.1cm}@{}}
+        \toprule
+        & \multicolumn{2}{c}{\textbf{DermLIP}} & \multicolumn{2}{c}{\textbf{Swin (\emph{ImageNet})}} \\
+        \cmidrule(lr){2-3}\cmidrule(l){4-5}
+        \textbf{Cabeza} & \textbf{F1 macro} & \textbf{Sensibilidad macro} & \textbf{F1 macro} & \textbf{Sensibilidad macro} \\
+        \midrule
+        \gls{svm} con núcleo RBF & 0.705 & 0.673 & 0.517 & 0.466 \\
+        Regresión logística & 0.671 & 0.689 & 0.519 & 0.538 \\
+        \emph{Random forest} & 0.577 & 0.515 & 0.150 & 0.162 \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+En síntesis, los \glspl{vlm} generativos no clasifican las lesiones, y los controles muestran que no se debe al
+desbalance ni a la modalidad. La especialización de DermLIP, en cambio, aporta una representación útil, pero solo se
+acerca a los supervisados con una cabeza entrenada sobre \emph{HAM10000}. La sección siguiente compara las tres
+familias en conjunto y mide si sus diferencias exceden la variación de la muestra.

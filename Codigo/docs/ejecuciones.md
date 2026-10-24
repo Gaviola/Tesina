@@ -6,6 +6,103 @@ Ayuda-memoria cronológico de experimentos enviados a cluster, ordenado de más 
 
 ## 2026-10-24
 
+### Cascada con DermLIP oficial en short — Mendieta jobs 1183274–1183301
+Plan: [cascada_dermlip_oficial_plan](ideas/cascada_dermlip_oficial_plan_20261024.md). Brazo `full_dermlip_oficial`
+(diagnóstico `outputs/full_dx_dermlip_oficial.csv`, 0.716 de acuerdo con el oráculo) para los tres generadores, con
+los argumentos de `full_swin_les`. Script nuevo `slurm/mendieta/v5/gen_short_dermlip_oficial.sh` (`MODEL`, `SHARD`;
+48 GB, excluye ivb02 e ivb11). Subidos por `scp` el script y el CSV (md5 verificado; `gen_common.sh` remoto igual al
+local salvo finales de línea). `sbatch --test-only` estimaba el primer arranque para las 20:20 del 24/10. Jobs:
+SkinVL 1183274–1183276 (3 tramos), Mini-VLM v2 1183277–1183286 (10), LLaVA-Med v2 1183287–1183301 (15).
+
+```
+for k in 0 1 2; do sbatch --export=ALL,MODEL=skinvl,SHARD=$k/3 slurm/mendieta/v5/gen_short_dermlip_oficial.sh; done
+for k in $(seq 0 9); do sbatch --export=ALL,MODEL=mini_vlm,SHARD=$k/10 slurm/mendieta/v5/gen_short_dermlip_oficial.sh; done
+for k in $(seq 0 14); do sbatch --export=ALL,MODEL=llava_med,SHARD=$k/15 slurm/mendieta/v5/gen_short_dermlip_oficial.sh; done
+```
+
+En cola, retenidos desde antes: 5 tramos de Mini-VLM v3 (1181056–1181061, `user env retrieval failed`).
+**Resul:** pendiente.
+
+---
+
+### DermLIP oficial en la tesina: predicciones, pruebas y derivados — **Sin jobs SLURM** (local, RTX 4070)
+`eval_dermlip_classify.py` con `--protocolo` (oficial por defecto; salida con sufijo `_oficial`, nada sobrescrito):
+HAM10000 0.716 / 0.544, SkinCAP 0.397 / 0.460. `statistical_tests.py` con los siete modelos de v2 → con el DermLIP
+anterior reproduce `statistical_tests_les_v2.json` exactamente; con el oficial → `statistical_tests_les_v3.json`.
+`dermlip_oficial_derivados.py` → Holm (15/21), fuga (0.544 todo, 0.575 limpio) y clase más predicha.
+
+```
+../.venv/Scripts/python.exe scripts/eval_dermlip_classify.py --eval-dataset ham10000
+../.venv/Scripts/python.exe scripts/eval_dermlip_classify.py --eval-dataset skincap_clinical
+../.venv/Scripts/python.exe scripts/statistical_tests.py --models <los 7 de v2, DermLIP oficial> --output outputs/results/statistical_tests_les_v3.json
+../.venv/Scripts/python.exe scripts/dermlip_oficial_derivados.py
+```
+
+---
+
+### DermLIP zero-shot con el protocolo oficial de Derm1M — **Sin jobs SLURM** (local, RTX 4070)
+Plan `ideas/dermlip_zs_protocolo_plan_20261024.md`; resultado `resul/dermlip_zs_protocolo_resul_20261024.md`.
+Prueba por lesión (1 503), plantillas (4 propias / 8 oficiales) × nombres de clase (propios / oficiales de
+`zero_shot_metadata.py`). Control 0.377 / 0.510 (reproduce); oficial 0.716 de exactitud y 0.544 de sensibilidad
+macro. Salida nueva `outputs/results/dermlip/dermlip_zs_protocolo.json`; nada sobrescrito.
+
+```
+../.venv/Scripts/python.exe scripts/dermlip_zs_protocolo.py
+```
+
+---
+
+### Figuras por semilla del Cap. 4 — **Sin jobs SLURM** (local, CPU)
+Dos funciones nuevas en `scripts/figuras_cap4.py`: `recall-clase-semillas.pdf` (sensibilidad por clase de las tres
+semillas de los cuatro supervisados, `*_les_cwnone{,_s43,_s44}_test_results.json`) y `melanoma-semillas.pdf`
+(`lesion_split_report.json`, `melanoma_semillas`). Las medias coinciden con las tablas que reemplazan. Sin
+resultados nuevos.
+
+---
+
+### Seis figuras más para el Cap. 4 — **Sin jobs SLURM** (local, CPU)
+Reorganización del Cap. 4 pedida por el autor (menos cifras en la prosa, más figuras). `scripts/figuras_cap4.py` (desde
+`Codigo/`, con `.venv`) lee solo JSON de `outputs/results/` y escribe en
+`Docs/TFG/Figures/Capitulos/04-Resultados-Clasificacion/`: `resumen-sensibilidad-macro`, `confusion-swin`,
+`robustez-curvas`, `calibracion-swin`, `hiba-por-clase-swin` y `distribucion-vlm-generativos` (`.pdf`). Sin resultados
+nuevos ni archivos sobrescritos. Lo que recalcula coincide con las tablas: sensibilidad macro de los generativos
+(«desconocido» como error) Mini 0.144 / 0.181 / 0.123 / 0.141 / 0.145, LLaVA 0.156 / 0.157 / 0.112 / 0.137 / 0.045;
+ECE de Swin 0.040 sin pesos y 0.376 con pesos; HIBA 0.716 → 0.424.
+
+```
+.venv/Scripts/python.exe scripts/figuras_cap4.py
+```
+
+---
+
+### Costo de los clasificadores remedido con memoria de GPU — **Sin jobs SLURM** (local, RTX 4070)
+`measure_cost.py` corregido: clases del proyecto con cabeza de 7 salidas (antes torchvision con 1 000, p. ej.
+DenseNet121 8.0 M en vez de 6.96 M), autocast bf16 como la evaluación (`--dtype`, por defecto bf16) y pico de memoria
+medido con `max_memory_allocated` (antes, estimación parámetros × 4 B + 0.5 GB). Los logs SLURM no traen el pico
+(solo `nvidia-smi` al inicio). Dos corridas; la memoria coincide y los tiempos varían 5–15 %.
+
+```
+python scripts/measure_cost.py --output outputs/results/cost/cost_comparison_v3.json
+python scripts/measure_cost.py --output outputs/results/cost/cost_comparison_v3_rep.json
+```
+
+Lote de 32 (pico, GB) / ms por imagen / img/s: Swin 0.522 / 11.05 / 1 353; ConvNeXt 0.407 / 4.99 / 1 739; ViT 0.678 /
+5.72 / 904; DenseNet 0.216 / 19.89 / 1 700. Generadores sin cambios (16.4 / 26.2 / 3.4 s por reporte).
+`cost_comparison{,_v2}.json` y `cost_latency.png` no se tocaron (la figura nueva es `cost_comparison_v3_latency.png`).
+
+---
+
+### Figuras del Cap. 4: curva ROC de melanoma y Grad-CAM en castellano — **Sin jobs SLURM** (local, CPU)
+Dos figuras para la tesina, sin resultados nuevos ni archivos de `outputs/` sobrescritos. **ROC:** Swin-Tiny t06
+semilla 42 (`swin_tiny_sweep_t06_les_cwnone_predictions.json`), umbral 0.211 de `lesion_split_report.json`;
+recalcula AUC 0.919, argmax 0.701 / 0.922 y umbral 0.778 / 0.862, iguales a la fuente. **Grad-CAM:** mismas
+funciones y selección que `scripts/interpretability.py` (primera imagen de cada clase, checkpoint
+`swin_tiny_sweep_t06_les_cwnone`), solo con rótulos en castellano; las predicciones coinciden con la figura de
+`interpretability_les/` (VASC → NV y BCC → MEL, las demás correctas). Scripts: `scripts/figura_roc_melanoma.py` y `scripts/figura_gradcam_tesina.py` (desde `Codigo/`);
+salida en `Docs/TFG/Figures/Capitulos/04-Resultados-Clasificacion/{roc-melanoma-swin,gradcam-swin}.pdf`.
+
+---
+
 ### Mini-VLM v3: descarga y evaluación parcial — TOKO 99257/99258 y Mendieta short (local)
 **TOKO:** 99257 `TIMEOUT` a las 12 h (oracle 1 503/1 503 y 290 de DermLIP); 99258 `COMPLETED` el 21/10 14:50
 (DermLIP 1 503/1 503). **Mendieta:** `skincot_test` 457/457 y `full_differential_les` 248/248 completos;

@@ -64,8 +64,8 @@ sobre la lesión, pero no mide el acierto ni prueba un razonamiento clínico.
 \label{sec:met_costo}
 
 La última evaluación estima el costo computacional de ejecutar los modelos y el \emph{pipeline}, que es parte de la
-restricción de la Sección~\ref{sec:met_tareas}. Para los clasificadores se miden el número de parámetros, el tiempo de
-inferencia de una imagen y la cantidad de imágenes procesadas por segundo. Para los generadores, en cambio, se toma el
+restricción de la Sección~\ref{sec:met_tareas}. Para los clasificadores se miden los parámetros, la memoria máxima en
+la GPU, el tiempo por imagen y las imágenes procesadas por segundo. Para los generadores, en cambio, se toma el
 tiempo por reporte de las ejecuciones de la generación, que comparten instrucción, decodificación y límite de tokens,
 de modo que la diferencia refleja el modelo y la longitud de lo que escribe. No es una medición controlada, sino una
 estimación del orden de magnitud, que permite contrastar el \emph{pipeline} con el cómputo que usan los trabajos
@@ -118,7 +118,7 @@ costo de los generadores, se presentan en el Capítulo~\ref{cp:res_gen}.
     \filasep
     Clasificación con \glspl{vlm} (Sección~\ref{sec:met_clasif_vlm})
         & Saber si un \gls{vlm} clasifica tan bien como un supervisado
-        & Prueba de \emph{HAM10000}
+        & Prueba de \emph{HAM10000}; fotografías clínicas de \emph{SkinCAP} como control
         & Sensibilidad macro; McNemar con Holm \\
     \filasep
     Generación con referencia
