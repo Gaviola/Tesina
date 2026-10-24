@@ -142,3 +142,16 @@ Solo para comparar: `yan2025derm1miccv`, `zeng2025mmskin`, `jiang2026multimodal`
   sale de indexar la lista de clases con −1. La sección usa el recálculo (1 223 sin etiqueta, MEL 0.154).
 - El «F1» de `tab:clasificacion` de `experimentacion.tex` es el F1 ponderado (DermLIP sin ajuste 0.424); la sección
   informa el F1 macro (0.364).
+
+## Reorganización (24/10/2026)
+
+El autor encontró el capítulo difícil de seguir por la cantidad de cifras y porque cada subsección recorría los
+cuatro modelos. Se acordó: (1) las cuatro arquitecturas se comparan una vez y el análisis sigue con Swin-Tiny,
+nombrando a las demás solo donde se comportan distinto; (2) como regla, una cifra clave por párrafo y el resto en
+tablas y figuras (seis figuras nuevas, `Codigo/scripts/figuras_cap4.py`); (3) una sola sección de comparación con
+la literatura (4.5) y una de comparación entre familias con el costo (4.4). Estructura nueva: 4.1 supervisados
+(con melanoma), 4.2 evaluaciones complementarias, 4.3 VLM, 4.4 comparación entre clasificadores, 4.5 estado del
+arte, 4.6 discusión.
+
+Figura nueva `fig:res_vlm_distribucion`. `tab:res_pruebas_vlm` pasó a 4.4 y la literatura (DermLIP, DermFM-Zero,
+SkinVL, Jiang) a 4.5.
