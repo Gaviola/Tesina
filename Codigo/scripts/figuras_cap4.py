@@ -258,7 +258,76 @@ def fig_distribucion_vlm():
     fig.savefig(f"{OUT}/distribucion-vlm-generativos.pdf")
 
 
+SEMILLAS = ("", "_s43", "_s44")
+RUNS = {"Swin-Tiny": ("swin_tiny_sweep_t06", AZUL, "o"), "ConvNeXt-Tiny": ("convnext_tiny_sweep_t02", NARANJA, "s"),
+        "ViT-B/16": ("vit_sweep_t06", VERDE, "^"), "DenseNet121": ("densenet_sweep_t02", PURPURA, "D")}
+
+
+def fig_recall_semillas():
+    """Sensibilidad por clase de cada semilla (puntos) y su media (raya); con tres semillas, una caja no aporta."""
+    n = cargar("swin_tiny_sweep_t06_les_cwnone_predictions.json")["y_true"]
+    n = np.bincount(n, minlength=7)
+    fig, ax = plt.subplots(figsize=(6.2, 3.1))
+    off = np.linspace(-0.3, 0.3, 4)
+    for (m, (run, c, mk)), dx in zip(RUNS.items(), off):
+        v = np.array([cargar(f"{run}_les_cwnone{s}_test_results.json")["ham10000"]["sensitivity_per_class"]
+                      for s in SEMILLAS])
+        print(f"  {m}: medias {np.round(v.mean(0), 3)}")
+        for k in range(7):
+            x = k + dx
+            ax.plot([x, x], [v[:, k].min(), v[:, k].max()], lw=1, color=c, alpha=0.6)
+            ax.plot([x - 0.06, x + 0.06], [v[:, k].mean()] * 2, lw=2, color=c)
+            ax.plot([x] * 3, v[:, k], mk, ms=3.2, color=c, mec="white", mew=0.4, alpha=0.9,
+                    label=m if k == 0 else None)
+    for k in range(6):
+        ax.axvline(k + 0.5, lw=0.4, color="#e6e6e6")
+    ax.set_xticks(range(7))
+    ax.set_xticklabels([f"{c}\n({k})" for c, k in zip(CLASES, n)], fontsize=8)
+    ax.set_ylabel("Sensibilidad")
+    ax.set_ylim(0.2, 1.0)
+    ax.set_xlim(-0.5, 6.5)
+    ax.legend(fontsize=7, frameon=False, ncol=4, loc="lower center", bbox_to_anchor=(0.5, 1.0))
+    ax.spines[["top", "right"]].set_visible(False)
+    ax.grid(axis="y", lw=0.4, color="#e6e6e6")
+    ax.set_axisbelow(True)
+    fig.tight_layout()
+    fig.savefig(f"{OUT}/recall-clase-semillas.pdf")
+
+
+def fig_melanoma_semillas():
+    """Sensibilidad y especificidad de melanoma de cada semilla con las dos reglas de decisión."""
+    ps = cargar("lesion_split_report.json")["melanoma_semillas"]["por_semilla"]
+    modelos = {"swin_tiny": "Swin", "convnext_tiny": "ConvNeXt", "ensamble": "Ensamble"}
+    reglas = (("op_argmax", "Clase más probable", VERDE, -0.13), ("op_spec85", "Umbral de validación", BERMELLON, 0.13))
+    fig, axs = plt.subplots(1, 2, figsize=(5.8, 2.9))
+    for ax, met, tit in zip(axs, ("sens", "spec"), ("Sensibilidad", "Especificidad")):
+        for i, clave in enumerate(modelos):
+            for op, et, c, dx in reglas:
+                v = np.array([ps[s][clave]["melanoma"][op][met] for s in ("42", "43", "44")])
+                x = i + dx
+                ax.plot([x, x], [v.min(), v.max()], lw=1, color=c, alpha=0.6)
+                ax.plot([x - 0.07, x + 0.07], [v.mean()] * 2, lw=2, color=c)
+                ax.plot([x] * 3, v, "o", ms=3.5, color=c, mec="white", mew=0.4, label=et if i == 0 else None)
+        ax.set_title(tit, fontsize=8.5)
+        ax.set_xticks(range(3))
+        ax.set_xticklabels(list(modelos.values()), fontsize=7.5)
+        ax.set_xlim(-0.5, 2.5)
+        ax.spines[["top", "right"]].set_visible(False)
+        ax.grid(axis="y", lw=0.4, color="#e6e6e6")
+        ax.set_axisbelow(True)
+    axs[0].set_ylim(0.45, 0.9)
+    axs[1].set_ylim(0.82, 0.98)
+    axs[1].axhline(0.85, lw=0.8, ls=":", color=GRIS)
+    axs[1].text(-0.45, 0.846, "mínimo exigido en validación", fontsize=6.5, color="#555555", va="top")
+    h, l = axs[0].get_legend_handles_labels()
+    fig.legend(h, l, fontsize=7.5, frameon=False, loc="upper center", ncol=2)
+    fig.tight_layout(rect=(0, 0, 1, 0.91))
+    fig.savefig(f"{OUT}/melanoma-semillas.pdf")
+
+
+
 if __name__ == "__main__":
-    for f in (fig_resumen, fig_confusion, fig_robustez, fig_calibracion, fig_hiba, fig_distribucion_vlm):
+    for f in (fig_resumen, fig_confusion, fig_robustez, fig_calibracion, fig_hiba, fig_distribucion_vlm,
+              fig_recall_semillas, fig_melanoma_semillas):
         print(f.__name__)
         f()

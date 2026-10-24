@@ -6,6 +6,14 @@ Ayuda-memoria cronológico de experimentos enviados a cluster, ordenado de más 
 
 ## 2026-10-24
 
+### Figuras por semilla del Cap. 4 — **Sin jobs SLURM** (local, CPU)
+Dos funciones nuevas en `scripts/figuras_cap4.py`: `recall-clase-semillas.pdf` (sensibilidad por clase de las tres
+semillas de los cuatro supervisados, `*_les_cwnone{,_s43,_s44}_test_results.json`) y `melanoma-semillas.pdf`
+(`lesion_split_report.json`, `melanoma_semillas`). Las medias coinciden con las tablas que reemplazan. Sin
+resultados nuevos.
+
+---
+
 ### Seis figuras más para el Cap. 4 — **Sin jobs SLURM** (local, CPU)
 Reorganización del Cap. 4 pedida por el autor (menos cifras en la prosa, más figuras). `scripts/figuras_cap4.py` (desde
 `Codigo/`, con `.venv`) lee solo JSON de `outputs/results/` y escribe en
