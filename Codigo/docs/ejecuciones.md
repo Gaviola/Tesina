@@ -4,6 +4,29 @@ Ayuda-memoria cronológico de experimentos enviados a cluster, ordenado de más 
 
 ---
 
+## 2026-10-24
+
+### Mini-VLM v3: descarga y evaluación parcial — TOKO 99257/99258 y Mendieta short (local)
+**TOKO:** 99257 `TIMEOUT` a las 12 h (oracle 1 503/1 503 y 290 de DermLIP); 99258 `COMPLETED` el 21/10 14:50
+(DermLIP 1 503/1 503). **Mendieta:** `skincot_test` 457/457 y `full_differential_les` 248/248 completos;
+`full_swin_les` 963/1 503 y `full_baseline` 372/1 503. Los 12 tramos que quedan en `short` (Swin 13–18 y 20–22
+de 25; baseline 5–7 de 28) se liberaron el 20/10 con `ExcNodeList=ivb02,ivb11`, volvieron a fallar en ivb14
+(`user_env_retrieval_failed_requeued_held`, Restarts=2) y siguen retenidos. Los jobs de `multi` (1179986–1179990)
+siguen `PENDING` por prioridad. Reportes bajados por `tar` sobre ssh a `generated_reports/mini_vlm/v3/<brazo>`.
+
+```
+python scripts/evaluate_reports.py --model mini_vlm --level 1 --dataset v3/skincot_test --strip-reasoning --output_dir outputs/results/level1_test/skincot_test
+```
+
+Consistencia oficial v3 − v2 (mismas imágenes): oracle −0.033 [−0.042, −0.023] (0.967; el diagnóstico queda
+dentro del `<think>` cortado), DermLIP +0.021, Swin por lesión −0.007 (n.s., n = 963), diferencial +0.032 (n.s.).
+Nivel 1 SkinCoT: 80/457 reportes vacíos al quitar el `<think>`; sobre 349 pares, v3 queda por debajo de LLaVA-Med
+v2 en las cinco métricas (BERTScore 0.781 frente a 0.797).
+**Resul:** [mini_vlm_lora_llm_resul_v3_20261024.md](resul/mini_vlm_lora_llm_resul_v3_20261024.md) (parcial,
+NO CUMPLE por incompleto).
+
+---
+
 ## 2026-10-20
 
 ### Mini-VLM v3 en short: nodo ivb02 excluido y primer vistazo parcial — Mendieta jobs 1180970–1181064 (local)
@@ -1719,6 +1742,7 @@ Modelos: DenseNet121, ViT-B/16, ConvNeXt-Tiny, Swin-Tiny. Con evaluación HIBA O
 
 | Documento | Tipo | Descripción |
 |-----------|------|-------------|
+| [mini_vlm_lora_llm_resul_v3_20261024.md](resul/mini_vlm_lora_llm_resul_v3_20261024.md) | Resultado | Mini-VLM v3 (LoRA en el LLM), parcial: no cambia la cascada con Swin; oracle 0.967 por el `<think>` |
 | [vlm_domain_gap_clinica_plan_20260603.md](ideas/vlm_domain_gap_clinica_plan_20260603.md) | Plan | Confirmación afirmativa domain gap (VLM ZS foto clínica vs dermatoscopía) |
 | [vlm_domain_gap_clinica_resul_20260604.md](resul/vlm_domain_gap_clinica_resul_20260604.md) | Resultado | Domain gap NO confirmado → limitación general de grano fino; clasificación VLM cerrada |
 | [dermlip_clasificacion_plan_20260604.md](ideas/dermlip_clasificacion_plan_20260604.md) | Plan | Agregar DermLIP (VL classifier derm-especializado, CLIP-style) — ¿resuelve la clasificación? |
