@@ -6,6 +6,25 @@ Ayuda-memoria cronológico de experimentos enviados a cluster, ordenado de más 
 
 ## 2026-10-24
 
+### Cascada con DermLIP oficial en short — Mendieta jobs 1183274–1183301
+Plan: [cascada_dermlip_oficial_plan](ideas/cascada_dermlip_oficial_plan_20261024.md). Brazo `full_dermlip_oficial`
+(diagnóstico `outputs/full_dx_dermlip_oficial.csv`, 0.716 de acuerdo con el oráculo) para los tres generadores, con
+los argumentos de `full_swin_les`. Script nuevo `slurm/mendieta/v5/gen_short_dermlip_oficial.sh` (`MODEL`, `SHARD`;
+48 GB, excluye ivb02 e ivb11). Subidos por `scp` el script y el CSV (md5 verificado; `gen_common.sh` remoto igual al
+local salvo finales de línea). `sbatch --test-only` estimaba el primer arranque para las 20:20 del 24/10. Jobs:
+SkinVL 1183274–1183276 (3 tramos), Mini-VLM v2 1183277–1183286 (10), LLaVA-Med v2 1183287–1183301 (15).
+
+```
+for k in 0 1 2; do sbatch --export=ALL,MODEL=skinvl,SHARD=$k/3 slurm/mendieta/v5/gen_short_dermlip_oficial.sh; done
+for k in $(seq 0 9); do sbatch --export=ALL,MODEL=mini_vlm,SHARD=$k/10 slurm/mendieta/v5/gen_short_dermlip_oficial.sh; done
+for k in $(seq 0 14); do sbatch --export=ALL,MODEL=llava_med,SHARD=$k/15 slurm/mendieta/v5/gen_short_dermlip_oficial.sh; done
+```
+
+En cola, retenidos desde antes: 5 tramos de Mini-VLM v3 (1181056–1181061, `user env retrieval failed`).
+**Resul:** pendiente.
+
+---
+
 ### DermLIP oficial en la tesina: predicciones, pruebas y derivados — **Sin jobs SLURM** (local, RTX 4070)
 `eval_dermlip_classify.py` con `--protocolo` (oficial por defecto; salida con sufijo `_oficial`, nada sobrescrito):
 HAM10000 0.716 / 0.544, SkinCAP 0.397 / 0.460. `statistical_tests.py` con los siete modelos de v2 → con el DermLIP
