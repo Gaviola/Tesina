@@ -9,6 +9,9 @@
 % Revisión del tutor del 21/10/2026: componentes disponibles → necesidad de integración (desde el marco y el estado del
 % arte, sin resultados propios) → arquitectura (figura) → funcionamiento (cascada y recuperación) → decisiones de salida
 % (ruteo). Las fuentes de comparación de la cascada, el oracle y la línea base sin generador pasan a 3.7.
+% Ampliación del 24/10/2026 (ficha 06-pipeline.md): motivo de Swin-Tiny (F1 macro en validación), división del
+% trabajo entre componentes, recuperación como alternativa y no como mecanismo, a(x) explícita, tab:met_niveles con
+% casos hipotéticos y limitaciones del diseño. Sin resultados propios.
 \section{Pipeline propuesto}
 \label{sec:met_pipeline}
 
@@ -29,17 +32,32 @@ limitaciones, la propuesta de este trabajo es un \emph{pipeline} que integra los
 compense una debilidad de los otros: el clasificador fija el diagnóstico, la recuperación aporta una segunda opinión
 y el generador redacta el reporte.
 
-La Figura~\ref{fig:met_pipeline} muestra la arquitectura general. La imagen entra en paralelo al clasificador,
-Swin-Tiny, uno de los dos modelos elegidos por la búsqueda de la Sección~\ref{sec:met_supervisados}, y al \gls{knn}.
-Un módulo de ruteo compara las dos decisiones y, según coincidan o no, determina si el generador redacta un reporte y
-con qué instrucción, o si el caso se deriva a un especialista. Así, la arquitectura separa dos decisiones: qué
-diagnóstico se afirma, que depende del clasificador, y si corresponde afirmarlo, que depende de la concordancia.
+La Figura~\ref{fig:met_pipeline} muestra la arquitectura general. La imagen entra en paralelo a dos predictores. El
+primero es Swin-Tiny, el clasificador del \emph{pipeline}: de los dos modelos sobre los que se hizo la búsqueda de
+hiperparámetros (Sección~\ref{sec:met_supervisados_ensamble}), es el de mayor F1 macro en validación, el criterio con
+que se eligen las configuraciones (Sección~\ref{sec:met_seleccion}). El segundo es el \gls{knn} sobre los
+\emph{embeddings} de DermLIP. Un módulo de ruteo compara las dos decisiones y, según coincidan o no, determina si el
+generador redacta un reporte y con qué instrucción, o si el caso se deriva a un especialista. Así, la arquitectura
+separa dos decisiones: qué diagnóstico se afirma, que depende del clasificador, y si corresponde afirmarlo, que
+depende de la concordancia.
 
 \input{Figures/Capitulos/03-Materiales-Metodos/pipeline}
 
-El funcionamiento del \emph{pipeline} combina tres mecanismos. La cascada lleva el diagnóstico del clasificador al
-generador; la recuperación ofrece una alternativa que le entrega al generador los casos parecidos; y el ruteo decide
-qué tipo de salida corresponde a cada caso. Las subsecciones siguientes los presentan en ese orden.
+En el reporte final, cada componente aporta una parte distinta. El generador recibe siempre la imagen, además de la
+instrucción que arma el ruteo, de modo que la descripción de la lesión (su morfología, sus colores y sus estructuras
+dermatoscópicas) sale de lo que el generador reconoce en ella. El diagnóstico, en cambio, no lo elige el generador,
+sino que le llega en la instrucción: el del clasificador cuando el caso se afirma, o el par de candidatos cuando se
+presenta un diferencial. Por su parte, el \gls{knn} no aporta texto al reporte, sino que interviene en la decisión de
+emitirlo. Con este reparto, el generador se usa para la redacción del texto clínico, para la que se ajustó en la
+Sección~\ref{sec:met_generacion}, y la elección entre las siete clases queda a cargo del componente entrenado para
+hacerla.
+
+El funcionamiento del \emph{pipeline} se apoya en dos mecanismos: la cascada, que lleva el diagnóstico del
+clasificador al generador, y el ruteo, que decide qué tipo de salida corresponde a cada caso. El \gls{knn} cumple en
+el ruteo la función de segundo predictor. Además, su índice de casos permite otra forma de \emph{grounding}, la
+recuperación, que entrega al generador los casos parecidos en lugar de un diagnóstico. La recuperación no forma parte
+del ruteo, sino que es una alternativa a la cascada que se compara con ella, y por eso se describe entre ambos
+mecanismos.
 
 \subsection{Cascada clasificador--generador (grounding)}
 \label{sec:met_cascada}
@@ -88,10 +106,12 @@ paramétrico y opera sobre una representación preentrenada en otros datos. Por 
 coincidan siempre, de modo que su desacuerdo señale los casos dudosos. Esa expectativa es una hipótesis del diseño, que
 se pone a prueba en el Capítulo~\ref{cp:res_clasif}.
 
-Para formalizar la señal, sean $a(x)$ la concordancia entre el clasificador y el voto del \gls{knn}, y $\kappa(x)$ el
-consenso de los vecinos (Ecuación~\ref{eq:marco_knn}). Con $k = 3$ vecinos, el consenso vale $1/3$, $2/3$ o $1$, y
-cuando los tres vecinos son de clases distintas, el voto del \gls{knn} es el del vecino más cercano. A partir de ambos,
-la regla que asigna cada caso a un nivel es
+Para formalizar la señal, sea $\hat{c}(x)$ la clase de mayor probabilidad del clasificador y $v(x)$ el voto del
+\gls{knn}, es decir, la clase más frecuente entre los $k = 3$ vecinos (Ecuación~\ref{eq:marco_knn}). Cuando los tres
+vecinos son de clases distintas, el voto es el del vecino más cercano. La concordancia es entonces
+$a(x) = \mathbf{1}[\hat{c}(x) = v(x)]$ (Ecuación~\ref{eq:marco_concordancia}), y el consenso $\kappa(x)$ es la
+proporción de vecinos que pertenecen a la clase más votada (Ecuación~\ref{eq:marco_consenso}), que con tres vecinos
+vale $1/3$, $2/3$ o $1$. A partir de ambos, la regla que asigna cada caso a un nivel es
 \begin{equation}
     \pi(x) =
     \begin{cases}
@@ -103,10 +123,10 @@ la regla que asigna cada caso a un nivel es
 \end{equation}
 Los tres niveles son alternativas excluyentes, cada una con su acción:
 \begin{enumerate}
-    \item \textbf{Afirmativo} ($a = 1$): reporte definitivo con el diagnóstico del clasificador y la plantilla
+    \item \textbf{Afirmativo} ($a = 1$): reporte definitivo con el diagnóstico $\hat{c}(x)$ y la plantilla
     \emph{noreasoning}.
-    \item \textbf{Diferencial} ($a = 0$ y $\kappa > 1/3$): reporte que enuncia el par formado por el clasificador y el
-    voto del \gls{knn}, con la plantilla diferencial.
+    \item \textbf{Diferencial} ($a = 0$ y $\kappa > 1/3$): reporte que enuncia el par $\{\hat{c}(x), v(x)\}$, con la
+    plantilla diferencial.
     \item \textbf{Derivación} ($a = 0$ y $\kappa = 1/3$, es decir, los tres vecinos de clases distintas): no se genera
     reporte y el caso se deriva a un especialista.
 \end{enumerate}
@@ -114,13 +134,49 @@ Los tres niveles cubren todos los casos (Figura~\ref{fig:met_ruteo}).
 
 \input{Figures/Capitulos/03-Materiales-Metodos/ruteo}
 
+Para ver cómo opera la regla, la Tabla~\ref{tab:met_niveles} resume qué recibe el generador en cada nivel y qué
+produce el \emph{pipeline}, con un caso de cada nivel. Los casos son hipotéticos: se construyeron para ilustrar la
+regla y no provienen de los datos. En los dos primeros, el generador recibe la imagen y una instrucción distinta, y
+en el tercero no se lo llama.
+
+\begin{table}[H]
+    \centering
+    \caption{Niveles del ruteo, con la entrada del generador, la salida y un caso hipotético de cada uno.}
+    \label{tab:met_niveles}
+    \small
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{1.9cm}
+        >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X@{}}
+        \toprule
+        \textbf{Nivel} & \textbf{Qué recibe el generador} & \textbf{Qué produce} & \textbf{Caso hipotético} \\
+        \midrule
+        Afirmativo & La imagen y $\hat{c}(x)$, con la plantilla \emph{noreasoning} & Un reporte que describe la
+            lesión y afirma $\hat{c}(x)$ & Swin-Tiny predice MEL; vecinos MEL, MEL y NV, voto MEL. Se afirma
+            melanoma \\
+        \filasep
+        Diferencial & La imagen y el par $\{\hat{c}(x), v(x)\}$, con la plantilla diferencial & Un reporte que
+            describe la lesión y discute los dos candidatos & Swin-Tiny predice NV; vecinos BKL, BKL y NV, voto BKL
+            y $\kappa = 2/3$. Diferencial entre NV y BKL \\
+        \filasep
+        Derivación & Nada: no se llama al generador & Ningún reporte; el caso se deriva a un especialista &
+            Swin-Tiny predice NV; vecinos MEL, BKL y DF, voto MEL (el más cercano) y $\kappa = 1/3$. Se deriva \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
 Esta regla es la política de tres salidas de la Sección~\ref{sec:marco_tres_salidas}, con la concordancia en lugar de
 la confianza. Derivar el caso es la abstención de la predicción selectiva (Sección~\ref{sec:marco_pred_selectiva}): en
 ese nivel el \emph{pipeline} no emite reporte. El diferencial presenta como candidatos el diagnóstico del clasificador
 y el voto del \gls{knn}, y no los dos primeros candidatos del clasificador, porque lo que el ruteo mide es el
-desacuerdo entre ambos predictores. La plantilla diferencial, que está en el Apéndice~\ref{ap:prompts}, atribuye la
-incertidumbre al clasificador aunque uno de los candidatos venga del \gls{knn}, y se usa sin cambios. Los reportes de
-los dos primeros niveles se generan con Mini-VLM y LLaVA-Med.
+desacuerdo entre ambos predictores. Los reportes de los dos primeros niveles se generan con Mini-VLM y LLaVA-Med, y
+las plantillas completas están en el Apéndice~\ref{ap:prompts}.
+
+El diseño del ruteo tiene limitaciones que se conocen antes de evaluarlo. En primer lugar, la concordancia no detecta
+los casos en que los dos predictores cometen el mismo error (Sección~\ref{sec:marco_concordancia}). En esos casos, el
+\emph{pipeline} afirma un diagnóstico equivocado con la misma plantilla que uno correcto. En segundo lugar, el consenso
+solo interviene cuando los predictores no coinciden y, con $k = 3$, toma apenas tres valores. Por eso, si los tres
+vecinos son de clases distintas pero el más cercano coincide con el clasificador, el caso se afirma igual. Por último,
+la plantilla diferencial atribuye la incertidumbre al clasificador aunque uno de los candidatos venga del \gls{knn}, y
+se usa sin cambios.
 
 Con el ruteo queda definido qué emite el \emph{pipeline} en cada caso. Falta establecer con qué criterios se evalúan
 sus componentes y el \emph{pipeline} completo, y contra qué referencias se los compara.

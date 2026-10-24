@@ -1,5 +1,43 @@
 # Ficha 3.7 — Pipeline propuesto
 
+**Ampliación del 24/10/2026, aprobada por el autor** (pedido del autor: 3.6 es el núcleo de la tesis y quedó corta
+frente a las demás). Regla: ningún resultado propio. Lo nuevo se justifica por diseño, por el Cap. 2 o por la
+selección en validación. Hilo nuevo (prevalece sobre el de abajo):
+
+```
+P1  Componentes disponibles (sin cambios)                                         describe
+    ↓ necesidad
+P2  Limitaciones conocidas y propuesta (sin cambios)                              justifica
+    ↓ consecuencia — la propuesta se concreta en una arquitectura
+P3  Arquitectura (figura). Swin-Tiny es el clasificador del pipeline: de los dos modelos de la búsqueda
+    (sec:met_supervisados_ensamble), el de mayor F1 macro en validación (sec:met_seleccion); sin cifras.
+    Dos decisiones separadas: qué se afirma y si corresponde afirmarlo                describe · justifica
+    ↓ ampliación — qué aporta cada componente al reporte
+P4  NUEVO. División del trabajo: el generador recibe siempre la imagen y redacta la descripción; el
+    diagnóstico le llega en la instrucción (clasificador o par de candidatos); el kNN no aporta texto, decide
+    si se emite. El generador se usa para lo que se ajustó (3.5)                      justifica
+    ↓ necesidad — cómo funciona
+P5  Funcionamiento: dos mecanismos (cascada y ruteo). El kNN cumple dos funciones con el mismo índice
+    (voto del ruteo; contexto de la recuperación). La recuperación es una alternativa de grounding que se
+    compara con la cascada y no forma parte del ruteo (antes figuraba como tercer mecanismo)   delimita
+3.6.1 Cascada (sin cambios). 3.6.2 Recuperación (sin cambios).
+3.6.3 Ruteo
+P9  Por qué la concordancia (sin cambios)
+P10 Formalización explícita: ĉ(x) = argmax del clasificador; v(x) = voto del kNN (eq:marco_knn, desempate
+    por el vecino más cercano); a(x) = 1[ĉ = v] (eq:marco_concordancia); κ(x) (eq:marco_consenso). Ecuación
+    y lista de niveles con ĉ y v. Figura de ruteo                                     define
+    ↓ ejemplo
+P11 NUEVO. Tabla tab:met_niveles: por nivel, qué recibe el generador, qué sale y un caso hipotético
+    construido para ilustrar la regla (no tomado de los datos)                        ilustra
+P12 Relación con las tres salidas del Cap. 2 (sin cambios, sin la oración de la plantilla diferencial)
+    ↓ contraste — lo que el diseño no cubre
+P13 NUEVO. Limitaciones del diseño, sin resultados: errores coincidentes de los dos predictores se afirman
+    (sec:marco_concordancia ya lo anticipa); con k = 3 el consenso toma tres valores y solo actúa si no hay
+    concordancia (tres vecinos distintos con el más cercano igual al clasificador → se afirma); la plantilla
+    diferencial atribuye la duda al clasificador                                      limita
+→ Transición a 3.7 (sin cambios)
+```
+
 **Revisión del tutor (21/10/2026), aplicada el 22/10:** Antes era 3.7. Orden pedido por el tutor: componentes disponibles → necesidad de integrarlos (desde el estado del arte, `sec:marco_rep_fallas` y `sec:marco_senales_confianza`; sale «como muestra el Capítulo 4», 25) → arquitectura (figura) → funcionamiento (cascada, recuperación) → decisiones de salida (ruteo). En la cascada, el diseño de la instrucción va antes del piloto. Las cuatro fuentes de diagnóstico, el *oracle* y la línea base sin generador pasan a 3.7 (decisión del autor del 22/10). La concordancia como señal se presenta como hipótesis del diseño.
 
 **Revisión del autor (21/10/2026):** el autor quitó la oración que declaraba que la concordancia se eligió como señal con resultados de prueba conocidos; queda declarado solo el piloto de *noreasoning* (17 imágenes de prueba).
