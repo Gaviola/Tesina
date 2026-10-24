@@ -111,10 +111,13 @@ sin cita.
 
 - Pregunta 1 resuelta: la figura de Grad-CAM se regeneró con rótulos en castellano
   (`Codigo/scripts/figura_gradcam_tesina.py`, mismas imágenes y mapas que `interpretability_swin.png`).
-- **Memoria de los clasificadores:** `measure_cost.py` no la mide; la estima como parámetros × 4 bytes + 0.5 GB. La
-  tabla y el texto dicen «memoria estimada».
-- **Latencias:** se usan las de `cost_comparison_v2.json` (medición del 12/10). `experimentacion.tex` conserva las
-  de julio (`cost_comparison.json`: ConvNeXt 3.9 ms, Swin 8.7 ms, DenseNet 11.5 ms), del mismo orden.
+- **Costo remedido (24/10, `cost/cost_comparison_v3.json`).** `measure_cost.py` estimaba la memoria (parámetros × 4
+  bytes + 0.5 GB) e instanciaba los modelos de torchvision con la cabeza de 1 000 clases, en fp32 (DenseNet 8.0 M en
+  lugar de 6.96 M). Los logs de los jobs no registran el pico de memoria: solo un `nvidia-smi` al arrancar, con la GPU
+  vacía. Ahora el script usa las clases del proyecto (cabeza de 7 salidas; los parámetros coinciden con
+  `tab:met_modelos_sup`), autocast bf16 como `tta.py`, y mide el pico con `torch.cuda.max_memory_allocated` con una
+  imagen y con lotes de 32. Una segunda corrida (`cost_comparison_v3_rep.json`) da la misma memoria y tiempos entre
+  5 % y 15 % distintos; se informa la primera. Se agregó la memoria a 3.8 y la precisión a 3.9.
 - **HIBA:** 158 de las 221 imágenes de AKIEC son carcinomas escamosos (`data/raw/HIBA/metadata.csv`), dato que
   también da `experimentacion.tex`. El cuerpo de ese documento dice que las 1 616 imágenes son dermatoscópicas; según
   `hiba_por_modalidad.json` son 1 270 dermatoscópicas y 346 clínicas, como dice 3.8.

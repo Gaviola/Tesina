@@ -157,38 +157,40 @@ hace ni prueba un razonamiento clínico (Sección~\ref{sec:met_interpretabilidad
 \label{sec:res_costo_clasificadores}
 
 La última evaluación estima el costo de ejecutar los clasificadores en la RTX 4070 de la
-Sección~\ref{sec:met_entorno}. Como muestra la Tabla~\ref{tab:res_costo_clasificadores}, los cuatro modelos
-clasifican una imagen en menos de 14~ms, y su memoria, estimada a partir de sus pesos en precisión simple más un
-margen de 0.5~GB, queda por debajo de 1~GB. Swin-Tiny, por ejemplo, tarda 9.6~ms por
-imagen y procesa unas 670 imágenes por segundo en lotes de 32, de modo que clasifica la prueba completa en unos pocos
-segundos. Además, la cantidad de parámetros no ordena el tiempo de inferencia: DenseNet121, el modelo más chico, es el
-más lento con una imagen por vez. Estos tiempos corresponden a una sola vista, y el \gls{tta} de la
+Sección~\ref{sec:met_entorno}, con la misma precisión bf16 que la evaluación. Como muestra la
+Tabla~\ref{tab:res_costo_clasificadores}, los cuatro modelos clasifican una imagen en 20~ms o menos, y la memoria
+máxima que ocupan en la GPU, con lotes de 32 imágenes, no llega a 0.7~GB. Swin-Tiny, por ejemplo, tarda 11.1~ms por
+imagen y procesa unas 1\,350 imágenes por segundo en lotes de 32, de modo que clasifica la prueba completa en poco
+más de un segundo. Además, la cantidad de parámetros no ordena el tiempo de inferencia: DenseNet121, el modelo más
+chico, es el más lento con una imagen por vez. Estos tiempos corresponden a una sola vista, y el \gls{tta} de la
 Sección~\ref{sec:met_supervisados_receta}, que suma la imagen reflejada, requiere dos pasadas por imagen. Aun así, el
 costo de los clasificadores queda muy por debajo del límite de una GPU de consumo que fija la
 Sección~\ref{sec:met_tareas}.
 
 \begin{table}[H]
     \centering
-    \caption{Costo de inferencia de los clasificadores en una RTX 4070, con una vista por imagen.}
+    \caption{Costo de inferencia de los clasificadores en una RTX 4070 (bf16, una vista por imagen).}
     \label{tab:res_costo_clasificadores}
     \small
-    \setlength{\tabcolsep}{4pt}
+    \setlength{\tabcolsep}{3pt}
     \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X
-        >{\centering\arraybackslash}p{2.3cm}>{\centering\arraybackslash}p{2.1cm}
-        >{\centering\arraybackslash}p{2.6cm}>{\centering\arraybackslash}p{3.1cm}@{}}
+        >{\centering\arraybackslash}p{1.9cm}>{\centering\arraybackslash}p{2.0cm}>{\centering\arraybackslash}p{2.0cm}
+        >{\centering\arraybackslash}p{1.9cm}>{\centering\arraybackslash}p{2.0cm}@{}}
         \toprule
-        \textbf{Modelo} & \textbf{Parámetros (millones)} & \textbf{Memoria estimada (GB)} & \textbf{Tiempo por imagen (ms)}
-            & \textbf{Imágenes por segundo (lote de 32)} \\
+        & & \multicolumn{2}{c}{\textbf{Memoria máxima (GB)}} & & \\
+        \cmidrule(lr){3-4}
+        \textbf{Modelo} & \textbf{Parámetros (millones)} & \textbf{Una imagen} & \textbf{Lote de 32}
+            & \textbf{Tiempo por imagen (ms)} & \textbf{Imágenes por segundo} \\
         \midrule
-        Swin-Tiny & 28.3 & 0.6 & 9.60 & 670.7 \\
-        ConvNeXt-Tiny & 28.6 & 0.6 & 4.83 & 911.4 \\
-        ViT-B/16 & 86.6 & 0.8 & 5.46 & 356.3 \\
-        DenseNet121 & 8.0 & 0.5 & 13.19 & 883.8 \\
+        Swin-Tiny & 27.52 & 0.180 & 0.522 & 11.05 & 1\,353.3 \\
+        ConvNeXt-Tiny & 27.83 & 0.179 & 0.407 & 4.99 & 1\,738.5 \\
+        ViT-B/16 & 85.80 & 0.511 & 0.678 & 5.72 & 903.5 \\
+        DenseNet121 & 6.96 & 0.052 & 0.216 & 19.89 & 1\,700.3 \\
         \bottomrule
     \end{tabularx}
 \end{table}
 
 Con estas cinco evaluaciones, el clasificador queda caracterizado también fuera de las condiciones de su
 entrenamiento: pierde buena parte de su desempeño en otra población, es sensible al ruido de la imagen, entrega
-probabilidades bien calibradas cuando se entrena sin pesos y clasifica una imagen en menos de 14~ms, con una memoria
-estimada menor que 1~GB. La sección siguiente reúne lo que estos resultados y los de las secciones anteriores responden.
+probabilidades bien calibradas cuando se entrena sin pesos y clasifica una imagen en 20~ms o menos, con menos de
+0.7~GB de memoria de la GPU. La sección siguiente reúne lo que estos resultados y los de las secciones anteriores responden.
