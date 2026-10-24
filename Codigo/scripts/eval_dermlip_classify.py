@@ -25,7 +25,7 @@ import torch
 
 from src.data.ham10000 import HAM10000_CLASSES, HAM10000Dataset
 from src.evaluation.classification import evaluate_classification
-from src.models.dermlip import DermLIPClassifier
+from src.models.dermlip import DEFAULT_TEMPLATES, OFFICIAL_TEMPLATES, DermLIPClassifier
 from src.utils.io import save_results
 from src.utils.logging import format_duration, setup_logger
 from src.utils.seed import set_seed
@@ -42,6 +42,17 @@ HAM_PROMPT_NAMES = [
     "benign keratosis",
     "dermatofibroma",
     "vascular lesion",
+]
+# Nombres oficiales de Derm1M (HAM_CLASSNAMES), en el mismo orden. Con «melanocytic nevus» DermLIP manda los nevos a
+# MEL (resul/dermlip_zs_protocolo_resul_20261024.md).
+HAM_PROMPT_NAMES_OFICIALES = [
+    "melanoma",
+    "nevus",
+    "basal cell carcinoma",
+    "actinic keratosis",
+    "benign keratosis",
+    "dermatofibroma",
+    "vascular",
 ]
 
 
@@ -75,6 +86,8 @@ def main():
                         choices=["ham10000", "skincap_clinical"], dest="eval_dataset")
     parser.add_argument("--batch_size", type=int, default=64)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--protocolo", choices=["oficial", "propio"], default="oficial",
+                        help="Plantillas y nombres de clase: los de Derm1M (oficial) o los anteriores (propio)")
     args = parser.parse_args()
 
     set_seed(args.seed)
@@ -85,6 +98,10 @@ def main():
         logger.warning("Sin GPU: la inferencia DermLIP será lenta pero funciona en CPU.")
 
     model = DermLIPClassifier(checkpoint=args.checkpoint)
+    if args.protocolo == "oficial":
+        nombres, plantillas = HAM_PROMPT_NAMES_OFICIALES, OFFICIAL_TEMPLATES
+    else:
+        nombres, plantillas = HAM_PROMPT_NAMES, DEFAULT_TEMPLATES
     test_dataset = _load_dataset(args)
 
     all_y_true, all_y_pred, all_y_prob, all_image_ids = [], [], [], []
@@ -95,7 +112,7 @@ def main():
     def _flush():
         if not batch_imgs:
             return
-        logits = model.zero_shot_logits(batch_imgs, HAM_PROMPT_NAMES)
+        logits = model.zero_shot_logits(batch_imgs, nombres, plantillas)
         preds = logits.argmax(dim=1).tolist()
         # Guardar probabilidades (softmax) para poder analizar calibración (P0.1).
         probs = torch.softmax(logits.float(), dim=1).tolist()
@@ -131,7 +148,7 @@ def main():
     logger.info("Spec. macro     : %.4f", results["specificity_macro"])
 
     ckpt_tag = args.checkpoint.replace("hf-hub:", "").replace("/", "_")
-    suffix = f"_zeroshot_{ckpt_tag}"
+    suffix = f"_zeroshot_{ckpt_tag}" + ("_oficial" if args.protocolo == "oficial" else "")
     if args.eval_dataset == "skincap_clinical":
         suffix += "_clinical"
     results_dir = Path(args.output_dir) / "results" / "dermlip"
@@ -144,7 +161,9 @@ def main():
         "method": "clip_zeroshot",
         "eval_dataset": args.eval_dataset,
         "class_names": HAM10000_CLASSES,
-        "prompt_names": HAM_PROMPT_NAMES,
+        "protocolo": args.protocolo,
+        "prompt_names": nombres,
+        "templates": list(plantillas),
         "image_ids": all_image_ids,
         "y_true": all_y_true,
         "y_pred": all_y_pred,

@@ -72,7 +72,8 @@ def fig_resumen():
     filas.append(("DermLIP + regresión logística", [dl["linear-probe (LogReg)"]["sens_macro"]], 0, VERDE))
     filas.append(("DermLIP + SVM", [dl["SVM-RBF"]["sens_macro"]], 0, VERDE))
     filas.append(("DermLIP + kNN", [dl["kNN (k=3)"]["sens_macro"]], 0, VERDE))
-    filas.append(("DermLIP sin ajuste", [0.510], 0, VERDE))  # classification_summary_les.json (ficha 4.3)
+    zs = cargar("dermlip/dermlip_zeroshot_vit-b-16_oficial_predictions.json")  # protocolo oficial de Derm1M
+    filas.append(("DermLIP sin ajuste", [sens_macro(zs["y_true"], zs["y_pred"])], 0, VERDE))
     for modelo in ("Mini-VLM", "LLaVA-Med"):
         vals = []
         for m, _, f in VLM:

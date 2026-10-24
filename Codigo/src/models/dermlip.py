@@ -35,6 +35,19 @@ DEFAULT_TEMPLATES = (
     "An image showing {c}",
 )
 
+# Protocolo oficial de Derm1M (OPENAI_SKIN_TEMPLATES en src/open_clip/zero_shot_metadata.py del repo
+# SiyuanYan1/Derm1M). Es el que usa la tesina desde el 24/10/2026 (resul/dermlip_zs_protocolo_resul_20261024.md).
+OFFICIAL_TEMPLATES = (
+    "This is a skin image of {c}",
+    "This is a skin image of {c}.",
+    "A skin image of {c}.",
+    "An image of {c}, a skin condition.",
+    "{c}, a skin disorder, is shown in this image.",
+    "The skin lesion depicted is {c}.",
+    "The skin cancer in this image is {c}.",
+    "This image depicts {c}, a type of skin cancer.",
+)
+
 
 class DermLIPClassifier(nn.Module):
     """Wrapper de DermLIP para clasificación zero-shot (y, opcional, linear-probe).

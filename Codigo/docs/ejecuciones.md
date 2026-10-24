@@ -6,6 +6,21 @@ Ayuda-memoria cronológico de experimentos enviados a cluster, ordenado de más 
 
 ## 2026-10-24
 
+### DermLIP oficial en la tesina: predicciones, pruebas y derivados — **Sin jobs SLURM** (local, RTX 4070)
+`eval_dermlip_classify.py` con `--protocolo` (oficial por defecto; salida con sufijo `_oficial`, nada sobrescrito):
+HAM10000 0.716 / 0.544, SkinCAP 0.397 / 0.460. `statistical_tests.py` con los siete modelos de v2 → con el DermLIP
+anterior reproduce `statistical_tests_les_v2.json` exactamente; con el oficial → `statistical_tests_les_v3.json`.
+`dermlip_oficial_derivados.py` → Holm (15/21), fuga (0.544 todo, 0.575 limpio) y clase más predicha.
+
+```
+../.venv/Scripts/python.exe scripts/eval_dermlip_classify.py --eval-dataset ham10000
+../.venv/Scripts/python.exe scripts/eval_dermlip_classify.py --eval-dataset skincap_clinical
+../.venv/Scripts/python.exe scripts/statistical_tests.py --models <los 7 de v2, DermLIP oficial> --output outputs/results/statistical_tests_les_v3.json
+../.venv/Scripts/python.exe scripts/dermlip_oficial_derivados.py
+```
+
+---
+
 ### DermLIP zero-shot con el protocolo oficial de Derm1M — **Sin jobs SLURM** (local, RTX 4070)
 Plan `ideas/dermlip_zs_protocolo_plan_20261024.md`; resultado `resul/dermlip_zs_protocolo_resul_20261024.md`.
 Prueba por lesión (1 503), plantillas (4 propias / 8 oficiales) × nombres de clase (propios / oficiales de

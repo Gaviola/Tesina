@@ -27,6 +27,8 @@ Sensibilidad por clase (MEL, NV, BCC, AKIEC, BKL, DF, VASC): control 0.760 / 0.3
 
 ## Veredicto
 
-**CUMPLE** (≥ 0.60): la diferencia con la cifra publicada se explica por el protocolo de texto. Decisión pendiente del
-autor: si el Cap. 4 pasa a usar el protocolo oficial (implica recalcular el control con *SkinCAP*, las pruebas
-contra DermLIP, el control de fuga y la figura resumen) o mantiene el propio y lo declara.
+**CUMPLE** (≥ 0.60): la diferencia con la cifra publicada se explica por el protocolo de texto. Decisión del autor
+(24/10/2026): la tesina pasa al protocolo oficial. Recalculado en local: *SkinCAP* 0.397 / 0.460; pruebas en
+`statistical_tests_les_v3.json` (DenseNet − DermLIP en sens. macro deja de ser significativa); fuga: DermLIP 0.544 en
+toda la prueba y 0.575 en el grupo sin fuga (`dermlip/dermlip_oficial_derivados.json`). Pendiente: la condición
+`full_dermlip` de la cascada (Cap. 5) usa las predicciones anteriores (`outputs/full_dx_dermlip.csv`).
