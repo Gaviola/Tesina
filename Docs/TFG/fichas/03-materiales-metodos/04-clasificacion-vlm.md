@@ -217,3 +217,7 @@ procedimiento tiene que estar acá.
 
 El segundo control suma una oración: DermLIP sin ajuste clasifica las mismas 624 fotografías de *SkinCAP* como
 contraste de un modelo especializado. Lo pidió el autor al revisar 4.3, que informa ese resultado.
+
+**Cambio del 24/10/2026 (decisión del autor):** el zero-shot de DermLIP usa el protocolo de sus autores (ocho
+plantillas y sus nombres de clase); el ítem «Zero-shot» de `sec:met_dermlip` y el Apéndice B (`ap:prompts`) lo dicen.
+Motivo: `Codigo/docs/resul/dermlip_zs_protocolo_resul_20261024.md`.

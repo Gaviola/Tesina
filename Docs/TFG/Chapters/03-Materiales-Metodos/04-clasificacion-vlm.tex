@@ -86,8 +86,9 @@ A diferencia de los modelos generativos, DermLIP no necesita convertir un texto 
 el \emph{embedding} de la imagen. Ese \emph{embedding}, congelado y normalizado, se usa de cuatro maneras:
 \begin{enumerate}[leftmargin=1.6em]
   \item \textbf{Zero-shot.} Se compara el \emph{embedding} de la imagen con el de cada clase por similitud coseno
-  (Ecuación~\ref{eq:marco_cos}). El \emph{embedding} de cada clase promedia los \emph{embeddings} del texto de cuatro plantillas, como
-  «A dermatoscopic image of \emph{clase}». Luego, se elige la clase de mayor similitud, sin «desconocido».
+  (Ecuación~\ref{eq:marco_cos}). El \emph{embedding} de cada clase promedia los \emph{embeddings} del texto de las
+  ocho plantillas con que lo evalúan sus autores, como «A skin image of \emph{clase}», con sus mismos nombres de clase
+  (Apéndice~\ref{ap:prompts}). Luego, se elige la clase de mayor similitud, sin «desconocido».
   \item \textbf{\emph{Linear probe}.} Una regresión logística sobre el \emph{embedding} normalizado, con $C = 1.0$ y pesos
   balanceados por clase.
   \item \textbf{Vecinos más cercanos.} Es el \gls{knn} con $k = 3$ y similitud coseno (Ecuaciones~\ref{eq:marco_knn} y
