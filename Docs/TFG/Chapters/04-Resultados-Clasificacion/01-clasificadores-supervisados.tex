@@ -213,8 +213,8 @@ Todos los resultados anteriores se obtuvieron con la partición por lesión, sin
 por imagen, se evalúa un Swin-Tiny entrenado con ella, con la configuración que eligió su propia validación, sobre dos
 grupos de la prueba: las 894 imágenes cuya lesión no aparece en su entrenamiento ni en su validación, y las 543 que
 comparten lesión con el entrenamiento. Su sensibilidad macro es de 0.804 en el primer grupo y de 0.936 en el segundo.
-El control, DermLIP sin ajuste, que no vio \emph{HAM10000}, obtiene casi lo mismo sobre toda la prueba que sobre el
-grupo sin fuga, de modo que la diferencia no se debe a que ese grupo sea más difícil. En esta prueba, entonces, la partición por imagen sobreestima la sensibilidad
+El control, DermLIP sin ajuste, que no vio \emph{HAM10000}, no empeora en el grupo sin fuga, de modo que la
+diferencia no se debe a que ese grupo sea más difícil. En esta prueba, entonces, la partición por imagen sobreestima la sensibilidad
 macro en unas 0.07, una distorsión que se retoma al comparar con otros trabajos en la
 Sección~\ref{sec:res_estado_arte}.
 

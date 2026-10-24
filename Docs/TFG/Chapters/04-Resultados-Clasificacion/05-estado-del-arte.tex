@@ -39,7 +39,7 @@ trabajo.
             & 0.921 \\
         \filasep
         \multicolumn{5}{@{}l}{\textit{\glspl{vlm} sin ajuste}} \\
-        \textcite{yan2025derm1miccv} & DermLIP en \emph{HAM10000} & Exactitud & 0.682 & 0.377 \\
+        \textcite{yan2025derm1miccv} & DermLIP en \emph{HAM10000} & Exactitud & 0.682 & 0.716 \\
         \textcite{yan2026dermfmzero} & DermFM-Zero en siete conjuntos; DermLIP obtiene 0.561 & Exactitud balanceada y AUC, en media
             & 0.733 & --- \\
         \textcite{zeng2025mmskin} & LLaVA-Med en \emph{HAM10000} & Exactitud & 0.055 & 0.037--0.114 \\
@@ -72,9 +72,8 @@ En los \glspl{vlm} generativos, los resultados coinciden con la literatura. \tex
 sin ajuste en \emph{HAM10000} con una exactitud del 5.5\,\%, dentro del rango que obtiene aquí, y solo su modelo
 especializado, SkinVL, supera el 50\,\%. Del mismo modo, \textcite{jiang2026multimodal} informan exactitudes de entre el 1.5\,\% y el 13.4\,\% con los modelos abiertos en
 consultas reales, entre ellos LLaVA-Med. Por lo tanto, el colapso de los generativos de propósito general no es propio
-de este trabajo. DermLIP sin ajuste, en cambio, obtiene aquí en \emph{HAM10000} una exactitud bastante menor que la que
-informan sus autores sobre el mismo conjunto, una diferencia que puede deberse a la partición de prueba y a las
-plantillas de texto. Aun así, en los dos casos DermLIP supera con amplitud a los generativos, y DermFM-Zero, evaluado
+de este trabajo. También DermLIP sin ajuste, con las plantillas y los nombres de clase de sus autores, obtiene en
+\emph{HAM10000} una exactitud cercana a la que ellos informan, sobre otra partición de prueba. DermFM-Zero, evaluado
 por sus autores junto con DermLIP, lo supera a su vez, lo que indica que la especialización en dermatología sigue
 mejorando por la vía contrastiva.
 

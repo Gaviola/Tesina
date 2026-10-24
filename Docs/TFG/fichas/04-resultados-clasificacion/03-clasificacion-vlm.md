@@ -155,3 +155,11 @@ arte, 4.6 discusión.
 
 Figura nueva `fig:res_vlm_distribucion`. `tab:res_pruebas_vlm` pasó a 4.4 y la literatura (DermLIP, DermFM-Zero,
 SkinVL, Jiang) a 4.5.
+
+## DermLIP con el protocolo oficial (24/10/2026, decisión del autor)
+
+Las cifras zero-shot de DermLIP pasan al protocolo de Derm1M (ocho plantillas, nombres «nevus» y «vascular»;
+`resul/dermlip_zs_protocolo_resul_20261024.md`). Fuentes nuevas: `dermlip/dermlip_zeroshot_vit-b-16_oficial{,_clinical}_predictions.json`
+y `dermlip/dermlip_oficial_derivados.json`. HAM10000: exactitud 0.716, F1 macro 0.475, sens. macro 0.544, sens. MEL
+0.503, más predicha NV (0.655). SkinCAP: 0.397 / 0.460, DF (0.351). Antes: 0.377 / 0.364 / 0.510 / 0.760 y SkinCAP
+0.386 / 0.454. El linear probe, kNN, SVM y el control con Swin no cambian (usan el embedding, no el texto).

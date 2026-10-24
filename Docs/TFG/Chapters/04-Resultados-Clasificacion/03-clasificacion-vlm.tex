@@ -97,8 +97,8 @@ apenas sube. Por lo tanto, el \emph{prompt} fija una respuesta por defecto y la 
         Fotografías clínicas de \emph{SkinCAP} & 624 & 0.071 & 0.106 & \gls{df} (0.428) \\
         \filasep
         \multicolumn{5}{@{}l}{\textit{DermLIP (contraste)}} \\
-        Prueba de \emph{HAM10000} & 1\,503 & 0.377 & 0.510 & \gls{mel} (0.525) \\
-        Fotografías clínicas de \emph{SkinCAP} & 624 & 0.386 & 0.454 & \gls{df} (0.325) \\
+        Prueba de \emph{HAM10000} & 1\,503 & 0.716 & 0.544 & \gls{nv} (0.655) \\
+        Fotografías clínicas de \emph{SkinCAP} & 624 & 0.397 & 0.460 & \gls{df} (0.351) \\
         \bottomrule
     \end{tabularx}
 \end{table}
@@ -106,14 +106,14 @@ apenas sube. Por lo tanto, el \emph{prompt} fija una respuesta por defecto y la 
 Otra explicación posible es la modalidad, porque la dermatoscopía requiere un equipo específico, mientras que la
 fotografía clínica se parece más a las imágenes de uso general. El control con las 624 fotografías clínicas de
 \emph{SkinCAP} descarta también esa explicación. Sobre esas imágenes, los dos generativos no mejoran su resultado en
-\emph{HAM10000} y vuelven a colapsar, mientras que DermLIP sin ajuste obtiene una sensibilidad macro cercana a la que
-alcanza en la dermatoscopía. Las fotografías permiten, entonces, distinguir las clases, y la dificultad está en la
+\emph{HAM10000} y vuelven a colapsar, mientras que DermLIP sin ajuste obtiene una sensibilidad macro algo menor que
+en la dermatoscopía, pero muy por encima de la de ellos. Las fotografías permiten, entonces, distinguir las clases, y la dificultad está en la
 capacidad de los \glspl{vlm} generativos para hacerlo, sea cual sea la forma en que se obtiene la clase.
 
 Queda por saber si un \gls{vlm} especializado en dermatología resuelve esa limitación, y DermLIP permite verlo sin
 generar texto, con los cuatro usos de la Sección~\ref{sec:met_dermlip} (Tabla~\ref{tab:res_dermlip}). Sin ningún
-ajuste y sin haber visto imágenes de \emph{HAM10000}, DermLIP alcanza una sensibilidad macro de 0.510, casi tres
-veces la del mejor \gls{vlm} generativo. Con una cabeza entrenada sobre su \emph{embedding} se acerca a los
+ajuste y sin haber visto imágenes de \emph{HAM10000}, DermLIP alcanza una sensibilidad macro de 0.544, tres veces
+la del mejor \gls{vlm} generativo. Con una cabeza entrenada sobre su \emph{embedding} se acerca a los
 supervisados: la \gls{svm} obtiene el mayor F1 macro de los cuatro usos, y el \emph{linear probe}, una sensibilidad
 macro algo mayor que la de Swin-Tiny, aunque con un F1 macro bastante menor. Es la divergencia que anticipa la
 Sección~\ref{sec:met_seleccion}: con pesos balanceados, la regresión logística asigna más imágenes a las clases
@@ -132,7 +132,7 @@ minoritarias y gana sensibilidad a costa de falsas alarmas.
         \textbf{Uso} & \textbf{Exactitud} & \textbf{F1 macro} & \textbf{Sensibilidad macro}
             & \textbf{Sensibilidad de \gls{mel}} \\
         \midrule
-        \emph{Zero-shot} & 0.377 & 0.364 & 0.510 & 0.760 \\
+        \emph{Zero-shot} & 0.716 & 0.475 & 0.544 & 0.503 \\
         \emph{Linear probe} & 0.738 & 0.618 & 0.729 & 0.593 \\
         \gls{knn} ($k = 3$) & 0.781 & 0.601 & 0.568 & 0.437 \\
         \gls{svm} con núcleo RBF & 0.832 & 0.705 & 0.673 & 0.569 \\

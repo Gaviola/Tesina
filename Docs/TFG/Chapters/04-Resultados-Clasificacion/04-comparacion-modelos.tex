@@ -8,7 +8,7 @@
 
 Las secciones anteriores evaluaron cada familia por separado. La Figura~\ref{fig:res_resumen} las reúne en una sola
 escala, la sensibilidad macro en la prueba, y muestra tres niveles bien separados. Los supervisados quedan entre 0.6
-y 0.7, con una variación pequeña entre semillas. DermLIP va desde 0.5 sin ajuste hasta el nivel de los supervisados
+y 0.7, con una variación pequeña entre semillas. DermLIP va desde algo más de 0.5 sin ajuste hasta el nivel de los supervisados
 cuando se le entrena una cabeza. Los generativos, con cualquiera de sus cinco estrategias, quedan alrededor del azar.
 
 \begin{figure}[H]
@@ -21,9 +21,11 @@ cuando se le entrena una cabeza. Los generativos, con cualquiera de sus cinco es
 Las pruebas de la Sección~\ref{sec:met_estadistica} confirman esa separación para los modelos sin ajuste, que entran
 con la estrategia de generación en el caso de los generativos. Los 15 pares de la familia de 21 que comparan un
 supervisado con DermLIP, Mini-VLM o LLaVA-Med, o a estos tres entre sí, son significativos con la corrección de Holm.
-La Tabla~\ref{tab:res_pruebas_vlm} muestra el tamaño de las diferencias: los supervisados superan a DermLIP sin ajuste
-por entre 0.08 y 0.21 de sensibilidad macro, y a los generativos, por alrededor de 0.5. Swin-Tiny, por ejemplo,
-acierta 768 imágenes en las que DermLIP falla, frente a 62 en el sentido contrario. En cambio, el intervalo de
+La Tabla~\ref{tab:res_pruebas_vlm} muestra el tamaño de las diferencias. Swin-Tiny, ConvNeXt-Tiny y ViT-B/16 superan
+a DermLIP sin ajuste por entre 0.15 y 0.17 de sensibilidad macro, y a los generativos, por alrededor de 0.5.
+DenseNet121, en cambio, no se distingue de DermLIP en sensibilidad macro, aunque McNemar muestra que acierta más
+imágenes. Swin-Tiny, por ejemplo, acierta 286 imágenes en las que DermLIP falla, frente a 89 en el sentido
+contrario. En cambio, el intervalo de
 \emph{bootstrap} de la sensibilidad macro de los dos generativos incluye el 1/7, de modo que ninguno de los dos se
 distingue del azar. Entre ellos, McNemar detecta que no aciertan las mismas imágenes, pero la diferencia de
 sensibilidad macro no se distingue de cero, porque los dos aciertan pocas imágenes y casi solo de la clase hacia la
@@ -40,10 +42,10 @@ que colapsan.
         \toprule
         \textbf{Supervisado} & \textbf{DermLIP} & \textbf{Mini-VLM} & \textbf{LLaVA-Med} \\
         \midrule
-        Swin-Tiny & 0.206 [0.148, 0.266] & 0.572 [0.522, 0.622] & 0.560 [0.510, 0.610] \\
-        ConvNeXt-Tiny & 0.184 [0.126, 0.244] & 0.550 [0.501, 0.600] & 0.538 [0.488, 0.590] \\
-        ViT-B/16 & 0.188 [0.136, 0.242] & 0.554 [0.503, 0.606] & 0.542 [0.490, 0.595] \\
-        DenseNet121 & 0.084 [0.020, 0.150] & 0.450 [0.398, 0.508] & 0.438 [0.385, 0.495] \\
+        Swin-Tiny & 0.172 [0.116, 0.233] & 0.572 [0.522, 0.622] & 0.560 [0.510, 0.610] \\
+        ConvNeXt-Tiny & 0.150 [0.092, 0.211] & 0.550 [0.501, 0.600] & 0.538 [0.488, 0.590] \\
+        ViT-B/16 & 0.154 [0.105, 0.209] & 0.554 [0.503, 0.606] & 0.542 [0.490, 0.595] \\
+        DenseNet121 & 0.050 [$-$0.016, 0.120] & 0.450 [0.398, 0.508] & 0.438 [0.385, 0.495] \\
         \bottomrule
     \end{tabularx}
 \end{table}

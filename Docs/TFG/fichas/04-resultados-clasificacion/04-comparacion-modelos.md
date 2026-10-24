@@ -34,3 +34,10 @@ P4  tab:res_costo_clasificadores: ≤ 20 ms, < 0.7 GB con lote de 32; parámetro
 Las de la ficha 4.3 («Pruebas») y la ficha 4.2 («Costo»): `statistical_tests_les_v2.json`,
 `densenet_vit_moderna_report.json` (`holm`), `cost/cost_comparison_v3.json`. La figura recalcula la sensibilidad
 macro de los generativos con «desconocido» como error y coincide con `tab:res_vlm_generativos`.
+
+## DermLIP con el protocolo oficial (24/10/2026)
+
+`statistical_tests_les_v3.json` (mismo comando que v2, con las predicciones oficiales de DermLIP; con las anteriores
+reproduce v2 exactamente). Supervisado − DermLIP en sens. macro: Swin 0.172 [0.116, 0.233], ConvNeXt 0.150 [0.092,
+0.211], ViT 0.154 [0.105, 0.209], DenseNet 0.050 [−0.016, 0.120] (n. s.; McNemar 250 / 85, sí). Swin − DermLIP
+McNemar 286 / 89. Holm: siguen 15 de 21 significativos (`dermlip/dermlip_oficial_derivados.json`).
