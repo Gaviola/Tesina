@@ -43,12 +43,21 @@ que el umbral elegido en una partición conserva su efecto en la otra.
 
 En cantidad de casos, el cambio de criterio se ve con la ejecución de semilla 42 de Swin-Tiny. Su umbral, de 0.211,
 detecta 130 de los 167 melanomas de la prueba, frente a 117 con la clase más probable, y a cambio señala 185 lesiones
-sin melanoma, frente a 104. Los umbrales de las nueve ejecuciones quedan entre 0.109 y 0.211, muy por debajo de 0.5.
+sin melanoma, frente a 104. La Figura~\ref{fig:res_roc_melanoma} ubica los dos puntos sobre la curva ROC de esa
+ejecución: el umbral de validación desplaza la decisión a lo largo de la misma curva, hacia la zona de mayor
+sensibilidad, sin cambiar el modelo. Los umbrales de las nueve ejecuciones quedan entre 0.109 y 0.211, muy por debajo de 0.5.
 Esto se relaciona con la prevalencia: \gls{mel} reúne el 11\,\% de las imágenes de prueba, y en muchos melanomas la
 probabilidad de esa clase no llega a ser la mayor, aunque supere la que el modelo asigna a casi todas las lesiones sin
 melanoma. Entre los tres modelos, el ensamble
 obtiene la mayor sensibilidad y el menor desvío entre semillas, 0.828 $\pm$ 0.007, aunque la diferencia con Swin-Tiny
 no se sometió a prueba.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.62\textwidth]{Figures/Capitulos/04-Resultados-Clasificacion/roc-melanoma-swin.pdf}
+    \caption{Curva ROC de melanoma de Swin-Tiny (semilla 42) con los dos puntos de operación.}
+    \label{fig:res_roc_melanoma}
+\end{figure}
 
 Los trabajos del Capítulo~\ref{cp:marco} muestran el mismo efecto del punto de operación
 (Tabla~\ref{tab:marco_sota_clasificacion}). \textcite{aboulmira2024skinhealthmate}, que clasifican por la clase más

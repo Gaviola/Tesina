@@ -79,3 +79,11 @@ Solo para comparar: `aboulmira2024skinhealthmate`, `yao2022single`, `marchetti20
 
 1. ¿Agregar la curva ROC de Swin con los dos puntos de operación? No existe la figura; se puede generar con las
    probabilidades de la semilla 42. Por ahora, la tabla alcanza.
+
+## Revisión del autor (24/10/2026)
+
+- Pregunta 1 resuelta: se agregó `fig:res_roc_melanoma` (`Figures/Capitulos/04-Resultados-Clasificacion/roc-melanoma-swin.pdf`,
+  generada con `Codigo/scripts/figura_roc_melanoma.py`), con los dos puntos de operación de la semilla 42. Recalcula
+  AUC 0.919, 0.701 / 0.922 y 0.778 / 0.862, iguales a `lesion_split_report.json`.
+- Verificación contra `Docs/experimentacion/experimentacion.tex`: coincide con la tabla «Vigente» (Swin 0.921 / 0.796;
+  ensamble 0.926 / 0.828). El cuerpo de ese documento usa la partición por imagen y no se toma.
