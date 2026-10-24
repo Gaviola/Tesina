@@ -113,7 +113,8 @@ clínicas de \emph{SkinCAP} (Sección~\ref{sec:met_datasets}) cuyo diagnóstico 
 correspondencia agrupa las variantes de cada diagnóstico, como las formas del melanoma, y descarta los diagnósticos
 sin una clase equivalente, lo que deja 624 imágenes. Como los modelos no se ajustan, se usan todas, sin partición.
 Si los modelos clasifican mejor las fotografías clínicas que la prueba de \emph{HAM10000}, la dificultad está en la
-modalidad y no en la tarea.
+modalidad y no en la tarea. Como contraste, DermLIP sin ajuste clasifica las mismas imágenes, lo que muestra si un
+modelo especializado distingue las siete clases en esa modalidad.
 
 El tercer control separa el efecto de la representación del de la cabeza, que con cuatro cabezas sobre el mismo
 \emph{embedding} quedan mezclados. Con este propósito, tres cabezas clásicas (SVM con núcleo RBF y $C = 10$, regresión

@@ -212,3 +212,8 @@ procedimiento tiene que estar acá.
   está en la modalidad. Sin resultados.
 - El control con Swin-ImageNet pasa a ser el tercero; el párrafo de datos exceptúa este control de «la misma prueba».
 - `tab:met_experimentos` (3.8): la fila de clasificación con VLM agrega *SkinCAP* como control en «Datos».
+
+## Agregado del 24/10/2026 (revisión del Cap. 4)
+
+El segundo control suma una oración: DermLIP sin ajuste clasifica las mismas 624 fotografías de *SkinCAP* como
+contraste de un modelo especializado. Lo pidió el autor al revisar 4.3, que informa ese resultado.
