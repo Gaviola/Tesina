@@ -53,11 +53,11 @@ Intro    Qué responde el capítulo (PI1), qué hipótesis contrasta; todo núme
 |---|---|---|---|---|---|---|
 | Intro | — | `00-capitulo.tex` | `cp:res_clasif` | 0.5 p. | — | Sí |
 | 4.1 | Clasificadores supervisados | `01-clasificadores-supervisados.tex` | `sec:res_supervisados` | 5 p. | `split_lesion_resul_20260926.md`, `densenet_vit_moderna_resul_20261017.md` | **Sí** (ficha lista para aprobar) |
-| 4.2 | VLM generales | `02-vlm-generales.tex` | `sec:res_vlm_generales` | 3 p. | `vlm_clasificacion_resul_v3_20260517.md`, `statistical_tests_les_v2.json` | **En parte.** Faltan las filas de Mini-VLM ajustado (v3: jobs 1179988 y 1179989, en cola; inicio estimado 20/10). Las de *zero-shot* y LLaVA-Med no cambian |
+| 4.2 | VLM generales | `02-vlm-generales.tex` | `sec:res_vlm_generales` | 3 p. | `vlm_clasificacion_resul_v3_20260517.md`, `statistical_tests_les_v2.json` | **Sí.** Mini-VLM ajustado, con el *checkpoint* v2 (decisión C10). Las filas de *zero-shot* y LLaVA-Med no cambian |
 | 4.3 | Re-diagnóstico del colapso | `03-rediagnostico-colapso.tex` | `sec:res_rediagnostico` | 3 p. | `vlm_domain_gap_clinica_resul_20260604.md`, `prior_lenguaje_noimage_resul_20260824.md` (modelos base, *zero-shot*) | Sí |
-| 4.4 | Especialización de dominio | `04-especializacion-dominio.tex` | `sec:res_dermlip` | 3.5 p. | `dermlip_split_eval.json`, `embeddings_classical_les.json`, `classification_summary_les.png` | Sí; la figura por enfoque se regenera cuando esté Mini-VLM v3 |
+| 4.4 | Especialización de dominio | `04-especializacion-dominio.tex` | `sec:res_dermlip` | 3.5 p. | `dermlip_split_eval.json`, `embeddings_classical_les.json`, `classification_summary_les.png` | Sí (figura con Mini-VLM v2, C10) |
 | 4.5 | Estado del arte | `05-comparacion-sota.tex` | `sec:res_sota_clasif` | 2 p. | `tablas_comparativas_sota_v34.tex` | Sí |
-| 4.6 | Calibración y significancia | `06-calibracion-significancia.tex` | `sec:res_calib_stats` | 2.5 p. | `lesion_split_report.json` (`calibracion`), `calibration_les/`, `statistical_tests_les_v2.json`, `densenet_vit_moderna_report.json` | Sí; la familia de 21 pares incluye Mini-VLM ZS, que no cambia con v3 |
+| 4.6 | Calibración y significancia | `06-calibracion-significancia.tex` | `sec:res_calib_stats` | 2.5 p. | `lesion_split_report.json` (`calibracion`), `calibration_les/`, `statistical_tests_les_v2.json`, `densenet_vit_moderna_report.json` | Sí |
 | 4.7 | Robustez | `07-robustez.tex` | `sec:res_robustez` | 3 p. | `lesion_split_report.json`, `robustness_summary.json`, `robustness_examples_les.png` | Sí |
 | 4.8 | Interpretabilidad | `08-interpretabilidad.tex` | `sec:res_interpretabilidad` | 1–1.5 p. | `interpretability_les/interpretability_swin.png` | Sí |
 | 4.9 | Detección de melanoma | `09-deteccion-melanoma.tex` | `sec:res_melanoma` | 2–3 p. | `lesion_split_report.json` (`melanoma_semillas`) | Sí |
@@ -74,9 +74,10 @@ Total orientativo: 24–26 páginas.
 | C3 | Se quita Wilcoxon de 4.6. El recall por clase se compara de forma descriptiva, contando en cuántas clases mejora cada modelo, y McNemar se corrige con Holm sobre 21 pares | Decisión del 12/10; así lo fija 3.3 (`sec:met_estadistica`) |
 | C4 | Se quita maligno-vs-benigno de 4.9 | Decisión del 12/10 («sin maligno/benigno»); 3.1 define la detección solo como MEL frente al resto |
 | C5 | 4.2: **los VLM generales no se ajustaron sobre *HAM10000***. La estrategia «ajuste fino» evalúa el *checkpoint* de generación de la etapa 2, entrenado con *SkinCaRe*. No hay fuga que declarar; la nota «Declarar» de la ficha vieja era falsa | Corrección del 11/10 (ficha 3.0, punto 6) |
-| C6 | 4.2: Mini-VLM ajustado se reporta con **v3** (LoRA sobre el modelo de lenguaje). El *checkpoint* v2 tenía el adaptador solo en CLIP; el texto de 3.6 describe solo la configuración v3 | Decisión del 12/10; job 1179985 completo el 18/10 |
+| C6 | ~~4.2: Mini-VLM ajustado se reporta con v3~~ **Reemplazada por C10** | Decisión del 12/10, revertida el 24/10 |
 | C7 | 4.6: con la familia nueva, 15 de 21 pares son significativos con Holm, todos los que incluyen un modelo *zero-shot*; ningún par entre supervisados lo es | `densenet_vit_moderna_resul_20261017.md` §3 |
 | C8 | Las fichas pasan a una por sección (`fichas/04-resultados-clasificacion/NN-seccion.md`) | Guía §1, desde el 10/10 |
+| C10 | **Mini-VLM ajustado se reporta con v2**, la configuración principal de 3.5: LoRA solo en el codificador visual, con el modelo de lenguaje congelado. La clasificación de v3 (1179988–1179989) no se espera. El control con v3 es de generación y va en el Cap. 5 | Decisión del autor del 24/10: v3 no llega para el 30/10 (`mini_vlm_lora_llm_resul_v3_20261024.md`) |
 | C9 | Rigen las reglas R1–R5 de la revisión del Cap. 3 (18/10): sin fechas, revisiones del tutor ni iteraciones viejas; solo resultados finales con su justificación; teoría y método se nombran con `\ref` | Pedido del autor: valen también para los Caps. 4 y 5 |
 
 ## Alcance y decisiones heredadas
@@ -100,7 +101,7 @@ Total orientativo: 24–26 páginas.
 
 | Qué | Para | Estado |
 |---|---|---|
-| Clasificación de Mini-VLM v3 por verosimilitud y CoT | 4.2 (filas de ajuste fino), figura por enfoque de 4.4 | Mendieta 1179988–1179989, en cola |
+| Clasificación de Mini-VLM v3 por verosimilitud y CoT | — | **No se espera (C10, 24/10).** Si llega, no entra al capítulo |
 | Ablaciones de la receta (sin MixUp, sin RandAugment, sin focal, etc.) | — | **Resuelto (18/10):** sin resultados ni local ni en TOKO; se quitó de 3.4 la oración que las prometía (D-E de la ficha del Cap. 3). No van al Cap. 4 |
 
 ## Preguntas abiertas
