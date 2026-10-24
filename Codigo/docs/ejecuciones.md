@@ -6,6 +6,21 @@ Ayuda-memoria cronológico de experimentos enviados a cluster, ordenado de más 
 
 ## 2026-10-24
 
+### Seis figuras más para el Cap. 4 — **Sin jobs SLURM** (local, CPU)
+Reorganización del Cap. 4 pedida por el autor (menos cifras en la prosa, más figuras). `scripts/figuras_cap4.py` (desde
+`Codigo/`, con `.venv`) lee solo JSON de `outputs/results/` y escribe en
+`Docs/TFG/Figures/Capitulos/04-Resultados-Clasificacion/`: `resumen-sensibilidad-macro`, `confusion-swin`,
+`robustez-curvas`, `calibracion-swin`, `hiba-por-clase-swin` y `distribucion-vlm-generativos` (`.pdf`). Sin resultados
+nuevos ni archivos sobrescritos. Lo que recalcula coincide con las tablas: sensibilidad macro de los generativos
+(«desconocido» como error) Mini 0.144 / 0.181 / 0.123 / 0.141 / 0.145, LLaVA 0.156 / 0.157 / 0.112 / 0.137 / 0.045;
+ECE de Swin 0.040 sin pesos y 0.376 con pesos; HIBA 0.716 → 0.424.
+
+```
+.venv/Scripts/python.exe scripts/figuras_cap4.py
+```
+
+---
+
 ### Costo de los clasificadores remedido con memoria de GPU — **Sin jobs SLURM** (local, RTX 4070)
 `measure_cost.py` corregido: clases del proyecto con cabeza de 7 salidas (antes torchvision con 1 000, p. ej.
 DenseNet121 8.0 M en vez de 6.96 M), autocast bf16 como la evaluación (`--dtype`, por defecto bf16) y pico de memoria
