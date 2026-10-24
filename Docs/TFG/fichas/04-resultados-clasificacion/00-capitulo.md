@@ -109,6 +109,22 @@ que los resultados de los VLM, que no se ajustan con *HAM10000*, valen sin repet
 7. **Terminología** (guía §4): «exactitud», no «precisión»; «reporte» solo para el informe clínico; «sensibilidad
    macro»; «fuga de información».
 
+## Redacción de 4.2 a 4.5 e introducción (24/10/2026)
+
+El autor pidió escribir el resto del capítulo de una pasada, con sus fichas, y revisarlo entero al final. Cada sección
+tiene su commit y su ficha, con las decisiones tomadas y las preguntas para la revisión. La introducción describe el
+capítulo por su contenido y fija las convenciones de las cifras (prueba de la partición por lesión, configuración
+elegida en validación, media ± desvío con tres semillas; pruebas, umbral y evaluaciones complementarias con la
+semilla 42).
+
+Preguntas para la revisión del capítulo, reunidas de las fichas:
+
+- 4.2: ¿curva ROC de Swin con los dos puntos de operación? (no existe; la tabla alcanza).
+- 4.3: ¿DermLIP sobre *SkinCAP* (0.454) como contraste del control clínico? Exige una oración en 3.4.
+- 4.4: ¿regenerar la figura de Grad-CAM con rótulos en castellano?
+
+La pregunta 1 de abajo quedó resuelta en 4.3: la figura solo tiene los modelos sin ajuste y no se usa.
+
 ## Preguntas abiertas
 
 1. ¿La figura `classification_summary_les.png` usa Mini-VLM v2 ajustado? Si no, se regenera o se arma la tabla sin

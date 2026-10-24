@@ -9,10 +9,21 @@
 % capítulo". La discusión transversal, que cruza este capítulo con el de generación, queda en el
 % Capítulo~\ref{cp:discusion}.
 
-\pendiente{Este capítulo responde la PI1 y evalúa el OE1, junto con la parte del OE3 que corresponde a la
-clasificación (generalización a otra población, calibración y costo computacional). Los resultados se presentan
-en el orden en que se tomaron las decisiones: cada sección presenta un resultado, lo interpreta y justifica
-el paso siguiente.}
+% Introducción redactada el 24/10/2026 (ficha 00-capitulo.md): por contenido, sin «responde la PI1», con las
+% convenciones que valen para todas las cifras del capítulo.
+
+Este capítulo presenta los resultados de la clasificación de lesiones de piel y de la detección de melanoma, en el
+orden de los experimentos de la Tabla~\ref{tab:met_experimentos} del Capítulo~\ref{cp:metodos}. Primero se
+comparan los clasificadores supervisados, junto con las funciones de pérdida para el desbalance y el efecto de la
+fuga de información, y se evalúa la detección de melanoma con un umbral fijado en validación. Con esa referencia,
+se evalúan los \glspl{vlm} generativos y contrastivos sobre las mismas imágenes, con los controles que permiten
+interpretar su desempeño. Después, las evaluaciones complementarias examinan al clasificador fuera de las condiciones
+de su entrenamiento, y el capítulo cierra con una discusión de lo que estos resultados responden.
+
+Salvo que se indique otra cosa, todas las cifras corresponden a las 1\,503 imágenes de prueba de la partición
+disjunta por lesión (Sección~\ref{sec:met_particiones}), con la configuración que eligió la validación. Los modelos
+entrenados con tres semillas se informan como media $\pm$ desvío estándar, y las pruebas estadísticas, el umbral de
+melanoma y las evaluaciones complementarias usan la ejecución con semilla 42.
 
 \input{Chapters/04-Resultados-Clasificacion/01-clasificadores-supervisados}
 \input{Chapters/04-Resultados-Clasificacion/02-deteccion-melanoma}
