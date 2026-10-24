@@ -123,3 +123,17 @@ sin cita.
   `hiba_por_modalidad.json` son 1 270 dermatoscópicas y 346 clínicas, como dice 3.8.
 - Verificación del resto contra la tabla «Vigente» de `experimentacion.tex`: HIBA 0.546 / 0.424, ECE 0.040 y caída
   por ruido como la más dañina coinciden.
+
+## Reorganización (24/10/2026)
+
+El autor encontró el capítulo difícil de seguir por la cantidad de cifras y porque cada subsección recorría los
+cuatro modelos. Se acordó: (1) las cuatro arquitecturas se comparan una vez y el análisis sigue con Swin-Tiny,
+nombrando a las demás solo donde se comportan distinto; (2) como regla, una cifra clave por párrafo y el resto en
+tablas y figuras (seis figuras nuevas, `Codigo/scripts/figuras_cap4.py`); (3) una sola sección de comparación con
+la literatura (4.5) y una de comparación entre familias con el costo (4.4). Estructura nueva: 4.1 supervisados
+(con melanoma), 4.2 evaluaciones complementarias, 4.3 VLM, 4.4 comparación entre clasificadores, 4.5 estado del
+arte, 4.6 discusión.
+
+Ahora es la sección 4.2 (`02-evaluaciones-complementarias.tex`), centrada en Swin-Tiny. El costo pasó a 4.4.
+Figuras nuevas: `fig:res_hiba_clases`, `fig:res_robustez`, `fig:res_calibracion`. Corrección: con pesos por
+clase el modelo queda subconfiado (confianza 0.414 < exactitud 0.775), no sobreconfiado.
