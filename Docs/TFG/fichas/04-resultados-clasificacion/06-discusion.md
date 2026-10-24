@@ -1,9 +1,9 @@
-# Ficha 4.5 — Discusión de los resultados de clasificación
+# Ficha 4.6 — Discusión de los resultados de clasificación
 
 **Estado (24/10/2026): redactada sin aprobación previa.** El autor pidió escribir el resto del Cap. 4 de una pasada
 y revisarlo entero al final (24/10).
 
-Archivo: `Chapters/04-Resultados-Clasificacion/05-discusion.tex`. Label: `sec:res_clasif_discusion`. Sin tablas ni
+Archivo: `Chapters/04-Resultados-Clasificacion/06-discusion.tex`. Label: `sec:res_clasif_discusion`. Sin tablas ni
 figuras. Una página (C16).
 
 ## Hilo conductor
@@ -41,3 +41,15 @@ Extensión: 4 párrafos, ~1 página.
 - Sin números nuevos: solo cifras ya presentadas en 4.1–4.4, una por afirmación.
 - Las limitaciones transversales (una semilla en las pruebas, una sola población externa, Grad-CAM sobre siete
   imágenes) se nombran sin desarrollar; el Cap. 6 las retoma.
+
+## Reorganización (24/10/2026)
+
+El autor encontró el capítulo difícil de seguir por la cantidad de cifras y porque cada subsección recorría los
+cuatro modelos. Se acordó: (1) las cuatro arquitecturas se comparan una vez y el análisis sigue con Swin-Tiny,
+nombrando a las demás solo donde se comportan distinto; (2) como regla, una cifra clave por párrafo y el resto en
+tablas y figuras (seis figuras nuevas, `Codigo/scripts/figuras_cap4.py`); (3) una sola sección de comparación con
+la literatura (4.5) y una de comparación entre familias con el costo (4.4). Estructura nueva: 4.1 supervisados
+(con melanoma), 4.2 evaluaciones complementarias, 4.3 VLM, 4.4 comparación entre clasificadores, 4.5 estado del
+arte, 4.6 discusión.
+
+Ahora es la 4.6. Se quitaron cifras repetidas (melanoma y HIBA en palabras).
