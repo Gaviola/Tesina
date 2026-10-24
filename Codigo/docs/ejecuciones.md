@@ -6,6 +6,18 @@ Ayuda-memoria cronológico de experimentos enviados a cluster, ordenado de más 
 
 ## 2026-10-24
 
+### DermLIP zero-shot con el protocolo oficial de Derm1M — **Sin jobs SLURM** (local, RTX 4070)
+Plan `ideas/dermlip_zs_protocolo_plan_20261024.md`; resultado `resul/dermlip_zs_protocolo_resul_20261024.md`.
+Prueba por lesión (1 503), plantillas (4 propias / 8 oficiales) × nombres de clase (propios / oficiales de
+`zero_shot_metadata.py`). Control 0.377 / 0.510 (reproduce); oficial 0.716 de exactitud y 0.544 de sensibilidad
+macro. Salida nueva `outputs/results/dermlip/dermlip_zs_protocolo.json`; nada sobrescrito.
+
+```
+../.venv/Scripts/python.exe scripts/dermlip_zs_protocolo.py
+```
+
+---
+
 ### Figuras por semilla del Cap. 4 — **Sin jobs SLURM** (local, CPU)
 Dos funciones nuevas en `scripts/figuras_cap4.py`: `recall-clase-semillas.pdf` (sensibilidad por clase de las tres
 semillas de los cuatro supervisados, `*_les_cwnone{,_s43,_s44}_test_results.json`) y `melanoma-semillas.pdf`
