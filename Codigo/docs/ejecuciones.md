@@ -6,6 +6,34 @@ Ayuda-memoria cronológico de experimentos enviados a cluster, ordenado de más 
 
 ## 2026-10-24
 
+### Derivados y figuras del Cap. 5 con la métrica oficial — **Sin jobs SLURM** (local, CPU)
+Para redactar el Cap. 5 con la estructura del Cap. 4. `scripts/cap5_derivados.py` (nuevo) →
+`outputs/results/cap5_derivados.json`: generación sin anclaje (consistencia exclusiva, clases por reporte, reportes
+distintos, palabras, `<think>`), fallas con las categorías del marco (la reserva junto al diagnóstico correcto cuenta
+como correcta, no como *hedging*), ablaciones recalculadas con la métrica oficial, sensibilidad de Swin por clase frente
+a la consistencia, ruteo (acierto por nivel, errores compartidos, melanoma), vecino equivocado en la recuperación y
+comparación pareada entre generadores. `scripts/figuras_cap5.py` (nuevo) → cinco PDF en
+`Docs/TFG/Figures/Capitulos/05-Resultados-Generacion/`.
+
+```
+Codigo/.venv/Scripts/python.exe -X utf8 scripts/cap5_derivados.py
+Codigo/.venv/Scripts/python.exe -X utf8 scripts/figuras_cap5.py
+```
+
+- Mini-VLM copia el ancla: nombra el diagnóstico de Swin en 1 501/1 503; con ancla correcta acierta 1 272/1 273, con
+  ancla equivocada 4/230. Por clase, la consistencia de Mini-VLM y SkinVL coincide con la sensibilidad de Swin.
+- Ablaciones (métrica oficial, 400 imágenes; SkinVL 1 503): sin imagen Mini 1.000 → 1.000, LLaVA-Med 0.863 → 0.893
+  (+0.030 [−0.013, +0.073], n. s.; antes 0.848 → 1.000), SkinVL 0.999 → 0.967; con diagnóstico equivocado 0.000 /
+  0.020 / 0.000. Sin imagen, siete textos (uno por clase) en los tres.
+- Ruteo: Swin acierta 0.915 / 0.573 / 0.569 por nivel; 102 de sus 230 errores caen en el afirmativo; 38 de 167
+  melanomas se afirman como otra clase (31 como NV).
+- Recuperación: con Swin correcto y kNN equivocado (171), Swin + RAG 1.000 igual que Swin; al revés (72), 0.167
+  frente a 0.014.
+- Entre generadores (Swin): Mini − LLaVA +0.104 [+0.087, +0.122]; Mini − SkinVL +0.003 (n. s.).
+
+**Resul:** no aplica (análisis de reportes existentes para la redacción; las cifras quedan en las fichas de
+`Docs/TFG/fichas/05-resultados-generacion/`).
+
 ### Cascada con DermLIP oficial en short — Mendieta jobs 1183274–1183301
 Plan: [cascada_dermlip_oficial_plan](ideas/cascada_dermlip_oficial_plan_20261024.md). Brazo `full_dermlip_oficial`
 (diagnóstico `outputs/full_dx_dermlip_oficial.csv`, 0.716 de acuerdo con el oráculo) para los tres generadores, con
