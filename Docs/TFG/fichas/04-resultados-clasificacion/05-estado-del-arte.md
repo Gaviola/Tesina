@@ -31,3 +31,17 @@ P4  Cierre                                                                      
 `aboulmira2024skinhealthmate`, `kim2025skinsavvy2`, `gessert2020skin`, `yao2022single`, `marchetti2023prospective`,
 `yan2025derm1miccv`, `yan2026dermfmzero`, `zeng2025mmskin`, `jiang2026multimodal` (todas ya usadas en el Cap. 2).
 Cifras tomadas de `tab:marco_sota_clasificacion`, `tab:marco_sota_vlm` y `tab:marco_sota_vlm_gen`.
+
+## Verificación contra los PDF (24/10/2026)
+
+Coinciden: Aboulmira (F1 macro 0.81, MEL 0.49, sin partición informada), Kim (exactitud balanceada 0.780 con Swin;
+80 % al azar por clase, imágenes externas), Yao (ISIC 2018: BACC 0.875, MEL 0.819; arquitectura y aumentación elegidas
+por BACC en la prueba del desafío), Marchetti (96.8 % / 37.4 %, AUC 0.857, umbral predefinido de 95 % de
+sensibilidad), Jiang (1.50–13.35 % abiertos, 24.65 % GPT-4.1). Corregido: (1) Gessert 63.6 % es la prueba oficial de
+ISIC 2019; la partición por lesión es de su validación cruzada. (2) Derm1M, Tabla 2: DermLIP ViT-B16 da 0.682 de
+exactitud zero-shot en HAM10000 (la media de cuatro conjuntos es 0.561); se compara con esa cifra. Este trabajo
+promedia cuatro plantillas (`src/models/dermlip.py`); posible causa de la diferencia, sin verificar. (3) DermFM-Zero:
+0.733 frente a 0.561 es la media del «Classification Ranking» (Fig. 2c), que mezcla exactitud balanceada y AUROC, no
+exactitud. (4) MM-Skin, Tabla 5: LLaVA-Med sin ajuste 5.49 % en HAM10000, SkinVL-PubMM 51.29 % (HAM no visto en el
+entrenamiento); se agregan las dos filas. El Cap. 2 (línea 195 de 07-estado-arte.tex) da 0.733 frente a 0.561 sin
+nombrar la métrica: no se tocó.

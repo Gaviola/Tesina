@@ -29,7 +29,7 @@ trabajo.
         \textcite{aboulmira2024skinhealthmate} & \emph{HAM10000}; partición no informada & F1 macro & 0.81 & 0.733 \\
         \textcite{kim2025skinsavvy2} & \emph{HAM10000} ampliado; partición al azar por imagen & Sensibilidad macro
             & 0.780 & 0.692 \\
-        \textcite{gessert2020skin} & ISIC 2019, otras clases; partición por lesión & Sensibilidad macro & 0.636
+        \textcite{gessert2020skin} & ISIC 2019, otras clases; prueba del desafío; validación por lesión & Sensibilidad macro & 0.636
             & 0.692 \\
         \filasep
         \multicolumn{5}{@{}l}{\textit{Detección de melanoma (Swin-Tiny)}} \\
@@ -39,10 +39,11 @@ trabajo.
             & 0.921 \\
         \filasep
         \multicolumn{5}{@{}l}{\textit{\glspl{vlm} sin ajuste}} \\
-        \textcite{yan2025derm1miccv} & DermLIP; media de cuatro conjuntos & Exactitud & 0.561 & 0.377 \\
-        \textcite{yan2026dermfmzero} & DermFM-Zero; mismo protocolo que DermLIP & Exactitud & 0.733 & --- \\
-        \textcite{zeng2025mmskin} & Generativos en \emph{HAM10000} & Exactitud
-            & $<$ 0.5; SkinVL $>$ 0.5 & 0.037--0.189 \\
+        \textcite{yan2025derm1miccv} & DermLIP en \emph{HAM10000} & Exactitud & 0.682 & 0.377 \\
+        \textcite{yan2026dermfmzero} & DermFM-Zero en ocho tareas; DermLIP obtiene 0.561 & Exactitud balanceada y AUC, en media
+            & 0.733 & --- \\
+        \textcite{zeng2025mmskin} & LLaVA-Med en \emph{HAM10000} & Exactitud & 0.055 & 0.037--0.114 \\
+        \textcite{zeng2025mmskin} & SkinVL, especializado, en \emph{HAM10000} & Exactitud & 0.513 & --- \\
         \textcite{jiang2026multimodal} & Generativos abiertos en consultas reales; tres primeros diagnósticos
             & Exactitud & 0.015--0.134 & --- \\
         \bottomrule
@@ -67,14 +68,15 @@ total a cambio de una especificidad baja, sobre lesiones que ya habían sido bio
 población y otro punto de operación, la comparación no ordena los modelos, pero justifica que este trabajo fije el
 umbral en validación y lo informe junto con la sensibilidad.
 
-En los \glspl{vlm}, en cambio, los resultados coinciden con la literatura. DermLIP sin ajuste obtiene aquí una exactitud
-menor que la que informan sus autores, una diferencia que puede deberse a los conjuntos y a las plantillas de texto.
-DermFM-Zero, que sus autores evalúan con el mismo protocolo, supera a DermLIP, lo que indica que la especialización en
-dermatología sigue mejorando por la vía contrastiva. Entre los generativos, \textcite{zeng2025mmskin} encuentran que
-sin ajuste solo su modelo especializado supera el 50\,\% de exactitud en \emph{HAM10000}, y
-\textcite{jiang2026multimodal} informan exactitudes de entre el 1.5\,\% y el 13.4\,\% con los modelos abiertos en
+En los \glspl{vlm} generativos, los resultados coinciden con la literatura. \textcite{zeng2025mmskin} miden LLaVA-Med
+sin ajuste en \emph{HAM10000} con una exactitud del 5.5\,\%, dentro del rango que obtiene aquí, y solo su modelo
+especializado, SkinVL, supera el 50\,\%. Del mismo modo, \textcite{jiang2026multimodal} informan exactitudes de entre el 1.5\,\% y el 13.4\,\% con los modelos abiertos en
 consultas reales, entre ellos LLaVA-Med. Por lo tanto, el colapso de los generativos de propósito general no es propio
-de este trabajo.
+de este trabajo. DermLIP sin ajuste, en cambio, obtiene aquí en \emph{HAM10000} una exactitud bastante menor que la que
+informan sus autores sobre el mismo conjunto, una diferencia que puede deberse a la partición de prueba y a las
+plantillas de texto. Aun así, en los dos casos DermLIP supera con amplitud a los generativos, y DermFM-Zero, evaluado
+por sus autores junto con DermLIP, lo supera a su vez, lo que indica que la especialización en dermatología sigue
+mejorando por la vía contrastiva.
 
 En conjunto, la comparación ubica a Swin-Tiny cerca de los trabajos con un protocolo comparable y por debajo de los que
 usan una partición por imagen, y confirma que la dificultad de los \glspl{vlm} generativos para clasificar lesiones de
