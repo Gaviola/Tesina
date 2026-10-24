@@ -273,3 +273,11 @@ Solo para comparar: `aboulmira2024skinhealthmate`, `yao2022single`, `marchetti20
   AUC 0.919, 0.701 / 0.922 y 0.778 / 0.862, iguales a `lesion_split_report.json`.
 - Verificación contra `Docs/experimentacion/experimentacion.tex`: coincide con la tabla «Vigente» (Swin 0.921 / 0.796;
   ensamble 0.926 / 0.828). El cuerpo de ese documento usa la partición por imagen y no se toma.
+
+## Tablas con desvío convertidas en figuras (24/10/2026)
+
+Pedido del autor. Con tres semillas un diagrama de cajas no aporta (los cuartiles de tres valores engañan), así que se
+muestran los tres valores y su media: `tab:res_recall_clase` → `fig:res_recall_semillas` (`recall-clase-semillas.pdf`)
+y `tab:res_melanoma` → `fig:res_melanoma_semillas` (`melanoma-semillas.pdf`, sensibilidad y especificidad por regla).
+El AUC de Swin-Tiny (0.921 ± 0.005) pasó al texto. `tab:res_supervisados` se mantiene (es la referencia de 4.5).
+Medias recalculadas iguales a las de las tablas anteriores.

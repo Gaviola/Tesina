@@ -1,4 +1,4 @@
-% Extensión estimada: unas 8 páginas, cinco subsecciones, cinco tablas y dos figuras (ficha 4.1).
+% Extensión estimada: unas 8 páginas, cinco subsecciones, tres tablas y cuatro figuras (ficha 4.1).
 % Fuentes: ficha fichas/04-resultados-clasificacion/01-clasificadores-supervisados.md; Codigo/outputs/results/
 % densenet_vit_moderna_report.json (media_std, val_media_std, semillas, holm), statistical_tests_les_v2.json
 % (paired_bootstrap_diff), classifier_ensemble_les/ensemble_seeds.json, *_les_cwnone{,_s43,_s44}_test_results.json
@@ -106,69 +106,38 @@ confunden entre sí, y una parte de los \gls{bcc} y de los \gls{vasc} se clasifi
     \label{fig:res_confusion_swin}
 \end{figure}
 
-Esa matriz corresponde a una sola ejecución, y la Tabla~\ref{tab:res_recall_clase} muestra que en las clases con pocas
-imágenes el resultado cambia mucho con la semilla. En \gls{df}, con 17 imágenes, una sola imagen mueve la sensibilidad
-en casi 0.06, y la de \gls{mel} varía en más de una décima entre las tres ejecuciones de Swin-Tiny. La tabla muestra
+Esa matriz corresponde a una sola ejecución, y la Figura~\ref{fig:res_recall_semillas} muestra que en las clases con
+pocas imágenes el resultado cambia mucho con la semilla. En \gls{df}, con 17 imágenes, una sola imagen mueve la sensibilidad
+en casi 0.06, y la de \gls{mel} varía en más de una décima entre las tres ejecuciones de Swin-Tiny. La figura muestra
 también por qué las pruebas no separan a las tres mejores arquitecturas: Swin-Tiny supera a DenseNet121 en cinco de
 las siete clases, pero a ConvNeXt-Tiny y a ViT-B/16 solo en tres.
 
-\begin{table}[H]
+\begin{figure}[H]
     \centering
-    \caption{Sensibilidad por clase en la prueba, media $\pm$ desvío de tres semillas.}
-    \label{tab:res_recall_clase}
-    \small
-    \setlength{\tabcolsep}{4pt}
-    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X>{\raggedleft\arraybackslash}p{1.5cm}
-        >{\centering\arraybackslash}p{2.1cm}>{\centering\arraybackslash}p{2.1cm}
-        >{\centering\arraybackslash}p{2.1cm}>{\centering\arraybackslash}p{2.25cm}@{}}
-        \toprule
-        \textbf{Clase} & \textbf{Imágenes} & \textbf{Swin-Tiny} & \textbf{ConvNeXt-Tiny} & \textbf{ViT-B/16}
-            & \textbf{DenseNet121} \\
-        \midrule
-        \gls{mel} & 167 & 0.623 $\pm$ 0.071 & 0.553 $\pm$ 0.042 & 0.609 $\pm$ 0.072 & 0.509 $\pm$ 0.016 \\
-        \gls{nv} & 1\,006 & 0.930 $\pm$ 0.016 & 0.943 $\pm$ 0.011 & 0.932 $\pm$ 0.009 & 0.948 $\pm$ 0.007 \\
-        \gls{bcc} & 77 & 0.710 $\pm$ 0.060 & 0.736 $\pm$ 0.020 & 0.680 $\pm$ 0.052 & 0.571 $\pm$ 0.022 \\
-        \gls{akiec} & 49 & 0.551 $\pm$ 0.035 & 0.626 $\pm$ 0.051 & 0.558 $\pm$ 0.059 & 0.571 $\pm$ 0.061 \\
-        \gls{bkl} & 165 & 0.756 $\pm$ 0.041 & 0.689 $\pm$ 0.037 & 0.677 $\pm$ 0.021 & 0.622 $\pm$ 0.031 \\
-        \gls{df} & 17 & 0.549 $\pm$ 0.122 & 0.490 $\pm$ 0.034 & 0.569 $\pm$ 0.090 & 0.353 $\pm$ 0.102 \\
-        \gls{vasc} & 22 & 0.727 $\pm$ 0.045 & 0.803 $\pm$ 0.026 & 0.742 $\pm$ 0.052 & 0.697 $\pm$ 0.095 \\
-        \bottomrule
-    \end{tabularx}
-\end{table}
+    \includegraphics[width=0.92\textwidth]{Figures/Capitulos/04-Resultados-Clasificacion/recall-clase-semillas.pdf}
+    \caption{Sensibilidad por clase en la prueba con cada una de las tres semillas (puntos) y su media (raya). Entre paréntesis, las imágenes de cada clase.}
+    \label{fig:res_recall_semillas}
+\end{figure}
 
 \subsection{Detección de melanoma}
 \label{sec:res_melanoma}
 
 Aunque la sensibilidad de \gls{mel} varía entre semillas, la capacidad de separar los melanomas del resto es estable:
-el \gls{auc} de melanoma de Swin-Tiny tiene un desvío de apenas 0.005 (Tabla~\ref{tab:res_melanoma}). Las tres
+el \gls{auc} de melanoma de Swin-Tiny es de 0.921, con un desvío de apenas 0.005 entre semillas. Las tres
 ejecuciones ordenan los casos de manera parecida, y lo que cambia entre ellas es cuántos melanomas superan el corte
 implícito en elegir la clase más probable. Por lo tanto, fijar ese corte de manera explícita en validación, como
 propone la Sección~\ref{sec:met_seleccion}, debería estabilizar también la decisión. Solo se evalúan Swin-Tiny,
 ConvNeXt-Tiny y su ensamble, que son los modelos de la búsqueda de hiperparámetros.
 
-\begin{table}[H]
+\begin{figure}[H]
     \centering
-    \caption{Detección de melanoma en la prueba con la clase más probable y con el umbral fijado en validación, media $\pm$ desvío de tres semillas.}
-    \label{tab:res_melanoma}
-    \small
-    \setlength{\tabcolsep}{3pt}
-    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X
-        >{\centering\arraybackslash}p{2.1cm}>{\centering\arraybackslash}p{2.1cm}>{\centering\arraybackslash}p{2.1cm}
-        >{\centering\arraybackslash}p{2.1cm}>{\centering\arraybackslash}p{2.1cm}@{}}
-        \toprule
-        & & \multicolumn{2}{c}{\textbf{Clase más probable}} & \multicolumn{2}{c}{\textbf{Umbral de validación}} \\
-        \cmidrule(lr){3-4}\cmidrule(l){5-6}
-        \textbf{Modelo} & \textbf{AUC} & \textbf{Sensibilidad} & \textbf{Especificidad} & \textbf{Sensibilidad}
-            & \textbf{Especificidad} \\
-        \midrule
-        Swin-Tiny & 0.921 $\pm$ 0.005 & 0.623 $\pm$ 0.071 & 0.944 $\pm$ 0.022 & 0.796 $\pm$ 0.036 & 0.862 $\pm$ 0.000 \\
-        ConvNeXt-Tiny & 0.909 $\pm$ 0.004 & 0.553 $\pm$ 0.043 & 0.953 $\pm$ 0.007 & 0.794 $\pm$ 0.012 & 0.854 $\pm$ 0.009 \\
-        Ensamble & 0.926 $\pm$ 0.003 & 0.605 $\pm$ 0.057 & 0.952 $\pm$ 0.012 & 0.828 $\pm$ 0.007 & 0.852 $\pm$ 0.006 \\
-        \bottomrule
-    \end{tabularx}
-\end{table}
+    \includegraphics[width=0.85\textwidth]{Figures/Capitulos/04-Resultados-Clasificacion/melanoma-semillas.pdf}
+    \caption{Detección de melanoma en la prueba con la clase más probable y con el umbral fijado en validación, por semilla (puntos) y en media (raya).}
+    \label{fig:res_melanoma_semillas}
+\end{figure}
 
-Con el umbral de validación, Swin-Tiny pasa de detectar unos tres de cada cinco melanomas a detectar cuatro de cada
+La Figura~\ref{fig:res_melanoma_semillas} compara las dos reglas en cada ejecución. Con el umbral de validación,
+Swin-Tiny pasa de detectar unos tres de cada cinco melanomas a detectar cuatro de cada
 cinco, y el desvío entre semillas se reduce a la mitad. A cambio, la especificidad baja de alrededor de 0.95 a
 alrededor de 0.86, cerca del mínimo de 0.85 que se exigió en validación, de modo que el umbral conserva su efecto al
 pasar de una partición a la otra. ConvNeXt-Tiny y el ensamble siguen el mismo patrón, y el ensamble obtiene la mayor
