@@ -74,6 +74,7 @@ Pesos por clase (Swin): sens.\ macro con CE simple $\to$ con pesos & sin gananci
 ECE de Swin-Tiny (sin calibrar) & 0.380 (subconfiado) & 0.040 (sin pesos por clase) \\
 Melanoma, Swin: AUC / sens.\ con esp.\ $\geq$0.85 & 0.931 / 0.862 & 0.921 / 0.796 \\
 Melanoma, ensamble: AUC / sens.\ con esp.\ $\geq$0.85 & --- & 0.926 / 0.828 \\
+DermLIP zero-shot: exactitud / sens.\ macro$^{\dagger}$ & 0.377 / 0.510 & 0.716 / 0.544 \\
 DermLIP SVM vs Swin-ImageNet congelado: sens.\ macro & 0.788 vs 0.579 & 0.673 vs 0.466 \\
 HIBA, Swin: exactitud / sens.\ macro & 0.585 / 0.532 & 0.546 / 0.424 \\
 Ruteo de 3 niveles: cobertura de lo presentado & 0.934 & 0.904 \\
@@ -94,7 +95,7 @@ pipeline avanzado no mejora el reporte de LLaVA-Med: su ganancia anterior venía
 reporte (sin \texttt{<think>}, también el que queda abierto), con \emph{matcher} estricto
 (\texttt{ensemble\_bootstrap*\_les\_report\_only\_strict.json}, actualizado el 18/10/2026). Las conclusiones
 centrales se sostienen. \texttt{full\_uncertainty} y la taxonomía por clase quedan con el anclaje anterior; RAG se
-regeneró con el índice por lesión (11/10/2026, Sección~\ref{sec:rag}).
+regeneró con el índice por lesión (11/10/2026, Sección~\ref{sec:rag}). $^{\dagger}$Protocolo oficial de Derm1M (ocho plantillas y nombres de clase de los autores, p.\,ej.\ ``nevus''); con ``melanocytic nevus'' los nevos se clasificaban como MEL (24/10/2026, \texttt{resul/dermlip\_zs\_protocolo\_resul\_20261024.md}). La condición de la cascada con diagnóstico de DermLIP (``0.38'') usa las predicciones anteriores.
 \end{minipage}}
 \bigskip
 
