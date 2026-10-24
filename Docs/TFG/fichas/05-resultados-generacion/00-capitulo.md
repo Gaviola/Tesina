@@ -73,6 +73,15 @@ subsecciones). Se conserva `sec:res_costo`, que cita el Cap. 6.
    condición vieja (`full_dermlip`, exactitud 0.38) no aparece.
 7. **Mini-VLM v3 solo como control** (5.4.1), con los brazos parciales declarados (Swin 963, sin anclaje 372).
 
+## Respuestas del autor (24/10/2026)
+
+1. Cap. 3 corregido: variantes de la cascada en `sec:met_referencias`, regla de fallas en `sec:met_eval_generacion`,
+   fila nueva en `tab:met_experimentos` y `\ref` de `sec:met_ruteo` a `cp:res_gen`; 5.2 remite a esas secciones.
+2. Nivel 1 de Mini-VLM v2 en SkinCoT: enviado (jobs 1183331–1183334).
+3. DermLIP: se espera a los jobs y se agrega al terminar.
+4. Memoria: se mide en la A30 (`measure_vlm_memory.py`, jobs 1183335–1183337), como en el Cap. 4.
+5. Figura de ejemplos: queda como está.
+
 ## Preguntas para la revisión del capítulo
 
 1. **Cap. 3 (no se tocó):** (a) no describe las ablaciones sin imagen y con diagnóstico equivocado ni la regla de la
