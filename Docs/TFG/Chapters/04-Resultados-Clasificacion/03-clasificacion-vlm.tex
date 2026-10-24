@@ -72,7 +72,7 @@ poco.
 
 \begin{table}[H]
     \centering
-    \caption{Controles de los \glspl{vlm} generativos, con verosimilitud y sin ajuste.}
+    \caption{Controles de los \glspl{vlm} generativos (verosimilitud, sin ajuste) y contraste con DermLIP.}
     \label{tab:res_vlm_controles}
     \small
     \setlength{\tabcolsep}{4pt}
@@ -91,6 +91,10 @@ poco.
         Prueba de \emph{HAM10000} & 1\,503 & 0.037 & 0.157 & \gls{vasc} (0.365) \\
         Imagen gris & 1\,503 & 0.011 & 0.143 & \gls{df} (1.000) \\
         Fotografías clínicas de \emph{SkinCAP} & 624 & 0.071 & 0.106 & \gls{df} (0.428) \\
+        \filasep
+        \multicolumn{5}{@{}l}{\textit{DermLIP (contraste)}} \\
+        Prueba de \emph{HAM10000} & 1\,503 & 0.377 & 0.510 & \gls{mel} (0.525) \\
+        Fotografías clínicas de \emph{SkinCAP} & 624 & 0.386 & 0.454 & \gls{df} (0.325) \\
         \bottomrule
     \end{tabularx}
 \end{table}
@@ -98,9 +102,11 @@ poco.
 Otra explicación posible es la modalidad, porque la dermatoscopía requiere un equipo específico, mientras que la
 fotografía clínica se parece más a las imágenes de uso general. El control con las 624 fotografías clínicas de \emph{SkinCAP} descarta
 también esa explicación. Sobre esas imágenes, Mini-VLM obtiene una sensibilidad macro de 0.176 y LLaVA-Med, de 0.106,
-valores que no superan los de la prueba de \emph{HAM10000}, y los dos colapsan hacia \gls{df}. En consecuencia, la
-dificultad no está en la modalidad de la imagen, sino en la capacidad de estos modelos para distinguir las siete
-clases, sea cual sea la forma en que se obtiene la clase.
+valores que no superan los de la prueba de \emph{HAM10000}, y los dos colapsan hacia \gls{df}. DermLIP sin ajuste, en
+cambio, alcanza sobre esas mismas fotografías una sensibilidad macro de 0.454, cerca de la de 0.510 que obtiene en la
+dermatoscopía, de modo que las imágenes de \emph{SkinCAP} sí permiten distinguir las clases. En consecuencia, la
+dificultad no está en la modalidad de la imagen, sino en la capacidad de los \glspl{vlm} generativos para distinguir
+las siete clases, sea cual sea la forma en que se obtiene la clase.
 
 Queda por saber si un \gls{vlm} especializado en dermatología resuelve esa limitación, y DermLIP permite verlo sin
 generar texto. La Tabla~\ref{tab:res_dermlip} muestra sus cuatro usos (Sección~\ref{sec:met_dermlip}). Sin ningún
@@ -164,7 +170,8 @@ las tres cabezas, se debe a la representación aprendida sobre imágenes dermato
 Las pruebas de la Sección~\ref{sec:met_estadistica} completan la comparación con los siete clasificadores de la
 familia de 21 pares, en la que los \glspl{vlm} generativos entran con la estrategia de generación. Los 15 pares que
 incluyen un modelo sin ajuste (DermLIP, Mini-VLM o LLaVA-Med) son significativos con la corrección de Holm, con valores
-p de $3.5 \times 10^{-10}$ o menores. La Tabla~\ref{tab:res_pruebas_vlm} muestra el tamaño de esas diferencias: los
+p de $3.5 \times 10^{-10}$ o menores. Además, el intervalo de \emph{bootstrap} de la sensibilidad macro de los dos
+generativos incluye el 1/7 del azar: [0.137, 0.152] en Mini-VLM y [0.145, 0.168] en LLaVA-Med. La Tabla~\ref{tab:res_pruebas_vlm} muestra el tamaño de esas diferencias: los
 supervisados superan a DermLIP sin ajuste por entre 0.08 y 0.21 de sensibilidad macro, y a los generativos, por entre
 0.44 y 0.57. Swin-Tiny, por ejemplo, acierta 768 imágenes en las que DermLIP falla, frente a 62 en el sentido
 contrario. Entre los dos generativos, en cambio, McNemar los distingue, porque LLaVA-Med acierta 163 imágenes que

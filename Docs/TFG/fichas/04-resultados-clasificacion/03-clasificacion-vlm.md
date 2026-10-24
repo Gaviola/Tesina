@@ -128,3 +128,17 @@ Solo para comparar: `yan2025derm1miccv`, `zeng2025mmskin`, `jiang2026multimodal`
 
 1. ¿Agregar DermLIP sobre *SkinCAP* (0.454) como contraste del control clínico? Reforzaría que las fotografías
    clínicas sí se pueden clasificar, pero exige agregar una oración a 3.4.
+
+## Revisión del autor (24/10/2026)
+
+- Pregunta 1 resuelta: DermLIP sobre *SkinCAP* entra como contraste en `tab:res_vlm_controles` y en el párrafo del
+  control clínico (exactitud 0.386, sensibilidad macro 0.454, `dermlip/dermlip_zeroshot_vit-b-16_clinical_predictions.json`;
+  coincide con `tab:dermlip_dominio` de `experimentacion.tex`). Se agregó una oración en 3.4 (commit aparte).
+- Se agregó el IC de *bootstrap* de la sensibilidad macro de los generativos por generación ([0.137, 0.152] y
+  [0.145, 0.168], `statistical_tests_les_v2.json`), que incluye 1/7, como en `experimentacion.tex` (§ calibración y
+  significancia).
+- Verificación contra `experimentacion.tex`: la figura de colapso de ese documento atribuye a LLaVA-Med con CoT un
+  colapso hacia VASC del 81 %. En las predicciones, ese 81 % son respuestas sin etiqueta (código −1); el rótulo VASC
+  sale de indexar la lista de clases con −1. La sección usa el recálculo (1 223 sin etiqueta, MEL 0.154).
+- El «F1» de `tab:clasificacion` de `experimentacion.tex` es el F1 ponderado (DermLIP sin ajuste 0.424); la sección
+  informa el F1 macro (0.364).
