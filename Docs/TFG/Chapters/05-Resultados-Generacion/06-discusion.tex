@@ -1,0 +1,34 @@
+% Extensión estimada: una página, cuatro párrafos (ficha 5.6).
+% Fuentes: secciones 5.1 a 5.5. Sin números nuevos.
+% Feedback del tutor (14/09/2026): el cierre se llama "Discusión"; la discusión que cruza clasificación y generación
+% queda en el Capítulo 6.
+\section{Discusión de los resultados de generación}
+\label{sec:res_gen_discusion}
+
+Los resultados del capítulo permiten responder la segunda pregunta de investigación
+(Sección~\ref{sec:intro_objetivos}) en sus dos partes. En cuanto al diagnóstico, un \gls{vlm} generativo ajustado no
+afirma por sí solo la clase de la imagen: sin un diagnóstico, enumera clases, evita comprometerse o, en el caso del
+generador especializado, repite un texto ajeno a las siete clases. Con la cascada, en cambio, el reporte afirma el
+diagnóstico del clasificador, y su fidelidad diagnóstica coincide con la exactitud de Swin-Tiny, tanto en total como
+en cada clase. Es decir, el reporte afirma el diagnóstico correcto en la medida en que el clasificador lo acierta, y
+ningún generador corrige un diagnóstico equivocado mirando la imagen.
+
+En cuanto a la descripción, la imagen cambia lo que el reporte describe de cada lesión, pero no se pudo verificar que
+lo descrito esté en ella. Sin la imagen, los generadores escriben un único texto por clase, y con ella cada reporte es
+distinto, con más entidades clínicas en el caso de Mini-VLM. Sin embargo, las métricas automáticas miden la presencia
+de términos y no su validez, y el ejemplo del melanoma afirmado como nevo muestra que la descripción también se adapta
+al diagnóstico recibido. Por lo tanto, la segunda parte de la pregunta queda respondida solo en lo que las métricas
+sin especialista pueden establecer.
+
+El ruteo por concordancia agrega al \emph{pipeline} lo que la cascada no tiene, una forma de reconocer los casos
+dudosos. La concordancia entre Swin-Tiny y el \gls{knn} separa los casos en que el clasificador es confiable, y en los
+demás presentar dos candidatos cubre más que afirmar uno. La mejora del reporte, sin embargo, es del ruteo y no del
+generador: Mini-VLM la conserva y LLaVA-Med la pierde cuando razona más allá del límite de tokens. Además, los errores
+que comparten los dos predictores, entre ellos casi un cuarto de los melanomas, se siguen afirmando como un acierto.
+
+Entre los generadores, Mini-VLM resulta el más adecuado para el \emph{pipeline}: transcribe el diagnóstico como el
+generador especializado, describe tanto como el biomédico más grande y es el único cuyos pesos entran en una GPU de
+consumo de 12~GB. En conjunto, el diagnóstico del reporte proviene del clasificador, la descripción proviene del generador, y
+el ruteo decide cuánto afirma el \emph{pipeline}. El Capítulo~\ref{cp:discusion} discute las limitaciones de esta
+evaluación junto con las de la clasificación, en particular la ausencia de una revisión por especialistas y el uso de
+una sola semilla para el clasificador que ancla los reportes.
