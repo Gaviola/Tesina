@@ -3,6 +3,10 @@
 **Estado (11/10/2026): aprobada por el autor como punto de partida; revisada el 18/10/2026 (ver abajo).** Contrato del capítulo. Ninguna sección se redacta hasta que
 el autor apruebe esta ficha y la ficha de la sección (guía §1).
 
+## Decisión del autor del 24/10/2026: Mini-VLM v2 principal, v3 de control
+
+Las tablas de los Caps. 4 y 5 usan Mini-VLM v2. En v2, el LoRA de la etapa 2 está solo en CLIP (6 291 456 parámetros) y el modelo de lenguaje queda congelado. v3 agrega `qkv_proj` (31 457 280) y se presenta como variante de control en 3.5 y en `tab:met_experimentos`. Motivo: los brazos de v3 en `multi` no llegan para el 30/10, y lo disponible no cambia la cascada con Swin (`Codigo/docs/resul/mini_vlm_lora_llm_resul_v3_20261024.md`). Toca 3.5 (texto, figura `ajuste.tex` y `tab:met_lora`) y 3.8 (una fila).
+
 ## Revisión del tutor del 21/10/2026 (prevalece sobre todo lo que sigue) — PROPUESTA, a aprobar
 
 Fuente: `feedback/cap_3/feedback_cap3.md` (mensaje, tres audios y 31 comentarios del PDF transcritos al final).

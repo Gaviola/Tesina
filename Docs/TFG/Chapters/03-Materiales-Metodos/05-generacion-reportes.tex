@@ -10,8 +10,11 @@
 % conteo propio sobre Codigo/data/raw/skincare/SkinCoT/EN; Codigo/docs/resul/analisis_pipeline_avanzado_resul_20260908.md
 % (penalización de repetición). Citas: \cite{shen2025skincare}, \cite{zeng2025mmskin}, \cite{abdin2024phi3},
 % \cite{liu2023visual}, \cite{li2023llavamed}, \cite{jiang2023mistral}, \cite{hu2021lora}, \cite{tschandl2018ham10000}.
-% Mini-VLM v3 (LoRA también en el modelo de lenguaje): job Mendieta 1179985, log en outputs/slurm_logs/mini_vlm/1179985.out
-% (31 457 280 parámetros entrenables, mejor época 10). Revisión del autor del 18/10/2026: sin repetir la presentación
+% Configuración principal: stage2_mini_vlm_v2 (LoRA solo en CLIP, 6 291 456) y stage2_llava_med (33 554 432), logs
+% 1153597 y 1153598. Variante de control: Mini-VLM v3 (LoRA también en qkv_proj), job Mendieta 1179985, log en
+% outputs/slurm_logs/mini_vlm/1179985.out (31 457 280 parámetros entrenables, mejor época 10). Decisión del autor del
+% 24/10/2026: v2 queda como configuración principal y v3 como control
+% (Codigo/docs/resul/mini_vlm_lora_llm_resul_v3_20261024.md). Revisión del autor del 18/10/2026: sin repetir la presentación
 % de los modelos (Sección 3.4) ni la historia de la primera configuración de LoRA.
 % Revisión del tutor del 21/10/2026: abre con qué necesita un reporte y qué limita a cada componente por separado; las
 % dos tablas de configuración van juntas al final; cierra con por qué la generación aislada lleva al pipeline.
@@ -50,16 +53,17 @@ instrucción es la misma: «Describe this skin lesion.».
 La primera etapa usa \emph{SkinCAP} para alinear la imagen con el texto. Para ello, se entrena solo el proyector
 visual, y el codificador visual y el modelo de lenguaje quedan congelados. La segunda etapa usa \emph{SkinCoT} para
 que el modelo aprenda a redactar hasta el diagnóstico. Debido a la restricción de cómputo, en lugar de ajustar todos
-los parámetros se aplica \gls{lora} (Sección~\ref{sec:marco_llm_lora}) sobre las proyecciones de atención del modelo
-de lenguaje y del codificador visual, con el proyector congelado. Es decir, a diferencia de la receta de LLaVA
-(Sección~\ref{sec:marco_vlm_generativos}), el proyector no se vuelve a ajustar y el codificador visual sí se adapta. En
-ambos componentes, el adaptador se coloca en los módulos \texttt{q\_proj} y \texttt{v\_proj}, salvo en el modelo de
-lenguaje de Mini-VLM, que reúne las tres proyecciones en un único módulo, \texttt{qkv\_proj}. Así, LLaVA-Med entrena
-33\,554\,432 parámetros y Mini-VLM 31\,457\,280, menos del 1\,\% de cada modelo. La Figura~\ref{fig:met_ajuste} resume
-qué se entrena en cada etapa.
-% Tarea de los Caps. 4 y 5 (no del 3): Mini-VLM se describe en su versión v3 (LoRA también en qkv_proj), pero
-% los resultados de los Caps. 4 y 5 son todavía de la v2 (LoRA solo en el codificador visual). Reemplazarlos con los
-% de v3 (cascada, recuperación y clasificación por verosimilitud y CoT; Mendieta short y 1179986--1179989).
+los parámetros se aplica \gls{lora} (Sección~\ref{sec:marco_llm_lora}) sobre las proyecciones de consulta y de valor
+de la atención, los módulos \texttt{q\_proj} y \texttt{v\_proj}, con el proyector congelado. Es decir, a diferencia de
+la receta de LLaVA (Sección~\ref{sec:marco_vlm_generativos}), el proyector no se vuelve a ajustar y el codificador
+visual sí se adapta.
+
+Los dos generadores, sin embargo, no reciben el adaptador en los mismos componentes. En LLaVA-Med, los módulos
+\texttt{q\_proj} y \texttt{v\_proj} están en el codificador visual y en el modelo de lenguaje, y se entrenan
+33\,554\,432 parámetros. En cambio, el modelo de lenguaje de Mini-VLM reúne las tres proyecciones de la atención en un
+único módulo, \texttt{qkv\_proj}, de modo que el adaptador queda solo en el codificador visual, con 6\,291\,456
+parámetros, y el modelo de lenguaje no se ajusta. En ambos casos se entrena menos del 1\,\% de los parámetros del
+modelo. La Figura~\ref{fig:met_ajuste} resume qué se entrena en cada etapa.
 
 \input{Figures/Capitulos/03-Materiales-Metodos/ajuste}
 
@@ -68,13 +72,20 @@ salen de una búsqueda aleatoria de cuatro configuraciones por modelo, con la p�
 como criterio. Además, en la segunda etapa, la pérdida de validación siguió bajando hasta la última época, que es la que
 se conserva. La Tabla~\ref{tab:met_lora} reúne la configuración de ambas etapas.
 
+Como Mini-VLM aprende a redactar sin que se ajuste su modelo de lenguaje, se agrega una variante de control para
+saber si esa diferencia con LLaVA-Med cambia lo que escribe el generador. En la variante, el adaptador se coloca
+también en \texttt{qkv\_proj}, con 31\,457\,280 parámetros entrenables, y el resto de la segunda etapa no cambia,
+salvo la división del lote por memoria. Con ella se regeneran los reportes de la cascada y de la partición de prueba
+de \emph{SkinCoT}, que se comparan con los de la configuración principal sobre las mismas imágenes.
+
 \subsection{Generación del texto}
 
-Una vez ajustado, el generador conserva el formato de \emph{SkinCoT}, en el que casi todos los textos intercalan
-bloques de razonamiento \texttt{\textless think\textgreater} entre las oraciones del reporte
-(Sección~\ref{sec:met_datasets}). Como aprende a escribir con ese formato, en la generación también abre bloques de
-razonamiento, y su salida contiene a la vez el razonamiento y el reporte. Les ocurre a los dos generadores ajustados, y
-por eso la evaluación separa ambas partes y mide solo el reporte (Sección~\ref{sec:met_eval_generacion}).
+Una vez ajustado, el generador puede conservar el formato de \emph{SkinCoT}, en el que casi todos los textos
+intercalan bloques de razonamiento \texttt{\textless think\textgreater} entre las oraciones del reporte
+(Sección~\ref{sec:met_datasets}). Los generadores cuyo modelo de lenguaje se ajusta, LLaVA-Med y la variante de
+control de Mini-VLM, aprenden a escribir con ese formato, y en la generación también abren bloques de razonamiento,
+de modo que su salida contiene a la vez el razonamiento y el reporte. Por eso la evaluación separa ambas partes y mide
+solo el reporte en todos los generadores (Sección~\ref{sec:met_eval_generacion}).
 
 Sin diagnóstico, la generación usa la misma instrucción del entrenamiento, y las variantes del \emph{pipeline} la
 reemplazan por sus propias plantillas (Sección~\ref{sec:met_pipeline}). En todos los casos se usa decodificación voraz
@@ -126,7 +137,8 @@ no se usa en ninguno de los tres generadores, que así comparten la misma decodi
         \filasep
         Dropout de LoRA & 0.0 \\
         \filasep
-        Módulos & \texttt{q\_proj}, \texttt{v\_proj}; en Mini-VLM, además \texttt{qkv\_proj} \\
+        Módulos & \texttt{q\_proj}, \texttt{v\_proj} (en Mini-VLM, solo en el codificador visual); en la variante
+            de control de Mini-VLM, además \texttt{qkv\_proj} \\
         \filasep
         Proyector & Congelado \\
         \filasep
@@ -142,7 +154,7 @@ no se usa en ninguno de los tres generadores, que así comparten la misma decodi
         \filasep
         Épocas & 10, paciencia 3 \\
         \filasep
-        Lote y acumulación & 4 y 8 (32 efectivos); en Mini-VLM, 2 y 16 por memoria \\
+        Lote y acumulación & 4 y 8 (32 efectivos); en la variante de control de Mini-VLM, 2 y 16 por memoria \\
         \filasep
         Longitud máxima & 2\,048 \\
         \filasep

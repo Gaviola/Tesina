@@ -26,13 +26,13 @@
         \node[figentrada, text width=18mm] (d2) at (11, -26) {\emph{SkinCoT}};
         \node[entrenado, text width=30mm] (e2) at (48, -26) {codificador visual\\{\footnotesize + adaptadores \gls{lora}}};
         \node[congelado, text width=22mm] (p2) at (83, -26) {proyector\\{\footnotesize congelado}};
-        \node[entrenado, text width=30mm] (l2) at (118, -26) {modelo de lenguaje\\{\footnotesize + adaptadores \gls{lora}}};
+        \node[entrenado, text width=40mm, font=\footnotesize] (l2) at (123, -26) {{\small modelo de lenguaje}\\+ \gls{lora} en LLaVA-Med\\congelado en Mini-VLM};
         \draw[figflecha] (d2) -- (e2);
         \draw[figflecha] (e2) -- (p2);
         \draw[figflecha] (p2) -- (l2);
 
     \end{tikzpicture}
     \caption{Ajuste de Mini-VLM y LLaVA-Med en dos etapas: en naranja, lo que se entrena; en gris, lo que queda
-    congelado.}
+    congelado en ambos generadores.}
     \label{fig:met_ajuste}
 \end{figure}

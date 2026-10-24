@@ -1,5 +1,17 @@
 # Ficha 3.6 — Generación de reportes
 
+**Decisión del autor (24/10/2026): v2 es la configuración principal de Mini-VLM y v3 queda como variante de control.**
+v3 no llega completo para el 30/10 y, con lo disponible, no cambia la cascada con Swin
+(`Codigo/docs/resul/mini_vlm_lora_llm_resul_v3_20261024.md`). P5 se divide en dos párrafos. El primero cuenta la etapa 2
+común (`q_proj`/`v_proj`, proyector congelado). El segundo dice dónde cae el adaptador en cada generador: en LLaVA-Med,
+33 554 432 parámetros en Mistral y CLIP; en Mini-VLM v2, 6 291 456 solo en CLIP, porque el LLM fusiona la atención en
+`qkv_proj` y queda congelado (logs 1153597 y 1153598). Un párrafo nuevo después de P6 presenta la variante de control:
+`qkv_proj` además, 31 457 280 entrenables, lote 2 × 16 (job 1179985), comparada sobre las mismas imágenes en la cascada y
+en la prueba de *SkinCoT*. P7: Mini-VLM v2 no abre `<think>` (0/1 503 en todos los brazos), LLaVA-Med y v3 sí. Por eso
+el texto ya no dice «les ocurre a los dos generadores ajustados». La figura `ajuste.tex` marca el modelo de lenguaje de
+la etapa 2 como «LoRA en LLaVA-Med; congelado en Mini-VLM». En la tabla, Módulos y Lote pasan a v2, con la variante
+aparte. La pregunta abierta 2 queda resuelta en este sentido.
+
 **Revisión del tutor (21/10/2026), aplicada el 22/10:** Antes era 3.6. Abre con qué necesita un reporte y por qué ningún componente lo cubre solo; sale «inventario cerrado» (24). SkinVL se presenta por su motivo. Figura nueva (`ajuste.tex`) con lo que se entrena y lo congelado en cada etapa. «Inferencia» → «Generación del texto»; las dos tablas de configuración quedan juntas al final. Cierre nuevo: por qué la generación aislada lleva al *pipeline* (diagnóstico sin las siete clases, *hedging*, sin señal de cuándo afirmar).
 
 **Revisión del autor (20/10/2026):** el ajuste «usa SkinCaRe» sin el contraste con HAM10000 ni la reserva de su prueba (ya dicha en 3.3); P7 explica por qué se mezclan razonamiento y reporte (el generador aprende el formato de SkinCoT y en inferencia también abre bloques `<think>`) y remite a 3.3 para cómo se evalúa; la penalización de repetición se explica por la causa real (la implementación de `transformers` indexa el vocabulario con los ids de la entrada y los tokens de imagen de Phi-3.5-vision caen fuera: `docs/ideas/mejoras_resultados_p5_plan_20260713.md` P5.5) y por qué tampoco se usa en los otros dos generadores (misma decodificación).
