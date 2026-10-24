@@ -1,33 +1,37 @@
 \chapter[Resultados: generación de reportes]{Resultados: generación de reportes y pipeline integrado}
 \label{cp:res_gen}
-% Extensión estimada: 25--30 páginas.
-% Fuentes: sección "Generación de reportes" del documento de experimentación,
-% Codigo/docs/resul/incertidumbre_llava_replica_resul_20260912.md y la sección "Costo computacional" del
-% mismo documento.
+% Extensión estimada: 22--26 páginas.
+% Fuentes: Codigo/outputs/results/ensemble_bootstrap{,_llava_med,_skinvl}_les_report_only_strict.json (métrica
+% oficial de la cascada), cap5_derivados.json (scripts/cap5_derivados.py), rag_les_eval.json, level1_test/,
+% level1_mmskin_recalc.json, uncertainty_analysis{,_llava_med}_les.json, cost/cost_comparison_v3.json;
+% Codigo/docs/resul/revision_experimentacion_20261003.md, rag_les_resul_20261011.md,
+% mini_vlm_lora_llm_resul_v3_20261024.md. Figuras: Codigo/scripts/figuras_cap5.py.
 %
-% Feedback del tutor (14/09/2026): el capítulo de costo computacional era demasiado corto para sostenerse
-% solo (3--5 páginas) y se incorpora como última sección de medición de este capítulo, que es donde se mide
-% el pipeline completo. La comparación de hardware contra el estado del arte, que es interpretación y no
-% medición, pasa al Capítulo~\ref{cp:discusion}. La sección de cierre se llama "Discusión".
-%
-% Generadores: Mini-VLM con la configuración principal (v2, LoRA solo en el codificador visual) y LLaVA-Med. La
-% variante de control de Mini-VLM (v3, LoRA también en qkv_proj; Sección 3.5) aparece solo como
-% control en 5.1, 5.2 y 5.3 (decisión del autor del 24/10/2026).
-% Fuente del control: Codigo/docs/resul/mini_vlm_lora_llm_resul_v3_20261024.md (parcial, 24/10/2026).
+% Feedback del tutor (14/09/2026): el costo computacional se incorpora como subsección de este capítulo, donde se
+% mide el pipeline completo; la comparación de hardware con el estado del arte va al Capítulo~\ref{cp:discusion}. La
+% sección de cierre se llama "Discusión".
+% Estructura (24/10/2026): la misma del Capítulo 4. El análisis sigue a la cascada con Swin-Tiny, los generadores se
+% comparan en una sola sección y la literatura, en otra. Mini-VLM v3 aparece solo como control (decisión del autor).
 
-\pendiente{Este capítulo responde la PI2 y evalúa el OE2, junto con la parte del OE3 que corresponde a la
-generación de reportes (calidad del texto, tratamiento de la incertidumbre y costo computacional). Los reportes se generaron
-sobre el test original, que es idéntico al del split por lesión; la robustez frente a la fuga de información
-se reporta sobre el subconjunto limpio.}
+Este capítulo presenta los resultados de la generación de reportes y del \emph{pipeline} que la integra con la
+clasificación. Primero se describe qué escriben los generadores cuando no reciben ningún diagnóstico, frente a textos
+de referencia y frente a la clase de la imagen. Después se evalúa la cascada, en la que el diagnóstico de Swin-Tiny
+llega al generador, junto con lo que aportan la imagen y la recuperación de casos parecidos. Sobre la cascada se
+analiza el ruteo por concordancia, que decide qué afirma el \emph{pipeline} en cada caso, y una sección compara los
+tres generadores y su costo computacional. Por último, los resultados se comparan con los de la literatura y el
+capítulo cierra con una discusión de lo que responden.
+
+Salvo que se indique otra cosa, todas las cifras corresponden a las 1\,503 imágenes de prueba de la partición
+disjunta por lesión (Sección~\ref{sec:met_particiones}). La métrica principal es la consistencia diagnóstica
+(Sección~\ref{sec:met_eval_generacion}), calculada solo sobre el reporte, sin los bloques de razonamiento, y con la
+búsqueda estricta de los términos de cada clase. Como cada generador escribe un único reporte por imagen con
+decodificación voraz (Tabla~\ref{tab:met_decodificacion}), las cifras no tienen desvío, y las diferencias entre dos
+variantes se evalúan con el \emph{bootstrap} pareado de la Sección~\ref{sec:met_estadistica}. Los fragmentos de
+reportes se citan en inglés, el idioma en que los escriben los generadores.
 
 \input{Chapters/05-Resultados-Generacion/01-generacion-directa}
-\input{Chapters/05-Resultados-Generacion/02-reporte-razonamiento}
-\input{Chapters/05-Resultados-Generacion/03-ensamble-cascada}
-\input{Chapters/05-Resultados-Generacion/04-taxonomia-errores}
-\input{Chapters/05-Resultados-Generacion/05-skinvl}
-\input{Chapters/05-Resultados-Generacion/06-aporte-imagen-vlm}
-\input{Chapters/05-Resultados-Generacion/07-grounding-recuperacion}
-\input{Chapters/05-Resultados-Generacion/08-ensamble-incertidumbre}
-\input{Chapters/05-Resultados-Generacion/09-ejemplos-cualitativos}
-\input{Chapters/05-Resultados-Generacion/10-costo-computacional}
-\input{Chapters/05-Resultados-Generacion/11-discusion}
+\input{Chapters/05-Resultados-Generacion/02-cascada}
+\input{Chapters/05-Resultados-Generacion/03-ruteo}
+\input{Chapters/05-Resultados-Generacion/04-comparacion-generadores}
+\input{Chapters/05-Resultados-Generacion/05-estado-del-arte}
+\input{Chapters/05-Resultados-Generacion/06-discusion}
