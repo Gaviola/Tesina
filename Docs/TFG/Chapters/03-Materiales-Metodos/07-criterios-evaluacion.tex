@@ -99,6 +99,13 @@ distintivos de cada clase, como «melanoma» o «basal cell», y exige palabra c
 Una búsqueda que aceptara abreviaturas o términos genéricos, en cambio, acreditaría diagnósticos que el texto no
 nombra, como «mel» dentro de «melanocytic» o la queratosis benigna por la palabra «keratosis» de «actinic keratosis».
 
+La consistencia dice si el reporte nombra la clase verdadera, pero no cómo falla cuando no lo hace. Por eso cada
+reporte se asigna además a su falla principal, según las categorías de la Tabla~\ref{tab:marco_fallas}, con reglas
+sobre el texto y la misma búsqueda estricta. Nombrar dos o más clases es una contradicción, nombrar solo una clase
+distinta de la verdadera es un diagnóstico incorrecto, y no nombrar ninguna, con expresiones de reserva como «may be»
+o «cannot be determined», es \emph{hedging}. En cambio, una expresión de reserva junto a la clase verdadera, como
+«consistent with nevus», no se cuenta como \emph{hedging}, porque el reporte se compromete con el diagnóstico.
+
 Aun así, la consistencia diagnóstica mide fidelidad diagnóstica y no validez clínica, porque, como las demás métricas
 de generación, no comprueba que lo descrito esté en la imagen (Sección~\ref{sec:marco_eval_texto}). Por eso ningún
 resultado se presenta como evidencia de validez clínica. La Tabla~\ref{tab:met_roles} resume el papel de cada métrica
@@ -162,6 +169,13 @@ cascada de la Sección~\ref{sec:met_cascada} se ejecuta con el mismo generador y
 En los cuatro casos se usan los tres generadores de la Sección~\ref{sec:met_generacion}: Mini-VLM y LLaVA-Med con los
 pesos ajustados allí, y SkinVL con sus pesos publicados. Las dos plantillas de recuperación
 (Sección~\ref{sec:met_recuperacion}) se comparan con la cascada sobre las mismas imágenes.
+
+Además, dos variantes de la cascada con el \emph{oracle} separan lo que el generador toma de la imagen de lo que toma
+del diagnóstico. En la primera, la imagen se reemplaza por una gris neutra, como en el control de la
+Sección~\ref{sec:met_clasif_vlm}. En la segunda, el diagnóstico es equivocado: cada clase se cambia por otra con la
+que se suele confundir, como \gls{mel} por \gls{nv}. Mini-VLM y LLaVA-Med se evalúan en las dos sobre un subconjunto
+fijo de 400 imágenes de la prueba, por el tiempo que lleva cada reporte, y SkinVL, que escribe más rápido, sobre la
+prueba completa.
 
 Por último, el ruteo tiene su propia línea base, que aísla el aporte del generador. La línea base sin generador usa el
 mismo ruteo y el mismo clasificador, pero no genera texto: el nivel afirmativo devuelve el diagnóstico del
