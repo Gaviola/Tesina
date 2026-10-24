@@ -6,6 +6,23 @@ Ayuda-memoria cronológico de experimentos enviados a cluster, ordenado de más 
 
 ## 2026-10-24
 
+### Costo de los clasificadores remedido con memoria de GPU — **Sin jobs SLURM** (local, RTX 4070)
+`measure_cost.py` corregido: clases del proyecto con cabeza de 7 salidas (antes torchvision con 1 000, p. ej.
+DenseNet121 8.0 M en vez de 6.96 M), autocast bf16 como la evaluación (`--dtype`, por defecto bf16) y pico de memoria
+medido con `max_memory_allocated` (antes, estimación parámetros × 4 B + 0.5 GB). Los logs SLURM no traen el pico
+(solo `nvidia-smi` al inicio). Dos corridas; la memoria coincide y los tiempos varían 5–15 %.
+
+```
+python scripts/measure_cost.py --output outputs/results/cost/cost_comparison_v3.json
+python scripts/measure_cost.py --output outputs/results/cost/cost_comparison_v3_rep.json
+```
+
+Lote de 32 (pico, GB) / ms por imagen / img/s: Swin 0.522 / 11.05 / 1 353; ConvNeXt 0.407 / 4.99 / 1 739; ViT 0.678 /
+5.72 / 904; DenseNet 0.216 / 19.89 / 1 700. Generadores sin cambios (16.4 / 26.2 / 3.4 s por reporte).
+`cost_comparison{,_v2}.json` y `cost_latency.png` no se tocaron (la figura nueva es `cost_comparison_v3_latency.png`).
+
+---
+
 ### Figuras del Cap. 4: curva ROC de melanoma y Grad-CAM en castellano — **Sin jobs SLURM** (local, CPU)
 Dos figuras para la tesina, sin resultados nuevos ni archivos de `outputs/` sobrescritos. **ROC:** Swin-Tiny t06
 semilla 42 (`swin_tiny_sweep_t06_les_cwnone_predictions.json`), umbral 0.211 de `lesion_split_report.json`;

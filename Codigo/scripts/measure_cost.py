@@ -3,7 +3,10 @@
 Compara los modelos por parámetros, memoria y latencia de inferencia. Es el eje "costo"
 de la tesina: ¿qué se puede correr en hardware modesto (RTX 4070 12GB) vs qué exige un A30?
 
-- Clasificadores (torchvision): parámetros + latencia medidos EN VIVO en la GPU local.
+- Clasificadores (clases del proyecto, cabeza de 7 salidas): parámetros, latencia y pico de memoria de GPU medidos
+  EN VIVO en la GPU local, con la misma precisión que la evaluación (autocast bf16 por defecto, como tta.py).
+  Antes del 24/10/2026 se instanciaban los modelos de torchvision con la cabeza de 1000 clases de ImageNet, en fp32,
+  y la memoria se estimaba como parámetros x 4 bytes + 0.5 GB (cost_comparison{,_v2}.json).
 - VLMs generativos: latencia real por-reporte parseada de los logs SLURM del cluster (A30).
 - Params/VRAM de VLMs y DermLIP: tabla de referencia (no cargan local: falta VRAM / open_clip).
 
@@ -23,17 +26,19 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import torch
-import torchvision.models as tvm
 
 logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
-# Clasificadores torchvision (instancian local sin descargar pesos: weights=None).
+from src.models.classifiers import (ConvNeXtTinyClassifier, DenseNet121Classifier, SwinTinyClassifier,
+                                    ViTClassifier)
+
+# Clasificadores del proyecto con cabeza de 7 clases (pretrained=False: no descarga pesos; la arquitectura es la misma).
 CLASSIFIERS = {
-    "DenseNet121": tvm.densenet121,
-    "ViT-B/16": tvm.vit_b_16,
-    "ConvNeXt-Tiny": tvm.convnext_tiny,
-    "Swin-Tiny": tvm.swin_t,
+    "DenseNet121": DenseNet121Classifier,
+    "ViT-B/16": ViTClassifier,
+    "ConvNeXt-Tiny": ConvNeXtTinyClassifier,
+    "Swin-Tiny": SwinTinyClassifier,
 }
 
 # Referencia para modelos que no cargan local (params en M, VRAM inferencia bf16 en GB).
@@ -57,27 +62,35 @@ _PROG_RE = re.compile(r"\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\].*Progreso:\s*\
 
 
 @torch.no_grad()
-def _bench_classifier(ctor, device, img=224, warmup=5, iters=20):
-    model = ctor(weights=None).to(device).eval()
+def _bench_classifier(ctor, device, dtype, img=224, warmup=5, iters=20):
+    """Latencia y pico de memoria de GPU (pesos + activaciones) por tamaño de lote, una vista por imagen."""
+    cuda = device.type == "cuda"
+    use_amp = cuda and dtype != torch.float32
+    model = ctor(num_classes=7, pretrained=False, freeze_backbone=False).to(device).eval()
     n_params = sum(p.numel() for p in model.parameters())
-    lat = {}
+    lat, mem = {}, {}
     for bs in (1, 32):
         x = torch.randn(bs, 3, img, img, device=device)
-        for _ in range(warmup):
-            model(x)
-        if device.type == "cuda":
+        if cuda:
             torch.cuda.synchronize()
-        t0 = time.perf_counter()
-        for _ in range(iters):
-            model(x)
-        if device.type == "cuda":
-            torch.cuda.synchronize()
-        dt = (time.perf_counter() - t0) / iters
-        lat[bs] = dt
+            torch.cuda.reset_peak_memory_stats()
+        with torch.amp.autocast("cuda", dtype=dtype, enabled=use_amp):
+            for _ in range(warmup):
+                model(x)
+            if cuda:
+                torch.cuda.synchronize()
+            t0 = time.perf_counter()
+            for _ in range(iters):
+                model(x)
+            if cuda:
+                torch.cuda.synchronize()
+        lat[bs] = (time.perf_counter() - t0) / iters
+        mem[bs] = torch.cuda.max_memory_allocated() / 2**30 if cuda else None
+        del x
     del model
-    if device.type == "cuda":
+    if cuda:
         torch.cuda.empty_cache()
-    return n_params, lat
+    return n_params, lat, mem
 
 
 def _gen_latency_from_logs(log_paths: list[str]) -> float | None:
@@ -112,7 +125,10 @@ def _gen_latency_from_logs(log_paths: list[str]) -> float | None:
 def main():
     parser = argparse.ArgumentParser(description="P0.4 Comparación de costo")
     parser.add_argument("--output", type=str, default="outputs/results/cost/cost_comparison.json")
+    parser.add_argument("--dtype", choices=["bf16", "fp32"], default="bf16",
+                        help="Precisión de inferencia de los clasificadores (la evaluación usa autocast bf16).")
     args = parser.parse_args()
+    dtype = torch.bfloat16 if args.dtype == "bf16" else torch.float32
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     gpu = torch.cuda.get_device_name(0) if device.type == "cuda" else "CPU"
@@ -123,15 +139,18 @@ def main():
     # Clasificadores (medidos en vivo)
     for name, ctor in CLASSIFIERS.items():
         try:
-            n_params, lat = _bench_classifier(ctor, device)
+            n_params, lat, mem = _bench_classifier(ctor, device, dtype)
             rows.append({
                 "modelo": name, "role": "classifier",
-                "params_m": round(n_params / 1e6, 1),
-                "vram_gb": round(n_params * 4 / 1e9 + 0.5, 1),  # fp32 aprox + overhead
+                "params_m": round(n_params / 1e6, 2),
+                "params": n_params,
+                "vram_gb": round(mem[32], 3) if mem[32] is not None else None,  # pico medido, lote de 32
+                "vram_gb_bs1": round(mem[1], 3) if mem[1] is not None else None,
                 "latency_ms_bs1": round(lat[1] * 1000, 2),
                 "throughput_img_s_bs32": round(32 / lat[32], 1),
+                "dtype": args.dtype,
                 "hw": "RTX 4070 12GB",
-                "fuente": f"medido ({gpu})",
+                "fuente": f"medido ({gpu}), max_memory_allocated",
             })
             logger.info("%-16s params=%.1fM  bs1=%.2fms  thr(bs32)=%.0f img/s",
                         name, n_params / 1e6, lat[1] * 1000, 32 / lat[32])
@@ -178,8 +197,9 @@ def main():
     for i, v in enumerate(vals):
         ax.text(v * 1.1, i, f"{v:.0f} ms" if v < 1000 else f"{v/1000:.0f} s", va="center", fontsize=8)
     fig.tight_layout()
-    fig.savefig(out.parent / "cost_latency.png", dpi=150)
-    logger.info("Figura: %s", out.parent / "cost_latency.png")
+    fig_path = out.parent / ("cost_latency.png" if out.stem == "cost_comparison" else f"{out.stem}_latency.png")
+    fig.savefig(fig_path, dpi=150)
+    logger.info("Figura: %s", fig_path)
 
     # Tabla a stdout
     print("\n=== Comparacion de costo ===")
