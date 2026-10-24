@@ -74,8 +74,8 @@ aparezca en el reporte. Con este propósito se usa la variante \emph{noreasoning
 prohíbe los bloques de razonamiento y la mención de diagnósticos alternativos. La plantilla completa está en el
 Apéndice~\ref{ap:prompts}.
 
-La variante se eligió en un piloto con LLaVA-Med sobre 100 imágenes de \emph{HAM10000}, con el diagnóstico verdadero
-inyectado. Con instrucciones menos restrictivas, el generador escribía el razonamiento antes que el reporte y el
+La variante se eligió en un piloto sobre 100 imágenes de \emph{HAM10000}, hecho con LLaVA-Med y con el diagnóstico
+verdadero inyectado. Con instrucciones menos restrictivas, el generador escribía el razonamiento antes que el reporte y el
 diagnóstico quedaba sobre todo en el razonamiento. En cambio, \emph{noreasoning} fue la variante cuyo reporte, sin
 los bloques de razonamiento, nombraba el diagnóstico en más casos. De esas 100 imágenes, 17 pertenecen a la prueba,
 así que la elección de la instrucción no es del todo ajena a ella, aunque no fija ningún umbral sobre la prueba.
