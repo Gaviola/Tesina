@@ -1,5 +1,7 @@
 # Ficha 3.8 — Evaluación en otros escenarios
 
+**Decisión del autor (24/10/2026):** `tab:met_experimentos` suma la fila «Ajuste del modelo de lenguaje de Mini-VLM», que es la variante de control de 3.5 (v3 contra v2 sobre las mismas imágenes). Se mide en la prueba de *HAM10000* y de *SkinCoT*, con la diferencia pareada de la consistencia y el Nivel 1.
+
 **Revisión del tutor (21/10/2026), aplicada el 22/10:** Antes «Evaluación en otros escenarios». Una subsección por tipo (generalización, robustez, calibración, interpretabilidad, costo computacional), cada una con objetivo, procedimiento y métrica. Sin «sistema» ni «protocolo» sin referente (27, 31); la Tabla 2.8 citada con su capítulo (30); GPU y lotes pasan a 3.9 (28, 29). Cierra con `tab:met_experimentos` (*longtable*), que relaciona cada experimento con lo que busca, sus datos y su métrica.
 
 **Revisión del autor (18/10/2026):** ficha puesta al día con el `.tex`. Reemplaza a la antigua 3.9 «Análisis complementarios» con el título «Evaluación en otros escenarios» (OE3). Sin las tres tablas de protocolo; las pruebas estadísticas pasaron a 3.3; un párrafo y una pregunta por análisis (HIBA, perturbaciones, calibración, Grad-CAM, costo).
