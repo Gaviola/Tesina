@@ -6,6 +6,21 @@ Ayuda-memoria cronológico de experimentos enviados a cluster, ordenado de más 
 
 ## 2026-10-24
 
+### Nivel 1 de Mini-VLM v2 en SkinCoT y memoria medida de los generadores — Mendieta jobs 1183331–1183337
+Plan: [costo_nivel1_mini_v2_plan](ideas/costo_nivel1_mini_v2_plan_20261024.md). Scripts nuevos
+`slurm/mendieta/v5/gen_short_level1_mini_v2.sh` (`SHARD`), `slurm/mendieta/v5/measure_vlm_memory.sh` (`MODEL`) y
+`scripts/measure_vlm_memory.py`, subidos por `scp` sin finales CR (md5 verificado). Código de generación remoto idéntico
+al local. `sbatch --test-only` estimaba el arranque para las 23:07 del 24/10. Jobs: Nivel 1 1183331–1183334 (4 tramos,
+salida `outputs/generated_reports/mini_vlm/v2/skincot_test/`); memoria Mini-VLM 1183335, LLaVA-Med 1183336, SkinVL
+1183337 (salida `outputs/results/cost/vlm_memory_<modelo>.json`).
+
+```
+for k in 0 1 2 3; do sbatch --export=ALL,SHARD=$k/4 slurm/mendieta/v5/gen_short_level1_mini_v2.sh; done
+for m in mini_vlm llava_med skinvl; do sbatch --export=ALL,MODEL=$m slurm/mendieta/v5/measure_vlm_memory.sh; done
+```
+
+**Resul:** pendiente.
+
 ### Derivados y figuras del Cap. 5 con la métrica oficial — **Sin jobs SLURM** (local, CPU)
 Para redactar el Cap. 5 con la estructura del Cap. 4. `scripts/cap5_derivados.py` (nuevo) →
 `outputs/results/cap5_derivados.json`: generación sin anclaje (consistencia exclusiva, clases por reporte, reportes
