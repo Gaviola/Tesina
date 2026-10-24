@@ -101,12 +101,21 @@ Los valores de $C$ y de $k$ son fijos y no se buscaron en validación.
 \subsection{Procedimiento experimental}
 \label{sec:met_vlm_procedimiento}
 
-El procedimiento agrega dos controles a las estrategias anteriores. El primero comprueba si el puntaje de verosimilitud
+El procedimiento agrega tres controles a las estrategias anteriores. El primero comprueba si el puntaje de verosimilitud
 depende de la imagen. Para ello, el mismo cálculo se repite con cada imagen reemplazada por una gris neutra de
 $224 \times 224$ píxeles, con el valor 128 en cada canal. Si el modelo sigue dando la misma distribución de puntajes,
 es el prompt, y no la imagen, lo que guía la respuesta.
 
-El segundo control separa el efecto de la representación del de la cabeza, que con cuatro cabezas sobre el mismo
+El segundo control comprueba si el desempeño de los \glspl{vlm} generativos depende de la modalidad de la imagen, ya
+que la dermatoscopía requiere un equipo específico y la fotografía clínica, en cambio, se parece más a las imágenes
+de uso general. Con este propósito, la clasificación por verosimilitud, sin ajuste, se repite sobre las fotografías
+clínicas de \emph{SkinCAP} (Sección~\ref{sec:met_datasets}) cuyo diagnóstico corresponde a una de las siete clases. La
+correspondencia agrupa las variantes de cada diagnóstico, como las formas del melanoma, y descarta los diagnósticos
+sin una clase equivalente, lo que deja 624 imágenes. Como los modelos no se ajustan, se usan todas, sin partición.
+Si los modelos clasifican mejor las fotografías clínicas que la prueba de \emph{HAM10000}, la dificultad está en la
+modalidad y no en la tarea.
+
+El tercer control separa el efecto de la representación del de la cabeza, que con cuatro cabezas sobre el mismo
 \emph{embedding} quedan mezclados. Con este propósito, tres cabezas clásicas (SVM con núcleo RBF y $C = 10$, regresión
 logística y un \emph{random forest} de 300 árboles, todas con pesos balanceados y sobre \emph{embeddings}
 estandarizados) se ajustan con el mismo procedimiento sobre el \emph{embedding} de DermLIP y sobre el de Swin
@@ -115,8 +124,8 @@ entre las dos representaciones es la misma con cada cabeza, el efecto es de la r
 
 En cuanto a los datos, todas las cabezas, sobre DermLIP y sobre Swin, se ajustan sobre el entrenamiento de la
 partición por lesión (Sección~\ref{sec:met_particiones}). El modo zero-shot de DermLIP y los \glspl{vlm} generativos,
-en cambio, no se ajustan con \emph{HAM10000}, así que no dependen de la partición. Todos se evalúan, entonces, sobre la
-misma prueba que los clasificadores supervisados.
+en cambio, no se ajustan con \emph{HAM10000}, así que no dependen de la partición. Salvo el control con fotografías clínicas, todos se
+evalúan, entonces, sobre la misma prueba que los clasificadores supervisados.
 
 Hasta aquí, los \glspl{vlm} generativos se usan como clasificadores. Sin embargo, su ventaja respecto de los
 clasificadores supervisados es que pueden generar texto, y esa capacidad es la que se aprovecha en la generación de
