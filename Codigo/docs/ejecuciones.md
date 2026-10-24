@@ -6,6 +6,17 @@ Ayuda-memoria cronológico de experimentos enviados a cluster, ordenado de más 
 
 ## 2026-10-24
 
+### Figuras del Cap. 4: curva ROC de melanoma y Grad-CAM en castellano — **Sin jobs SLURM** (local, CPU)
+Dos figuras para la tesina, sin resultados nuevos ni archivos de `outputs/` sobrescritos. **ROC:** Swin-Tiny t06
+semilla 42 (`swin_tiny_sweep_t06_les_cwnone_predictions.json`), umbral 0.211 de `lesion_split_report.json`;
+recalcula AUC 0.919, argmax 0.701 / 0.922 y umbral 0.778 / 0.862, iguales a la fuente. **Grad-CAM:** mismas
+funciones y selección que `scripts/interpretability.py` (primera imagen de cada clase, checkpoint
+`swin_tiny_sweep_t06_les_cwnone`), solo con rótulos en castellano; las predicciones coinciden con la figura de
+`interpretability_les/` (VASC → NV y BCC → MEL, las demás correctas). Scripts: `scripts/figura_roc_melanoma.py` y `scripts/figura_gradcam_tesina.py` (desde `Codigo/`);
+salida en `Docs/TFG/Figures/Capitulos/04-Resultados-Clasificacion/{roc-melanoma-swin,gradcam-swin}.pdf`.
+
+---
+
 ### Mini-VLM v3: descarga y evaluación parcial — TOKO 99257/99258 y Mendieta short (local)
 **TOKO:** 99257 `TIMEOUT` a las 12 h (oracle 1 503/1 503 y 290 de DermLIP); 99258 `COMPLETED` el 21/10 14:50
 (DermLIP 1 503/1 503). **Mendieta:** `skincot_test` 457/457 y `full_differential_les` 248/248 completos;
