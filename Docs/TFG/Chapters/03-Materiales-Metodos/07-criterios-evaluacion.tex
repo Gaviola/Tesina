@@ -1,0 +1,235 @@
+% Extensión estimada: 5--5.5 páginas; cuatro subsecciones y tres tablas.
+% Fuentes: HAM10000 (metadatos, Codigo/data/raw); y_true del test en Codigo/outputs/results/swin_tiny_sweep_t06_les_cwnone_predictions.json;
+% Codigo/docs/ideas/criterio_seleccion_plan_20260917.md; Codigo/docs/resul/split_lesion_resul_20260926.md (§4: con el
+% criterio anterior, ConvNeXt t06 tenía sens. macro 0.700 frente a 0.691 de t02);
+% Codigo/docs/resul/revision_experimentacion_20261003.md (§2.3, §2.8 y §5); src/evaluation/clinical_ner.py;
+% scripts/melanoma_detection.py; scripts/lesion_split_report.py; scripts/statistical_tests.py (bootstrap_ci,
+% paired_bootstrap_diff, mcnemar_exact); scripts/ensemble_bootstrap.py (paired_bootstrap_diff_flags).
+% Revisión del autor del 18/10/2026: sin fechas ni historia del proceso; cada métrica con su justificación; las
+% pruebas estadísticas vienen de la antigua Sección 3.9; la especificidad de 0.85 se justifica como decisión de diseño.
+% Revisión del tutor del 21/10/2026: pasa después de los componentes y del pipeline (antes era 3.3); recibe las
+% referencias de comparación del pipeline (fuentes de la cascada, oracle, línea base sin generador) que estaban en 3.7.
+
+\section{Protocolo y criterios de evaluación}
+\label{sec:met_protocolo}
+
+Con los componentes y el \emph{pipeline} definidos, falta establecer cómo se evalúan. La evaluación sigue tres reglas
+generales. En primer lugar, toda decisión sobre un modelo, como su configuración o un umbral, se toma en validación,
+y la prueba se usa para informar el resultado. En segundo lugar, cada resultado se lee frente a referencias de
+comparación que dicen cuánto vale. Finalmente, una diferencia entre dos modelos se afirma solo si la sostiene una
+prueba estadística. Dentro de ese marco, la clasificación y la generación de texto no se miden igual, así que cada
+tarea justifica sus métricas por separado.
+
+\subsection{Métricas de clasificación}
+\label{sec:met_seleccion}
+
+Las métricas de clasificación tienen que reflejar que las confusiones no cuestan lo mismo. Confundir \gls{mel} con
+\gls{nv} retrasa la extirpación de una lesión cuya letalidad depende del estadio en que se diagnostica, mientras que
+confundir \gls{nv} con \gls{mel} lleva a extirpar sin necesidad una lesión benigna, y las confusiones entre clases
+benignas tienen menos consecuencias~\cite{tschandl2018ham10000,nci2026melanoma}. Como además \gls{nv} reúne dos tercios
+de \emph{HAM10000}, un buen resultado global puede esconder un mal desempeño en las clases que más importan. Por lo
+tanto, las métricas tienen que evaluar cada clase por separado y darles a todas el mismo peso.
+
+Con esa condición, el trabajo usa dos métricas que promedian las siete clases sin ponderarlas
+(Sección~\ref{sec:marco_eval_clasif}). La sensibilidad macro (Ecuación~\ref{eq:marco_acc_bal}) es el resultado
+principal, porque mide qué fracción de cada clase reconoce el modelo y es la métrica principal de los trabajos
+revisados en la Sección~\ref{sec:estado_arte_diagnostico}, con los que así se puede comparar. El F1 macro
+(Ecuación~\ref{eq:marco_f1}), en cambio, es el criterio con que se elige la configuración de cada modelo, porque
+corrige lo que la sensibilidad macro no ve: un modelo que asigna muchas imágenes a las clases minoritarias sube su
+sensibilidad aunque se equivoque en las demás, y el F1 macro lo penaliza a través de la precisión de cada clase. Las
+dos se informan juntas, y cuando divergen, la diferencia muestra cuánto gana el modelo en detectar las clases a costa
+de dar falsas alarmas.
+
+La elección de un modelo se hace en validación, en dos niveles. Entre las configuraciones de un mismo modelo se elige
+la de mayor F1 macro, porque en esa comparación tienen que pesar las clases minoritarias. Dentro de cada
+entrenamiento, en cambio, la detención temprana y la época que se conserva se deciden por el F1 ponderado. La razón
+es el tamaño de la validación: con 14 imágenes de DF y 18 de VASC (Tabla~\ref{tab:met_tamanos}), un solo acierto más
+en DF sube su sensibilidad en 0.07, de modo que el F1 macro cambia de una época a otra por pocas imágenes y podría
+detener el entrenamiento por azar. El F1 ponderado, dominado por las clases con más imágenes, varía menos. Su costo es
+que la época conservada puede no ser la mejor para las clases minoritarias, y por eso las prioridades clínicas se
+aplican en las demás decisiones: la configuración se elige por F1 macro, el resultado principal es la sensibilidad
+macro y el melanoma tiene su propio umbral.
+
+Una misma configuración tampoco da siempre el mismo resultado, porque las métricas de las clases minoritarias dependen
+de pocas imágenes. Por eso, el resultado de cada modelo entrenado con tres semillas
+(Sección~\ref{sec:met_supervisados_ensamble}) se informa como media $\pm$ desvío estándar muestral. Con tres semillas,
+sin embargo, el desvío es una estimación gruesa, así que las comparaciones entre modelos se sostienen en las pruebas
+estadísticas de la Sección~\ref{sec:met_estadistica} y no en el desvío.
+
+La detección de melanoma (T2) necesita un criterio propio, porque si se toma como melanoma la clase de mayor
+probabilidad, el costo de perder un melanoma no interviene en la decisión. Por eso el umbral sobre la probabilidad de
+melanoma se fija en validación como el de mayor sensibilidad entre los que mantienen una especificidad de al menos
+0.850, y se aplica sin cambios a la prueba. Así se prioriza no perder melanomas, con un tope a las falsas alarmas: en
+validación, a lo sumo el 15\,\% de los casos sin melanoma se señala como sospechoso. El \gls{auc}
+(Ecuación~\ref{eq:marco_auc}), que no depende del umbral, se informa como resumen de la discriminación.
+
+\subsection{Evaluación de la generación de reportes}
+\label{sec:met_eval_generacion}
+
+A diferencia de una clase, un reporte no tiene una única respuesta correcta, y por eso el texto generado se evalúa en
+dos niveles, según haya o no un texto de referencia. En los dos se evalúa solo el reporte: los bloques de razonamiento
+que el generador escribe entre etiquetas \texttt{\textless{}think\textgreater{}} se descartan antes de medir, incluido
+el que queda abierto cuando el límite de tokens corta el texto. Se descartan porque el clínico lee el reporte y no el
+razonamiento, y porque, si se midiera el texto completo, los diagnósticos que el razonamiento solo menciona como
+hipótesis contarían como aciertos.
+
+El Nivel~1 compara el reporte con un texto de referencia mediante BLEU-4, ROUGE-L, METEOR, CIDEr y BERTScore
+(Sección~\ref{sec:marco_eval_texto}). Solo puede aplicarse a \emph{MM-Skin} y \emph{SkinCoT}, los conjuntos que tienen
+ese texto, y se mide sobre sus particiones de prueba, de 1\,650 y 457 imágenes. De ellas se descartan los pares sin
+referencia, es decir, las imágenes de \emph{MM-Skin} sin descripción y los textos de \emph{SkinCoT} que están enteros
+dentro de bloques de razonamiento, de modo que quedan 1\,414 y 426 pares. Además, cuando el límite de tokens llega
+mientras el generador todavía razona, el reporte queda vacío. Esos reportes no entran en las métricas, porque no hay
+texto que comparar, pero su proporción se informa junto a ellas.
+
+Los valores del Nivel~1 se informan, pero no se usan para elegir ningún modelo ni ninguna configuración, porque los
+textos de referencia no son diagnósticos clínicos de la lesión. Lo que mide la comparación depende de quién escribió
+esos textos (Tabla~\ref{tab:met_conjuntos}). En \emph{MM-Skin} mide el parecido con la descripción de un libro de
+texto, y en \emph{SkinCoT}, el parecido con un razonamiento que un modelo de lenguaje escribió conociendo el
+diagnóstico.
+
+El Nivel~2, en cambio, no necesita referencia y se aplica a la prueba de \emph{HAM10000}, con las dos métricas sin
+referencia de la Sección~\ref{sec:marco_eval_texto}. La cobertura de entidades clínicas (\emph{clinical entity
+recall}) se informa como complemento, porque mide cuánto contenido clínico describe el texto y no si es pertinente. La
+consistencia diagnóstica (\emph{diagnostic consistency}, Ecuación~\ref{eq:marco_fd}) es la métrica principal de
+generación, porque responde directamente la segunda pregunta de investigación: si el reporte afirma el diagnóstico
+correcto de la imagen que recibe.
+
+Para calcular la consistencia, el diagnóstico se reconoce con una búsqueda estricta, que solo acepta los términos
+distintivos de cada clase, como «melanoma» o «basal cell», y exige palabra completa en las abreviaturas, como «BCC».
+Una búsqueda que aceptara abreviaturas o términos genéricos, en cambio, acreditaría diagnósticos que el texto no
+nombra, como «mel» dentro de «melanocytic» o la queratosis benigna por la palabra «keratosis» de «actinic keratosis».
+
+Aun así, la consistencia diagnóstica mide fidelidad diagnóstica y no validez clínica, porque, como las demás métricas
+de generación, no comprueba que lo descrito esté en la imagen (Sección~\ref{sec:marco_eval_texto}). Por eso ningún
+resultado se presenta como evidencia de validez clínica. La Tabla~\ref{tab:met_roles} resume el papel de cada métrica
+de clasificación y de generación en el trabajo.
+
+\begin{table}[H]
+    \caption{Papel de cada métrica en el trabajo.}
+    \label{tab:met_roles}
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{4.6cm}
+        >{\raggedright\arraybackslash\hspace{0pt}}X >{\raggedright\arraybackslash\hspace{0pt}}p{3.6cm}@{}}
+        \toprule
+        \textbf{Métrica} & \textbf{Papel en el trabajo} & \textbf{Se define en} \\
+        \midrule
+        Sensibilidad macro & Resultado principal de clasificación en la prueba & Sección~\ref{sec:marco_eval_clasif} \\
+        \filasep
+        F1 macro & Elige la configuración de cada modelo (validación); se informa en la prueba & Ecuación~\ref{eq:marco_f1} \\
+        \filasep
+        F1 ponderado & Elige la época dentro de cada entrenamiento (validación) & Ecuación~\ref{eq:marco_f1} \\
+        \filasep
+        Exactitud & Se informa & Sección~\ref{sec:marco_eval_clasif} \\
+        \filasep
+        Sensibilidad y especificidad de melanoma & Umbral fijado en validación (especificidad de al menos 0.850); resultado en la prueba & Sección~\ref{sec:marco_eval_clasif} \\
+        \filasep
+        AUC de melanoma & Se informa & Sección~\ref{sec:marco_eval_clasif} \\
+        \filasep
+        Nivel 1 (BLEU-4, ROUGE-L, METEOR, CIDEr, BERTScore) & Se informa, solo en \emph{MM-Skin} y \emph{SkinCoT} & Sección~\ref{sec:marco_eval_texto} \\
+        \filasep
+        Cobertura de entidades clínicas & Complemento del Nivel 2 & Sección~\ref{sec:marco_eval_texto} \\
+        \filasep
+        Consistencia diagnóstica & Métrica principal de generación (solo el reporte, búsqueda estricta) & Sección~\ref{sec:marco_eval_texto} \\
+        \filasep
+        Calibración (ECE, Brier) & Se analiza en la Sección~\ref{sec:met_calibracion} & Sección~\ref{sec:marco_eval_calib} \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+\subsection{Referencias de comparación}
+\label{sec:met_referencias}
+
+Un valor de una métrica no dice por sí solo si un modelo es bueno, y por eso cada resultado se lee frente a una
+referencia. En la clasificación se usan tres. En primer lugar, el azar fija el piso de cualquier clasificador de
+siete clases, una sensibilidad macro de 1/7. En segundo lugar, el clasificador trivial que responde siempre NV muestra
+lo que se obtiene del desbalance sin mirar la imagen: en la prueba alcanza una exactitud de 0.669 y un F1 ponderado de
+0.537, pero una sensibilidad macro de 0.143 y un F1 macro de 0.115. Por eso la exactitud y el F1 ponderado, que
+favorecen a NV, se informan pero no son el resultado principal. Finalmente, los clasificadores supervisados de la
+Sección~\ref{sec:met_supervisados} son la línea base de los \glspl{vlm}, y la primera pregunta de investigación se
+responde comparándolos.
+
+En la generación, las referencias sirven para separar lo que aporta cada componente del \emph{pipeline}. Para ello, la
+cascada de la Sección~\ref{sec:met_cascada} se ejecuta con el mismo generador y cuatro fuentes de diagnóstico:
+\begin{itemize}[leftmargin=1.6em]
+    \item \textbf{Swin-Tiny}, el clasificador del \emph{pipeline}, con semilla 42.
+    \item \textbf{DermLIP en modo zero-shot}, una alternativa sin entrenamiento sobre \emph{HAM10000}
+        (Sección~\ref{sec:met_clasif_vlm}).
+    \item \textbf{\emph{Oracle}}, que entrega el diagnóstico verdadero. Es una cota superior, es decir, el mejor
+        resultado que alcanzaría la cascada si el clasificador no se equivocara, y no un sistema usable, porque en la
+        práctica la etiqueta no se conoce de antemano.
+    \item \textbf{La ausencia de anclaje}, es decir, el generador sin diagnóstico, que muestra qué aporta el anclaje al
+        reporte.
+\end{itemize}
+En los cuatro casos se usan los tres generadores de la Sección~\ref{sec:met_generacion}: Mini-VLM y LLaVA-Med con los
+pesos ajustados allí, y SkinVL con sus pesos publicados. Las dos plantillas de recuperación
+(Sección~\ref{sec:met_recuperacion}) se comparan con la cascada sobre las mismas imágenes.
+
+Por último, el ruteo tiene su propia línea base, que aísla el aporte del generador. La línea base sin generador usa el
+mismo ruteo y el mismo clasificador, pero no genera texto: el nivel afirmativo devuelve el diagnóstico del
+clasificador, el diferencial devuelve el par de candidatos y el nivel de derivación queda igual que en el
+\emph{pipeline}. Junto con el \emph{oracle}, que fija la cota superior, es la referencia con la que se compara el
+\emph{pipeline} completo.
+
+\subsection{Comparación estadística}
+\label{sec:met_estadistica}
+
+Una vez calculadas las métricas, que un modelo obtenga en la prueba un valor de una métrica más alto que otro, o
+viceversa, no alcanza para afirmar que uno sea mejor que el otro (Sección~\ref{sec:marco_eval_estadistica}). Por
+ello, cada comparación usa el \emph{bootstrap} o la prueba de McNemar exacta, según lo que se pregunta. Todos los
+\emph{bootstrap} usan 2\,000 remuestreos de las imágenes de
+prueba, con semilla 42. Las pruebas se calculan sobre la ejecución con semilla 42, y la variación entre semillas se
+informa como desvío.
+
+Como se comparan siete clasificadores (los cuatro supervisados, DermLIP sin ajuste y los dos \glspl{vlm} generativos
+sin ajuste, Sección~\ref{sec:met_clasif_vlm}), que forman 21 pares, los valores p de McNemar se corrigen con el método
+de Holm (Ecuación~\ref{eq:marco_holm}). La sensibilidad de cada clase, en cambio, se compara de forma descriptiva,
+contando en cuántas de las siete clases mejora cada modelo, porque con siete valores ninguna prueba de rangos podría
+alcanzar el umbral que Holm exige para 21 comparaciones. Además, el \emph{bootstrap} remuestrea imágenes y no
+lesiones, así que trata como independientes las imágenes de una misma lesión. En la prueba hay 1\,503 imágenes de
+1\,429 lesiones, y remuestrear por lesión casi no cambia los intervalos. La Tabla~\ref{tab:met_pruebas} indica qué
+prueba se aplica a cada comparación.
+
+\begingroup
+\small
+\setlength{\tabcolsep}{3pt}
+\begin{table}[H]
+    \centering
+    \caption{Pruebas estadísticas según la comparación.}
+    \label{tab:met_pruebas}
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{3.4cm}
+        >{\raggedright\arraybackslash\hspace{0pt}}X
+        >{\raggedright\arraybackslash\hspace{0pt}}X
+        >{\raggedright\arraybackslash\hspace{0pt}}p{2.6cm}@{}}
+        \toprule
+        \textbf{Comparación} & \textbf{Pregunta que responde} & \textbf{Prueba} & \textbf{Criterio} \\
+        \midrule
+        Métrica agregada de un modelo
+            & ¿Cuánto varía por la composición de la prueba?
+            & Intervalo percentil de \emph{bootstrap}
+            & IC del 95\,\% \\
+        \filasep
+        Diferencia de F1 macro o de sensibilidad macro entre dos modelos
+            & ¿La diferencia excede la variación de la muestra?
+            & \emph{Bootstrap} pareado
+            & IC del 95\,\% sin el cero \\
+        \filasep
+        Aciertos por imagen entre dos modelos
+            & ¿Uno acierta imágenes en las que el otro falla?
+            & McNemar exacto sobre los casos discordantes, con corrección de Holm
+            & $p < 0.05$ corregido \\
+        \filasep
+        Sensibilidad por clase entre dos modelos
+            & ¿En cuántas clases mejora cada uno?
+            & Descriptiva
+            & --- \\
+        \filasep
+        Consistencia diagnóstica entre dos variantes del \emph{pipeline}
+            & ¿La diferencia excede la variación de los reportes?
+            & \emph{Bootstrap} pareado de la diferencia de proporciones
+            & IC del 95\,\% sin el cero \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+\endgroup
+
+Estos criterios se aplican a los resultados sobre la prueba de \emph{HAM10000}, que reproduce las condiciones en que
+se entrenaron los modelos. Las evaluaciones complementarias de la sección siguiente cambian esas condiciones.

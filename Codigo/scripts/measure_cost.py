@@ -12,7 +12,6 @@ Uso:
 """
 
 import argparse
-import glob
 import json
 import logging
 import re
@@ -40,15 +39,19 @@ CLASSIFIERS = {
 # Referencia para modelos que no cargan local (params en M, VRAM inferencia bf16 en GB).
 REFERENCE = {
     "DermLIP (ViT-B/16)": {"params_m": 150, "vram_gb": 2, "hw": "RTX 4070", "role": "VL-classifier"},
-    "Mini-VLM (Phi-3.5-V)": {"params_m": 4200, "vram_gb": 10, "hw": "A30 / RTX 4080", "role": "VLM-gen"},
+    "Mini-VLM (Phi-3.5-V)": {"params_m": 4147, "vram_gb": 10, "hw": "A30 / RTX 4080", "role": "VLM-gen"},
     "LLaVA-Med v1.5 (7B)": {"params_m": 7000, "vram_gb": 14, "hw": "A30 24GB", "role": "VLM-gen"},
     "SkinVL-MM (7B)": {"params_m": 7000, "vram_gb": 14, "hw": "A30 24GB", "role": "VLM-gen"},
 }
 
-# Logs SLURM de generación para extraer s/reporte (A30).
+# Logs SLURM de generación para extraer s/reporte (A30). Se usan las corridas del re-anclaje de la cascada
+# (slurm/mendieta/v4/reanchor_*.sh): mismo script, misma plantilla y 384 tokens para los tres generadores.
+# Antes se tomaba la mediana de todos los logs del modelo, que mezclaba condiciones (512 tokens, prompts con
+# recuperación) y cambiaba al bajar logs nuevos (2026-10-12).
 GEN_LOGS = {
-    "LLaVA-Med v1.5 (7B)": "outputs/slurm_logs/llava_med/*.out",
-    "Mini-VLM (Phi-3.5-V)": "outputs/slurm_logs/mini_vlm/*.out",
+    "LLaVA-Med v1.5 (7B)": ["outputs/slurm_logs/llava_med/1178901.out"],
+    "Mini-VLM (Phi-3.5-V)": ["outputs/slurm_logs/mini_vlm/1177953.out"],
+    "SkinVL-MM (7B)": ["outputs/slurm_logs/skinvl/1177955.out"],
 }
 _PROG_RE = re.compile(r"\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\].*Progreso:\s*\d+\s*nuevos?\s*/\s*(\d+)\s*totales")
 
@@ -77,24 +80,33 @@ def _bench_classifier(ctor, device, img=224, warmup=5, iters=20):
     return n_params, lat
 
 
-def _gen_latency_from_logs(glob_pat: str) -> float | None:
-    """s/reporte estimado a partir de las líneas 'Progreso' de los logs (mediana entre logs)."""
-    rates = []
-    for lf in glob.glob(glob_pat):
-        pts = []
+def _gen_latency_from_logs(log_paths: list[str]) -> float | None:
+    """s/reporte a partir de las líneas 'Progreso' de los logs.
+
+    Un log puede tener varios brazos, y el contador de 'totales' se reinicia en cada uno: se corta un segmento
+    cada vez que el contador baja y se suman tiempo y reportes de todos los segmentos.
+    """
+    seconds, reports = 0.0, 0
+    for lf in log_paths:
+        if not Path(lf).exists():
+            logger.warning("Falta el log %s (bajarlo con sync_down.py --logs)", lf)
+            continue
+        segments, cur = [], []
         for line in Path(lf).read_text(encoding="utf-8", errors="ignore").splitlines():
             m = _PROG_RE.search(line)
             if m:
                 t = datetime.strptime(m.group(1), "%Y-%m-%d %H:%M:%S")
-                pts.append((t, int(m.group(2))))
-        if len(pts) >= 2:
-            (t0, n0), (t1, n1) = pts[0], pts[-1]
-            if n1 > n0:
-                rates.append((t1 - t0).total_seconds() / (n1 - n0))
-    if not rates:
-        return None
-    rates.sort()
-    return rates[len(rates) // 2]
+                n = int(m.group(2))
+                if cur and n < cur[-1][1]:
+                    segments.append(cur)
+                    cur = []
+                cur.append((t, n))
+        segments.append(cur)
+        for seg in segments:
+            if len(seg) >= 2 and seg[-1][1] > seg[0][1]:
+                seconds += (seg[-1][0] - seg[0][0]).total_seconds()
+                reports += seg[-1][1] - seg[0][1]
+    return seconds / reports if reports else None
 
 
 def main():

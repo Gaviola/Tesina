@@ -1,0 +1,38 @@
+% Figura: qué se entrena y qué queda congelado en cada etapa del ajuste de los generadores, fig:met_ajuste.
+% Usada en sec:met_generacion (3.5). Complementa fig:marco_llava (Cap. 2) sin redibujar la arquitectura.
+% Revisión del tutor del 21/10/2026 (figuras de los modelos). Ancho: unos 140 mm.
+
+\begin{figure}[H]
+    \centering
+    \hyphenpenalty=10000 \exhyphenpenalty=10000
+    \begin{tikzpicture}[x=1mm, y=1mm]
+        \tikzset{
+            congelado/.style={fignodo, fill=figrelleno, text=black!60},
+            entrenado/.style={figtarea},
+        }
+
+        % Etapa 1: SkinCAP, solo el proyector.
+        \node[font=\small, anchor=west] at (0, 11) {Etapa 1: alineación imagen--texto};
+        \node[figentrada, text width=18mm] (d1) at (11, 0) {\emph{SkinCAP}};
+        \node[congelado, text width=30mm] (e1) at (48, 0) {codificador visual\\{\footnotesize congelado}};
+        \node[entrenado, text width=22mm] (p1) at (83, 0) {proyector\\{\footnotesize se entrena}};
+        \node[congelado, text width=30mm] (l1) at (118, 0) {modelo de lenguaje\\{\footnotesize congelado}};
+        \draw[figflecha] (d1) -- (e1);
+        \draw[figflecha] (e1) -- (p1);
+        \draw[figflecha] (p1) -- (l1);
+
+        % Etapa 2: SkinCoT, LoRA en codificador y modelo de lenguaje.
+        \node[font=\small, anchor=west] at (0, -13) {Etapa 2: redacción hasta el diagnóstico};
+        \node[figentrada, text width=18mm] (d2) at (11, -26) {\emph{SkinCoT}};
+        \node[entrenado, text width=30mm] (e2) at (48, -26) {codificador visual\\{\footnotesize + adaptadores \gls{lora}}};
+        \node[congelado, text width=22mm] (p2) at (83, -26) {proyector\\{\footnotesize congelado}};
+        \node[entrenado, text width=40mm, font=\footnotesize] (l2) at (123, -26) {{\small modelo de lenguaje}\\+ \gls{lora} en LLaVA-Med\\congelado en Mini-VLM};
+        \draw[figflecha] (d2) -- (e2);
+        \draw[figflecha] (e2) -- (p2);
+        \draw[figflecha] (p2) -- (l2);
+
+    \end{tikzpicture}
+    \caption{Ajuste de Mini-VLM y LLaVA-Med en dos etapas: en naranja, lo que se entrena; en gris, lo que queda
+    congelado en ambos generadores.}
+    \label{fig:met_ajuste}
+\end{figure}

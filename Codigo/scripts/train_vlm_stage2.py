@@ -71,6 +71,9 @@ def main():
     parser.add_argument("--lora_r", type=int, default=64)
     parser.add_argument("--lora_alpha", type=int, default=128)
     parser.add_argument("--lora_dropout", type=float, default=0.05)
+    parser.add_argument("--lora_target_modules", type=str, nargs="+", default=["q_proj", "v_proj"],
+                        help="Módulos donde se coloca LoRA. Phi-3.5-vision (Mini-VLM) fusiona la atención del LLM en "
+                             "qkv_proj: con el default solo se adaptan q_proj/v_proj del codificador CLIP.")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--wandb", action="store_true")
     parser.add_argument("--run-name", type=str, default=None, dest="run_name",
@@ -229,7 +232,7 @@ def main():
             "r": args.lora_r,
             "alpha": args.lora_alpha,
             "dropout": args.lora_dropout,
-            "target_modules": ["q_proj", "v_proj"],
+            "target_modules": args.lora_target_modules,
         },
     }
 
@@ -314,7 +317,9 @@ def main():
         sys.exit(0)
 
     # --- Guardar resultados ---
-    results_path = str(output_dir / "results" / args.model / "stage2_metrics.json")
+    # Con --run-name se versiona el archivo para no sobrescribir el de corridas anteriores.
+    metrics_name = f"stage2_metrics_{args.run_name}.json" if args.run_name else "stage2_metrics.json"
+    results_path = str(output_dir / "results" / args.model / metrics_name)
     save_results(metrics, results_path)
     logger.info("Métricas Stage 2 guardadas en %s", results_path)
 

@@ -33,7 +33,7 @@ from src.evaluation.clinical_ner import (
 logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
-THINK_RE = re.compile(r"<think>.*?</think>", re.DOTALL | re.IGNORECASE)
+THINK_RE = re.compile(r"<think>.*?(?:</think>|$)", re.DOTALL | re.IGNORECASE)
 
 # Morfología típica por clase (canónica). Canned pero clase-específica; contiene términos
 # dermatológicos que el recall detecta (pigmentation, border, color, telangiectasia, scaling...).

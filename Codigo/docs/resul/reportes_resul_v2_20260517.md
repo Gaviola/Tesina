@@ -174,6 +174,23 @@ python scripts/evaluate_reports.py --model llava_med --level 1 --dataset v2/mmsk
 
 ### 4.1 Nivel 1 (métricas automáticas) — MM-SkinQA
 
+> **Corrección (2026-10-12).** Estas cifras incluyen 539 (Mini-VLM) y 175 (LLaVA-Med) reportes cuya
+> referencia es la cadena «nan» (imágenes sin descripción en `caption.csv`) y no quitan los bloques
+> `<think>`; además cubren el archivo completo cortado por tiempo, no la partición de prueba. Recalculadas con
+> `scripts/level1_mmskin_recalc.py` (`outputs/results/level1_mmskin_recalc.json`), solo con referencia real y
+> sin `<think>`:
+>
+> | Modelo | Subconjunto | n | BLEU-4 | ROUGE-L | METEOR | CIDEr | BERTScore |
+> |---|---|---|---|---|---|---|---|
+> | Mini-VLM | con referencia | 6 590 | 0.0016 | 0.0580 | 0.1121 | 0.0084 | 0.7129 |
+> | Mini-VLM | partición de prueba | 1 022 | 0.0016 | 0.0571 | 0.1117 | 0.0089 | 0.7128 |
+> | Mini-VLM | imágenes comunes con LLaVA-Med | 2 426 | 0.0014 | 0.0622 | 0.1187 | 0.0086 | 0.7200 |
+> | LLaVA-Med | con referencia (= comunes) | 2 426 | 0.0009 | 0.0336 | 0.0872 | 0.0104 | 0.6703 |
+> | LLaVA-Med | partición de prueba | 381 | 0.0008 | 0.0326 | 0.0850 | 0.0113 | 0.6702 |
+>
+> El orden no cambia (Mini-VLM por encima salvo en CIDEr) y los valores suben poco. La partición de prueba
+> completa se regenera en los jobs 1179990 (Mini-VLM v3) y 1179991 (LLaVA-Med v2).
+
 | Modelo | Dataset | CIDEr v1 (re-eval) | CIDEr v2 | Δ | BLEU-4 v2 | ROUGE-L v2 | METEOR v2 | BERTScore v2 |
 |--------|---------|---------------------|----------|---|----------|------------|-----------|--------------|
 | LLaVA-Med | MM-SkinQA (n=2601) | 0.0103 | 0.0098 | −0.0005 | 0.0008 | 0.0312 | 0.0810 | 0.6580 |

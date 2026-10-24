@@ -1,7 +1,7 @@
 # Guía de redacción de la tesina
 
 Contrato único para la redacción del documento final. Quien escriba una sección —el autor o un
-agente— lee esta guía antes de escribir la primera línea, y todo lo que produzca se juzga contra
+agente— lee esta guía antes de escribir la primera línea, y todo lo que produzca se evalúa contra
 ella. Las decisiones acá fijadas valen para todos los capítulos: si algo hay que cambiar, se cambia
 en este archivo y no sección por sección.
 
@@ -109,6 +109,14 @@ las dos versiones juntas.
 
 - **Impersonal y descriptiva.** «Se evalúan cuatro arquitecturas», no «evaluamos» ni «el autor
   evalúa». Nunca se habla del autor en tercera persona.
+- **Tiempo verbal con función fija** (tutor, 21/10/2026). El presente describe cómo funciona el método y
+  el *pipeline* («el clasificador fija el diagnóstico», «se evalúa con la sensibilidad macro»), y es el
+  tiempo de la metodología. El pasado queda para los procedimientos experimentales ya realizados («la
+  búsqueda se hizo sobre Swin-Tiny», «la variante se eligió en un piloto»). No se escribe «se construyó
+  cada componente y se evaluó» donde se describe el método.
+- **Construcciones variadas.** «Se evalúa», «se compara», «se usa», «la sección presenta» son correctas,
+  pero repetidas en párrafos seguidos vuelven monótono el texto. Se alternan con otras construcciones
+  («con este propósito se aplica…», «la comparación incluye…») sin forzar sinónimos imprecisos.
 - **El texto es propio.** No se escribe meta-lenguaje sobre el documento ni sobre la plantilla
   («este capítulo fue elaborado a partir de…», «material no desarrollado por el autor»).
 - **Párrafos de 4 a 8 líneas**, uno por idea, encadenados. Se evitan las listas de viñetas en el
@@ -135,7 +143,9 @@ las dos versiones juntas.
   término traducido lleva el original en cursiva: «sobreajuste (*overfitting*)», «aumento de datos
   (*data augmentation*)», «parches (*patches*)», «atención multicabezal (*multi-head attention*)»,
   «fuga de información (*data leakage*)». Vale para todo término que se use habitualmente en inglés en
-  el área, no solo para las siglas (tutor, 09/10/2026).
+  el área, no solo para las siglas (tutor, 09/10/2026). Si el término se definió en otro capítulo y el
+  lector lo conoce sobre todo en inglés, su primera aparición en el capítulo nuevo repite el original
+  entre paréntesis junto al `\ref`: «voto suave (*soft voting*; Sección~\ref{…})» (tutor, 21/10/2026).
 - **Cursiva la primera vez en cada capítulo** con `\emph{}`; después, redonda. En títulos de
   sección y en los índices, siempre redonda. Un término que aparece cincuenta veces en cursiva es
   ruido tipográfico.
@@ -258,9 +268,24 @@ prevalecen sobre «Concisión»: **la concisión se logra sacando temas, no comp
   | «una predicción merece afirmarse» | «una predicción es lo bastante confiable para presentarla como diagnóstico» |
   | «esta segunda dice si…» | «esta última permite determinar si…» |
   | «esa equivalencia no vale» | se explica por qué no se cumple |
+  | «la propuesta encadena un clasificador…» | «la propuesta de este trabajo integra un clasificador…» |
+  | «cuánto inflaba la fuga los resultados» | «cuánto sobreestima el desempeño la fuga de información» |
+  | «eligen una etiqueta de un inventario cerrado» | «eligen una de las siete clases» |
+  | «sus propiedades deciden la métrica y la partición» | se dice qué propiedad lleva a qué decisión: «como NV reúne dos tercios de las imágenes, las métricas dan a cada clase el mismo peso» |
+  | «qué cuesta usar el sistema» | «el costo computacional de entrenar y ejecutar los modelos y el *pipeline*» |
+  | «Así resuelve juntas la clasificación y…» | «De este modo, el *pipeline* permite resolver…» |
 
 - **Artículo delante del nombre de una técnica.** «El preentrenamiento contrastivo lenguaje–imagen
   (CLIP) entrena…», no «Preentrenamiento contrastivo… entrena…».
+- **Sustantivos con referente.** «El sistema», «el protocolo», «el modelo» o «las pruebas» a secas no
+  dicen nada si en ese punto hay más de un candidato. Se nombra el objeto: «el *pipeline*», «los
+  clasificadores supervisados», «el procedimiento de evaluación de la Sección~\ref{…}» (tutor,
+  21/10/2026).
+- **Las cifras compactas se explican.** Una notación como «70/15/15», «$k = 3$» o «IC del 95 %» se dice
+  con palabras la primera vez: «70 % de las imágenes para entrenamiento, 15 % para validación y 15 % para
+  prueba».
+- **Títulos completos.** El título de una sección o subsección se entiende fuera de contexto, porque se
+  lee en el índice: «Evaluación de la generación de reportes», no «Evaluación de la generación».
 
 ### Lista de control de la pasada de estilo
 
@@ -275,7 +300,10 @@ Etapa 3 del circuito. Se recorre la sección párrafo por párrafo:
 7. ¿Cada término traducido lleva el inglés entre paréntesis en su primera aparición?
 8. ¿Se redefine algo que ya se definió en otra sección? Si es así, se reemplaza por una mención con `\ref`.
 9. ¿La sección abre retomando la anterior y cierra con la transición a la siguiente?
-10. ¿Compila sin huérfanas ni flotantes fuera de lugar (§7)?
+10. ¿El presente describe el método y el pasado solo lo ya realizado? ¿Se repite «se evalúa», «se compara» en párrafos seguidos?
+11. ¿Quedan «el sistema», «el protocolo» o cifras compactas («70/15/15») sin decir a qué se refieren?
+12. En la metodología: ¿algún párrafo adelanta un resultado, justifica una decisión con un resultado sin decir de dónde sale, o mezcla el método con el hardware (§3, «Capítulo de metodología»)?
+13. ¿Compila sin huérfanas ni flotantes fuera de lugar (§7)?
 
 ### Concisión: menos es más
 
@@ -400,6 +428,65 @@ misma carrera que pasó el tutor (`Docs/tesinamaglione_ejemplo.pdf`, no versiona
   se dice objetivo, método, datos, métricas, contra qué se comparó, resultados, si hubo evaluación
   con expertos y qué limitaciones reconocen los autores, en un párrafo compacto (ver «Concisión»).
 
+### Capítulo de metodología
+
+Revisión del tutor del Capítulo 3 (21/10/2026, `feedback/cap_3/feedback_cap3.md`). El capítulo no se lee como una
+colección de algoritmos y experimentos, sino como la explicación ordenada de las decisiones que llevan del
+problema inicial al *pipeline* y a su evaluación. Valen para el Cap. 3 y, en lo que corresponda, para los
+capítulos de resultados.
+
+- **Primero lo que se evalúa, después cómo se evalúa.** El orden es: problema y tareas → flujo de trabajo →
+  datos → componentes (cada familia de modelos) → integración en el *pipeline* → criterios y procedimientos
+  de evaluación → entorno experimental. Las métricas no aparecen antes que los modelos que miden. Si una
+  sección anterior necesita un criterio (por ejemplo, con qué métrica se elige una configuración), lo
+  nombra con `\ref` hacia adelante en una oración y la definición queda en la sección de evaluación.
+- **El flujo de trabajo va primero y es breve.** La figura del flujo culmina la definición de las tareas:
+  una oración por etapa dice qué hace, y cada sección siguiente la desarrolla. La introducción del capítulo
+  presenta la lógica metodológica general y después cómo se organiza; no repite la descripción del
+  *pipeline* que hace la primera sección.
+- **Secciones paralelas con la misma estructura.** Las secciones que presentan familias de modelos siguen el
+  mismo orden: propósito (qué pregunta o tarea atiende la familia) → modelos seleccionados → configuración
+  → procedimiento experimental. Leer una sección prepara al lector para la siguiente.
+- **Por qué antes que qué.** Un modelo se presenta desde la necesidad: «para evaluar X se necesita Y; por
+  ello se usa Z, que tiene tales características y produce tal salida». Las características técnicas
+  vienen después de la razón de la elección.
+- **Una figura por modelo o familia, sobre cómo se usa en el trabajo.** El Cap. 3 no redibuja la
+  arquitectura genérica del Cap. 2: muestra qué entra, qué sale, qué se entrena y qué queda congelado en
+  este trabajo, y el párrafo que la cita la explica.
+- **No se repite el marco teórico.** Se dice qué modelo se ajusta, qué parámetros se configuran y por qué
+  se usa la técnica, y se remite con `\ref` a su definición. No se vuelve a explicar cómo funciona LoRA o
+  una red convolucional.
+- **Un párrafo, una función.** Un párrafo presenta un modelo y justifica su elección; otro explica cómo se
+  configura o se usa. Características de arquitectura, motivos de selección, detalles de entrenamiento y
+  resultados esperados no van juntos.
+- **Diseño antes que implementación.** En el *pipeline* se distinguen la arquitectura general de las reglas
+  particulares de decisión, y las decisiones de diseño se explican antes de sus detalles de implementación.
+  Orden de argumento: componentes disponibles → necesidad de integrarlos → arquitectura propuesta (figura)
+  → funcionamiento → decisiones de salida.
+- **Ningún resultado en la metodología.** No se justifica una decisión con un resultado de los capítulos
+  siguientes («como muestra el Capítulo 4»). La motivación sale de los objetivos, del marco teórico o del
+  estado del arte (las debilidades conocidas de cada familia de modelos). Si una decisión surgió de un
+  experimento propio (un piloto, una búsqueda en validación), se dice cuál fue y sobre qué datos.
+- **El método separado de las herramientas.** GPU, clústeres, tamaños de lote, precisión numérica, semillas y
+  bibliotecas van en una sección de entorno experimental al final del capítulo. En el cuerpo queda solo la
+  restricción de cómputo, como parte del alcance de la propuesta (una GPU de consumo, sin clústeres ni GPU
+  de última generación).
+- **Los datos, por su uso.** Los conjuntos se distinguen de manera consistente según para qué se usan:
+  entrenamiento, validación, prueba, evaluación externa o preentrenamiento de modelos de terceros. Primero
+  se describen en general y después, en otro párrafo, se explica qué papel cumple cada uno en la
+  experimentación y por qué uno tiene más peso que los otros. Los párrafos no se vuelven una ficha por
+  conjunto.
+- **Cada experimento con su objetivo y su métrica.** La sección de evaluación presenta primero los criterios
+  generales y las métricas, y después los procedimientos complementarios, cada uno separado
+  (generalización a otra población, robustez, calibración, interpretabilidad, costo). Una tabla hace
+  explícita la correspondencia experimento → qué se busca → métrica.
+- **Los resultados replican esa estructura.** Si la metodología dice «primero se compara A, B y C», los
+  Caps. 4 y 5 presentan esos resultados juntos en una sección, y las comparaciones entre ellos van en la
+  misma sección.
+- **Tablas y figuras citadas antes y cerca.** Cada flotante se cita en el párrafo que lo precede. Una tabla
+  o figura de otro capítulo se cita con su capítulo («la Tabla~\ref{…} del Capítulo~\ref{…}»), porque el
+  lector la busca en la página.
+
 ### Patrones de escritura automatizada
 
 Recomendaciones para no caer en el tono predecible de la escritura generada por modelos de IA.
@@ -443,6 +530,7 @@ los capítulos.
 | parche (*patch*) | — | El inglés entre paréntesis en la primera mención |
 | sensibilidad macro | *recall* macro, exhaustividad, exactitud balanceada (como nombre propio) | Es el mismo número que la exactitud balanceada; la definición lo menciona una vez como sinónimo |
 | F1 ponderado, F1 macro | F1-score, puntaje F1 | |
+| función de pérdida | pérdida (a secas, en tablas y títulos) | En la prosa, «la pérdida» basta una vez que se nombró la función (tutor, 21/10/2026) |
 | ajuste fino | *fine-tuning* | El anglicismo solo en la definición inicial |
 | conjunto de datos | *dataset* | |
 | reporte | informe | Consistencia con el título de la tesina. **«Reporte» designa únicamente el informe clínico**: no se lo usa en el sentido de «lo que se reporta». Para eso se dice «métrica de selección» (con qué se elige el modelo, en validación) y «resultado principal» (qué número se presenta, en test) |

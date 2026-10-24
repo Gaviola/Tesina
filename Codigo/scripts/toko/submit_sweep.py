@@ -305,7 +305,10 @@ def submit_hiba_rerun(model: str, trial_id: str, dry_run: bool) -> str | None:
 def main():
     parser = argparse.ArgumentParser(description="Sweep clasificadores modernos en TOKO")
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("--model", choices=["convnext_tiny", "swin_tiny"],
+    # densenet y vit no se barren: se entrenan con el trial ganador de su familia (--trials), para tener los
+    # cuatro modelos con la receta moderna (ver docs/ideas/densenet_vit_moderna_plan_20261012.md). Sus corridas
+    # quedan fuera del ranking de lesion_split_report.py (RUN_RE solo reconoce swin_tiny y convnext_tiny).
+    group.add_argument("--model", choices=["convnext_tiny", "swin_tiny", "densenet", "vit"],
                        help="Modelo a sweepear (15 jobs)")
     group.add_argument("--all", action="store_true",
                        help="Sweepear ambos modelos (30 jobs)")

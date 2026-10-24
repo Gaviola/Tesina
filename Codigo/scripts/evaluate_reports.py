@@ -76,7 +76,11 @@ def _level1(reports: list[dict], model: str, output_dir: Path):
     predictions = [r["report"] for r in reports if r.get("report")]
     references = [r.get("reference", "") for r in reports if r.get("report")]
 
-    if not any(ref.strip() for ref in references):
+    # «nan» es una fila sin descripción guardada como texto por versiones anteriores de generate_report.py.
+    def _has_ref(ref: str) -> bool:
+        return bool(ref and ref.strip() and ref.strip().lower() != "nan")
+
+    if not any(_has_ref(ref) for ref in references):
         logger.error(
             "Nivel 1 requiere referencias en los reportes. "
             "Asegúrate de que los JSON tengan la clave 'reference'."
@@ -84,7 +88,7 @@ def _level1(reports: list[dict], model: str, output_dir: Path):
         sys.exit(1)
 
     # Usar solo reportes que tengan referencia
-    pairs = [(p, r) for p, r in zip(predictions, references) if r.strip()]
+    pairs = [(p, r) for p, r in zip(predictions, references) if _has_ref(r)]
     if len(pairs) < len(predictions):
         logger.warning(
             "%d/%d reportes tienen referencia y serán evaluados.",
@@ -200,7 +204,7 @@ def main():
 
     if args.strip_reasoning:
         import re as _re
-        _TAG = _re.compile(r"<think>.*?</think>", _re.DOTALL)
+        _TAG = _re.compile(r"<think>.*?(?:</think>|$)", _re.DOTALL)
         for r in reports:
             if r.get("report"):
                 r["report"] = _TAG.sub(" ", r["report"]).strip()

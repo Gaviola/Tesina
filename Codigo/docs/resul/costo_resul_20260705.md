@@ -3,6 +3,12 @@
 **Fecha:** 2026-07-05 · **Plan:** [plan-julio-agosto.md](../plan-julio-agosto.md) (P0.4) · **Sin jobs SLURM** (local + logs).
 **Feedback:** #44 — falta una comparación sistemática del costo de inferencia entre alternativas.
 
+> **Corrección (2026-10-12).** La latencia de los VLM se tomaba como la mediana de *todos* los logs del
+> modelo, que mezclan condiciones (512 o 384 tokens, prompts con recuperación) y cambian al bajar logs
+> nuevos (Mini-VLM pasaba a 50.3 s con el log del RAG). `measure_cost.py` usa ahora las corridas del
+> re-anclaje (mismo script y plantilla, 384 tokens): **Mini-VLM 16.4 s, LLaVA-Med 26.2 s, SkinVL-MM 3.4 s**
+> por reporte (SkinVL escribe reportes mucho más cortos). Salida: `outputs/results/cost/cost_comparison_v2.json`.
+
 ## Diseño
 - **Clasificadores (torchvision):** parámetros + latencia medidos EN VIVO en la GPU local (RTX 4070 12GB).
 - **VLMs generativos:** latencia real por-reporte **parseada de los logs SLURM** (A30, líneas "Progreso").

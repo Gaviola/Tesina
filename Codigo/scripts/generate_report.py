@@ -30,7 +30,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from PIL import Image
 
 from src.models.factory import build_model
-from src.training.lora_config import apply_lora, get_lora_config
+from src.training.lora_config import apply_lora, get_lora_config, load_finetuned_state_dict
 from src.utils.device import get_vram_gb
 from src.utils.io import save_results
 from src.utils.logging import log_time, setup_logger
@@ -102,10 +102,12 @@ def _load_model_with_checkpoint(args):
             )
             model.model = apply_lora(model.model, lora_config)
 
-        model.load_state_dict(ckpt["model_state_dict"], strict=False)
+            result = load_finetuned_state_dict(model, ckpt["model_state_dict"], strict=False)
+        else:
+            result = model.load_state_dict(ckpt["model_state_dict"], strict=False)
         logger.info(
-            "Checkpoint cargado desde %s (época %d)",
-            args.checkpoint, ckpt.get("epoch", "?"),
+            "Checkpoint cargado desde %s (época %d; %d claves faltantes, %d sobrantes)",
+            args.checkpoint, ckpt.get("epoch", "?"), len(result.missing_keys), len(result.unexpected_keys),
         )
 
     return model
@@ -260,6 +262,9 @@ def main():
                              "restringe la generación a las imágenes de ese split.")
     parser.add_argument("--split", type=str, default=None,
                         help="Split a usar (train|val|test) si se pasa --splits_file.")
+    parser.add_argument("--shard", type=str, default=None,
+                        help="K/N: procesa solo el tramo K (desde 0) de N, tras --limit. Para partir un brazo en "
+                             "jobs cortos (partición short de Mendieta) sobre el mismo --output_dir.")
     args = parser.parse_args()
 
     if args.image is None and args.images_dir is None:
@@ -325,7 +330,8 @@ def main():
             with open(args.splits_file, encoding="utf-8") as f:
                 split_ids = set(json.load(f).get(args.split, []))
             before = len(image_paths)
-            image_paths = [p for p in image_paths if p.stem in split_ids]
+            # Los splits de HAM10000 guardan el id sin extensión; los de MM-Skin, el nombre con extensión.
+            image_paths = [p for p in image_paths if p.stem in split_ids or p.name in split_ids]
             logger.info("Split '%s': %d/%d imágenes tras filtrar por %s",
                         args.split, len(image_paths), before, args.splits_file)
 
@@ -341,6 +347,13 @@ def main():
         if args.limit is not None:
             image_paths = image_paths[: args.limit]
             logger.info("Limit: procesando a lo sumo %d imágenes", len(image_paths))
+
+        if args.shard:
+            k, n = (int(x) for x in args.shard.split("/"))
+            if not 0 <= k < n:
+                parser.error(f"--shard {args.shard}: se espera K/N con 0 <= K < N")
+            image_paths = image_paths[k::n]
+            logger.info("Shard %d/%d: %d imágenes", k, n, len(image_paths))
 
         def _is_valid_report(path: Path) -> bool:
             """True si el archivo existe y tiene un reporte no vacío (resume defensivo)."""
@@ -419,8 +432,10 @@ def main():
             for _, row in ref_df.iterrows():
                 img_id = Path(str(row.get("image", ""))).name.replace("dataset/", "")
                 text = row.get(ref_col, "")
-                if img_id and text:
-                    references[img_id] = str(text)
+                # Las filas sin descripción vienen como NaN (float, que es verdadero): sin este control se
+                # guardaba la cadena «nan» como referencia (539 reportes de Mini-VLM v2 en MM-Skin).
+                if img_id and isinstance(text, str) and text.strip():
+                    references[img_id] = text
 
         # Directorio de referencias en estructura paralela (ej: SkinCoT EN/)
         reference_dir = Path(args.reference_dir) if args.reference_dir else None

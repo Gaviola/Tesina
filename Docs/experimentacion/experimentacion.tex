@@ -89,7 +89,8 @@ Cambios de interpretación: (1) las pérdidas para desbalance sí suben la sensi
 exactitud y F1 macro; (2) la subconfianza de la calibración venía de los pesos por clase y de ajustar la
 temperatura sobre un val solapado con train; (3) la ganancia del pipeline avanzado es menor porque el
 clasificador nuevo deja menos casos inciertos (248 en vez de 334). Las conclusiones centrales se
-sostienen. RAG, \texttt{full\_uncertainty} y la taxonomía por clase quedan con el anclaje anterior.
+sostienen. \texttt{full\_uncertainty} y la taxonomía por clase quedan con el anclaje anterior; RAG se
+regeneró con el índice por lesión (11/10/2026, Sección~\ref{sec:rag}).
 \end{minipage}}
 \bigskip
 
@@ -1561,39 +1562,42 @@ Si la fidelidad la aporta el \emph{diagnóstico} y no la visión del generador, 
 (\emph{retrieval-augmented generation}, RAG): para cada imagen de test se buscan los $k=3$ casos de
 entrenamiento visualmente más cercanos en el espacio de embeddings de DermLIP y se inyecta su diagnóstico
 como contexto (``casos similares fueron diagnosticados como\dots''), sin intervención de un clasificador.
-El voto de esos tres vecinos (un \emph{kNN} sobre embeddings DermLIP) ya acierta el $83\%$ del test:
-la recuperación sola casi iguala a un clasificador entrenado, otra manifestación de que la
-\emph{representación} derm-especializada es lo determinante (Sección~\ref{sec:dermlip}).
+El índice contiene solo imágenes de entrenamiento de la partición por lesión; el voto de los tres
+vecinos (un \emph{kNN} sobre embeddings DermLIP) acierta el $78\%$ del test.
 
-El Cuadro~\ref{tab:rag} compara, sobre Mini-VLM, el RAG-only y el \emph{grounding} clásico. Dos hallazgos:
-(i) el \textbf{RAG-only lleva la consistencia de $0.20$ (baseline) a $0.76$} —cerca del \emph{grounding}
-con Swin ($0.83$)— \emph{y produce los reportes más ricos} (\emph{entity recall} $0.91$, muy por encima de
-todas las demás condiciones): el contexto de casos similares aporta morfología y localización concretas;
-(ii) \textbf{sumar RAG sobre el clasificador aporta poco} —la consistencia sube apenas $0.83\to0.84$ y la
-riqueza \emph{baja}—: si el clasificador ya resuelve la fidelidad, la recuperación no agrega valor
-diagnóstico. El costo del RAG-only es un mayor riesgo de \emph{contradicción} ($0.19$ vs $0.09$): al
-recibir varios candidatos tiende a nombrar más de uno, y parte de su riqueza puede provenir de rasgos de
-los casos recuperados que no están en la imagen (alucinación por transferencia). En suma, la fidelidad
-puede anclarse indistintamente con \textbf{un clasificador o con recuperación} —ambos especializados y
-baratos—, y la recuperación además enriquece el reporte.
+\emph{Actualización (11/10/2026).} La versión anterior de esta sección usaba un índice construido sobre la
+partición por imagen (con fuga: el voto kNN acertaba el $83\%$), el ancla Swin anterior y $n=400$. Se
+regeneró (job 1179315, \texttt{rag\_les\_resul\_20261011.md}) con el índice por lesión, el ancla nueva, el
+test completo y la métrica oficial (solo reporte, \emph{matcher} estricto).
+
+El Cuadro~\ref{tab:rag} compara, sobre Mini-VLM, el RAG-only y el \emph{grounding} clásico. Tres hallazgos:
+(i) el \textbf{RAG-only rescata frente a no anclar pero no reemplaza al clasificador}: lleva la consistencia
+de $0.163$ a $0.669$ ($+0.506$ [$+0.476$, $+0.534$]) pero queda $-0.180$ [$-0.206$, $-0.155$] por debajo del
+\emph{grounding} con Swin; (ii) \textbf{el generador pierde información de los vecinos}: imprimir el voto kNN
+sin generador da $0.781$, y el generador que recibe ese contexto queda $-0.112$ por debajo, porque cuando los
+vecinos no coinciden nombra varias clases o una distinta; (iii) \textbf{sumar RAG sobre el clasificador
+aporta poco}: $+0.013$ [$+0.007$, $+0.019$], y esa ganancia viene de nombrar la clase de los vecinos además
+de la del ancla (la consistencia exclusiva, que exige nombrar solo la clase verdadera, queda $-0.055$ por
+debajo de imprimir el diagnóstico de Swin). La versión anterior leía el RAG-only como ``casi igual al
+clasificador''; con el índice sin fuga esa lectura no se sostiene.
 
 \begin{table}[H]
   \centering
-  \caption{Grounding por recuperación (RAG) vs.\ grounding por clasificador, sobre Mini-VLM ($n=400$,
-  subconjunto de ablación). El baseline sobre este subconjunto es $0.20$, levemente distinto del $0.246$
-  del Cuadro~\ref{tab:ensamble} ($n=1503$) por el tamaño de muestra. La recuperación sola (RAG-only) casi
-  iguala al clasificador en fidelidad y da los reportes más ricos; apilar RAG sobre el clasificador aporta poco.}
+  \caption{Grounding por recuperación (RAG) vs.\ grounding por clasificador, sobre Mini-VLM ($n=1503$,
+  índice y ancla de la partición por lesión; consistencia diagnóstica oficial: solo reporte, \emph{matcher}
+  estricto). ``Exclusiva'' exige nombrar la clase verdadera y ninguna otra. Las filas ``impreso'' no usan
+  generador: el reporte es solo el diagnóstico.}
   \label{tab:rag}
   \begin{tabular}{lcc}
     \toprule
-    \textbf{Condición} & \textbf{Diagnostic consistency} & \textbf{Clinical entity recall} \\
+    \textbf{Condición} & \textbf{Consistencia} & \textbf{Exclusiva} \\
     \midrule
-    Baseline (sin contexto)        & 0.20 & 0.55 \\
-    RAG-only (recuperación)        & 0.76 & \textbf{0.91} \\
-    Grounding Swin                 & 0.83 & 0.77 \\
-    Grounding Swin + RAG           & \textbf{0.84} & 0.68 \\
-    \midrule
-    \textit{Oracle (dx correcto) --- cota superior} & \textit{1.00} & \textit{0.79} \\
+    Baseline (sin contexto)        & 0.163 & 0.045 \\
+    RAG-only (recuperación)        & 0.669 & 0.500 \\
+    Voto kNN impreso               & 0.781 & 0.781 \\
+    Grounding Swin                 & 0.849 & 0.757 \\
+    Swin impreso                   & 0.847 & \textbf{0.847} \\
+    Grounding Swin + RAG           & \textbf{0.862} & 0.792 \\
     \bottomrule
   \end{tabular}
   \\[2pt]
@@ -1964,7 +1968,7 @@ Nuestros modelos aparecen al pie del Cuadro~\ref{tab:sota_gen}, evaluados sobre 
 \emph{benchmark} que las primeras filas). El contraste es la mejor evidencia del punto anterior: como
 fueron entrenados sobre SkinCaRe y se aplican a MM-Skin \emph{sin reajuste}, su BLEU-4 cae a
 $\approx 0.1$ —dos órdenes de magnitud por debajo de los modelos ajustados sobre MM-Skin—; sin embargo,
-su \emph{BERTScore} ($\approx 66$--$70$), que mide similitud \emph{semántica} y no de palabras exactas,
+su \emph{BERTScore} ($\approx 67$--$71$), que mide similitud \emph{semántica} y no de palabras exactas,
 queda al nivel del SOTA sobre ese mismo \emph{benchmark} ($\approx 67$--$71$). Es decir, el contenido es
 comparable pero la redacción difiere: el BLEU castiga la diferencia de estilo, no la de calidad clínica.
 Esto confirma por qué la evaluación de Nivel 2 es la métrica decisiva en este trabajo.
@@ -1993,8 +1997,8 @@ Esto confirma por qué la evaluación de Nivel 2 es la métrica decisiva en este
     \cite{DermatoLlama2025} & DermatoLlama / DERM12345 (sint.) & 65.59 & 93.44$^{c}$ & --- & --- \\
     \cite{PeFoMed2024} & PeFoMed / IU-Xray (radiol.) & --- & 28.60$^{d}$ & 15.70 & --- \\
     \multicolumn{6}{@{}l}{\itshape Este trabajo --- evaluado sobre MM-Skin$^{e}$} \\
-    & LLaVA-Med (FT SkinCaRe) & 0.08 & 3.12 & 8.10 & 65.80 \\
-    & Mini-VLM (FT SkinCaRe) & \textbf{0.15} & \textbf{5.36} & \textbf{10.36} & \textbf{69.91} \\
+    & LLaVA-Med (FT SkinCaRe) & 0.09 & 3.36 & 8.72 & 67.03 \\
+    & Mini-VLM (FT SkinCaRe) & \textbf{0.16} & \textbf{5.80} & \textbf{11.21} & \textbf{71.29} \\
     \bottomrule
   \end{tabular}%
   }
@@ -2004,7 +2008,10 @@ Esto confirma por qué la evaluación de Nivel 2 es la métrica decisiva en este
   sintéticos. $^{d}$Reportes radiológicos (IU-Xray), no dermatológicos; incluido como referencia de la
   arquitectura VLM$+$LoRA. $^{e}$Nuestros modelos se entrenaron sobre SkinCaRe y se evalúan aquí sobre
   MM-Skin \emph{sin ajuste a ese corpus} (transferencia entre datasets), de ahí los puntajes léxicos muy
-  bajos pese a su fidelidad diagnóstica en Nivel 2.\par}
+  bajos pese a su fidelidad diagnóstica en Nivel 2. Recalculado el 12/10/2026 sin las imágenes sin descripción
+  (antes entraban con la referencia ``nan'') y sin los bloques \texttt{<think>}: $n = 6\,590$ (Mini-VLM) y
+  $2\,426$ (LLaVA-Med), sobre el archivo completo cortado por tiempo y no sobre la partición de prueba (en
+  regeneración, jobs 1179990 y 1179991).\par}
 \end{table}
 
 \begin{figure}[H]

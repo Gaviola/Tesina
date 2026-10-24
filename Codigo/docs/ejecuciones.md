@@ -4,6 +4,254 @@ Ayuda-memoria cronológico de experimentos enviados a cluster, ordenado de más 
 
 ---
 
+## 2026-10-24
+
+### Mini-VLM v3: descarga y evaluación parcial — TOKO 99257/99258 y Mendieta short (local)
+**TOKO:** 99257 `TIMEOUT` a las 12 h (oracle 1 503/1 503 y 290 de DermLIP); 99258 `COMPLETED` el 21/10 14:50
+(DermLIP 1 503/1 503). **Mendieta:** `skincot_test` 457/457 y `full_differential_les` 248/248 completos;
+`full_swin_les` 963/1 503 y `full_baseline` 372/1 503. Los 12 tramos que quedan en `short` (Swin 13–18 y 20–22
+de 25; baseline 5–7 de 28) se liberaron el 20/10 con `ExcNodeList=ivb02,ivb11`, volvieron a fallar en ivb14
+(`user_env_retrieval_failed_requeued_held`, Restarts=2) y siguen retenidos. Los jobs de `multi` (1179986–1179990)
+siguen `PENDING` por prioridad. Reportes bajados por `tar` sobre ssh a `generated_reports/mini_vlm/v3/<brazo>`.
+
+```
+python scripts/evaluate_reports.py --model mini_vlm --level 1 --dataset v3/skincot_test --strip-reasoning --output_dir outputs/results/level1_test/skincot_test
+```
+
+Consistencia oficial v3 − v2 (mismas imágenes): oracle −0.033 [−0.042, −0.023] (0.967; el diagnóstico queda
+dentro del `<think>` cortado), DermLIP +0.021, Swin por lesión −0.007 (n.s., n = 963), diferencial +0.032 (n.s.).
+Nivel 1 SkinCoT: 80/457 reportes vacíos al quitar el `<think>`; sobre 349 pares, v3 queda por debajo de LLaVA-Med
+v2 en las cinco métricas (BERTScore 0.781 frente a 0.797).
+**Resul:** [mini_vlm_lora_llm_resul_v3_20261024.md](resul/mini_vlm_lora_llm_resul_v3_20261024.md) (parcial,
+NO CUMPLE por incompleto).
+
+---
+
+## 2026-10-20
+
+### Mini-VLM v3 en short: nodo ivb02 excluido y primer vistazo parcial — Mendieta jobs 1180970–1181064 (local)
+Durante la noche terminaron 16 tramos (todos `COMPLETED`; 1180965 `TIMEOUT` con lo que llegó a generar) y desde
+~01:17 no arrancó ninguno más: 38 quedaron `user_env_retrieval_failed_requeued_held`, 33 de los 40 reintentos
+fallidos en ivb02 y 7 en ivb11. El script pasa a `#SBATCH --exclude=ivb02,ivb11` (local y remoto) y a los jobs
+encolados se les aplicó `scontrol update ExcNodeList=ivb02,ivb11` + `scontrol release` (también a 1179986–1179990).
+
+Reportes al cortar (remoto y bajados a `generated_reports/mini_vlm/v3/<brazo>`): `skincot_test` 255/457,
+`full_differential_les` 50, `full_swin_les` 300/1 503, `full_baseline` 283/1 503. Mediana de ~207 palabras (34 con
+el checkpoint sin cargar), así que el modelo cargado es v3. Comparación preliminar sobre las mismas imágenes
+(script de borrador fuera del repo; métrica oficial: solo el reporte, matcher estricto, bootstrap pareado 2 000):
+
+| Brazo | n | v3 | v2 | Δ [IC 95 %] |
+|---|---|---|---|---|
+| `full_swin_les` | 300 | 0.840 | 0.860 | −0.020 [−0.043, +0.003] |
+| `full_differential_les` | 50 | 0.840 | 0.840 | 0.000 [−0.060, +0.060] |
+| `full_baseline` | 283 | 0.194 | 0.187 | +0.007 [−0.053, +0.071] |
+
+Nivel 1 en SkinCoT test (solo el reporte): v3 imita el formato de SkinCoT y abre `<think>` en 164/255 reportes;
+con 384 tokens, **50/255 (20 %) quedan solo con razonamiento** (cortado o en bucle de `<think>`) y el reporte queda
+vacío. LLaVA-Med v2, con el mismo presupuesto: 11/457 con `<think>`, 0 vacíos. Sobre los 193 pares con referencia y
+reporte no vacío en ambos: v3 BLEU-4 0.061, ROUGE-L 0.145, BERTScore F1 0.780; LLaVA-Med 0.108, 0.193, 0.797. En los
+brazos de HAM10000 el `<think>` aparece en 25 % (swin_les) y 21 % (baseline) de los reportes, sin dejar ninguno vacío.
+**Resul:** pendiente (faltan tramos; la decisión sobre v3 es del autor).
+
+**TOKO:** la copia del checkpoint se retoma por la máquina local en tramos de 1 GiB que se saltean si ya están
+completos (borrador `toko_chunks.sh`, fuera del repo); al terminar arma el archivo, verifica el md5 y envía
+`slurm/toko/v5/gen_mini_v3.sh` dos veces con `afterany`. Copia completa a las 18:51 (9 tramos, ~50 min, md5
+`de25b7e4…` igual en origen y destino). **TOKO jobs 99257** (en gpu1 desde las 18:54, empieza por oracle) **y
+99258** (`afterany:99257`). **Resul:** pendiente.
+
+## 2026-10-19
+
+### Mini-VLM v3 troceado en la partición short (prueba de 10 tramos) — Mendieta jobs 1180951–1180978
+Los jobs de `multi` de v3 (1179986–1179990) siguen `PENDING` (Priority) desde el 18/10; `sbatch --test-only`
+estima el arranque de la cascada en `multi` para el 28/10 y el de un job de 1 h en `short` para la misma noche
+(`short` tiene `PriorityJobFactor=100`, `multi` 0). Cambios: `generate_report.py --shard K/N` (procesa el tramo K
+de N tras `--limit`) y `slurm/mendieta/v5/gen_short_mini_v3.sh` (un tramo de un brazo de generación de v3, mismos
+argumentos que cascade/extra/level1_test, 5 CPU y 32 GB en vez del nodo entero; Mini-VLM usa ~25 GB). Subidos por
+`scp` (md5 verificado; copia `generate_report.py.bak_20261019` en remoto).
+
+Un primer envío de todos los brazos en 148 tramos (1180803–1180950) se canceló entero antes de generar nada: el
+autor pidió probar con 10, y los que arrancaron fallaron con `user env retrieval failed requeued held`. La causa es
+el nodo ivb11 (en ivb10 e ivb12 arrancan bien), así que el script lo excluye (`#SBATCH --exclude=ivb11`). Prueba
+vigente: tramos 0–9 de 16 de `full_baseline` (~94 imágenes cada uno), enviados como `submit.py`, con
+`. /etc/profile` antes de `sbatch`:
+
+```
+for k in $(seq 0 9); do sbatch --export=ALL,ARM=full_baseline,SHARD=$k/16 slurm/mendieta/v5/gen_short_mini_v3.sh; done
+```
+
+**Checkpoint v3 sin cargar (bug, corregido).** Esos 10 tramos (7 completos, 742 reportes) iban a ~6 s por reporte
+con textos de ~34 palabras y sin diagnóstico, frente a 160 en v2: era Phi-3.5-vision base. El reintento por OOM
+de 1179985 reusó el modelo ya envuelto por PEFT y el checkpoint guardó las claves como
+`model.base_model.model.base_model.model.…`; `generate_report.py` cargaba con `strict=False`, así que ninguna de
+las 753 claves entraba y no avisaba. Los adaptadores son uno solo (160 tensores LoRA = 96 de CLIP + 64 de
+`qkv_proj`; 31 457 280 entrenables), así que el entrenamiento vale: solo cambia el nombre. v2 no tiene el prefijo
+doble y sus resultados no cambian. Arreglo: `src/training/lora_config.py` (`normalize_peft_keys`,
+`load_finetuned_state_dict`: colapsa el prefijo y falla si queda un adaptador sin cargar), usado por
+`generate_report.py` y `train_vlm_classify.py` (este cargaba estricto, así que 1179988–1179989 habrían fallado
+con error). Verificado sin GPU: las claves normalizadas de v3 = las de v2 + 64 LoRA de `qkv_proj`, con
+`qkv_proj.weight` → `qkv_proj.base_layer.weight`. Subidos por `scp` (md5 verificado; copias `*.bak_20261019` y
+`generate_report.py.bak_20261019b`). Los 742 reportes inválidos quedan apartados en
+`generated_reports/mini_vlm_v3/_invalido_ckpt_sin_cargar_full_baseline/` (remoto). Los jobs de `multi`
+estuvieron retenidos (`scontrol hold`) mientras tanto y se liberaron con el código corregido.
+
+Con el arreglo (1180965, tramo 0/16): «0 claves faltantes, 0 sobrantes», reportes de ~200 palabras con diferencial
+razonado y ~50 s por reporte, así que 94 imágenes no entran en 1 h. El resto de la prueba va en tramos de ~54
+(1/28 a 9/28, jobs 1180970–1180978); un tramo cortado se completa con cualquier partición posterior porque se
+saltean los reportes ya válidos. La clasificación (1179988–1179989) no se trocea. **Resul:** pendiente.
+
+**Prioridad para el Cap. 3 (decisión del autor).** Lo indispensable es confirmar que v3 es la configuración final:
+la pérdida de validación de la etapa 2 baja de 1.334 (v2, 1153597) a 0.960 (v3, 1179985; LLaVA-Med 0.939). Se
+envían primero SkinCoT test (Nivel 1, 9 tramos, 1181026–1181034), el nivel diferencial (5, 1181035–1181039) y
+Swin por lesión (25, 1181040–1181064); los 9 tramos de `full_baseline` pasan a `nice=500`. El resto (baseline,
+recuperación, ablaciones, MM-Skin) queda para los Caps. 4–5; para el Nivel 1 de MM-Skin y, si hace falta, para la
+recuperación alcanza un subconjunto fijo de ~500 imágenes.
+
+**TOKO** (`slurm/toko/v5/gen_mini_v3.sh`, nuevo): oracle y dermlip completos (1 503 c/u), brazos que Mendieta no
+tiene asignados. Partición `gpu`, límite 12 h, así que se encadenan dos envíos (`afterany`). Subidos
+`generate_report.py`, `lora_config.py` y `clinical_ner.py` (los únicos distintos del local; copias
+`*.bak_20261019`), `full_dx_{oracle,dermlip}.csv` y la configuración LoRA. El checkpoint (8.7 GB, md5
+`de25b7e4…`) va de Mendieta a TOKO por la máquina local (Mendieta no tiene clave para TOKO), con un script que
+verifica el md5 y recién entonces envía los dos jobs. **Postergado:** la copia se cortó a 1.4 GB porque había que
+apagar la máquina local; se borró el `.part` y no se envió nada a TOKO (oracle y dermlip son para el Cap. 5).
+
+### Nivel 1 de LLaVA-Med v2 sobre las particiones de prueba — descarga de Mendieta job 1179991 (local)
+1179991 termina `FAILED` tras 30 h, pero la generación está completa: SkinCoT 457/457 y MM-Skin 1 650/1 653. Las 3
+que «faltan» son entradas `bk7_.DS_Store`, `bk8_.DS_Store` y `bk10_.DS_Store` de `mmskin_splits.json` (basura de
+`caption.csv`), así que el control final del script falla en falso. Corregido en `slurm/mendieta/v5/level1_test.sh`
+(espera 1 650); 1179990 (Mini-VLM v3) ya se envió con la copia anterior y terminará igual. Reportes bajados por
+`tar` sobre ssh a `generated_reports/llava_med/v2/{skincot,mmskin}_test`, log en `outputs/slurm_logs/level1/`.
+
+```
+python scripts/evaluate_reports.py --model llava_med --level 1 --dataset v2/skincot_test --strip-reasoning --output_dir outputs/results/level1_test/skincot_test
+python scripts/evaluate_reports.py --model llava_med --level 1 --dataset v2/mmskin_test  --strip-reasoning --output_dir outputs/results/level1_test/mmskin_test
+```
+
+Se descartan los pares sin referencia: en SkinCoT, 31 textos que están enteros dentro de `<think>` y no dejan
+referencia al quitarlo (quedan 426); en MM-Skin, 236 filas de `caption.csv` sin descripción (quedan 1 414).
+
+| LLaVA-Med v2 | n | BLEU-4 | ROUGE-L | METEOR | CIDEr | BERTScore F1 |
+|---|---|---|---|---|---|---|
+| SkinCoT test | 426 | 0.102 | 0.191 | 0.329 | 0.054 | 0.797 |
+| MM-Skin test | 1 414 | 0.001 | 0.037 | 0.088 | 0.009 | 0.669 |
+
+MM-Skin coincide con el subconjunto de prueba del recálculo del 12/10 (n = 381, BERTScore 0.670). Falta Mini-VLM
+v3 (1179990, `PENDING`).
+
+---
+
+## 2026-10-18
+
+### Verificaciones del Cap. 3 contra el código — **Sin jobs SLURM** (local)
+Sale de contrastar el Cap. 3 con el código y los registros. Mendieta: 1179986–1179990 siguen `PENDING`
+(Priority) y 1179991 corre hace 21 h; el Cap. 3 describe Mini-VLM v3 y lo marca con `\pendiente`.
+
+- **Calibración post-hoc del split por lesión regenerada** (`posthoc_calibration.py --glob-lesion` →
+  `outputs/results/calibration/posthoc_calibration.json`; no estaba en local ni en TOKO/Mendieta). Reproduce el
+  registro del 26/09: Swin t06 ECE 0.040 → TS 0.027 (T = 0.85) → VS 0.014; ConvNeXt t02 0.040 → 0.027 → 0.033.
+- **HIBA por modalidad versionado** (`scripts/hiba_por_modalidad.py`, nuevo → `outputs/results/hiba_por_modalidad.json`).
+  Las 1 616 imágenes se alinean por posición con `metadata.csv` (verificado con `y_true`). Swin 0.624 / 0.263 de
+  exactitud (dermoscópica / clínica), ConvNeXt 0.632 / 0.283: coincide con la revisión del 03/10. Todas las
+  corridas `*_predictions_hiba.json` usan las mismas 1 616 imágenes.
+- **Piloto de plantillas recalculado con el matcher estricto** (LLaVA-Med, 100 imágenes, sin `<think>`):
+  noreasoning 0.86, confirmed 0.69, conclude 0.58, dxfirst 0.50, baseline 0.46. El orden no cambia; si además se
+  quita el `<think>` sin cerrar, noreasoning sigue en 0.86 y las demás caen a 0.05–0.47.
+- **`<think>` sin cerrar** (`THINK_RE` exige el cierre): solo afecta a LLaVA-Med. En `full_differential_les`, 144 de
+  248 reportes; la consistencia estricta pasaría de 0.677 a 0.407 si se quitara hasta el final. En los demás brazos
+  de LLaVA-Med son 8–30 de 1 503 (diferencias ≤ 0.006). Mini-VLM y SkinVL-MM: ninguno.
+- **`THINK_RE` corregido y LLaVA-Med re-evaluado.** La expresión de los siete scripts de medición
+  (`ensemble_bootstrap`, `per_class_ensemble`, `error_taxonomy`, `rag_les_eval`, `level1_mmskin_recalc`,
+  `generate_template_report`, `evaluate_reports --strip-reasoning`) pasa a `<think>.*?(?:</think>|$)`: un bloque que
+  el límite de 384 tokens dejó abierto se quita hasta el final. Copias previas en
+  `outputs/results/_pre_think_fix_20261018/`. Re-ejecutados `ensemble_bootstrap.py --model llava_med --anchor les
+  --report_only --strict`, `per_class_ensemble.py --strict` (3 generadores → `per_class_les_strict/`),
+  `uncertainty_analysis.py --model llava_med --anchor les` y `error_taxonomy.py --models llava_med`
+  (→ `error_taxonomy_les/llava_med/`). Cambios (LLaVA-Med): Swin 0.749 → 0.745, oracle 0.860 → 0.854, DermLIP
+  0.345 → 0.340, sin anclaje igual (0.582). **Pipeline frente a grounding simple (n = 1452): +0.034 [+0.020,
+  +0.048] → −0.011 [−0.025, +0.003], n. s.**; diferencial frente a forzado (n = 248): +0.198 → −0.065 [−0.141,
+  +0.016], n. s.; pipeline − sin generador −0.110 → −0.160. Con LLaVA-Med el ruteo deja de mejorar el reporte:
+  la ganancia anterior venía de razonamiento sin cerrar que nombraba los candidatos. Mini-VLM y SkinVL-MM sin
+  cambios. Pendiente: `experimentacion.tex:82` conserva la cifra anterior (+0.056).
+- **Partición de SkinCoT:** 18 imágenes figuran en dos carpetas de enfermedad con textos distintos; el split por id
+  deja 2 136 / 463 / 460 pares (lo que cargó el entrenamiento) y 3 ids de prueba también en train o val
+  (`lichen-planus-89`, `molluscum-contagiosum-144`, `alopecia-areata-23`).
+
+---
+
+## 2026-10-17
+
+### DenseNet121 y ViT-B/16 moderna: descarga y análisis — **Sin jobs SLURM** (local)
+Resul: [densenet_vit_moderna_resul](resul/densenet_vit_moderna_resul_20261017.md) (cierra el plan del 12/10;
+veredicto **CUMPLE**). Descarga por `scp` de los 18 JSON de las 6 corridas y de los `.out` 99007–99012 (no
+`sync_down`, para no pisar `outputs/results/` local con copias remotas).
+
+- **Tests estadísticos:** `statistical_tests.py --models` con los ganadores `_les`, DenseNet121 t02 y ViT-B/16 t06
+  modernos (semilla 42), DermLIP ZS y VLM ZS → `outputs/results/statistical_tests_les_v2.json` (el `_les` anterior,
+  con los legacy, se conserva). Swin vs ViT p = 0.42; Swin vs DenseNet p = 0.021, ns con Holm.
+- **Informe:** `scripts/densenet_vit_moderna_report.py` (nuevo) → `outputs/results/densenet_vit_moderna_report.json`:
+  media ± sd en test y validación, receta anterior frente a moderna y Holm sobre las dos familias de 21 pares.
+  ViT-B/16 F1m 0.707 ± 0.025 (Swin 0.733 ± 0.026), DenseNet121 0.655 ± 0.017.
+- **Tabla SOTA:** `Docs/tabla_resultados_sota/tablas_comparativas_sota_v34.tex`.
+
+---
+
+## 2026-10-12
+
+### DenseNet121 y ViT-B/16 con la receta moderna (split por lesión) — TOKO jobs 99007–99012
+Plan: [densenet_vit_moderna_plan](ideas/densenet_vit_moderna_plan_20261012.md). Los dos modelos que quedaron con la
+receta legacy se entrenan con la moderna y el trial ganador de su familia, sin pesos por clase, semillas 42/43/44:
+DenseNet121 ← t02 de ConvNeXt (99007–99009), ViT-B/16 ← t06 de Swin (99010–99012). Cambio de código:
+`submit_sweep.py --model` acepta `densenet` y `vit`. Código remoto idéntico al local (md5 sin CRLF); sin `sync_up`.
+
+```
+python scripts/toko/submit_sweep.py --model densenet --lesion-split --class-weights none --trials t02 --seeds 42 43 44
+python scripts/toko/submit_sweep.py --model vit      --lesion-split --class-weights none --trials t06 --seeds 42 43 44
+```
+
+**Resul:** [densenet_vit_moderna_resul](resul/densenet_vit_moderna_resul_20261017.md). 6/6 OK el 14/10.
+
+### Mini-VLM v3 (LoRA sobre el LLM) + Nivel 1 sobre las particiones de prueba — Mendieta jobs 1179985–1179991
+Plan: [mini_vlm_lora_llm_plan](ideas/mini_vlm_lora_llm_plan_20261012.md). El LoRA de `stage2_mini_vlm_v2` quedó
+solo en CLIP; v3 usa `--lora_target_modules qkv_proj q_proj v_proj` (31 457 280 entrenables, verificado sin cargar
+pesos). Cambios de código: `train_vlm_stage2.py` (`--lora_target_modules`; métricas `stage2_metrics_<run>.json`),
+`generate_report.py` (filtro de partición acepta nombres con extensión, como los de `mmskin_splits.json`;
+referencias NaN ya no se guardan como «nan»), `evaluate_reports.py` (descarta referencias «nan»), `submit.py`
+(`--after JOBID` → `afterok`, alias `*_v3`), `slurm/mendieta/v5/`. Subidos por `scp` (md5 verificado; copias
+`*.bak_20261012` en remoto); no se usó `sync_up` porque la carpeta principal está en otra rama.
+
+| Job | Alias | Depende de | Qué hace |
+|---|---|---|---|
+| 1179985 | `mini_s2_v3` | — | Etapa 2 v3 → `outputs/checkpoints/stage2_mini_vlm_v3/` |
+| 1179986 | `cascade_mini_v3` | 1179985 | baseline, swin_les, oracle, dermlip (1503) + differential_les (248) → `generated_reports/mini_vlm_v3/` |
+| 1179987 | `extra_mini_v3` | 1179985 | rag_les, swin_rag_les (1503) + oracle_noimage, wrong_swap (400) |
+| 1179988 | `classify_mini_v3_lik` | 1179985 | Clasificación por verosimilitud → `results/mini_vlm/v3/` |
+| 1179989 | `classify_mini_v3_cot` | 1179985 | Clasificación CoT → `results/mini_vlm/v3/` |
+| 1179990 | `level1_mini_v3` | 1179985 | SkinCoT test (457) + MM-Skin test (1653) |
+| 1179991 | `level1_llava_v2` | — | Ídem con LLaVA-Med v2 → `generated_reports/llava_med/v2/{skincot,mmskin}_test` |
+
+**Envío:**
+```
+python scripts/mendieta/submit.py mini_s2_v3 --no-sync                       # 1179985
+python scripts/mendieta/submit.py after_mini_v3 --no-sync --after 1179985    # 1179986-1179990
+python scripts/mendieta/submit.py level1_llava_v2 --no-sync                  # 1179991
+```
+
+**Locales del mismo día (sin SLURM):** Nivel 1 de MM-Skin recalculado sin las referencias «nan»
+(`scripts/level1_mmskin_recalc.py`, nota en [reportes_resul_v2](resul/reportes_resul_v2_20260517.md) §4.1);
+latencia de generación desde las corridas comparables del re-anclaje (`measure_cost.py`, nota en
+[costo_resul](resul/costo_resul_20260705.md)): Mini-VLM 16.4 s, LLaVA-Med 26.2 s, SkinVL-MM 3.4 s por reporte.
+
+**Resul:** pendiente hasta que bajen los jobs.
+
+## 2026-10-11
+
+### Verificaciones para los pendientes del Cap. 3 — **Sin jobs SLURM** (local)
+Resul: [verificaciones_cap03_resul](resul/verificaciones_cap03_resul_20261011.md) — **CUMPLE**. Se bajaron los logs
+1153597/1153598 (stage 2 v2) y se calcularon con `scripts/verificaciones_cap03.py` y
+`scripts/verificaciones_cap03_vlm_ci.py` los IC de HIBA, el bootstrap por lesión, Holm y los IC de los VLM ajustados.
+Hallazgos: el LoRA de Mini-VLM entrena solo el codificador visual (6 291 456 parámetros; Phi-3.5 fusiona la atención
+en `qkv_proj`); las métricas de Nivel 1 de MM-Skin incluyen 539/175 referencias «nan» y no usan su partición; el
+piloto de *noreasoning* mezcló 67 train / 10 val / 17 test; Wilcoxon por clase no sobrevive a Holm.
+
 ## 2026-10-03
 
 ### RAG con el índice por lesión + métrica oficial de la cascada — Mendieta job 1179315
@@ -26,7 +274,11 @@ como limitación.
 python scripts/mendieta/submit.py rag_les --no-sync   # 1179315 (inicio estimado 2026-10-04 15:45)
 ```
 
-**Resul:** pendiente hasta que baje el job.
+**Resul (2026-10-11):** [rag_les_resul](resul/rag_les_resul_20261011.md) — **CUMPLE**. Job COMPLETED (21 h),
+2 × 1503 reportes, bajados con `sync_down.py --reports`; evaluación local con `scripts/rag_les_eval.py`
+(`outputs/results/rag_les_eval.json`). RAG solo 0.669 (+0.506 sobre no anclar, −0.180 frente al *grounding*
+Swin 0.849, −0.112 frente al voto kNN impreso 0.781); Swin + RAG 0.862 (+0.013 [+0.007, +0.019] sobre Swin),
+ganancia que viene de nombrar la clase de los vecinos (consistencia exclusiva −0.055 frente a Swin impreso).
 
 ### Revisión profunda de la experimentación — **Sin jobs SLURM** (local + segunda opinión)
 Resul: [revision_experimentacion](resul/revision_experimentacion_20261003.md) — **CUMPLE con correcciones**.
@@ -1490,6 +1742,7 @@ Modelos: DenseNet121, ViT-B/16, ConvNeXt-Tiny, Swin-Tiny. Con evaluación HIBA O
 
 | Documento | Tipo | Descripción |
 |-----------|------|-------------|
+| [mini_vlm_lora_llm_resul_v3_20261024.md](resul/mini_vlm_lora_llm_resul_v3_20261024.md) | Resultado | Mini-VLM v3 (LoRA en el LLM), parcial: no cambia la cascada con Swin; oracle 0.967 por el `<think>` |
 | [vlm_domain_gap_clinica_plan_20260603.md](ideas/vlm_domain_gap_clinica_plan_20260603.md) | Plan | Confirmación afirmativa domain gap (VLM ZS foto clínica vs dermatoscopía) |
 | [vlm_domain_gap_clinica_resul_20260604.md](resul/vlm_domain_gap_clinica_resul_20260604.md) | Resultado | Domain gap NO confirmado → limitación general de grano fino; clasificación VLM cerrada |
 | [dermlip_clasificacion_plan_20260604.md](ideas/dermlip_clasificacion_plan_20260604.md) | Plan | Agregar DermLIP (VL classifier derm-especializado, CLIP-style) — ¿resuelve la clasificación? |

@@ -1,0 +1,41 @@
+% Figura: pipeline propuesto (cascada con ruteo). Adaptada de fig:cascada y de fig:incertidumbre de
+% Docs/experimentacion/experimentacion.tex, sin cifras. Se usa en sec:met_pipeline, después del párrafo que la cita.
+% Coordenadas en mm reales (x=1mm): cada recuadro mide su text width más 2.8 mm de inner sep; el tronco de las
+% flechas que salen de la imagen queda entre la imagen y las cajas del clasificador y del kNN. Ancho: unos 148 mm.
+
+\begin{figure}[H]
+    \centering
+    \hyphenpenalty=10000 \exhyphenpenalty=10000
+    \begin{tikzpicture}[x=1mm, y=1mm]
+
+        \node[figentrada, text width=23mm] (img) at (-2, 0) {Imagen\\{\footnotesize dermatoscópica}};
+
+        \node[figtarea, text width=28mm] (clf) at (34, 16)
+            {Clasificador\\{\footnotesize Swin-Tiny}};
+        \node[figtarea, text width=28mm, draw=figceleste!70!black, fill=figceleste!18] (knn) at (34, -16)
+            {kNN sobre\\{\footnotesize \emph{embeddings} de DermLIP}};
+
+        \node[fignodo, text width=22mm, fill=figrelleno] (rut) at (66.5, 0) {Ruteo por\\concordancia};
+
+        \node[figtarea, text width=24mm] (gen) at (100.5, 0) {Generador\\{\footnotesize plantilla según el nivel}};
+        \node[figsalida, text width=13mm] (rep) at (125.5, 0) {Reporte};
+
+        \node[figsalida, text width=26mm, draw=figbermellon!80!black, fill=figbermellon!12] (der) at (66.5, -37)
+            {Derivación a\\especialista};
+
+        \draw[figflecha] (img.east) -- ++(5, 0) |- (clf.west);
+        \draw[figflecha] (img.east) -- ++(5, 0) |- (knn.west);
+        \draw[figflecha] (clf.east) -| node[figetiqueta, pos=0.3, above] {clase} (rut.north);
+        \draw[figflecha] (knn.east) -| ([xshift=-7mm]rut.south);
+        \node[figetiqueta, anchor=north west, align=left] at ([xshift=1mm, yshift=-1mm]knn.east) {voto y\\consenso};
+        \draw[figflecha] (rut.east) -- (gen.west);
+        \draw[figflecha] (gen.east) -- (rep.west);
+        \draw[figflecha] (rut.south) -- (der.north);
+
+        \node[figetiqueta, anchor=west] at (67.5, -17) {sin consenso};
+
+    \end{tikzpicture}
+    \caption{Pipeline propuesto. Según la concordancia entre clasificador y kNN, el generador redacta un reporte
+    o el caso se deriva.}
+    \label{fig:met_pipeline}
+\end{figure}

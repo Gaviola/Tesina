@@ -1,4 +1,10 @@
 \section{Ensamble en cascada}
 \label{sec:res_gen_cascada}
 \pendiente{Se justifica el uso de un ensamble y se presentan sus resultados con distintas fuentes de
-diagnóstico (clasificador, DermLIP y \emph{oracle} como cota superior), con dos generadores y por clase.}
+diagnóstico (clasificador, DermLIP y \emph{oracle} como cota superior), con dos generadores y por clase. Como control, se compara la variante de Mini-VLM con el modelo de lenguaje ajustado contra la
+configuración principal sobre las mismas imágenes.}
+% Fuente del control: Codigo/docs/resul/mini_vlm_lora_llm_resul_v3_20261024.md (parcial, 24/10/2026).
+% v3 − v2 (consistencia oficial, bootstrap pareado 2000): oracle 0.967 vs 0.999, −0.033 [−0.042, −0.023] (el
+% diagnóstico queda dentro del <think> cortado en 31 de 50 fallas); DermLIP 0.412 vs 0.391, +0.021 [+0.007, +0.035];
+% Swin por lesión (n = 963) 0.843 vs 0.850, −0.007 [−0.021, +0.006]; sin anclaje (n = 372) +0.011 n.s.; diferencial
+% (n = 248) 0.863 vs 0.831, +0.032 [−0.008, +0.077]. Si terminan los tramos de Swin en short, recalcular con n = 1503.

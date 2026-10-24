@@ -45,7 +45,7 @@ from src.evaluation.clinical_ner import (
 logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
-THINK_RE = re.compile(r"<think>.*?</think>", re.DOTALL | re.IGNORECASE)
+THINK_RE = re.compile(r"<think>.*?(?:</think>|$)", re.DOTALL | re.IGNORECASE)
 
 # Términos DISTINTIVOS por clase HAM (CLASS_RE): definidos en clinical_ner, donde también los usa la
 # consistencia diagnóstica estricta.

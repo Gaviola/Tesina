@@ -37,7 +37,7 @@ from src.data.collators import VLMCollator
 from src.data.ham10000 import HAM10000_CLASSES, HAM10000_LABEL_MAP, HAM10000Dataset
 from src.evaluation.vlm_scoring import CLASS_SYNONYMS, COT_PROMPT, PROMPT_TEMPLATES, score_image
 from src.models.factory import build_model
-from src.training.lora_config import apply_lora, get_lora_config
+from src.training.lora_config import apply_lora, get_lora_config, load_finetuned_state_dict
 from src.utils.device import check_vram, get_device, get_training_dtype, get_vram_gb
 from src.utils.io import load_checkpoint, save_results
 from src.utils.logging import format_duration, log_time, setup_logger
@@ -650,7 +650,7 @@ def main():
 
             lora_config = get_lora_config(**lora_params)
             model.model = apply_lora(model.model, lora_config)
-            model.load_state_dict(ckpt_data["model_state_dict"])
+            load_finetuned_state_dict(model, ckpt_data["model_state_dict"])
             logger.info(
                 "Checkpoint fine-tuneado cargado: %s (LoRA r=%d, alpha=%d)",
                 args.checkpoint, lora_params["r"], lora_params["lora_alpha"],

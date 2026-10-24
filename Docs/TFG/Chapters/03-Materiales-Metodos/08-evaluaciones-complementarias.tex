@@ -1,0 +1,174 @@
+% Extensión estimada: 3--3.5 páginas, cinco subsecciones y una tabla de correspondencia.
+% Fuentes: scripts/robustness_perturbations.py; scripts/posthoc_calibration.py; scripts/interpretability.py;
+% scripts/measure_cost.py; outputs/results/{lesion_split_report, robustness/robustness_summary, cost/cost_comparison,
+% *_hiba_test_results}.json; docs/resul/revision_experimentacion_20261003.md.
+% Revisión del autor del 18/10/2026: reemplaza a la antigua Sección 3.9 (Análisis complementarios). Las pruebas
+% estadísticas pasaron a 3.7 (sec:met_estadistica).
+% Revisión del tutor del 21/10/2026: una subsección por tipo de evaluación (generalización, robustez, calibración,
+% interpretabilidad, costo), cada una con objetivo, procedimiento y métrica; el hardware de la medición de costo pasa
+% a 3.9; cierra con la tabla que relaciona cada experimento con su objetivo y su métrica.
+
+\section{Evaluaciones complementarias}
+\label{sec:met_complementarios}
+
+La prueba de \emph{HAM10000} mide el desempeño en las mismas condiciones en que se entrenaron los modelos: la misma
+población, el mismo equipo de captura y la misma forma de etiquetar. Sin embargo, el tercer objetivo específico pide
+evaluar los modelos en escenarios en que esas condiciones cambian (Sección~\ref{sec:marco_generalizacion}), y conocer
+cuánto se puede confiar en sus salidas y cuánto cuesta ejecutarlos. Cada evaluación de esta sección responde una de
+esas preguntas. Las cuatro primeras se aplican a los clasificadores, que son los que fijan el diagnóstico del
+\emph{pipeline}, y la última incluye también a los generadores. Salvo que se indique otra cosa, se usan los modelos
+elegidos en la Sección~\ref{sec:met_supervisados} con la semilla 42.
+
+\subsection{Generalización a otra población}
+\label{sec:met_hiba}
+
+La primera evaluación busca saber si el desempeño se sostiene en una población distinta de la de entrenamiento. Para
+ello, Swin-Tiny y ConvNeXt-Tiny se evalúan sin ningún ajuste sobre las 1\,616 imágenes de \emph{HIBA}
+(Sección~\ref{sec:met_datasets}), y la sensibilidad macro de cada uno se compara con la que obtiene en la prueba de
+\emph{HAM10000}. Como \emph{HIBA} mezcla imágenes dermatoscópicas y clínicas, el resultado también se separa por
+modalidad. Parte de la diferencia, sin embargo, puede deberse al mapeo de diagnósticos, que lleva el carcinoma
+escamoso a AKIEC, y no al cambio de población. Esa fuente de ruido no puede separarse, y por ello se declara.
+
+\subsection{Robustez a perturbaciones de la imagen}
+\label{sec:met_robustez}
+
+La segunda evaluación mide qué ocurre si empeoran las condiciones de captura sin cambiar de conjunto. Con este
+propósito, y siguiendo el esquema de los bancos de prueba de corrupciones de imagen~\cite{hendrycks2019benchmarking},
+a las 1\,503 imágenes de prueba se les aplican cuatro perturbaciones, con cinco niveles de intensidad cada una:
+compresión JPEG (calidad de 70 a 5), ruido gaussiano (desvío de 8 a 64 sobre la escala de 0 a 255), desenfoque
+gaussiano (radio de 1 a 6 píxeles) y reducción de la resolución (de 0.75 a 0.15 del tamaño original, y vuelta al
+tamaño original). La métrica es la caída relativa de la sensibilidad macro frente a la imagen sin perturbar
+(Ecuación~\ref{eq:marco_robustez}). A diferencia de la prueba principal, esta evaluación usa una sola vista de la
+imagen, sin \gls{tta}.
+
+\subsection{Calibración}
+\label{sec:met_calibracion}
+
+La tercera evaluación busca saber cuánto se puede confiar en la probabilidad que da el modelo, que fija el umbral de
+melanoma y que un clínico leería como certeza. Para ello se miden el ECE y el Brier
+(Sección~\ref{sec:marco_eval_calib}) sin calibrar y con dos ajustes posteriores, \emph{temperature scaling} y
+\emph{vector scaling}, que se ajustan en validación y se evalúan en la prueba. Como el modelo guarda las
+probabilidades promediadas con \gls{tta} y no sus salidas previas a la softmax, ambos ajustes se aplican sobre el
+logaritmo de esas probabilidades, una aproximación que se declara. Además, dado que los pesos por clase alteran la
+confianza del modelo, se comparan dos versiones de la misma configuración, entrenadas con y sin ellos.
+
+\subsection{Interpretabilidad}
+\label{sec:met_interpretabilidad}
+
+La cuarta evaluación examina en qué parte de la imagen se apoya el modelo. Para ello se aplica Grad-CAM
+(Sección~\ref{sec:marco_eval_gradcam}) a Swin-Tiny, sobre la última etapa de la red y para la clase predicha, en siete
+imágenes de prueba, una por clase, con una sola vista. Es una inspección cualitativa, que muestra si la activación cae
+sobre la lesión, pero no mide el acierto ni prueba un razonamiento clínico.
+
+\subsection{Costo computacional}
+\label{sec:met_costo}
+
+La última evaluación estima el costo computacional de ejecutar los modelos y el \emph{pipeline}, que es parte de la
+restricción de la Sección~\ref{sec:met_tareas}. Para los clasificadores se miden el número de parámetros, el tiempo de
+inferencia de una imagen y la cantidad de imágenes procesadas por segundo. Para los generadores, en cambio, se toma el
+tiempo por reporte de las ejecuciones de la generación, que comparten instrucción, decodificación y límite de tokens,
+de modo que la diferencia refleja el modelo y la longitud de lo que escribe. No es una medición controlada, sino una
+estimación del orden de magnitud, que permite contrastar el \emph{pipeline} con el cómputo que usan los trabajos
+revisados (Tabla~\ref{tab:marco_brechas} del Capítulo~\ref{cp:marco}). Las condiciones de la medición se detallan en
+la Sección~\ref{sec:met_entorno}.
+
+La Tabla~\ref{tab:met_experimentos} reúne los experimentos de este capítulo con lo que busca cada uno, los datos sobre
+los que se mide y su métrica principal. Los resultados de clasificación y las evaluaciones que se refieren a los
+clasificadores se presentan en el Capítulo~\ref{cp:res_clasif}. Los de generación y del \emph{pipeline}, junto con el
+costo de los generadores, se presentan en el Capítulo~\ref{cp:res_gen}.
+
+\begingroup
+\small
+\setlength{\tabcolsep}{3pt}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{3.5cm}
+    >{\raggedright\arraybackslash\hspace{0pt}}p{4.3cm}
+    >{\raggedright\arraybackslash\hspace{0pt}}p{2.6cm}
+    >{\raggedright\arraybackslash\hspace{0pt}}p{3.5cm}@{}}
+    \caption{Experimentos del trabajo: qué busca cada uno, sobre qué datos se mide y con qué métrica.}
+    \label{tab:met_experimentos}\\
+    \toprule
+    \textbf{Experimento} & \textbf{Qué se busca} & \textbf{Datos} & \textbf{Métrica principal} \\
+    \midrule
+    \endfirsthead
+    \toprule
+    \textbf{Experimento} & \textbf{Qué se busca} & \textbf{Datos} & \textbf{Métrica principal} \\
+    \midrule
+    \endhead
+    \bottomrule
+    \endlastfoot
+    Clasificadores supervisados (Sección~\ref{sec:met_supervisados})
+        & Comparar las dos familias de arquitecturas con el mismo procedimiento
+        & Prueba de \emph{HAM10000}
+        & Sensibilidad macro; F1 macro \\
+    \filasep
+    Funciones de pérdida para el desbalance
+        & Ver si otra función de pérdida mejora las clases minoritarias
+        & Prueba de \emph{HAM10000}
+        & Sensibilidad macro \\
+    \filasep
+    Detección de melanoma
+        & Detectar melanomas con un tope de falsas alarmas
+        & Prueba de \emph{HAM10000}
+        & Sensibilidad y especificidad con umbral; AUC \\
+    \filasep
+    Fuga de información (Sección~\ref{sec:met_particiones})
+        & Estimar cuánto sobreestimaba la fuga el desempeño
+        & Prueba completa y subconjunto sin lesiones compartidas
+        & Sensibilidad macro \\
+    \filasep
+    Clasificación con \glspl{vlm} (Sección~\ref{sec:met_clasif_vlm})
+        & Saber si un \gls{vlm} clasifica tan bien como un supervisado
+        & Prueba de \emph{HAM10000}
+        & Sensibilidad macro; McNemar con Holm \\
+    \filasep
+    Generación con referencia
+        & Medir el parecido del reporte con un texto de referencia
+        & Prueba de \emph{MM-Skin} y de \emph{SkinCoT}
+        & Nivel~1 (BLEU-4, ROUGE-L, METEOR, CIDEr, BERTScore) \\
+    \filasep
+    Ajuste del modelo de lenguaje de Mini-VLM (Sección~\ref{sec:met_generacion})
+        & Ver si ajustar también el modelo de lenguaje cambia el reporte
+        & Prueba de \emph{HAM10000} y de \emph{SkinCoT}
+        & Diferencia pareada de la consistencia diagnóstica; Nivel~1 \\
+    \filasep
+    Cascada con cuatro fuentes (Sección~\ref{sec:met_referencias})
+        & Saber si el reporte afirma el diagnóstico correcto y cuánto aporta el anclaje
+        & Prueba de \emph{HAM10000}
+        & Consistencia diagnóstica \\
+    \filasep
+    Recuperación (Sección~\ref{sec:met_recuperacion})
+        & Ver si los casos parecidos mejoran el reporte
+        & Prueba de \emph{HAM10000}
+        & Consistencia diagnóstica \\
+    \filasep
+    Ruteo en tres niveles (Sección~\ref{sec:met_ruteo})
+        & Ver si la concordancia separa aciertos de errores y cuánto aporta el generador
+        & Prueba de \emph{HAM10000}
+        & Consistencia diagnóstica por nivel; proporción de casos en cada nivel \\
+    \filasep
+    Generalización (Sección~\ref{sec:met_hiba})
+        & Ver si el desempeño se sostiene en otra población
+        & \emph{HIBA}
+        & Sensibilidad macro \\
+    \filasep
+    Robustez (Sección~\ref{sec:met_robustez})
+        & Medir la caída ante peores condiciones de captura
+        & Prueba de \emph{HAM10000} perturbada
+        & Caída relativa de la sensibilidad macro \\
+    \filasep
+    Calibración (Sección~\ref{sec:met_calibracion})
+        & Saber cuánto se puede confiar en la probabilidad
+        & Validación y prueba de \emph{HAM10000}
+        & ECE; Brier \\
+    \filasep
+    Interpretabilidad (Sección~\ref{sec:met_interpretabilidad})
+        & Ver en qué parte de la imagen se apoya el modelo
+        & Siete imágenes de prueba
+        & Inspección cualitativa \\
+    \filasep
+    Costo computacional (Sección~\ref{sec:met_costo})
+        & Estimar el costo de ejecutar los modelos y el \emph{pipeline}
+        & Prueba de \emph{HAM10000}
+        & Parámetros; tiempo por imagen y por reporte \\
+\end{longtable}
+\endgroup

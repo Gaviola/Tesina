@@ -1,0 +1,26 @@
+% Extensión estimada: algo más de media página, tres párrafos.
+% Fuentes: Codigo/CLAUDE.md (GPU de cada clúster y del equipo local, bf16 en Ampere o posterior);
+% Codigo/requirements.txt y src/models/{classifiers,dermlip,mini_vlm}.py (bibliotecas); scripts/measure_cost.py
+% (costo de los clasificadores en la RTX 4070, lotes de 32); Apéndice E (ap:reproducibilidad).
+% Revisión del tutor del 21/10/2026: sección nueva que reúne el hardware, las semillas y las bibliotecas, antes
+% dispersos en 3.1, 3.3, 3.6 y 3.8. Sin versiones de CUDA ni herramientas internas (regla R1 del autor).
+\section{Entorno experimental y recursos computacionales}
+\label{sec:met_entorno}
+
+Los experimentos se ejecutaron en tres GPU, todas dentro de la restricción de la Sección~\ref{sec:met_tareas}. Los
+clasificadores supervisados se entrenaron en una RTX 4080 de 16~GB, en el clúster TOKO de la Universidad Nacional de
+Cuyo. El ajuste de los \glspl{vlm} y la generación de los reportes se ejecutaron en una A30 de 24~GB, en el clúster
+Mendieta de la Universidad Nacional de Córdoba. Por último, una RTX 4070 de 12~GB, en un equipo personal, se usó para
+calcular las métricas de generación y para medir el costo de los clasificadores. Las tres GPU tienen arquitectura Ampere
+o posterior, lo que permite entrenar en precisión \emph{bfloat16} (bf16) en todos los casos.
+
+En cuanto a la medición del costo (Sección~\ref{sec:met_costo}), el tiempo de inferencia y la cantidad de imágenes por
+segundo de los clasificadores se midieron en la RTX 4070, con lotes de 32 imágenes. El tiempo por reporte de los
+generadores, en cambio, se tomó de las ejecuciones de la generación en la A30. Como las dos mediciones se hicieron en
+GPU distintas, la comparación entre clasificadores y generadores es solo de orden de magnitud.
+
+El código usa PyTorch y torchvision para los clasificadores supervisados, las bibliotecas \texttt{transformers} y
+\texttt{peft} de Hugging Face para los \glspl{vlm} generativos y LoRA, \texttt{open\_clip} para DermLIP y scikit-learn
+para las cabezas clásicas, la partición y las métricas. Todos los entrenamientos fijan la semilla 42, salvo las
+réplicas con las semillas 43 y 44 de la Sección~\ref{sec:met_supervisados_ensamble}. El
+Apéndice~\ref{ap:reproducibilidad} reúne lo necesario para repetir cada experimento.

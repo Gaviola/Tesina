@@ -45,7 +45,7 @@ logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 DATA_DIR = Path("data/raw/HAM10000")
-THINK_RE = re.compile(r"<think>.*?</think>", re.DOTALL | re.IGNORECASE)
+THINK_RE = re.compile(r"<think>.*?(?:</think>|$)", re.DOTALL | re.IGNORECASE)
 REPORT_ONLY = False  # --report_only
 STRICT = False       # --strict
 REPORTS_DIR = Path("outputs/generated_reports/mini_vlm")  # sobreescrito por --model
