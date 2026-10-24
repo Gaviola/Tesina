@@ -1,4 +1,65 @@
+% Extensión estimada: unas 2 páginas y una tabla (ficha 4.2).
+% Fuentes: ficha fichas/04-resultados-clasificacion/02-deteccion-melanoma.md; Codigo/outputs/results/
+% lesion_split_report.json (melanoma, melanoma_semillas). La detección con umbral existe para Swin-Tiny,
+% ConvNeXt-Tiny y el ensamble.
 \section{Detección de melanoma}
 \label{sec:res_melanoma}
-\pendiente{Melanoma frente al resto: AUC, sensibilidad y especificidad con el umbral fijado en validación, por modelo
-y para el ensamble, y comparación con la literatura.}
+
+La variación de la sensibilidad de \gls{mel} entre semillas no se repite en la capacidad del modelo para separar los
+melanomas del resto. Con Swin-Tiny, el \gls{auc} de melanoma es de 0.921 $\pm$ 0.005, frente a una sensibilidad que,
+tomando la clase de mayor probabilidad, va de 0.563 a 0.701 según la semilla. Es decir, las tres ejecuciones ordenan
+los casos de manera parecida, y lo que cambia entre ellas es cuántos melanomas quedan por encima del corte implícito
+en elegir la clase más probable. Por lo tanto, fijar ese corte de manera explícita, como propone la
+Sección~\ref{sec:met_seleccion}, debería estabilizar también la decisión. Solo se evalúan Swin-Tiny, ConvNeXt-Tiny y
+su ensamble, que son los modelos de la búsqueda de hiperparámetros.
+
+La Tabla~\ref{tab:res_melanoma} compara las dos formas de decidir. Con el umbral fijado en validación, la
+sensibilidad de Swin-Tiny pasa de 0.623 $\pm$ 0.071 a 0.796 $\pm$ 0.036, y la de ConvNeXt-Tiny, de 0.553 a 0.794. A
+cambio, la especificidad baja de alrededor de 0.95 a alrededor de 0.86. Además, en las nueve ejecuciones la
+especificidad en la prueba queda entre 0.844 y 0.862, cerca del mínimo de 0.850 que se exigió en validación, de modo
+que el umbral elegido en una partición conserva su efecto en la otra.
+
+\begin{table}[H]
+    \centering
+    \caption{Detección de melanoma en la prueba con la clase más probable y con el umbral fijado en validación, media $\pm$ desvío de tres semillas.}
+    \label{tab:res_melanoma}
+    \small
+    \setlength{\tabcolsep}{3pt}
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X
+        >{\centering\arraybackslash}p{2.1cm}>{\centering\arraybackslash}p{2.1cm}>{\centering\arraybackslash}p{2.1cm}
+        >{\centering\arraybackslash}p{2.1cm}>{\centering\arraybackslash}p{2.1cm}@{}}
+        \toprule
+        & & \multicolumn{2}{c}{\textbf{Clase más probable}} & \multicolumn{2}{c}{\textbf{Umbral de validación}} \\
+        \cmidrule(lr){3-4}\cmidrule(l){5-6}
+        \textbf{Modelo} & \textbf{AUC} & \textbf{Sensibilidad} & \textbf{Especificidad} & \textbf{Sensibilidad}
+            & \textbf{Especificidad} \\
+        \midrule
+        Swin-Tiny & 0.921 $\pm$ 0.005 & 0.623 $\pm$ 0.071 & 0.944 $\pm$ 0.022 & 0.796 $\pm$ 0.036 & 0.862 $\pm$ 0.000 \\
+        ConvNeXt-Tiny & 0.909 $\pm$ 0.004 & 0.553 $\pm$ 0.043 & 0.953 $\pm$ 0.007 & 0.794 $\pm$ 0.012 & 0.854 $\pm$ 0.009 \\
+        Ensamble & 0.926 $\pm$ 0.003 & 0.605 $\pm$ 0.057 & 0.952 $\pm$ 0.012 & 0.828 $\pm$ 0.007 & 0.852 $\pm$ 0.006 \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+En cantidad de casos, el cambio de criterio se ve con la ejecución de semilla 42 de Swin-Tiny. Su umbral, de 0.211,
+detecta 130 de los 167 melanomas de la prueba, frente a 117 con la clase más probable, y a cambio señala 185 lesiones
+sin melanoma, frente a 104. Los umbrales de las nueve ejecuciones quedan entre 0.109 y 0.211, muy por debajo de 0.5.
+Esto se relaciona con la prevalencia: \gls{mel} reúne el 11\,\% de las imágenes de prueba, y en muchos melanomas la
+probabilidad de esa clase no llega a ser la mayor, aunque supere la que el modelo asigna a casi todas las lesiones sin
+melanoma. Entre los tres modelos, el ensamble
+obtiene la mayor sensibilidad y el menor desvío entre semillas, 0.828 $\pm$ 0.007, aunque la diferencia con Swin-Tiny
+no se sometió a prueba.
+
+Los trabajos del Capítulo~\ref{cp:marco} muestran el mismo efecto del punto de operación
+(Tabla~\ref{tab:marco_sota_clasificacion}). \textcite{aboulmira2024skinhealthmate}, que clasifican por la clase más
+probable, informan una sensibilidad de melanoma de 0.49, menor que la de Swin-Tiny con el mismo criterio.
+\textcite{yao2022single} alcanzan 0.819 en la prueba de ISIC 2018, pero eligen su modelo sobre esa misma prueba. En el
+otro extremo, \textcite{marchetti2023prospective} operan con una sensibilidad de 96.8\,\% y una especificidad de
+37.4\,\%, sobre lesiones biopsiadas, con un \gls{auc} de 0.857. Como cada trabajo usa otra población y otro umbral, la
+comparación no ordena los modelos, pero muestra que la sensibilidad de melanoma depende tanto del umbral como del
+clasificador, y por eso este trabajo lo fija en validación.
+
+Con estos resultados, el clasificador supervisado queda caracterizado en las dos tareas: en las siete clases, con la
+sensibilidad macro de la Sección~\ref{sec:res_supervisados}, y en melanoma, con un punto de operación que detecta unos
+cuatro de cada cinco casos. La sección siguiente usa esas cifras como referencia para evaluar si un \gls{vlm}
+clasifica las mismas imágenes con un desempeño comparable.
