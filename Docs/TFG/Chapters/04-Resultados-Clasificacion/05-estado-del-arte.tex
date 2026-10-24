@@ -1,0 +1,81 @@
+% Extensión estimada: unas 2.5 páginas, cuatro párrafos y una tabla (ficha 4.5).
+% Fuentes: Tablas tab:marco_sota_clasificacion, tab:marco_sota_vlm y tab:marco_sota_vlm_gen del Capítulo 2 y las
+% cifras de las secciones 4.1 a 4.4. Reúne las comparaciones con la literatura que antes estaban repartidas en cada
+% sección (revisión del autor, 24/10/2026).
+\section{Comparación con el estado del arte}
+\label{sec:res_estado_arte}
+
+Los trabajos del Capítulo~\ref{cp:marco} no permiten una comparación directa con estos resultados, porque difieren en
+los datos, en la forma de dividirlos y en la regla de decisión. Por eso, esta sección no ordena los modelos, sino que
+ubica el orden de magnitud de los resultados y examina qué parte de las diferencias se explica por el protocolo. La
+Tabla~\ref{tab:res_estado_arte} reúne las cifras comparables de cada trabajo junto con la del modelo equivalente de este
+trabajo.
+
+\begin{table}[H]
+    \centering
+    \caption{Resultados de la literatura (Capítulo~\ref{cp:marco}) frente a los de este trabajo. «---»: sin cifra equivalente.}
+    \label{tab:res_estado_arte}
+    \footnotesize
+    \setlength{\tabcolsep}{3pt}
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{2.6cm}
+        >{\raggedright\arraybackslash\hspace{0pt}}X
+        >{\raggedright\arraybackslash\hspace{0pt}}p{2.5cm}
+        >{\centering\arraybackslash}p{1.9cm}>{\centering\arraybackslash}p{1.9cm}@{}}
+        \toprule
+        \textbf{Trabajo} & \textbf{Datos y protocolo} & \textbf{Métrica} & \textbf{Trabajo citado}
+            & \textbf{Este trabajo} \\
+        \midrule
+        \multicolumn{5}{@{}l}{\textit{Clasificación en siete clases (Swin-Tiny)}} \\
+        \textcite{aboulmira2024skinhealthmate} & \emph{HAM10000}; partición no informada & F1 macro & 0.81 & 0.733 \\
+        \textcite{kim2025skinsavvy2} & \emph{HAM10000} ampliado; partición al azar por imagen & Sensibilidad macro
+            & 0.780 & 0.692 \\
+        \textcite{gessert2020skin} & ISIC 2019, otras clases; partición por lesión & Sensibilidad macro & 0.636
+            & 0.692 \\
+        \filasep
+        \multicolumn{5}{@{}l}{\textit{Detección de melanoma (Swin-Tiny)}} \\
+        \textcite{aboulmira2024skinhealthmate} & Clase más probable & Sensibilidad & 0.49 & 0.623 \\
+        \textcite{yao2022single} & ISIC 2018; modelo elegido sobre la prueba & Sensibilidad & 0.819 & 0.796 \\
+        \textcite{marchetti2023prospective} & Lesiones biopsiadas; umbral de alta sensibilidad & AUC & 0.857
+            & 0.921 \\
+        \filasep
+        \multicolumn{5}{@{}l}{\textit{\glspl{vlm} sin ajuste}} \\
+        \textcite{yan2025derm1miccv} & DermLIP; media de cuatro conjuntos & Exactitud & 0.561 & 0.377 \\
+        \textcite{yan2026dermfmzero} & DermFM-Zero; mismo protocolo que DermLIP & Exactitud & 0.733 & --- \\
+        \textcite{zeng2025mmskin} & Generativos en \emph{HAM10000} & Exactitud
+            & $<$ 0.5; SkinVL $>$ 0.5 & 0.037--0.189 \\
+        \textcite{jiang2026multimodal} & Generativos abiertos en consultas reales; tres primeros diagnósticos
+            & Exactitud & 0.015--0.134 & --- \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+En la clasificación de siete clases, los resultados de Swin-Tiny quedan por debajo de los dos trabajos que usan
+\emph{HAM10000}, pero ninguno de ellos divide las imágenes por lesión: uno no informa cómo las divide, y el otro amplía
+el conjunto con imágenes externas y lo divide al azar por imagen. La Sección~\ref{sec:res_fuga} mostró que, en esta
+prueba, una partición por imagen sobreestima la sensibilidad macro en unas 0.07, una cifra del mismo orden que la
+distancia con el segundo trabajo. Por el contrario, el único trabajo que mantiene juntas las imágenes de una lesión
+informa una sensibilidad macro algo menor que la de Swin-Tiny, aunque sobre otro conjunto y con otras clases. La
+comparación no permite atribuir toda la distancia a la partición, porque los trabajos difieren también en los datos y
+en el entrenamiento, pero sí muestra que una parte puede deberse a ella.
+
+En la detección de melanoma, la tabla muestra que la sensibilidad depende tanto de la regla de decisión como del
+modelo. Con la clase más probable, Swin-Tiny detecta más melanomas que el ensamble de
+\textcite{aboulmira2024skinhealthmate}, que usa la misma regla. El trabajo de \textcite{yao2022single} obtiene una
+sensibilidad algo mayor que la de Swin-Tiny con el umbral de validación, pero elige su modelo sobre la misma prueba
+en que lo informa. En el otro extremo, \textcite{marchetti2023prospective} operan con una sensibilidad cercana a la
+total a cambio de una especificidad baja, sobre lesiones que ya habían sido biopsiadas. Como cada trabajo usa otra
+población y otro punto de operación, la comparación no ordena los modelos, pero justifica que este trabajo fije el
+umbral en validación y lo informe junto con la sensibilidad.
+
+En los \glspl{vlm}, en cambio, los resultados coinciden con la literatura. DermLIP sin ajuste obtiene aquí una exactitud
+menor que la que informan sus autores, una diferencia que puede deberse a los conjuntos y a las plantillas de texto.
+DermFM-Zero, que sus autores evalúan con el mismo protocolo, supera a DermLIP, lo que indica que la especialización en
+dermatología sigue mejorando por la vía contrastiva. Entre los generativos, \textcite{zeng2025mmskin} encuentran que
+sin ajuste solo su modelo especializado supera el 50\,\% de exactitud en \emph{HAM10000}, y
+\textcite{jiang2026multimodal} informan exactitudes de entre el 1.5\,\% y el 13.4\,\% con los modelos abiertos en
+consultas reales, entre ellos LLaVA-Med. Por lo tanto, el colapso de los generativos de propósito general no es propio
+de este trabajo.
+
+En conjunto, la comparación ubica a Swin-Tiny cerca de los trabajos con un protocolo comparable y por debajo de los que
+usan una partición por imagen, y confirma que la dificultad de los \glspl{vlm} generativos para clasificar lesiones de
+piel aparece también en la literatura.
