@@ -106,3 +106,17 @@ sin cita.
 
 1. ¿Regenerar la figura de Grad-CAM con rótulos en castellano («predicción: BKL»)? Requiere correr
    `scripts/interpretability.py` con el *checkpoint* de Swin (funciona en CPU).
+
+## Revisión del autor (24/10/2026)
+
+- Pregunta 1 resuelta: la figura de Grad-CAM se regeneró con rótulos en castellano
+  (`Codigo/scripts/figura_gradcam_tesina.py`, mismas imágenes y mapas que `interpretability_swin.png`).
+- **Memoria de los clasificadores:** `measure_cost.py` no la mide; la estima como parámetros × 4 bytes + 0.5 GB. La
+  tabla y el texto dicen «memoria estimada».
+- **Latencias:** se usan las de `cost_comparison_v2.json` (medición del 12/10). `experimentacion.tex` conserva las
+  de julio (`cost_comparison.json`: ConvNeXt 3.9 ms, Swin 8.7 ms, DenseNet 11.5 ms), del mismo orden.
+- **HIBA:** 158 de las 221 imágenes de AKIEC son carcinomas escamosos (`data/raw/HIBA/metadata.csv`), dato que
+  también da `experimentacion.tex`. El cuerpo de ese documento dice que las 1 616 imágenes son dermatoscópicas; según
+  `hiba_por_modalidad.json` son 1 270 dermatoscópicas y 346 clínicas, como dice 3.8.
+- Verificación del resto contra la tabla «Vigente» de `experimentacion.tex`: HIBA 0.546 / 0.424, ECE 0.040 y caída
+  por ruido como la más dañina coinciden.

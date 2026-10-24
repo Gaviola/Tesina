@@ -47,8 +47,8 @@ por debajo de 0.27, pero también aparece en las imágenes dermatoscópicas, la 
 
 La sensibilidad por clase muestra dónde se concentra esa caída. \gls{nv} se sostiene, con 0.930 en Swin-Tiny y 0.922
 en ConvNeXt-Tiny, mientras que \gls{akiec} cae a 0.113 y 0.077. En esta clase influye el mapeo de diagnósticos de la
-Sección~\ref{sec:met_hiba}, que lleva el carcinoma escamoso a \gls{akiec}, un ruido que no puede separarse del cambio
-de población. Las demás clases, sin embargo, también bajan: \gls{mel} queda en 0.455 y 0.435, y \gls{bcc}, en 0.309 y
+Sección~\ref{sec:met_hiba}, que lleva el carcinoma escamoso a \gls{akiec}: 158 de las 221 imágenes de esa clase en
+\emph{HIBA} son carcinomas escamosos, un ruido que no puede separarse del cambio de población. Las demás clases, sin embargo, también bajan: \gls{mel} queda en 0.455 y 0.435, y \gls{bcc}, en 0.309 y
 0.385. Por lo tanto, el desempeño medido en \emph{HAM10000} no se traslada a esta población, aun dentro de la misma
 modalidad. Ninguno de los trabajos revisados en la Sección~\ref{sec:estado_arte_diagnostico} evalúa sus modelos en
 población de América Latina, de modo que no hay una referencia con la que comparar esta caída.
@@ -148,8 +148,8 @@ hace ni prueba un razonamiento clínico (Sección~\ref{sec:met_interpretabilidad
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.92\textwidth]{Figures/Capitulos/04-Resultados-Clasificacion/gradcam-swin.pdf}
-    \caption{Grad-CAM de Swin-Tiny sobre una imagen de prueba por clase: clase verdadera, a la izquierda, y clase predicha, sobre el mapa.}
+    \includegraphics[width=0.9\textwidth]{Figures/Capitulos/04-Resultados-Clasificacion/gradcam-swin.pdf}
+    \caption{Grad-CAM de Swin-Tiny sobre la primera imagen de prueba de cada clase.}
     \label{fig:res_gradcam}
 \end{figure}
 
@@ -157,8 +157,9 @@ hace ni prueba un razonamiento clínico (Sección~\ref{sec:met_interpretabilidad
 \label{sec:res_costo_clasificadores}
 
 La última evaluación estima el costo de ejecutar los clasificadores en la RTX 4070 de la
-Sección~\ref{sec:met_entorno}. Como muestra la Tabla~\ref{tab:res_costo_clasificadores}, los cuatro modelos ocupan
-menos de 1~GB de memoria de la GPU y clasifican una imagen en menos de 14~ms. Swin-Tiny, por ejemplo, tarda 9.6~ms por
+Sección~\ref{sec:met_entorno}. Como muestra la Tabla~\ref{tab:res_costo_clasificadores}, los cuatro modelos
+clasifican una imagen en menos de 14~ms, y su memoria, estimada a partir de sus pesos en precisión simple más un
+margen de 0.5~GB, queda por debajo de 1~GB. Swin-Tiny, por ejemplo, tarda 9.6~ms por
 imagen y procesa unas 670 imágenes por segundo en lotes de 32, de modo que clasifica la prueba completa en unos pocos
 segundos. Además, la cantidad de parámetros no ordena el tiempo de inferencia: DenseNet121, el modelo más chico, es el
 más lento con una imagen por vez. Estos tiempos corresponden a una sola vista, y el \gls{tta} de la
@@ -176,7 +177,7 @@ Sección~\ref{sec:met_tareas}.
         >{\centering\arraybackslash}p{2.3cm}>{\centering\arraybackslash}p{2.1cm}
         >{\centering\arraybackslash}p{2.6cm}>{\centering\arraybackslash}p{3.1cm}@{}}
         \toprule
-        \textbf{Modelo} & \textbf{Parámetros (millones)} & \textbf{Memoria (GB)} & \textbf{Tiempo por imagen (ms)}
+        \textbf{Modelo} & \textbf{Parámetros (millones)} & \textbf{Memoria estimada (GB)} & \textbf{Tiempo por imagen (ms)}
             & \textbf{Imágenes por segundo (lote de 32)} \\
         \midrule
         Swin-Tiny & 28.3 & 0.6 & 9.60 & 670.7 \\
@@ -189,5 +190,5 @@ Sección~\ref{sec:met_tareas}.
 
 Con estas cinco evaluaciones, el clasificador queda caracterizado también fuera de las condiciones de su
 entrenamiento: pierde buena parte de su desempeño en otra población, es sensible al ruido de la imagen, entrega
-probabilidades bien calibradas cuando se entrena sin pesos y se ejecuta con menos de 1~GB de memoria y 14~ms por
-imagen. La sección siguiente reúne lo que estos resultados y los de las secciones anteriores responden.
+probabilidades bien calibradas cuando se entrena sin pesos y clasifica una imagen en menos de 14~ms, con una memoria
+estimada menor que 1~GB. La sección siguiente reúne lo que estos resultados y los de las secciones anteriores responden.
