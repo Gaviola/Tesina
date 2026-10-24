@@ -102,11 +102,10 @@ Sección~\ref{sec:res_melanoma}, de modo que mejorar el reporte de una clase exi
 \label{sec:res_gen_ablaciones}
 
 Si la fidelidad del reporte viene del clasificador, queda por saber qué hace el generador con la imagen. Para
-responderlo, la cascada con el \emph{oracle} se repitió en dos condiciones: con la imagen reemplazada por una gris
-neutra, como en el control de la Sección~\ref{sec:met_clasif_vlm}, y con un diagnóstico equivocado, que cambia cada
-clase por otra con la que se suele confundir, como \gls{mel} por \gls{nv}. Mini-VLM y LLaVA-Med se evaluaron sobre un
-subconjunto fijo de 400 imágenes de la prueba y SkinVL, sobre la prueba completa
-(Tabla~\ref{tab:res_gen_ablaciones}).
+responderlo, la cascada con el \emph{oracle} se repitió en las dos variantes de la
+Sección~\ref{sec:met_referencias}: con la imagen reemplazada por una gris neutra y con un diagnóstico equivocado, como
+\gls{mel} por \gls{nv}. La Tabla~\ref{tab:res_gen_ablaciones} reúne los resultados, sobre 400 imágenes con Mini-VLM y
+LLaVA-Med y sobre la prueba completa con SkinVL.
 
 \begin{table}[H]
     \centering
@@ -150,12 +149,10 @@ variación de la descripción entre lesiones, aunque estas métricas no permiten
 \label{sec:res_gen_errores}
 
 La consistencia indica si el reporte nombra la clase verdadera, pero no de qué manera falla cuando no lo hace. Para
-saberlo, cada reporte se asignó a su falla principal según las categorías de la Tabla~\ref{tab:marco_fallas}, con
-reglas sobre el texto: nombrar dos o más clases es una contradicción, nombrar solo una clase distinta de la verdadera es
-un diagnóstico incorrecto, y no nombrar ninguna con expresiones de reserva, como «may be» o «cannot be determined», es
-\emph{hedging}. Una expresión de reserva junto al diagnóstico correcto, como «consistent with nevus», se cuenta aparte,
-porque el reporte se compromete con la clase. La Figura~\ref{fig:res_gen_errores} muestra la distribución de las fallas
-de cada generador sin anclaje, con Swin-Tiny y con el \emph{oracle}.
+saberlo, cada reporte se asignó a su falla principal con las reglas de la Sección~\ref{sec:met_eval_generacion}, que
+cuentan aparte la expresión de reserva junto a la clase verdadera, como «consistent with nevus», porque el reporte se
+compromete con el diagnóstico. La Figura~\ref{fig:res_gen_errores} muestra la distribución de las fallas de cada
+generador sin anclaje, con Swin-Tiny y con el \emph{oracle}.
 
 \begin{figure}[H]
     \centering
