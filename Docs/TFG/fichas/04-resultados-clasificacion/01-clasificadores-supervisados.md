@@ -1,75 +1,108 @@
 # Ficha 4.1 — Clasificadores supervisados
 
-**Estado (18/10/2026): borrador para aprobar; ajustado el mismo día a las reglas de la revisión del Cap. 3 (sin receta anterior ni comparación entre iteraciones).** Archivo: `Chapters/04-Resultados-Clasificacion/01-clasificadores-supervisados.tex`.
-Label: `sec:res_supervisados`. Tablas: `tab:res_supervisados`, `tab:res_recall_clase`, `tab:res_desbalance`.
+**Estado (24/10/2026): borrador para aprobar.** Reemplaza la del 18/10 con la estructura aprobada del capítulo
+(C11–C12): la comparación con la literatura y las pruebas entre supervisados van acá, y las funciones de pérdida y la
+fuga de información son subsecciones.
+
+Archivo: `Chapters/04-Resultados-Clasificacion/01-clasificadores-supervisados.tex`. Label: `sec:res_supervisados`.
+Subsecciones: `sec:res_desbalance`, `sec:res_fuga`. Tablas: `tab:res_supervisados`, `tab:res_pruebas_supervisados`,
+`tab:res_recall_clase`, `tab:res_desbalance`.
 
 ## Hilo conductor
 
-Pregunta que responde la sección: ¿cuánto rinde un clasificador supervisado entrenado con *HAM10000* sin fuga, qué
-tan estable es ese número y de qué depende?
+Pregunta que responde la sección: ¿cuánto rinde un clasificador supervisado entrenado con *HAM10000* sobre lesiones
+que no vio, cuánto depende de la arquitectura, de la semilla y de la función de pérdida, y cuánto se aleja ese número
+del que da una partición con fuga?
 
-Viene de: el Cap. 3 deja los cuatro modelos con un mismo procedimiento de entrenamiento (`sec:met_supervisados`), la regla de selección en
-validación y la sensibilidad macro como resultado principal (`sec:met_seleccion`), las líneas base
-(`sec:met_lineas_base`) y la partición por lesión con su fuga cuantificada (`sec:met_particiones`). La introducción del
-capítulo deja dicho que los números son de test, con media ± sd de tres semillas.
-Deja instalado: la referencia contra la que se mide a los VLM en 4.2 (Swin-Tiny, sensibilidad macro
-0.692 ± 0.025, exactitud 0.846) y la idea de que con esta receta la arquitectura pesa poco y el manejo del desbalance
-es un intercambio entre sensibilidad y exactitud, y una medida de cuánto infla los resultados la fuga. Para 4.6: la calibración de los modelos sin pesos por clase. Para 4.9:
-el recall de melanoma con *argmax* y su desvío.
+Viene de: la introducción del capítulo (todo número es de la prueba de la partición por lesión, con la configuración
+elegida en validación, y media ± sd con tres semillas). Del Cap. 3: los cuatro modelos y su procedimiento
+(`sec:met_supervisados`), el ensamble (`sec:met_supervisados_ensamble`), la selección por F1 macro y la sensibilidad
+macro como resultado principal (`sec:met_seleccion`), las referencias de la clasificación (`sec:met_referencias`), las
+pruebas (`sec:met_estadistica`) y la comparación anunciada para la fuga (`sec:met_particiones`).
+Deja instalado: Swin-Tiny como referencia (sensibilidad macro 0.692 ± 0.025), que la arquitectura pesa poco con el
+mismo procedimiento, que el recall de MEL es el más variable, y el orden de magnitud de la sobreestimación por fuga.
+4.2 parte del recall de MEL; 4.3 compara los VLM contra estos números.
 
 ```
-P1  Selección: en validación, el F1 macro elige Swin-Tiny t06 y ConvNeXt-Tiny t02, los dos sin pesos por clase;
-    Swin tiene el mejor F1 macro de validación de los cuatro modelos (0.781 ± 0.018)        función: describe
-    ↓ consecuencia: elegidos en validación, se miden en test
-P2  Tabla principal (tab:res_supervisados). Los cuatro modelos y el ensamble, media ± sd: Swin 0.692 ± 0.025
-    de sensibilidad macro y 0.846 de exactitud, contra 0.143 y 0.669 del clasificador mayoritario  función: describe
-    ↓ contraste: tres de los cuatro tienen medias casi iguales; ¿hay un ganador?
-P3  Con el mismo procedimiento, la arquitectura pesa poco: Swin, ConvNeXt y ViT empatan (McNemar p = 0.87 y 0.42; ΔF1m con
-    IC que cruza 0). DenseNet121 queda 0.08–0.12 abajo en F1 macro y sensibilidad macro (IC bootstrap que no cruza 0),
-    pero no en exactitud ni AUC, y McNemar no resiste Holm. La familia completa de pruebas está en 4.6
-                                                                                            función: interpreta
-    ↓ ampliación: si la diferencia de DenseNet está en las clases minoritarias, hay que mirar cada clase
-P4  Recall por clase (tab:res_recall_clase): NV y BCC altos y estables; DF, AKIEC y MEL bajos y muy variables. La
-    diferencia de DenseNet está en DF (0.353) y en MEL (0.509). La exactitud varía ±0.002 entre semillas y el recall
-    MEL de Swin ±0.071: una semilla no alcanza                                              función: interpreta
-    ↓ consecuencia: con esa varianza, combinar modelos puede estabilizar
-P5  Ensamble Swin + ConvNeXt: +0.014 de F1 macro y de sensibilidad macro, y el sd de la sensibilidad macro baja de
-    0.025 a 0.002. Estabiliza más de lo que mejora                                          función: interpreta
-    ↓ contraste: los ganadores no usan pesos por clase; ¿mejoraría el desbalance tratarlo en la pérdida?
-P6  Desbalance (tab:res_desbalance, semilla 42): las tres pérdidas para desbalance suben la sensibilidad macro (Swin
-    0.707 → 0.783 con CE ponderada) a costa de exactitud (0.860 → 0.752) y de F1 macro (0.745 → 0.635); ninguna supera
-    a la CE en F1 macro. Es un intercambio, no una mejora                                   función: interpreta
-    ↓ ampliación: estos números se obtienen sin fuga; ¿cuánto cambian si la partición la tiene?
-P7  Efecto de la fuga (la comparación que anuncia sec:met_particiones): un Swin-Tiny entrenado con la partición por
-    imagen da 0.870 de sensibilidad macro sobre toda la prueba y 0.804 sobre el subconjunto limpio (894 imágenes); el
-    control, DermLIP sin ajuste, no baja (0.510 → 0.527), así que la diferencia es fuga y no composición del
-    subconjunto. Da el orden de magnitud del sesgo de las particiones por imagen      función: interpreta / limita
-→ Transición a 4.2: Swin-Tiny queda como referencia; la pregunta es si un VLM médico general, que además genera texto,
-  clasifica igual de bien.
+P1  Selección en validación. Swin-Tiny tiene el mayor F1 macro medio en validación de los cuatro (0.781 ± 0.018;
+    ConvNeXt 0.740 ± 0.027, ViT 0.740 ± 0.008, DenseNet 0.710 ± 0.011). Con la semilla 42 sola, ConvNeXt queda
+    apenas arriba (0.770 frente a 0.766), y por eso la elección usa la media           función: describe
+    ↓ consecuencia: elegidas en validación, las configuraciones se leen en la prueba
+P2  Tabla principal (tab:res_supervisados): los cuatro y el ensamble, media ± sd en la prueba (exactitud, F1
+    ponderado, F1 macro, sensibilidad macro, AUC macro). Swin 0.692 ± 0.025 de sensibilidad macro y 0.846 de
+    exactitud, frente a 1/7 del azar y 0.143 / 0.669 del clasificador que responde siempre NV  función: describe
+    ↓ contraste: tres de los cuatro tienen medias casi iguales; ¿hay un mejor modelo?
+P3  Pruebas entre supervisados (tab:res_pruebas_supervisados, semilla 42): Swin, ConvNeXt y ViT no se distinguen
+    (IC del bootstrap de la diferencia de F1 macro y de sensibilidad macro que incluyen el 0; McNemar p = 0.87,
+    0.42, 0.57). DenseNet121 queda 0.08–0.12 abajo en F1 macro y sensibilidad macro frente a los otros tres (IC que
+    no incluyen el 0), pero no en exactitud ni AUC, y McNemar no supera el umbral de Holm (p = 0.021 y 0.026 frente
+    a 0.008 y 0.010). Los seis pares son parte de la familia de 21; el resto va en 4.3    función: interpreta
+    ↓ ampliación: si la diferencia de DenseNet está en las métricas macro, está en las clases minoritarias
+P4  Sensibilidad por clase (tab:res_recall_clase): NV y BCC altas y estables; MEL, AKIEC y DF bajas y variables
+    (DF ± 0.122 en Swin; una imagen de DF mueve 0.059). Comparación descriptiva (sec:met_estadistica): Swin mejora a
+    DenseNet en 5 de 7 clases, y frente a ConvNeXt y ViT en 3 de 7. El recall de MEL de Swin va de 0.563 a 0.701
+    según la semilla: una sola ejecución no alcanza                                   función: interpreta
+    ↓ consecuencia: con esa variación, combinar dos modelos puede estabilizar
+P5  Ensamble Swin + ConvNeXt (voto suave, soft voting; \ref): +0.014 de F1 macro y de sensibilidad macro, y el
+    desvío de la sensibilidad macro baja de 0.025 a 0.002. Estabiliza más de lo que mejora; no se prueba
+    estadísticamente                                                                   función: interpreta
+    ↓ ampliación (literatura): ¿dónde quedan estos números frente a los trabajos del Cap. 2?
+P6  Comparación con la literatura (tab:marco_sota_clasificacion del Cap. 2): Aboulmira (F1 macro 0.81, sensibilidad
+    de MEL 0.49) y Kim (sensibilidad macro 0.780, F1 macro 0.793, con HAM10000 ampliado) informan valores mayores que
+    los de Swin; Gessert, con particiones por lesión, informa 0.636 de sensibilidad macro en la prueba de ISIC 2019.
+    Los protocolos difieren (datos, partición, clases), así que la comparación ubica el orden de magnitud. La
+    partición de cada trabajo explica parte de la diferencia, y 4.1.2 la mide          función: compara / limita
+    ↓ contraste: los ganadores no usan pesos por clase; ¿mejora otra función de pérdida las clases minoritarias?
 
-Se definen acá (y no se vuelven a definir): el resultado de referencia del capítulo (Swin 0.692 ± 0.025).
-Se retoman de antes (solo se nombran, con \ref): receta, barrido y semillas (sec:met_supervisados_*), criterio de
-selección (sec:met_seleccion), clasificador mayoritario (sec:met_lineas_base), fuga y subconjunto limpio
-(sec:met_particiones), voto suave (sec:met_supervisados_ensamble), McNemar, bootstrap y Holm (sec:met_estadistica).
-Extensión: 7 párrafos y 3 tablas, ~4.5 páginas.
+4.1.1 Funciones de pérdida para el desbalance de clases (sec:res_desbalance)
+P7  Tabla (tab:res_desbalance, semilla 42, hiperparámetros fijos, \ref al párrafo de 3.3): las tres pérdidas para el
+    desbalance suben la sensibilidad macro en los tres modelos (Swin 0.707 → 0.783 con CE ponderada), pero bajan la
+    exactitud (0.860 → 0.752) y el F1 macro (0.745 → 0.635), y ninguna supera a la CE sin pesos en F1 macro. El
+    recall de MEL no sube de forma consistente (Swin focal 0.503 frente a 0.551 con CE)   función: interpreta
+    ↓ consecuencia: más falsas alarmas en las clases minoritarias; por eso la configuración común usa CE sin pesos
+    (sin justificar el método con el resultado: el criterio de selección ya estaba en 3.7)
+    ↓ ampliación: todos estos números son sin fuga; ¿cuánto cambian con una partición que la tiene?
+
+4.1.2 Efecto de la fuga de información (sec:res_fuga)
+P8  Con la comparación de sec:met_particiones: un Swin-Tiny entrenado con la partición por imagen (configuración
+    elegida en validación) da 0.870 de sensibilidad macro sobre toda la prueba, 0.804 sobre las 894 imágenes sin
+    lesiones compartidas y 0.936 sobre las 543 con fuga. El control, DermLIP sin ajuste, no baja (0.510 en toda la
+    prueba, 0.527 en el subconjunto), así que la diferencia se debe a la fuga y no a la composición del subconjunto
+                                                                                       función: interpreta
+    ↓ consecuencia: una partición por imagen sobreestima la sensibilidad macro en unas 0.07 en esta prueba
+P9  Cierre: el orden de magnitud de esa sobreestimación es comparable a la distancia con los trabajos de P6 que no
+    informan particiones por lesión; por eso los números de 4.1 no se comparan sin más con ellos  función: limita
+→ Transición a 4.2: de las siete clases, MEL es la de mayor costo clínico y la de recall más variable con argmax;
+  la sección siguiente la evalúa como tarea binaria con un umbral fijado en validación.
+
+Se definen acá (y no se vuelven a definir): el resultado de referencia del capítulo (Swin 0.692 ± 0.025) y la magnitud
+de la sobreestimación por fuga.
+Se retoman de antes (solo se nombran, con \ref): modelos y procedimiento (sec:met_supervisados_arquitecturas,
+sec:met_supervisados_receta), funciones de pérdida (párrafo de sec:met_supervisados_ensamble), voto suave
+(sec:met_supervisados_ensamble), criterio de selección (sec:met_seleccion), referencias (sec:met_referencias),
+bootstrap, McNemar y Holm (sec:met_estadistica), subconjunto sin fuga y control (sec:met_particiones).
+Extensión: 9 párrafos y 4 tablas, ~6 páginas.
 ```
 
 ## Fuentes de cada número
 
+Todo en `Codigo/outputs/results/` salvo indicación. Verificado el 24/10.
+
 | P | Número | Fuente |
 |---|---|---|
-| P1 | Ganadores t06 y t02 sin pesos; 30 corridas por modelo; F1 macro de validación Swin 0.781 ± 0.018, ConvNeXt 0.740 ± 0.027, ViT 0.740 ± 0.008, DenseNet 0.710 ± 0.011 | `lesion_split_report.json` (`ganadores`, `val_media_std`); `densenet_vit_moderna_resul_20261017.md` §2 |
-| P2 | Tabla de test de los cuatro modelos (exactitud, F1 ponderado, F1 macro, sensibilidad macro, recall MEL, AUC macro) | `densenet_vit_moderna_resul_20261017.md` §2 (`densenet_vit_moderna_report.json`) |
-| P2 | Ensamble: exactitud 0.855 ± 0.003, F1 ponderado 0.853 ± 0.005, F1 macro 0.747 ± 0.005, sensibilidad macro 0.706 ± 0.002 | `classifier_ensemble_les/ensemble_seeds.json`; `split_lesion_resul_20260926.md` §3 |
-| P2 | Clasificador mayoritario 0.669 / 0.143 | 3.3 (`03-criterios-evaluacion.tex`, `sec:met_seleccion`) |
-| P3 | McNemar y ΔF1m, Δsens con IC (pares de supervisados, semilla 42); Holm sobre 21 pares | `statistical_tests_les_v2.json`; `densenet_vit_moderna_resul_20261017.md` §3 |
-| P4 | Recall por clase, media ± sd (abajo) | `*_les_cwnone{,_s43,_s44}_test_results.json` → `ham10000.sensitivity_per_class` (orden MEL, NV, BCC, AKIEC, BKL, DF, VASC, verificado con los totales de la matriz de confusión) |
-| P4 | Swin: recall MEL 0.701 con la semilla 42 frente a 0.623 ± 0.071 con tres | `lesion_split_report.json` (`test_por_semilla`) |
-| P5 | Ensamble frente a Swin solo | `ensemble_seeds.json` |
-| P6 | Tabla de desbalance, 4 pérdidas × 3 modelos | `lesion_split_report.json` (`legacy_y_desbalance`, `*_imb_*_les`); `split_lesion_resul_20260926.md` §5 |
-| P7 | 0.870 (toda la prueba) y 0.804 (subconjunto limpio, 894 imágenes) del Swin-Tiny entrenado con la partición por imagen (t08); DermLIP ZS 0.510 → 0.527 | `leakage_analysis.json` (`Swin-Tiny (sweep t08, headline)`, `DermLIP (zero-shot)`) |
+| P1 | F1 macro de validación, media ± sd: Swin 0.781 ± 0.018, ConvNeXt 0.740 ± 0.027, ViT 0.740 ± 0.008, DenseNet 0.710 ± 0.011; semilla 42: Swin 0.766, ConvNeXt 0.770 | `densenet_vit_moderna_report.json` (`val_media_std`); `lesion_split_report.json` (`sweep`) |
+| P2 | Prueba, media ± sd. Swin: exactitud 0.846 ± 0.002, F1 pond. 0.846 ± 0.004, F1 macro 0.733 ± 0.026, sens. macro 0.692 ± 0.025, AUC 0.953 ± 0.014. ConvNeXt: 0.843 ± 0.005, 0.840 ± 0.005, 0.727 ± 0.007, 0.691 ± 0.009, 0.964 ± 0.001. ViT: 0.836 ± 0.003, 0.836 ± 0.004, 0.707 ± 0.025, 0.681 ± 0.025, 0.956 ± 0.003. DenseNet: 0.822 ± 0.005, 0.815 ± 0.004, 0.655 ± 0.017, 0.610 ± 0.020, 0.957 ± 0.003 | `densenet_vit_moderna_report.json` (`media_std`) |
+| P2 | Ensamble: 0.855 ± 0.003, 0.853 ± 0.005, 0.747 ± 0.005, 0.706 ± 0.002 (sin AUC en la fuente) | `classifier_ensemble_les/ensemble_seeds.json` (`resumen`) |
+| P2 | Siempre NV: 0.669 / 0.537 / 0.115 / 0.143 | `sec:met_referencias` (Cap. 3) |
+| P3 | Diferencias pareadas con IC (F1 macro; sens. macro): Swin−ConvNeXt +0.029 [−0.015, 0.074]; +0.022 [−0.027, 0.071]. Swin−ViT +0.032 [−0.005, 0.070]; +0.018 [−0.019, 0.057]. ConvNeXt−ViT +0.003 [−0.048, 0.053]; −0.004 [−0.057, 0.048]. Swin−DenseNet +0.114 [0.061, 0.170]; +0.122 [0.069, 0.176]. ConvNeXt−DenseNet +0.085 [0.029, 0.146]; +0.100 [0.044, 0.156]. ViT−DenseNet +0.082 [0.019, 0.148]; +0.104 [0.039, 0.167] | `statistical_tests_les_v2.json` (`paired_bootstrap_diff`) |
+| P3 | McNemar p y umbral de Holm: Swin–ConvNeXt 0.867 / 0.050; Swin–ViT 0.416 / 0.017; ConvNeXt–ViT 0.573 / 0.025; Swin–DenseNet 0.021 / 0.008; ConvNeXt–DenseNet 0.026 / 0.010; DenseNet–ViT 0.143 / 0.013. Ninguno significativo | `densenet_vit_moderna_report.json` (`holm`) |
+| P4 | Sensibilidad por clase, media ± sd (tabla de abajo); recall MEL de Swin por semilla 0.701 / 0.563 / 0.605 | `*_les_cwnone{,_s43,_s44}_test_results.json`; `densenet_vit_moderna_report.json` (`semillas`) |
+| P5 | Ensamble frente a Swin | `ensemble_seeds.json` |
+| P6 | Aboulmira, Kim, Gessert | `tab:marco_sota_clasificacion` (Cap. 2); verificar la partición de Aboulmira y de Kim en `Papers/` antes de escribir P9 |
+| P7 | Tabla de abajo | `lesion_split_report.json` (`legacy_y_desbalance`, `*_imb_*_les`) |
+| P8 | Swin t08 (partición por imagen, mejor también en validación): sens. macro 0.870 / 0.804 / 0.936 (toda, 894 sin fuga, 543 con fuga); DermLIP ZS 0.510 / 0.527 / 0.477 | `leakage_analysis.json` (`Swin-Tiny (sweep t08, headline)`, `DermLIP (zero-shot)`); selección en validación: `docs/ejecuciones.md` (auditoría del 12/09) |
 
-**Recall por clase en test (media ± sd, 3 semillas)** — base de `tab:res_recall_clase`:
+**Sensibilidad por clase en la prueba (media ± sd, tres semillas)**, base de `tab:res_recall_clase`:
 
 | Modelo | MEL | NV | BCC | AKIEC | BKL | DF | VASC |
 |---|---|---|---|---|---|---|---|
@@ -78,30 +111,59 @@ Extensión: 7 párrafos y 3 tablas, ~4.5 páginas.
 | ViT-B/16 | 0.609 ± 0.072 | 0.932 ± 0.009 | 0.680 ± 0.052 | 0.558 ± 0.059 | 0.677 ± 0.021 | 0.569 ± 0.090 | 0.742 ± 0.052 |
 | DenseNet121 | 0.509 ± 0.016 | 0.948 ± 0.007 | 0.571 ± 0.022 | 0.571 ± 0.061 | 0.622 ± 0.031 | 0.353 ± 0.102 | 0.697 ± 0.095 |
 
-Soporte en test: MEL 167, NV 1006, BCC 77, AKIEC 49, BKL 165, DF 17, VASC 22. Con 17 imágenes de DF, una imagen mueve
-el recall 0.059; se dice al presentar la tabla.
+Soporte en la prueba: MEL 167, NV 1006, BCC 77, AKIEC 49, BKL 165, DF 17, VASC 22.
+Conteo descriptivo de clases en que cada uno supera al otro (con las medias): Swin–ConvNeXt 3–4, Swin–ViT 3–4,
+Swin–DenseNet 5–2, ConvNeXt–ViT 5–2, ConvNeXt–DenseNet 6–1, ViT–DenseNet 5–2.
+
+**Funciones de pérdida (semilla 42, hiperparámetros fijos)**, base de `tab:res_desbalance`
+(exactitud / F1 macro / sensibilidad macro / recall MEL):
+
+| Modelo | CE sin pesos | CE ponderada | Focal | Balanced softmax |
+|---|---|---|---|---|
+| Swin-Tiny | 0.860 / 0.745 / 0.707 / 0.551 | 0.752 / 0.635 / 0.783 / 0.790 | 0.781 / 0.620 / 0.773 / 0.503 | 0.756 / 0.626 / 0.758 / 0.695 |
+| ConvNeXt-Tiny | 0.846 / 0.753 / 0.715 / 0.605 | 0.669 / 0.570 / 0.731 / 0.659 | 0.739 / 0.588 / 0.730 / 0.509 | 0.733 / 0.576 / 0.719 / 0.425 |
+| DenseNet121 | 0.830 / 0.664 / 0.634 / 0.485 | 0.568 / 0.470 / 0.692 / 0.545 | 0.557 / 0.479 / 0.654 / 0.581 | 0.568 / 0.479 / 0.646 / 0.515 |
 
 ## Claves de cita
 
-`liu2021swin`, `liu2022convnet`, `huang2018densely`, `dosovitskiy2021image` (al nombrar los modelos en P1, solo si la
-sección no los nombra solo con `\ref` a 3.4); `lin2017focal`, `ren2020balanced` (P6). Las pruebas no se citan: se
-remite a `sec:met_estadistica`. Todas existen en el `.bib`.
+Solo para comparar (guía §6): `aboulmira2024skinhealthmate`, `kim2025skinsavvy2`, `gessert2020skin` (P6, P9). Los
+modelos, la pérdida focal y *balanced softmax* se nombran con `\ref` a 3.3, sin volver a citarlos.
 
 ## Decisiones tomadas
 
-- El ensamble va en la misma tabla que los modelos individuales (decisión de la ficha del 26/09).
-- Sin la receta anterior de DenseNet121 y ViT-B/16 ni la comparación con el 0.870 «anterior» como iteración (revisión del autor del 18/10, reglas R1–R2 de la ficha del Cap. 3). La fuga se presenta como medida del sesgo (P7), no como historia. Los números de la receta anterior siguen en `densenet_vit_moderna_resul_20261017.md` §4.
-- La comparación de pares en P3 se limita a los supervisados; la familia de 21 pares con Holm, a 4.6.
+- El ensamble va en la misma tabla que los modelos individuales; la diferencia con Swin se describe, no se prueba
+  (no está en `tab:met_pruebas`).
+- La comparación con la literatura va en 4.1 (C11), y su límite se cierra con la subsección de la fuga (P9).
+- La fuga se presenta como medida de la sobreestimación, sin historia de iteraciones. Solo la comparación interna del
+  modelo con fuga (toda la prueba frente al subconjunto), que es la que define `sec:met_particiones`; no se compara
+  con el Swin de la partición por lesión, que además entrena con 776 imágenes menos.
+- P7 no justifica la elección de CE sin pesos con este resultado; la configuración ya se eligió en validación (3.7).
 
 ## Qué no va
 
-- Cómo se hizo la partición, cómo se midió la fuga, la receta y el barrido (Cap. 3).
-- Lo que la fuga implica para la literatura (4.5 y Cap. 6).
-- La calibración (4.6) y la detección de melanoma con umbral (4.9).
-- Las ablaciones de la receta: sin fuente; quitadas también de 3.4 (D-E de la ficha del Cap. 3).
-- Las corridas de la receta anterior (D-B de la ficha del Cap. 3).
+- Cómo se hizo la partición, la búsqueda y la receta (Cap. 3).
+- Detección de melanoma con umbral (4.2), calibración (4.4), los 15 pares restantes de Holm (4.3).
+- Las corridas con la receta anterior de DenseNet121 y ViT-B/16 (C1).
 
 ## Preguntas abiertas
 
-1. ¿Va una figura con el F1 macro de validación de las 30 corridas de cada modelo, para mostrar cuánto separa el
-   barrido al ganador? Hoy no existe; se puede generar desde `lesion_split_report.json` (`sweep`).
+1. ¿Figura con el F1 macro de validación de las 30 configuraciones de cada modelo? No existe; se puede generar desde
+   `lesion_split_report.json` (`sweep`). Propuesta: no, la tabla alcanza.
+2. P6 y P9 dependen de qué partición usaron Aboulmira y Kim: si no lo informan, se dice así («no informan una partición
+   por lesión») y no se afirma que tengan fuga.
+
+## Redacción (24/10/2026)
+
+Ficha aprobada por el autor el 24/10. Decisiones al redactar:
+
+- **Sin AUC macro** en `tab:res_supervisados`: el Cap. 3 define solo la AUC de melanoma (`tab:met_roles`). P3 dice
+  «no en exactitud» en lugar de «ni en exactitud ni en AUC».
+- **`tab:res_recall_clase` transpuesta** (clases en filas, con la cantidad de imágenes), para que entre en el ancho.
+- **`tab:res_pruebas_supervisados`**: modelos por su familia («Swin», «ConvNeXt»…) y el IC en una segunda línea.
+- **`tab:res_desbalance`** con `[!b]` y «EC» por entropía cruzada (se aclara en el epígrafe), para no dejar media
+  página en blanco antes de 4.1.1.
+- **Partición de los trabajos citados (pregunta 2)**, verificada en `Papers/`: Aboulmira no informa cómo divide; Kim
+  separa al azar el 80 % de las imágenes de cada clase sobre su conjunto ampliado. P9 compara con Kim (0.088) y no
+  afirma que ninguno tenga fuga.
+- P9 quedó separado en dos párrafos: el límite de la comparación y la transición a 4.2.
+- Pregunta 1 (figura del barrido): no se hizo.
