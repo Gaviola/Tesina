@@ -19,7 +19,21 @@ for k in 0 1 2 3; do sbatch --export=ALL,SHARD=$k/4 slurm/mendieta/v5/gen_short_
 for m in mini_vlm llava_med skinvl; do sbatch --export=ALL,MODEL=$m slurm/mendieta/v5/measure_vlm_memory.sh; done
 ```
 
-**Resul:** pendiente.
+1183331 (tramo 0/4) terminó en TIMEOUT a la hora con ~88 de 115 reportes (~37 s por reporte, cada tramo necesita
+~70 min). Reanudaciones (saltan los reportes válidos): 1183424 (0/4) y 1183425–1183427 (1/4–3/4, con
+`--dependency=afterany` sobre 1183332–1183334).
+
+```
+sbatch --export=ALL,SHARD=0/4 slurm/mendieta/v5/gen_short_level1_mini_v2.sh
+sbatch --dependency=afterany:1183332 --export=ALL,SHARD=1/4 slurm/mendieta/v5/gen_short_level1_mini_v2.sh  # ídem 2/4, 3/4
+```
+
+Al 25/10: los cuatro tramos originales en TIMEOUT y las cuatro reanudaciones `COMPLETED` (~24 min); 457/457
+reportes, ninguno con `<think>`. Memoria `COMPLETED` (Mini 8.64 GiB de pico, LLaVA-Med 14.52, SkinVL 14.38). Nivel 1
+local en `outputs/results/level1_test/skincot_test_mini_v2/` (425 pares, BERTScore 0.770; v3 queda en
+`level1_test/skincot_test/`), más el pareado v2/v3/LLaVA-Med (`scripts/level1_pareado.py`, n = 349). Se instalaron
+`rouge-score` y `bert-score` en el `.venv` (faltaban; la reevaluación de v3 reproduce sus cifras).
+**Resul:** [costo_nivel1_mini_v2_resul](resul/costo_nivel1_mini_v2_resul_20261025.md) — **CUMPLE**.
 
 ### Derivados y figuras del Cap. 5 con la métrica oficial — **Sin jobs SLURM** (local, CPU)
 Para redactar el Cap. 5 con la estructura del Cap. 4. `scripts/cap5_derivados.py` (nuevo) →
@@ -64,7 +78,10 @@ for k in $(seq 0 14); do sbatch --export=ALL,MODEL=llava_med,SHARD=$k/15 slurm/m
 ```
 
 En cola, retenidos desde antes: 5 tramos de Mini-VLM v3 (1181056–1181061, `user env retrieval failed`).
-**Resul:** pendiente.
+Al 25/10: los 28 tramos `COMPLETED` (30–43 min), 1 503 reportes por generador. Métrica oficial con
+`scripts/cascada_dermlip_oficial.py` (nuevo) → `outputs/results/cascada_dermlip_oficial_<modelo>.json`: Mini-VLM
+0.717, LLaVA-Med 0.641, SkinVL 0.716.
+**Resul:** [cascada_dermlip_oficial_resul](resul/cascada_dermlip_oficial_resul_20261025.md) — **CUMPLE**.
 
 ---
 

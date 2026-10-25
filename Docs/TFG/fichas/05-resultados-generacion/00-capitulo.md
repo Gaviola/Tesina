@@ -69,8 +69,9 @@ subsecciones). Se conserva `sec:res_costo`, que cita el Cap. 6.
    experimentación decía que el *hedging* persistía con el oracle).
 5. **«Solo la clase verdadera»** (consistencia exclusiva de `rag_les_resul`) se informa como columna auxiliar para
    mostrar que la consistencia sin anclaje de LLaVA-Med viene de enumerar clases.
-6. **Sin DermLIP como fuente** hasta que terminen los reportes `full_dermlip_oficial` (\pendiente en 5.2). La
-   condición vieja (`full_dermlip`, exactitud 0.38) no aparece.
+6. **DermLIP oficial como fuente** (`cascada_dermlip_oficial_<gen>.json`, resul del 25/10): columna en
+   `tab:res_gen_cascada`, puntos en la figura y dos párrafos en 5.2.1. La condición vieja (`full_dermlip`, exactitud
+   0.38) no aparece.
 7. **Mini-VLM v3 solo como control** (5.4.1), con los brazos parciales declarados (Swin 963, sin anclaje 372).
 
 ## Respuestas del autor (24/10/2026)
@@ -96,3 +97,10 @@ subsecciones). Se conserva `sec:res_costo`, que cita el Cap. 6.
 4. **Memoria de los generadores**: es la de los pesos en bf16 (parámetros × 2 bytes), no una medición. ¿Alcanza?
 5. **Figura de ejemplos**: el segundo reporte repite la instrucción («The final clinical report should include…»). Se
    eligió a propósito como defecto que las métricas no ven. ¿Se prefiere otro ejemplo?
+
+## Cierre de los pendientes (25/10/2026)
+
+- 5.1: fila de Mini-VLM v2 en SkinCoT en `tab:res_gen_nivel1` y párrafo nuevo (sin `\pendiente`).
+- 5.2: DermLIP oficial en tabla, figura y texto (Mini 0.717, LLaVA-Med 0.641, SkinVL 0.716).
+- 5.4: control con el Nivel 1 pareado (n = 349: v3 mejor en BLEU-4 y BERTScore, peor en ROUGE-L y METEOR);
+  `tab:res_costo_generadores` con parámetros y memoria medidos (carga y generación; Mini 8.6 GB de pico).
