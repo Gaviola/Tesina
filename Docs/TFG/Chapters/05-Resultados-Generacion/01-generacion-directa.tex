@@ -11,8 +11,9 @@ El Capítulo~\ref{cp:res_clasif} mostró que los \glspl{vlm} generativos no dist
 como clasificadores. Ajustados con \emph{SkinCaRe} (Sección~\ref{sec:met_generacion}), en cambio, los generadores sí
 escriben un texto con la forma de un reporte clínico, y ese texto tiene dos partes que importan: la descripción de la
 lesión y el diagnóstico en que termina. Esta sección evalúa al generador aislado, sin el clasificador ni la
-recuperación del \emph{pipeline}: cada generador recibe solo la imagen y la instrucción del entrenamiento, «Describe
-this skin lesion.», y escribe un reporte por imagen con la decodificación de la Tabla~\ref{tab:met_decodificacion}.
+recuperación del pipeline: cada generador recibe solo la imagen y la instrucción del entrenamiento, «Describe
+this skin lesion.», y escribe un reporte por imagen con la decodificación del Capítulo~\ref{cp:metodos}
+(Tabla~\ref{tab:met_decodificacion}).
 
 Las dos partes del reporte se miden con instrumentos distintos (Sección~\ref{sec:met_eval_generacion}). La
 descripción se compara con un texto de referencia en los conjuntos que lo tienen, el Nivel~1, y el diagnóstico se
@@ -36,7 +37,7 @@ los dos generadores, y solo el BERTScore, que compara el significado y no las pa
 
 \begin{table}[H]
     \centering
-    \caption{Nivel~1 de los generadores sin diagnóstico en las pruebas de \emph{SkinCoT} y \emph{MM-Skin}.}
+    \caption{Nivel~1 de los generadores sin diagnóstico en las pruebas de \emph{SkinCoT} y \emph{MM-Skin}. Pares: imágenes con un reporte no vacío y una referencia.}
     \label{tab:res_gen_nivel1}
     \small
     \setlength{\tabcolsep}{4pt}
@@ -62,13 +63,11 @@ lesión.
 Entre los generadores, Mini-VLM queda por debajo de LLaVA-Med en las cinco métricas de \emph{SkinCoT}, con un
 BERTScore de 0.770 frente a 0.797. La diferencia es coherente con lo que se ajustó en cada uno
 (Sección~\ref{sec:met_generacion}). En LLaVA-Med, \gls{lora} adapta también el modelo de lenguaje, que aprende las
-frases de \emph{SkinCoT}. En Mini-VLM, en cambio, el modelo de lenguaje reúne las proyecciones de la atención en un
-único módulo al que el adaptador no llega, de modo que el ajuste modifica solo el codificador visual y el modelo de
-lenguaje queda como el original. Es decir, el ajuste cambia lo que Mini-VLM ve en la imagen, pero no su manera de
-redactar.
+frases de \emph{SkinCoT}. En Mini-VLM, en cambio, el adaptador no llega al modelo de lenguaje, que queda como el
+original. Es decir, el ajuste cambia lo que Mini-VLM ve en la imagen, pero no su manera de redactar.
 
 En \emph{MM-Skin}, cuyas descripciones no usó ningún generador, el orden se invierte. Sobre los mismos pares,
-Mini-VLM supera a LLaVA-Med en BERTScore por 0.039 [0.038, 0.041] (\emph{bootstrap} pareado), y también en ROUGE-L y
+Mini-VLM supera a LLaVA-Med en BERTScore por 0.039 [0.038, 0.041] (bootstrap pareado), y también en ROUGE-L y
 METEOR. Por lo tanto, el generador que más se acerca a las frases de \emph{SkinCoT} no es el que más se acerca al
 significado de una descripción de otro estilo, y el Nivel~1 mide sobre todo cuánto se ajustó la redacción a la de
 cada referencia. Por esa razón, como establece la Sección~\ref{sec:met_eval_generacion}, sus cifras se informan pero
