@@ -117,7 +117,7 @@ Tabla~\ref{tab:res_calibracion} reúne el \gls{ece} y el Brier, también con los
 
 \begin{table}[H]
     \centering
-    \caption{Calibración en la prueba de \emph{HAM10000} (semilla 42).}
+    \caption{Calibración en la prueba de \emph{HAM10000} (semilla 42). La fila con pesos por clase es la mejor configuración del barrido con pesos, distinta de la entropía cruzada ponderada de la Tabla~\ref{tab:res_desbalance}, que usa hiperparámetros fijos.}
     \label{tab:res_calibracion}
     \small
     \setlength{\tabcolsep}{4pt}
@@ -141,7 +141,7 @@ Tabla~\ref{tab:res_calibracion} reúne el \gls{ece} y el Brier, también con los
 
 Sin pesos por clase, la curva sigue de cerca la diagonal, apenas por encima: el modelo es levemente subconfiado, es
 decir, acierta algo más de lo que su confianza indica. Por eso la temperatura que ajusta la validación es menor que
-uno, y con ella el \gls{ece} baja sin que cambie ninguna predicción. El \emph{vector scaling} lo baja todavía más, pero
+uno, y con ella el \gls{ece} baja sin que cambie ninguna predicción. El vector scaling lo baja todavía más, pero
 ajusta un parámetro por clase, cambia predicciones y reduce la sensibilidad macro. Con pesos por clase, en cambio, la
 calibración se desarma: la confianza media cae a alrededor de 0.4 mientras la exactitud se mantiene cerca de 0.78, y
 el \gls{ece} crece casi diez veces. En consecuencia, las probabilidades del modelo sin pesos pueden usarse casi sin
