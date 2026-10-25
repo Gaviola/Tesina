@@ -1,4 +1,4 @@
-# Ficha 5.3 — Ruteo por concordancia y pipeline completo
+# Ficha 5.3 — Pipeline completo
 
 **Estado (24/10/2026): redactada sin aprobación previa** (ver `00-capitulo.md`).
 
@@ -48,3 +48,11 @@ P14 Cierre → comparación de generadores                                      
 - La taxonomía por nivel es la de `uncertainty_analysis.py` (cuenta el par correcto como acierto en el diferencial);
   solo se usa la fila de diagnóstico incorrecto, que coincide en definición con 5.2.4.
 - Ejemplo (b) elegido con el defecto de la instrucción repetida (pregunta 5 de `00-capitulo.md`).
+
+## Revisión del autor (25/10/2026)
+
+- Título «Pipeline completo» (label sin cambios). P1 recorre un caso por el pipeline (fig:met_pipeline,
+  tab:met_niveles): Swin-Tiny y kNN en paralelo → afirmativo, diferencial o derivación. P2 anuncia las tres partes.
+- `tab:res_gen_pipeline` suma un bloque sobre las 1 503 imágenes con las derivaciones sin diagnóstico: cascada
+  0.849 / 0.745, pipeline 0.870 / 0.719, línea base sin generador 0.873 (aciertos 1 308, 1 080 y 1 312 sobre 1 503,
+  a partir de `tab_incertidumbre_e2e` × 1 452).

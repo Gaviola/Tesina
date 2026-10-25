@@ -4,14 +4,21 @@
 % Codigo/docs/ejecuciones.md, 18/10/2026 (bloques <think> sin cerrar de LLaVA-Med en el diferencial: 144 de 248).
 % Cohorte completa: aciertos del pipeline (0.901 × 1 452 = 1 308; LLaVA-Med 0.744 × 1 452 = 1 080) sobre 1 503.
 % Figuras: scripts/figuras_cap5.py (ruteo-niveles); ejemplos-reportes.tex.
-\section{Ruteo por concordancia y pipeline completo}
+\section{Pipeline completo}
 \label{sec:res_gen_incertidumbre}
 
 La cascada afirma siempre el diagnóstico del clasificador, aunque sea incorrecto, y ni la imagen ni los vecinos lo
-corrigen. El ruteo de la Sección~\ref{sec:met_ruteo} decide, en cambio, si el \emph{pipeline} afirma el diagnóstico,
-presenta dos candidatos o deriva el caso, según la concordancia entre Swin-Tiny y el voto del \gls{knn}. Esta sección
-evalúa primero si esa concordancia separa los casos en que el clasificador acierta de aquellos en que se equivoca, y
-después mide los reportes que produce el \emph{pipeline} completo.
+corrigen. El último paso del recorrido agrega el ruteo de la Sección~\ref{sec:met_ruteo}, que completa el
+\emph{pipeline} de la Figura~\ref{fig:met_pipeline}. Cada imagen pasa en paralelo por Swin-Tiny y por el \gls{knn}
+sobre los \emph{embeddings} de DermLIP. Si los dos predictores coinciden, el generador recibe ese diagnóstico con la
+plantilla \emph{noreasoning} y escribe un reporte afirmativo. Si no coinciden, pero al menos dos de los tres vecinos
+comparten la clase, recibe el par de candidatos con la plantilla diferencial, y si los tres vecinos son de clases
+distintas, no se genera reporte y el caso se deriva a un especialista (Tabla~\ref{tab:met_niveles}).
+
+Esta sección evalúa primero si la concordancia separa los casos en que el clasificador acierta de aquellos en que se
+equivoca. Después mide los reportes del \emph{pipeline} con Mini-VLM y LLaVA-Med, frente a la cascada simple de la
+sección anterior y a la línea base sin generador de la Sección~\ref{sec:met_referencias}, y cierra con ejemplos de
+reportes.
 
 \subsection{Concordancia entre el clasificador y el kNN}
 \label{sec:res_gen_concordancia}
@@ -60,8 +67,9 @@ utilidad depende de cuánto cueste en la práctica un error frente a una consult
 
 Con el ruteo, los casos afirmativos reciben el reporte de la cascada y los diferenciales, uno que discute los dos
 candidatos. La Tabla~\ref{tab:res_gen_pipeline} compara la consistencia de esos reportes con la de la cascada simple
-sobre los mismos 1\,452 casos no derivados, y con la línea base sin generador de la
-Sección~\ref{sec:met_referencias}, que escribe el diagnóstico afirmado o el par de candidatos.
+sobre los mismos 1\,452 casos no derivados, y con la línea base sin generador, que escribe el diagnóstico afirmado o
+el par de candidatos. La tabla informa también la consistencia sobre las 1\,503 imágenes, con cada derivación contada
+como un caso sin diagnóstico.
 
 \begin{table}[H]
     \centering
@@ -85,6 +93,11 @@ Sección~\ref{sec:met_referencias}, que escribe el diagnóstico afirmado o el pa
         Cascada simple & 0.581 & 0.472 \\
         Reporte diferencial & 0.831 & 0.407 \\
         Par de candidatos, sin generador & 0.847 & 0.847 \\
+        \filasep
+        \multicolumn{3}{@{}l}{\textit{Prueba completa, con las derivaciones sin diagnóstico (1\,503)}} \\
+        Cascada simple & 0.849 & 0.745 \\
+        \emph{Pipeline} completo & 0.870 & 0.719 \\
+        Línea base sin generador & 0.873 & 0.873 \\
         \bottomrule
     \end{tabularx}
 \end{table}
@@ -108,7 +121,7 @@ reporte que nombra dos candidatos cuenta como consistente si uno de ellos es el 
 parece a acertar entre las dos primeras opciones. Segundo, se calcula sin los casos derivados, que son de los más
 difíciles. Si cada derivación se cuenta como un caso sin diagnóstico, la consistencia de Mini-VLM sobre las 1\,503
 imágenes pasa de 0.849 con la cascada simple a 0.870 con el \emph{pipeline}, una mejora menor que la de los casos no
-derivados.
+derivados, y con LLaVA-Med baja de la cascada al \emph{pipeline}.
 
 Los errores graves también disminuyen. Entre los casos no derivados, los reportes con un diagnóstico incorrecto bajan
 del 13.6\,\% al 9.0\,\% con Mini-VLM y del 9.4\,\% al 7.1\,\% con LLaVA-Med, si en el nivel diferencial se cuenta como
