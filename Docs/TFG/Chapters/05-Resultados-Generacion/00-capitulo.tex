@@ -16,13 +16,13 @@
 % las convenciones se reducen; las decisiones de diseño se reúnen en la discusión.
 
 Este capítulo presenta los resultados de la generación de reportes y del \emph{pipeline} que la integra con la
-clasificación. Las secciones siguen el recorrido de una imagen por el \emph{pipeline} de la
+clasificación. Las secciones siguen el recorrido de una imagen por el pipeline de la
 Sección~\ref{sec:met_pipeline} (Figura~\ref{fig:met_pipeline}) y agregan un componente por vez. Primero se evalúa el
 generador solo, sin ningún diagnóstico. Después se evalúa la cascada, en la que el diagnóstico de Swin-Tiny llega al
 generador, junto con lo que aportan la imagen y la recuperación de casos parecidos. Por último, el ruteo por
-concordancia con el \gls{knn} completa el \emph{pipeline}, que se evalúa entero. Sobre esos resultados, una sección
+concordancia con el \gls{knn} completa el pipeline, que se evalúa entero. Sobre esos resultados, una sección
 compara los tres generadores y su costo computacional, otra contrasta los resultados con los de la literatura, y la
-discusión cierra el capítulo con lo que aporta cada componente. La Tabla~\ref{tab:met_experimentos} reúne los
+discusión cierra el capítulo con lo que aporta cada componente. La Tabla~\ref{tab:met_experimentos} del Capítulo~\ref{cp:metodos} reúne los
 experimentos con sus datos y sus métricas.
 
 Salvo que se indique otra cosa, las cifras corresponden a las 1\,503 imágenes de prueba de la partición disjunta por
