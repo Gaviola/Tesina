@@ -71,8 +71,8 @@ el par de candidatos.
 
 Esta consistencia no equivale a una exactitud, por dos razones. Primero, en el nivel diferencial un reporte que nombra
 dos candidatos cuenta como consistente si uno de ellos es el verdadero, de modo que el criterio se parece a acertar
-entre las dos primeras opciones. Segundo, sobre los casos no derivados deja afuera las derivaciones, que son de los
-más difíciles. Por eso la tabla informa también la consistencia sobre las 1\,503 imágenes, con cada derivación
+entre las dos primeras opciones. Segundo, la consistencia de los casos no derivados excluye las derivaciones, que son
+de los más difíciles. Por eso la tabla informa también la consistencia sobre las 1\,503 imágenes, con cada derivación
 contada como un caso sin diagnóstico.
 
 \begin{table}[H]
@@ -143,11 +143,8 @@ un melanoma, y el reporte afirma el nevo y describe una pigmentación homogénea
 descripción acompaña al diagnóstico recibido, y un error del clasificador llega al reporte con rasgos que lo hacen
 verosímil.
 
-% La figura de ejemplos ([t]) no debe subir por encima del título de la subsección: se trae al final y se le
-% prohíbe el tope de la página en curso, de modo que pasa al tope de la siguiente.
-\suppressfloats[t]
-\input{Figures/Capitulos/05-Resultados-Generacion/ejemplos-reportes}
-
 En conjunto, el ruteo identifica una parte de los casos dudosos y, en ellos, presentar dos candidatos cubre más que
 afirmar uno, aunque los errores compartidos por los dos predictores se siguen afirmando. La sección siguiente compara
 los tres generadores con estos resultados y con su costo de ejecución.
+
+\input{Figures/Capitulos/05-Resultados-Generacion/ejemplos-reportes}
