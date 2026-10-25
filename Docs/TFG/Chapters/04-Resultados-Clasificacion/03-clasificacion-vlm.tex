@@ -18,9 +18,10 @@ genera el reporte.
 
 La Tabla~\ref{tab:res_vlm_generativos} reúne las diez combinaciones de los dos \glspl{vlm} generativos con las
 estrategias de la Sección~\ref{sec:met_vlm_estrategias}, y la Figura~\ref{fig:res_vlm_distribucion} muestra a qué
-clases asigna las imágenes cada una. En todas, la sensibilidad macro queda alrededor de 1/7, el nivel del azar, y seis
-de las diez combinaciones asignan más del 85\,\% de las imágenes a una sola clase, cualquiera sea la lesión. Este
-comportamiento se denomina en este trabajo \textbf{colapso hacia una clase} (\emph{class collapse}).
+clases asigna las imágenes cada una. La sensibilidad macro queda alrededor de 1/7, el nivel del azar, salvo en
+LLaVA-Med ajustado con CoT, que no produce etiqueta y baja a 0.045. Seis de las diez combinaciones asignan más del
+85\,\% de las imágenes a una sola clase, cualquiera sea la lesión. Este comportamiento se denomina en este trabajo
+\textbf{colapso hacia una clase} (\emph{class collapse}).
 
 \begin{table}[H]
     \centering
@@ -156,7 +157,7 @@ cada parte, y para ello sirve el control con Swin preentrenado en \emph{ImageNet
 Con las mismas tres cabezas, DermLIP supera a Swin congelado en todas, por entre 0.15 y 0.35 de sensibilidad macro y
 por márgenes parecidos de F1 macro. Su ventaja se debe, entonces, a la representación aprendida sobre imágenes
 dermatológicas y no a la cabeza. La regresión logística de este control da valores distintos de los del linear
-probe porque usa \emph{embeddings} estandarizados en lugar de normalizados.
+probe porque usa embeddings estandarizados en lugar de normalizados.
 
 \begin{table}[H]
     \centering
