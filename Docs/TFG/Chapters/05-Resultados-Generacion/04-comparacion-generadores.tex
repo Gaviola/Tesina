@@ -12,9 +12,10 @@
 \label{sec:res_gen_comparacion}
 
 Las secciones anteriores siguieron sobre todo a Mini-VLM, la configuración principal, y mencionaron a los otros
-generadores donde se comportan distinto. Puestos en una misma escala, la Figura~\ref{fig:res_gen_resumen} reúne lo que
-separa a los tres con el diagnóstico de Swin-Tiny: la consistencia diagnóstica, la cobertura de entidades clínicas y el
-tiempo por reporte.
+generadores donde se comportan distinto. Esta sección los pone en una misma escala, con la cascada con Swin-Tiny
+sobre las 1\,503 imágenes de prueba y la misma plantilla y decodificación para los tres. La
+Figura~\ref{fig:res_gen_resumen} reúne lo que los separa: la consistencia diagnóstica, la cobertura de entidades
+clínicas y el tiempo por reporte. Después se evalúan la variante de control de Mini-VLM y el costo de los generadores.
 
 \begin{figure}[H]
     \centering
@@ -34,14 +35,14 @@ de Mini-VLM y 86 de LLaVA-Med, y cubren la mitad de las entidades clínicas. Ade
 reportes distintos para las 1\,503 imágenes, de modo que su texto depende del diagnóstico y casi nada de la imagen. Por
 lo tanto, la especialización en dermatología no mejora la fidelidad del reporte, que ya fija el clasificador, y reduce
 la descripción, que es lo que el generador agrega en la cascada. Mini-VLM, en cambio, iguala la fidelidad de SkinVL y
-describe tanto como LLaVA-Med, y por eso es el generador de referencia del trabajo.
+describe tanto como LLaVA-Med, de modo que es el único de los tres que reúne las dos condiciones.
 
 \subsection{Ajuste del modelo de lenguaje de Mini-VLM}
 \label{sec:res_gen_control_mini}
 
-En la configuración principal, Mini-VLM aprende a redactar sin que se ajuste su modelo de lenguaje
-(Sección~\ref{sec:met_generacion}). La variante de control, que también ajusta ese modelo, permite saber si esa
-decisión cambia los reportes. La Tabla~\ref{tab:res_gen_control} compara ambas versiones sobre las mismas imágenes en
+En la configuración principal, el ajuste de Mini-VLM no llega a su modelo de lenguaje
+(Sección~\ref{sec:res_gen_nivel1}). La variante de control de la Sección~\ref{sec:met_generacion}, que también
+ajusta ese modelo, permite saber si esa diferencia cambia los reportes. La Tabla~\ref{tab:res_gen_control} compara ambas versiones sobre las mismas imágenes en
 cada fuente de diagnóstico; en la cascada con Swin-Tiny y sin anclaje, la variante de control tiene reportes solo para
 una parte de la prueba.
 
@@ -76,7 +77,7 @@ reporte, además, el parecido con la referencia cambia poco y en sentidos opuest
 control supera a la principal en BLEU-4 y en BERTScore, 0.781 frente a 0.770, y queda por debajo en ROUGE-L y METEOR,
 mientras que las dos quedan por debajo de LLaVA-Med en las cinco. Por lo tanto, ajustar el modelo de lenguaje acerca el
 formato al de \emph{SkinCoT} sin mejorar la fidelidad ni, de manera consistente, el parecido con la referencia, a
-costa de reportes vacíos, y la configuración principal se mantiene.
+costa de reportes vacíos.
 
 \subsection{Costo computacional del pipeline}
 \label{sec:res_costo}

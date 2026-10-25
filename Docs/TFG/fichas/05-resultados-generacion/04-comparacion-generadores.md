@@ -43,3 +43,11 @@ P9  Memoria por tamaño; Mini entra en 12 GB; cumple la restricción → Cap. 6 
   («solo para una parte de la prueba») y en la tabla.
 - Memoria = parámetros × 2 bytes (bf16), sin la de la generación; no hay medición de memoria de los generadores
   (pregunta 4 de `00-capitulo.md`). El tiempo del kNN no se midió: se argumenta con el ViT-B/16 medido en el Cap. 4.
+
+## Revisión del autor (25/10/2026)
+
+- P1 con el diseño de la comparación (cascada con Swin-Tiny, 1 503 imágenes, misma plantilla y decodificación) y el
+  orden de la sección.
+- Salen las decisiones: «por eso es el generador de referencia» pasa a «el único que reúne las dos condiciones», y
+  «la configuración principal se mantiene» se quita del control. Ambas decisiones se reúnen en 5.6.
+- El LLM sin ajustar de Mini-VLM ya no se explica aquí: remite a 5.1.1.
