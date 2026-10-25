@@ -51,19 +51,19 @@ comportamiento se denomina en este trabajo \textbf{colapso hacia una clase} (\em
     \end{tabularx}
 \end{table}
 
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.92\textwidth]{Figures/Capitulos/04-Resultados-Clasificacion/distribucion-vlm-generativos.pdf}
-    \caption{Clases reales de la prueba y clases que predice cada \gls{vlm} generativo con cada estrategia.}
-    \label{fig:res_vlm_distribucion}
-\end{figure}
-
 El colapso explica también los valores que, a primera vista, parecen mejores. Mini-VLM ajustado y con verosimilitud
 alcanza la mayor exactitud de la tabla, pero porque responde \gls{nv} en casi todas las imágenes, igual que el
 clasificador que responde siempre \gls{nv} (Sección~\ref{sec:met_referencias}). En el otro extremo, LLaVA-Med ajustado
 y con \gls{cot} no produce una etiqueta válida en cuatro de cada cinco imágenes, porque sus respuestas ya no terminan
 en la línea de diagnóstico que pide el \emph{prompt}. En ninguno de los dos modelos el ajuste con los textos clínicos
 de \emph{SkinCaRe} mejora la sensibilidad macro.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.92\textwidth]{Figures/Capitulos/04-Resultados-Clasificacion/distribucion-vlm-generativos.pdf}
+    \caption{Clases reales de la prueba y clases que predice cada \gls{vlm} generativo con cada estrategia.}
+    \label{fig:res_vlm_distribucion}
+\end{figure}
 
 \subsection{Controles del colapso}
 \label{sec:res_vlm_controles}

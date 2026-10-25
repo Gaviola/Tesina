@@ -61,6 +61,13 @@ no incluyen el cero, aunque McNemar no confirma la diferencia después de la cor
 compatibles, porque DenseNet121 acierta casi tantas imágenes como los demás y falla más en las clases minoritarias,
 que pesan poco en el total de aciertos y mucho en las métricas macro.
 
+Como las tres mejores arquitecturas no se distinguen, combinar dos de ellas puede, al menos, estabilizar el
+resultado.
+El ensamble de Swin-Tiny y ConvNeXt-Tiny por voto suave (\emph{soft voting};
+Sección~\ref{sec:met_supervisados_ensamble}) apenas mejora la media, pero reduce mucho la variación entre semillas
+(Tabla~\ref{tab:res_supervisados}): con cualquiera de las tres, da casi el mismo resultado. Como la mejora media no se
+sometió a prueba, el resto del capítulo toma como referencia a Swin-Tiny, el modelo que eligió la validación.
+
 \begin{table}[H]
     \centering
     \caption{Pruebas entre los clasificadores supervisados (semilla 42): diferencia del primero menos el segundo, con su IC del 95\,\%. El umbral de Holm es el que corresponde a cada par en la corrección sobre los 21 pares del capítulo. Los modelos se nombran por su familia.}
@@ -81,13 +88,6 @@ que pesan poco en el total de aciertos y mucho en las métricas macro.
         \bottomrule
     \end{tabularx}
 \end{table}
-
-Como las tres mejores arquitecturas no se distinguen, combinar dos de ellas puede, al menos, estabilizar el
-resultado.
-El ensamble de Swin-Tiny y ConvNeXt-Tiny por voto suave (\emph{soft voting};
-Sección~\ref{sec:met_supervisados_ensamble}) apenas mejora la media, pero reduce mucho la variación entre semillas
-(Tabla~\ref{tab:res_supervisados}): con cualquiera de las tres, da casi el mismo resultado. Como la mejora media no se
-sometió a prueba, el resto del capítulo toma como referencia a Swin-Tiny, el modelo que eligió la validación.
 
 \subsection{Errores por clase de Swin-Tiny}
 \label{sec:res_sup_clases}

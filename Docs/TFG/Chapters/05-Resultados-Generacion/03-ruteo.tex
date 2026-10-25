@@ -135,8 +135,6 @@ Mini-VLM en el pipeline, uno por situación. En el primero, el clasificador y lo
 melanoma, y el reporte afirma el diagnóstico y lo acompaña con rasgos compatibles con él, como los bordes irregulares
 y la asimetría.
 
-\input{Figures/Capitulos/05-Resultados-Generacion/ejemplos-reportes}
-
 El segundo es un caso diferencial: el clasificador predice melanoma, dos de los tres vecinos son nevos, y el reporte
 discute los dos candidatos y recomienda una biopsia. El texto incluye, sin embargo, una oración que repite la
 instrucción recibida («The final clinical report should include…»), un defecto de redacción que las métricas
@@ -144,6 +142,11 @@ automáticas no detectan. El tercero es un error compartido: el clasificador y l
 un melanoma, y el reporte afirma el nevo y describe una pigmentación homogénea «sin rasgos atípicos». Es decir, la
 descripción acompaña al diagnóstico recibido, y un error del clasificador llega al reporte con rasgos que lo hacen
 verosímil.
+
+% La figura de ejemplos ([t]) no debe subir por encima del título de la subsección: se trae al final y se le
+% prohíbe el tope de la página en curso, de modo que pasa al tope de la siguiente.
+\suppressfloats[t]
+\input{Figures/Capitulos/05-Resultados-Generacion/ejemplos-reportes}
 
 En conjunto, el ruteo identifica una parte de los casos dudosos y, en ellos, presentar dos candidatos cubre más que
 afirmar uno, aunque los errores compartidos por los dos predictores se siguen afirmando. La sección siguiente compara

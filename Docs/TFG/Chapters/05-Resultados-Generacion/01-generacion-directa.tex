@@ -55,10 +55,9 @@ los dos generadores, y solo el BERTScore, que compara el significado y no las pa
 \end{table}
 
 La diferencia entre los dos conjuntos refleja el estilo de las referencias más que la calidad de los reportes. Los
-textos de \emph{SkinCoT} tienen la estructura que los generadores aprendieron, mientras que las descripciones de
-libros de texto de \emph{MM-Skin} usan otro vocabulario y otra organización, y ningún generador se ajustó con ellas.
-Por eso un BLEU-4 cercano a cero indica que el reporte no reproduce las frases del libro, no que describa mal la
-lesión.
+textos de \emph{SkinCoT} tienen la estructura que los generadores aprendieron, mientras que los de \emph{MM-Skin}
+siguen el vocabulario y la organización de un libro de texto, y ningún generador se ajustó con ellos. Por eso un
+BLEU-4 cercano a cero indica que el reporte no reproduce las frases del libro, no que describa mal la lesión.
 
 Entre los generadores, Mini-VLM queda por debajo de LLaVA-Med en las cinco métricas de \emph{SkinCoT}, con un
 BERTScore de 0.770 frente a 0.797. La diferencia es coherente con lo que se ajustó en cada uno
@@ -106,7 +105,8 @@ LLaVA-Med obtiene la consistencia más alta, pero la alcanza enumerando clases: 
 solo uno de cada veinte reportes nombra únicamente la clase verdadera. Mini-VLM, en cambio, nombra alguna clase en
 menos reportes, y cuando lo hace suele elegir una equivocada. Los dos escriben reportes extensos, de cientos de
 palabras, pero no concluyen en el diagnóstico de la imagen. Estas dos maneras de fallar son las contradicciones y el
-\emph{hedging} de la Sección~\ref{sec:marco_rep_fallas}, que la Sección~\ref{sec:res_gen_errores} cuantifica.
+\emph{hedging} de la Sección~\ref{sec:marco_rep_fallas}, y la Sección~\ref{sec:res_gen_errores} cuantifica cuántos
+reportes caen en cada una.
 
 SkinVL falla de una manera distinta, porque repite casi siempre el mismo texto. Entre los 1\,503 reportes hay solo 72
 distintos, y siete de cada diez son la misma frase: «This skin lesion appears as a raised, red, and scaly patch on the

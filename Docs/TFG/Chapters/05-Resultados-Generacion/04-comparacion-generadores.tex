@@ -15,7 +15,7 @@ Las secciones anteriores siguieron sobre todo a Mini-VLM, la configuración prin
 generadores donde se comportan distinto. Esta sección los pone en una misma escala, con la cascada con Swin-Tiny
 sobre las 1\,503 imágenes de prueba y la misma plantilla y decodificación para los tres. La
 Figura~\ref{fig:res_gen_resumen} reúne lo que los separa: la consistencia diagnóstica, la cobertura de entidades
-clínicas y el tiempo por reporte.
+clínicas y el tiempo por reporte de cada uno.
 
 \begin{figure}[H]
     \centering
@@ -89,6 +89,14 @@ cascada y el límite de 384 tokens, y el tiempo que llevaría generar los report
 máxima ocupada por los tensores en la GPU, medida al cargar el modelo y durante la generación de 20 reportes de la
 cascada.
 
+Un reporte de Mini-VLM en la A30 tarda más de mil veces lo que una clasificación de Swin-Tiny en la RTX 4070. Aunque
+las dos mediciones se hicieron en GPU distintas, la diferencia es de tres órdenes de magnitud, de modo que el costo del
+pipeline lo fija el generador. El \gls{knn} tampoco cambia esa cuenta, porque requiere una pasada del
+codificador de DermLIP, un ViT-B/16, la misma arquitectura que la fila de ese nombre de la
+Tabla~\ref{tab:res_costo_clasificadores}, y una búsqueda entre 6\,447 embeddings. Entre los generadores, el
+tiempo por reporte depende más de lo que escriben que de su tamaño: SkinVL, del mismo tamaño que LLaVA-Med, es el más
+rápido porque escribe una oración, y Mini-VLM tarda menos que LLaVA-Med con reportes más breves.
+
 \begin{table}[H]
     \centering
     \caption{Costo de los generadores, medido en la A30.}
@@ -110,14 +118,6 @@ cascada.
         \bottomrule
     \end{tabularx}
 \end{table}
-
-Un reporte de Mini-VLM en la A30 tarda más de mil veces lo que una clasificación de Swin-Tiny en la RTX 4070. Aunque
-las dos mediciones se hicieron en GPU distintas, la diferencia es de tres órdenes de magnitud, de modo que el costo del
-pipeline lo fija el generador. El \gls{knn} tampoco cambia esa cuenta, porque requiere una pasada del
-codificador de DermLIP, un ViT-B/16, la misma arquitectura que la fila de ese nombre de la
-Tabla~\ref{tab:res_costo_clasificadores}, y una búsqueda entre 6\,447 embeddings. Entre los generadores, el
-tiempo por reporte depende más de lo que escriben que de su tamaño: SkinVL, del mismo tamaño que LLaVA-Med, es el más
-rápido porque escribe una oración, y Mini-VLM tarda menos que LLaVA-Med con reportes más breves.
 
 La memoria, en cambio, sí depende del tamaño. Mini-VLM ocupa como máximo 8.6~GB durante la generación, por debajo de
 los 12~GB de una GPU de consumo como la RTX 4070, mientras que LLaVA-Med y SkinVL superan esa cifra ya al cargar los

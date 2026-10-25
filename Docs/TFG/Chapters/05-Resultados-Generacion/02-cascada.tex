@@ -29,6 +29,12 @@ el diagnóstico de Swin-Tiny, Mini-VLM y SkinVL alcanzan una consistencia igual 
 prueba, 0.847, mientras que LLaVA-Med queda una décima por debajo. Con el diagnóstico verdadero (oracle), Mini-VLM
 y SkinVL lo nombran en todos los reportes salvo uno, y LLaVA-Med, en cambio, lo omite en uno de cada siete.
 
+Las diferencias entre las fuentes exceden la variación de la muestra con los tres generadores
+(Tabla~\ref{tab:res_gen_cascada}). El anclaje a Swin-Tiny multiplica por cinco la consistencia de Mini-VLM y saca a
+SkinVL de su texto fijo, mientras que a LLaVA-Med le aporta menos, porque sin anclaje ya nombraba la clase verdadera
+entre otras. A su vez, la distancia entre Swin-Tiny y el oracle es de unas 0.15 con Mini-VLM y SkinVL, la misma
+proporción de imágenes en que el clasificador se equivoca.
+
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{Figures/Capitulos/05-Resultados-Generacion/cascada-fuentes.pdf}
@@ -36,12 +42,6 @@ y SkinVL lo nombran en todos los reportes salvo uno, y LLaVA-Med, en cambio, lo 
     exactitud de Swin-Tiny.}
     \label{fig:res_gen_cascada}
 \end{figure}
-
-Las diferencias entre las fuentes exceden la variación de la muestra con los tres generadores
-(Tabla~\ref{tab:res_gen_cascada}). El anclaje a Swin-Tiny multiplica por cinco la consistencia de Mini-VLM y saca a
-SkinVL de su texto fijo, mientras que a LLaVA-Med le aporta menos, porque sin anclaje ya nombraba la clase verdadera
-entre otras. A su vez, la distancia entre Swin-Tiny y el oracle es de unas 0.15 con Mini-VLM y SkinVL, la misma
-proporción de imágenes en que el clasificador se equivoca.
 
 \begin{table}[H]
     \centering

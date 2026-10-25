@@ -21,6 +21,15 @@ aporta cada uno al reporte final. La Tabla~\ref{tab:res_gen_aportes} lo resume. 
 diagnóstico, el generador aporta la redacción y la descripción de cada lesión, y la concordancia con el \gls{knn}
 aporta la señal que el clasificador no tiene, la de los casos en que su diagnóstico es menos confiable.
 
+Este reparto es el aporte del pipeline. El diseño de la Sección~\ref{sec:met_pipeline} separa qué diagnóstico
+se afirma de si corresponde afirmarlo, y deja al generador solo la redacción, la tarea para la que se ajustó. Los
+resultados confirman esa separación: sobre las 1\,503 imágenes, la consistencia de Mini-VLM pasa de 0.849 con la
+cascada simple a 0.870 con el pipeline, aun con las derivaciones contadas como casos sin diagnóstico, y toda la
+ganancia proviene del ruteo, porque el pipeline no supera a la línea base que escribe los mismos diagnósticos
+sin generador. Es decir, el generador no agrega fidelidad, pero tampoco la pierde, y el reporte afirma o presenta
+como diferencial lo que deciden los predictores. Que estos aportes puedan medirse por separado es lo que distingue a
+este trabajo de los de la literatura, que evalúan el sistema entero (Sección~\ref{sec:res_gen_estado_arte}).
+
 \begin{table}[H]
     \centering
     \caption{Aporte de cada componente del pipeline al reporte, según los resultados del capítulo.}
@@ -49,15 +58,6 @@ aporta la señal que el clasificador no tiene, la de los casos en que su diagnó
         \bottomrule
     \end{tabularx}
 \end{table}
-
-Este reparto es el aporte del pipeline. El diseño de la Sección~\ref{sec:met_pipeline} separa qué diagnóstico
-se afirma de si corresponde afirmarlo, y deja al generador solo la redacción, la tarea para la que se ajustó. Los
-resultados confirman esa separación: sobre las 1\,503 imágenes, la consistencia de Mini-VLM pasa de 0.849 con la
-cascada simple a 0.870 con el pipeline, aun con las derivaciones contadas como casos sin diagnóstico, y toda la
-ganancia proviene del ruteo, porque el pipeline no supera a la línea base que escribe los mismos diagnósticos
-sin generador. Es decir, el generador no agrega fidelidad, pero tampoco la pierde, y el reporte afirma o presenta
-como diferencial lo que deciden los predictores. Que estos aportes puedan medirse por separado es lo que distingue a
-este trabajo de los de la literatura, que evalúan el sistema entero (Sección~\ref{sec:res_gen_estado_arte}).
 
 Los resultados respaldan también las decisiones del diseño. El ancla en Swin-Tiny se eligió por su F1 macro en
 validación (Sección~\ref{sec:met_pipeline}), y la cascada lo confirma: con DermLIP sin ajuste como fuente, los
