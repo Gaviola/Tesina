@@ -8,26 +8,26 @@
 % control: level1_test/skincot_test_mini_v2/level1_pareado_mini_v2_v3_llava_v2.json (n = 349).
 % Figura: scripts/figuras_cap5.py (resumen-generadores).
 % El label del costo es sec:res_costo (lo cita el Capítulo 6).
-\section{Comparación entre los generadores}
+\section{Comparación entre los generadores y costo}
 \label{sec:res_gen_comparacion}
 
 Las secciones anteriores siguieron sobre todo a Mini-VLM, la configuración principal, y mencionaron a los otros
 generadores donde se comportan distinto. Esta sección los pone en una misma escala, con la cascada con Swin-Tiny
 sobre las 1\,503 imágenes de prueba y la misma plantilla y decodificación para los tres. La
 Figura~\ref{fig:res_gen_resumen} reúne lo que los separa: la consistencia diagnóstica, la cobertura de entidades
-clínicas y el tiempo por reporte. Después se evalúan la variante de control de Mini-VLM y el costo de los generadores.
+clínicas y el tiempo por reporte.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{Figures/Capitulos/05-Resultados-Generacion/resumen-generadores.pdf}
     \caption{Consistencia diagnóstica, cobertura de entidades clínicas y tiempo por reporte de los tres generadores
-    en la cascada con Swin-Tiny. La marca vertical es la consistencia con el \emph{oracle}.}
+    en la cascada con Swin-Tiny. La marca vertical es la consistencia con el oracle.}
     \label{fig:res_gen_resumen}
 \end{figure}
 
-En consistencia, Mini-VLM y SkinVL no se distinguen, ni con Swin-Tiny ni con el \emph{oracle}, porque los dos copian el
+En consistencia, Mini-VLM y SkinVL no se distinguen, ni con Swin-Tiny ni con el oracle, porque los dos copian el
 diagnóstico. Mini-VLM supera a LLaVA-Med por una décima con Swin-Tiny, 0.104 [0.087, 0.122], y la diferencia crece con
-el \emph{oracle}, porque en ese caso todas las fallas son del generador. Es decir, el generador biomédico más grande es
+el oracle, porque en ese caso todas las fallas son del generador. Es decir, el generador biomédico más grande es
 el que menos transcribe el diagnóstico recibido.
 
 La cobertura de entidades separa a SkinVL de los otros dos. Sus reportes tienen una mediana de 17 palabras, frente a 62
@@ -49,7 +49,7 @@ una parte de la prueba.
 \begin{table}[H]
     \centering
     \caption{Consistencia diagnóstica de la variante de control de Mini-VLM frente a la configuración principal, con
-    IC del 95\,\% (\emph{bootstrap} pareado).}
+    IC del 95\,\% (bootstrap pareado).}
     \label{tab:res_gen_control}
     \small
     \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X cccc@{}}
@@ -57,7 +57,7 @@ una parte de la prueba.
         \textbf{Fuente del diagnóstico} & \textbf{Imágenes} & \textbf{Control} & \textbf{Principal}
             & \textbf{Diferencia} \\
         \midrule
-        \emph{Oracle} & 1\,503 & 0.967 & 0.999 & $-0.033$ [$-0.042$, $-0.023$] \\
+        Oracle & 1\,503 & 0.967 & 0.999 & $-0.033$ [$-0.042$, $-0.023$] \\
         Swin-Tiny & 963 & 0.843 & 0.850 & $-0.007$ [$-0.021$, $+0.006$] \\
         Sin anclaje & 372 & 0.196 & 0.185 & $+0.011$ [$-0.043$, $+0.065$] \\
         Nivel diferencial & 248 & 0.863 & 0.831 & $+0.032$ [$-0.008$, $+0.077$] \\
@@ -67,14 +67,14 @@ una parte de la prueba.
 
 Ajustar el modelo de lenguaje no cambia la cascada con Swin-Tiny ni el nivel diferencial, y en la generación sin
 anclaje tampoco mejora la consistencia. Lo que sí cambia es el formato: la variante de control aprende la estructura de
-\emph{SkinCoT} y abre bloques de razonamiento en uno de cada cuatro reportes de \emph{HAM10000}. Con el \emph{oracle},
+\emph{SkinCoT} y abre bloques de razonamiento en uno de cada cuatro reportes de \emph{HAM10000}. Con el oracle,
 esa estructura le cuesta tres centésimas de consistencia, porque en parte de los reportes el límite de 384 tokens llega
 antes de que el diagnóstico salga del razonamiento.
 
 En \emph{SkinCoT}, el mismo efecto es mayor. La variante de control abre un bloque de razonamiento en casi dos de cada
 tres reportes, y uno de cada seis queda vacío al quitarlo. Sobre los 349 pares en que ambos generadores escriben un
 reporte, además, el parecido con la referencia cambia poco y en sentidos opuestos según la métrica: la variante de
-control supera a la principal en BLEU-4 y en BERTScore, 0.781 frente a 0.770, y queda por debajo en ROUGE-L y METEOR,
+control supera a la principal en BLEU-4, CIDEr y BERTScore, este último por 0.781 frente a 0.770, y queda por debajo en ROUGE-L y METEOR,
 mientras que las dos quedan por debajo de LLaVA-Med en las cinco. Por lo tanto, ajustar el modelo de lenguaje acerca el
 formato al de \emph{SkinCoT} sin mejorar la fidelidad ni, de manera consistente, el parecido con la referencia, a
 costa de reportes vacíos.
@@ -83,7 +83,7 @@ costa de reportes vacíos.
 \label{sec:res_costo}
 
 El costo de los clasificadores, que se mide en milisegundos por imagen (Sección~\ref{sec:res_costo_clasificadores}),
-es una parte mínima del costo del \emph{pipeline}. La Tabla~\ref{tab:res_costo_generadores} reúne el de los
+es una parte mínima del costo del pipeline. La Tabla~\ref{tab:res_costo_generadores} reúne el de los
 generadores: el tiempo del ajuste, el tiempo por reporte en la A30 de la Sección~\ref{sec:met_entorno}, con la
 cascada y el límite de 384 tokens, y el tiempo que llevaría generar los reportes de toda la prueba. La memoria es la
 máxima ocupada por los tensores en la GPU, medida al cargar el modelo y durante la generación de 20 reportes de la
@@ -111,17 +111,21 @@ cascada.
     \end{tabularx}
 \end{table}
 
-Un reporte de Mini-VLM tarda unas mil quinientas veces más que una clasificación de Swin-Tiny, de modo que el costo del
-\emph{pipeline} lo fija el generador. El \gls{knn} tampoco cambia esa cuenta, porque requiere una pasada del
-codificador de DermLIP, un ViT-B/16 como el clasificador del mismo nombre de la
-Tabla~\ref{tab:res_costo_clasificadores}, y una búsqueda entre 6\,447 \emph{embeddings}. Entre los generadores, el
+Un reporte de Mini-VLM en la A30 tarda más de mil veces lo que una clasificación de Swin-Tiny en la RTX 4070. Aunque
+las dos mediciones se hicieron en GPU distintas, la diferencia es de tres órdenes de magnitud, de modo que el costo del
+pipeline lo fija el generador. El \gls{knn} tampoco cambia esa cuenta, porque requiere una pasada del
+codificador de DermLIP, un ViT-B/16, la misma arquitectura que la fila de ese nombre de la
+Tabla~\ref{tab:res_costo_clasificadores}, y una búsqueda entre 6\,447 embeddings. Entre los generadores, el
 tiempo por reporte depende más de lo que escriben que de su tamaño: SkinVL, del mismo tamaño que LLaVA-Med, es el más
 rápido porque escribe una oración, y Mini-VLM tarda menos que LLaVA-Med con reportes más breves.
 
 La memoria, en cambio, sí depende del tamaño. Mini-VLM ocupa como máximo 8.6~GB durante la generación, por debajo de
 los 12~GB de una GPU de consumo como la RTX 4070, mientras que LLaVA-Med y SkinVL superan esa cifra ya al cargar los
 pesos. La generación agrega poco a la carga, porque cada reporte se escribe de a uno y con un límite de 384 tokens. El ajuste de Mini-VLM tomó
-algo más de nueve horas en una sola GPU, y el de LLaVA-Med, algo menos de siete. Por lo tanto, el \emph{pipeline} con
-Mini-VLM cumple la restricción de cómputo de la Sección~\ref{sec:met_tareas}: se ajusta y se ejecuta en una sola GPU,
-con un reporte en menos de 20 segundos, y la comparación con el cómputo que usan los trabajos revisados se retoma en el
-Capítulo~\ref{cp:discusion}.
+algo más de nueve horas en la A30, y el de LLaVA-Med, algo menos de siete. Por lo tanto, el pipeline con
+Mini-VLM cumple la restricción de cómputo de la Sección~\ref{sec:met_tareas}: se ajusta en una sola GPU de 24~GB y se
+ejecuta en una de consumo de 12~GB, con un reporte en menos de 20 segundos. Que el ajuste también entre en 12 o 16~GB
+no se comprobó.
+
+Con la fidelidad, la descripción y el costo de cada generador caracterizados, queda ubicar estos resultados frente a
+los de la literatura.
