@@ -11,19 +11,19 @@ Los resultados del capítulo permiten responder la segunda pregunta de investiga
 (Sección~\ref{sec:intro_objetivos}) en sus dos partes. En cuanto al diagnóstico, un \gls{vlm} generativo ajustado no
 afirma por sí solo la clase de la imagen: sin un diagnóstico, enumera clases, evita comprometerse o, en el caso del
 generador especializado, repite un texto ajeno a las siete clases. Con la cascada, en cambio, el reporte afirma el
-diagnóstico del clasificador, y su fidelidad diagnóstica coincide con la exactitud de Swin-Tiny, tanto en total como
-en cada clase. En cuanto a la descripción, la imagen cambia lo que el reporte describe de cada lesión, pero las
+diagnóstico del clasificador, y con Mini-VLM y SkinVL su fidelidad diagnóstica coincide con la exactitud de Swin-Tiny,
+tanto en total como en cada clase, mientras que LLaVA-Med queda por debajo. En cuanto a la descripción, la imagen cambia lo que el reporte describe de cada lesión, pero las
 métricas sin especialista no permiten saber si lo descrito está en ella, y el melanoma afirmado como nevo de la
 Sección~\ref{sec:res_gen_cualitativos} muestra que la descripción también se adapta al diagnóstico recibido.
 
-Como cada sección agregó un componente del \emph{pipeline} por vez, los resultados permiten además separar lo que
+Como cada sección agregó un componente del pipeline por vez, los resultados permiten además separar lo que
 aporta cada uno al reporte final. La Tabla~\ref{tab:res_gen_aportes} lo resume. El clasificador aporta el
 diagnóstico, el generador aporta la redacción y la descripción de cada lesión, y la concordancia con el \gls{knn}
 aporta la señal que el clasificador no tiene, la de los casos en que su diagnóstico es menos confiable.
 
 \begin{table}[H]
     \centering
-    \caption{Aporte de cada componente del \emph{pipeline} al reporte, según los resultados del capítulo.}
+    \caption{Aporte de cada componente del pipeline al reporte, según los resultados del capítulo.}
     \label{tab:res_gen_aportes}
     \small
     \setlength{\tabcolsep}{4pt}
@@ -50,11 +50,11 @@ aporta la señal que el clasificador no tiene, la de los casos en que su diagnó
     \end{tabularx}
 \end{table}
 
-Este reparto es el aporte del \emph{pipeline}. El diseño de la Sección~\ref{sec:met_pipeline} separa qué diagnóstico
+Este reparto es el aporte del pipeline. El diseño de la Sección~\ref{sec:met_pipeline} separa qué diagnóstico
 se afirma de si corresponde afirmarlo, y deja al generador solo la redacción, la tarea para la que se ajustó. Los
 resultados confirman esa separación: sobre las 1\,503 imágenes, la consistencia de Mini-VLM pasa de 0.849 con la
-cascada simple a 0.870 con el \emph{pipeline}, aun con las derivaciones contadas como casos sin diagnóstico, y toda la
-ganancia proviene del ruteo, porque el \emph{pipeline} no supera a la línea base que escribe los mismos diagnósticos
+cascada simple a 0.870 con el pipeline, aun con las derivaciones contadas como casos sin diagnóstico, y toda la
+ganancia proviene del ruteo, porque el pipeline no supera a la línea base que escribe los mismos diagnósticos
 sin generador. Es decir, el generador no agrega fidelidad, pero tampoco la pierde, y el reporte afirma o presenta
 como diferencial lo que deciden los predictores. Que estos aportes puedan medirse por separado es lo que distingue a
 este trabajo de los de la literatura, que evalúan el sistema entero (Sección~\ref{sec:res_gen_estado_arte}).
@@ -62,7 +62,7 @@ este trabajo de los de la literatura, que evalúan el sistema entero (Sección~\
 Los resultados respaldan también las decisiones del diseño. El ancla en Swin-Tiny se eligió por su F1 macro en
 validación (Sección~\ref{sec:met_pipeline}), y la cascada lo confirma: con DermLIP sin ajuste como fuente, los
 reportes pierden más de una décima de consistencia (Sección~\ref{sec:res_gen_fuentes}). Mini-VLM es el generador del
-\emph{pipeline} porque transcribe el diagnóstico como el generador especializado, describe tanto como el biomédico más
+pipeline porque transcribe el diagnóstico como el generador especializado, describe tanto como el biomédico más
 grande y es el único cuyos pesos entran en una GPU de consumo de 12~GB (Sección~\ref{sec:res_gen_comparacion}). La
 variante de control, que ajusta también su modelo de lenguaje, no mejora la fidelidad y deja reportes vacíos
 (Sección~\ref{sec:res_gen_control_mini}), de modo que la configuración principal se mantiene. Por último, la
@@ -71,13 +71,13 @@ clasificador aporta poco (Sección~\ref{sec:res_gen_rag}).
 
 Otras dos decisiones muestran lo que el diseño todavía puede mejorar. La plantilla \emph{noreasoning} hace que el
 diagnóstico inyectado quede en el reporte, pero la plantilla diferencial lleva a LLaVA-Med a razonar más allá del
-límite de tokens, y por eso el \emph{pipeline} con ese generador no mejora la cascada
+límite de tokens, y por eso el pipeline con ese generador no mejora la cascada
 (Sección~\ref{sec:res_gen_pipeline}). Además, la cascada usa la clase más probable de Swin-Tiny y no el umbral de
 melanoma de la Sección~\ref{sec:res_melanoma}, de modo que tres de cada diez melanomas reciben un reporte que no los
 nombra (Sección~\ref{sec:res_gen_clases}). Anclar el reporte con ese umbral es una mejora directa que este trabajo no
 evaluó.
 
-Lo que el \emph{pipeline} no resuelve son los errores que comparten los dos predictores. La concordancia no los
+Lo que el pipeline no resuelve son los errores que comparten los dos predictores. La concordancia no los
 detecta, y casi un cuarto de los melanomas se afirma como otra clase con la misma plantilla que un acierto
 (Sección~\ref{sec:res_gen_concordancia}). La derivación, a su vez, evita errores a costa de descartar un número
 parecido de aciertos. El Capítulo~\ref{cp:discusion} discute estas limitaciones junto con las de la clasificación, en
