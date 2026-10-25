@@ -113,3 +113,22 @@ para el diseño del pipeline pasan a 5.6; (4) 5.3 pasa a «Pipeline completo» y
 - 5.2: DermLIP oficial en tabla, figura y texto (Mini 0.717, LLaVA-Med 0.641, SkinVL 0.716).
 - 5.4: control con el Nivel 1 pareado (n = 349: v3 mejor en BLEU-4 y BERTScore, peor en ROUGE-L y METEOR);
   `tab:res_costo_generadores` con parámetros y memoria medidos (carga y generación; Mini 8.6 GB de pico).
+
+## Revisión externa (25/10/2026)
+
+Revisión de los Caps. 4 y 5 por otro agente (`agent_feedback_cap_4_5.md`), aceptada por el autor con una segunda
+opinión. Cambios en este capítulo:
+
+- **Datos:** BLEU-4 separado de BERTScore en el control de Mini-VLM (la variante de control supera en BLEU-4, CIDEr y
+  BERTScore); LLaVA-Med sin imagen sube tres centésimas sin que la diferencia se distinga de cero (no «no cambia»);
+  «un patrón de fallas distinto»; en 5.6, la coincidencia por clase vale para Mini-VLM y SkinVL, no para LLaVA-Med;
+  el melanoma con la semilla 42 (siete de cada diez) se aclara como algo más que la media de las tres semillas.
+- **Hardware:** la restricción se fija por memoria (una GPU de hasta 24 GB, la de una de consumo de gama alta; Cap. 3,
+  3.1 y 3.9). En 5.4.2: el ajuste de Mini-VLM entra en 24 GB y la inferencia en 12 GB; el ajuste en 12 o 16 GB no se
+  comprobó. El factor de costo se dice como «más de mil veces», con GPU distintas.
+- **SkinVL:** verificado en el paper de MM-Skin que SkinVL-MM se ajustó solo con MM-Skin (libros de texto); las
+  variantes Pub y PubMM incluyen HAM10000 e HIBA. Se aclara en el Cap. 3 (3.2); no hace falta salvedad en la cascada.
+- **Estructura:** 5.3.2 explica que la consistencia no es una exactitud antes de la tabla; 5.4 suma «y costo» al
+  título y termina con la transición a 5.5; 5.1 reduce a una oración por qué el modelo de lenguaje de Mini-VLM no se
+  ajusta (el detalle está en el Cap. 3).
+- **Pendiente para el tutor:** el reparto entre 5.6 y el Cap. 6 (respuesta a PI2, decisiones y limitaciones).
