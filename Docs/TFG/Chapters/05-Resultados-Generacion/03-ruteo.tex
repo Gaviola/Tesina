@@ -9,16 +9,15 @@
 
 La cascada afirma siempre el diagnóstico del clasificador, aunque sea incorrecto, y ni la imagen ni los vecinos lo
 corrigen. El último paso del recorrido agrega el ruteo de la Sección~\ref{sec:met_ruteo}, que completa el
-\emph{pipeline} de la Figura~\ref{fig:met_pipeline}. Cada imagen pasa en paralelo por Swin-Tiny y por el \gls{knn}
+pipeline de la Figura~\ref{fig:met_pipeline} del Capítulo~\ref{cp:metodos}. Cada imagen pasa en paralelo por Swin-Tiny y por el \gls{knn}
 sobre los \emph{embeddings} de DermLIP. Si los dos predictores coinciden, el generador recibe ese diagnóstico con la
 plantilla \emph{noreasoning} y escribe un reporte afirmativo. Si no coinciden, pero al menos dos de los tres vecinos
 comparten la clase, recibe el par de candidatos con la plantilla diferencial, y si los tres vecinos son de clases
-distintas, no se genera reporte y el caso se deriva a un especialista (Tabla~\ref{tab:met_niveles}).
+distintas, no se genera reporte y el caso se deriva a un especialista (Tabla~\ref{tab:met_niveles} del Capítulo~\ref{cp:metodos}).
 
-Esta sección evalúa primero si la concordancia separa los casos en que el clasificador acierta de aquellos en que se
-equivoca. Después mide los reportes del \emph{pipeline} con Mini-VLM y LLaVA-Med, frente a la cascada simple de la
-sección anterior y a la línea base sin generador de la Sección~\ref{sec:met_referencias}, y cierra con ejemplos de
-reportes.
+La evaluación tiene dos partes: si la concordancia separa los casos en que el clasificador acierta de aquellos en que
+se equivoca, y cuánto cambian los reportes de Mini-VLM y LLaVA-Med frente a la cascada simple de la sección anterior y
+a la línea base sin generador de la Sección~\ref{sec:met_referencias}.
 
 \subsection{Concordancia entre el clasificador y el kNN}
 \label{sec:res_gen_concordancia}
@@ -56,7 +55,7 @@ melanoma queda en una posición intermedia. Un tercio de los melanomas va al niv
 de candidatos contiene el melanoma en 52 de 54 imágenes, la mayoría como par melanoma--nevo, la confusión más
 costosa según la Sección~\ref{sec:met_seleccion}.
 
-La derivación, por último, retira del \emph{pipeline} 51 casos en los que el clasificador acierta tan poco como en el
+La derivación, por último, deja fuera del pipeline 51 casos en los que el clasificador acierta tan poco como en el
 nivel diferencial. Esta decisión tiene un costo: en esos casos, con la cascada simple, Mini-VLM habría escrito 20
 reportes con un diagnóstico incorrecto, pero el clasificador acierta 29 de los 51 diagnósticos, que la derivación
 también descarta. Por eso la derivación evita errores a costa de dejar sin reporte un número parecido de aciertos, y su
@@ -68,13 +67,18 @@ utilidad depende de cuánto cueste en la práctica un error frente a una consult
 Con el ruteo, los casos afirmativos reciben el reporte de la cascada y los diferenciales, uno que discute los dos
 candidatos. La Tabla~\ref{tab:res_gen_pipeline} compara la consistencia de esos reportes con la de la cascada simple
 sobre los mismos 1\,452 casos no derivados, y con la línea base sin generador, que escribe el diagnóstico afirmado o
-el par de candidatos. La tabla informa también la consistencia sobre las 1\,503 imágenes, con cada derivación contada
-como un caso sin diagnóstico.
+el par de candidatos.
+
+Esta consistencia no equivale a una exactitud, por dos razones. Primero, en el nivel diferencial un reporte que nombra
+dos candidatos cuenta como consistente si uno de ellos es el verdadero, de modo que el criterio se parece a acertar
+entre las dos primeras opciones. Segundo, sobre los casos no derivados deja afuera las derivaciones, que son de los
+más difíciles. Por eso la tabla informa también la consistencia sobre las 1\,503 imágenes, con cada derivación
+contada como un caso sin diagnóstico.
 
 \begin{table}[H]
     \centering
-    \caption{Consistencia diagnóstica del \emph{pipeline} completo frente a la cascada simple y a la línea base sin
-    generador, con IC del 95\,\% (\emph{bootstrap} pareado).}
+    \caption{Consistencia diagnóstica del pipeline completo frente a la cascada simple y a la línea base sin
+    generador, con IC del 95\,\% (bootstrap pareado).}
     \label{tab:res_gen_pipeline}
     \small
     \setlength{\tabcolsep}{4pt}
@@ -84,10 +88,10 @@ como un caso sin diagnóstico.
         \midrule
         \multicolumn{3}{@{}l}{\textit{Casos no derivados (1\,452)}} \\
         Cascada simple & 0.858 & 0.755 \\
-        \emph{Pipeline} completo & 0.901 & 0.744 \\
+        Pipeline completo & 0.901 & 0.744 \\
         Línea base sin generador & 0.904 & 0.904 \\
-        \emph{Pipeline} $-$ cascada simple & $+0.043$ [$+0.031$, $+0.055$] & $-0.011$ [$-0.025$, $+0.003$] \\
-        \emph{Pipeline} $-$ línea base sin generador & $-0.003$ [$-0.008$, $+0.002$] & $-0.160$ [$-0.180$, $-0.140$] \\
+        Pipeline $-$ cascada simple & $+0.043$ [$+0.031$, $+0.055$] & $-0.011$ [$-0.025$, $+0.003$] \\
+        Pipeline $-$ línea base sin generador & $-0.003$ [$-0.008$, $+0.002$] & $-0.160$ [$-0.180$, $-0.140$] \\
         \filasep
         \multicolumn{3}{@{}l}{\textit{Nivel diferencial (248)}} \\
         Cascada simple & 0.581 & 0.472 \\
@@ -96,32 +100,27 @@ como un caso sin diagnóstico.
         \filasep
         \multicolumn{3}{@{}l}{\textit{Prueba completa, con las derivaciones sin diagnóstico (1\,503)}} \\
         Cascada simple & 0.849 & 0.745 \\
-        \emph{Pipeline} completo & 0.870 & 0.719 \\
+        Pipeline completo & 0.870 & 0.719 \\
         Línea base sin generador & 0.873 & 0.873 \\
         \bottomrule
     \end{tabularx}
 \end{table}
 
-Con Mini-VLM, el \emph{pipeline} mejora la consistencia de la cascada simple, y la mejora se concentra en el nivel
+Con Mini-VLM, el pipeline mejora la consistencia de la cascada simple, y la mejora se concentra en el nivel
 diferencial, donde el reporte nombra la clase verdadera en cuatro de cada cinco casos, frente a seis de cada diez de
-la cascada. Sin embargo, el \emph{pipeline} no supera a la línea base sin generador. Toda la ganancia proviene, por lo
+la cascada. Sin embargo, el pipeline no supera a la línea base sin generador. Toda la ganancia proviene, por lo
 tanto, de presentar dos candidatos cuando los predictores discrepan, una decisión del ruteo, y el generador la
-conserva sin agregarle fidelidad. Esta lectura coincide con la de la cascada: el diagnóstico sale de los predictores, y
+conserva sin agregarle fidelidad. Sobre la prueba completa, con las derivaciones contadas como casos sin diagnóstico,
+la mejora es menor, de 0.849 a 0.870. Esta lectura coincide con la de la cascada: el diagnóstico sale de los predictores, y
 el generador lo redacta.
 
-Con LLaVA-Med, en cambio, el \emph{pipeline} no mejora la cascada simple. Sus reportes diferenciales nombran la clase
+Con LLaVA-Med, en cambio, el pipeline no mejora la cascada simple, y sobre la prueba completa queda por debajo
+de ella. Sus reportes diferenciales nombran la clase
 verdadera en cuatro de cada diez casos, la mitad que el par de candidatos que reciben, porque en 144 de los 248 el
 generador abre un bloque de razonamiento que el límite de tokens deja sin cerrar, y los candidatos quedan dentro de
 él. Como la evaluación mide solo el reporte (Sección~\ref{sec:met_eval_generacion}), esos candidatos no cuentan. La
 plantilla diferencial, que pide discutir dos candidatos, induce a LLaVA-Med a razonar, mientras que la plantilla
 \emph{noreasoning} del nivel afirmativo lo evita en la mayoría de los casos.
-
-La consistencia del \emph{pipeline} no equivale a una exactitud, por dos razones. Primero, en el nivel diferencial un
-reporte que nombra dos candidatos cuenta como consistente si uno de ellos es el verdadero, de modo que el criterio se
-parece a acertar entre las dos primeras opciones. Segundo, se calcula sin los casos derivados, que son de los más
-difíciles. Si cada derivación se cuenta como un caso sin diagnóstico, la consistencia de Mini-VLM sobre las 1\,503
-imágenes pasa de 0.849 con la cascada simple a 0.870 con el \emph{pipeline}, una mejora menor que la de los casos no
-derivados, y con LLaVA-Med baja de la cascada al \emph{pipeline}.
 
 Los errores graves también disminuyen. Entre los casos no derivados, los reportes con un diagnóstico incorrecto bajan
 del 13.6\,\% al 9.0\,\% con Mini-VLM y del 9.4\,\% al 7.1\,\% con LLaVA-Med, si en el nivel diferencial se cuenta como
@@ -132,7 +131,7 @@ los reportes diferenciales de Mini-VLM nombran en promedio más de dos clases y 
 \label{sec:res_gen_cualitativos}
 
 Las métricas no muestran cómo se lee un reporte, y por eso la Figura~\ref{fig:res_gen_ejemplos} reúne tres reportes de
-Mini-VLM en el \emph{pipeline}, uno por situación. En el primero, el clasificador y los vecinos coinciden en
+Mini-VLM en el pipeline, uno por situación. En el primero, el clasificador y los vecinos coinciden en
 melanoma, y el reporte afirma el diagnóstico y lo acompaña con rasgos compatibles con él, como los bordes irregulares
 y la asimetría.
 
