@@ -29,8 +29,8 @@ Tabla~\ref{tab:res_gen_estado_arte} reúne las cifras que tienen un equivalente 
         \multicolumn{5}{@{}l}{\textit{Parecido con un texto de referencia}} \\
         \textcite{zeng2025mmskin} & LLaVA-Med sin ajuste; prueba de \emph{MM-Skin} de los autores, dermatoscopía,
             preguntas y respuestas & BLEU-4 & 0.089 & 0.001 (LLaVA-Med) \\
-        \textcite{zeng2025mmskin} & Ídem & BERTScore & 0.666 & 0.674 (LLaVA-Med)\newline 0.713 (Mini-VLM) \\
-        \textcite{zeng2025mmskin} & SkinVL ajustado con \emph{MM-Skin}; ídem & BLEU-4 / BERTScore & 0.216 / 0.713
+        \textcite{zeng2025mmskin} & LLaVA-Med sin ajuste; misma prueba & BERTScore & 0.666 & 0.674 (LLaVA-Med)\newline 0.713 (Mini-VLM) \\
+        \textcite{zeng2025mmskin} & SkinVL ajustado con \emph{MM-Skin}; misma prueba & BLEU-4 / BERTScore & 0.216 / 0.713
             & --- \\
         \filasep
         \multicolumn{5}{@{}l}{\textit{Corrección del diagnóstico en el texto}} \\
@@ -46,7 +46,7 @@ Tabla~\ref{tab:res_gen_estado_arte} reúne las cifras que tienen un equivalente 
 
 En el parecido con un texto de referencia, los generadores de este trabajo quedan muy por debajo de los de
 \textcite{zeng2025mmskin} en BLEU-4, pero no en BERTScore. El BLEU-4 de LLaVA-Med ajustado con \emph{SkinCaRe} es
-casi nulo, mientras que el mismo modelo sin ajuste comparte con las descripciones de \emph{MM-Skin} algunas frases y
+casi nulo, mientras que en ese trabajo el mismo modelo sin ajuste comparte con las descripciones de \emph{MM-Skin} algunas frases y
 SkinVL, ajustado con ellas, muchas más. En cambio, el BERTScore de LLaVA-Med queda cerca del que obtiene sin ajuste en
 ese trabajo, y el de Mini-VLM alcanza el de SkinVL. La comparación no es directa, porque la prueba y la instrucción
 son otras, pero indica que la distancia está en las palabras y no en el contenido: el BLEU-4 premia escribir como el
@@ -75,5 +75,5 @@ ensamble de \textcite{khan2025ensemble} deriva a un especialista los casos en qu
 informa cuántos casos deriva ni con qué acierto, y su texto lo escribe un modelo que no ve la imagen. En este trabajo,
 la concordancia separa los casos en que el clasificador acierta nueve de cada diez de aquellos en que acierta la mitad
 (Sección~\ref{sec:res_gen_concordancia}), aunque no detecta los errores compartidos. En conjunto, los reportes quedan
-en el orden de los de la literatura en las métricas comparables, y la diferencia principal del trabajo está en que
-mide por separado el aporte de cada componente del \emph{pipeline}.
+en el mismo orden de magnitud que los de la literatura en las métricas comparables, y la diferencia principal del trabajo está en que
+mide por separado el aporte de cada componente del pipeline.
