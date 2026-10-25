@@ -165,7 +165,7 @@ por clase en ese conjunto cambian mucho con pocos aciertos.
 Además de corregirla, interesa saber cuánto sobreestimaba la fuga el desempeño de los clasificadores. Para estimarlo,
 el Capítulo~\ref{cp:res_clasif} compara el resultado sobre la prueba completa con el que se obtiene sobre sus 894
 imágenes cuya lesión no aparecía ni en entrenamiento ni en validación de la partición original. Como control se usa
-DermLIP sin ajuste, que no vio \emph{HAM10000}: si su desempeño también cambia entre ambos conjuntos, el cambio se debe
+DermLIP sin ajuste, que no se entrenó con \emph{HAM10000}: si su desempeño también cambia entre ambos conjuntos, el cambio se debe
 a la composición del subconjunto y no a la fuga. A diferencia de \emph{HAM10000}, los demás conjuntos no pasan por esta
 partición, porque cada uno trae su propia división o se usa completo como prueba.
 
@@ -207,7 +207,9 @@ generación contra un texto de referencia. Sus textos son descripciones de quinc
 asociadas a imágenes clínicas, dermatoscópicas y patológicas~\cite{zeng2025mmskin}, y las métricas con referencia se
 calculan sobre su partición de prueba (Sección~\ref{sec:met_eval_generacion}). Ninguno de los generadores ajustados en
 este trabajo vio \emph{MM-Skin}.
-SkinVL, en cambio, sí se ajustó con él y por ello no se evalúa sobre este conjunto.
+SkinVL, en cambio, sí se ajustó con él y por ello no se evalúa sobre este conjunto. Se usa su variante ajustada solo
+con \emph{MM-Skin}; las otras dos suman conjuntos públicos de diagnóstico que incluyen imágenes de \emph{HAM10000} y
+de \emph{HIBA}~\cite{zeng2025mmskin}.
 
 Por otra parte, \emph{HIBA} reúne 1\,616 imágenes de 623 pacientes de un hospital de Buenos Aires, con licencia CC
 BY~\cite{riccilara2023dataset}. Es el único conjunto de otra población y se usa completo como prueba externa, de modo que
