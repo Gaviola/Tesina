@@ -147,8 +147,8 @@ cero en los tres generadores, porque el reporte afirma el diagnóstico recibido 
 Mini-VLM nombra la clase equivocada en todos los reportes y LLaVA-Med, en tres de cada cuatro. En consecuencia, un
 error del clasificador llega al reporte sin ninguna corrección.
 
-La imagen sí interviene en qué se describe. Sin ella, los tres generadores escriben un único texto por clase, siete en
-total, mientras que con ella casi cada reporte de Mini-VLM y de LLaVA-Med es distinto. Además, la cobertura de entidades
+La imagen sí interviene en qué se describe. Sin ella, los tres generadores escriben un único texto por clase, siete
+por generador, mientras que con ella casi cada reporte de Mini-VLM y de LLaVA-Med es distinto. Además, la cobertura de entidades
 clínicas de Mini-VLM cae a la mitad sin la imagen, de modo que su descripción se apoya en ella. En LLaVA-Med, en cambio,
 la cobertura no baja, porque sin la imagen el generador escribe una descripción genérica de la clase, con tantos
 términos clínicos como la de una lesión concreta. Por lo tanto, el clasificador aporta el diagnóstico, y la imagen
