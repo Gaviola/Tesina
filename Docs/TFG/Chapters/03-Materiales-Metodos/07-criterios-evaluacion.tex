@@ -77,9 +77,10 @@ El Nivel~1 compara el reporte con un texto de referencia mediante BLEU-4, ROUGE-
 (Sección~\ref{sec:marco_eval_texto}). Solo puede aplicarse a \emph{MM-Skin} y \emph{SkinCoT}, los conjuntos que tienen
 ese texto, y se mide sobre sus particiones de prueba, de 1\,650 y 457 imágenes. De ellas se descartan los pares sin
 referencia, es decir, las imágenes de \emph{MM-Skin} sin descripción y los textos de \emph{SkinCoT} que están enteros
-dentro de bloques de razonamiento, de modo que quedan 1\,414 y 426 pares. Además, cuando el límite de tokens llega
-mientras el generador todavía razona, el reporte queda vacío. Esos reportes no entran en las métricas, porque no hay
-texto que comparar, pero su proporción se informa junto a ellas.
+dentro de bloques de razonamiento, de modo que quedan 1\,414 y 426 pares. En \emph{MM-Skin}, Mini-VLM tiene reportes
+para una parte de esas imágenes, y los dos generadores se comparan sobre los 1\,022 pares que comparten. Además,
+cuando el límite de tokens llega mientras el generador todavía razona, el reporte queda vacío. Esos reportes no entran
+en las métricas, porque no hay texto que comparar, pero su proporción se informa junto a ellas.
 
 Los valores del Nivel~1 se informan, pero no se usan para elegir ningún modelo ni ninguna configuración, porque los
 textos de referencia no son diagnósticos clínicos de la lesión. Lo que mide la comparación depende de quién escribió
