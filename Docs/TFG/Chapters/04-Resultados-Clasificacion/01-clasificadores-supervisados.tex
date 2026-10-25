@@ -6,12 +6,12 @@
 % leakage_analysis.json. Figuras: scripts/figuras_cap4.py (confusión) y scripts/figura_roc_melanoma.py.
 % Estructura (revisión del autor, 24/10/2026): las cuatro arquitecturas se comparan una vez y el análisis sigue con
 % Swin-Tiny; la comparación con la literatura está en sec:res_estado_arte.
-\section{Clasificadores supervisados}
+\section{Clasificadores supervisados y detección de melanoma}
 \label{sec:res_supervisados}
 
-Esta sección compara primero las cuatro arquitecturas supervisadas y, con la que elige la validación, analiza en
-detalle sus errores por clase, la detección de melanoma, el tratamiento del desbalance y el efecto de la partición.
-Las demás arquitecturas se mencionan solo donde se comportan distinto.
+Las cuatro arquitecturas supervisadas se entrenaron con tres semillas cada una y se comparan en validación y en la
+prueba. El análisis detallado se hace sobre la que elige la validación, y las demás se mencionan solo donde se
+comportan distinto.
 
 \subsection{Comparación de las cuatro arquitecturas}
 \label{sec:res_sup_arquitecturas}
@@ -63,7 +63,7 @@ que pesan poco en el total de aciertos y mucho en las métricas macro.
 
 \begin{table}[H]
     \centering
-    \caption{Pruebas entre los clasificadores supervisados (semilla 42): diferencia del primero menos el segundo, con su IC del 95\,\%. Los modelos se nombran por su familia.}
+    \caption{Pruebas entre los clasificadores supervisados (semilla 42): diferencia del primero menos el segundo, con su IC del 95\,\%. El umbral de Holm es el que corresponde a cada par en la corrección sobre los 21 pares del capítulo. Los modelos se nombran por su familia.}
     \label{tab:res_pruebas_supervisados}
     \footnotesize
     \setlength{\tabcolsep}{3pt}
@@ -82,7 +82,8 @@ que pesan poco en el total de aciertos y mucho en las métricas macro.
     \end{tabularx}
 \end{table}
 
-Si las tres mejores arquitecturas no se distinguen, combinar dos de ellas puede, al menos, estabilizar el resultado.
+Como las tres mejores arquitecturas no se distinguen, combinar dos de ellas puede, al menos, estabilizar el
+resultado.
 El ensamble de Swin-Tiny y ConvNeXt-Tiny por voto suave (\emph{soft voting};
 Sección~\ref{sec:met_supervisados_ensamble}) apenas mejora la media, pero reduce mucho la variación entre semillas
 (Tabla~\ref{tab:res_supervisados}): con cualquiera de las tres, da casi el mismo resultado. Como la mejora media no se
@@ -104,7 +105,7 @@ confunden entre sí, y una parte de los \gls{bcc} y de los \gls{vasc} se clasifi
     \label{fig:res_confusion_swin}
 \end{figure}
 
-Esa matriz corresponde a una sola ejecución, y la Figura~\ref{fig:res_recall_semillas} muestra que en las clases con
+La matriz corresponde a una sola ejecución, y la Figura~\ref{fig:res_recall_semillas} muestra que en las clases con
 pocas imágenes el resultado cambia mucho con la semilla. En \gls{df}, con 17 imágenes, una sola imagen mueve la sensibilidad
 en casi 0.06, y la de \gls{mel} varía en más de una décima entre las tres ejecuciones de Swin-Tiny. La figura muestra
 también por qué las pruebas no separan a las tres mejores arquitecturas: Swin-Tiny supera a DenseNet121 en cinco de
@@ -185,12 +186,12 @@ Tabla~\ref{tab:res_supervisados}.
         ConvNeXt-Tiny & EC sin pesos & 0.846 & 0.753 & 0.715 & 0.605 \\
             & EC ponderada & 0.669 & 0.570 & 0.731 & 0.659 \\
             & Pérdida focal & 0.739 & 0.588 & 0.730 & 0.509 \\
-            & \emph{Balanced softmax} & 0.733 & 0.576 & 0.719 & 0.425 \\
+            & Balanced softmax & 0.733 & 0.576 & 0.719 & 0.425 \\
         \filasep
         DenseNet121 & EC sin pesos & 0.830 & 0.664 & 0.634 & 0.485 \\
             & EC ponderada & 0.568 & 0.470 & 0.692 & 0.545 \\
             & Pérdida focal & 0.557 & 0.479 & 0.654 & 0.581 \\
-            & \emph{Balanced softmax} & 0.568 & 0.479 & 0.646 & 0.515 \\
+            & Balanced softmax & 0.568 & 0.479 & 0.646 & 0.515 \\
         \bottomrule
     \end{tabularx}
 \end{table}
@@ -199,7 +200,7 @@ En los tres modelos, las tres funciones pensadas para el desbalance suben la sen
 exactitud y el F1 macro, y ninguna supera a la entropía cruzada sin pesos en F1 macro. Es decir, los modelos asignan
 más imágenes a las clases minoritarias y aciertan algunas más, a cambio de falsas alarmas sobre las demás. Tampoco la
 sensibilidad de \gls{mel} mejora de manera consistente: sube con la entropía cruzada ponderada en los tres modelos, pero
-baja con la pérdida focal en Swin-Tiny y con \emph{balanced softmax} en ConvNeXt-Tiny. Por lo tanto, ninguna de estas
+baja con la pérdida focal en Swin-Tiny y con balanced softmax en ConvNeXt-Tiny. Por lo tanto, ninguna de estas
 funciones mejora a la vez la detección de las clases minoritarias y la precisión de esas detecciones, y para melanoma
 el umbral de validación logra una ganancia de sensibilidad comparable sin cambiar el entrenamiento.
 
@@ -208,13 +209,13 @@ el umbral de validación logra una ganancia de sensibilidad comparable sin cambi
 
 Todos los resultados anteriores se obtuvieron con la partición por lesión, sin fuga de información entre particiones
 (\emph{data leakage}; Sección~\ref{sec:met_particiones}). Para estimar cuánto cambiarían con la partición original
-por imagen, se evalúa un Swin-Tiny entrenado con ella, con la configuración que eligió su propia validación, sobre dos
-grupos de la prueba: las 894 imágenes cuya lesión no aparece en su entrenamiento ni en su validación, y las 543 que
-comparten lesión con el entrenamiento. Su sensibilidad macro es de 0.804 en el primer grupo y de 0.936 en el segundo.
-El control, DermLIP sin ajuste, que no vio \emph{HAM10000}, no empeora en el grupo sin fuga, de modo que la
-diferencia no se debe a que ese grupo sea más difícil. En esta prueba, entonces, la partición por imagen sobreestima la sensibilidad
-macro en unas 0.07, una distorsión que se retoma al comparar con otros trabajos en la
-Sección~\ref{sec:res_estado_arte}.
+por imagen, se evalúa un Swin-Tiny entrenado con ella, con la configuración que eligió su propia validación. Sobre la
+prueba completa, su sensibilidad macro es de 0.870, y sobre las 894 imágenes cuya lesión no aparece en su entrenamiento
+ni en su validación, de 0.804. En las 543 que comparten lesión con el entrenamiento llega a 0.936, y las 66 restantes
+comparten lesión solo con la validación. El control, DermLIP sin ajuste sobre \emph{HAM10000}, no empeora en el grupo
+sin fuga, de modo que la diferencia no se debe a que ese grupo sea más difícil. En esta prueba, entonces, la partición
+por imagen sobreestima la sensibilidad macro en unas 0.07, una distorsión que se retoma al comparar con otros trabajos
+en la Sección~\ref{sec:res_estado_arte}.
 
 Con estos resultados, Swin-Tiny queda como el clasificador de referencia del trabajo, con un punto de operación para
 melanoma fijado en validación. Todos sus resultados, sin embargo, se midieron sobre la prueba de \emph{HAM10000}, y la
