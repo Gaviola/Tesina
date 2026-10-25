@@ -23,7 +23,8 @@ P2  fig: Mini y SkinVL = 0.847; LLaVA una décima abajo; oracle: Mini/SkinVL tod
 P3  tab: diferencias significativas; ×5 en Mini; distancia al oracle = errores de Swin          describe
 P4  Copia: Mini nombra el ancla en 1 501/1 503; 1 272/1 273 si acierta, 4/230 si no             interpreta
 P5  LLaVA: omisiones (describe sin diagnóstico; textos breves/vacíos), en NV, BKL, AKIEC        interpreta
-\pendiente  DermLIP oficial como fuente
+P5b DermLIP sin ajuste (0.716): Mini/SkinVL nombran su dx salvo 1 y 2 reportes; consistencia = exactitud  interpreta
+P5c Swin − DermLIP +0.132 [0.107, 0.158] (Mini); LLaVA apenas sobre sin anclaje; se ancla en Swin   cierra
 5.2.2
 P6  fig por clase: Mini/SkinVL sobre la diagonal; LLaVA abajo, AKIEC a la mitad                 describe
 P7  Consecuencia: 3 de 10 melanomas sin melanoma en el reporte; mejorar el reporte = mejorar el

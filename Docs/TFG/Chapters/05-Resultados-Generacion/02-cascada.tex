@@ -3,7 +3,8 @@
 % cap5_derivados.json ("por_clase", "ablaciones", "fallas", "recuperacion"); rag_les_eval.json y
 % Codigo/docs/resul/rag_les_resul_20261011.md (tabla de recuperación). Ablaciones: reportes full_oracle_noimage y
 % full_wrong_swap (400 imágenes de Mini-VLM y LLaVA-Med; 1 503 de SkinVL), recalculadas con la métrica oficial.
-% DermLIP como fuente: brazo full_dermlip_oficial en generación (Mendieta 1183274–1183301); ver \pendiente.
+% DermLIP como fuente: brazo full_dermlip_oficial (Mendieta 1183274–1183301), cascada_dermlip_oficial_<gen>.json
+% (scripts/cascada_dermlip_oficial.py; métrica oficial, IC bootstrap pareado).
 % Figuras: scripts/figuras_cap5.py (cascada-fuentes, cascada-por-clase, fallas-reportes).
 \section{Cascada clasificador--generador}
 \label{sec:res_gen_cascada}
@@ -43,16 +44,16 @@ proporción de imágenes en que el clasificador se equivoca.
     \label{tab:res_gen_cascada}
     \small
     \setlength{\tabcolsep}{3pt}
-    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X >{\centering\arraybackslash}p{1.45cm}
-        >{\centering\arraybackslash}p{1.45cm}>{\centering\arraybackslash}p{1.45cm}
-        >{\centering\arraybackslash}p{3.2cm}>{\centering\arraybackslash}p{3.0cm}@{}}
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X >{\centering\arraybackslash}p{1.25cm}
+        >{\centering\arraybackslash}p{1.25cm}>{\centering\arraybackslash}p{1.25cm}>{\centering\arraybackslash}p{1.25cm}
+        >{\centering\arraybackslash}p{3.0cm}>{\centering\arraybackslash}p{2.9cm}@{}}
         \toprule
-        \textbf{Generador} & \textbf{Sin anclaje} & \textbf{Swin-Tiny} & \textbf{Oracle}
+        \textbf{Generador} & \textbf{Sin anclaje} & \textbf{DermLIP} & \textbf{Swin-Tiny} & \textbf{Oracle}
             & \textbf{Swin-Tiny $-$ sin anclaje} & \textbf{Oracle $-$ Swin-Tiny} \\
         \midrule
-        Mini-VLM & 0.163 & 0.849 & 0.999 & $+0.686$ [$+0.658$, $+0.712$] & $+0.150$ [$+0.132$, $+0.168$] \\
-        LLaVA-Med & 0.582 & 0.745 & 0.854 & $+0.162$ [$+0.130$, $+0.194$] & $+0.110$ [$+0.094$, $+0.126$] \\
-        SkinVL & 0.001 & 0.846 & 0.999 & $+0.845$ [$+0.827$, $+0.863$] & $+0.153$ [$+0.135$, $+0.171$] \\
+        Mini-VLM & 0.163 & 0.717 & 0.849 & 0.999 & $+0.686$ [$+0.658$, $+0.712$] & $+0.150$ [$+0.132$, $+0.168$] \\
+        LLaVA-Med & 0.582 & 0.641 & 0.745 & 0.854 & $+0.162$ [$+0.130$, $+0.194$] & $+0.110$ [$+0.094$, $+0.126$] \\
+        SkinVL & 0.001 & 0.716 & 0.846 & 0.999 & $+0.845$ [$+0.827$, $+0.863$] & $+0.153$ [$+0.135$, $+0.171$] \\
         \bottomrule
     \end{tabularx}
 \end{table}
@@ -69,12 +70,16 @@ de que la instrucción lo pide, y el resto son textos demasiado breves, entre el
 límite de tokens corta un bloque de razonamiento. Estas omisiones se concentran en \gls{nv}, \gls{bkl} y \gls{akiec}, y
 son fallas del generador y no del clasificador (Sección~\ref{sec:res_gen_errores}).
 
-\pendiente{Cascada con DermLIP sin ajuste como fuente del diagnóstico (protocolo oficial de la
-Sección~\ref{sec:met_clasif_vlm}, exactitud 0.716): reportes en generación (Mendieta, jobs 1183274--1183301). Al
-terminar, agregar la columna a la Tabla~\ref{tab:res_gen_cascada} y los puntos a la Figura~\ref{fig:res_gen_cascada}
-(\texttt{figuras\_cap5.py} los toma de \texttt{cascada\_dermlip\_oficial\_<generador>.json}), y escribir un párrafo:
-se espera que la consistencia quede entre la de la generación sin anclaje y la de Swin-Tiny, cerca de la exactitud de
-DermLIP para Mini-VLM y SkinVL.}
+La misma relación aparece cuando la fuente es DermLIP sin ajuste, el \gls{vlm} de la Sección~\ref{sec:res_vlm}, que
+acierta en 0.716 de las imágenes de la prueba. Mini-VLM y SkinVL nombran el diagnóstico de DermLIP en todos los
+reportes salvo uno y dos, respectivamente, y su consistencia coincide con esa exactitud. Por lo tanto, el generador
+transcribe el diagnóstico de igual modo cuando proviene de un clasificador ajustado y cuando proviene de un modelo
+sin ajuste, y la fidelidad del reporte es la de la fuente.
+
+Lo que cambia con la fuente es cuántos errores se transcriben. Con Mini-VLM, la cascada con Swin-Tiny supera a la de
+DermLIP en 0.132 [0.107, 0.158] de consistencia, y la diferencia es similar con los otros dos generadores. LLaVA-Med,
+además, apenas mejora con DermLIP frente a no anclar, porque sigue omitiendo el diagnóstico recibido en uno de cada
+siete reportes. Por eso el \emph{pipeline} ancla la cascada en el clasificador ajustado y no en el \gls{vlm}.
 
 \subsection{Consistencia por clase}
 \label{sec:res_gen_clases}
