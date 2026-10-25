@@ -10,10 +10,16 @@
 \label{sec:res_gen_cascada}
 
 Como ningún generador afirma por sí solo la clase de la imagen, la cascada de la Sección~\ref{sec:met_cascada} le
-entrega el diagnóstico del clasificador en la instrucción. Esta sección evalúa primero la cascada con Swin-Tiny, que es
-la del \emph{pipeline}, frente a las otras fuentes de diagnóstico de la Sección~\ref{sec:met_referencias}, y después
-analiza su comportamiento por clase, el aporte de la imagen, las fallas de los reportes y la recuperación de casos
-parecidos como alternativa al clasificador.
+entrega el diagnóstico del clasificador en la instrucción. Es el segundo paso del recorrido: al generador de la
+sección anterior se le suma el clasificador, todavía sin el ruteo. Cada generador recibe la imagen y la plantilla
+\emph{noreasoning} con el diagnóstico de una fuente, sobre las 1\,503 imágenes de prueba, y la consistencia se mide
+siempre respecto de la clase verdadera. Las fuentes son las de la Sección~\ref{sec:met_referencias}: Swin-Tiny, que
+es la del \emph{pipeline}, DermLIP sin ajuste y el \emph{oracle}, y la generación sin anclaje de la sección anterior
+sirve de punto de partida.
+
+Esta sección compara primero esas fuentes, y después analiza la cascada con Swin-Tiny por clase, el aporte de la
+imagen y las fallas de los reportes. Por último, evalúa la recuperación de casos parecidos como alternativa al
+clasificador.
 
 \subsection{Consistencia según la fuente del diagnóstico}
 \label{sec:res_gen_fuentes}
@@ -77,7 +83,8 @@ sin ajuste, y la fidelidad del reporte es la de la fuente.
 Lo que cambia con la fuente es cuántos errores se transcriben. Con Mini-VLM, la cascada con Swin-Tiny supera a la de
 DermLIP en 0.132 [0.107, 0.158] de consistencia, y la diferencia es similar con los otros dos generadores. LLaVA-Med,
 además, apenas mejora con DermLIP frente a no anclar, porque sigue omitiendo el diagnóstico recibido en uno de cada
-siete reportes. Por eso el \emph{pipeline} ancla la cascada en el clasificador ajustado y no en el \gls{vlm}.
+siete reportes. Por lo tanto, de las dos fuentes que no conocen la etiqueta, el clasificador ajustado es la que lleva
+más diagnósticos correctos al reporte.
 
 \subsection{Consistencia por clase}
 \label{sec:res_gen_clases}
@@ -98,8 +105,8 @@ que el clasificador la acierta.
 La consecuencia clínica es que la cascada reproduce los puntos débiles del clasificador. Con la semilla que ancla el
 \emph{pipeline}, Swin-Tiny reconoce siete de cada diez melanomas (Sección~\ref{sec:res_sup_clases}), y por ello tres
 de cada diez reportes de un melanoma no lo nombran. Las clases con menor sensibilidad, como \gls{akiec},
-reciben del mismo modo los reportes menos fieles. La cascada usa la clase más probable y no el umbral de melanoma de la
-Sección~\ref{sec:res_melanoma}, de modo que mejorar el reporte de una clase exige mejorar el diagnóstico que lo ancla.
+reciben del mismo modo los reportes menos fieles, de modo que mejorar el reporte de una clase exige mejorar el
+diagnóstico que lo ancla.
 
 \subsection{Aporte de la imagen al reporte}
 \label{sec:res_gen_ablaciones}

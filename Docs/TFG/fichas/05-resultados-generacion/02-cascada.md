@@ -16,7 +16,9 @@ Viene de: 5.1, ningún generador afirma solo la clase. Deja instalado: la fideli
 clasificador, con sus errores; ni la imagen ni los vecinos los corrigen.
 
 ```
-P1  Retoma 5.1; orden de la sección                                                             orienta
+P1  Retoma 5.1; segundo paso del recorrido; diseño: plantilla noreasoning, 1 503 imágenes, fuentes
+    de met_referencias, consistencia respecto de la clase verdadera                               orienta
+P1b Orden de la sección                                                                         orienta
 5.2.1
 P2  fig: Mini y SkinVL = 0.847; LLaVA una décima abajo; oracle: Mini/SkinVL todo menos uno,
     LLaVA omite 1 de 7                                                                          describe
@@ -51,6 +53,13 @@ P17 Síntesis → transición al ruteo                                          
   oficial sobre las 400 imágenes comunes de `full_oracle`, `full_oracle_noimage` y `full_wrong_swap`; SkinVL 1 503),
   `fallas`, `recuperacion`.
 - `rag_les_eval.json` y `docs/resul/rag_les_resul_20261011.md` (tabla de recuperación).
+
+## Revisión del autor (25/10/2026)
+
+- Párrafo de diseño al abrir (P1).
+- Salen de los resultados las decisiones de diseño: «por eso el pipeline ancla en el clasificador ajustado» (5.2.1) y
+  el umbral de melanoma que la cascada no usa (5.2.2). El hallazgo queda; la decisión pasa a 5.6. El ancla en Swin-Tiny
+  se eligió por F1 macro en validación (Cap. 3): el resultado la confirma, no la causa.
 
 ## Decisiones y preguntas
 
