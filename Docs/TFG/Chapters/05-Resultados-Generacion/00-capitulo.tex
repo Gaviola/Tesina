@@ -12,22 +12,25 @@
 % sección de cierre se llama "Discusión".
 % Estructura (24/10/2026): la misma del Capítulo 4. El análisis sigue a la cascada con Swin-Tiny, los generadores se
 % comparan en una sola sección y la literatura, en otra. Mini-VLM v3 aparece solo como control (decisión del autor).
+% Revisión del autor (25/10/2026): la intro recuerda el recorrido del pipeline y que cada sección agrega un componente;
+% las convenciones se reducen; las decisiones de diseño se reúnen en la discusión.
 
 Este capítulo presenta los resultados de la generación de reportes y del \emph{pipeline} que la integra con la
-clasificación. Primero se describe qué escriben los generadores cuando no reciben ningún diagnóstico, frente a textos
-de referencia y frente a la clase de la imagen. Después se evalúa la cascada, en la que el diagnóstico de Swin-Tiny
-llega al generador, junto con lo que aportan la imagen y la recuperación de casos parecidos. Sobre la cascada se
-analiza el ruteo por concordancia, que decide qué afirma el \emph{pipeline} en cada caso, y una sección compara los
-tres generadores y su costo computacional. Por último, los resultados se comparan con los de la literatura y el
-capítulo cierra con una discusión de lo que responden.
+clasificación. Las secciones siguen el recorrido de una imagen por el \emph{pipeline} de la
+Sección~\ref{sec:met_pipeline} (Figura~\ref{fig:met_pipeline}) y agregan un componente por vez. Primero se evalúa el
+generador solo, sin ningún diagnóstico. Después se evalúa la cascada, en la que el diagnóstico de Swin-Tiny llega al
+generador, junto con lo que aportan la imagen y la recuperación de casos parecidos. Por último, el ruteo por
+concordancia con el \gls{knn} completa el \emph{pipeline}, que se evalúa entero. Sobre esos resultados, una sección
+compara los tres generadores y su costo computacional, otra contrasta los resultados con los de la literatura, y la
+discusión cierra el capítulo con lo que aporta cada componente. La Tabla~\ref{tab:met_experimentos} reúne los
+experimentos con sus datos y sus métricas.
 
-Salvo que se indique otra cosa, todas las cifras corresponden a las 1\,503 imágenes de prueba de la partición
-disjunta por lesión (Sección~\ref{sec:met_particiones}). La métrica principal es la consistencia diagnóstica
-(Sección~\ref{sec:met_eval_generacion}), calculada solo sobre el reporte, sin los bloques de razonamiento, y con la
-búsqueda estricta de los términos de cada clase. Como cada generador escribe un único reporte por imagen con
-decodificación voraz (Tabla~\ref{tab:met_decodificacion}), las cifras no tienen desvío, y las diferencias entre dos
-variantes se evalúan con el \emph{bootstrap} pareado de la Sección~\ref{sec:met_estadistica}. Los fragmentos de
-reportes se citan en inglés, el idioma en que los escriben los generadores.
+Salvo que se indique otra cosa, las cifras corresponden a las 1\,503 imágenes de prueba de la partición disjunta por
+lesión (Sección~\ref{sec:met_particiones}) y a la consistencia diagnóstica de la
+Sección~\ref{sec:met_eval_generacion}. Como cada generador escribe un único reporte por imagen con decodificación
+voraz, las cifras no llevan desvío, y las diferencias se acompañan de su IC del 95\,\% por \emph{bootstrap} pareado
+(Sección~\ref{sec:met_estadistica}). Los fragmentos de reportes se citan en inglés, el idioma en que los escriben los
+generadores.
 
 \input{Chapters/05-Resultados-Generacion/01-generacion-directa}
 \input{Chapters/05-Resultados-Generacion/02-cascada}

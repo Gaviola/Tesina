@@ -17,8 +17,9 @@ Deja instalado: el diagnóstico del reporte viene del clasificador; la descripci
 cuánto afirma el pipeline. Para el Cap. 6: falta de especialistas, errores compartidos, una semilla en el ancla, costo.
 
 ```
-Intro   Qué contiene y cómo se organiza; convenciones: prueba por lesión, métrica oficial (solo reporte, estricta),
-        un reporte por imagen sin desvío, bootstrap pareado, citas en inglés
+Intro   Qué contiene, ordenado por el recorrido del pipeline (fig:met_pipeline): generador solo → cascada →
+        ruteo y pipeline completo; después generadores, literatura y discusión; remite a tab:met_experimentos.
+        Convenciones reducidas: prueba por lesión, consistencia oficial, sin desvío, bootstrap pareado, inglés
          ↓ necesidad: antes de la cascada, ¿qué escribe un generador solo?
 5.1     Generación sin diagnóstico: Nivel 1 (estilo de la referencia) y consistencia sin anclaje (LLaVA enumera,
         Mini elige mal, SkinVL repite «tinea corporis»)
@@ -26,13 +27,14 @@ Intro   Qué contiene y cómo se organiza; convenciones: prueba por lesión, mé
 5.2     Cascada: consistencia = exactitud de Swin (el generador copia); por clase sobre la diagonal; la imagen no
         cambia el diagnóstico pero sí la descripción; fallas; recuperación no reemplaza al clasificador
          ↓ necesidad: la cascada afirma también los errores; ¿se pueden reconocer?
-5.3     Ruteo: la concordancia separa (0.915 frente a ~0.57); el par cubre 0.847; 102 de 230 errores compartidos
+5.3     Pipeline completo (abre con el recorrido de un caso). Ruteo: la concordancia separa (0.915 frente a ~0.57); el par cubre 0.847; 102 de 230 errores compartidos
         (38 melanomas afirmados como otra clase); pipeline = línea base sin generador; ejemplos
          ↓ ampliación: comparar los generadores y su costo
 5.4     Comparación entre generadores (Mini = SkinVL en fidelidad, Mini > LLaVA; SkinVL describe la mitad); control
         Mini v3; costo (sec:res_costo)
 5.5     Estado del arte: MM-Skin (BLEU frente a BERTScore), SkinGPT-4, RULE, Khan
-5.6     Discusión: PI2 en sus dos partes
+5.6     Discusión centrada en el pipeline: PI2 breve; qué aporta y qué no cada componente (tabla);
+        decisiones de diseño y su evidencia (reunidas desde 5.1–5.4); lo que el pipeline no resuelve
 → Cap. 6: discusión transversal y limitaciones.
 ```
 
@@ -43,7 +45,7 @@ Intro   Qué contiene y cómo se organiza; convenciones: prueba por lesión, mé
 | Intro | — | `00-capitulo.tex` | `cp:res_gen` | 0.7 |
 | 5.1 | Generación de reportes sin diagnóstico | `01-generacion-directa.tex` | `sec:res_gen_directa` | 3 |
 | 5.2 | Cascada clasificador–generador | `02-cascada.tex` | `sec:res_gen_cascada` | 6.5 |
-| 5.3 | Ruteo por concordancia y pipeline completo | `03-ruteo.tex` | `sec:res_gen_incertidumbre` | 4.5 |
+| 5.3 | Pipeline completo: ruteo por concordancia | `03-ruteo.tex` | `sec:res_gen_incertidumbre` | 4.5 |
 | 5.4 | Comparación entre los generadores | `04-comparacion-generadores.tex` | `sec:res_gen_comparacion` | 3.5 |
 | 5.5 | Comparación con el estado del arte | `05-estado-del-arte.tex` | `sec:res_gen_estado_arte` | 2 |
 | 5.6 | Discusión de los resultados de generación | `06-discusion.tex` | `sec:res_gen_discusion` | 1 |
@@ -52,6 +54,13 @@ Unas 19 páginas. Los archivos del esqueleto anterior se renombraron (`03-ensamb
 `08-ensamble-incertidumbre` → `03-ruteo`, `10-costo-computacional` → `04-comparacion-generadores`, `11-discusion` →
 `06-discusion`) o se borraron (razonamiento, taxonomía, SkinVL, ablaciones, recuperación y ejemplos pasan a ser
 subsecciones). Se conserva `sec:res_costo`, que cita el Cap. 6.
+
+## Revisión del autor (25/10/2026)
+
+Aplicada entera: (1) intro con el recorrido del pipeline y convenciones reducidas; (2) cada sección abre con un párrafo
+de diseño (qué se corrió, con qué n, contra qué se compara); (3) los resultados dicen el hallazgo y las consecuencias
+para el diseño del pipeline pasan a 5.6; (4) 5.3 pasa a «Pipeline completo» y abre con el recorrido de un caso; (5)
+5.6 se reorganiza alrededor del pipeline; (6) MM-Skin pareado en 5.1 (`level1_mmskin_pareado_resul_20261025.md`).
 
 ## Decisiones tomadas (24/10/2026)
 
