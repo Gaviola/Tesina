@@ -18,7 +18,8 @@ P2  tab:res_gen_nivel1: el parecido depende del conjunto (SkinCoT ~0.80 BERTScor
     solapamiento)                                                                               describe
 P3  Es el estilo de la referencia, no la calidad; Mini vs LLaVA sobre subconjuntos distintos; no elige
     modelos                                                                                     interpreta
-\pendiente  Nivel 1 de Mini-VLM principal en SkinCoT
+P3b Mini-VLM en SkinCoT por debajo de LLaVA en las cinco (BERTScore 0.770 vs 0.797): LLaVA ajusta el
+    modelo de lenguaje con SkinCoT, Mini no; el Nivel 1 mide el ajuste de la redacción; no elige    interpreta
 5.1.2
 P4  tab:res_gen_sin_anclaje + «solo la clase verdadera»                                         describe
 P5  LLaVA enumera (2.17 clases, 1 de 20 exclusiva); Mini elige mal; ambos describen             interpreta
@@ -37,8 +38,8 @@ P7  Bloques <think> casi ausentes (11 en LLaVA, 0 en Mini) → transición a la 
 
 ## Decisiones y preguntas
 
-- No hay Nivel 1 de Mini-VLM v2 en SkinCoT (`mini_vlm_lora_llm_resul_v3` §3.4): queda `\pendiente` con lo que
-  haría falta generar. Pregunta 2 de `00-capitulo.md`.
+- Nivel 1 de Mini-VLM v2 en SkinCoT: `level1_test/skincot_test_mini_v2/level1_mini_vlm_results.json` (425 pares;
+  `costo_nivel1_mini_v2_resul_20261025.md`). La frase «no eligen ningún modelo» pasa al final de P3b.
 - La comparación Mini–LLaVA en MM-Skin no se interpreta porque los subconjuntos difieren (1 022 frente a 1 414).
 - La explicación del colapso de SkinVL se limita a lo observado (texto ajeno a las siete clases, independiente de la
   imagen); el experimento de instrucciones alternativas (`skinvl_prompts_p42_resul`) no está en el Cap. 3 y no se usa.

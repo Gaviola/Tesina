@@ -3,7 +3,8 @@
 % partición de prueba); level1_mmskin_recalc.json (Mini-VLM v2, "test": imágenes de la partición de prueba dentro de la
 % corrida sobre el archivo completo, n = 1 022); cap5_derivados.json ("sin_anclaje", "fallas"). Sin anclaje con la
 % métrica oficial: ensemble_bootstrap*_les_report_only_strict.json ("full_baseline").
-% No existe el Nivel 1 de Mini-VLM v2 sobre la prueba de SkinCoT (ver \pendiente).
+% Mini-VLM v2 en SkinCoT: level1_test/skincot_test_mini_v2/level1_mini_vlm_results.json (Mendieta 1183331–34 y
+% reanudaciones 1183424–27; 425 pares).
 \section{Generación de reportes sin diagnóstico}
 \label{sec:res_gen_directa}
 
@@ -36,6 +37,7 @@ BERTScore, que compara el significado y no las palabras, conserva un valor inter
             & \textbf{CIDEr} & \textbf{BERTScore} \\
         \midrule
         LLaVA-Med, \emph{SkinCoT} & 426 & 0.102 & 0.191 & 0.329 & 0.054 & 0.797 \\
+        Mini-VLM, \emph{SkinCoT} & 425 & 0.044 & 0.152 & 0.253 & 0.038 & 0.770 \\
         LLaVA-Med, \emph{MM-Skin} & 1\,414 & 0.001 & 0.037 & 0.088 & 0.009 & 0.669 \\
         Mini-VLM, \emph{MM-Skin} & 1\,022 & 0.002 & 0.057 & 0.112 & 0.009 & 0.713 \\
         \bottomrule
@@ -47,13 +49,14 @@ textos de \emph{SkinCoT} tienen la estructura que los generadores aprendieron, m
 libros de texto de \emph{MM-Skin} usan otro vocabulario y otra organización, y ningún generador se ajustó con ellas.
 Por eso un BLEU-4 cercano a cero indica que el reporte no reproduce las frases del libro, no que describa mal la
 lesión. Entre los dos generadores, Mini-VLM obtiene en \emph{MM-Skin} un BERTScore algo mayor que LLaVA-Med, aunque
-sobre un subconjunto distinto de la prueba, de modo que la diferencia no se interpreta. Como establece la
-Sección~\ref{sec:met_eval_generacion}, estas cifras se informan pero no eligen ningún modelo.
+sobre un subconjunto distinto de la prueba, de modo que la diferencia no se interpreta.
 
-\pendiente{Nivel~1 de Mini-VLM con la configuración principal sobre la prueba de \emph{SkinCoT}: no se generó. Hace
-falta generar los 457 reportes (tres tramos de una hora en la partición \texttt{short} de Mendieta) y evaluarlos con
-\texttt{evaluate\_reports.py --level 1 --strip-reasoning}. La variante de control sí tiene esa evaluación
-(Sección~\ref{sec:res_gen_control_mini}).}
+En \emph{SkinCoT}, en cambio, Mini-VLM queda por debajo de LLaVA-Med en las cinco métricas, con un BERTScore de 0.770
+frente a 0.797. La diferencia es coherente con lo que se ajustó en cada generador. LLaVA-Med ajusta su modelo de
+lenguaje con los textos de \emph{SkinCoT} y aprende sus frases, mientras que Mini-VLM conserva el suyo sin ajustar
+(Sección~\ref{sec:met_generacion}) y redacta con un vocabulario propio. Por lo tanto, en este conjunto el Nivel~1
+mide sobre todo cuánto se ajustó la redacción a la de las referencias, y, como establece la
+Sección~\ref{sec:met_eval_generacion}, sus cifras se informan pero no eligen ningún modelo.
 
 \subsection{Consistencia diagnóstica sin anclaje}
 \label{sec:res_gen_sin_anclaje}
