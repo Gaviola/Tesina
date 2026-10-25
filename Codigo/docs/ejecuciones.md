@@ -4,6 +4,20 @@ Ayuda-memoria cronológico de experimentos enviados a cluster, ordenado de más 
 
 ---
 
+## 2026-10-25
+
+### Nivel 1 pareado de Mini-VLM v2 y LLaVA-Med v2 en MM-Skin — **Sin jobs SLURM** (local, CPU)
+Plan: [level1_mmskin_pareado_plan](ideas/level1_mmskin_pareado_plan_20261025.md). Las filas de MM-Skin de
+`tab:res_gen_nivel1` venían de pares distintos (1 414 de LLaVA-Med, 1 022 de Mini-VLM). `scripts/level1_mmskin_pareado.py`
+(nuevo) evalúa ambos sobre los 1 022 comunes → `outputs/results/level1_test/mmskin_test/level1_pareado_mini_v2_llava_v2.json`.
+
+```
+Codigo/.venv/Scripts/python.exe -X utf8 scripts/level1_mmskin_pareado.py
+```
+
+BERTScore 0.713 frente a 0.674, diferencia +0.039 [+0.038, +0.041].
+**Resul:** [level1_mmskin_pareado_resul](resul/level1_mmskin_pareado_resul_20261025.md) — **CUMPLE**.
+
 ## 2026-10-24
 
 ### Nivel 1 de Mini-VLM v2 en SkinCoT y memoria medida de los generadores — Mendieta jobs 1183331–1183337
