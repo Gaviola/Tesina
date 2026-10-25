@@ -29,9 +29,7 @@ BERTScore, que compara el significado y no las palabras, conserva un valor inter
     \label{tab:res_gen_nivel1}
     \small
     \setlength{\tabcolsep}{4pt}
-    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X >{\centering\arraybackslash}p{1.2cm}
-        >{\centering\arraybackslash}p{1.35cm}>{\centering\arraybackslash}p{1.35cm}>{\centering\arraybackslash}p{1.35cm}
-        >{\centering\arraybackslash}p{1.35cm}>{\centering\arraybackslash}p{1.6cm}@{}}
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X cccccc@{}}
         \toprule
         \textbf{Generador y conjunto} & \textbf{Pares} & \textbf{BLEU-4} & \textbf{ROUGE-L} & \textbf{METEOR}
             & \textbf{CIDEr} & \textbf{BERTScore} \\
@@ -73,12 +71,11 @@ aunque no se comprometa con ninguna.
     \label{tab:res_gen_sin_anclaje}
     \small
     \setlength{\tabcolsep}{3pt}
-    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X >{\centering\arraybackslash}p{2.0cm}
-        >{\centering\arraybackslash}p{2.0cm}>{\centering\arraybackslash}p{1.8cm}>{\centering\arraybackslash}p{1.7cm}
-        >{\centering\arraybackslash}p{1.7cm}@{}}
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X ccccc@{}}
         \toprule
-        \textbf{Generador} & \textbf{Consistencia diagnóstica} & \textbf{Solo la clase verdadera}
-            & \textbf{Clases por reporte} & \textbf{Reportes distintos} & \textbf{Palabras (mediana)} \\
+        \textbf{Generador} & \textbf{\encabezado{Consistencia\\diagnóstica}} & \textbf{\encabezado{Solo la clase\\verdadera}}
+            & \textbf{\encabezado{Clases por\\reporte}} & \textbf{\encabezado{Reportes\\distintos}}
+            & \textbf{\encabezado{Palabras\\(mediana)}} \\
         \midrule
         Mini-VLM & 0.163 & 0.045 & 0.81 & 1\,501 & 157 \\
         LLaVA-Med & 0.582 & 0.047 & 2.17 & 1\,502 & 232 \\

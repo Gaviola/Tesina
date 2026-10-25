@@ -43,13 +43,11 @@ proporción de imágenes en que el clasificador se equivoca.
     95\,\% (\emph{bootstrap} pareado).}
     \label{tab:res_gen_cascada}
     \small
-    \setlength{\tabcolsep}{3pt}
-    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X >{\centering\arraybackslash}p{1.25cm}
-        >{\centering\arraybackslash}p{1.25cm}>{\centering\arraybackslash}p{1.25cm}>{\centering\arraybackslash}p{1.25cm}
-        >{\centering\arraybackslash}p{3.0cm}>{\centering\arraybackslash}p{2.9cm}@{}}
+    \setlength{\tabcolsep}{2pt}
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X cccccc@{}}
         \toprule
-        \textbf{Generador} & \textbf{Sin anclaje} & \textbf{DermLIP} & \textbf{Swin-Tiny} & \textbf{Oracle}
-            & \textbf{Swin-Tiny $-$ sin anclaje} & \textbf{Oracle $-$ Swin-Tiny} \\
+        \textbf{Generador} & \textbf{\encabezado{Sin\\anclaje}} & \textbf{DermLIP} & \textbf{\encabezado{Swin-\\Tiny}}
+            & \textbf{Oracle} & \textbf{\encabezado{Swin-Tiny $-$\\sin anclaje}} & \textbf{\encabezado{Oracle $-$\\Swin-Tiny}} \\
         \midrule
         Mini-VLM & 0.163 & 0.717 & 0.849 & 0.999 & $+0.686$ [$+0.658$, $+0.712$] & $+0.150$ [$+0.132$, $+0.168$] \\
         LLaVA-Med & 0.582 & 0.641 & 0.745 & 0.854 & $+0.162$ [$+0.130$, $+0.194$] & $+0.110$ [$+0.094$, $+0.126$] \\
@@ -119,15 +117,14 @@ LLaVA-Med y sobre la prueba completa con SkinVL.
     \label{tab:res_gen_ablaciones}
     \small
     \setlength{\tabcolsep}{3pt}
-    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X >{\centering\arraybackslash}p{1.25cm}
-        >{\centering\arraybackslash}p{1.3cm}>{\centering\arraybackslash}p{1.3cm}>{\centering\arraybackslash}p{1.8cm}
-        >{\centering\arraybackslash}p{2.2cm}>{\centering\arraybackslash}p{2.2cm}@{}}
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X cccccc@{}}
         \toprule
-        & & \multicolumn{3}{c}{\textbf{Consistencia diagnóstica}} & \textbf{Reportes distintos}
-            & \textbf{Cobertura de entidades} \\
+        & & \multicolumn{3}{c}{\textbf{Consistencia diagnóstica}} & \textbf{\encabezado{Reportes\\distintos}}
+            & \textbf{\encabezado{Cobertura\\de entidades}} \\
         \cmidrule(lr){3-5}
-        \textbf{Generador} & \textbf{Imágenes} & \textbf{Con imagen} & \textbf{Sin imagen}
-            & \textbf{Diagnóstico equivocado} & \textbf{Con / sin imagen} & \textbf{Con / sin imagen} \\
+        \textbf{Generador} & \textbf{Imágenes} & \textbf{\encabezado{Con\\imagen}} & \textbf{\encabezado{Sin\\imagen}}
+            & \textbf{\encabezado{Diagnóstico\\equivocado}} & \textbf{\encabezado{Con / sin\\imagen}}
+            & \textbf{\encabezado{Con / sin\\imagen}} \\
         \midrule
         Mini-VLM & 400 & 1.000 & 1.000 & 0.000 & 395 / 7 & 0.787 / 0.378 \\
         LLaVA-Med & 400 & 0.863 & 0.893 & 0.020 & 399 / 7 & 0.760 / 0.811 \\

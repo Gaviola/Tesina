@@ -67,19 +67,17 @@ que pesan poco en el total de aciertos y mucho en las métricas macro.
     \label{tab:res_pruebas_supervisados}
     \footnotesize
     \setlength{\tabcolsep}{3pt}
-    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X
-        >{\centering\arraybackslash}p{2.6cm}>{\centering\arraybackslash}p{2.6cm}
-        >{\centering\arraybackslash}p{1.6cm}>{\centering\arraybackslash}p{1.2cm}@{}}
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X cccc@{}}
         \toprule
-        \textbf{Par} & \textbf{Diferencia de F1 macro} & \textbf{Diferencia de sensibilidad macro}
-            & \textbf{McNemar $p$} & \textbf{Umbral de Holm} \\
+        \textbf{Par} & \textbf{\encabezado{Diferencia de\\F1 macro}} & \textbf{\encabezado{Diferencia de\\sensibilidad macro}}
+            & \textbf{\encabezado{McNemar\\$p$}} & \textbf{\encabezado{Umbral\\de Holm}} \\
         \midrule
-        Swin -- ConvNeXt & 0.029\newline [$-$0.015, 0.074] & 0.022\newline [$-$0.027, 0.071] & 0.867 & 0.050 \\
-        Swin -- ViT & 0.032\newline [$-$0.005, 0.070] & 0.018\newline [$-$0.019, 0.057] & 0.416 & 0.017 \\
-        ConvNeXt -- ViT & 0.003\newline [$-$0.048, 0.053] & $-$0.004\newline [$-$0.057, 0.048] & 0.573 & 0.025 \\
-        Swin -- DenseNet & 0.114\newline [0.061, 0.170] & 0.122\newline [0.069, 0.176] & 0.021 & 0.008 \\
-        ConvNeXt -- DenseNet & 0.085\newline [0.029, 0.146] & 0.100\newline [0.044, 0.156] & 0.026 & 0.010 \\
-        ViT -- DenseNet & 0.082\newline [0.019, 0.148] & 0.104\newline [0.039, 0.167] & 0.143 & 0.013 \\
+        Swin -- ConvNeXt & 0.029 [$-$0.015, 0.074] & 0.022 [$-$0.027, 0.071] & 0.867 & 0.050 \\
+        Swin -- ViT & 0.032 [$-$0.005, 0.070] & 0.018 [$-$0.019, 0.057] & 0.416 & 0.017 \\
+        ConvNeXt -- ViT & 0.003 [$-$0.048, 0.053] & $-$0.004 [$-$0.057, 0.048] & 0.573 & 0.025 \\
+        Swin -- DenseNet & 0.114 [0.061, 0.170] & 0.122 [0.069, 0.176] & 0.021 & 0.008 \\
+        ConvNeXt -- DenseNet & 0.085 [0.029, 0.146] & 0.100 [0.044, 0.156] & 0.026 & 0.010 \\
+        ViT -- DenseNet & 0.082 [0.019, 0.148] & 0.104 [0.039, 0.167] & 0.143 & 0.013 \\
         \bottomrule
     \end{tabularx}
 \end{table}

@@ -9,6 +9,10 @@
 \RequirePackage{colortbl}
 \newcommand{\filasep}{\arrayrulecolor{black!25}\specialrule{0.3pt}{2pt}{2pt}\arrayrulecolor{black}}
 
+% Encabezado en varias líneas para columnas de ancho natural (tipo c), que no cortan las cifras con IC:
+% \encabezado{Diferencia de\\F1 macro}. Conserva el tamaño de letra de la tabla y alinea por la última línea.
+\newcommand{\encabezado}[1]{{\let\customtableformatting\relax\begin{tabular}[b]{@{}c@{}}#1\end{tabular}}}
+
 
 %%% Captions %%%
 \captionsetup{skip=6pt} % Whitespace between figures/tables and the caption.
