@@ -126,7 +126,8 @@ el \gls{auc} de melanoma de Swin-Tiny es de 0.921, con un desvío de apenas 0.00
 ejecuciones ordenan los casos de manera parecida, y lo que cambia entre ellas es cuántos melanomas superan el corte
 implícito en elegir la clase más probable. Por lo tanto, fijar ese corte de manera explícita en validación, como
 propone la Sección~\ref{sec:met_seleccion}, debería estabilizar también la decisión. Solo se evalúan Swin-Tiny,
-ConvNeXt-Tiny y su ensamble, que son los modelos de la búsqueda de hiperparámetros.
+ConvNeXt-Tiny y su ensamble, que son los modelos de la búsqueda de hiperparámetros. La
+Figura~\ref{fig:res_melanoma_semillas} compara las dos reglas en cada ejecución.
 
 \begin{figure}[H]
     \centering
@@ -135,8 +136,7 @@ ConvNeXt-Tiny y su ensamble, que son los modelos de la búsqueda de hiperparáme
     \label{fig:res_melanoma_semillas}
 \end{figure}
 
-La Figura~\ref{fig:res_melanoma_semillas} compara las dos reglas en cada ejecución. Con el umbral de validación,
-Swin-Tiny pasa de detectar unos tres de cada cinco melanomas a detectar cuatro de cada
+Con el umbral de validación, Swin-Tiny pasa de detectar unos tres de cada cinco melanomas a detectar cuatro de cada
 cinco, y el desvío entre semillas se reduce a la mitad. A cambio, la especificidad baja de alrededor de 0.95 a
 alrededor de 0.86, cerca del mínimo de 0.85 que se exigió en validación, de modo que el umbral conserva su efecto al
 pasar de una partición a la otra. ConvNeXt-Tiny y el ensamble siguen el mismo patrón, y el ensamble obtiene la mayor
