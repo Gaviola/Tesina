@@ -1,16 +1,54 @@
 \section{Lecciones metodológicas}
 \label{sec:disc_lecciones}
-\pendiente{Se discuten la fuga de información por lesión en HAM10000 y su efecto sobre los resultados
-publicados en el área, la importancia de seleccionar exclusivamente en validación, la inestabilidad entre
-semillas de las métricas de las clases minoritarias y el sesgo de las métricas con referencia al comparar
-estilos de reporte.}
+% Extensión estimada: 2 páginas, seis párrafos (ficha 6.5).
+% Fuentes: sec:res_fuga, sec:res_melanoma, sec:res_sup_arquitecturas, sec:res_sup_clases (fig:res_recall_semillas),
+% sec:res_comparacion, sec:res_estado_arte, sec:res_gen_nivel1, sec:res_gen_sin_anclaje, sec:res_gen_estado_arte;
+% Integra el párrafo 2 del antiguo 4.6.
 
-% --- Material de 4.6, párrafo 2 (revisión del tutor del 26/10/2026: 4.6 y 5.6 quedan como balance breve y lo
-% argumentativo pasa a este capítulo). Para integrar al redactar esta sección; no se imprime.
-% Entre los clasificadores supervisados, en cambio, la arquitectura pesa menos que otros factores. Con el mismo
-% procedimiento, Swin-Tiny, ConvNeXt-Tiny y ViT-B/16 no se distinguen entre sí, mientras que la semilla cambia la
-% sensibilidad de las clases minoritarias y del melanoma en más de una décima. En melanoma, la regla de decisión pesa más
-% que el modelo: el umbral fijado en validación lleva la detección de tres a cuatro de cada cinco casos sin cambiar el
-% \gls{auc}. Del mismo modo, la partición cambia el resultado, ya que una partición por imagen sobreestima la
-% sensibilidad macro en unas 0.07. Por ello, una comparación con otros trabajos tiene sentido solo cuando se conocen
-% su partición y su regla de decisión.
+Además de responder las preguntas, los resultados muestran que varias decisiones de evaluación pesan tanto como el
+modelo en las cifras que se informan. Entre los clasificadores supervisados, la arquitectura pesa menos que otros
+factores: con el mismo procedimiento, Swin-Tiny, ConvNeXt-Tiny y ViT-B/16 no se distinguen entre sí
+(Sección~\ref{sec:res_sup_arquitecturas}). En cambio, la partición, la regla de decisión, la variación entre
+ejecuciones y la elección de la métrica cambian los resultados en magnitudes comparables o mayores que las que separan
+a esas arquitecturas. Esta sección reúne esas lecciones, que valen para leer tanto estos resultados como los de la
+literatura.
+
+La primera lección es que la partición cambia el resultado. Con la partición original por imagen, en la que imágenes
+de una misma lesión quedan en el entrenamiento y en la prueba, la sensibilidad macro se sobreestima en unas 0.07
+(Sección~\ref{sec:res_fuga}). Esa cifra es del mismo orden que la distancia entre Swin-Tiny y el trabajo de
+\textcite{kim2025skinsavvy2}, que divide las imágenes al azar, mientras que el único trabajo revisado que mantiene
+juntas las imágenes de una lesión informa un valor algo menor que el de este trabajo
+(Sección~\ref{sec:res_estado_arte}). Como los trabajos revisados dividen las imágenes de maneras distintas, y alguno
+no informa cómo lo hace, una comparación con ellos tiene sentido solo cuando se conoce su partición.
+
+La segunda es que, en melanoma, la regla de decisión pesa más que el modelo. El umbral fijado en validación lleva la
+detección de Swin-Tiny de tres a cuatro de cada cinco melanomas sin cambiar el \gls{auc}, a cambio de una
+especificidad que baja de 0.95 a 0.86 (Sección~\ref{sec:res_melanoma}). Los trabajos revisados operan en puntos muy
+distintos, desde la clase más probable hasta una sensibilidad cercana a la total, de modo que una sensibilidad sin su
+regla de decisión no permite comparar modelos. Que el umbral se fije en validación es, además, lo que permite
+informarlo en la prueba sin sobreestimarlo, a diferencia de un modelo elegido sobre la misma prueba en que se
+informa, como el de \textcite{yao2022single}.
+
+La tercera es que la variación entre ejecuciones es del orden de las diferencias que se buscan. La sensibilidad de las
+clases minoritarias y del melanoma cambia en más de una décima entre las tres ejecuciones de un mismo modelo
+(Sección~\ref{sec:res_sup_clases}). Por eso el modelo se eligió por la media de tres ejecuciones en validación, y por
+eso el ensamble, que apenas mejora la media, reduce su desvío a una fracción del de Swin-Tiny. Un resultado de una sola
+ejecución, como los de las funciones de pérdida para el desbalance, debe leerse con esa variación en mente.
+
+La cuarta se refiere a la métrica que se pone a prueba. En dos comparaciones, McNemar y el \emph{bootstrap} pareado
+dan resultados distintos: DenseNet121 no se distingue de los otros supervisados en aciertos por imagen, pero sí en
+sensibilidad macro, y acierta más imágenes que DermLIP sin superarlo en sensibilidad macro
+(Sección~\ref{sec:res_comparacion}). Las dos pruebas no se contradicen, porque con un conjunto desbalanceado los
+aciertos los dominan las clases mayoritarias, y las métricas macro, las minoritarias. La lección es que la prueba
+estadística debe aplicarse a la métrica con la que se elige el modelo, y no solo a la proporción de aciertos.
+
+La última se refiere a la evaluación del texto. Las métricas con referencia premian escribir con el estilo de la
+referencia: el generador que más se acerca a las frases de \emph{SkinCoT} no es el que más se acerca al significado de
+\emph{MM-Skin} (Sección~\ref{sec:res_gen_nivel1}), y SkinVL, ajustado con las descripciones de \emph{MM-Skin}, obtiene
+en ellas un BLEU-4 más de cien veces mayor que el de los generadores de este trabajo con un BERTScore parecido
+(Sección~\ref{sec:res_gen_estado_arte}). La consistencia diagnóstica, a su vez, cuenta como correcto un reporte que
+enumera varias clases, y por eso LLaVA-Med obtiene sin anclaje la consistencia más alta nombrando dos clases por
+reporte (Sección~\ref{sec:res_gen_sin_anclaje}). Una métrica de fidelidad necesita, entonces, una medida complementaria
+de cuánto se compromete el reporte, como la proporción de reportes que nombran solo la clase verdadera. Estas
+lecciones afectan cómo se comparan los resultados con los de otros trabajos, y la sección siguiente extiende esa
+comparación al costo de obtenerlos.
