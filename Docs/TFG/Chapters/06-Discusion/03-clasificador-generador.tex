@@ -2,3 +2,12 @@
 \label{sec:disc_division}
 \pendiente{Se discute que el clasificador aporta el diagnóstico y el VLM la descripción, y qué implica esto
 para el diseño de sistemas de generación de reportes médicos.}
+
+% --- Material de 4.6, párrafo 4 (revisión del tutor del 26/10/2026: 4.6 y 5.6 quedan como balance breve y lo
+% argumentativo pasa a este capítulo). Para integrar al redactar esta sección; no se imprime.
+% Estos resultados determinan también de dónde sale el diagnóstico del \emph{pipeline}. Como un \gls{vlm} generativo no
+% distingue las siete clases, el diagnóstico no puede salir del generador, y por eso lo fija Swin-Tiny, que se lo
+% entrega al generador a través de la cascada (Sección~\ref{sec:met_cascada}). Como el clasificador ocupa menos de
+% 1~GB de memoria y clasifica una imagen en milisegundos, el costo del pipeline lo fija el generador. El
+% Capítulo~\ref{cp:res_gen} evalúa si, con ese diagnóstico, el reporte generado afirma la clase correcta y cuánto cuesta
+% generarlo, y la discusión que cruza ambos resultados queda para el Capítulo~\ref{cp:discusion}.
