@@ -24,6 +24,6 @@ GPU distintas, la comparación entre clasificadores y generadores es solo de ord
 El código usa PyTorch y torchvision para los clasificadores supervisados, las bibliotecas \texttt{transformers} y
 \texttt{peft} de Hugging Face para los \glspl{vlm} generativos y LoRA, \texttt{open\_clip} para DermLIP y scikit-learn
 para las cabezas clásicas, la partición y las métricas. Todos los entrenamientos fijan la semilla 42, que es
-también la de la ejecución que usan las pruebas y el \emph{pipeline}, y las otras dos ejecuciones de cada
+también la de la ejecución de referencia (Sección~\ref{sec:met_estadistica}), y las otras dos ejecuciones de cada
 clasificador supervisado (Sección~\ref{sec:met_supervisados_ensamble}) usan las semillas 43 y 44. El
 Apéndice~\ref{ap:reproducibilidad} reúne lo necesario para repetir cada experimento.
