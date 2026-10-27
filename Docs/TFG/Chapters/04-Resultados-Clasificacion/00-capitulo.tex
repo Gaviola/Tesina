@@ -12,19 +12,16 @@
 % Introducción redactada el 24/10/2026 (ficha 00-capitulo.md): por contenido, sin «responde la PI1», con las
 % convenciones que valen para todas las cifras del capítulo.
 
-Este capítulo presenta los resultados de la clasificación de lesiones de piel y de la detección de melanoma. Primero
-se comparan las cuatro arquitecturas supervisadas y se analiza en detalle la que elige la validación, Swin-Tiny: sus
-errores por clase, la detección de melanoma con un umbral fijado en validación, el tratamiento del desbalance y el
-efecto de la fuga de información. Las evaluaciones complementarias examinan después a ese clasificador fuera de las
-condiciones de su entrenamiento. Con esa referencia, se evalúan los \glspl{vlm} generativos y contrastivos sobre las
-mismas imágenes, y una sección compara las tres familias y su costo. Por último, los resultados se comparan con los
-de la literatura y el capítulo cierra con una discusión de lo que responden.
+% Revisión del tutor del 26/10/2026: la introducción sigue su redacción propuesta, adaptada; las convenciones (prueba,
+% ejecuciones) pasan al Capítulo 3 y a cada sección.
 
-Salvo que se indique otra cosa, todas las cifras corresponden a las 1\,503 imágenes de prueba de la partición
-disjunta por lesión (Sección~\ref{sec:met_particiones}), con la configuración que eligió la validación. Los modelos
-entrenados con tres semillas se informan como media $\pm$ desvío estándar, también en la detección de melanoma, y las
-pruebas estadísticas, la curva ROC de melanoma y las evaluaciones complementarias usan la ejecución con semilla 42,
-la misma que ancla los reportes del Capítulo~\ref{cp:res_gen}.
+Este capítulo presenta los resultados de la primera parte de los experimentos (Sección~\ref{sec:met_diseno}): la
+clasificación de lesiones de piel en siete clases y la detección de melanoma. En primer lugar, se analiza el desempeño
+de los clasificadores supervisados, y las evaluaciones complementarias examinan su comportamiento en condiciones
+distintas de las del entrenamiento. Después se presentan los resultados de los modelos visión--lenguaje, tanto
+generativos como contrastivos, usados como clasificadores, y se comparan los distintos enfoques entre sí, también por
+su costo. Finalmente, los resultados se contrastan con los de la literatura, y el capítulo cierra con un balance de
+sus hallazgos principales.
 
 \input{Chapters/04-Resultados-Clasificacion/01-clasificadores-supervisados}
 \input{Chapters/04-Resultados-Clasificacion/02-evaluaciones-complementarias}

@@ -166,3 +166,18 @@ opinión. Cambios en este capítulo:
 - **Tablas:** latencia (una imagen) y rendimiento (lote de 32) separados en el costo; umbral de Holm explicado;
   «Sin etiqueta» y proporción entre paréntesis en las tablas de VLM; la fila con pesos de la calibración aclarada.
 - **Cursivas:** primera vez en el capítulo en cursiva y después redonda (guía §3), aplicado con un script.
+
+## Revisión del tutor (26/10/2026)
+
+Feedback en `feedback/cap4_5/feedback_cap_4_5.md`. Aplicado en la rama `doc/cap05-resultados-generacion`:
+
+- Introducción adaptada de la redacción del tutor; las convenciones (prueba, ejecuciones) pasan al Cap. 3 (3.7, 3.9)
+  y a cada sección.
+- Todas las secciones siguen el esquema contexto → objeto (qué hay en filas, columnas, ejes) → valores (mejor y peor
+  primero, de lo general a lo particular) → conjetura separada (guía, «Capítulos de resultados»).
+- Sin semillas: «ejecuciones», y «ejecución de referencia» (definida en 3.7) para las pruebas, la ROC, la matriz de
+  confusión y las evaluaciones complementarias.
+- McNemar y el *bootstrap* separados, con la prueba que respalda cada conclusión (4.1.1, 4.4, 4.6).
+- «Descarta» (control de *SkinCAP*) atenuado; el resto de las frases tajantes va a la lista para el autor.
+- 4.6 pasa a «Balance de los resultados de clasificación», dos párrafos sin argumentación; los cuatro párrafos
+  anteriores quedan como comentarios en las secciones del Cap. 6 donde se integran.
