@@ -1,4 +1,38 @@
 \section{Respuesta a las preguntas de investigación}
 \label{sec:disc_preguntas}
-\pendiente{Se responden la PI1 y la PI2 con la evidencia de los capítulos de resultados y se resume el estado
-final de cada hipótesis.}
+% Extensión estimada: 1.5 páginas, cuatro párrafos (ficha 6.1).
+% Fuentes: sec:res_clasif_discusion, sec:res_gen_discusion; tab:res_pruebas_vlm, tab:res_dermlip,
+% fig:res_melanoma_semillas, tab:res_estado_arte (sensibilidad de melanoma de Swin-Tiny con cada regla),
+% tab:res_gen_cascada, tab:res_gen_ablaciones, tab:res_gen_pipeline. Incluye el párrafo 1 del antiguo 4.6.
+
+La primera pregunta de investigación (Sección~\ref{sec:intro_objetivos}) es si los \glspl{vlm} clasifican las
+lesiones de piel, y en particular el melanoma, tan bien como los clasificadores entrenados solo con imágenes. En la
+prueba de \emph{HAM10000}, ningún \gls{vlm} usado sin una cabeza entrenada sobre ese conjunto lo logra. Los
+\glspl{vlm} generativos de propósito general quedan en el nivel del azar con las cinco estrategias evaluadas, y el
+\gls{vlm} contrastivo especializado, DermLIP, queda entre 0.15 y 0.18 de sensibilidad macro por debajo de los tres
+mejores supervisados, con intervalos de \emph{bootstrap} que excluyen el cero (Sección~\ref{sec:res_comparacion}). En
+melanoma la distancia es parecida: DermLIP sin ajuste detecta la mitad de los melanomas, mientras que Swin-Tiny
+detecta unos tres de cada cinco con la clase más probable y cuatro de cada cinco con el umbral fijado en validación.
+
+La respuesta tiene un matiz. Con una cabeza entrenada sobre su \emph{embedding}, DermLIP se acerca a los supervisados
+en sensibilidad macro, aunque no en F1 macro (Sección~\ref{sec:res_vlm_dermlip}). En ese uso, sin embargo, el
+\gls{vlm} aporta la representación y el diagnóstico lo decide un clasificador entrenado con las etiquetas de
+\emph{HAM10000}, de modo que la comparación ya no es entre un \gls{vlm} y un clasificador supervisado, sino entre dos
+clasificadores supervisados con distinta representación. La respuesta a la primera pregunta es, entonces, negativa
+para los \glspl{vlm} usados como tales, y positiva solo para la representación de un \gls{vlm} especializado.
+
+La segunda pregunta es si los reportes que genera un \gls{vlm} afirman el diagnóstico correcto y describen la lesión
+que muestra la imagen. En cuanto al diagnóstico, un generador sin anclaje no afirma de manera confiable la clase de la
+imagen (Sección~\ref{sec:res_gen_directa}), pero en la cascada el reporte afirma el diagnóstico del clasificador, y la
+consistencia diagnóstica de Mini-VLM, 0.849, coincide con la exactitud de Swin-Tiny. Con el ruteo por concordancia,
+esa consistencia llega a 0.870 sobre la prueba completa (Sección~\ref{sec:res_gen_pipeline}). En cuanto a la
+descripción, la imagen cambia lo que el reporte describe de cada lesión, lo que verifica en parte su fidelidad visual,
+pero la descripción también se adapta al diagnóstico recibido (Sección~\ref{sec:res_gen_cualitativos}), y que cada
+rasgo descrito esté en la imagen no se verificó. La respuesta a la segunda pregunta es, por lo tanto, afirmativa para
+el diagnóstico en la medida en que lo es el clasificador que lo ancla, y solo parcial para la descripción.
+
+Las dos respuestas están relacionadas. Como un \gls{vlm} generativo no distingue las siete clases, el diagnóstico del
+reporte no puede salir del generador, y por eso el \emph{pipeline} lo toma de un clasificador supervisado. A su vez,
+como el generador transcribe el diagnóstico que recibe, la fidelidad diagnóstica del reporte queda fijada por ese
+clasificador. Las secciones siguientes discuten qué explica la primera respuesta, qué implica la segunda para el
+diseño de un sistema de generación de reportes y hasta dónde llega lo que miden las métricas.
