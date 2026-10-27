@@ -1,46 +1,80 @@
 \section{Limitaciones y amenazas a la validez}
 \label{sec:disc_limitaciones}
-\pendiente{Se analizan las amenazas a la validez interna, externa, de constructo y de conclusión estadística,
-junto con las limitaciones del trabajo: escala de los modelos, costo, ausencia de reportes redactados por
-especialistas, generalización fuera de distribución, anclajes y generadores no evaluados, y generación de
-reportes sobre el test original.
+% Extensión estimada: 2.5 páginas, una lista de cuatro amenazas y cinco párrafos (ficha 6.7).
+% Fuentes: sec:met_estadistica (ejecución de referencia, unidad de las pruebas), sec:met_diseno, sec:met_pipeline
+% (piloto de la plantilla), sec:met_hiba; sec:res_hiba, sec:res_robustez, sec:res_sup_clases, sec:res_gen_clases,
+% sec:res_gen_ablaciones, sec:res_gen_concordancia, sec:res_gen_pipeline, sec:res_costo; sección "Amenazas a la
+% validez" y "Limitaciones" de Docs/experimentacion/experimentacion.tex, con las cifras de la partición por lesión.
+% Recibe del Capítulo 1 las limitaciones de alcance (dermatoscopía, fidelidad frente a validez clínica, sin producto
+% clínico, restricción de cómputo). Integra el párrafo 3 del antiguo 4.6 y los párrafos 5 y 6 del antiguo 5.6.
 
-Para cada resultado con el que se responden las preguntas y se evalúan los objetivos se indica si hubo
-evidencia independiente de los datos con los que se tomaron las decisiones (HIBA, la partición disjunta por
-lesión, semillas nuevas) o si se evaluó sobre el mismo material, en cuyo caso su respaldo queda como
-exploratorio.
+Las conclusiones de las secciones anteriores valen dentro de las condiciones en que se obtuvieron: imágenes
+dermatoscópicas de \emph{HAM10000}, métricas automáticas y el cómputo de una sola GPU. Esta sección reúne lo que
+limita su alcance, primero según el tipo de validez que afecta cada amenaza y después según las decisiones que el
+trabajo no evaluó.
 
-Recibe del Capítulo~\ref{cp:introduccion} las limitaciones de alcance que antes estaban en su sección de
-alcance y delimitación (commit f520295): el trabajo se pronuncia sobre imágenes dermatoscópicas, y nada se
-traslada a la histopatología ni a la fotografía clínica sin volver a medirlo; las métricas automáticas
-establecen fidelidad diagnóstica, no validez clínica, que exigiría la lectura de especialistas; no se
-desarrolla un producto de uso clínico ni se lo valida con pacientes; y la restricción de cómputo deja fuera
-a los modelos de mayor tamaño, que podrían rendir mejor.}
+Las amenazas a la validez de las conclusiones se agrupan en cuatro tipos:
+\begin{itemize}
+    \item \textbf{Validez interna.} No todos los experimentos usan el mismo protocolo de inferencia. Los resultados
+    principales de clasificación promedian dos vistas de cada imagen con \gls{tta}, mientras que la robustez y la
+    interpretabilidad usan una sola vista, y el costo se midió en dos GPU distintas. Cada tabla declara su protocolo,
+    pero los valores absolutos de tablas distintas no siempre son comparables. Además, las variantes de la cascada sin
+    imagen y con un diagnóstico equivocado se midieron sobre 400 imágenes con Mini-VLM y LLaVA-Med, por el costo de
+    generar los reportes.
+    \item \textbf{Validez de la conclusión estadística.} Las pruebas usan como unidad la imagen de prueba y se
+    calculan sobre la ejecución de referencia de cada modelo (Sección~\ref{sec:met_estadistica}). Miden, por lo
+    tanto, la variación debida a la muestra de imágenes, pero no la variación entre entrenamientos, que en las clases
+    minoritarias y en el melanoma supera una décima. Las clases con pocas imágenes, como \gls{df} con 17, dan
+    intervalos amplios, y algunas diferencias, como la del ensamble frente a Swin-Tiny, no se sometieron a prueba.
+    \item \textbf{Validez de constructo.} La consistencia diagnóstica busca el nombre de la clase en el texto y no
+    juzga el reporte, el Nivel~1 mide sobre todo el parecido de estilo con la referencia, y la cobertura de entidades
+    cuenta términos clínicos sin verificar que correspondan a la imagen (Sección~\ref{sec:disc_validez_clinica}). En
+    el nivel diferencial, además, la consistencia se parece a acertar entre las dos primeras opciones y no equivale
+    a una exactitud.
+    \item \textbf{Validez externa.} La evaluación principal usa un solo conjunto, y en \emph{HIBA} Swin-Tiny pierde
+    cerca del 40\,\% de su sensibilidad macro, también en las imágenes dermatoscópicas, con un mapeo de diagnósticos
+    que agrega ruido en \gls{akiec} (Sección~\ref{sec:res_hiba}). Como la fidelidad diagnóstica del reporte coincide
+    con la exactitud del clasificador, cabe esperar que también caiga en otra población, aunque no se midió. Las
+    comparaciones con la literatura, por su parte, ubican el orden de magnitud de los resultados, pero no permiten
+    ordenar los modelos.
+\end{itemize}
 
-% --- Material de 4.6, párrafo 3 (revisión del tutor del 26/10/2026: 4.6 y 5.6 quedan como balance breve y lo
-% argumentativo pasa a este capítulo). Para integrar al redactar esta sección; no se imprime.
-% Estos resultados valen dentro de la fuente de entrenamiento. En \emph{HIBA}, Swin-Tiny pierde cerca del 40\,\% de su
-% sensibilidad macro, también en las imágenes dermatoscópicas, y el ruido de la imagen lo afecta más que la compresión
-% o la pérdida de resolución. Sus probabilidades, en cambio, están bien calibradas cuando se entrena sin pesos por clase.
-% En consecuencia, Swin-Tiny es la referencia del trabajo dentro de \emph{HAM10000}, pero no una herramienta validada
-% para otra población, y las limitaciones que eso implica, junto con las de evaluar las pruebas con una sola semilla, se
-% retoman en el Capítulo~\ref{cp:discusion}.
+A estas amenazas se suman las limitaciones de alcance del trabajo. La principal es la ausencia de especialistas.
+Ningún dermatólogo leyó los reportes, y no existe para las imágenes de \emph{HAM10000} un conjunto de reportes
+redactados por especialistas con el que compararlos, de modo que la fidelidad visual de la descripción queda
+verificada solo en parte. Por la misma razón, el trabajo establece la fidelidad diagnóstica de los reportes y no su
+validez clínica, y no desarrolla un producto de uso clínico ni lo valida con pacientes. Tampoco se pronuncia sobre la
+fotografía clínica ni sobre la histopatología, donde nada de lo medido se traslada sin volver a medirlo.
 
-% --- Material de 5.6, párrafo 5 (revisión del tutor del 26/10/2026: 4.6 y 5.6 quedan como balance breve y lo
-% argumentativo pasa a este capítulo). Para integrar al redactar esta sección; no se imprime.
-% Otras dos decisiones muestran lo que el diseño todavía puede mejorar. La plantilla \emph{noreasoning} hace que el
-% diagnóstico inyectado quede en el reporte, pero la plantilla diferencial lleva a LLaVA-Med a razonar más allá del
-% límite de tokens, y por eso el pipeline con ese generador no mejora la cascada
-% (Sección~\ref{sec:res_gen_pipeline}). Además, la cascada usa la clase más probable de Swin-Tiny y no el umbral de
-% melanoma de la Sección~\ref{sec:res_melanoma}, de modo que tres de cada diez melanomas reciben un reporte que no los
-% nombra (Sección~\ref{sec:res_gen_clases}). Anclar el reporte con ese umbral es una mejora directa que este trabajo no
-% evaluó.
+Una segunda limitación surge de usar una sola ejecución del clasificador como ancla. El \emph{pipeline} usa la
+ejecución de referencia de Swin-Tiny, que reconoce siete de cada diez melanomas, algo más que la media de sus tres
+ejecuciones (Sección~\ref{sec:res_gen_clases}). Como la consistencia de la cascada hereda la sensibilidad del
+clasificador en cada clase, la de los reportes de melanoma posiblemente cambiaría con otra ejecución en una magnitud parecida a la
+que cambia el clasificador.
 
-% --- Material de 5.6, párrafo 6 (revisión del tutor del 26/10/2026: 4.6 y 5.6 quedan como balance breve y lo
-% argumentativo pasa a este capítulo). Para integrar al redactar esta sección; no se imprime.
-% Lo que el pipeline no resuelve son los errores que comparten los dos predictores. La concordancia no los
-% detecta, y casi un cuarto de los melanomas se afirma como otra clase con la misma plantilla que un acierto
-% (Sección~\ref{sec:res_gen_concordancia}). La derivación, a su vez, evita errores a costa de descartar un número
-% parecido de aciertos. El Capítulo~\ref{cp:discusion} discute estas limitaciones junto con las de la clasificación, en
-% particular la ausencia de una revisión por especialistas, que es la única forma de verificar la descripción, y el uso
-% de una sola semilla para el clasificador que ancla los reportes.
+Varias decisiones del diseño, además, quedaron sin evaluar o muestran lo que el diseño todavía puede mejorar:
+\begin{itemize}
+    \item \textbf{El umbral de melanoma en el ancla.} La cascada usa la clase más probable de Swin-Tiny y no el umbral
+    de la Sección~\ref{sec:res_melanoma}, de modo que tres de cada diez melanomas reciben un reporte que no los nombra.
+    Anclar el reporte con ese umbral es una mejora directa que no se evaluó.
+    \item \textbf{La plantilla diferencial.} Con LLaVA-Med, la plantilla del nivel diferencial induce un razonamiento
+    que el límite de tokens deja sin cerrar, y por eso el \emph{pipeline} con ese generador no mejora la cascada
+    (Sección~\ref{sec:res_gen_pipeline}). La plantilla \emph{noreasoning}, a su vez, se eligió en un piloto que incluía
+    17 imágenes de la prueba (Sección~\ref{sec:met_pipeline}).
+    \item \textbf{Otros anclajes y generadores.} La relación entre la exactitud de la fuente y la fidelidad del reporte
+    se caracteriza con tres fuentes, DermLIP sin ajuste, Swin-Tiny y el \emph{oracle}, y no con un barrido de
+    clasificadores. Tampoco se evaluaron como generadores los modelos que razonan antes de diagnosticar, como
+    Skin-R1~\cite{liu2025skinr1}, ni los de mayor tamaño que la restricción de cómputo deja fuera.
+    \item \textbf{Los errores compartidos.} La concordancia no detecta los errores en que el clasificador y el
+    \gls{knn} coinciden, y casi uno de cada cuatro melanomas se afirma como otra clase
+    (Sección~\ref{sec:res_gen_concordancia}). Reducirlos podría requerir una señal de confianza que no dependa de la
+    coincidencia entre los dos predictores, como la probabilidad del clasificador, que el ruteo no usa.
+\end{itemize}
+
+Por último, no todos los resultados tienen el mismo respaldo. Las decisiones de selección se tomaron en validación: el
+modelo, por la media de tres ejecuciones, y el umbral de melanoma, con una especificidad mínima fijada de antemano. La
+prueba por lesión y \emph{HIBA} aportan, entonces, una evaluación independiente de esas decisiones, y el ruteo no
+ajusta ningún umbral sobre la prueba. En cambio, los análisis que se hicieron después de ver los resultados, como la
+clasificación de las fallas de los reportes o los ejemplos, describen la prueba sin haberse confirmado en otros datos, y
+quedan como exploratorios. Con estas limitaciones delimitadas, el Capítulo~\ref{cp:conclusiones} reúne las conclusiones
+del trabajo y el grado de cumplimiento de sus objetivos.
