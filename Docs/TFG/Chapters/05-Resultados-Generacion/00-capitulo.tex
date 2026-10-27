@@ -15,22 +15,17 @@
 % Revisión del autor (25/10/2026): la intro recuerda el recorrido del pipeline y que cada sección agrega un componente;
 % las convenciones se reducen; las decisiones de diseño se reúnen en la discusión.
 
-Este capítulo presenta los resultados de la generación de reportes y del \emph{pipeline} que la integra con la
-clasificación. Las secciones siguen el recorrido de una imagen por el pipeline de la
-Sección~\ref{sec:met_pipeline} (Figura~\ref{fig:met_pipeline}) y agregan un componente por vez. Primero se evalúa el
-generador solo, sin ningún diagnóstico. Después se evalúa la cascada, en la que el diagnóstico de Swin-Tiny llega al
-generador, junto con lo que aportan la imagen y la recuperación de casos parecidos. Por último, el ruteo por
-concordancia con el \gls{knn} completa el pipeline, que se evalúa entero. Sobre esos resultados, una sección
-compara los tres generadores y su costo computacional, otra contrasta los resultados con los de la literatura, y la
-discusión cierra el capítulo con lo que aporta cada componente. La Tabla~\ref{tab:met_experimentos} del Capítulo~\ref{cp:metodos} reúne los
-experimentos con sus datos y sus métricas.
+% Revisión del tutor del 26/10/2026: introducción paralela a la del Capítulo 4; las convenciones (prueba, una
+% ejecución por configuración, bootstrap) pasan al Capítulo 3 y a cada sección.
 
-Salvo que se indique otra cosa, las cifras corresponden a las 1\,503 imágenes de prueba de la partición disjunta por
-lesión (Sección~\ref{sec:met_particiones}) y a la consistencia diagnóstica de la
-Sección~\ref{sec:met_eval_generacion}. Como cada generador escribe un único reporte por imagen con decodificación
-voraz, las cifras no llevan desvío, y las diferencias se acompañan de su IC del 95\,\% por \emph{bootstrap} pareado
-(Sección~\ref{sec:met_estadistica}). Los fragmentos de reportes se citan en inglés, el idioma en que los escriben los
-generadores.
+Este capítulo presenta los resultados de la segunda parte de los experimentos (Sección~\ref{sec:met_diseno}): la
+generación de reportes y el \emph{pipeline} que la integra con la clasificación. Las secciones siguen el recorrido de
+una imagen por el \emph{pipeline} de la Sección~\ref{sec:met_pipeline} y agregan un componente por vez. En primer
+lugar se evalúa el generador solo, sin ningún diagnóstico. Después se presenta la cascada, en la que el diagnóstico de
+Swin-Tiny llega al generador, junto con lo que aportan la imagen y la recuperación de casos parecidos, y a
+continuación el \emph{pipeline} completo, con el ruteo por concordancia. Sobre esos resultados, se comparan los tres
+generadores, también por su costo, y los resultados se contrastan con los de la literatura. Finalmente, el capítulo
+cierra con un balance de sus hallazgos principales.
 
 \input{Chapters/05-Resultados-Generacion/01-generacion-directa}
 \input{Chapters/05-Resultados-Generacion/02-cascada}

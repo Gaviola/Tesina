@@ -132,3 +132,17 @@ opinión. Cambios en este capítulo:
   título y termina con la transición a 5.5; 5.1 reduce a una oración por qué el modelo de lenguaje de Mini-VLM no se
   ajusta (el detalle está en el Cap. 3).
 - **Pendiente para el tutor:** el reparto entre 5.6 y el Cap. 6 (respuesta a PI2, decisiones y limitaciones).
+
+## Revisión del tutor (26/10/2026)
+
+Feedback en `feedback/cap4_5/feedback_cap_4_5.md`. Aplicado en la rama `doc/cap05-resultados-generacion`:
+
+- Introducción paralela a la del Cap. 4; las convenciones pasan al Cap. 3 (3.7, 3.9) y a cada sección (la cita en
+  inglés de los fragmentos, a 5.1 y 5.3.3).
+- Esquema contexto → objeto → valores → conjetura en todas las secciones; sin semillas («ejecución de referencia»).
+- La consistencia verifica el diagnóstico; la fidelidad visual de la descripción queda verificada en parte (la
+  ablación sin imagen), sin «no se puede determinar».
+- 5.3 ya no vuelve a describir el ruteo: lo nombra con su referencia al Cap. 3.
+- 5.6 pasa a «Balance de los resultados de generación» con la tabla de aportes; el aporte del pipeline frente a la
+  literatura, las decisiones de diseño, lo que puede mejorar y las limitaciones quedan como comentarios en el Cap. 6.
+- Respuesta a la pregunta abierta de la revisión externa: 5.6 es balance y el Cap. 6, la interpretación conjunta.
