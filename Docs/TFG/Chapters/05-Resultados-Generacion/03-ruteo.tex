@@ -9,8 +9,7 @@
 \section{Pipeline completo}
 \label{sec:res_gen_incertidumbre}
 
-La cascada afirma siempre el diagnóstico del clasificador, aunque sea incorrecto, y ni la imagen ni los vecinos lo
-corrigen. El último paso del recorrido agrega el ruteo por concordancia de la Sección~\ref{sec:met_ruteo}, que
+La cascada afirma siempre el diagnóstico del clasificador, aunque sea incorrecto, y ni la imagen ni los vecinos lo corrigen en la mayoría de los casos. El último paso del recorrido agrega el ruteo por concordancia de la Sección~\ref{sec:met_ruteo}, que
 completa el \emph{pipeline} de la Figura~\ref{fig:met_pipeline} del Capítulo~\ref{cp:metodos}: según coincidan o no
 Swin-Tiny y el \gls{knn}, cada imagen recibe un reporte afirmativo, un reporte diferencial con dos candidatos o se
 deriva a un especialista, según los tres niveles de la Tabla~\ref{tab:met_niveles} del Capítulo~\ref{cp:metodos}.
@@ -115,8 +114,7 @@ de los más difíciles, y por eso el tercer bloque informa también la consisten
 La línea base sin generador obtiene la consistencia más alta en los tres bloques, y LLaVA-Med en el \emph{pipeline},
 la más baja. Con Mini-VLM, el \emph{pipeline} mejora la consistencia de la cascada simple, y la mejora se concentra en
 el nivel diferencial, donde el reporte nombra la clase verdadera en cuatro de cada cinco casos, frente a seis de cada
-diez de la cascada. Sin embargo, el \emph{pipeline} no supera a la línea base sin generador. Toda la ganancia proviene,
-por lo tanto, de presentar dos candidatos cuando los predictores discrepan, una decisión del ruteo, y el generador la
+diez de la cascada. Sin embargo, el \emph{pipeline} no supera a la línea base sin generador. La ganancia puede atribuirse, por lo tanto, a presentar dos candidatos cuando los predictores discrepan, una decisión del ruteo, y el generador la
 conserva sin agregarle fidelidad. Sobre la prueba completa, con las derivaciones contadas como casos sin diagnóstico,
 la mejora es menor, de 0.849 a 0.870. Esta lectura coincide con la de la cascada: el diagnóstico sale de los
 predictores, y el generador lo redacta.
