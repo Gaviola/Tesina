@@ -127,7 +127,7 @@ Además de los valores comunes, tres hiperparámetros se eligen por búsqueda: l
 pesos y la magnitud de RandAugment (Tabla~\ref{tab:met_barrido}). Las cinco tasas se cruzan con los tres
 decaimientos, y cada magnitud se asigna a cinco de esas 15 combinaciones. Cada combinación se entrena con y sin pesos
 por clase en la función de pérdida (Sección~\ref{sec:marco_desbalance}), lo que suma 30 configuraciones por modelo,
-todas con la semilla 42. La búsqueda se hizo sobre Swin-Tiny y ConvNeXt-Tiny, y en ambos ganó, con el criterio de la
+con una ejecución cada una. La búsqueda se hizo sobre Swin-Tiny y ConvNeXt-Tiny, y en ambos ganó, con el criterio de la
 Sección~\ref{sec:met_seleccion}, una configuración sin pesos por clase. DenseNet121 y ViT-B/16, en cambio, usan la
 configuración ganadora del modelo de su misma familia: la de ConvNeXt-Tiny en el caso de DenseNet121 y la de Swin-Tiny
 en el de ViT-B/16. Así los cuatro se comparan con el mismo procedimiento, aunque si DenseNet121 o ViT-B/16 rinden
@@ -154,8 +154,9 @@ Apéndice~\ref{ap:hiperparametros}.
     \end{tabularx}
 \end{table}
 
-Una vez elegida la configuración, cada modelo se entrena con tres semillas (42, 43 y 44), porque las métricas de las
-clases minoritarias dependen de pocas imágenes y una sola ejecución no muestra cuánto varía el resultado.
+Una vez elegida la configuración, cada modelo se entrena tres veces, con distinta inicialización aleatoria, porque las
+métricas de las clases minoritarias dependen de pocas imágenes y una sola ejecución no muestra cuánto varía el
+resultado.
 
 Los pesos por clase no son la única forma de abordar el desbalance (Sección~\ref{sec:marco_desbalance}), y por eso se
 comparan aparte cuatro funciones de pérdida sobre Swin-Tiny, ConvNeXt-Tiny y DenseNet121:
@@ -166,8 +167,8 @@ comparan aparte cuatro funciones de pérdida sobre Swin-Tiny, ConvNeXt-Tiny y De
     \item \textbf{\emph{Balanced softmax}}~\cite{ren2020balanced}, sin pesos.
 \end{itemize}
 Para que la función de pérdida sea lo único que cambia, esta comparación fija el resto de los hiperparámetros
-(decaimiento de pesos 0.05, $M = 9$ y una tasa de $10^{-4}$, o de $7.91 \times 10^{-5}$ en DenseNet121) y usa una sola
-semilla.
+(decaimiento de pesos 0.05, $M = 9$ y una tasa de $10^{-4}$, o de $7.91 \times 10^{-5}$ en DenseNet121) y entrena
+cada combinación una sola vez.
 
 Por último, los dos modelos de la búsqueda, Swin-Tiny y ConvNeXt-Tiny, también se combinan por voto suave
 (\emph{soft voting}; Sección~\ref{sec:marco_senales_confianza}), que promedia sus probabilidades. Solo se combinan esos
