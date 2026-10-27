@@ -1,5 +1,44 @@
 \section{Viabilidad en hardware accesible}
 \label{sec:disc_hardware}
-\pendiente{Se relacionan el desempeño alcanzado y el costo medido en la Sección~\ref{sec:res_costo} con los
-requerimientos de cómputo de los trabajos del estado del arte, para discutir qué parte de la brecha con el
-SOTA se explica por escala de modelo y de datos y qué parte no.}
+% Extensión estimada: 1.5 páginas, cinco párrafos (ficha 6.6).
+% Fuentes: sec:met_tareas (restricción de cómputo), sec:met_entorno; sec:res_costo_clasificadores
+% (tab:res_costo_clasificadores), sec:res_costo (tab:res_costo_generadores); tab:marco_generadores, sec:estado_arte_vlm y
+% tab:marco_brechas (hardware de la literatura); tab:res_estado_arte (DermFM-Zero frente a DermLIP).
+
+La restricción de cómputo de la Sección~\ref{sec:met_tareas}, una sola GPU de consumo, es parte del alcance de la
+propuesta, y los resultados permiten evaluar si el \emph{pipeline} la cumple. Los clasificadores supervisados
+clasifican una imagen en 20~ms o menos y ocupan menos de 0.7~GB de memoria
+(Sección~\ref{sec:res_costo_clasificadores}), y el \gls{knn} agrega una pasada del codificador de DermLIP y una
+búsqueda entre 6\,447 \emph{embeddings}. El costo lo fija el generador: Mini-VLM ocupa como máximo 8.6~GB durante la
+generación, por debajo de los 12~GB de una GPU de consumo, y escribe un reporte en unos 16 segundos
+(Sección~\ref{sec:res_costo}). Su ajuste tomó algo más de nueve horas en una sola GPU de 24~GB. Por lo tanto, el
+\emph{pipeline} completo se ajusta en una GPU de 24~GB y se ejecuta en una de 12~GB, aunque que el ajuste también
+entre en una GPU de 12 o 16~GB no se comprobó.
+
+Los trabajos del estado del arte usan un cómputo de otro orden. Ajustar SkinGPT-R1 requirió ocho RTX 4090, SkinVL se
+ajustó en ocho RTX 3090 y SkinGPT-4 en ocho A100, mientras que PanDerm y DermFM-Zero se preentrenaron en cuatro H100, y
+el ensamble de \textcite{khan2025ensemble} redacta con un modelo de 70 mil millones de parámetros consultado por API
+(Sección~\ref{sec:estado_arte_vlm} y Tabla~\ref{tab:marco_generadores} del Capítulo~\ref{cp:marco}). Frente a esa
+escala, la pregunta es qué parte de la distancia entre estos resultados y los de la literatura se explica por el
+cómputo y qué parte no.
+
+En la clasificación, la distancia no parece deberse principalmente a la escala. Swin-Tiny tiene 28 millones de
+parámetros, y su distancia con los trabajos que obtienen valores más altos en \emph{HAM10000} es del mismo orden que la
+sobreestimación que produce una partición por imagen (Sección~\ref{sec:disc_lecciones}). Además, entre los
+supervisados, ViT-B/16, con el triple de parámetros que Swin-Tiny, no lo supera. En la representación contrastiva, en
+cambio, una parte de la distancia sí corresponde a la escala: DermFM-Zero, un modelo fundacional visual que suma un
+preentrenamiento contrastivo con un millón de pares imagen--texto y requiere cuatro H100, supera a DermLIP en el protocolo de sus autores, con 0.733 frente a
+0.561~\cite{yan2026dermfmzero}, una diferencia que este trabajo no intentó cerrar.
+
+En la generación, el tamaño del modelo no ordena la fidelidad del reporte. LLaVA-Med, con unos 7\,600 millones de
+parámetros, transcribe peor el diagnóstico que Mini-VLM, con unos 4\,150 millones, y SkinVL, del mismo tamaño que
+LLaVA-Med, describe la mitad de las entidades clínicas (Sección~\ref{sec:res_gen_comparacion}). Como en la cascada la
+fidelidad diagnóstica la fija el clasificador, y con el \emph{oracle} Mini-VLM ya nombra el diagnóstico en casi todos
+los reportes, un generador más grande posiblemente no elevaría la consistencia, aunque podría mejorar la descripción,
+que este trabajo no verificó por completo.
+
+En consecuencia, la restricción de una GPU de consumo resulta compatible con la fidelidad diagnóstica del
+\emph{pipeline}, porque esa fidelidad depende de un clasificador pequeño y barato. Lo que la restricción deja fuera es
+otra cosa: los generadores de mayor tamaño, que podrían describir mejor la lesión, y el preentrenamiento a gran escala
+de la representación, que podría mejorar la recuperación de casos parecidos. Esas exclusiones forman parte de las
+limitaciones que reúne la sección siguiente.
