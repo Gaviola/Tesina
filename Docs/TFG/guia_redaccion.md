@@ -487,6 +487,29 @@ capítulos de resultados.
   o figura de otro capítulo se cita con su capítulo («la Tabla~\ref{…} del Capítulo~\ref{…}»), porque el
   lector la busca en la página.
 
+### Capítulos de resultados
+
+Revisión del tutor de los Caps. 4 y 5 (26/10/2026, audio 5, `feedback/cap4_5/feedback_cap_4_5.md`). Cada resultado se
+presenta con el mismo esquema, y prevalece sobre «Cada sección abre directamente con su contenido» en estos capítulos:
+
+1. **Contexto.** Qué se analiza, con qué modelos y sobre qué datos («Esta sección presenta los resultados de los cuatro
+   clasificadores supervisados sobre las 1 503 imágenes de prueba…»). La introducción de cada sección dice qué se va a
+   mostrar en ella, en general; cada subsección lo muestra en particular. El diseño del experimento no se repite: se
+   remite al Cap. 3, y lo que no esté allí se agrega allí.
+2. **El objeto.** Qué tabla o figura se presenta y qué contiene: qué hay en las filas y en las columnas, o en cada eje
+   y en cada panel. La redacción varía para no repetir la fórmula.
+3. **Los valores.** Primero cuál obtiene el mejor resultado y cuál el peor, después el detalle. Un solo orden para todo
+   el texto: **de lo general a lo particular**. Frases cortas.
+4. **La conjetura, separada.** El valor y la explicación de por qué se da van en oraciones distintas, y la explicación
+   se marca como tal («posiblemente porque…», «una explicación posible es…») y se apoya en lo que se sabe del modelo
+   (arquitectura, preentrenamiento, configuración), nunca en «porque es el mejor».
+
+Además: **no se habla de semillas** en los resultados (solo de ejecuciones; los números de semilla quedan en la
+Sección 3.10), cada conclusión dice qué prueba estadística la respalda (McNemar compara aciertos por imagen; el
+*bootstrap* pareado, la diferencia de una métrica), y las afirmaciones se atenúan a lo que muestran los datos
+(«no mejora» en lugar de «descarta»). La corrección diagnóstica de los reportes se mide; la fidelidad visual de la
+descripción queda parcialmente sin verificar, sin decir que «no se puede determinar».
+
 ### Patrones de escritura automatizada
 
 Recomendaciones para no caer en el tono predecible de la escritura generada por modelos de IA.

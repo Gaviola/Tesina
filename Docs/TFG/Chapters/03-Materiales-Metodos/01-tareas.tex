@@ -44,7 +44,8 @@ histopatología.
 
 La última condición de la definición, una GPU de consumo, forma parte del alcance de la propuesta. El trabajo no
 recurre a varias GPU en paralelo ni a GPU de última generación: cada entrenamiento y cada ejecución usan una sola GPU,
-con 24~GB de memoria como máximo. Debido a esta restricción, no se preentrena ningún modelo. Se parte de modelos ya
+con 24~GB de memoria como máximo, los de una GPU de consumo de gama alta. La restricción se fija, entonces, por la
+memoria y no por el modelo de GPU. Debido a esta restricción, no se preentrena ningún modelo. Se parte de modelos ya
 preentrenados, y los \glspl{vlm} se adaptan con \gls{lora} (Sección~\ref{sec:marco_llm_lora}), que entrena una
 fracción pequeña de sus parámetros~\cite{hu2021lora}. Las GPU concretas en que se ejecutaron los experimentos se
 detallan en la Sección~\ref{sec:met_entorno}.

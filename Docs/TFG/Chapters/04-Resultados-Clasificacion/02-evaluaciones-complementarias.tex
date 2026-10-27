@@ -4,21 +4,22 @@
 % lesion_split_report.json (calibracion) y calibration_les/calibration_summary.json;
 % interpretability_les/interpretability_swin.png. Figuras: scripts/figuras_cap4.py y scripts/figura_gradcam_tesina.py.
 % El costo pasó a sec:res_comparacion (revisión del autor, 24/10/2026).
+% Revisión del tutor del 26/10/2026: esquema contexto → objeto → valores → conjetura; sin semillas.
 \section{Evaluaciones complementarias del clasificador}
 \label{sec:res_complementarios}
 
-La prueba de \emph{HAM10000} comparte población, equipo de captura y forma de etiquetar con el entrenamiento. Cuatro de
-las evaluaciones de la Sección~\ref{sec:met_complementarios} cambian esas condiciones o examinan otros aspectos del
-clasificador: otra población, imágenes degradadas, la confianza de sus probabilidades y la región en que se apoya. La
-quinta, el costo, se presenta junto con la comparación de la Sección~\ref{sec:res_comparacion}. Se evalúa Swin-Tiny
-con la semilla 42, y las tablas incluyen a ConvNeXt-Tiny como contraste.
+La prueba de \emph{HAM10000} comparte población, equipo de captura y forma de etiquetar con el entrenamiento. Esta
+sección presenta cuatro de las evaluaciones de la Sección~\ref{sec:met_complementarios}, que examinan a Swin-Tiny, en su
+ejecución de referencia, fuera de esas condiciones: en otra población, con imágenes degradadas, en la confianza de sus
+probabilidades y en la región de la imagen en que se apoya. Las tablas incluyen a ConvNeXt-Tiny como contraste. La
+quinta evaluación, el costo, se presenta junto con la comparación de la Sección~\ref{sec:res_comparacion}.
 
 \subsection{Generalización a otra población}
 \label{sec:res_hiba}
 
-Sin ningún ajuste, en las 1\,616 imágenes de \emph{HIBA} la sensibilidad macro de Swin-Tiny cae de 0.716 a 0.424
-(Tabla~\ref{tab:res_hiba}). La caída es mayor en las fotografías clínicas, una modalidad que el modelo no vio en el
-entrenamiento, pero aparece también en las imágenes dermatoscópicas. ConvNeXt-Tiny cae de manera parecida.
+La primera evaluación aplica Swin-Tiny y ConvNeXt-Tiny, sin ningún ajuste, a las 1\,616 imágenes de \emph{HIBA}. La
+Tabla~\ref{tab:res_hiba} presenta la sensibilidad macro de cada modelo en la prueba de \emph{HAM10000} y en
+\emph{HIBA}, en total y separada por modalidad, y su primera fila da la cantidad de imágenes de cada grupo.
 
 \begin{table}[H]
     \centering
@@ -42,11 +43,13 @@ entrenamiento, pero aparece también en las imágenes dermatoscópicas. ConvNeXt
     \end{tabularx}
 \end{table}
 
-La Figura~\ref{fig:res_hiba_clases} muestra que la caída alcanza a todas las clases salvo \gls{nv}, que se sostiene.
-La más afectada es \gls{akiec}, en la que influye el mapeo de diagnósticos de la Sección~\ref{sec:met_hiba}: 158 de
-sus 221 imágenes en \emph{HIBA} son carcinomas escamosos, un ruido que no puede separarse del cambio de población. Sin
-embargo, también \gls{mel} pierde un tercio de su sensibilidad, y \gls{bcc}, más de la mitad. Por lo tanto, el
-desempeño medido en \emph{HAM10000} no se traslada a esta población, aun dentro de la misma modalidad.
+En \emph{HIBA}, la sensibilidad macro de Swin-Tiny cae de 0.716 a 0.424, y la de ConvNeXt-Tiny cae de manera parecida.
+La caída es mayor en las fotografías clínicas, pero aparece también en las imágenes dermatoscópicas. En las
+fotografías clínicas, una explicación posible es que se trata de una modalidad que el modelo no vio en el
+entrenamiento.
+
+Para ver qué clases explican la caída, la Figura~\ref{fig:res_hiba_clases} presenta la sensibilidad de cada clase de
+Swin-Tiny en las dos poblaciones.
 
 \begin{figure}[H]
     \centering
@@ -55,13 +58,19 @@ desempeño medido en \emph{HAM10000} no se traslada a esta población, aun dentr
     \label{fig:res_hiba_clases}
 \end{figure}
 
+La caída alcanza a todas las clases salvo \gls{nv}, que se sostiene. La más afectada es \gls{akiec}, aunque en ella
+influye el mapeo de diagnósticos de la Sección~\ref{sec:met_hiba}: 158 de sus 221 imágenes en \emph{HIBA} son
+carcinomas escamosos, un ruido que no puede separarse del cambio de población. Sin embargo, también \gls{mel} pierde
+un tercio de su sensibilidad, y \gls{bcc}, más de la mitad. Por lo tanto, el desempeño medido en \emph{HAM10000} se traslada solo en parte a esta población, aun dentro de la misma modalidad.
+
 \subsection{Robustez a perturbaciones de la imagen}
 \label{sec:res_robustez}
 
-Sin cambiar de población, la segunda evaluación degrada las imágenes de la prueba con cuatro perturbaciones de
-intensidad creciente. La Figura~\ref{fig:res_robustez} muestra la sensibilidad macro en cada nivel, y la
-Tabla~\ref{tab:res_robustez}, la caída relativa (Ecuación~\ref{eq:marco_robustez}) en los niveles 1, 3 y 5. Como se
-mide con una sola vista y sin \gls{tta}, la base es algo menor que la de la Tabla~\ref{tab:res_hiba}.
+La segunda evaluación conserva la población, pero degrada las imágenes de la prueba con cuatro perturbaciones de
+intensidad creciente. La Figura~\ref{fig:res_robustez} presenta un panel por perturbación, con la sensibilidad macro
+de los dos modelos en cada nivel de intensidad. La Tabla~\ref{tab:res_robustez} resume la caída relativa
+(Ecuación~\ref{eq:marco_robustez}) en los niveles 1, 3 y 5. Como esta evaluación usa una sola vista y no el
+\gls{tta}, la sensibilidad sin perturbar es algo menor que la de la Tabla~\ref{tab:res_hiba}.
 
 \begin{figure}[H]
     \centering
@@ -93,31 +102,40 @@ mide con una sola vista y sin \gls{tta}, la base es algo menor que la de la Tabl
     \end{tabularx}
 \end{table}
 
-Las degradaciones leves cuestan poco, salvo el ruido gaussiano, que es la perturbación más dañina: con un desvío de 8
-sobre 255 ya quita casi un quinto de la sensibilidad macro, y en los niveles más altos lleva a los dos modelos al azar.
-La compresión, en cambio, solo pesa cuando la calidad es muy baja. La diferencia más clara entre los dos modelos está
-en el desenfoque y la reducción de resolución intensos, que ConvNeXt-Tiny soporta mejor. Estas perturbaciones
-reproducen solo una parte de la variación real entre equipos (Sección~\ref{sec:marco_eval_robustez}), así que no
-reemplazan la evaluación en \emph{HIBA}.
+El ruido gaussiano es la perturbación más dañina para los dos modelos: con un desvío de 8 sobre 255 ya quita casi un
+quinto de la sensibilidad macro, y en los niveles más altos los lleva al azar. Las demás degradaciones leves cuestan
+poco, y la compresión, en particular, solo pesa cuando la calidad es muy baja. La diferencia más clara entre los dos
+modelos está en el desenfoque y la reducción de resolución intensos, en los que ConvNeXt-Tiny cae menos. Estas
+perturbaciones reproducen solo una parte de la variación real entre equipos (Sección~\ref{sec:marco_eval_robustez}),
+así que no reemplazan la evaluación en \emph{HIBA}.
 
 \subsection{Calibración}
 \label{sec:res_calibracion}
 
 Además de acertar la clase, el clasificador entrega probabilidades que fijan el umbral de melanoma y que un clínico
-leería como certeza, y la tercera evaluación mide cuánto se puede confiar en ellas. La
-Figura~\ref{fig:res_calibracion} muestra el diagrama de confiabilidad de Swin-Tiny con y sin pesos por clase, y la
-Tabla~\ref{tab:res_calibracion} reúne el \gls{ece} y el Brier, también con los dos ajustes posteriores.
+leería como certeza. La tercera evaluación mide cuánto se puede confiar en ellas. La
+Figura~\ref{fig:res_calibracion} presenta el diagrama de confiabilidad de Swin-Tiny entrenado sin pesos por clase y con
+ellos: el eje horizontal es la confianza media de cada intervalo y el vertical, su exactitud, de modo que un modelo
+calibrado queda sobre la diagonal.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.85\textwidth]{Figures/Capitulos/04-Resultados-Clasificacion/calibracion-swin.pdf}
-    \caption{Diagrama de confiabilidad de Swin-Tiny (semilla 42); el tamaño del punto es proporcional a la cantidad de imágenes del intervalo.}
+    \caption{Diagrama de confiabilidad de Swin-Tiny (ejecución de referencia); el tamaño del punto es proporcional a la cantidad de imágenes del intervalo.}
     \label{fig:res_calibracion}
 \end{figure}
 
+Sin pesos por clase, la curva sigue de cerca la diagonal, apenas por encima: el modelo es levemente subconfiado, es
+decir, acierta algo más de lo que su confianza indica. Con pesos por clase, en cambio, la curva se aleja de la
+diagonal, porque la confianza media cae a alrededor de 0.4 mientras la exactitud se mantiene cerca de 0.78.
+
+La Tabla~\ref{tab:res_calibracion} cuantifica esa diferencia para los dos modelos. Sus filas son las versiones sin
+calibrar, con los dos ajustes posteriores y con pesos por clase, y sus columnas, el \gls{ece}, el Brier y la
+sensibilidad macro de cada modelo.
+
 \begin{table}[H]
     \centering
-    \caption{Calibración en la prueba de \emph{HAM10000} (semilla 42).}
+    \caption{Calibración en la prueba de \emph{HAM10000} (ejecución de referencia). La fila con pesos por clase es la mejor configuración del barrido con pesos, distinta de la entropía cruzada ponderada de la Tabla~\ref{tab:res_desbalance}, que usa hiperparámetros fijos.}
     \label{tab:res_calibracion}
     \small
     \setlength{\tabcolsep}{4pt}
@@ -139,25 +157,19 @@ Tabla~\ref{tab:res_calibracion} reúne el \gls{ece} y el Brier, también con los
     \end{tabularx}
 \end{table}
 
-Sin pesos por clase, la curva sigue de cerca la diagonal, apenas por encima: el modelo es levemente subconfiado, es
-decir, acierta algo más de lo que su confianza indica. Por eso la temperatura que ajusta la validación es menor que
-uno, y con ella el \gls{ece} baja sin que cambie ninguna predicción. El \emph{vector scaling} lo baja todavía más, pero
-ajusta un parámetro por clase, cambia predicciones y reduce la sensibilidad macro. Con pesos por clase, en cambio, la
-calibración se desarma: la confianza media cae a alrededor de 0.4 mientras la exactitud se mantiene cerca de 0.78, y
-el \gls{ece} crece casi diez veces. En consecuencia, las probabilidades del modelo sin pesos pueden usarse casi sin
-corrección, y las del modelo con pesos no deben leerse como certezas.
+Sin pesos, los dos modelos parten de un \gls{ece} de 0.040, y con pesos por clase el \gls{ece} de Swin-Tiny crece casi
+diez veces. Los dos ajustes posteriores, en cambio, lo reducen. El \emph{temperature scaling} lo baja sin que cambie
+ninguna predicción, con una temperatura menor que uno, como corresponde a un modelo subconfiado. En Swin-Tiny, el \emph{vector
+scaling} obtiene el menor \gls{ece}, pero ajusta un parámetro por clase, cambia predicciones y reduce la sensibilidad
+macro. En consecuencia, las probabilidades del modelo sin pesos pueden usarse casi sin corrección, y las del modelo
+con pesos no deberían leerse como certezas.
 
 \subsection{Interpretabilidad}
 \label{sec:res_interpretabilidad}
 
 La última evaluación examina en qué parte de la imagen se apoya Swin-Tiny para decidir. La
-Figura~\ref{fig:res_gradcam} muestra el mapa de Grad-CAM de la primera imagen de cada clase en la prueba. En las cinco
-imágenes que el modelo clasifica bien (\gls{bkl}, \gls{df}, \gls{mel}, \gls{nv} y \gls{akiec}), la activación se
-concentra sobre la lesión. De los dos errores, el \gls{bcc} clasificado como \gls{mel} también activa la lesión, lo
-que sugiere una confusión entre lesiones pigmentadas y no una decisión tomada sobre el fondo. El \gls{vasc}
-clasificado como \gls{nv}, en cambio, tiene una activación difusa sobre la piel que rodea la lesión. Como se trata de
-siete imágenes, la inspección muestra que el modelo puede apoyarse en la lesión, pero no mide con qué frecuencia lo
-hace ni prueba un razonamiento clínico (Sección~\ref{sec:met_interpretabilidad}).
+Figura~\ref{fig:res_gradcam} presenta, para la primera imagen de prueba de cada clase, la imagen con su clase verdadera y,
+al lado, el mapa de Grad-CAM superpuesto con la clase que predice el modelo.
 
 \begin{figure}[H]
     \centering
@@ -165,6 +177,13 @@ hace ni prueba un razonamiento clínico (Sección~\ref{sec:met_interpretabilidad
     \caption{Grad-CAM de Swin-Tiny sobre la primera imagen de prueba de cada clase.}
     \label{fig:res_gradcam}
 \end{figure}
+
+En las cinco imágenes que el modelo clasifica bien (\gls{bkl}, \gls{df}, \gls{mel}, \gls{nv} y \gls{akiec}), la
+activación se concentra sobre la lesión. De los dos errores, el \gls{bcc} clasificado como \gls{mel} también activa la
+lesión, mientras que el \gls{vasc} clasificado como \gls{nv} tiene una activación difusa sobre la piel que rodea la
+lesión. El primer error sugiere, entonces, una confusión entre lesiones pigmentadas y no una decisión tomada sobre el
+fondo. Como se trata de siete imágenes, la inspección muestra que el modelo puede apoyarse en la lesión, pero no mide
+con qué frecuencia lo hace ni prueba un razonamiento clínico (Sección~\ref{sec:met_interpretabilidad}).
 
 Con estas cuatro evaluaciones, el clasificador queda caracterizado también fuera de las condiciones de su
 entrenamiento: pierde buena parte de su desempeño en otra población, es sensible al ruido de la imagen y entrega

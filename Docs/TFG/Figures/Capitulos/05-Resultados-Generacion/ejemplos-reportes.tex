@@ -1,0 +1,39 @@
+% Tres reportes reales de Mini-VLM (configuración principal), elegidos con scripts de lectura sobre
+% outputs/generated_reports/mini_vlm/{full_swin_les,full_differential_les}: el nivel afirmativo con el diagnóstico
+% correcto, el diferencial con el par {Swin-Tiny, kNN} y el afirmativo con un error compartido. Imágenes de HAM10000
+% (CC BY-NC 4.0), recortadas al centro, reducidas a 300 px y guardadas como PDF (el .gitignore excluye los JPG de
+% Docs/). Los «[...]» marcan texto omitido.
+\begin{figure}[H]
+    \centering
+    \footnotesize
+    \newcommand{\ejemplo}[3]{%
+        \begin{minipage}[c]{0.2\textwidth}
+            \centering
+            \includegraphics[width=\textwidth]{Figures/Capitulos/05-Resultados-Generacion/ejemplo-#1.pdf}
+        \end{minipage}\hfill
+        \begin{minipage}[c]{0.77\textwidth}
+            \raggedright #2\par\smallskip
+            \itshape #3
+        \end{minipage}}
+    \ejemplo{ISIC_0029473}{(a) Afirmativo. Clase verdadera: \gls{mel}. Swin-Tiny: \gls{mel}; los tres vecinos:
+        \gls{mel}.}{«Final Clinical Report: Diagnosis - Melanoma. Morphological features include a
+        pigmented lesion with irregular borders and an asymmetrical shape. Dermatoscopic examination reveals atypical
+        melanocytic proliferation with irregular pigmentation patterns.»}
+    \par\medskip\hrule\medskip
+    \ejemplo{ISIC_0031194}{(b) Diferencial. Clase verdadera: \gls{nv}. Swin-Tiny: \gls{mel}; vecinos: \gls{mel},
+        \gls{nv}, \gls{nv}.}{«The lesion in question presents with a well-defined, irregular border and a
+        brownish-black coloration, which are characteristic features of melanoma. However, the presence of a central
+        depression and the overall morphology could also suggest a nevus [\ldots] The final clinical report should
+        include a detailed description of the lesion's morphological and dermatoscopic features, presenting these as
+        a differential diagnosis between melanoma and nevus. Further diagnostic steps, such as a biopsy, may be
+        necessary to confirm the diagnosis and rule out malignancy.»}
+    \par\medskip\hrule\medskip
+    \ejemplo{ISIC_0033452}{(c) Afirmativo con un error compartido. Clase verdadera: \gls{mel}. Swin-Tiny: \gls{nv};
+        vecinos: \gls{nv}, \gls{nv}, \gls{nv}.}{«Final Clinical Report: The diagnosis is nevus. The lesion is
+        characterized by a well-defined, brown, macular area with a smooth border and a slightly elevated surface.
+        Dermatoscopic examination reveals a homogeneous pigmentation with no visible melanocytic infiltration or
+        atypical features.»}
+    \caption[Reportes de Mini-VLM en el \emph{pipeline}]{Reportes de Mini-VLM en el \emph{pipeline}, uno por
+    situación. Imágenes de \emph{HAM10000}~\cite{tschandl2018ham10000}, licencia CC BY-NC 4.0.}
+    \label{fig:res_gen_ejemplos}
+\end{figure}

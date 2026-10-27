@@ -8,8 +8,9 @@
 Los trabajos del Capítulo~\ref{cp:marco} no permiten una comparación directa con estos resultados, porque difieren en
 los datos, en la forma de dividirlos y en la regla de decisión. Por eso, esta sección no ordena los modelos, sino que
 ubica el orden de magnitud de los resultados y examina qué parte de las diferencias se explica por el protocolo. La
-Tabla~\ref{tab:res_estado_arte} reúne las cifras comparables de cada trabajo junto con la del modelo equivalente de este
-trabajo.
+Tabla~\ref{tab:res_estado_arte} reúne las cifras comparables en tres bloques: la clasificación en siete clases, la
+detección de melanoma y los \glspl{vlm} sin ajuste. Cada fila es un trabajo, con sus datos y su protocolo, la métrica
+que se compara, el valor que informa y el del modelo equivalente de este trabajo.
 
 \begin{table}[H]
     \centering
@@ -29,12 +30,12 @@ trabajo.
         \textcite{aboulmira2024skinhealthmate} & \emph{HAM10000}; partición no informada & F1 macro & 0.81 & 0.733 \\
         \textcite{kim2025skinsavvy2} & \emph{HAM10000} ampliado; partición al azar por imagen & Sensibilidad macro
             & 0.780 & 0.692 \\
-        \textcite{gessert2020skin} & ISIC 2019, otras clases; prueba del desafío; validación por lesión & Sensibilidad macro & 0.636
+        \textcite{gessert2020skin} & \emph{ISIC 2019}, otras clases; prueba del desafío; validación por lesión & Sensibilidad macro & 0.636
             & 0.692 \\
         \filasep
         \multicolumn{5}{@{}l}{\textit{Detección de melanoma (Swin-Tiny)}} \\
         \textcite{aboulmira2024skinhealthmate} & Clase más probable & Sensibilidad & 0.49 & 0.623 \\
-        \textcite{yao2022single} & ISIC 2018; modelo elegido sobre la prueba & Sensibilidad & 0.819 & 0.796 \\
+        \textcite{yao2022single} & \emph{ISIC 2018}; modelo elegido sobre la prueba & Sensibilidad & 0.819 & 0.796 \\
         \textcite{marchetti2023prospective} & Lesiones biopsiadas; umbral de alta sensibilidad & AUC & 0.857
             & 0.921 \\
         \filasep
@@ -78,5 +79,5 @@ por sus autores junto con DermLIP, lo supera a su vez, lo que indica que la espe
 mejorando por la vía contrastiva.
 
 En conjunto, la comparación ubica a Swin-Tiny cerca de los trabajos con un protocolo comparable y por debajo de los que
-usan una partición por imagen, y confirma que la dificultad de los \glspl{vlm} generativos para clasificar lesiones de
+usan una partición por imagen, y muestra que la dificultad de los \glspl{vlm} generativos para clasificar lesiones de
 piel aparece también en la literatura.

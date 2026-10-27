@@ -34,8 +34,8 @@ y el generador redacta el reporte.
 
 La Figura~\ref{fig:met_pipeline} muestra la arquitectura general. La imagen entra en paralelo a dos predictores. El
 primero es Swin-Tiny, el clasificador del \emph{pipeline}: de los dos modelos sobre los que se hizo la búsqueda de
-hiperparámetros (Sección~\ref{sec:met_supervisados_ensamble}), es el de mayor F1 macro en validación, promediado sobre las tres
-semillas, el criterio con que se eligen las configuraciones (Sección~\ref{sec:met_seleccion}). El segundo es el \gls{knn} sobre los
+hiperparámetros (Sección~\ref{sec:met_supervisados_ensamble}), es el de mayor F1 macro en validación, promediado sobre sus tres
+ejecuciones, el criterio con que se eligen las configuraciones (Sección~\ref{sec:met_seleccion}). El segundo es el \gls{knn} sobre los
 \emph{embeddings} de DermLIP. Un módulo de ruteo compara las dos decisiones y, según coincidan o no, determina si el
 generador redacta un reporte y con qué instrucción, o si el caso se deriva a un especialista. Así, la arquitectura
 separa dos decisiones: qué diagnóstico se afirma, que depende del clasificador, y si corresponde afirmarlo, que
@@ -104,7 +104,7 @@ necesita un umbral que ajustar (Sección~\ref{sec:marco_concordancia}). Segundo,
 distintos: uno ajusta fronteras de decisión sobre \emph{HAM10000}~\cite{tschandl2018ham10000}, y el otro es no
 paramétrico y opera sobre una representación preentrenada en otros datos. Por eso se espera que sus errores no
 coincidan siempre, de modo que su desacuerdo señale los casos dudosos. Esa expectativa es una hipótesis del diseño, que
-se pone a prueba en el Capítulo~\ref{cp:res_clasif}.
+se pone a prueba en el Capítulo~\ref{cp:res_gen}.
 
 Para formalizar la señal, sea $\hat{c}(x)$ la clase de mayor probabilidad del clasificador y $v(x)$ el voto del
 \gls{knn}, es decir, la clase más frecuente entre los $k = 3$ vecinos (Ecuación~\ref{eq:marco_knn}). Cuando los tres

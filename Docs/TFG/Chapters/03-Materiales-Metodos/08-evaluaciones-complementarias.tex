@@ -17,7 +17,8 @@ evaluar los modelos en escenarios en que esas condiciones cambian (Sección~\ref
 cuánto se puede confiar en sus salidas y cuánto cuesta ejecutarlos. Cada evaluación de esta sección responde una de
 esas preguntas. Las cuatro primeras se aplican a los clasificadores, que son los que fijan el diagnóstico del
 \emph{pipeline}, y la última incluye también a los generadores. Salvo que se indique otra cosa, se usan los modelos
-elegidos en la Sección~\ref{sec:met_supervisados} con la semilla 42.
+elegidos en la Sección~\ref{sec:met_supervisados}, en su ejecución de referencia
+(Sección~\ref{sec:met_estadistica}).
 
 \subsection{Generalización a otra población}
 \label{sec:met_hiba}
@@ -72,103 +73,5 @@ estimación del orden de magnitud, que permite contrastar el \emph{pipeline} con
 revisados (Tabla~\ref{tab:marco_brechas} del Capítulo~\ref{cp:marco}). Las condiciones de la medición se detallan en
 la Sección~\ref{sec:met_entorno}.
 
-La Tabla~\ref{tab:met_experimentos} reúne los experimentos de este capítulo con lo que busca cada uno, los datos sobre
-los que se mide y su métrica principal. Los resultados de clasificación y las evaluaciones que se refieren a los
-clasificadores se presentan en el Capítulo~\ref{cp:res_clasif}. Los de generación y del \emph{pipeline}, junto con el
-costo de los generadores, se presentan en el Capítulo~\ref{cp:res_gen}.
-
-\begingroup
-\small
-\setlength{\tabcolsep}{3pt}
-\begin{longtable}{@{}>{\raggedright\arraybackslash}p{3.5cm}
-    >{\raggedright\arraybackslash\hspace{0pt}}p{4.3cm}
-    >{\raggedright\arraybackslash\hspace{0pt}}p{2.6cm}
-    >{\raggedright\arraybackslash\hspace{0pt}}p{3.5cm}@{}}
-    \caption{Experimentos del trabajo: qué busca cada uno, sobre qué datos se mide y con qué métrica.}
-    \label{tab:met_experimentos}\\
-    \toprule
-    \textbf{Experimento} & \textbf{Qué se busca} & \textbf{Datos} & \textbf{Métrica principal} \\
-    \midrule
-    \endfirsthead
-    \toprule
-    \textbf{Experimento} & \textbf{Qué se busca} & \textbf{Datos} & \textbf{Métrica principal} \\
-    \midrule
-    \endhead
-    \bottomrule
-    \endlastfoot
-    Clasificadores supervisados (Sección~\ref{sec:met_supervisados})
-        & Comparar las dos familias de arquitecturas con el mismo procedimiento
-        & Prueba de \emph{HAM10000}
-        & Sensibilidad macro; F1 macro \\
-    \filasep
-    Funciones de pérdida para el desbalance
-        & Ver si otra función de pérdida mejora las clases minoritarias
-        & Prueba de \emph{HAM10000}
-        & Sensibilidad macro \\
-    \filasep
-    Detección de melanoma
-        & Detectar melanomas con un tope de falsas alarmas
-        & Prueba de \emph{HAM10000}
-        & Sensibilidad y especificidad con umbral; AUC \\
-    \filasep
-    Fuga de información (Sección~\ref{sec:met_particiones})
-        & Estimar cuánto sobreestimaba la fuga el desempeño
-        & Prueba completa y subconjunto sin lesiones compartidas
-        & Sensibilidad macro \\
-    \filasep
-    Clasificación con \glspl{vlm} (Sección~\ref{sec:met_clasif_vlm})
-        & Saber si un \gls{vlm} clasifica tan bien como un supervisado
-        & Prueba de \emph{HAM10000}; fotografías clínicas de \emph{SkinCAP} como control
-        & Sensibilidad macro; McNemar con Holm \\
-    \filasep
-    Generación con referencia
-        & Medir el parecido del reporte con un texto de referencia
-        & Prueba de \emph{MM-Skin} y de \emph{SkinCoT}
-        & Nivel~1 (BLEU-4, ROUGE-L, METEOR, CIDEr, BERTScore) \\
-    \filasep
-    Ajuste del modelo de lenguaje de Mini-VLM (Sección~\ref{sec:met_generacion})
-        & Ver si ajustar también el modelo de lenguaje cambia el reporte
-        & Prueba de \emph{HAM10000} y de \emph{SkinCoT}
-        & Diferencia pareada de la consistencia diagnóstica; Nivel~1 \\
-    \filasep
-    Cascada con cuatro fuentes (Sección~\ref{sec:met_referencias})
-        & Saber si el reporte afirma el diagnóstico correcto y cuánto aporta el anclaje
-        & Prueba de \emph{HAM10000}
-        & Consistencia diagnóstica \\
-    \filasep
-    Recuperación (Sección~\ref{sec:met_recuperacion})
-        & Ver si los casos parecidos mejoran el reporte
-        & Prueba de \emph{HAM10000}
-        & Consistencia diagnóstica \\
-    \filasep
-    Ruteo en tres niveles (Sección~\ref{sec:met_ruteo})
-        & Ver si la concordancia separa aciertos de errores y cuánto aporta el generador
-        & Prueba de \emph{HAM10000}
-        & Consistencia diagnóstica por nivel; proporción de casos en cada nivel \\
-    \filasep
-    Generalización (Sección~\ref{sec:met_hiba})
-        & Ver si el desempeño se sostiene en otra población
-        & \emph{HIBA}
-        & Sensibilidad macro \\
-    \filasep
-    Robustez (Sección~\ref{sec:met_robustez})
-        & Medir la caída ante peores condiciones de captura
-        & Prueba de \emph{HAM10000} perturbada
-        & Caída relativa de la sensibilidad macro \\
-    \filasep
-    Calibración (Sección~\ref{sec:met_calibracion})
-        & Saber cuánto se puede confiar en la probabilidad
-        & Validación y prueba de \emph{HAM10000}
-        & ECE; Brier \\
-    \filasep
-    Interpretabilidad (Sección~\ref{sec:met_interpretabilidad})
-        & Ver en qué parte de la imagen se apoya el modelo
-        & Siete imágenes de prueba
-        & Inspección cualitativa \\
-    \filasep
-    Costo computacional (Sección~\ref{sec:met_costo})
-        & Estimar el costo de ejecutar los modelos y el \emph{pipeline}
-        & Prueba de \emph{HAM10000}
-        & Parámetros; tiempo por imagen y por reporte \\
-\end{longtable}
-\endgroup
+Con estas evaluaciones, quedan definidos todos los experimentos del trabajo, y falta ordenarlos según la parte del
+problema que aborda cada uno.

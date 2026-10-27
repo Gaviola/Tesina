@@ -1,44 +1,54 @@
 % Extensión estimada: unas 3 páginas, una subsección, dos tablas y una figura (ficha 4.4).
 % Fuentes: ficha fichas/04-resultados-clasificacion/04-comparacion-modelos.md; Codigo/outputs/results/
-% statistical_tests_les_v2.json, densenet_vit_moderna_report.json (holm), cost/cost_comparison_v3.json.
+% statistical_tests_les_v3.json (DermLIP con el protocolo oficial; v2 tenía el anterior), densenet_vit_moderna_report.json
+% (holm, calculado sobre v2: los pares con DermLIP siguen con p < 1e-19 en v3), cost/cost_comparison_v3.json.
+% Conteos de McNemar contra DermLIP (250/85, 286/89) recalculados de las predicciones de la semilla 42 y de
+% dermlip/dermlip_zeroshot_vit-b-16_oficial_predictions.json.
 % Figura: scripts/figuras_cap4.py (resumen-sensibilidad-macro.pdf).
 % El label del costo es sec:res_costo_clasificadores: sec:res_costo es del Capítulo 5.
-\section{Comparación entre los clasificadores}
+% Revisión del tutor del 26/10/2026: McNemar (aciertos por imagen) y bootstrap (diferencia de sensibilidad macro)
+% separados, con la prueba que respalda cada conclusión; esquema contexto → objeto → valores → conjetura.
+\section{Comparación entre los clasificadores y costo}
 \label{sec:res_comparacion}
 
-Las secciones anteriores evaluaron cada familia por separado. La Figura~\ref{fig:res_resumen} las reúne en una sola
-escala, la sensibilidad macro en la prueba, y muestra tres niveles bien separados. Los supervisados quedan entre 0.6
-y 0.7, con una variación pequeña entre semillas. DermLIP va desde algo más de 0.5 sin ajuste hasta el nivel de los supervisados
-cuando se le entrena una cabeza. Los generativos, con cualquiera de sus cinco estrategias, quedan alrededor del azar.
+Las secciones anteriores evaluaron cada familia de clasificadores por separado. Esta sección las compara en una misma
+escala y con las pruebas estadísticas de la Sección~\ref{sec:met_estadistica}, y después compara el costo de ejecutar
+los clasificadores supervisados.
+
+La Figura~\ref{fig:res_resumen} reúne la sensibilidad macro en la prueba de todos los clasificadores del capítulo. Cada
+fila es un modelo o una estrategia, y el eje horizontal es la sensibilidad macro: los supervisados se presentan con la
+media y el desvío de sus tres ejecuciones, y cada punto de los generativos es una de sus estrategias.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.85\textwidth]{Figures/Capitulos/04-Resultados-Clasificacion/resumen-sensibilidad-macro.pdf}
-    \caption{Sensibilidad macro en la prueba de todos los clasificadores del capítulo. Los supervisados, con media y desvío de tres semillas; cada punto de los generativos es una estrategia.}
+    \caption{Sensibilidad macro en la prueba de todos los clasificadores del capítulo. Los supervisados, con media y desvío de tres ejecuciones; cada punto de los generativos es una estrategia.}
     \label{fig:res_resumen}
 \end{figure}
 
-Las pruebas de la Sección~\ref{sec:met_estadistica} confirman esa separación para los modelos sin ajuste, que entran
-con la estrategia de generación en el caso de los generativos. Los 15 pares de la familia de 21 que comparan un
-supervisado con DermLIP, Mini-VLM o LLaVA-Med, o a estos tres entre sí, son significativos con la corrección de Holm.
-La Tabla~\ref{tab:res_pruebas_vlm} muestra el tamaño de las diferencias. Swin-Tiny, ConvNeXt-Tiny y ViT-B/16 superan
-a DermLIP sin ajuste por entre 0.15 y 0.17 de sensibilidad macro, y a los generativos, por alrededor de 0.5.
-DenseNet121, en cambio, no se distingue de DermLIP en sensibilidad macro, aunque McNemar muestra que acierta más
-imágenes. Swin-Tiny, por ejemplo, acierta 286 imágenes en las que DermLIP falla, frente a 89 en el sentido
-contrario. En cambio, el intervalo de
-\emph{bootstrap} de la sensibilidad macro de los dos generativos incluye el 1/7, de modo que ninguno de los dos se
-distingue del azar. Entre ellos, McNemar detecta que no aciertan las mismas imágenes, pero la diferencia de
-sensibilidad macro no se distingue de cero, porque los dos aciertan pocas imágenes y casi solo de la clase hacia la
-que colapsan.
+La figura muestra tres niveles separados. Los supervisados obtienen los valores más altos, entre 0.6 y 0.7, con una
+variación pequeña entre ejecuciones. DermLIP va desde algo más de 0.5 sin ajuste hasta el nivel de los supervisados
+cuando se le entrena una cabeza. Los generativos, con cualquiera de sus cinco estrategias, obtienen los valores más
+bajos, alrededor del azar.
+
+Para saber si estas diferencias exceden la variación de la muestra, las pruebas comparan los siete modelos sin ajuste
+sobre \emph{HAM10000}: los cuatro supervisados, DermLIP \emph{zero-shot} y los dos generativos con la estrategia de
+generación. Las dos pruebas responden preguntas distintas. McNemar compara las imágenes que acierta cada modelo del
+par, y el \emph{bootstrap} pareado compara la diferencia de sensibilidad macro. Según McNemar, los 15 pares de la
+familia de 21 que comparan un supervisado con DermLIP, Mini-VLM o LLaVA-Med, o a estos tres entre sí, son
+significativos con la corrección de Holm.
+
+Para el \emph{bootstrap}, la Tabla~\ref{tab:res_pruebas_vlm} presenta la diferencia de sensibilidad macro de cada
+supervisado (filas) frente a cada \gls{vlm} sin ajuste (columnas) y el intervalo de confianza del 95\,\% de cada
+diferencia.
 
 \begin{table}[H]
     \centering
-    \caption{Diferencia de sensibilidad macro entre cada supervisado y cada \gls{vlm} sin ajuste (semilla 42), con su IC del 95\,\%.}
+    \caption{Diferencia de sensibilidad macro entre cada supervisado y cada \gls{vlm} sin ajuste (ejecución de referencia), con su IC del 95\,\% (\emph{bootstrap} pareado).}
     \label{tab:res_pruebas_vlm}
     \small
     \setlength{\tabcolsep}{4pt}
-    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X
-        >{\centering\arraybackslash}p{3.1cm}>{\centering\arraybackslash}p{3.1cm}>{\centering\arraybackslash}p{3.1cm}@{}}
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X ccc@{}}
         \toprule
         \textbf{Supervisado} & \textbf{DermLIP} & \textbf{Mini-VLM} & \textbf{LLaVA-Med} \\
         \midrule
@@ -50,6 +60,20 @@ que colapsan.
     \end{tabularx}
 \end{table}
 
+Swin-Tiny, ConvNeXt-Tiny y ViT-B/16 superan a DermLIP sin ajuste por entre 0.15 y 0.18 de sensibilidad macro, y a los
+generativos, por alrededor de 0.5, todos con intervalos que no incluyen el cero. La única diferencia cuyo intervalo
+incluye el cero es la de DenseNet121 frente a DermLIP. En este par, las dos pruebas dan resultados distintos: según
+McNemar, DenseNet121 acierta más imágenes, 250 en las que DermLIP falla frente a 85 en el sentido contrario, pero según
+el \emph{bootstrap}, su sensibilidad macro no se distingue de la de DermLIP. Una explicación posible, como en la
+comparación entre supervisados, es que la ventaja de DenseNet121 está en las clases mayoritarias, que pesan mucho en
+el total de aciertos y poco en las métricas macro.
+
+Entre los generativos, el intervalo de \emph{bootstrap} de la sensibilidad macro de Mini-VLM incluye 1/7, de modo que
+no se distingue del azar. El de LLaVA-Med queda apenas por encima, aunque su exactitud y su F1 macro siguen siendo los
+de un modelo colapsado (Sección~\ref{sec:res_vlm}). Entre ellos, McNemar indica que no aciertan las mismas imágenes,
+pero el \emph{bootstrap} no distingue su diferencia de sensibilidad macro de cero. Posiblemente se debe a que los dos
+aciertan pocas imágenes, y casi solo de la clase hacia la que colapsan.
+
 La comparación deja abierta la posición de DermLIP con una cabeza entrenada, que se acerca a los supervisados en
 sensibilidad macro pero no en F1 macro (Tabla~\ref{tab:res_dermlip}). Como esa cabeza se entrena sobre
 \emph{HAM10000}, deja de ser un uso sin ajuste y no resuelve lo que motivaba usar un \gls{vlm}: obtener el diagnóstico
@@ -59,18 +83,14 @@ del modelo que genera el reporte.
 \label{sec:res_costo_clasificadores}
 
 Además del desempeño, la restricción de una GPU de consumo de la Sección~\ref{sec:met_tareas} exige que el
-clasificador sea barato de ejecutar. La Tabla~\ref{tab:res_costo_clasificadores} reúne su costo en la RTX 4070 de la
-Sección~\ref{sec:met_entorno}, con la misma precisión bf16 que la evaluación. Los cuatro modelos clasifican una
-imagen en 20~ms o menos y ocupan menos de 0.7~GB de memoria de la GPU aun con lotes de 32 imágenes, de modo que
-Swin-Tiny clasifica la prueba completa en poco más de un segundo. Además, la cantidad de parámetros no ordena el
-tiempo de inferencia: DenseNet121, el modelo más chico, es el más lento con una imagen por vez. Estos tiempos
-corresponden a una sola vista, y el \gls{tta} de la Sección~\ref{sec:met_supervisados_receta} duplica las pasadas.
-Aun así, el costo de los clasificadores queda muy por debajo de ese límite, y el del \emph{pipeline} completo lo fija
-el generador, que se evalúa en el Capítulo~\ref{cp:res_gen}.
+clasificador sea barato de ejecutar. La Tabla~\ref{tab:res_costo_clasificadores} presenta el costo de los cuatro
+supervisados en la RTX 4070 de la Sección~\ref{sec:met_entorno}, con la misma precisión bf16 que la evaluación: para
+cada modelo, la cantidad de parámetros, la memoria máxima de la GPU con una imagen y con lotes de 32, la latencia con
+una imagen por vez y las imágenes por segundo con lotes de 32.
 
 \begin{table}[H]
     \centering
-    \caption{Costo de inferencia de los clasificadores en una RTX 4070 (bf16, una vista por imagen).}
+    \caption{Costo de inferencia de los clasificadores en una RTX 4070 (bf16, una vista por imagen). La latencia se mide con una imagen por vez, y las imágenes por segundo, con lotes de 32.}
     \label{tab:res_costo_clasificadores}
     \small
     \setlength{\tabcolsep}{3pt}
@@ -81,7 +101,7 @@ el generador, que se evalúa en el Capítulo~\ref{cp:res_gen}.
         & & \multicolumn{2}{c}{\textbf{Memoria máxima (GB)}} & & \\
         \cmidrule(lr){3-4}
         \textbf{Modelo} & \textbf{Parámetros (millones)} & \textbf{Una imagen} & \textbf{Lote de 32}
-            & \textbf{Tiempo por imagen (ms)} & \textbf{Imágenes por segundo} \\
+            & \textbf{Latencia (ms)} & \textbf{Imágenes por segundo} \\
         \midrule
         Swin-Tiny & 27.52 & 0.180 & 0.522 & 11.05 & 1\,353.3 \\
         ConvNeXt-Tiny & 27.83 & 0.179 & 0.407 & 4.99 & 1\,738.5 \\
@@ -90,3 +110,14 @@ el generador, que se evalúa en el Capítulo~\ref{cp:res_gen}.
         \bottomrule
     \end{tabularx}
 \end{table}
+
+ConvNeXt-Tiny es el más rápido, tanto con una imagen por vez como con lotes, y DenseNet121, el más lento con una imagen
+por vez, aunque es el modelo más chico. Es decir, la cantidad de parámetros no ordena el tiempo de inferencia. En
+conjunto, los cuatro modelos clasifican una imagen en 20~ms o menos y ocupan menos de 0.7~GB de memoria de la GPU aun
+con lotes de 32 imágenes. Con esos lotes, Swin-Tiny clasifica la prueba completa en poco más de un segundo, y con una
+imagen por vez, en unos 17 segundos. Estos tiempos corresponden a una sola vista, y el \gls{tta} de la
+Sección~\ref{sec:met_supervisados_receta} duplica las pasadas. Aun así, el costo de los clasificadores queda muy por
+debajo de ese límite.
+
+Con el desempeño y el costo de las tres familias caracterizados, queda ubicar estos resultados frente a los de la
+literatura.

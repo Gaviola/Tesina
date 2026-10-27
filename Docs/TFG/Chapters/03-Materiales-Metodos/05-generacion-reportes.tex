@@ -62,8 +62,9 @@ Los dos generadores, sin embargo, no reciben el adaptador en los mismos componen
 \texttt{q\_proj} y \texttt{v\_proj} están en el codificador visual y en el modelo de lenguaje, y se entrenan
 33\,554\,432 parámetros. En cambio, el modelo de lenguaje de Mini-VLM reúne las tres proyecciones de la atención en un
 único módulo, \texttt{qkv\_proj}, de modo que el adaptador queda solo en el codificador visual, con 6\,291\,456
-parámetros, y el modelo de lenguaje no se ajusta. En ambos casos se entrena menos del 1\,\% de los parámetros del
-modelo. La Figura~\ref{fig:met_ajuste} resume qué se entrena en cada etapa.
+parámetros, y el modelo de lenguaje no se ajusta. En Mini-VLM, por lo tanto, la segunda etapa adapta lo que el
+generador extrae de la imagen, pero no su manera de redactar. En ambos casos se entrena menos del 1\,\% de los
+parámetros del modelo. La Figura~\ref{fig:met_ajuste} resume qué se entrena en cada etapa.
 
 \input{Figures/Capitulos/03-Materiales-Metodos/ajuste}
 

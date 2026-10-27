@@ -4,7 +4,78 @@ Ayuda-memoria cronológico de experimentos enviados a cluster, ordenado de más 
 
 ---
 
+## 2026-10-25
+
+### Nivel 1 pareado de Mini-VLM v2 y LLaVA-Med v2 en MM-Skin — **Sin jobs SLURM** (local, CPU)
+Plan: [level1_mmskin_pareado_plan](ideas/level1_mmskin_pareado_plan_20261025.md). Las filas de MM-Skin de
+`tab:res_gen_nivel1` venían de pares distintos (1 414 de LLaVA-Med, 1 022 de Mini-VLM). `scripts/level1_mmskin_pareado.py`
+(nuevo) evalúa ambos sobre los 1 022 comunes → `outputs/results/level1_test/mmskin_test/level1_pareado_mini_v2_llava_v2.json`.
+
+```
+Codigo/.venv/Scripts/python.exe -X utf8 scripts/level1_mmskin_pareado.py
+```
+
+BERTScore 0.713 frente a 0.674, diferencia +0.039 [+0.038, +0.041].
+**Resul:** [level1_mmskin_pareado_resul](resul/level1_mmskin_pareado_resul_20261025.md) — **CUMPLE**.
+
 ## 2026-10-24
+
+### Nivel 1 de Mini-VLM v2 en SkinCoT y memoria medida de los generadores — Mendieta jobs 1183331–1183337
+Plan: [costo_nivel1_mini_v2_plan](ideas/costo_nivel1_mini_v2_plan_20261024.md). Scripts nuevos
+`slurm/mendieta/v5/gen_short_level1_mini_v2.sh` (`SHARD`), `slurm/mendieta/v5/measure_vlm_memory.sh` (`MODEL`) y
+`scripts/measure_vlm_memory.py`, subidos por `scp` sin finales CR (md5 verificado). Código de generación remoto idéntico
+al local. `sbatch --test-only` estimaba el arranque para las 23:07 del 24/10. Jobs: Nivel 1 1183331–1183334 (4 tramos,
+salida `outputs/generated_reports/mini_vlm/v2/skincot_test/`); memoria Mini-VLM 1183335, LLaVA-Med 1183336, SkinVL
+1183337 (salida `outputs/results/cost/vlm_memory_<modelo>.json`).
+
+```
+for k in 0 1 2 3; do sbatch --export=ALL,SHARD=$k/4 slurm/mendieta/v5/gen_short_level1_mini_v2.sh; done
+for m in mini_vlm llava_med skinvl; do sbatch --export=ALL,MODEL=$m slurm/mendieta/v5/measure_vlm_memory.sh; done
+```
+
+1183331 (tramo 0/4) terminó en TIMEOUT a la hora con ~88 de 115 reportes (~37 s por reporte, cada tramo necesita
+~70 min). Reanudaciones (saltan los reportes válidos): 1183424 (0/4) y 1183425–1183427 (1/4–3/4, con
+`--dependency=afterany` sobre 1183332–1183334).
+
+```
+sbatch --export=ALL,SHARD=0/4 slurm/mendieta/v5/gen_short_level1_mini_v2.sh
+sbatch --dependency=afterany:1183332 --export=ALL,SHARD=1/4 slurm/mendieta/v5/gen_short_level1_mini_v2.sh  # ídem 2/4, 3/4
+```
+
+Al 25/10: los cuatro tramos originales en TIMEOUT y las cuatro reanudaciones `COMPLETED` (~24 min); 457/457
+reportes, ninguno con `<think>`. Memoria `COMPLETED` (Mini 8.64 GiB de pico, LLaVA-Med 14.52, SkinVL 14.38). Nivel 1
+local en `outputs/results/level1_test/skincot_test_mini_v2/` (425 pares, BERTScore 0.770; v3 queda en
+`level1_test/skincot_test/`), más el pareado v2/v3/LLaVA-Med (`scripts/level1_pareado.py`, n = 349). Se instalaron
+`rouge-score` y `bert-score` en el `.venv` (faltaban; la reevaluación de v3 reproduce sus cifras).
+**Resul:** [costo_nivel1_mini_v2_resul](resul/costo_nivel1_mini_v2_resul_20261025.md) — **CUMPLE**.
+
+### Derivados y figuras del Cap. 5 con la métrica oficial — **Sin jobs SLURM** (local, CPU)
+Para redactar el Cap. 5 con la estructura del Cap. 4. `scripts/cap5_derivados.py` (nuevo) →
+`outputs/results/cap5_derivados.json`: generación sin anclaje (consistencia exclusiva, clases por reporte, reportes
+distintos, palabras, `<think>`), fallas con las categorías del marco (la reserva junto al diagnóstico correcto cuenta
+como correcta, no como *hedging*), ablaciones recalculadas con la métrica oficial, sensibilidad de Swin por clase frente
+a la consistencia, ruteo (acierto por nivel, errores compartidos, melanoma), vecino equivocado en la recuperación y
+comparación pareada entre generadores. `scripts/figuras_cap5.py` (nuevo) → cinco PDF en
+`Docs/TFG/Figures/Capitulos/05-Resultados-Generacion/`.
+
+```
+Codigo/.venv/Scripts/python.exe -X utf8 scripts/cap5_derivados.py
+Codigo/.venv/Scripts/python.exe -X utf8 scripts/figuras_cap5.py
+```
+
+- Mini-VLM copia el ancla: nombra el diagnóstico de Swin en 1 501/1 503; con ancla correcta acierta 1 272/1 273, con
+  ancla equivocada 4/230. Por clase, la consistencia de Mini-VLM y SkinVL coincide con la sensibilidad de Swin.
+- Ablaciones (métrica oficial, 400 imágenes; SkinVL 1 503): sin imagen Mini 1.000 → 1.000, LLaVA-Med 0.863 → 0.893
+  (+0.030 [−0.013, +0.073], n. s.; antes 0.848 → 1.000), SkinVL 0.999 → 0.967; con diagnóstico equivocado 0.000 /
+  0.020 / 0.000. Sin imagen, siete textos (uno por clase) en los tres.
+- Ruteo: Swin acierta 0.915 / 0.573 / 0.569 por nivel; 102 de sus 230 errores caen en el afirmativo; 38 de 167
+  melanomas se afirman como otra clase (31 como NV).
+- Recuperación: con Swin correcto y kNN equivocado (171), Swin + RAG 1.000 igual que Swin; al revés (72), 0.167
+  frente a 0.014.
+- Entre generadores (Swin): Mini − LLaVA +0.104 [+0.087, +0.122]; Mini − SkinVL +0.003 (n. s.).
+
+**Resul:** no aplica (análisis de reportes existentes para la redacción; las cifras quedan en las fichas de
+`Docs/TFG/fichas/05-resultados-generacion/`).
 
 ### Cascada con DermLIP oficial en short — Mendieta jobs 1183274–1183301
 Plan: [cascada_dermlip_oficial_plan](ideas/cascada_dermlip_oficial_plan_20261024.md). Brazo `full_dermlip_oficial`
@@ -21,7 +92,10 @@ for k in $(seq 0 14); do sbatch --export=ALL,MODEL=llava_med,SHARD=$k/15 slurm/m
 ```
 
 En cola, retenidos desde antes: 5 tramos de Mini-VLM v3 (1181056–1181061, `user env retrieval failed`).
-**Resul:** pendiente.
+Al 25/10: los 28 tramos `COMPLETED` (30–43 min), 1 503 reportes por generador. Métrica oficial con
+`scripts/cascada_dermlip_oficial.py` (nuevo) → `outputs/results/cascada_dermlip_oficial_<modelo>.json`: Mini-VLM
+0.717, LLaVA-Med 0.641, SkinVL 0.716.
+**Resul:** [cascada_dermlip_oficial_resul](resul/cascada_dermlip_oficial_resul_20261025.md) — **CUMPLE**.
 
 ---
 

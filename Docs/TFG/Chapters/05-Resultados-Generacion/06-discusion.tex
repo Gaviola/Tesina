@@ -1,0 +1,59 @@
+% Extensión estimada: una página y media, tres párrafos y una tabla (ficha 5.6).
+% Fuentes: secciones 5.1 a 5.5. Sin números nuevos.
+% Feedback del tutor (14/09/2026): la discusión que cruza clasificación y generación queda en el Capítulo 6.
+% Revisión del autor (25/10/2026): el balance se organiza alrededor del pipeline (tab:res_gen_aportes).
+% Revisión del tutor del 26/10/2026: balance breve de los hallazgos del capítulo; el aporte del pipeline frente a la
+% literatura, las decisiones de diseño, lo que el diseño puede mejorar y las limitaciones pasaron al Capítulo 6 (como
+% comentarios en 03-clasificador-generador, 04-fidelidad-validez y 07-limitaciones).
+\section{Balance de los resultados de generación}
+\label{sec:res_gen_discusion}
+
+Con respecto a la segunda pregunta de investigación (Sección~\ref{sec:intro_objetivos}), un \gls{vlm} generativo
+ajustado no afirma por sí solo la clase de la imagen: sin un diagnóstico, enumera clases, evita comprometerse o, en el
+caso del generador especializado, repite un texto ajeno a las siete clases. Con la cascada, en cambio, el reporte
+afirma el diagnóstico del clasificador, y con Mini-VLM y SkinVL su consistencia diagnóstica coincide con la exactitud
+de Swin-Tiny, en total y en cada clase, mientras que LLaVA-Med queda por debajo. Con el ruteo, la consistencia de
+Mini-VLM sobre la prueba completa pasa de 0.849 a 0.870, una ganancia que proviene de presentar dos candidatos en los
+casos dudosos. En cuanto a la descripción, la imagen cambia lo que el reporte describe de cada lesión, lo que verifica
+en parte su fidelidad visual, aunque el melanoma afirmado como nevo de la Sección~\ref{sec:res_gen_cualitativos}
+muestra que la descripción también se adapta al diagnóstico recibido.
+
+Como cada sección agregó un componente del \emph{pipeline} por vez, los resultados permiten además separar lo que
+aporta cada uno al reporte final. La Tabla~\ref{tab:res_gen_aportes} lo resume, con una fila por componente, lo que
+aporta y lo que no, y las secciones en que se mide. El clasificador aporta el diagnóstico, el generador aporta la
+redacción y la descripción de cada lesión, y la concordancia con el \gls{knn} aporta la señal que el clasificador no
+tiene, la de los casos en que su diagnóstico es menos confiable.
+
+\begin{table}[H]
+    \centering
+    \caption{Aporte de cada componente del pipeline al reporte, según los resultados del capítulo.}
+    \label{tab:res_gen_aportes}
+    \small
+    \setlength{\tabcolsep}{4pt}
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{2.4cm}
+        >{\raggedright\arraybackslash\hspace{0pt}}X >{\raggedright\arraybackslash\hspace{0pt}}X
+        >{\raggedright\arraybackslash}p{1.9cm}@{}}
+        \toprule
+        \textbf{Componente} & \textbf{Qué aporta} & \textbf{Qué no aporta} & \textbf{Secciones} \\
+        \midrule
+        Swin-Tiny & El diagnóstico: la consistencia de la cascada es su exactitud, en total y por clase & Una señal
+            de cuándo duda; sus errores llegan al reporte & \ref{sec:res_gen_fuentes}, \ref{sec:res_gen_clases} \\
+        \filasep
+        Generador & La redacción y la descripción de cada lesión, que varía con la imagen & Fidelidad diagnóstica:
+            rara vez corrige un diagnóstico equivocado y no supera a la línea base sin generador
+            & \ref{sec:res_gen_ablaciones}, \ref{sec:res_gen_pipeline} \\
+        \filasep
+        \gls{knn} y ruteo & La separación de los casos dudosos y, en ellos, un segundo candidato & La detección de
+            los errores que comparte con el clasificador & \ref{sec:res_gen_concordancia},
+            \ref{sec:res_gen_pipeline} \\
+        \filasep
+        Recuperación como contexto & Una mejora menor junto al clasificador & Un reemplazo del clasificador
+            & \ref{sec:res_gen_rag} \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+Lo que el \emph{pipeline} no resuelve son los errores que comparten los dos predictores, que se afirman con la misma
+plantilla que un acierto (Sección~\ref{sec:res_gen_concordancia}). El Capítulo~\ref{cp:discusion} interpreta estos
+hallazgos junto con los de la clasificación y discute las decisiones de diseño que respaldan y las limitaciones
+del trabajo.

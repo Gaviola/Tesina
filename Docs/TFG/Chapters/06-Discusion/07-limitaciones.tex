@@ -16,3 +16,31 @@ traslada a la histopatología ni a la fotografía clínica sin volver a medirlo;
 establecen fidelidad diagnóstica, no validez clínica, que exigiría la lectura de especialistas; no se
 desarrolla un producto de uso clínico ni se lo valida con pacientes; y la restricción de cómputo deja fuera
 a los modelos de mayor tamaño, que podrían rendir mejor.}
+
+% --- Material de 4.6, párrafo 3 (revisión del tutor del 26/10/2026: 4.6 y 5.6 quedan como balance breve y lo
+% argumentativo pasa a este capítulo). Para integrar al redactar esta sección; no se imprime.
+% Estos resultados valen dentro de la fuente de entrenamiento. En \emph{HIBA}, Swin-Tiny pierde cerca del 40\,\% de su
+% sensibilidad macro, también en las imágenes dermatoscópicas, y el ruido de la imagen lo afecta más que la compresión
+% o la pérdida de resolución. Sus probabilidades, en cambio, están bien calibradas cuando se entrena sin pesos por clase.
+% En consecuencia, Swin-Tiny es la referencia del trabajo dentro de \emph{HAM10000}, pero no una herramienta validada
+% para otra población, y las limitaciones que eso implica, junto con las de evaluar las pruebas con una sola semilla, se
+% retoman en el Capítulo~\ref{cp:discusion}.
+
+% --- Material de 5.6, párrafo 5 (revisión del tutor del 26/10/2026: 4.6 y 5.6 quedan como balance breve y lo
+% argumentativo pasa a este capítulo). Para integrar al redactar esta sección; no se imprime.
+% Otras dos decisiones muestran lo que el diseño todavía puede mejorar. La plantilla \emph{noreasoning} hace que el
+% diagnóstico inyectado quede en el reporte, pero la plantilla diferencial lleva a LLaVA-Med a razonar más allá del
+% límite de tokens, y por eso el pipeline con ese generador no mejora la cascada
+% (Sección~\ref{sec:res_gen_pipeline}). Además, la cascada usa la clase más probable de Swin-Tiny y no el umbral de
+% melanoma de la Sección~\ref{sec:res_melanoma}, de modo que tres de cada diez melanomas reciben un reporte que no los
+% nombra (Sección~\ref{sec:res_gen_clases}). Anclar el reporte con ese umbral es una mejora directa que este trabajo no
+% evaluó.
+
+% --- Material de 5.6, párrafo 6 (revisión del tutor del 26/10/2026: 4.6 y 5.6 quedan como balance breve y lo
+% argumentativo pasa a este capítulo). Para integrar al redactar esta sección; no se imprime.
+% Lo que el pipeline no resuelve son los errores que comparten los dos predictores. La concordancia no los
+% detecta, y casi un cuarto de los melanomas se afirma como otra clase con la misma plantilla que un acierto
+% (Sección~\ref{sec:res_gen_concordancia}). La derivación, a su vez, evita errores a costa de descartar un número
+% parecido de aciertos. El Capítulo~\ref{cp:discusion} discute estas limitaciones junto con las de la clasificación, en
+% particular la ausencia de una revisión por especialistas, que es la única forma de verificar la descripción, y el uso
+% de una sola semilla para el clasificador que ancla los reportes.

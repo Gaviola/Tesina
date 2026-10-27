@@ -1,13 +1,13 @@
-# Ficha 3.9 — Entorno experimental y recursos computacionales
+# Ficha 3.10 — Entorno experimental y recursos computacionales
 
 **Creada el 22/10/2026 por la revisión del tutor del 21/10** (comentarios 6, 28 y 29): reúne el hardware, las semillas y
-las bibliotecas que antes estaban en 3.1, 3.3, 3.6 y 3.8. Archivo: `Chapters/03-Materiales-Metodos/09-entorno-experimental.tex`.
+las bibliotecas que antes estaban en 3.1, 3.3, 3.6 y 3.8. Archivo: `Chapters/03-Materiales-Metodos/10-entorno-experimental.tex` (renumerada el 26/10/2026, al crearse 3.9 «Diseño de los experimentos»).
 Label: `sec:met_entorno`.
 
 ## Hilo conductor
 
 Pregunta que responde la sección: ¿en qué hardware y con qué software se ejecutó cada experimento?
-Viene de: 3.8 (costo computacional), que remite acá las condiciones de la medición.
+Viene de: 3.9 (diseño de los experimentos); 3.8 (costo computacional) remite acá las condiciones de la medición.
 Deja instalado: lo necesario para reproducir los experimentos, con remisión al Apéndice E.
 
 ```

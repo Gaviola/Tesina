@@ -9,6 +9,8 @@ Lo que cambia está en «Cambios respecto de la ficha del 18/10».
 
 ## Hilo del capítulo
 
+Esquema original (18/10); la estructura vigente es la de la tabla de secciones y la de «Reorganización (24/10/2026)».
+
 Pregunta que responde el capítulo: ¿clasifica un VLM las lesiones dermatoscópicas, y en particular el melanoma, tan
 bien como un clasificador supervisado, y se sostiene el desempeño de los clasificadores fuera de la prueba? (PI1,
 OE1 y la parte del OE3 que toca a la clasificación: otra población, perturbaciones, calibración, interpretabilidad
@@ -48,11 +50,12 @@ Intro    Qué contiene el capítulo y cómo se organiza (por contenido, sin «re
 | Sec. | Título | Archivo | Label | Ext. | Fuentes |
 |---|---|---|---|---|---|
 | Intro | — | `00-capitulo.tex` | `cp:res_clasif` | 0.5 p. | — |
-| 4.1 | Clasificadores supervisados | `01-clasificadores-supervisados.tex` | `sec:res_supervisados` | 6 p. | `lesion_split_report.json` (`ganadores`, `sweep`), `densenet_vit_moderna_report.json`, `statistical_tests_les_v2.json` (pares entre supervisados), `classifier_ensemble_les/`, `per_class_les/`; pérdidas: `lesion_split_report.json` (`legacy_y_desbalance`), `desbalance_multimodelo_resul_20260725.md`; fuga: `leakage_analysis.json`; literatura: `Docs/tabla_resultados_sota/` (v34) |
-| 4.2 | Detección de melanoma | `02-deteccion-melanoma.tex` | `sec:res_melanoma` | 2.5 p. | `lesion_split_report.json` (`melanoma`, `melanoma_semillas`); literatura: v34 |
-| 4.3 | Clasificación con modelos visión--lenguaje | `03-clasificacion-vlm.tex` | `sec:res_vlm` | 6 p. | `vlm_clasificacion_resul_v3_20260517.md`; `mini_vlm/v2/`, `llava_med/v2/` (ajustados, C10); `*_likelihood_noimage_*`, `prior_lenguaje_noimage_resul_20260824.md`; `*_likelihood_clinical_*`, `vlm_domain_gap_clinica_resul_20260604.md`; `dermlip/dermlip_split_eval.json`, `embeddings/` (control con Swin); `statistical_tests_les_v2.json`, `densenet_vit_moderna_report.json` (Holm, 21 pares); `classification_summary_les.png` |
-| 4.4 | Evaluaciones complementarias de la clasificación | `04-evaluaciones-complementarias.tex` | `sec:res_complementarios` | 5–6 p. | HIBA: `hiba_por_modalidad.json`, `*_hiba` de los ganadores; robustez: `robustness/robustness_summary.json`, `robustness_examples_les.png`; calibración: `lesion_split_report.json` (`calibracion`), `calibration_les/`; interpretabilidad: `interpretability_les/interpretability_swin.png`; costo: `cost/cost_comparison_v2.json` |
-| 4.5 | Discusión de los resultados de clasificación | `05-discusion.tex` | `sec:res_clasif_discusion` | 1 p. | secciones anteriores |
+| 4.1 | Clasificadores supervisados y detección de melanoma | `01-clasificadores-supervisados.tex` | `sec:res_supervisados` | 8 p. | `lesion_split_report.json` (`ganadores`, `sweep`, `melanoma`, `melanoma_semillas`, `legacy_y_desbalance`), `densenet_vit_moderna_report.json`, `statistical_tests_les_v2.json` (pares entre supervisados), `classifier_ensemble_les/`, `per_class_les/`; fuga: `leakage_analysis.json` |
+| 4.2 | Evaluaciones complementarias del clasificador | `02-evaluaciones-complementarias.tex` | `sec:res_complementarios` | 5 p. | HIBA: `hiba_por_modalidad.json`; robustez: `robustness/robustness_summary.json`; calibración: `lesion_split_report.json` (`calibracion`), `calibration_les/`; interpretabilidad: `interpretability_les/` |
+| 4.3 | Clasificación con modelos visión--lenguaje (tres subsecciones: generativos y colapso, controles, DermLIP) | `03-clasificacion-vlm.tex` | `sec:res_vlm` | 5 p. | `mini_vlm/v2/`, `llava_med/v2/`; `*_likelihood_noimage_*`; `*_likelihood_clinical_*`; `dermlip/dermlip_split_eval.json`, `embeddings/` |
+| 4.4 | Comparación entre los clasificadores y costo | `04-comparacion-modelos.tex` | `sec:res_comparacion` | 3 p. | `statistical_tests_les_v3.json`, `densenet_vit_moderna_report.json` (Holm, 21 pares), `cost/cost_comparison_v3.json` |
+| 4.5 | Comparación con el estado del arte | `05-estado-del-arte.tex` | `sec:res_estado_arte` | 2.5 p. | Tablas del Cap. 2; `Docs/tabla_resultados_sota/` (v34) |
+| 4.6 | Discusión de los resultados de clasificación | `06-discusion.tex` | `sec:res_clasif_discusion` | 1 p. | secciones anteriores |
 
 Total orientativo: unas 21 páginas. Archivos renombrados al aprobarse la ficha (24/10).
 
@@ -143,3 +146,38 @@ tablas y figuras (seis figuras nuevas, `Codigo/scripts/figuras_cap4.py`); (3) un
 la literatura (4.5) y una de comparación entre familias con el costo (4.4). Estructura nueva: 4.1 supervisados
 (con melanoma), 4.2 evaluaciones complementarias, 4.3 VLM, 4.4 comparación entre clasificadores, 4.5 estado del
 arte, 4.6 discusión.
+
+## Revisión externa (25/10/2026)
+
+Revisión de los Caps. 4 y 5 por otro agente (`agent_feedback_cap_4_5.md`), aceptada por el autor con una segunda
+opinión. Cambios en este capítulo:
+
+- **Convención de melanoma:** el cuerpo del capítulo usa la media de las tres semillas (0.623 → 0.796), como el resto
+  de las tablas; la curva ROC y las pruebas usan la semilla 42, que es la que ancla los reportes del Cap. 5 (0.701).
+  La intro lo declara.
+- **Correcciones de datos:** el IC de LLaVA-Med no incluye 1/7 (0.145–0.168); los 15 pares significativos lo son en
+  McNemar, y la excepción en sensibilidad macro es DenseNet121–DermLIP (250 frente a 85 aciertos discordantes);
+  la fuga se mide como prueba completa (0.870) menos grupo limpio (0.804), y las 66 imágenes restantes comparten
+  lesión solo con la validación; DermLIP «sin ajuste sobre HAM10000» (no figura entre las fuentes de Derm1M) en vez
+  de «no vio HAM10000»; «ningún VLM sin una cabeza entrenada».
+- **Estructura:** 4.1 se titula «Clasificadores supervisados y detección de melanoma» para que el melanoma aparezca
+  en el índice; 4.3 se parte en tres subsecciones; 4.4 suma «y costo» al título y termina con la transición a 4.5;
+  el puntero al costo del Cap. 5 pasa a 4.6.
+- **Tablas:** latencia (una imagen) y rendimiento (lote de 32) separados en el costo; umbral de Holm explicado;
+  «Sin etiqueta» y proporción entre paréntesis en las tablas de VLM; la fila con pesos de la calibración aclarada.
+- **Cursivas:** primera vez en el capítulo en cursiva y después redonda (guía §3), aplicado con un script.
+
+## Revisión del tutor (26/10/2026)
+
+Feedback en `feedback/cap4_5/feedback_cap_4_5.md`. Aplicado en la rama `doc/cap05-resultados-generacion`:
+
+- Introducción adaptada de la redacción del tutor; las convenciones (prueba, ejecuciones) pasan al Cap. 3 (3.7, 3.9)
+  y a cada sección.
+- Todas las secciones siguen el esquema contexto → objeto (qué hay en filas, columnas, ejes) → valores (mejor y peor
+  primero, de lo general a lo particular) → conjetura separada (guía, «Capítulos de resultados»).
+- Sin semillas: «ejecuciones», y «ejecución de referencia» (definida en 3.7) para las pruebas, la ROC, la matriz de
+  confusión y las evaluaciones complementarias.
+- McNemar y el *bootstrap* separados, con la prueba que respalda cada conclusión (4.1.1, 4.4, 4.6).
+- «Descarta» (control de *SkinCAP*) atenuado; el resto de las frases tajantes va a la lista para el autor.
+- 4.6 pasa a «Balance de los resultados de clasificación», dos párrafos sin argumentación; los cuatro párrafos
+  anteriores quedan como comentarios en las secciones del Cap. 6 donde se integran.

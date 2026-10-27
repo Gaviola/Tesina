@@ -1,8 +1,132 @@
-\section{Generación directa con VLMs ajustados}
+% Extensión estimada: unas 3.5 páginas, dos subsecciones y dos tablas (ficha 5.1).
+% Fuentes: Codigo/outputs/results/level1_test/skincot_test/level1_llava_med_results.json (LLaVA-Med v2, SkinCoT);
+% level1_test/skincot_test_mini_v2/level1_mini_vlm_results.json (Mini-VLM v2, SkinCoT, 425 pares);
+% level1_test/mmskin_test/level1_pareado_mini_v2_llava_v2.json (MM-Skin, los dos generadores sobre los mismos 1 022
+% pares; resul level1_mmskin_pareado_resul_20261025.md); cap5_derivados.json ("sin_anclaje", "fallas"). Sin anclaje
+% con la métrica oficial: ensemble_bootstrap*_les_report_only_strict.json ("full_baseline").
+% Revisión del tutor del 26/10/2026: esquema contexto → objeto → valores → conjetura; la consistencia verifica el
+% diagnóstico y la fidelidad visual queda verificada en parte (sin «no se puede determinar»).
+\section{Generación de reportes sin diagnóstico}
 \label{sec:res_gen_directa}
-\pendiente{Se presentan los resultados de Nivel 1 y Nivel 2 de los generadores ajustados sin
-\emph{grounding}, que producen descripciones ricas pero diagnósticamente poco fieles. Incluye el Nivel~1 de la variante de control de Mini-VLM sobre la prueba de \emph{SkinCoT}, frente a
-LLaVA-Med sobre los mismos pares.}
-% Fuente del control: Codigo/docs/resul/mini_vlm_lora_llm_resul_v3_20261024.md (parcial, 24/10/2026).
-% Nivel 1 SkinCoT test, 349 pares comunes, solo el reporte: v3 BLEU-4 0.065, ROUGE-L 0.145, METEOR 0.235, CIDEr 0.040,
-% BERTScore 0.781; LLaVA-Med v2 0.102, 0.191, 0.330, 0.053, 0.797. No hay Nivel 1 de Mini-VLM v2 en esa partición.
+
+El Capítulo~\ref{cp:res_clasif} mostró que los \glspl{vlm} generativos no distinguen las siete clases cuando se los usa
+como clasificadores. Ajustados con \emph{SkinCaRe} (Sección~\ref{sec:met_generacion}), en cambio, los generadores
+escriben un texto con la forma de un reporte clínico, que tiene dos partes: la descripción de la lesión y el
+diagnóstico en que termina. Esta sección presenta los resultados del generador aislado, sin el clasificador ni la
+recuperación del \emph{pipeline}. Cada generador recibe solo la imagen y la instrucción del entrenamiento, «Describe
+this skin lesion.», y escribe un reporte por imagen con la decodificación del Capítulo~\ref{cp:metodos}
+(Tabla~\ref{tab:met_decodificacion}). Los fragmentos de reportes se citan en inglés, el idioma en que los escriben los
+generadores.
+
+Las dos partes del reporte se miden con instrumentos distintos (Sección~\ref{sec:met_eval_generacion}). La
+descripción se compara con un texto de referencia en los conjuntos que lo tienen, el Nivel~1, y el diagnóstico se
+busca en el reporte sobre las imágenes de \emph{HAM10000}, la consistencia diagnóstica del Nivel~2. La consistencia
+verifica, entonces, si el diagnóstico del reporte es correcto, mientras que la fidelidad visual de la descripción, es
+decir, que los rasgos que el reporte enumera estén en la imagen, queda verificada solo en parte, porque su revisión
+completa requiere a un especialista (Capítulo~\ref{cp:discusion}).
+
+\subsection{Comparación con textos de referencia}
+\label{sec:res_gen_nivel1}
+
+El Nivel~1 se mide sobre las particiones de prueba de \emph{SkinCoT} y de \emph{MM-Skin}, con Mini-VLM y LLaVA-Med.
+En \emph{MM-Skin} los dos generadores se comparan sobre los mismos 1\,022 pares, los que tienen reporte de ambos y
+texto de referencia. SkinVL no se incluye, porque no se ajustó con \emph{SkinCaRe} y porque \emph{MM-Skin} es su
+conjunto de ajuste, de modo que sus imágenes de prueba pudieron formar parte de ese ajuste. Sus cifras de Nivel~1 son
+las que informan sus autores, que la Sección~\ref{sec:res_gen_estado_arte} compara con las de este trabajo.
+
+La Tabla~\ref{tab:res_gen_nivel1} presenta, para cada combinación de generador y conjunto, la cantidad de pares
+evaluados y las cinco métricas del Nivel~1.
+
+\begin{table}[H]
+    \centering
+    \caption{Nivel~1 de los generadores sin diagnóstico en las pruebas de \emph{SkinCoT} y \emph{MM-Skin}. Pares: imágenes con un reporte no vacío y una referencia.}
+    \label{tab:res_gen_nivel1}
+    \small
+    \setlength{\tabcolsep}{4pt}
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X cccccc@{}}
+        \toprule
+        \textbf{Generador y conjunto} & \textbf{Pares} & \textbf{BLEU-4} & \textbf{ROUGE-L} & \textbf{METEOR}
+            & \textbf{CIDEr} & \textbf{BERTScore} \\
+        \midrule
+        LLaVA-Med, \emph{SkinCoT} & 426 & 0.102 & 0.191 & 0.329 & 0.054 & 0.797 \\
+        Mini-VLM, \emph{SkinCoT} & 425 & 0.044 & 0.152 & 0.253 & 0.038 & 0.770 \\
+        LLaVA-Med, \emph{MM-Skin} & 1\,022 & 0.001 & 0.040 & 0.094 & 0.010 & 0.674 \\
+        Mini-VLM, \emph{MM-Skin} & 1\,022 & 0.002 & 0.057 & 0.112 & 0.009 & 0.713 \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+El parecido depende sobre todo del conjunto. Los valores más altos de las cinco métricas se obtienen en
+\emph{SkinCoT}, cuyos textos se usaron para ajustar a los generadores, y allí LLaVA-Med comparte con la referencia
+frases enteras y obtiene un BERTScore cercano a 0.80. En \emph{MM-Skin}, en cambio, las métricas de solapamiento de
+palabras caen casi a cero con los dos generadores, y solo el BERTScore, que compara el significado y no las palabras,
+conserva un valor intermedio.
+
+Una explicación posible de esa diferencia es el estilo de las referencias, más que la calidad de los reportes. Los
+textos de \emph{SkinCoT} tienen la estructura que los generadores aprendieron, mientras que los de \emph{MM-Skin}
+siguen el vocabulario y la organización de un libro de texto, y ningún generador se ajustó con ellos. Por eso un
+BLEU-4 cercano a cero indica sobre todo que el reporte no reproduce las frases del libro, y no necesariamente que describa mal la lesión.
+
+Entre los generadores, Mini-VLM queda por debajo de LLaVA-Med en las cinco métricas de \emph{SkinCoT}, con un
+BERTScore de 0.770 frente a 0.797. La diferencia es coherente con lo que se ajustó en cada uno
+(Sección~\ref{sec:met_generacion}). En LLaVA-Med, \gls{lora} adapta también el modelo de lenguaje, que aprende las
+frases de \emph{SkinCoT}. En Mini-VLM, en cambio, el adaptador no llega al modelo de lenguaje, que queda como el
+original. Es decir, el ajuste cambia lo que Mini-VLM ve en la imagen, pero posiblemente no su manera de redactar.
+
+En \emph{MM-Skin}, cuyas descripciones no usó ningún generador, el orden se invierte. Sobre los mismos pares,
+Mini-VLM supera a LLaVA-Med en BERTScore por 0.039 [0.038, 0.041] (\emph{bootstrap} pareado), y también en ROUGE-L y
+METEOR. Por lo tanto, el generador que más se acerca a las frases de \emph{SkinCoT} no es el que más se acerca al
+significado de una descripción de otro estilo, y el Nivel~1 mide sobre todo cuánto se ajustó la redacción a la de
+cada referencia. Por esa razón, como establece la Sección~\ref{sec:met_eval_generacion}, sus cifras se informan pero
+no eligen ningún modelo.
+
+\subsection{Consistencia diagnóstica sin anclaje}
+\label{sec:res_gen_sin_anclaje}
+
+La segunda parte del reporte se evalúa sobre las 1\,503 imágenes de prueba de \emph{HAM10000}, con los tres
+generadores y la misma instrucción, y la pregunta es si el reporte afirma la clase de la imagen. La
+Tabla~\ref{tab:res_gen_sin_anclaje} presenta, para cada generador, la consistencia diagnóstica y la proporción de
+reportes que nombran la clase verdadera y ninguna otra de las siete, que se informa porque un reporte que enumera
+varias clases cuenta como consistente aunque no se comprometa con ninguna. Las últimas columnas dan cuántas clases
+nombra cada reporte en promedio, cuántos reportes distintos escribe el generador y la mediana de palabras.
+
+\begin{table}[H]
+    \centering
+    \caption{Reportes de los generadores sin diagnóstico sobre la prueba de \emph{HAM10000}.}
+    \label{tab:res_gen_sin_anclaje}
+    \small
+    \setlength{\tabcolsep}{3pt}
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X ccccc@{}}
+        \toprule
+        \textbf{Generador} & \textbf{\encabezado{Consistencia\\diagnóstica}} & \textbf{\encabezado{Solo la clase\\verdadera}}
+            & \textbf{\encabezado{Clases por\\reporte}} & \textbf{\encabezado{Reportes\\distintos}}
+            & \textbf{\encabezado{Palabras\\(mediana)}} \\
+        \midrule
+        Mini-VLM & 0.163 & 0.045 & 0.81 & 1\,501 & 157 \\
+        LLaVA-Med & 0.582 & 0.047 & 2.17 & 1\,502 & 232 \\
+        SkinVL & 0.001 & 0.001 & 0.00 & 72 & 25 \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+Ninguno de los tres generadores afirma de manera confiable la clase de la imagen, aunque cada uno falla de una manera
+distinta. LLaVA-Med obtiene la consistencia más alta, pero la alcanza enumerando clases: nombra en promedio dos por
+reporte, y solo uno de cada veinte reportes nombra únicamente la clase verdadera. Mini-VLM, en cambio, nombra alguna
+clase en menos reportes, y cuando lo hace suele elegir una equivocada. Los dos escriben reportes extensos, de cientos de
+palabras, pero no concluyen en el diagnóstico de la imagen. Estas dos maneras de fallar son las contradicciones y el
+\emph{hedging} de la Sección~\ref{sec:marco_rep_fallas}, y la Sección~\ref{sec:res_gen_errores} cuantifica cuántos
+reportes caen en cada una.
+
+SkinVL obtiene la consistencia más baja y falla de otra manera, porque repite casi siempre el mismo texto. Entre los
+1\,503 reportes hay solo 72 distintos, y siete de cada diez son la misma frase: «This skin lesion appears as a raised,
+red, and scaly patch on the skin. It is likely caused by a fungal infection called tinea corporis.». La tiña corporal
+(\emph{tinea corporis}), una infección de la piel causada por hongos, no pertenece a las siete clases. Una explicación
+posible es que el generador especializado en dermatología, sin un diagnóstico que lo oriente, responde con un texto
+que no depende de la imagen dermatoscópica que recibe. Es decir, en este caso la especialización no garantiza un
+reporte útil fuera de las imágenes y del formato de instrucción con que se ajustó el modelo.
+
+Los bloques de razonamiento, por su parte, casi no aparecen en estos reportes. Mini-VLM no abre ninguno, posiblemente
+porque su modelo de lenguaje no vio el formato de \emph{SkinCoT} (Sección~\ref{sec:res_gen_nivel1}), y LLaVA-Med los
+abre en 11 de los 1\,503 reportes, de modo que descartarlos no cambia la lectura de esta sección. Sin un diagnóstico,
+por lo tanto, ningún generador produce de manera confiable un reporte que afirme la clase correcta, y la sección
+siguiente le entrega ese diagnóstico desde el clasificador.

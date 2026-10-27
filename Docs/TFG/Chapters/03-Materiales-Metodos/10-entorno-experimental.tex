@@ -10,7 +10,8 @@
 Los experimentos se ejecutaron en tres GPU, todas dentro de la restricción de la Sección~\ref{sec:met_tareas}. Los
 clasificadores supervisados se entrenaron en una RTX 4080 de 16~GB, en el clúster TOKO de la Universidad Nacional de
 Cuyo. El ajuste de los \glspl{vlm} y la generación de los reportes se ejecutaron en una A30 de 24~GB, en el clúster
-Mendieta de la Universidad Nacional de Córdoba. Por último, una RTX 4070 de 12~GB, en un equipo personal, se usó para
+Mendieta de la Universidad Nacional de Córdoba. La A30 es una GPU de centro de datos, pero tiene la misma memoria que
+una de consumo de gama alta, que es lo que fija la restricción. Por último, una RTX 4070 de 12~GB, en un equipo personal, se usó para
 calcular las métricas de generación y para medir el costo de los clasificadores. Las tres GPU tienen arquitectura Ampere
 o posterior, lo que permite entrenar en precisión \emph{bfloat16} (bf16) en todos los casos.
 
@@ -22,6 +23,7 @@ GPU distintas, la comparación entre clasificadores y generadores es solo de ord
 
 El código usa PyTorch y torchvision para los clasificadores supervisados, las bibliotecas \texttt{transformers} y
 \texttt{peft} de Hugging Face para los \glspl{vlm} generativos y LoRA, \texttt{open\_clip} para DermLIP y scikit-learn
-para las cabezas clásicas, la partición y las métricas. Todos los entrenamientos fijan la semilla 42, salvo las
-réplicas con las semillas 43 y 44 de la Sección~\ref{sec:met_supervisados_ensamble}. El
+para las cabezas clásicas, la partición y las métricas. Todos los entrenamientos fijan la semilla 42, que es
+también la de la ejecución de referencia (Sección~\ref{sec:met_estadistica}), y las otras dos ejecuciones de cada
+clasificador supervisado (Sección~\ref{sec:met_supervisados_ensamble}) usan las semillas 43 y 44. El
 Apéndice~\ref{ap:reproducibilidad} reúne lo necesario para repetir cada experimento.
