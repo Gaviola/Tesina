@@ -1,16 +1,46 @@
 \section{Especialización de dominio frente a modalidad}
 \label{sec:disc_especializacion}
-\pendiente{Se discute por qué el factor determinante no es que el modelo sea visión--lenguaje, sino que esté
-especializado en dermatología, y cómo se ubica esa conclusión respecto de los trabajos revisados en la
-Sección~\ref{sec:estado_arte}.}
+% Extensión estimada: 1.5 páginas, cinco párrafos (ficha 6.2).
+% Fuentes: sec:res_vlm_controles (tab:res_vlm_controles), sec:res_vlm_dermlip (tab:res_dermlip_swin),
+% sec:res_gen_sin_anclaje (SkinVL), tab:res_estado_arte (zeng2025mmskin, jiang2026multimodal, yan2026dermfmzero).
 
-% --- Material de 4.6, párrafo 1 (revisión del tutor del 26/10/2026: 4.6 y 5.6 quedan como balance breve y lo
-% argumentativo pasa a este capítulo). Para integrar al redactar esta sección; no se imprime.
-% Los resultados del capítulo permiten responder la primera pregunta de investigación
-% (Sección~\ref{sec:intro_objetivos}): en la prueba de \emph{HAM10000}, ningún \gls{vlm} sin una cabeza entrenada sobre
-% ese conjunto clasifica las lesiones tan bien como un clasificador supervisado. Los \glspl{vlm} generativos de propósito general quedan en el nivel del azar y
-% colapsan hacia una clase que depende del modelo y de la estrategia, y los controles muestran que ese comportamiento no
-% se explica por el desbalance de las clases ni por la modalidad de la imagen. DermLIP, en cambio, muestra que la
-% especialización en dermatología aporta una representación útil, pero solo se acerca a los supervisados con una cabeza
-% entrenada sobre \emph{HAM10000}. Las diferencias con los modelos sin ajuste son, además, significativas en McNemar,
-% salvo la de DenseNet frente a DermLIP en sensibilidad macro, y coinciden con lo que informa la literatura.
+El colapso de los \glspl{vlm} generativos admite dos explicaciones que el diseño de los controles buscó separar
+(Sección~\ref{sec:res_vlm_controles}). La primera es la modalidad: Mini-VLM y LLaVA-Med se preentrenaron con
+imágenes de uso general o con figuras biomédicas, y es posible que la dermatoscopía casi no aparezca en ellas. La
+segunda es el dominio: esos modelos no aprendieron a distinguir lesiones de piel, sea cual sea la forma en que se las
+muestre. Las dos explicaciones predicen resultados distintos en las fotografías clínicas de \emph{SkinCAP}, una
+modalidad más parecida a la de las imágenes de uso general.
+
+Los resultados se inclinan por la segunda explicación. En las fotografías clínicas, los dos generativos vuelven a
+colapsar y no mejoran su resultado en \emph{HAM10000}, mientras que DermLIP, especializado en dermatología, distingue
+las clases en las dos modalidades, con una sensibilidad macro de 0.544 en la dermatoscopía y de 0.460 en las
+fotografías. Además, con la imagen reemplazada por una gris, los generativos asignan todas las imágenes a una misma
+clase, y con la imagen real su sensibilidad macro apenas sube, de modo que su respuesta depende sobre todo del
+\emph{prompt}. Por lo tanto, en
+estos experimentos lo que separa a los modelos que distinguen las clases de los que no es la especialización en
+dermatología y no la modalidad de la imagen, aunque el control no permite excluir que la modalidad también influya.
+
+El control de la representación precisa dónde está esa especialización. Con las mismas tres cabezas, el
+\emph{embedding} de DermLIP supera al de Swin preentrenado en \emph{ImageNet} por entre 0.15 y 0.35 de sensibilidad
+macro (Sección~\ref{sec:res_vlm_dermlip}). Es decir, lo que aporta DermLIP es una representación visual aprendida
+sobre imágenes dermatológicas, en la que una cabeza simple distingue las clases sin ajustar el codificador. Una explicación
+posible del contraste con los generativos es que, en estos, la representación visual pasa por un modelo de lenguaje
+que debe convertirla en el nombre de una clase, y ese paso es el que falla cuando el modelo no se ajustó con lesiones
+de piel.
+
+La especialización, sin embargo, no alcanza por sí sola para que un generador diagnostique. SkinVL, ajustado con
+imágenes y textos dermatológicos, escribe sin anclaje el mismo texto sobre una infección por hongos en siete de cada
+diez reportes, y nombra la clase verdadera en una imagen de cada mil (Sección~\ref{sec:res_gen_sin_anclaje}). Sus
+autores, en cambio, le miden una exactitud del 51.3\,\% en \emph{HAM10000} con su propia evaluación, en forma de
+preguntas y respuestas~\cite{zeng2025mmskin}. Una explicación posible de la diferencia es el formato: allí SkinVL
+responde preguntas como las de su ajuste, mientras que aquí se le pide una descripción libre. La
+especialización de un generador depende, entonces, de las imágenes y del formato de instrucción con que se ajustó, y
+la de una representación contrastiva se traslada mejor a una tarea nueva.
+
+La literatura revisada coincide con esta lectura. \textcite{zeng2025mmskin} miden LLaVA-Med sin ajuste en
+\emph{HAM10000} con una exactitud del 5.5\,\%, y \textcite{jiang2026multimodal} informan exactitudes de entre el
+1.5\,\% y el 13.4\,\% para los generativos abiertos en consultas reales, de modo que el colapso no es propio de este
+trabajo. Por la vía contrastiva, DermFM-Zero supera a DermLIP en el protocolo de sus autores~\cite{yan2026dermfmzero},
+lo que indica que la especialización sigue mejorando por esa vía. Para el diseño de este trabajo, la consecuencia es
+que la representación especializada se aprovecha para recuperar casos parecidos, y el diagnóstico se obtiene de un
+clasificador supervisado, lo que lleva a la división del trabajo que discute la sección siguiente.
