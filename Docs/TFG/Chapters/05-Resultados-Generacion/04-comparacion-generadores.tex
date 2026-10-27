@@ -13,10 +13,13 @@
 \label{sec:res_gen_comparacion}
 
 Las secciones anteriores siguieron sobre todo a Mini-VLM, la configuración principal, y mencionaron a los otros
-generadores donde se comportan distinto. Esta sección los pone en una misma escala, con la cascada con Swin-Tiny
-sobre las 1\,503 imágenes de prueba y la misma plantilla y decodificación para los tres. La
-Figura~\ref{fig:res_gen_resumen} reúne lo que los separa: la consistencia diagnóstica, la cobertura de entidades
-clínicas y el tiempo por reporte de cada uno.
+generadores donde se comportan distinto. Esta sección compara los tres generadores en una misma escala, con la cascada
+con Swin-Tiny sobre las 1\,503 imágenes de prueba y la misma plantilla y decodificación para los tres. A continuación
+se presentan la variante de control de Mini-VLM y, por último, el costo computacional del \emph{pipeline} completo.
+
+La Figura~\ref{fig:res_gen_resumen} reúne lo que separa a los generadores en tres paneles, con una barra por
+generador: la consistencia diagnóstica, con una marca vertical en la que obtiene con el \emph{oracle}, la cobertura de
+entidades clínicas y el tiempo por reporte.
 
 \begin{figure}[H]
     \centering
@@ -26,16 +29,17 @@ clínicas y el tiempo por reporte de cada uno.
     \label{fig:res_gen_resumen}
 \end{figure}
 
-En consistencia, Mini-VLM y SkinVL no se distinguen, ni con Swin-Tiny ni con el oracle, porque los dos copian el
-diagnóstico. Mini-VLM supera a LLaVA-Med por una décima con Swin-Tiny, 0.104 [0.087, 0.122], y la diferencia crece con
-el oracle, porque en ese caso todas las fallas son del generador. Es decir, el generador biomédico más grande es
-el que menos transcribe el diagnóstico recibido.
+En consistencia, Mini-VLM y SkinVL obtienen los valores más altos y no se distinguen, ni con Swin-Tiny ni con el
+\emph{oracle}, porque los dos copian el diagnóstico. LLaVA-Med obtiene el más bajo: Mini-VLM lo supera por una décima
+con Swin-Tiny, 0.104 [0.087, 0.122], y la diferencia crece con el \emph{oracle}, porque en ese caso todas las fallas
+son del generador. Es decir, el generador biomédico más grande es el que menos transcribe el diagnóstico recibido.
 
-La cobertura de entidades separa a SkinVL de los otros dos. Sus reportes tienen una mediana de 17 palabras, frente a 62
-de Mini-VLM y 86 de LLaVA-Med, y cubren la mitad de las entidades clínicas. Además, con Swin-Tiny escribe solo 59
-reportes distintos para las 1\,503 imágenes, de modo que su texto depende del diagnóstico y casi nada de la imagen. Por
-lo tanto, la especialización en dermatología no mejora la fidelidad del reporte, que ya fija el clasificador, y reduce
-la descripción, que es lo que el generador agrega en la cascada. Mini-VLM, en cambio, iguala la fidelidad de SkinVL y
+La cobertura de entidades, en cambio, separa a SkinVL de los otros dos, con el valor más bajo. Sus reportes tienen una
+mediana de 17 palabras, frente a 62 de Mini-VLM y 86 de LLaVA-Med, y cubren la mitad de las entidades clínicas.
+Además, con Swin-Tiny escribe solo 59 reportes distintos para las 1\,503 imágenes, de modo que su texto depende del
+diagnóstico y casi nada de la imagen. Por lo tanto, en estos experimentos la especialización en dermatología no mejora
+la fidelidad del reporte, que ya fija el clasificador, y reduce la descripción, que es lo que el generador agrega en la
+cascada. Mini-VLM, en cambio, iguala la fidelidad de SkinVL y
 describe tanto como LLaVA-Med, de modo que es el único de los tres que reúne las dos condiciones.
 
 \subsection{Ajuste del modelo de lenguaje de Mini-VLM}
@@ -43,9 +47,10 @@ describe tanto como LLaVA-Med, de modo que es el único de los tres que reúne l
 
 En la configuración principal, el ajuste de Mini-VLM no llega a su modelo de lenguaje
 (Sección~\ref{sec:res_gen_nivel1}). La variante de control de la Sección~\ref{sec:met_generacion}, que también
-ajusta ese modelo, permite saber si esa diferencia cambia los reportes. La Tabla~\ref{tab:res_gen_control} compara ambas versiones sobre las mismas imágenes en
-cada fuente de diagnóstico; en la cascada con Swin-Tiny y sin anclaje, la variante de control tiene reportes solo para
-una parte de la prueba.
+ajusta ese modelo, permite saber si esa diferencia cambia los reportes. La Tabla~\ref{tab:res_gen_control} compara
+ambas versiones sobre las mismas imágenes: cada fila es una fuente de diagnóstico, y las columnas dan la cantidad de
+imágenes, la consistencia de cada versión y su diferencia, con el intervalo de confianza. En la cascada con Swin-Tiny
+y sin anclaje, la variante de control tiene reportes solo para una parte de la prueba.
 
 \begin{table}[H]
     \centering
@@ -66,8 +71,9 @@ una parte de la prueba.
     \end{tabularx}
 \end{table}
 
-Ajustar el modelo de lenguaje no cambia la cascada con Swin-Tiny ni el nivel diferencial, y en la generación sin
-anclaje tampoco mejora la consistencia. Lo que sí cambia es el formato: la variante de control aprende la estructura de
+La única diferencia cuyo intervalo excluye el cero es la del \emph{oracle}, en la que la variante de control queda por
+debajo. Ajustar el modelo de lenguaje no cambia la cascada con Swin-Tiny ni el nivel diferencial, y en la generación
+sin anclaje tampoco mejora la consistencia. Lo que sí cambia es el formato: la variante de control aprende la estructura de
 \emph{SkinCoT} y abre bloques de razonamiento en uno de cada cuatro reportes de \emph{HAM10000}. Con el oracle,
 esa estructura le cuesta tres centésimas de consistencia, porque en parte de los reportes el límite de 384 tokens llega
 antes de que el diagnóstico salga del razonamiento.
@@ -84,11 +90,11 @@ costa de reportes vacíos.
 \label{sec:res_costo}
 
 El costo de los clasificadores, que se mide en milisegundos por imagen (Sección~\ref{sec:res_costo_clasificadores}),
-es una parte mínima del costo del pipeline. La Tabla~\ref{tab:res_costo_generadores} reúne el de los
-generadores: el tiempo del ajuste, el tiempo por reporte en la A30 de la Sección~\ref{sec:met_entorno}, con la
-cascada y el límite de 384 tokens, y el tiempo que llevaría generar los reportes de toda la prueba. La memoria es la
-máxima ocupada por los tensores en la GPU, medida al cargar el modelo y durante la generación de 20 reportes de la
-cascada.
+es una parte mínima del costo del \emph{pipeline}. La Tabla~\ref{tab:res_costo_generadores} presenta el de los
+generadores, con una fila por generador. Las columnas dan los parámetros, la memoria máxima ocupada por los tensores en
+la GPU al cargar el modelo y durante la generación de 20 reportes de la cascada, el tiempo de la segunda etapa del
+ajuste, el tiempo por reporte en la A30 de la Sección~\ref{sec:met_entorno}, con la cascada y el límite de 384 tokens,
+y el tiempo que llevaría generar los reportes de toda la prueba.
 
 Un reporte de Mini-VLM en la A30 tarda más de mil veces lo que una clasificación de Swin-Tiny en la RTX 4070. Aunque
 las dos mediciones se hicieron en GPU distintas, la diferencia es de tres órdenes de magnitud, de modo que el costo del
