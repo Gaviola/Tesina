@@ -71,11 +71,10 @@ posiblemente porque sin anclaje ya nombraba la clase verdadera entre otras. A su
 \emph{oracle} es de unas 0.15 con Mini-VLM y SkinVL, la misma proporción de imágenes en que el clasificador se
 equivoca.
 
-La coincidencia entre la consistencia y la exactitud del clasificador se explica porque los generadores copian el
-diagnóstico que reciben. Mini-VLM nombra el diagnóstico de Swin-Tiny en todos los reportes salvo dos. Cuando ese
+La coincidencia entre la consistencia y la exactitud del clasificador se explica porque los generadores transcriben el diagnóstico que reciben. Mini-VLM nombra el diagnóstico de Swin-Tiny en todos los reportes salvo dos. Cuando ese
 diagnóstico es correcto, el reporte nombra la clase verdadera en 1\,272 de 1\,273 imágenes, y cuando es incorrecto,
-solo en 4 de 230. Por lo tanto, en la cascada la fidelidad diagnóstica del reporte es la exactitud del clasificador, y
-la distancia al \emph{oracle} mide sus errores y no los del generador.
+solo en 4 de 230. Por lo tanto, en la cascada la fidelidad diagnóstica del reporte coincide con la exactitud del clasificador, y
+la distancia al \emph{oracle} refleja sobre todo sus errores y no los del generador.
 
 LLaVA-Med es la excepción, porque no siempre transcribe el diagnóstico. Aun con el \emph{oracle}, uno de cada siete
 reportes no nombra la clase recibida. La mayoría describe la lesión y termina sin enunciar ningún diagnóstico, a pesar
@@ -98,7 +97,7 @@ más diagnósticos correctos al reporte.
 \subsection{Consistencia por clase}
 \label{sec:res_gen_clases}
 
-Si el generador copia el diagnóstico, la cascada debería heredar también la sensibilidad de Swin-Tiny en cada clase.
+Si el generador transcribe el diagnóstico, la cascada debería heredar también la sensibilidad de Swin-Tiny en cada clase.
 Para comprobarlo, la Figura~\ref{fig:res_gen_clases} relaciona, para cada clase y cada generador, la sensibilidad de
 Swin-Tiny en esa clase, en el eje horizontal, con la consistencia de la cascada en la misma clase, en el vertical. Un
 punto sobre la diagonal indica que el reporte nombra la clase tantas veces como la acierta el clasificador.
@@ -117,8 +116,7 @@ está en \gls{akiec}, donde nombra la clase en la mitad de los reportes en que e
 La consecuencia clínica es que la cascada reproduce los puntos débiles del clasificador. En su ejecución de
 referencia, que es la que usa el \emph{pipeline}, Swin-Tiny reconoce siete de cada diez melanomas, algo más que la
 media de sus tres ejecuciones (Sección~\ref{sec:res_melanoma}), y por ello tres de cada diez reportes de un melanoma no
-lo nombran. Las clases con menor sensibilidad, como \gls{akiec}, reciben del mismo modo los reportes menos fieles, de
-modo que mejorar el reporte de una clase exige mejorar el diagnóstico que lo ancla.
+lo nombran. Las clases con menor sensibilidad, como \gls{akiec}, reciben del mismo modo los reportes menos fieles, de modo que, en la cascada, mejorar el reporte de una clase pasa por mejorar el diagnóstico que lo ancla.
 
 \subsection{Aporte de la imagen al reporte}
 \label{sec:res_gen_ablaciones}
@@ -153,12 +151,11 @@ variantes se midieron sobre 400 imágenes con Mini-VLM y LLaVA-Med y sobre la pr
     \end{tabularx}
 \end{table}
 
-La imagen no interviene en qué diagnóstico afirma el reporte. Sin ella, la consistencia no cambia con Mini-VLM, con
+La imagen casi no interviene en qué diagnóstico afirma el reporte. Sin ella, la consistencia no cambia con Mini-VLM, con
 LLaVA-Med sube tres centésimas sin que la diferencia se distinga de cero, y con SkinVL baja apenas tres centésimas. Con
 un diagnóstico equivocado, en cambio, la consistencia cae a cero en los tres generadores, porque el reporte afirma el
 diagnóstico recibido y no lo corrige a partir de la imagen: Mini-VLM nombra la clase equivocada en todos los reportes
-y LLaVA-Med, en tres de cada cuatro. En consecuencia, un error del clasificador llega al reporte sin ninguna
-corrección.
+y LLaVA-Med, en tres de cada cuatro. En consecuencia, un error del clasificador llega al reporte y el generador rara vez lo corrige.
 
 La imagen sí interviene en qué se describe. Sin ella, los tres generadores escriben un único texto por clase, siete
 por generador, mientras que con ella casi cada reporte de Mini-VLM y de LLaVA-Med es distinto. Además, la cobertura de
@@ -244,5 +241,5 @@ contrario, recupera la clase verdadera en una de cada seis. El generador, por lo
 clasificador también cuando recibe otra evidencia.
 
 En síntesis, la cascada lleva al reporte la exactitud del clasificador junto con sus errores, y ni la imagen ni los
-casos recuperados corrigen esos errores. La sección siguiente evalúa si la concordancia entre el clasificador y el
+casos recuperados corrigen la mayoría de esos errores. La sección siguiente evalúa si la concordancia entre el clasificador y el
 \gls{knn} permite reconocer los casos en que el diagnóstico es menos confiable.
