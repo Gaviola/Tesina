@@ -6,34 +6,28 @@
 % DermLIP como fuente: brazo full_dermlip_oficial (Mendieta 1183274–1183301), cascada_dermlip_oficial_<gen>.json
 % (scripts/cascada_dermlip_oficial.py; métrica oficial, IC bootstrap pareado).
 % Figuras: scripts/figuras_cap5.py (cascada-fuentes, cascada-por-clase, fallas-reportes).
+% Revisión del tutor del 26/10/2026: esquema contexto → objeto → valores → conjetura; sin semillas (ejecución de
+% referencia); la ablación sin imagen como verificación parcial de la fidelidad visual.
 \section{Cascada clasificador--generador}
 \label{sec:res_gen_cascada}
 
 Como ningún generador afirma por sí solo la clase de la imagen, la cascada de la Sección~\ref{sec:met_cascada} le
 entrega el diagnóstico del clasificador en la instrucción. Es el segundo paso del recorrido: al generador de la
-sección anterior se le suma el clasificador, todavía sin el ruteo. Cada generador recibe la imagen y la plantilla
-\emph{noreasoning} con el diagnóstico de una fuente, sobre las 1\,503 imágenes de prueba, y la consistencia se mide
-siempre respecto de la clase verdadera. Las fuentes son las de la Sección~\ref{sec:met_referencias}: Swin-Tiny, que
-es la del pipeline, DermLIP sin ajuste y el \emph{oracle}, y la generación sin anclaje de la sección anterior
-sirve de punto de partida.
+sección anterior se le suma el clasificador, todavía sin el ruteo. Esta sección presenta los resultados de la cascada
+con los tres generadores sobre las 1\,503 imágenes de prueba. Cada generador recibe la imagen y la plantilla
+\emph{noreasoning} con el diagnóstico de una de las fuentes de la Sección~\ref{sec:met_referencias}: Swin-Tiny, que es
+la del \emph{pipeline}, DermLIP sin ajuste y el \emph{oracle}, y la generación sin anclaje de la sección anterior sirve
+de punto de partida. La consistencia se mide siempre respecto de la clase verdadera.
 
-Esta sección compara primero esas fuentes, y después analiza la cascada con Swin-Tiny por clase, el aporte de la
-imagen y las fallas de los reportes. Por último, evalúa la recuperación de casos parecidos como alternativa al
-clasificador.
+En primer lugar se comparan esas fuentes. Después, con Swin-Tiny como fuente, se analizan la consistencia por clase,
+el aporte de la imagen y las fallas de los reportes, y por último se evalúa la recuperación de casos parecidos como
+alternativa al clasificador.
 
 \subsection{Consistencia según la fuente del diagnóstico}
 \label{sec:res_gen_fuentes}
 
-La Figura~\ref{fig:res_gen_cascada} muestra la consistencia diagnóstica de los tres generadores con cada fuente. Con
-el diagnóstico de Swin-Tiny, Mini-VLM y SkinVL alcanzan una consistencia igual a la exactitud del clasificador en la
-prueba, 0.847, mientras que LLaVA-Med queda una décima por debajo. Con el diagnóstico verdadero (oracle), Mini-VLM
-y SkinVL lo nombran en todos los reportes salvo uno, y LLaVA-Med, en cambio, lo omite en uno de cada siete.
-
-Las diferencias entre las fuentes exceden la variación de la muestra con los tres generadores
-(Tabla~\ref{tab:res_gen_cascada}). El anclaje a Swin-Tiny multiplica por cinco la consistencia de Mini-VLM y saca a
-SkinVL de su texto fijo, mientras que a LLaVA-Med le aporta menos, porque sin anclaje ya nombraba la clase verdadera
-entre otras. A su vez, la distancia entre Swin-Tiny y el oracle es de unas 0.15 con Mini-VLM y SkinVL, la misma
-proporción de imágenes en que el clasificador se equivoca.
+La Figura~\ref{fig:res_gen_cascada} presenta una fila por generador, y en cada fila, la consistencia diagnóstica que
+obtiene con cada fuente. La línea discontinua marca la exactitud de Swin-Tiny en la prueba.
 
 \begin{figure}[H]
     \centering
@@ -42,6 +36,15 @@ proporción de imágenes en que el clasificador se equivoca.
     exactitud de Swin-Tiny.}
     \label{fig:res_gen_cascada}
 \end{figure}
+
+En los tres generadores, el \emph{oracle} da la consistencia más alta y la generación sin anclaje, la más baja. Con el
+diagnóstico verdadero, Mini-VLM y SkinVL lo nombran en todos los reportes salvo uno, mientras que LLaVA-Med lo omite en
+uno de cada siete. Con el diagnóstico de Swin-Tiny, Mini-VLM y SkinVL alcanzan una consistencia igual a la exactitud
+del clasificador, 0.847, y LLaVA-Med queda una décima por debajo.
+
+La Tabla~\ref{tab:res_gen_cascada} da los mismos valores junto con dos diferencias pareadas y su intervalo de
+confianza: la que aporta anclar el reporte a Swin-Tiny frente a no anclarlo, y la que separa a Swin-Tiny del
+\emph{oracle}.
 
 \begin{table}[H]
     \centering
@@ -62,13 +65,19 @@ proporción de imágenes en que el clasificador se equivoca.
     \end{tabularx}
 \end{table}
 
-Que la consistencia coincida con la exactitud del clasificador se explica porque los generadores copian el diagnóstico
-que reciben. Mini-VLM nombra el diagnóstico de Swin-Tiny en todos los reportes salvo dos. Cuando ese diagnóstico es
-correcto, el reporte nombra la clase verdadera en 1\,272 de 1\,273 imágenes, y cuando es incorrecto, solo en 4 de
-230. Por lo tanto, en la cascada la fidelidad diagnóstica del reporte es la exactitud del clasificador, y la distancia
-al oracle mide sus errores y no los del generador.
+Las dos diferencias exceden la variación de la muestra con los tres generadores. El anclaje a Swin-Tiny multiplica por
+cinco la consistencia de Mini-VLM y saca a SkinVL de su texto fijo, mientras que a LLaVA-Med le aporta menos,
+posiblemente porque sin anclaje ya nombraba la clase verdadera entre otras. A su vez, la distancia entre Swin-Tiny y el
+\emph{oracle} es de unas 0.15 con Mini-VLM y SkinVL, la misma proporción de imágenes en que el clasificador se
+equivoca.
 
-LLaVA-Med es la excepción, porque no siempre transcribe el diagnóstico. Aun con el oracle, uno de cada siete
+La coincidencia entre la consistencia y la exactitud del clasificador se explica porque los generadores copian el
+diagnóstico que reciben. Mini-VLM nombra el diagnóstico de Swin-Tiny en todos los reportes salvo dos. Cuando ese
+diagnóstico es correcto, el reporte nombra la clase verdadera en 1\,272 de 1\,273 imágenes, y cuando es incorrecto,
+solo en 4 de 230. Por lo tanto, en la cascada la fidelidad diagnóstica del reporte es la exactitud del clasificador, y
+la distancia al \emph{oracle} mide sus errores y no los del generador.
+
+LLaVA-Med es la excepción, porque no siempre transcribe el diagnóstico. Aun con el \emph{oracle}, uno de cada siete
 reportes no nombra la clase recibida. La mayoría describe la lesión y termina sin enunciar ningún diagnóstico, a pesar
 de que la instrucción lo pide, y el resto son textos demasiado breves, entre ellos los que quedan vacíos cuando el
 límite de tokens corta un bloque de razonamiento. Estas omisiones se concentran en \gls{nv}, \gls{bkl} y \gls{akiec}, y
@@ -89,11 +98,10 @@ más diagnósticos correctos al reporte.
 \subsection{Consistencia por clase}
 \label{sec:res_gen_clases}
 
-Si el generador copia el diagnóstico, la cascada hereda también la sensibilidad de Swin-Tiny en cada clase. La
-Figura~\ref{fig:res_gen_clases} lo confirma: con Mini-VLM y SkinVL, la consistencia de cada clase coincide con la
-sensibilidad del clasificador en esa clase, de modo que los puntos quedan sobre la diagonal. LLaVA-Med queda por debajo
-en casi todas las clases, y la mayor pérdida está en \gls{akiec}, donde nombra la clase en la mitad de los reportes en
-que el clasificador la acierta.
+Si el generador copia el diagnóstico, la cascada debería heredar también la sensibilidad de Swin-Tiny en cada clase.
+Para comprobarlo, la Figura~\ref{fig:res_gen_clases} relaciona, para cada clase y cada generador, la sensibilidad de
+Swin-Tiny en esa clase, en el eje horizontal, con la consistencia de la cascada en la misma clase, en el vertical. Un
+punto sobre la diagonal indica que el reporte nombra la clase tantas veces como la acierta el clasificador.
 
 \begin{figure}[H]
     \centering
@@ -102,21 +110,25 @@ que el clasificador la acierta.
     \label{fig:res_gen_clases}
 \end{figure}
 
-La consecuencia clínica es que la cascada reproduce los puntos débiles del clasificador. Con la semilla que ancla el
-pipeline, Swin-Tiny reconoce siete de cada diez melanomas, algo más que la media de sus tres semillas
-(Sección~\ref{sec:res_melanoma}), y por ello tres
-de cada diez reportes de un melanoma no lo nombran. Las clases con menor sensibilidad, como \gls{akiec},
-reciben del mismo modo los reportes menos fieles, de modo que mejorar el reporte de una clase exige mejorar el
-diagnóstico que lo ancla.
+Con Mini-VLM y SkinVL, los puntos quedan sobre la diagonal, es decir, la consistencia de cada clase coincide con la
+sensibilidad del clasificador en esa clase. LLaVA-Med queda por debajo en casi todas las clases, y la mayor pérdida
+está en \gls{akiec}, donde nombra la clase en la mitad de los reportes en que el clasificador la acierta.
+
+La consecuencia clínica es que la cascada reproduce los puntos débiles del clasificador. En su ejecución de
+referencia, que es la que usa el \emph{pipeline}, Swin-Tiny reconoce siete de cada diez melanomas, algo más que la
+media de sus tres ejecuciones (Sección~\ref{sec:res_melanoma}), y por ello tres de cada diez reportes de un melanoma no
+lo nombran. Las clases con menor sensibilidad, como \gls{akiec}, reciben del mismo modo los reportes menos fieles, de
+modo que mejorar el reporte de una clase exige mejorar el diagnóstico que lo ancla.
 
 \subsection{Aporte de la imagen al reporte}
 \label{sec:res_gen_ablaciones}
 
-Si la fidelidad del reporte viene del clasificador, queda por saber qué hace el generador con la imagen. Para
-responderlo, la cascada con el oracle se repitió en las dos variantes de la
+Si la fidelidad diagnóstica del reporte viene del clasificador, queda por saber qué hace el generador con la imagen.
+Para responderlo, la cascada con el \emph{oracle} se repitió en las dos variantes de la
 Sección~\ref{sec:met_referencias}: con la imagen reemplazada por una gris neutra y con un diagnóstico equivocado, como
-\gls{mel} por \gls{nv}. La Tabla~\ref{tab:res_gen_ablaciones} reúne los resultados, sobre 400 imágenes con Mini-VLM y
-LLaVA-Med y sobre la prueba completa con SkinVL.
+\gls{mel} por \gls{nv}. La Tabla~\ref{tab:res_gen_ablaciones} presenta, para cada generador, la consistencia en las
+tres condiciones y, con y sin la imagen, la cantidad de reportes distintos y la cobertura de entidades clínicas. Las
+variantes se midieron sobre 400 imágenes con Mini-VLM y LLaVA-Med y sobre la prueba completa con SkinVL.
 
 \begin{table}[H]
     \centering
@@ -142,18 +154,20 @@ LLaVA-Med y sobre la prueba completa con SkinVL.
 \end{table}
 
 La imagen no interviene en qué diagnóstico afirma el reporte. Sin ella, la consistencia no cambia con Mini-VLM, con
-LLaVA-Med sube tres centésimas sin que la diferencia se distinga de cero, y con SkinVL baja apenas tres centésimas. Con un diagnóstico equivocado, en cambio, la consistencia cae a
-cero en los tres generadores, porque el reporte afirma el diagnóstico recibido y no lo corrige a partir de la imagen:
-Mini-VLM nombra la clase equivocada en todos los reportes y LLaVA-Med, en tres de cada cuatro. En consecuencia, un
-error del clasificador llega al reporte sin ninguna corrección.
+LLaVA-Med sube tres centésimas sin que la diferencia se distinga de cero, y con SkinVL baja apenas tres centésimas. Con
+un diagnóstico equivocado, en cambio, la consistencia cae a cero en los tres generadores, porque el reporte afirma el
+diagnóstico recibido y no lo corrige a partir de la imagen: Mini-VLM nombra la clase equivocada en todos los reportes
+y LLaVA-Med, en tres de cada cuatro. En consecuencia, un error del clasificador llega al reporte sin ninguna
+corrección.
 
 La imagen sí interviene en qué se describe. Sin ella, los tres generadores escriben un único texto por clase, siete
-por generador, mientras que con ella casi cada reporte de Mini-VLM y de LLaVA-Med es distinto. Además, la cobertura de entidades
-clínicas de Mini-VLM cae a la mitad sin la imagen, de modo que su descripción se apoya en ella. En LLaVA-Med, en cambio,
-la cobertura no baja, porque sin la imagen el generador escribe una descripción genérica de la clase, con tantos
-términos clínicos como la de una lesión concreta. Por lo tanto, el clasificador aporta el diagnóstico, y la imagen
-aporta la variación de la descripción entre lesiones, aunque estas métricas no permiten saber si lo descrito está en la imagen
-(Sección~\ref{sec:met_eval_generacion}).
+por generador, mientras que con ella casi cada reporte de Mini-VLM y de LLaVA-Med es distinto. Además, la cobertura de
+entidades clínicas de Mini-VLM cae a la mitad sin la imagen, de modo que su descripción se apoya en ella. En
+LLaVA-Med, en cambio, la cobertura no baja, posiblemente porque sin la imagen el generador escribe una descripción
+genérica de la clase, con tantos términos clínicos como la de una lesión concreta. Por lo tanto, el clasificador
+aporta el diagnóstico, y la imagen aporta la variación de la descripción entre lesiones. Este resultado verifica en
+parte la fidelidad visual de la descripción, porque muestra que el generador usa la imagen, aunque no que cada rasgo
+descrito esté en ella (Sección~\ref{sec:met_eval_generacion}).
 
 \subsection{Fallas de los reportes}
 \label{sec:res_gen_errores}
@@ -161,8 +175,8 @@ aporta la variación de la descripción entre lesiones, aunque estas métricas n
 La consistencia indica si el reporte nombra la clase verdadera, pero no de qué manera falla cuando no lo hace. Para
 saberlo, cada reporte se asignó a su falla principal con las reglas de la Sección~\ref{sec:met_eval_generacion}, que
 cuentan aparte la expresión de reserva junto a la clase verdadera, como «consistent with nevus», porque el reporte se
-compromete con el diagnóstico. La Figura~\ref{fig:res_gen_errores} muestra la distribución de las fallas de cada
-generador sin anclaje, con Swin-Tiny y con el oracle.
+compromete con el diagnóstico. La Figura~\ref{fig:res_gen_errores} presenta una barra por generador y fuente (sin
+anclaje, Swin-Tiny y \emph{oracle}), dividida según la proporción de los reportes que cae en cada falla principal.
 
 \begin{figure}[H]
     \centering
@@ -171,14 +185,14 @@ generador sin anclaje, con Swin-Tiny y con el oracle.
     \label{fig:res_gen_errores}
 \end{figure}
 
-Sin anclaje, cada generador tiene un patrón de fallas distinto. Dos de cada tres reportes de LLaVA-Med son contradicciones,
-porque enumeran varias clases, y Mini-VLM reparte sus fallas entre el hedging y el diagnóstico incorrecto, que
-juntos reúnen casi dos tercios de sus reportes. SkinVL, por su parte, no nombra ninguna clase en casi ningún reporte.
-Estas distribuciones explican las consistencias de la Tabla~\ref{tab:res_gen_sin_anclaje}: la de LLaVA-Med proviene
-de enumerar y no de afirmar el diagnóstico.
+Sin anclaje, cada generador tiene un patrón de fallas distinto. Dos de cada tres reportes de LLaVA-Med son
+contradicciones, porque enumeran varias clases, y Mini-VLM reparte sus fallas entre el \emph{hedging} y el diagnóstico
+incorrecto, que juntos reúnen casi dos tercios de sus reportes. SkinVL, por su parte, no nombra ninguna clase en casi
+ningún reporte. Estas distribuciones explican las consistencias de la Tabla~\ref{tab:res_gen_sin_anclaje}: la de
+LLaVA-Med proviene de enumerar y no de afirmar el diagnóstico.
 
-Con el anclaje, el hedging desaparece en los tres generadores, y el diagnóstico incorrecto queda reducido a los
-errores del clasificador. Con el oracle, el diagnóstico incorrecto desaparece, y lo que queda son fallas del
+Con el anclaje, el \emph{hedging} desaparece en los tres generadores, y el diagnóstico incorrecto queda reducido a los
+errores del clasificador. Con el \emph{oracle}, el diagnóstico incorrecto desaparece, y lo que queda son fallas del
 generador. En Mini-VLM, uno de cada diez reportes nombra además otra clase, mientras que en LLaVA-Med casi uno de cada
 cinco es una contradicción y uno de cada diez no nombra ninguna clase. SkinVL no tiene más fallas que las del
 clasificador, porque escribe una oración breve con el diagnóstico recibido. La repetición, frecuente con la
@@ -190,9 +204,9 @@ menos del 1\,\% con anclaje.
 
 La cascada depende de un clasificador entrenado, y la recuperación de la Sección~\ref{sec:met_recuperacion} es la
 alternativa que entrega al generador los diagnósticos de los tres casos de entrenamiento más parecidos. La
-Tabla~\ref{tab:res_gen_rag} la compara con la cascada en Mini-VLM, junto con dos líneas base sin generador que
-escriben solo el diagnóstico: el voto del \gls{knn} y el de Swin-Tiny. Además de la consistencia, la tabla informa la
-proporción de reportes que nombran la clase verdadera y ninguna otra.
+Tabla~\ref{tab:res_gen_rag} compara, con Mini-VLM, la recuperación sola y sumada a la cascada con la cascada simple y
+con dos líneas base sin generador que escriben solo el diagnóstico: el voto del \gls{knn} y el de Swin-Tiny. Para cada
+condición se informan la consistencia y la proporción de reportes que nombran la clase verdadera y ninguna otra.
 
 \begin{table}[H]
     \centering
@@ -214,11 +228,12 @@ proporción de reportes que nombran la clase verdadera y ninguna otra.
     \end{tabularx}
 \end{table}
 
-La recuperación sola mejora mucho la consistencia frente a no anclar, pero no reemplaza al clasificador. Queda casi
-dos décimas por debajo de la cascada con Swin-Tiny, y también por debajo de escribir directamente el voto del
-\gls{knn}. Es decir, el generador aprovecha peor la información de los vecinos que una regla de votación: cuando los
-tres no coinciden, nombra varias clases o una distinta, y por eso solo la mitad de sus reportes nombra únicamente la
-clase verdadera.
+La cascada con recuperación obtiene la consistencia más alta de la tabla y la generación sin anclaje, la más baja. La
+recuperación sola mejora mucho la consistencia frente a no anclar, pero no reemplaza al clasificador. Queda casi dos
+décimas por debajo de la cascada con Swin-Tiny, y también por debajo de escribir directamente el voto del \gls{knn}. Es
+decir, el generador aprovecha peor la información de los vecinos que una regla de votación: cuando los tres no
+coinciden, nombra varias clases o una distinta, y por eso solo la mitad de sus reportes nombra únicamente la clase
+verdadera.
 
 Sumar la recuperación a la cascada, por su parte, aporta poco. La consistencia sube 0.013 [0.007, 0.019], pero la
 ganancia viene de que el reporte agrega la clase de los vecinos cuando difiere de la del clasificador, de modo que
