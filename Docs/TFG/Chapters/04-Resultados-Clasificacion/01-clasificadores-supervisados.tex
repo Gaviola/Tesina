@@ -6,30 +6,29 @@
 % leakage_analysis.json. Figuras: scripts/figuras_cap4.py (confusión) y scripts/figura_roc_melanoma.py.
 % Estructura (revisión del autor, 24/10/2026): las cuatro arquitecturas se comparan una vez y el análisis sigue con
 % Swin-Tiny; la comparación con la literatura está en sec:res_estado_arte.
+% Revisión del tutor del 26/10/2026: esquema contexto → objeto → valores → conjetura (guía, «Capítulos de resultados»);
+% sin semillas (ejecuciones; la de referencia es la de las pruebas); McNemar y bootstrap separados.
 \section{Clasificadores supervisados y detección de melanoma}
 \label{sec:res_supervisados}
 
-Las cuatro arquitecturas supervisadas se entrenaron con tres semillas cada una y se comparan en validación y en la
-prueba. El análisis detallado se hace sobre la que elige la validación, y las demás se mencionan solo donde se
-comportan distinto.
+Esta sección presenta los resultados de los cuatro clasificadores supervisados de la
+Sección~\ref{sec:met_supervisados}, Swin-Tiny, ConvNeXt-Tiny, ViT-B/16 y DenseNet121, sobre las 1\,503 imágenes de
+prueba de la partición disjunta por lesión (Sección~\ref{sec:met_particiones}). En primer lugar se comparan las cuatro
+arquitecturas y su ensamble. A continuación, sobre el modelo que elige la validación, se analizan los errores por clase,
+la detección de melanoma y dos variantes del entrenamiento: las funciones de pérdida para el desbalance y la partición
+con fuga de información.
 
 \subsection{Comparación de las cuatro arquitecturas}
 \label{sec:res_sup_arquitecturas}
 
-La validación elige Swin-Tiny, que obtiene el mayor F1 macro medio con las tres semillas entre los dos modelos de la
-búsqueda de hiperparámetros (Sección~\ref{sec:met_supervisados_ensamble}). Con la semilla 42 sola, en cambio,
-ConvNeXt-Tiny queda apenas por encima, y por eso la elección se basa en la media y no en una única ejecución.
-
-En la prueba, como muestra la Tabla~\ref{tab:res_supervisados}, Swin-Tiny, ConvNeXt-Tiny y ViT-B/16 quedan muy cerca
-entre sí en todas las métricas, mientras que DenseNet121 queda por debajo en las dos métricas macro. En los cuatro, la
-exactitud supera a la sensibilidad macro en más de 0.15. Es decir, el acierto global se apoya en \gls{nv}, que reúne
-dos tercios de la prueba, y las demás clases se reconocen peor. La referencia de la Sección~\ref{sec:met_referencias}
-muestra el mismo efecto en su forma extrema: el clasificador que responde siempre \gls{nv} alcanza una exactitud de
-0.669 con una sensibilidad macro de 1/7.
+La Tabla~\ref{tab:res_supervisados} presenta los resultados de los cuatro modelos y del ensamble. Las filas son los
+modelos, y las columnas, el F1 macro en validación, con el que se elige el modelo, y la exactitud, el F1 ponderado, el
+F1 macro y la sensibilidad macro en la prueba. Cada valor es la media y el desvío de las tres ejecuciones del modelo
+(Sección~\ref{sec:met_seleccion}).
 
 \begin{table}[H]
     \centering
-    \caption{Clasificadores supervisados en validación y en la prueba, media $\pm$ desvío de tres semillas.}
+    \caption{Clasificadores supervisados en validación y en la prueba, media $\pm$ desvío de tres ejecuciones.}
     \label{tab:res_supervisados}
     \small
     \setlength{\tabcolsep}{4pt}
@@ -53,24 +52,25 @@ muestra el mismo efecto en su forma extrema: el clasificador que responde siempr
     \end{tabularx}
 \end{table}
 
-Las pruebas de la Sección~\ref{sec:met_estadistica}, aplicadas a los seis pares con la semilla 42, confirman esa
-lectura (Tabla~\ref{tab:res_pruebas_supervisados}). Entre Swin-Tiny, ConvNeXt-Tiny y ViT-B/16 ningún par se distingue:
-todos los intervalos del \emph{bootstrap} pareado incluyen el cero, y McNemar no rechaza la igualdad. DenseNet121, en
-cambio, queda alrededor de una décima por debajo de cada uno en F1 macro y en sensibilidad macro, con intervalos que
-no incluyen el cero, aunque McNemar no confirma la diferencia después de la corrección de Holm. Las dos pruebas son
-compatibles, porque DenseNet121 acierta casi tantas imágenes como los demás y falla más en las clases minoritarias,
-que pesan poco en el total de aciertos y mucho en las métricas macro.
+En validación, Swin-Tiny obtiene el mayor F1 macro medio entre los dos modelos de la búsqueda de hiperparámetros
+(Sección~\ref{sec:met_supervisados_ensamble}), y por eso es el modelo elegido. La elección usa el promedio de las tres
+ejecuciones y no una sola, de modo que no depende de la variación entre ejecuciones.
 
-Como las tres mejores arquitecturas no se distinguen, combinar dos de ellas puede, al menos, estabilizar el
-resultado.
-El ensamble de Swin-Tiny y ConvNeXt-Tiny por voto suave (\emph{soft voting};
-Sección~\ref{sec:met_supervisados_ensamble}) apenas mejora la media, pero reduce mucho la variación entre semillas
-(Tabla~\ref{tab:res_supervisados}): con cualquiera de las tres, da casi el mismo resultado. Como la mejora media no se
-sometió a prueba, el resto del capítulo toma como referencia a Swin-Tiny, el modelo que eligió la validación.
+En la prueba, Swin-Tiny, ConvNeXt-Tiny y ViT-B/16 obtienen valores muy cercanos en todas las métricas, con
+sensibilidades macro de entre 0.681 y 0.692. DenseNet121 obtiene los valores más bajos, sobre todo en las dos métricas
+macro. En los cuatro modelos, además, la exactitud supera a la sensibilidad macro en más de 0.15. Esta diferencia
+indica que el acierto global se apoya en \gls{nv}, que reúne dos tercios de la prueba, y que las demás clases se
+reconocen peor. La referencia de la Sección~\ref{sec:met_referencias} muestra el mismo efecto en su forma extrema: el
+clasificador que responde siempre \gls{nv} alcanza una exactitud de 0.669 con una sensibilidad macro de 1/7.
+
+Para saber si estas diferencias exceden la variación de la muestra, la Tabla~\ref{tab:res_pruebas_supervisados}
+presenta las dos pruebas de la Sección~\ref{sec:met_estadistica} para los seis pares de modelos. Las dos primeras
+columnas dan la diferencia de F1 macro y de sensibilidad macro, con el intervalo del \emph{bootstrap} pareado, y las
+dos últimas, el valor p de McNemar y el umbral que le corresponde con la corrección de Holm.
 
 \begin{table}[H]
     \centering
-    \caption{Pruebas entre los clasificadores supervisados (semilla 42): diferencia del primero menos el segundo, con su IC del 95\,\%. El umbral de Holm es el que corresponde a cada par en la corrección sobre los 21 pares del capítulo. Los modelos se nombran por su familia.}
+    \caption{Pruebas entre los clasificadores supervisados: diferencia del primero menos el segundo, con su IC del 95\,\%. El umbral de Holm es el que corresponde a cada par en la corrección sobre los 21 pares del capítulo. Los modelos se nombran por su familia.}
     \label{tab:res_pruebas_supervisados}
     \footnotesize
     \setlength{\tabcolsep}{3pt}
@@ -89,85 +89,116 @@ sometió a prueba, el resto del capítulo toma como referencia a Swin-Tiny, el m
     \end{tabularx}
 \end{table}
 
+Según el \emph{bootstrap} pareado, Swin-Tiny, ConvNeXt-Tiny y ViT-B/16 no se distinguen entre sí, porque todos sus
+intervalos incluyen el cero. DenseNet121, en cambio, queda alrededor de una décima por debajo de cada uno en F1 macro
+y en sensibilidad macro, con intervalos que no incluyen el cero. McNemar, que compara las imágenes que acierta cada
+modelo, no distingue ningún par después de la corrección de Holm, tampoco los de DenseNet121. Las dos pruebas no se
+contradicen, porque responden preguntas distintas. Una explicación posible es que DenseNet121 acierta casi tantas
+imágenes como los demás, pero falla más en las clases minoritarias, que pesan poco en el total de aciertos y mucho en
+las métricas macro.
+
+La última fila de la Tabla~\ref{tab:res_supervisados} corresponde al ensamble de Swin-Tiny y ConvNeXt-Tiny por voto
+suave (\emph{soft voting}; Sección~\ref{sec:met_supervisados_ensamble}). Su media apenas supera la de Swin-Tiny, pero
+su desvío es mucho menor: con cualquiera de las tres ejecuciones, el ensamble da casi el mismo resultado. Este
+comportamiento es coherente con que las tres mejores arquitecturas no se distingan, ya que combinar dos de ellas
+estabiliza el resultado más de lo que lo mejora. Como la mejora media no se sometió a prueba, el resto del capítulo
+toma como referencia a Swin-Tiny, el modelo que eligió la validación.
+
 \subsection{Errores por clase de Swin-Tiny}
 \label{sec:res_sup_clases}
 
-La matriz de confusión de la Figura~\ref{fig:res_confusion_swin} muestra hacia dónde van los errores de Swin-Tiny.
-\gls{nv} se reconoce casi siempre, y los errores de las demás clases se concentran en tres columnas: \gls{nv},
-\gls{mel} y \gls{bkl}. La confusión de mayor costo clínico es también una de las más frecuentes, porque una quinta
-parte de los melanomas se clasifica como nevo. Además, las dos clases queratósicas, \gls{akiec} y \gls{bkl}, se
-confunden entre sí, y una parte de los \gls{bcc} y de los \gls{vasc} se clasifica como \gls{mel}.
+Las métricas macro resumen las siete clases en un solo valor. Para ver en qué clases se equivoca Swin-Tiny, la
+Figura~\ref{fig:res_confusion_swin} presenta su matriz de confusión en la prueba: cada fila es una clase real, cada
+columna una clase predicha, y cada celda, la proporción de las imágenes de la clase real que se asignan a la predicha.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.6\textwidth]{Figures/Capitulos/04-Resultados-Clasificacion/confusion-swin.pdf}
-    \caption{Matriz de confusión de Swin-Tiny en la prueba (semilla 42), normalizada por clase real.}
+    \caption{Matriz de confusión de Swin-Tiny (ejecución de referencia), normalizada por clase real.}
     \label{fig:res_confusion_swin}
 \end{figure}
 
-La matriz corresponde a una sola ejecución, y la Figura~\ref{fig:res_recall_semillas} muestra que en las clases con
-pocas imágenes el resultado cambia mucho con la semilla. En \gls{df}, con 17 imágenes, una sola imagen mueve la sensibilidad
-en casi 0.06, y la de \gls{mel} varía en más de una décima entre las tres ejecuciones de Swin-Tiny. La figura muestra
-también por qué las pruebas no separan a las tres mejores arquitecturas: Swin-Tiny supera a DenseNet121 en cinco de
-las siete clases, pero a ConvNeXt-Tiny y a ViT-B/16 solo en tres.
+La diagonal muestra que \gls{nv} se reconoce casi siempre. Fuera de ella, los errores de las demás clases se
+concentran en tres columnas: \gls{nv}, \gls{mel} y \gls{bkl}. La confusión de mayor costo clínico es también una de las
+más frecuentes, ya que una quinta parte de los melanomas se clasifica como nevo. Además, las dos clases queratósicas,
+\gls{akiec} y \gls{bkl}, se confunden entre sí, y una parte de los \gls{bcc} y de los \gls{vasc} se clasifica como
+\gls{mel}.
+
+La matriz corresponde a una sola ejecución. Para ver cuánto cambian estos resultados entre ejecuciones, la
+Figura~\ref{fig:res_recall_semillas} presenta, para los cuatro modelos, la sensibilidad de cada clase en cada
+ejecución (puntos) y su media (raya).
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.92\textwidth]{Figures/Capitulos/04-Resultados-Clasificacion/recall-clase-semillas.pdf}
-    \caption{Sensibilidad por clase en la prueba con cada una de las tres semillas (puntos) y su media (raya). Entre paréntesis, las imágenes de cada clase.}
+    \caption{Sensibilidad por clase en la prueba en cada una de las tres ejecuciones (puntos) y su media (raya). Entre paréntesis, las imágenes de cada clase.}
     \label{fig:res_recall_semillas}
 \end{figure}
+
+La variación es mayor en las clases con pocas imágenes. En \gls{df}, con 17 imágenes, una sola imagen mueve la
+sensibilidad en casi 0.06, y la de \gls{mel} varía en más de una décima entre las tres ejecuciones de Swin-Tiny. La
+figura muestra, además, que Swin-Tiny supera a DenseNet121 en cinco de las siete clases, pero a ConvNeXt-Tiny y a
+ViT-B/16 solo en tres. Esta distribución es coherente con que las pruebas no separen a las tres mejores
+arquitecturas.
 
 \subsection{Detección de melanoma}
 \label{sec:res_melanoma}
 
-Aunque la sensibilidad de \gls{mel} varía entre semillas, la capacidad de separar los melanomas del resto es estable:
-el \gls{auc} de melanoma de Swin-Tiny es de 0.921, con un desvío de apenas 0.005 entre semillas. Las tres
-ejecuciones ordenan los casos de manera parecida, y lo que cambia entre ellas es cuántos melanomas superan el corte
-implícito en elegir la clase más probable. Por lo tanto, fijar ese corte de manera explícita en validación, como
-propone la Sección~\ref{sec:met_seleccion}, debería estabilizar también la decisión. Solo se evalúan Swin-Tiny,
-ConvNeXt-Tiny y su ensamble, que son los modelos de la búsqueda de hiperparámetros. La
-Figura~\ref{fig:res_melanoma_semillas} compara las dos reglas en cada ejecución.
+La detección de melanoma se evalúa en Swin-Tiny, ConvNeXt-Tiny y su ensamble, que son los modelos de la búsqueda de
+hiperparámetros, con las dos reglas de decisión de la Sección~\ref{sec:met_seleccion}: tomar como melanoma la clase más
+probable o usar el umbral fijado en validación. El \gls{auc} de melanoma, que no depende de la regla, es de 0.921 en
+Swin-Tiny, con un desvío de 0.005 entre ejecuciones. Aunque la sensibilidad de \gls{mel} varía entre ejecuciones, las
+tres ordenan los casos de manera parecida. Por lo tanto, lo que cambia entre ellas es posiblemente cuántos melanomas
+superan el corte implícito en elegir la clase más probable, y fijar ese corte en validación debería estabilizar
+también la decisión.
+
+La Figura~\ref{fig:res_melanoma_semillas} compara las dos reglas. El panel izquierdo presenta la sensibilidad y el
+derecho, la especificidad de los tres modelos con cada regla, y en cada uno los puntos son las ejecuciones y la raya,
+su media.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.85\textwidth]{Figures/Capitulos/04-Resultados-Clasificacion/melanoma-semillas.pdf}
-    \caption{Detección de melanoma en la prueba con la clase más probable y con el umbral fijado en validación, por semilla (puntos) y en media (raya).}
+    \caption{Detección de melanoma en la prueba con la clase más probable y con el umbral fijado en validación, por ejecución (puntos) y en media (raya).}
     \label{fig:res_melanoma_semillas}
 \end{figure}
 
 Con el umbral de validación, Swin-Tiny pasa de detectar unos tres de cada cinco melanomas a detectar cuatro de cada
-cinco, y el desvío entre semillas se reduce a la mitad. A cambio, la especificidad baja de alrededor de 0.95 a
+cinco, y el desvío entre ejecuciones se reduce a la mitad. A cambio, la especificidad baja de alrededor de 0.95 a
 alrededor de 0.86, cerca del mínimo de 0.85 que se exigió en validación, de modo que el umbral conserva su efecto al
 pasar de una partición a la otra. ConvNeXt-Tiny y el ensamble siguen el mismo patrón, y el ensamble obtiene la mayor
 sensibilidad, aunque la diferencia con Swin-Tiny no se sometió a prueba.
 
-La Figura~\ref{fig:res_roc_melanoma} muestra el cambio sobre la curva ROC de la ejecución con semilla 42: el umbral
-desplaza la decisión a lo largo de la misma curva, hacia la zona de mayor sensibilidad, sin cambiar el modelo. En esa
-ejecución detecta 13 melanomas más a cambio de unas 80 falsas alarmas adicionales. Los umbrales de las nueve
-ejecuciones quedan muy por debajo de 0.5, porque \gls{mel} reúne solo el 11\,\% de la prueba y en muchos melanomas la
-probabilidad de esa clase no llega a ser la mayor, aunque supere la que el modelo asigna a casi todas las lesiones sin
-melanoma.
+La Figura~\ref{fig:res_roc_melanoma} muestra el mismo cambio sobre la curva ROC de Swin-Tiny en su ejecución de
+referencia (Sección~\ref{sec:met_estadistica}). El eje horizontal es la proporción de lesiones sin melanoma que se señalan
+como melanoma (1 $-$ especificidad) y el vertical, la sensibilidad, y los dos puntos marcan la decisión con cada regla.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.62\textwidth]{Figures/Capitulos/04-Resultados-Clasificacion/roc-melanoma-swin.pdf}
-    \caption{Curva ROC de melanoma de Swin-Tiny (semilla 42) con los dos puntos de operación.}
+    \caption{Curva ROC de melanoma de Swin-Tiny (ejecución de referencia) y decisión de cada regla.}
     \label{fig:res_roc_melanoma}
 \end{figure}
+
+El umbral desplaza la decisión a lo largo de la misma curva, hacia la zona de mayor sensibilidad, sin cambiar el
+modelo: en esa ejecución detecta 13 melanomas más a cambio de unas 80 falsas alarmas adicionales. Los umbrales de las
+nueve ejecuciones, además, quedan muy por debajo de 0.5. Una explicación posible es que \gls{mel} reúne solo el
+11\,\% de la prueba, y en muchos melanomas la probabilidad de esa clase no llega a ser la mayor, aunque supere la que
+el modelo asigna a casi todas las lesiones sin melanoma.
 
 \subsection{Funciones de pérdida para el desbalance de clases}
 \label{sec:res_desbalance}
 
-El umbral mejora la detección de una sola clase sin reentrenar. Otra forma de tratar el desbalance, en cambio, podría
-mejorar todas las clases minoritarias desde el entrenamiento. La Tabla~\ref{tab:res_desbalance} compara las cuatro
-funciones de pérdida de la Sección~\ref{sec:met_supervisados_ensamble}, que se entrenaron con los mismos
-hiperparámetros fijos y la semilla 42. Por ese motivo, la fila de la entropía cruzada sin pesos no coincide con la
-Tabla~\ref{tab:res_supervisados}.
+El umbral mejora la detección de una sola clase sin reentrenar. Las funciones de pérdida para el desbalance, en
+cambio, buscan mejorar todas las clases minoritarias desde el entrenamiento. La Tabla~\ref{tab:res_desbalance}
+presenta las cuatro funciones de la Sección~\ref{sec:met_supervisados_ensamble} en Swin-Tiny, ConvNeXt-Tiny y
+DenseNet121: cada fila es una combinación de modelo y función, y las columnas son la exactitud, el F1 macro, la
+sensibilidad macro y la sensibilidad de \gls{mel} en la prueba. Como todas se entrenaron una vez y con los mismos
+hiperparámetros fijos, la fila de la entropía cruzada sin pesos no coincide con la Tabla~\ref{tab:res_supervisados}.
 
 \begin{table}[H]
     \centering
-    \caption{Funciones de pérdida para el desbalance en la prueba (hiperparámetros fijos, semilla 42). EC: entropía cruzada.}
+    \caption{Funciones de pérdida para el desbalance en la prueba (hiperparámetros fijos, una ejecución). EC: entropía cruzada.}
     \label{tab:res_desbalance}
     \small
     \setlength{\tabcolsep}{3pt}
@@ -196,26 +227,30 @@ Tabla~\ref{tab:res_supervisados}.
     \end{tabularx}
 \end{table}
 
-En los tres modelos, las tres funciones pensadas para el desbalance suben la sensibilidad macro, pero bajan la
-exactitud y el F1 macro, y ninguna supera a la entropía cruzada sin pesos en F1 macro. Es decir, los modelos asignan
-más imágenes a las clases minoritarias y aciertan algunas más, a cambio de falsas alarmas sobre las demás. Tampoco la
-sensibilidad de \gls{mel} mejora de manera consistente: sube con la entropía cruzada ponderada en los tres modelos, pero
-baja con la pérdida focal en Swin-Tiny y con balanced softmax en ConvNeXt-Tiny. Por lo tanto, ninguna de estas
-funciones mejora a la vez la detección de las clases minoritarias y la precisión de esas detecciones, y para melanoma
-el umbral de validación logra una ganancia de sensibilidad comparable sin cambiar el entrenamiento.
+En los tres modelos, la entropía cruzada sin pesos obtiene la mayor exactitud y el mayor F1 macro, y las tres funciones
+pensadas para el desbalance obtienen una sensibilidad macro mayor. Es decir, con estas funciones los modelos asignan
+más imágenes a las clases minoritarias y aciertan algunas más, a cambio de falsas alarmas sobre las demás. La
+sensibilidad de \gls{mel}, en cambio, no mejora de manera consistente: sube con la entropía cruzada ponderada en los
+tres modelos, pero baja con la pérdida focal en Swin-Tiny y con balanced softmax en ConvNeXt-Tiny. Por lo tanto, en
+estos experimentos ninguna de las funciones mejora a la vez la detección de las clases minoritarias y la precisión de
+esas detecciones, y para melanoma el umbral de validación logra una ganancia de sensibilidad comparable sin cambiar el
+entrenamiento.
 
 \subsection{Efecto de la fuga de información}
 \label{sec:res_fuga}
 
 Todos los resultados anteriores se obtuvieron con la partición por lesión, sin fuga de información entre particiones
-(\emph{data leakage}; Sección~\ref{sec:met_particiones}). Para estimar cuánto cambiarían con la partición original
-por imagen, se evalúa un Swin-Tiny entrenado con ella, con la configuración que eligió su propia validación. Sobre la
-prueba completa, su sensibilidad macro es de 0.870, y sobre las 894 imágenes cuya lesión no aparece en su entrenamiento
-ni en su validación, de 0.804. En las 543 que comparten lesión con el entrenamiento llega a 0.936, y las 66 restantes
-comparten lesión solo con la validación. El control, DermLIP sin ajuste sobre \emph{HAM10000}, no empeora en el grupo
-sin fuga, de modo que la diferencia no se debe a que ese grupo sea más difícil. En esta prueba, entonces, la partición
-por imagen sobreestima la sensibilidad macro en unas 0.07, una distorsión que se retoma al comparar con otros trabajos
-en la Sección~\ref{sec:res_estado_arte}.
+(\emph{data leakage}; Sección~\ref{sec:met_particiones}). Para estimar cuánto cambiarían con la partición original por
+imagen, se evalúa un Swin-Tiny entrenado con ella, con la configuración que eligió su propia validación, sobre tres
+grupos de imágenes de su prueba: la prueba completa, las imágenes cuya lesión no aparece en su entrenamiento ni en su
+validación, y las que comparten lesión con el entrenamiento.
+
+Sobre la prueba completa, la sensibilidad macro de este modelo es de 0.870, y sobre las 894 imágenes sin lesión
+compartida, de 0.804. En las 543 que comparten lesión con el entrenamiento llega a 0.936, y las 66 restantes comparten
+lesión solo con la validación. Como control, DermLIP sin ajuste sobre \emph{HAM10000} no empeora en el grupo sin
+lesión compartida, de modo que la diferencia no se debe a que ese grupo sea más difícil. En esta prueba, entonces, la
+partición por imagen sobreestima la sensibilidad macro en unas 0.07, una distorsión que se retoma al comparar con
+otros trabajos en la Sección~\ref{sec:res_estado_arte}.
 
 Con estos resultados, Swin-Tiny queda como el clasificador de referencia del trabajo, con un punto de operación para
 melanoma fijado en validación. Todos sus resultados, sin embargo, se midieron sobre la prueba de \emph{HAM10000}, y la
