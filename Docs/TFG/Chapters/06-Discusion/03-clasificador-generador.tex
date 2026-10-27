@@ -1,36 +1,51 @@
 \section{División de trabajo entre clasificador y generador}
 \label{sec:disc_division}
-\pendiente{Se discute que el clasificador aporta el diagnóstico y el VLM la descripción, y qué implica esto
-para el diseño de sistemas de generación de reportes médicos.}
+% Extensión estimada: 2 páginas, cinco párrafos (ficha 6.3).
+% Fuentes: sec:res_gen_fuentes, sec:res_gen_ablaciones, sec:res_gen_pipeline (tab:res_gen_pipeline),
+% sec:res_gen_comparacion, sec:res_gen_control_mini, sec:res_gen_rag, tab:res_gen_aportes, sec:res_gen_estado_arte.
+% Integra el párrafo 4 del antiguo 4.6 y los párrafos 3 y 4 del antiguo 5.6.
 
-% --- Material de 4.6, párrafo 4 (revisión del tutor del 26/10/2026: 4.6 y 5.6 quedan como balance breve y lo
-% argumentativo pasa a este capítulo). Para integrar al redactar esta sección; no se imprime.
-% Estos resultados determinan también de dónde sale el diagnóstico del \emph{pipeline}. Como un \gls{vlm} generativo no
-% distingue las siete clases, el diagnóstico no puede salir del generador, y por eso lo fija Swin-Tiny, que se lo
-% entrega al generador a través de la cascada (Sección~\ref{sec:met_cascada}). Como el clasificador ocupa menos de
-% 1~GB de memoria y clasifica una imagen en milisegundos, el costo del pipeline lo fija el generador. El
-% Capítulo~\ref{cp:res_gen} evalúa si, con ese diagnóstico, el reporte generado afirma la clase correcta y cuánto cuesta
-% generarlo, y la discusión que cruza ambos resultados queda para el Capítulo~\ref{cp:discusion}.
+Como el diagnóstico no puede salir del generador, el \emph{pipeline} lo toma de Swin-Tiny, que se lo entrega al
+generador a través de la cascada (Sección~\ref{sec:met_cascada}). Los resultados del Capítulo~\ref{cp:res_gen}
+muestran hasta qué punto esa decisión reparte las tareas entre los dos componentes. Con Mini-VLM y SkinVL,
+la consistencia diagnóstica de la cascada coincide con la exactitud de la fuente, tanto con Swin-Tiny, 0.847, como con
+DermLIP sin ajuste, 0.716, y también en cada clase (Secciones~\ref{sec:res_gen_fuentes} y~\ref{sec:res_gen_clases}).
+Sin la imagen, el diagnóstico afirmado casi no cambia, y con un diagnóstico equivocado el reporte casi siempre lo afirma
+en lugar de corregirlo (Sección~\ref{sec:res_gen_ablaciones}). El clasificador aporta, entonces, el diagnóstico, y el
+generador, la redacción y la descripción de cada lesión, que sí varía con la imagen.
 
-% --- Material de 5.6, párrafo 3 (revisión del tutor del 26/10/2026: 4.6 y 5.6 quedan como balance breve y lo
-% argumentativo pasa a este capítulo). Para integrar al redactar esta sección; no se imprime.
-% Este reparto es el aporte del pipeline. El diseño de la Sección~\ref{sec:met_pipeline} separa qué diagnóstico
-% se afirma de si corresponde afirmarlo, y deja al generador solo la redacción, la tarea para la que se ajustó. Los
-% resultados confirman esa separación: sobre las 1\,503 imágenes, la consistencia de Mini-VLM pasa de 0.849 con la
-% cascada simple a 0.870 con el pipeline, aun con las derivaciones contadas como casos sin diagnóstico, y toda la
-% ganancia proviene del ruteo, porque el pipeline no supera a la línea base que escribe los mismos diagnósticos
-% sin generador. Es decir, el generador no agrega fidelidad, pero tampoco la pierde, y el reporte afirma o presenta
-% como diferencial lo que deciden los predictores. Que estos aportes puedan medirse por separado es lo que distingue a
-% este trabajo de los de la literatura, que evalúan el sistema entero (Sección~\ref{sec:res_gen_estado_arte}).
+Este reparto tiene una consecuencia para el diseño de los sistemas que generan reportes médicos: en una cascada, la
+fidelidad diagnóstica del reporte se mejora mejorando el clasificador, y no el generador. La comparación entre fuentes
+lo muestra en los dos sentidos. Pasar de DermLIP sin ajuste a Swin-Tiny agrega 0.132 de consistencia con el mismo
+generador, mientras que cambiar de generador con la misma fuente no la lleva más allá de la exactitud del
+clasificador. La consecuencia es también una advertencia para la evaluación. Un sistema que integra un clasificador y
+un generador y se evalúa como un todo, como los de la literatura revisada (Sección~\ref{sec:res_gen_estado_arte}),
+puede atribuir al generador una fidelidad que proviene del clasificador. En este trabajo, en cambio, el aporte de cada
+componente se mide por separado (Tabla~\ref{tab:res_gen_aportes} del Capítulo~\ref{cp:res_gen}).
 
-% --- Material de 5.6, párrafo 4 (revisión del tutor del 26/10/2026: 4.6 y 5.6 quedan como balance breve y lo
-% argumentativo pasa a este capítulo). Para integrar al redactar esta sección; no se imprime.
-% Los resultados respaldan también las decisiones del diseño. El ancla en Swin-Tiny se eligió por su F1 macro en
-% validación (Sección~\ref{sec:met_pipeline}), y la cascada lo confirma: con DermLIP sin ajuste como fuente, los
-% reportes pierden más de una décima de consistencia (Sección~\ref{sec:res_gen_fuentes}). Mini-VLM es el generador del
-% pipeline porque transcribe el diagnóstico como el generador especializado, describe tanto como el biomédico más
-% grande y es el único cuyos pesos entran en una GPU de consumo de 12~GB (Sección~\ref{sec:res_gen_comparacion}). La
-% variante de control, que ajusta también su modelo de lenguaje, no mejora la fidelidad y deja reportes vacíos
-% (Sección~\ref{sec:res_gen_control_mini}), de modo que la configuración principal se mantiene. Por último, la
-% recuperación queda fuera del ruteo como alternativa, porque sola no alcanza al voto del \gls{knn} y junto al
-% clasificador aporta poco (Sección~\ref{sec:res_gen_rag}).
+El ruteo por concordancia agrega al reparto una tercera tarea, la de decidir si el diagnóstico es lo bastante
+confiable para afirmarlo. El diseño de la Sección~\ref{sec:met_pipeline} separa así qué diagnóstico se afirma, que
+decide el clasificador, de si corresponde afirmarlo, que decide la concordancia con el \gls{knn}. Sobre las 1\,503
+imágenes, la consistencia de Mini-VLM pasa de 0.849 con la cascada simple a 0.870 con el \emph{pipeline}, aun con las
+derivaciones contadas como casos sin diagnóstico. La línea base que escribe los mismos diagnósticos sin generador
+obtiene una consistencia equivalente, de modo que la ganancia puede atribuirse al ruteo, y el generador no agrega
+fidelidad, pero tampoco la pierde. Con LLaVA-Med, en cambio, el \emph{pipeline} queda por debajo de esa línea base,
+porque en el nivel diferencial el generador deja los candidatos dentro de un razonamiento inconcluso. Es decir, el
+generador no suma fidelidad, pero puede restarla, y por eso su elección importa.
+
+Los resultados respaldan, además, las decisiones de diseño del Capítulo~\ref{cp:metodos}. El ancla en Swin-Tiny se
+eligió por su F1 macro en validación (Sección~\ref{sec:met_pipeline}), y la cascada la confirma, porque con DermLIP
+sin ajuste como fuente los reportes pierden más de una décima de consistencia. Mini-VLM es el generador del
+\emph{pipeline} porque transcribe el diagnóstico como el generador especializado, describe tanto como el biomédico más
+grande y es el único cuyos pesos entran en una GPU de consumo de 12~GB (Sección~\ref{sec:res_gen_comparacion}). La
+variante de control, que ajusta también su modelo de lenguaje, no mejora la fidelidad y deja reportes vacíos
+(Sección~\ref{sec:res_gen_control_mini}), de modo que la configuración principal se mantiene. Por último, la
+recuperación queda fuera del ruteo como alternativa al clasificador, porque sola no alcanza al voto del \gls{knn} y
+junto al clasificador aporta poco (Sección~\ref{sec:res_gen_rag}).
+
+El mismo reparto que hace transparente la fidelidad del reporte tiene un costo. Como el generador transcribe el
+diagnóstico y adapta la descripción a él, un error del clasificador llega al reporte acompañado de rasgos que lo hacen
+verosímil, como el melanoma descrito como una lesión de pigmentación homogénea de la
+Sección~\ref{sec:res_gen_cualitativos}. La calidad de la redacción, por lo tanto, no indica si el diagnóstico es
+correcto, y lo que las métricas permiten afirmar sobre la utilidad clínica del reporte es el tema de la sección
+siguiente.
