@@ -1,0 +1,61 @@
+\section{Datos, evaluación y escala como límites del desempeño}
+\label{sec:disc_limites}
+% Extensión estimada: 2.5 páginas, cinco párrafos (ficha 6.4).
+% Fuentes: sec:res_sup_arquitecturas, sec:res_sup_clases, tab:res_supervisados (ensamble), sec:res_melanoma, sec:res_fuga,
+% sec:res_comparacion, sec:res_estado_arte, sec:res_gen_nivel1, sec:res_gen_sin_anclaje, sec:res_gen_estado_arte,
+% sec:res_costo_clasificadores, sec:res_costo, sec:res_gen_comparacion, tab:marco_generadores, sec:estado_arte_vlm;
+% kim2025skinsavvy2, yao2022single, khan2025ensemble, yan2026dermfmzero. Reemplaza las antiguas 6.5 y 6.6.
+
+Si el reporte hereda el desempeño del clasificador, la pregunta siguiente es qué limita ese desempeño. Entre los
+supervisados, el modelo parece pesar poco. Swin-Tiny, ConvNeXt-Tiny y ViT-B/16 no se distinguen entre sí con el mismo
+procedimiento (Sección~\ref{sec:res_sup_arquitecturas}), ViT-B/16 no supera a Swin-Tiny con el triple de parámetros, aunque usa la
+configuración elegida para este último, y
+el ensamble de los dos mejores apenas mejora la media de cada uno, aunque reduce su variación entre ejecuciones
+(Tabla~\ref{tab:res_supervisados}). Una explicación posible es que, con unas 6\,400 imágenes de entrenamiento y clases
+minoritarias de pocas decenas de imágenes en la prueba, el límite lo ponen los datos y no la capacidad del modelo. Es
+compatible con esa explicación que las clases minoritarias sean también las que más varían entre ejecuciones
+(Sección~\ref{sec:res_sup_clases}), porque con pocos ejemplos el resultado depende más de qué imágenes ve cada
+entrenamiento y en qué orden.
+
+Las decisiones de evaluación, en cambio, mueven las cifras en magnitudes iguales o mayores que las que separan a las
+arquitecturas. La partición por imagen sobreestima la sensibilidad macro en unas 0.07 (Sección~\ref{sec:res_fuga}),
+una cifra del mismo orden que la distancia entre Swin-Tiny y el trabajo de \textcite{kim2025skinsavvy2}, que divide las
+imágenes al azar. En melanoma, la regla de decisión pesa más que el modelo: el umbral fijado en validación lleva la
+detección de tres a cuatro de cada cinco melanomas sin cambiar el \gls{auc} (Sección~\ref{sec:res_melanoma}), mientras
+que los trabajos revisados operan en puntos que van desde la clase más probable hasta una sensibilidad cercana a la
+total. Y la variación entre ejecuciones supera una décima en las clases minoritarias, de modo que un resultado de una
+sola ejecución puede quedar arriba o abajo de otro por azar. Por eso una comparación con la literatura tiene sentido
+solo cuando se conocen la partición, la regla de decisión y la cantidad de ejecuciones, y por eso este trabajo fija el
+umbral en validación, a diferencia de un modelo elegido sobre la misma prueba en que se informa, como el de
+\textcite{yao2022single} (Sección~\ref{sec:res_estado_arte}).
+
+Lo mismo ocurre al elegir qué se mide. McNemar y el \emph{bootstrap} pareado responden preguntas distintas, si un
+modelo acierta más imágenes que otro o si su sensibilidad macro es mayor, y por eso DenseNet121 acierta más imágenes
+que DermLIP sin superarlo en sensibilidad macro (Sección~\ref{sec:res_comparacion}): con clases desbalanceadas, la
+prueba tiene que aplicarse a la métrica con que se elige el modelo. En el texto, las métricas con referencia premian
+el estilo: SkinVL, ajustado con las descripciones de \emph{MM-Skin}, obtiene en ellas un BLEU-4 más de cien veces
+mayor que el de los generadores de este trabajo con un BERTScore parecido (Sección~\ref{sec:res_gen_estado_arte}). La
+consistencia diagnóstica, a su vez, premia enumerar, y por eso LLaVA-Med obtiene sin anclaje la consistencia más alta
+nombrando dos clases por reporte (Sección~\ref{sec:res_gen_sin_anclaje}). Una métrica de fidelidad necesita, entonces,
+una medida de cuánto se compromete el reporte, como la proporción de reportes que nombran solo la clase verdadera.
+
+Frente a estos factores, la escala explica solo una parte de la distancia con el estado del arte. El \emph{pipeline} se
+ajusta en una sola GPU de 24~GB y se ejecuta en una de consumo de 12~GB: Mini-VLM ocupa como máximo 8.6~GB y escribe un
+reporte en unos 16 segundos, y el clasificador y el \gls{knn} agregan un costo mínimo (Secciones~\ref{sec:res_costo_clasificadores}
+y~\ref{sec:res_costo}). Los trabajos revisados, en cambio, ajustan sus generadores en ocho GPU, preentrenan sus modelos
+fundacionales en cuatro H100 o redactan con un modelo de 70 mil millones de parámetros consultado por
+API~\cite{khan2025ensemble} (Tabla~\ref{tab:marco_generadores} del Capítulo~\ref{cp:marco}). En la clasificación, esa
+diferencia no parece decisiva, porque la distancia con los mejores resultados de la literatura es del orden del efecto
+de la partición, y entre los modelos evaluados el más grande no mejora a Swin-Tiny. En la representación contrastiva, en cambio, sí lo
+es: DermFM-Zero, preentrenado con un millón de pares imagen--texto en cuatro H100, supera a DermLIP en el protocolo de
+sus autores con 0.733 frente a 0.561~\cite{yan2026dermfmzero}. En la generación, por último, el tamaño no ordena la
+fidelidad: LLaVA-Med, con casi el doble de parámetros que Mini-VLM, transcribe peor el diagnóstico, y SkinVL, del mismo
+tamaño que LLaVA-Med, describe la mitad de las entidades clínicas (Sección~\ref{sec:res_gen_comparacion}).
+
+En consecuencia, la restricción de una GPU de consumo es compatible con la fidelidad diagnóstica del \emph{pipeline},
+porque esa fidelidad depende de un clasificador pequeño, y el margen que le queda al generador está acotado: con el
+diagnóstico verdadero, Mini-VLM ya lo nombra en todos los reportes salvo uno. Lo que la restricción deja fuera son dos
+cosas que este trabajo no evaluó: los generadores de mayor tamaño, cuya descripción podría ser distinta, y el
+preentrenamiento contrastivo a gran escala, que es la vía por la que la literatura mejora la representación que aquí
+usa el \gls{knn}. Esas exclusiones, junto con las demás condiciones de los resultados, delimitan la validez de las
+conclusiones que reúne la sección siguiente.
