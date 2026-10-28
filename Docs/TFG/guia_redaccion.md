@@ -177,6 +177,10 @@ las dos versiones juntas.
   limitaciones de los modelos se enuncian con su alcance («en los trabajos revisados», «sobre
   imágenes dermatoscópicas», «suele»), no como verdades generales, y se prefieren las palabras de
   intensidad moderada: «dificultades» o «limitaciones» antes que «problemas».
+- **Sin futurología.** Las conclusiones describen lo medido. Lo que no se evaluó se enuncia como limitación o trabajo
+  futuro, no como un beneficio esperable: «un generador más grande mejoraría la descripción» solo si hay evidencia;
+  si no, se escribe «no se evaluó» o «queda como trabajo futuro». Las implicaciones se derivan de los resultados, no
+  de lo que podría pasar con más datos, más cómputo o una evaluación que no se hizo.
 - **Las decisiones se explican desde los objetivos.** «Como uno de los objetivos es ejecutar todo en una
   GPU de consumo, los modelos se adaptan con LoRA», no «se adaptan con LoRA, y por eso se ejecutan en una
   GPU de consumo». La causalidad sigue el orden en que se tomó la decisión.
@@ -274,6 +278,11 @@ prevalecen sobre «Concisión»: **la concisión se logra sacando temas, no comp
   | «sus propiedades deciden la métrica y la partición» | se dice qué propiedad lleva a qué decisión: «como NV reúne dos tercios de las imágenes, las métricas dan a cada clase el mismo peso» |
   | «qué cuesta usar el sistema» | «el costo computacional de entrenar y ejecutar los modelos y el *pipeline*» |
   | «Así resuelve juntas la clasificación y…» | «De este modo, el *pipeline* permite resolver…» |
+  | «descarta» | «no permite excluir», «no explica», «no se sostiene» |
+  | «demuestra», «prueba que» | «indica», «es compatible con», «los resultados muestran que» |
+  | «garantiza» | «en estos experimentos», «bajo estas condiciones» |
+  | «siempre», «nunca» sin alcance | «en la prueba», «en los casos evaluados» |
+  | «nivel del azar» cuando el IC excluye 1/7 | «cerca del azar», «apenas por encima del azar» |
 
 - **Artículo delante del nombre de una técnica.** «El preentrenamiento contrastivo lenguaje–imagen
   (CLIP) entrena…», no «Preentrenamiento contrastivo… entrena…».
@@ -284,6 +293,9 @@ prevalecen sobre «Concisión»: **la concisión se logra sacando temas, no comp
 - **Las cifras compactas se explican.** Una notación como «70/15/15», «$k = 3$» o «IC del 95 %» se dice
   con palabras la primera vez: «70 % de las imágenes para entrenamiento, 15 % para validación y 15 % para
   prueba».
+- **Las partes cierran con el total.** Si un párrafo reparte un total («de los 51 casos, 20 incorrectos y 29
+  correctos»), la suma tiene que dar el total o se dice qué queda afuera: «y dos contradicciones». Una cuenta que no
+  cierra obliga al lector a desconfiar de las demás cifras.
 - **Títulos completos.** El título de una sección o subsección se entiende fuera de contexto, porque se
   lee en el índice: «Evaluación de la generación de reportes», no «Evaluación de la generación».
 
@@ -304,6 +316,9 @@ Etapa 3 del circuito. Se recorre la sección párrafo por párrafo:
 11. ¿Quedan «el sistema», «el protocolo» o cifras compactas («70/15/15») sin decir a qué se refieren?
 12. En la metodología: ¿algún párrafo adelanta un resultado, justifica una decisión con un resultado sin decir de dónde sale, o mezcla el método con el hardware (§3, «Capítulo de metodología»)?
 13. ¿Compila sin huérfanas ni flotantes fuera de lugar (§7)?
+14. En un capítulo de resultados: ¿la sección abre con contexto, describe el objeto (filas y columnas, ejes y paneles), da primero el mejor y el peor valor y separa la conjetura? ¿Cierra con un balance que no repite la discusión?
+15. ¿Cada afirmación comparativa nombra la prueba que la respalda y evita mezclar McNemar con el *bootstrap*?
+16. ¿El tono no supera la evidencia («descarta», «demuestra», «garantiza», «siempre», «nunca», «nivel del azar»)?
 
 ### Concisión: menos es más
 
@@ -480,6 +495,12 @@ capítulos de resultados.
   generales y las métricas, y después los procedimientos complementarios, cada uno separado
   (generalización a otra población, robustez, calibración, interpretabilidad, costo). Una tabla hace
   explícita la correspondencia experimento → qué se busca → métrica.
+- **El diseño experimental se ordena por etapas y dice cuántas ejecuciones tiene cada configuración.** Después de las
+  métricas, una sección ordena los experimentos como se ejecutan: primero los de clasificación y después los de
+  generación, cada etapa con lo que usa de la anterior. Dice cuántas ejecuciones tiene cada configuración y por qué
+  (la búsqueda y las funciones de pérdida, una; los clasificadores, tres; los modelos deterministas, una), y deja los
+  números de semilla en el entorno experimental. Con tres ejecuciones, el desvío es una estimación gruesa de la
+  variación y no un intervalo de confianza: se dice en las métricas y se retoma en las limitaciones.
 - **Los resultados replican esa estructura.** Si la metodología dice «primero se compara A, B y C», los
   Caps. 4 y 5 presentan esos resultados juntos en una sección, y las comparaciones entre ellos van en la
   misma sección.
@@ -495,7 +516,8 @@ presenta con el mismo esquema, y prevalece sobre «Cada sección abre directamen
 1. **Contexto.** Qué se analiza, con qué modelos y sobre qué datos («Esta sección presenta los resultados de los cuatro
    clasificadores supervisados sobre las 1 503 imágenes de prueba…»). La introducción de cada sección dice qué se va a
    mostrar en ella, en general; cada subsección lo muestra en particular. El diseño del experimento no se repite: se
-   remite al Cap. 3, y lo que no esté allí se agrega allí.
+   remite al Cap. 3, y lo que no esté allí se agrega allí. Tampoco se explica de nuevo cómo se calcula una métrica ni
+   cómo funciona un componente: se nombra con `\ref` y se dice qué condición se está midiendo.
 2. **El objeto.** Qué tabla o figura se presenta y qué contiene: qué hay en las filas y en las columnas, o en cada eje
    y en cada panel. La redacción varía para no repetir la fórmula.
 3. **Los valores.** Primero cuál obtiene el mejor resultado y cuál el peor, después el detalle. Un solo orden para todo
@@ -504,11 +526,36 @@ presenta con el mismo esquema, y prevalece sobre «Cada sección abre directamen
    se marca como tal («posiblemente porque…», «una explicación posible es…») y se apoya en lo que se sabe del modelo
    (arquitectura, preentrenamiento, configuración), nunca en «porque es el mejor».
 
-Además: **no se habla de semillas** en los resultados (solo de ejecuciones; los números de semilla quedan en la
-Sección 3.10), cada conclusión dice qué prueba estadística la respalda (McNemar compara aciertos por imagen; el
-*bootstrap* pareado, la diferencia de una métrica), y las afirmaciones se atenúan a lo que muestran los datos
-(«no mejora» en lugar de «descarta»). La corrección diagnóstica de los reportes se mide; la fidelidad visual de la
-descripción queda parcialmente sin verificar, sin decir que «no se puede determinar».
+Además:
+
+- **No se habla de semillas** en los resultados: se habla de ejecuciones, y cuando una cifra corresponde a una sola se
+  dice «ejecución de referencia» y se remite a la sección que la define, sin repetir el número de semilla.
+- **Cada conclusión dice qué prueba respalda lo que afirma**: McNemar compara los aciertos por imagen y el *bootstrap*
+  pareado, la diferencia de una métrica. Las dos no se mezclan en una misma oración: «las diferencias son significativas
+  en McNemar, salvo la de DenseNet frente a DermLIP en sensibilidad macro» confunde dos pruebas y dos cantidades. Si las
+  dos no coinciden, se explica por qué miden cosas distintas.
+- **Las afirmaciones se atenúan** a lo que muestran los datos: «no mejora» o «no permite excluir» en lugar de
+  «descarta», y «cerca del azar» en lugar de «nivel del azar» cuando el intervalo excluye 1/7.
+- **La corrección diagnóstica de los reportes se mide**; la fidelidad visual de la descripción queda parcialmente sin
+  verificar, sin decir que «no se puede determinar»: se escribe qué se midió y qué queda por verificar.
+
+### Balance de cierre y capítulo de discusión
+
+Revisión del tutor de los Caps. 4 y 5 (26/10/2026, comentarios al texto y audios 2 a 4). Cada capítulo de resultados
+cierra con un **balance**; la interpretación conjunta va en el capítulo de discusión, y ninguno de los dos repite al
+otro.
+
+- **El balance cierra el capítulo, no lo discute.** Dos o tres párrafos que enuncian los hallazgos del capítulo con las
+  cifras ya presentadas y remiten a la sección donde se midieron. No agrega argumentos, no compara con la literatura y
+  no adelanta las implicaciones: eso es materia de la discusión. Su última oración prepara el capítulo siguiente.
+- **La discusión es transversal.** Responde las preguntas de investigación en conjunto, interpreta los hallazgos que
+  cruzan los dos capítulos, deriva implicaciones para el diseño, reúne las limitaciones y las amenazas a la validez, y
+  contrasta con la literatura cuando corresponde. No vuelve a describir los resultados ni repite el balance.
+- **La discusión tiene que ser sustantiva.** Si el material disponible solo alcanza para resumir los capítulos, no se
+  justifica un capítulo aparte: la discusión se integra al final del capítulo de resultados. Un capítulo de discusión
+  se organiza por argumentos, no por el orden de los capítulos que interpreta.
+- **El balance no introduce cifras nuevas.** Usa las que ya están en las tablas y figuras del capítulo; si una cifra
+  hace falta para el balance y no está en el capítulo, se agrega en la sección donde se midió, no en el cierre.
 
 ### Patrones de escritura automatizada
 
@@ -710,3 +757,18 @@ desde `master` actualizado y se integra cuando el capítulo está cerrado.
 
       git config merge.keep-ours.name "Conserva la version local; el artefacto se regenera recompilando"
       git config merge.keep-ours.driver true
+
+## 9. Preliminares y cierre
+
+Revisión del tutor de los Caps. 4 y 5 (26/10/2026, comentarios a las páginas preliminares). Las piezas que rodean al
+cuerpo también se cierran antes de la entrega.
+
+- **El resumen se escribe al final**, con las cifras definitivas y sin `\pendiente`. Cubre el problema, la propuesta,
+  los datos y el método, los resultados principales y el aporte; no adelanta conclusiones que el cuerpo no sostiene ni
+  incluye cifras que no estén en los capítulos. El resumen en inglés se escribe junto con el español, con la misma
+  estructura y las mismas cifras.
+- **La dedicatoria y los agradecimientos se completan antes de la entrega.** No se dejan como `\pendiente` en la
+  versión que se envía al tutor.
+- **Las conclusiones no introducen información nueva.** Distinguen lo que se midió de lo que queda como limitación o
+  trabajo futuro, y cada aporte remite al capítulo que lo sustenta. No prometen beneficios que no se evaluaron ni
+  convierten una posibilidad en un resultado.
