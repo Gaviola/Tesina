@@ -135,7 +135,7 @@ dos clases malignas, que son las que más importan, son las más afectadas.
 Para eliminar la fuga, la partición nueva conserva completa la prueba original, de modo que los resultados de los
 \glspl{vlm} y del \emph{pipeline}, medidos sobre ella, siguen siendo comparables. Del entrenamiento y la validación
 originales se descartan las 776 imágenes cuya lesión aparece en la prueba, y las restantes se reparten con
-\texttt{StratifiedGroupKFold} de scikit-learn, con la lesión como grupo, el diagnóstico como estrato y la semilla 42.
+\texttt{StratifiedGroupKFold} de scikit-learn, con la lesión como grupo y el diagnóstico como estrato.
 Con este procedimiento se obtienen 6\,447 imágenes de entrenamiento y 1\,289 de validación, sin lesiones compartidas entre particiones
 (Tabla~\ref{tab:met_tamanos}). El costo es que el entrenamiento tiene un 8\,\% menos de imágenes que el de la partición
 original (6\,447 frente a 7\,010). Además, en validación DF y VASC quedan con menos de 20 imágenes, así que sus métricas
