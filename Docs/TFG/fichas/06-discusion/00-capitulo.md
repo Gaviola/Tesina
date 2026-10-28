@@ -1,88 +1,68 @@
 # Ficha del Capítulo 6 — Discusión general
 
-**Estado: redactado entero sin aprobación previa**, por pedido del autor («escribirlo entero y después lo reviso»), como
-los Caps. 4 y 5. Cada sección tiene su ficha con el hilo, las fuentes, las decisiones tomadas y las preguntas para la
-revisión.
+**Estado: reestructurado y redactado entero tras la revisión del autor** (28/10). La primera versión (siete
+secciones) seguía el orden de los resultados y repetía sus cifras. Esta versión se organiza por argumentos, cada uno
+con una conjetura propia que cruza los Caps. 4 y 5.
 
 ## Hilo del capítulo
 
-Pregunta que responde el capítulo: ¿qué significan, en conjunto, los resultados de la clasificación y de la
-generación, y hasta dónde valen?
+Pregunta que responde el capítulo: ¿qué explica, en conjunto, lo que se midió en la clasificación y en la generación,
+y hasta dónde vale?
 
-Viene de: los balances de 4.6 y 5.6, breves por pedido del tutor (revisión de los Caps. 4 y 5), que remiten acá la
-discusión transversal. El material argumentativo que salió de ellos estaba como comentarios en estos archivos y quedó
-integrado en la prosa (ver «Origen del material»).
-Deja instalado (para el Cap. 7): respuestas a PI1 y PI2; especialización > modalidad; el clasificador fija la
-fidelidad y el generador redacta; el ruteo como apoyo y no reemplazo; lecciones de evaluación; viabilidad en una GPU
-de consumo; limitaciones.
+Viene de: los balances de 4.6 y 5.6, que enuncian los hallazgos sin interpretarlos.
+Deja instalado (para el Cap. 7): dónde está la especialización de un VLM; por qué el generador transcribe; la
+concordancia como predicción selectiva y sus límites; qué limita el desempeño (datos y evaluación, no escala, salvo
+en el preentrenamiento contrastivo); limitaciones. **Las respuestas directas a PI1 y PI2 pasan al Cap. 7**
+(material guardado como comentario en `Chapters/07-Conclusiones/01-conclusiones-generales.tex`).
 
 ```
-Intro  Qué contiene y en qué orden (como las intros de los Caps. 4 y 5)
+Intro  Qué interpreta el capítulo y en qué orden; las respuestas a las PI se enuncian en el Cap. 7
         ↓
-6.1    PI1 (no, para los VLM usados como tales; sí para la representación especializada con cabeza) y
-       PI2 (diagnóstico sí, en la medida del clasificador; descripción parcial) → las dos respuestas se encadenan
-        ↓ necesidad: ¿qué explica la primera respuesta?
-6.2    Especialización frente a modalidad: SkinCAP y gris → especialización; control de representación;
-       SkinVL muestra que la especialización generativa depende del formato; literatura
-        ↓ consecuencia: el diagnóstico sale de un clasificador
-6.3    División del trabajo: consistencia = exactitud de la fuente; implicación de diseño y de evaluación;
-       ruteo = tercera tarea (0.849 → 0.870, atribuible al ruteo); decisiones respaldadas; costo del reparto
-        ↓ necesidad: la redacción no indica si el diagnóstico es correcto
-6.4    Fidelidad frente a validez clínica: qué mide cada métrica; descripción verificada en parte; expertos
-       escasos también en la literatura; ruteo como señal; errores compartidos → apoyo, no reemplazo
-        ↓ ampliación: lecciones sobre cómo medir
-6.5    Lecciones: partición, regla de decisión, variación entre ejecuciones, prueba sobre la métrica que
-       selecciona, métricas de texto (estilo y enumeración)
-        ↓ ampliación: comparación con la literatura en costo
-6.6    Hardware: costo medido; cómputo de la literatura; qué parte de la brecha es escala (clasificación no,
-       contrastivo sí, generación no ordena la fidelidad)
-        ↓ consecuencia: lo que la restricción deja fuera
-6.7    Limitaciones: amenazas por tipo de validez (lista); especialistas; ancla de una ejecución; decisiones
-       sin evaluar (lista); respaldo independiente o exploratorio → Cap. 7
+6.1    Representación y decisión: la especialización está en la representación; los generativos «ven»
+       (la descripción cambia con la imagen) pero no deciden la clase → el cuello de botella es el paso
+       a la clase. Depende del uso: como clasificador autónomo, no; como codificador, se acerca
+        ↓ consecuencia: los generativos ceden la decisión… ¿a qué?
+6.2    Texto frente a imagen: en los dos capítulos, cuando compiten, gana el texto (prompt, diagnóstico
+       inyectado, vecinos). Conjetura: viene del modelo de lenguaje base (el ajuste nunca vio diagnósticos).
+       Consecuencias: el generador transcribe (diseño y evaluación por componente) y no es segunda opinión;
+       la descripción se adapta al diagnóstico
+        ↓ necesidad: la señal de confianza tiene que venir de fuera del generador
+6.3    Concordancia como predicción selectiva: cobertura 0.80, riesgo selectivo 0.085 frente a 0.153.
+       Funciona por la heterogeneidad de los predictores, pero sus errores coinciden ~3 veces más que si
+       fueran independientes (comparten los datos). Tensión: consistencia ≈ exactitud (domina NV) frente a
+       la prioridad clínica del melanoma. Apoyo, no reemplazo
+        ↓ ampliación: si el límite no está en el generador ni en el ruteo, ¿dónde está?
+6.4    Datos, evaluación y escala: arquitectura y tamaño pesan menos que partición, regla, variación y métrica;
+       la escala explica la brecha solo en el preentrenamiento contrastivo; la restricción de cómputo es
+       compatible con la fidelidad
+        ↓ delimita
+6.5    Validez y limitaciones: qué miden las métricas; amenazas por tipo (lista); alcance; ancla de una
+       ejecución; decisiones sin evaluar (lista); respaldo independiente o exploratorio → Cap. 7
 ```
 
 ## Secciones, archivos y labels
 
-| Sec. | Título | Archivo | Label | Pág. |
-|---|---|---|---|---|
-| Intro | — | `00-capitulo.tex` | `cp:discusion` | 0.5 |
-| 6.1 | Respuesta a las preguntas de investigación | `01-respuesta-preguntas.tex` | `sec:disc_preguntas` | 1.3 |
-| 6.2 | Especialización de dominio frente a modalidad | `02-dominio-modalidad.tex` | `sec:disc_especializacion` | 1.3 |
-| 6.3 | División de trabajo entre clasificador y generador | `03-clasificador-generador.tex` | `sec:disc_division` | 1.8 |
-| 6.4 | Fidelidad diagnóstica y validez clínica | `04-fidelidad-validez.tex` | `sec:disc_validez_clinica` | 1.5 |
-| 6.5 | Lecciones metodológicas | `05-lecciones-metodologicas.tex` | `sec:disc_lecciones` | 1.7 |
-| 6.6 | Viabilidad en hardware accesible | `06-hardware-accesible.tex` | `sec:disc_hardware` | 1.2 |
-| 6.7 | Limitaciones y amenazas a la validez | `07-limitaciones.tex` | `sec:disc_limitaciones` | 2 |
-
-Unas 10 páginas, sin figuras ni tablas: la tabla de aportes ya está en 5.6 (`tab:res_gen_aportes`) y se cita.
-
-## Origen del material de 4.6 y 5.6
-
-| Párrafo | Va a |
-|---|---|
-| 4.6 p1 (respuesta a PI1) | 6.1 P1–P2 |
-| 4.6 p2 (arquitectura, ejecuciones, umbral, partición) | 6.5 P1–P4 |
-| 4.6 p3 (HIBA, calibración) | 6.7, validez externa |
-| 4.6 p4 (el diagnóstico no sale del generador) | 6.3 P1 |
-| 5.6 p1 (descripción) | 6.1 P3 y 6.4 P2 |
-| 5.6 p3 (el reparto como aporte) | 6.3 P3 |
-| 5.6 p4 (decisiones respaldadas) | 6.3 P4 |
-| 5.6 p5 (plantilla diferencial, umbral de melanoma) | 6.7, lista de decisiones |
-| 5.6 p6 (errores compartidos, derivación) | 6.4 P4–P5 y 6.7 |
+| Sec. | Título | Archivo | Label |
+|---|---|---|---|
+| Intro | Discusión general | `00-capitulo.tex` | `cp:discusion` |
+| 6.1 | Especialización de la representación y decisión diagnóstica | `01-representacion-decision.tex` | `sec:disc_representacion` |
+| 6.2 | El peso del texto frente a la imagen en los generadores | `02-texto-imagen.tex` | `sec:disc_texto_imagen` |
+| 6.3 | La concordancia como predicción selectiva | `03-concordancia-selectiva.tex` | `sec:disc_concordancia` |
+| 6.4 | Datos, evaluación y escala como límites del desempeño | `04-datos-evaluacion-escala.tex` | `sec:disc_limites` |
+| 6.5 | Validez de las conclusiones y limitaciones | `05-validez-limitaciones.tex` | `sec:disc_limitaciones` |
 
 ## Decisiones tomadas
 
-- Se conserva la estructura de siete secciones del esqueleto. Sin hipótesis: el Cap. 1 solo plantea PI1 y PI2.
-- Sin semillas: «ejecución de referencia» y «variación entre ejecuciones», como en los Caps. 3–5.
-- Las frases atenuadas en los Caps. 4 y 5 se mantienen atenuadas acá («puede atribuirse», «rara vez corrige»,
-  «coincide con»); «toda la ganancia proviene» del comentario de 5.6 no se usó.
-- Las comparaciones con la literatura van dentro de cada sección temática (6.2, 6.4, 6.5, 6.6), sin sección propia.
-- Del documento de experimentación se tomaron las amenazas y limitaciones, pero no los números (eran de v3) ni el
-  tiempo de cola en el clúster (dato interno), ni «generación sobre el test original», que ya no aplica.
-
-## Preguntas para la revisión
-
-1. 6.1: ¿alcanza con dos párrafos por pregunta, o el tutor espera una tabla PI → respuesta → evidencia?
-2. 6.7: ¿las dos listas (amenazas y decisiones sin evaluar) están bien, o se prefieren párrafos?
-3. 6.6: la afirmación de que un generador más grande «posiblemente no elevaría la consistencia» es una conjetura
-   apoyada en el oracle; ¿se deja?
+- **Sin repetir resultados.** Cada sección abre con la pregunta que discute; las cifras aparecen solo cuando un
+  argumento las necesita, con `\ref` a donde se midieron.
+- **Cifras derivadas nuevas** (solo en 6.3, marcadas como cálculo sobre cifras ya presentadas): cobertura 0.80 y
+  riesgo selectivo 0.085 (1 204 afirmados, 102 errores); 158 imágenes con los dos predictores equivocados frente a
+  unas 50 esperables si sus errores fueran independientes (0.153 × 0.219 × 1 503). Fuentes: `sec:res_gen_concordancia`
+  (230 errores, 102 afirmados), `sec:res_gen_rag` (171 y 72), `tab:res_dermlip` (kNN 0.781).
+- **Conjeturas marcadas** («una explicación posible», «posiblemente»), cada una con su explicación alternativa.
+- **Sin futurología** (guía §3): lo no evaluado se enuncia como «no se evaluó», no como beneficio esperable. La
+  conjetura del generador más grande se reemplazó por una cota medida: con el oracle, Mini-VLM ya nombra el
+  diagnóstico en 0.999 de los reportes.
+- McNemar frente a *bootstrap* queda en una oración (6.4): responden preguntas distintas.
+- Las 400 imágenes de las variantes se remiten a 3.7 y 5.2; en 6.5 solo su consecuencia (intervalos más amplios).
+- Semillas: solo «ejecuciones» y «ejecución de referencia».
