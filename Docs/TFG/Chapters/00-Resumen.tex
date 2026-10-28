@@ -1,14 +1,33 @@
 \thispagestyle{plain}
 \chapter*{Resumen}
-% Extensión estimada: 250--350 palabras. Se redacta al final.
+% Extensión: unas 340 palabras. Cifras tomadas de los Caps. 4 y 5 (tab:res_supervisados, tab:res_pruebas_vlm,
+% sec:res_melanoma, sec:res_fuga, sec:res_hiba, tab:res_gen_cascada, tab:res_gen_pipeline, sec:res_gen_concordancia,
+% tab:res_costo_generadores). El abstract repite la misma estructura y las mismas cifras.
 
-\pendiente{El resumen sintetiza el trabajo en cinco partes: (1) el problema, clasificar lesiones de piel y
-redactar su reporte clínico a partir de la imagen; (2) la pregunta, si los modelos visión--lenguaje (VLMs)
-pueden hacer ambas cosas con la calidad necesaria; (3) el enfoque, que compara clasificadores supervisados,
-VLMs médicos generales y un modelo visión--lenguaje dermatológico, y propone un ensamble en cascada
-consciente de la incertidumbre para generar reportes; (4) los resultados principales, con los números
-definitivos (split disjunto por lesión, media $\pm$ desvío entre semillas); y (5) el alcance: dermatoscopía,
-métricas automáticas y hardware de consumo.}
+El diagnóstico de una lesión de piel a partir de una imagen dermatoscópica exige, además de clasificarla, redactar un
+reporte que registre lo observado y la conclusión. Los modelos visión--lenguaje (VLM) prometen resolver las dos tareas
+con un mismo modelo, pero no está establecido si clasifican las lesiones tan bien como los clasificadores entrenados
+solo con imágenes, ni si los reportes que generan afirman el diagnóstico correcto y describen la lesión de la imagen.
+Este trabajo estudia ambas preguntas sobre \emph{HAM10000}, con una partición disjunta por lesión, y bajo la
+restricción de usar una sola GPU de consumo.
+
+En la clasificación se comparan cuatro clasificadores supervisados, dos VLM generativos de propósito general y un
+modelo visión--lenguaje dermatológico, DermLIP. El mejor supervisado, Swin-Tiny, obtiene un F1 macro de
+$0.733 \pm 0.026$ en la prueba. Los VLM generativos quedan cerca del azar, y DermLIP sin ajuste queda entre 0.15 y
+0.18 de sensibilidad macro por debajo de los mejores supervisados, aunque con una cabeza entrenada sobre su
+representación se acerca a ellos. En melanoma, un umbral fijado en validación lleva la detección de Swin-Tiny de tres a
+cuatro de cada cinco casos. La evaluación muestra, además, que una partición por imagen sobreestima la sensibilidad
+macro en unas 0.07, y que en otra población, \emph{HIBA}, el clasificador pierde cerca del 40\,\% de ella.
+
+Para la generación se propone un \emph{pipeline} que entrega al generador el diagnóstico de Swin-Tiny y decide, según
+la concordancia con un \emph{k}-vecinos sobre la representación de DermLIP, si afirmarlo, presentar dos candidatos o
+derivar el caso a un especialista. El reporte transcribe el diagnóstico recibido, de modo que su consistencia
+diagnóstica, 0.849, coincide con la exactitud del clasificador, y el ruteo la eleva a 0.870. Entre los casos que el
+\emph{pipeline} afirma, el clasificador acierta el 91.5\,\%, aunque los errores que comparten los dos predictores se
+siguen afirmando. El generador, Mini-VLM, ocupa como máximo 8.6~GB y escribe un reporte en unos 16 segundos.
+
+El trabajo establece la fidelidad diagnóstica de los reportes con métricas automáticas, pero no su validez clínica,
+que requiere la evaluación de especialistas, y sus resultados se limitan a la dermatoscopía.
 
 \keywordses{lesiones de piel, dermatoscopía, modelos visión--lenguaje, clasificación diagnóstica, detección
 de melanoma, generación de reportes clínicos, incertidumbre}
@@ -16,7 +35,29 @@ de melanoma, generación de reportes clínicos, incertidumbre}
 \pdfbookmark[1]{Abstract}{abstract}
 \chapter*{Abstract}
 
-\pendiente{Versión en inglés del resumen.}
+Diagnosing a skin lesion from a dermoscopic image requires not only classifying it but also writing a report that
+records the findings and the conclusion. Vision--language models (VLMs) promise to solve both tasks with a single
+model, but it is not established whether they classify lesions as well as classifiers trained on images alone, nor
+whether the reports they generate state the correct diagnosis and describe the lesion in the image. This work studies
+both questions on \emph{HAM10000}, with a lesion-disjoint split, under the constraint of a single consumer GPU.
+
+For classification, four supervised classifiers, two general-purpose generative VLMs and a dermatology
+vision--language model, DermLIP, are compared. The best supervised model, Swin-Tiny, reaches a macro F1 of
+$0.733 \pm 0.026$ on the test set. The generative VLMs stay close to chance, and zero-shot DermLIP falls 0.15 to 0.18
+of macro sensitivity below the best supervised models, although with a head trained on its representation it comes
+close to them. For melanoma, a threshold set on validation raises Swin-Tiny's detection from three to four out of five
+cases. The evaluation also shows that an image-level split overestimates macro sensitivity by about 0.07, and that on
+another population, \emph{HIBA}, the classifier loses about 40\,\% of it.
+
+For report generation, a pipeline is proposed that passes the Swin-Tiny diagnosis to the generator and decides,
+according to its agreement with a \emph{k}-nearest-neighbours vote on the DermLIP representation, whether to assert
+it, present two candidates or refer the case to a specialist. The report transcribes the diagnosis it receives, so
+its diagnostic consistency, 0.849, matches the classifier's accuracy, and routing raises it to 0.870. Among the cases
+the pipeline asserts, the classifier is correct in 91.5\,\%, although the errors shared by both predictors are still
+asserted. The generator, Mini-VLM, uses at most 8.6~GB and writes a report in about 16 seconds.
+
+This work establishes the diagnostic fidelity of the reports with automatic metrics, but not their clinical validity,
+which requires evaluation by specialists, and its results are limited to dermoscopy.
 
 \keywordsen{skin lesions, dermoscopy, vision--language models, diagnostic classification, melanoma
 detection, clinical report generation, uncertainty}
