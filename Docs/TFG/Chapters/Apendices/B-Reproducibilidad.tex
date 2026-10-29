@@ -1,0 +1,80 @@
+\chapter{Reproducibilidad}
+\label{ap:reproducibilidad}
+% Modelo: anexo «Código fuente del proyecto» de la tesina de referencia (un enlace y la organización del repositorio),
+% ampliado con los scripts de cada etapa y las semillas. Fuentes: Codigo/docs/USAGE.md, Codigo/CLAUDE.md.
+
+El código del trabajo y los archivos \LaTeX{} de este documento están en el repositorio
+\url{https://github.com/Gaviola/Tesina}. Este apéndice describe cómo está organizado y qué \emph{scripts} corresponden
+a cada etapa de la experimentación. La guía de uso del repositorio, \texttt{Codigo/docs/USAGE.md}, detalla la
+instalación del entorno, la descarga de los conjuntos de datos y los comandos de cada etapa.
+
+\section{Organización del repositorio}
+\label{sec:ap_repositorio}
+
+El código vive en la carpeta \texttt{Codigo/}, organizada en cinco partes:
+\begin{itemize}
+    \item \textbf{\texttt{src/}}, el paquete con la carga de los datos, los modelos, el entrenamiento y las métricas
+    de evaluación, que usan todos los \emph{scripts}.
+    \item \textbf{\texttt{configs/}}, los archivos YAML con los hiperparámetros de cada modelo y de cada etapa, que
+    son la única fuente de esos valores: los \emph{scripts} los leen y no los fijan en el código.
+    \item \textbf{\texttt{scripts/}}, los programas que se ejecutan para entrenar, evaluar y producir las tablas y
+    figuras de los Capítulos~\ref{cp:res_clasif} y~\ref{cp:res_gen}.
+    \item \textbf{\texttt{slurm/}}, los trabajos que se envían a los clústeres TOKO y Mendieta
+    (Sección~\ref{sec:met_entorno}).
+    \item \textbf{\texttt{requirements.txt}} y \textbf{\texttt{scripts/setup\_env.py}}, que instalan las dependencias
+    y eligen la versión de PyTorch según la GPU disponible.
+\end{itemize}
+Los conjuntos de datos y los resultados no se incluyen en el repositorio. Los conjuntos se descargan de sus fuentes
+originales (Sección~\ref{sec:met_datasets}) a \texttt{Codigo/data/raw/}, y cada ejecución escribe sus resultados en
+\texttt{Codigo/outputs/}.
+
+\section{Scripts de cada etapa}
+\label{sec:ap_scripts}
+
+La Tabla~\ref{tab:ap_scripts} relaciona cada etapa de la experimentación con los \emph{scripts} principales que la
+ejecutan, todos en \texttt{Codigo/scripts/}.
+
+\begin{table}[H]
+    \centering
+    \caption{Scripts principales de cada etapa de la experimentación.}
+    \label{tab:ap_scripts}
+    \small
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{4.6cm}>{\raggedright\arraybackslash}X@{}}
+        \toprule
+        \textbf{Etapa} & \textbf{Scripts} \\
+        \midrule
+        Preparación de los datos y partición por lesión & \texttt{prepare\_data.py},
+            \texttt{make\_lesion\_disjoint\_split.py} \\
+        \filasep
+        Clasificadores supervisados & \texttt{sweep\_phase1.py}, \texttt{train\_classifier.py},
+            \texttt{classifier\_ensemble.py}, \texttt{melanoma\_detection.py} \\
+        \filasep
+        \glspl{vlm} en clasificación & \texttt{train\_vlm\_classify.py}, \texttt{eval\_dermlip\_classify.py},
+            \texttt{eval\_dermlip\_linearprobe.py} \\
+        \filasep
+        Evaluación de la clasificación & \texttt{evaluate\_classify.py}, \texttt{statistical\_tests.py},
+            \texttt{leakage\_analysis.py} \\
+        \filasep
+        Evaluaciones complementarias & \texttt{hiba\_por\_modalidad.py}, \texttt{robustness\_perturbations.py},
+            \texttt{evaluate\_calibration.py}, \texttt{interpretability.py} \\
+        \filasep
+        Ajuste de los generadores & \texttt{train\_vlm\_stage1.py}, \texttt{train\_vlm\_stage2.py} \\
+        \filasep
+        \emph{Pipeline} y generación de reportes & \texttt{build\_rag\_index.py},
+            \texttt{build\_uncertainty\_agreement.py}, \texttt{generate\_report.py} \\
+        \filasep
+        Evaluación de los reportes & \texttt{evaluate\_reports.py}, \texttt{error\_taxonomy.py} \\
+        \filasep
+        Costo computacional & \texttt{measure\_cost.py}, \texttt{measure\_vlm\_memory.py} \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+\section{Semillas}
+\label{sec:ap_semillas}
+
+Todos los entrenamientos, la partición por lesión y la generación de los reportes fijan la semilla 42. Esa es también
+la semilla de la ejecución de referencia de cada clasificador supervisado (Sección~\ref{sec:met_estadistica}), y las
+otras dos ejecuciones (Sección~\ref{sec:met_supervisados_ensamble}) usan las semillas 43 y 44. Como la generación usa
+decodificación voraz, la semilla no cambia los reportes, y se fija solo para que el entorno sea el mismo en todas las
+ejecuciones.
