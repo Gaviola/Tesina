@@ -1,5 +1,6 @@
 % ----------------------------------------
-% Carátula: fondo blanco con el isologotipo de la UNCuyo y la Facultad de Ingeniería.
+% Carátula: fondo blanco con el isologotipo de la UNCuyo y la Facultad de Ingeniería. Contenido según el reglamento de
+% la Tesina Final de Carrera (Res. CD 107/17, §3.2): título, alumno, tutor y fecha de presentación.
 % El isologotipo es la versión oficial en color descargada de
 % https://cicunc.uncuyo.edu.ar/imagen-institucional (marcas-facu-ingenieria.pdf), recortada a la marca combinada.
 % ----------------------------------------
@@ -21,28 +22,32 @@
 
     % Selección de portada en inglés vs español
     \ifthenelse{\equal{\LanguageOption}{english}}{%
-      {\noindent\bfseries\fontsize{12}{14}\selectfont UNDERGRADUATE THESIS — COMPUTER SCIENCE\par}
+      {\noindent\bfseries\fontsize{12}{14}\selectfont FINAL DEGREE THESIS\par}
+      \vspace{0.15cm}
+      {\noindent\fontsize{11}{14}\selectfont Bachelor's Degree in Computer Science\par}
       \vspace{0.5cm}
-      {\noindent\raggedright\itshape\color{uncuyoazul}\fontsize{22}{26}\selectfont \thetitle\par}
+      {\noindent\raggedright\itshape\color{uncuyoazul}\fontsize{24}{29}\selectfont \thetitle\par}
       \vspace{2cm}
       \def\EtiquetaAutor{AUTHOR:}\def\EtiquetaDirector{SUPERVISOR:}
     }{%
-      {\noindent\bfseries\fontsize{12}{14}\selectfont TESINA DE GRADO — LICENCIATURA EN CIENCIAS DE LA COMPUTACIÓN\par}
+      {\noindent\bfseries\fontsize{12}{14}\selectfont TESINA FINAL DE CARRERA\par}
+      \vspace{0.15cm}
+      {\noindent\fontsize{11}{14}\selectfont \GetDegree\par}
       \vspace{0.5cm}
-      {\noindent\raggedright\itshape\color{uncuyoazul}\fontsize{22}{26}\selectfont \titleesp\par}
+      {\noindent\raggedright\itshape\color{uncuyoazul}\fontsize{24}{29}\selectfont \titleesp\par}
       \vspace{2cm}
-      \def\EtiquetaAutor{AUTOR:}\def\EtiquetaDirector{DIRECTOR:}
+      \def\EtiquetaAutor{AUTOR:}\def\EtiquetaDirector{TUTOR:}
     }
 
     \noindent
     \begin{tabbing}
       \hspace{3cm}\=\kill
       \textbf{\fontsize{12}{10}\selectfont \EtiquetaAutor}\> \GetFirstAuthor \\[0.3cm]
-      \textbf{\fontsize{12}{10}\selectfont \EtiquetaDirector}\> \GetSupervisor
+      \textbf{\fontsize{12}{10}\selectfont \EtiquetaDirector}\> \GetSupervisorTitle~\GetSupervisor
     \end{tabbing}
 
     \vspace{1cm}
-    {\noindent\hfill\fontsize{13}{16}\selectfont \the\year\par}
+    {\noindent\hfill\fontsize{12}{16}\selectfont Mendoza, \DTMmonthname{\month} de \number\year\par}
 
     \vspace{1cm}
   \endgroup
