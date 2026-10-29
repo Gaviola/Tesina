@@ -114,9 +114,11 @@ sensibilidad del clasificador en esa clase. LLaVA-Med queda por debajo en casi t
 está en \gls{akiec}, donde nombra la clase en la mitad de los reportes en que el clasificador la acierta.
 
 La consecuencia clínica es que la cascada reproduce los puntos débiles del clasificador. En su ejecución de
-referencia, que es la que usa el \emph{pipeline}, Swin-Tiny reconoce siete de cada diez melanomas, algo más que la
-media de sus tres ejecuciones (Sección~\ref{sec:res_melanoma}), y por ello tres de cada diez reportes de un melanoma no
-lo nombran. Las clases con menor sensibilidad, como \gls{akiec}, reciben del mismo modo los reportes menos fieles, de modo que, en la cascada, mejorar el reporte de una clase pasa por mejorar el diagnóstico que lo ancla.
+referencia, que es la que usa el \emph{pipeline} (Sección~\ref{sec:met_estadistica}), Swin-Tiny reconoce siete de cada
+diez melanomas, algo más que la media de sus tres ejecuciones (Sección~\ref{sec:res_melanoma}), y por ello tres de cada
+diez reportes de un melanoma no lo nombran. Las clases con menor sensibilidad, como \gls{akiec}, reciben del mismo
+modo los reportes menos fieles, de modo que, en la cascada, mejorar el reporte de una clase exige mejorar el diagnóstico
+que lo ancla, no el generador.
 
 \subsection{Aporte de la imagen al reporte}
 \label{sec:res_gen_ablaciones}

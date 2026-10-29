@@ -1,0 +1,87 @@
+\section{Validez de las conclusiones y limitaciones}
+\label{sec:disc_limitaciones}
+% Extensión estimada: 3 páginas, dos listas y cinco párrafos (ficha 6.5).
+% Fuentes: sec:met_eval_generacion, sec:met_estadistica, sec:met_referencias, sec:met_pipeline (piloto de la plantilla),
+% sec:met_hiba; sec:res_gen_nivel1, sec:res_gen_ablaciones, sec:res_gen_cualitativos, sec:res_hiba, sec:res_robustez,
+% sec:res_sup_clases, sec:res_gen_clases, sec:res_gen_pipeline, sec:res_costo; sec:estado_arte_reportes; secciones
+% "Amenazas a la validez" y "Limitaciones" de Docs/experimentacion/experimentacion.tex, con las cifras de la partición
+% por lesión. Recibe del Capítulo 1 las limitaciones de alcance. Reemplaza las antiguas 6.4 (métricas) y 6.7.
+
+Las conclusiones de las secciones anteriores valen dentro de las condiciones en que se obtuvieron: imágenes
+dermatoscópicas de \emph{HAM10000}, métricas automáticas y el cómputo de una sola GPU. La primera de esas condiciones
+que conviene precisar es qué establecen las métricas. La consistencia diagnóstica busca el nombre de la clase en el
+texto, de modo que mide la fidelidad diagnóstica del reporte y no si un dermatólogo lo aceptaría, y las métricas con
+referencia del Nivel~1 miden sobre todo el parecido de estilo con un texto ajeno (Sección~\ref{sec:res_gen_nivel1}).
+La descripción, por su parte, queda verificada solo en parte: la imagen cambia lo que el reporte describe
+(Sección~\ref{sec:res_gen_ablaciones}), pero que cada rasgo descrito esté en ella requiere que un especialista compare
+cada reporte con su imagen, y los ejemplos de la Sección~\ref{sec:res_gen_cualitativos} muestran defectos que ninguna
+métrica automática registra. Esta limitación es compartida por la literatura revisada, en la que la evaluación con
+expertos es escasa: cinco dermatólogos en SkinGPT-4~\cite{zhou2024pretrained}, dos entre veinte participantes en
+SkinSavvy2~\cite{kim2025skinsavvy2} y un médico en el trabajo de \citeauthor{chakrabarti2025skin}, mientras que los
+demás trabajos evalúan el texto por su parecido con una referencia o por la exactitud del diagnóstico
+(Sección~\ref{sec:estado_arte_reportes}).
+
+Además de esa distancia entre lo medido y la validez clínica, las conclusiones enfrentan amenazas de cuatro tipos:
+\begin{itemize}
+    \item \textbf{Validez interna.} No todos los experimentos usan el mismo protocolo de inferencia. Los resultados
+    principales de clasificación promedian dos vistas de cada imagen con \gls{tta}, mientras que la robustez y la
+    interpretabilidad usan una sola vista, y el costo se midió en dos GPU distintas. Cada tabla declara su protocolo,
+    pero los valores absolutos de tablas distintas no siempre son comparables. Además, las variantes de la cascada sin
+    imagen y con un diagnóstico equivocado usan un subconjunto de 400 imágenes con Mini-VLM y LLaVA-Med
+    (Sección~\ref{sec:met_referencias}), de modo que sus intervalos son más amplios que los de la prueba completa.
+    \item \textbf{Validez de la conclusión estadística.} Las pruebas usan como unidad la imagen de prueba y se
+    calculan sobre la ejecución de referencia de cada modelo (Sección~\ref{sec:met_estadistica}). Miden, por lo
+    tanto, la variación debida a la muestra de imágenes, pero no la variación entre entrenamientos, que en las clases
+    minoritarias y en el melanoma supera una décima, y que con tres ejecuciones solo se estima de manera gruesa. Las
+    clases con pocas imágenes, como \gls{df} con 17, dan intervalos amplios, y algunas diferencias, como la del
+    ensamble frente a Swin-Tiny o la de DermLIP con una cabeza frente a los supervisados, no se sometieron a prueba.
+    \item \textbf{Validez de constructo.} La consistencia diagnóstica no juzga el reporte, el Nivel~1 mide sobre todo
+    el estilo, y la cobertura de entidades cuenta términos clínicos sin verificar que correspondan a la imagen. En el
+    nivel diferencial, además, la consistencia se parece a acertar entre las dos primeras opciones y no equivale a una
+    exactitud.
+    \item \textbf{Validez externa.} La evaluación principal usa un solo conjunto, y en \emph{HIBA} Swin-Tiny pierde
+    cerca del 40\,\% de su sensibilidad macro, también en las imágenes dermatoscópicas, con un mapeo de diagnósticos
+    que agrega ruido en \gls{akiec} (Sección~\ref{sec:res_hiba}). Como la fidelidad diagnóstica del reporte coincide
+    con la exactitud del clasificador, es esperable que también caiga en otra población, aunque no se midió. Las
+    comparaciones con la literatura, por su parte, ubican el orden de magnitud de los resultados, pero no permiten
+    ordenar los modelos.
+\end{itemize}
+
+A estas amenazas se suman las limitaciones de alcance del trabajo. La principal es la ausencia de especialistas.
+Ningún dermatólogo leyó los reportes, y no existe para las imágenes de \emph{HAM10000} un conjunto de reportes
+redactados por especialistas con el que compararlos. Por eso el trabajo establece la fidelidad diagnóstica de los
+reportes y no su validez clínica, y no desarrolla un producto de uso clínico ni lo valida con pacientes. Tampoco se
+pronuncia sobre la fotografía clínica ni sobre la histopatología, donde nada de lo medido se traslada sin volver a
+medirlo.
+
+Una segunda limitación surge de usar una sola ejecución del clasificador como ancla. El \emph{pipeline} usa la
+ejecución de referencia de Swin-Tiny, que reconoce siete de cada diez melanomas, algo más que la media de sus tres
+ejecuciones (Sección~\ref{sec:res_gen_clases}). Como la consistencia de la cascada hereda la sensibilidad del
+clasificador en cada clase, la de los reportes de melanoma posiblemente cambiaría con otra ejecución en una magnitud
+parecida a la que cambia el clasificador.
+
+Varias decisiones del diseño, además, quedaron sin evaluar:
+\begin{itemize}
+    \item \textbf{El umbral de melanoma en el ancla.} La cascada usa la clase más probable de Swin-Tiny y no el umbral
+    de la Sección~\ref{sec:res_melanoma}, de modo que tres de cada diez melanomas reciben un reporte que no los nombra
+    (Sección~\ref{sec:disc_concordancia}).
+    \item \textbf{La plantilla diferencial.} Con LLaVA-Med, la plantilla del nivel diferencial induce un razonamiento
+    que el límite de tokens deja sin cerrar (Sección~\ref{sec:res_gen_pipeline}). La plantilla \emph{noreasoning}, a
+    su vez, se eligió en un piloto que incluía 17 imágenes de la prueba (Sección~\ref{sec:met_pipeline}).
+    \item \textbf{Otros anclajes y generadores.} La relación entre la exactitud de la fuente y la fidelidad del reporte
+    se caracteriza con tres fuentes, DermLIP sin ajuste, Swin-Tiny y el \emph{oracle}, y no con un barrido de
+    clasificadores. Tampoco se evaluaron como generadores los modelos que razonan antes de diagnosticar, como
+    Skin-R1~\cite{liu2025skinr1}, ni los de mayor tamaño que la restricción de cómputo deja fuera.
+    \item \textbf{Otras señales de confianza.} El ruteo usa solo la concordancia entre el clasificador y el
+    \gls{knn}, cuyos errores coinciden más de lo que coincidirían por azar (Sección~\ref{sec:disc_concordancia}). Si
+    otra señal, como la probabilidad del clasificador, detecta una parte de esos errores no se evaluó.
+\end{itemize}
+
+Por último, no todos los resultados tienen el mismo respaldo. Las decisiones de selección se tomaron en validación: el
+modelo, por la media de tres ejecuciones, y el umbral de melanoma, con una especificidad mínima fijada de antemano. La
+prueba por lesión y \emph{HIBA} aportan, entonces, una evaluación independiente de esas decisiones, y el ruteo no
+ajusta ningún umbral sobre la prueba. En cambio, las explicaciones que este capítulo propone, como la jerarquía entre
+el texto y la imagen o el origen de los errores compartidos, y los análisis que se hicieron después de ver los
+resultados, como la clasificación de las fallas de los reportes o los ejemplos, describen la prueba sin haberse
+confirmado en otros datos, y quedan como exploratorios. Con estas limitaciones delimitadas, el
+Capítulo~\ref{cp:conclusiones} responde las preguntas de investigación y reúne las conclusiones del trabajo.

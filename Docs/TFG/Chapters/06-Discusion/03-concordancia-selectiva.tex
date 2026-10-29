@@ -1,0 +1,61 @@
+\section{La concordancia como predicción selectiva}
+\label{sec:disc_concordancia}
+% Extensión estimada: 2 páginas, cinco párrafos (ficha 6.3).
+% Fuentes: sec:marco_pred_selectiva, sec:marco_concordancia, sec:met_ruteo; sec:res_gen_concordancia (1 204 afirmados,
+% 102 errores afirmados, 230 errores de Swin-Tiny, 248 diferenciales, 51 derivados), sec:res_gen_rag (171 y 72),
+% tab:res_dermlip (kNN 0.781), sec:res_gen_pipeline, sec:res_melanoma, sec:res_calibracion, sec:res_gen_estado_arte.
+% Cifras derivadas: cobertura 1 204 / 1 503 = 0.80; riesgo 102 / 1 204 = 0.085; error global 230 / 1 503 = 0.153;
+% ambos equivocados 230 - 72 = 158; esperable si fueran independientes 0.153 x 0.219 x 1 503 = 50.
+% Reemplaza la parte del ruteo de las antiguas 6.3 y 6.4.
+
+El ruteo por concordancia es, en los términos de la Sección~\ref{sec:marco_pred_selectiva}, un clasificador selectivo:
+Swin-Tiny propone el diagnóstico, y la concordancia con el \gls{knn} decide si se afirma. Leído así, sus resultados
+(Sección~\ref{sec:res_gen_concordancia}) se resumen en dos cifras. El \emph{pipeline} afirma el diagnóstico en el
+80\,\% de las imágenes de prueba, que es su cobertura, y entre ellas el clasificador se equivoca en el 8.5\,\%, que es
+su riesgo selectivo, frente al 15.3\,\% de error sobre la prueba completa. Es decir, renunciar a afirmar una de cada
+cinco imágenes reduce a algo más de la mitad la proporción de diagnósticos afirmados erróneos. Además, a diferencia de
+un umbral sobre la probabilidad, la regla no tiene ningún parámetro ajustado sobre la prueba, de modo que esa
+reducción no está sobreestimada por la selección.
+
+Que la concordancia funcione depende de que los dos predictores se equivoquen en imágenes distintas. La
+Sección~\ref{sec:marco_concordancia} lo planteaba como una hipótesis: un clasificador que ajusta fronteras entre las
+clases y un \gls{knn} que vota con los casos más parecidos, sobre una representación aprendida de otra manera, deberían
+tener sesgos distintos. Los resultados la respaldan solo en parte. Los predictores difieren en muchas imágenes: el
+\gls{knn} acierta 72 en que Swin-Tiny se equivoca, y Swin-Tiny acierta 171 en que el \gls{knn} se equivoca
+(Sección~\ref{sec:res_gen_rag}). Esos desacuerdos son los que el ruteo aprovecha, y por eso en el nivel diferencial el
+par de candidatos contiene la clase verdadera en el 84.7\,\% de los casos.
+
+Sus errores, sin embargo, coinciden mucho más de lo que coincidirían por azar. Los dos predictores se equivocan a la
+vez en 158 imágenes, y en 102 de ellas eligen la misma clase errónea. Si sus errores fueran independientes, con una
+tasa de error de 0.153 para Swin-Tiny y de 0.219 para el \gls{knn}, se equivocarían a la vez en unas 50 imágenes, de
+modo que la coincidencia observada es unas tres veces mayor. Una explicación posible es que los dos predictores
+aprenden de las mismas 6\,447 imágenes de entrenamiento: el clasificador ajusta sus fronteras con ellas y el \gls{knn}
+las usa como casos de referencia. Si una lesión de prueba se parece a lesiones de entrenamiento de otra clase, o si
+esas lesiones están mal etiquetadas, los dos heredan la misma confusión, por distintas que sean sus representaciones.
+Otra explicación, compatible con la anterior, es que una parte de esas imágenes sea ambigua para cualquier modelo,
+como lo es la distinción entre melanoma y nevo para los especialistas. En cualquier caso, la heterogeneidad de las
+representaciones no basta para que los errores sean independientes. Otras señales de confianza, como la probabilidad de
+Swin-Tiny, que está bien calibrada cuando se entrena sin pesos por clase (Sección~\ref{sec:res_calibracion}), no
+intervienen en el ruteo, y no se evaluó si detectan una parte de esos errores.
+
+Los errores compartidos se concentran, además, donde el costo clínico es mayor. El \emph{pipeline} se eligió y se
+evaluó por la consistencia diagnóstica, que con la cascada coincide con la exactitud del clasificador y está dominada,
+por lo tanto, por los nevos, que son dos tercios de la prueba. En el melanoma, la prioridad clínica es la
+sensibilidad, y ahí el \emph{pipeline} queda más débil: casi uno de cada cuatro melanomas se afirma como otra clase, la
+mayoría como nevo (Sección~\ref{sec:res_gen_concordancia}). El ruteo mitiga parte del problema, porque cuando un
+melanoma pasa al nivel diferencial el par de candidatos casi siempre lo incluye, pero no puede mitigar los melanomas
+que los dos predictores confunden. Al mismo tiempo, el umbral fijado en validación, que lleva la detección de
+Swin-Tiny de tres a cuatro de cada cinco melanomas (Sección~\ref{sec:res_melanoma}), no se usa en el ancla. Es decir,
+el \emph{pipeline} optimiza una métrica que trata igual todos los errores, mientras que la clínica no los trata igual,
+y la configuración que maximiza la consistencia no tiene por qué ser la preferible en la práctica.
+
+Lo que sí logra el ruteo es convertir parte de los errores en una duda explícita. En el nivel diferencial, el reporte
+presenta dos candidatos en lugar de afirmar el diagnóstico equivocado del clasificador, y en la derivación no se emite
+reporte: se evitan 20 reportes incorrectos y dos contradictorios, a costa de 29 diagnósticos correctos. El valor de ese
+intercambio depende de cuánto cueste en la práctica un error frente a una consulta con el especialista, una relación
+que este trabajo no midió. El único trabajo revisado que combina un ensamble con la derivación,
+el de \textcite{khan2025ensemble}, no informa cuántos casos deriva ni con qué acierto (Sección~\ref{sec:res_gen_estado_arte}),
+de modo que la cobertura y el riesgo selectivo de este trabajo no tienen todavía con qué compararse. En conjunto, el
+\emph{pipeline} puede ordenar la atención del especialista, señalando qué casos revisar primero, pero no reemplazarla,
+la misma conclusión a la que llegan \textcite{jiang2026multimodal} sobre los \glspl{vlm} que evalúan en consultas
+reales.

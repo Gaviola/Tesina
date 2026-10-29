@@ -1,3 +1,18 @@
 \section{Conclusiones generales}
 \label{sec:concl_generales}
-\pendiente{Se sintetizan los hallazgos principales en pocos párrafos.}
+\pendiente{Se responden las dos preguntas de investigación y se sintetizan los hallazgos principales en pocos
+párrafos.}
+% Material para responder PI1 y PI2, movido desde la antigua Sección 6.1 en la reestructuración del Cap. 6 (28/10).
+% Ajustes acordados con el autor: PI1 «depende del uso» (no «negativa»): como clasificador autónomo, ningún VLM alcanza
+% a los supervisados (probado con bootstrap); como codificador con una cabeza, DermLIP se acerca (F1 macro 0.705 con
+% SVM frente a 0.733 de Swin-Tiny; sensibilidad macro mayor con regresión logística), sin prueba estadística. La
+% comparación es entre dos formas de aprender la representación (texto dermatológico, congelada, frente a etiquetas
+% de HAM10000, ajustada), no «entre dos clasificadores supervisados». Ese uso no cumple la motivación de la pregunta:
+% obtener el diagnóstico del mismo modelo que escribe el reporte. Ver sec:disc_representacion.
+% PI2, sin tono tajante y con análisis (sec:disc_texto_imagen, sec:disc_concordancia): el reporte afirma el diagnóstico
+% correcto en la medida en que lo hace el clasificador que lo ancla, porque el generador transcribe (0.849 frente a
+% 0.847); el ruteo lleva la consistencia a 0.870 y reduce el riesgo selectivo de los afirmados a 0.085; la
+% descripción usa la imagen (cobertura de Mini-VLM a la mitad sin ella) pero se adapta al diagnóstico recibido, y que
+% cada rasgo esté en la imagen queda verificado solo en parte.
+% Las dos respuestas se encadenan: como un VLM generativo no decide la clase, el diagnóstico lo pone un clasificador,
+% y como el generador lo transcribe, la fidelidad del reporte queda fijada por ese clasificador.
