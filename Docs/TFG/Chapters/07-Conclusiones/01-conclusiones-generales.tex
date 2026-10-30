@@ -1,18 +1,33 @@
 \section{Conclusiones generales}
 \label{sec:concl_generales}
-\pendiente{Se responden las dos preguntas de investigación y se sintetizan los hallazgos principales en pocos
-párrafos.}
-% Material para responder PI1 y PI2, movido desde la antigua Sección 6.1 en la reestructuración del Cap. 6 (28/10).
-% Ajustes acordados con el autor: PI1 «depende del uso» (no «negativa»): como clasificador autónomo, ningún VLM alcanza
-% a los supervisados (probado con bootstrap); como codificador con una cabeza, DermLIP se acerca (F1 macro 0.705 con
-% SVM frente a 0.733 de Swin-Tiny; sensibilidad macro mayor con regresión logística), sin prueba estadística. La
-% comparación es entre dos formas de aprender la representación (texto dermatológico, congelada, frente a etiquetas
-% de HAM10000, ajustada), no «entre dos clasificadores supervisados». Ese uso no cumple la motivación de la pregunta:
-% obtener el diagnóstico del mismo modelo que escribe el reporte. Ver sec:disc_representacion.
-% PI2, sin tono tajante y con análisis (sec:disc_texto_imagen, sec:disc_concordancia): el reporte afirma el diagnóstico
-% correcto en la medida en que lo hace el clasificador que lo ancla, porque el generador transcribe (0.849 frente a
-% 0.847); el ruteo lleva la consistencia a 0.870 y reduce el riesgo selectivo de los afirmados a 0.085; la
-% descripción usa la imagen (cobertura de Mini-VLM a la mitad sin ella) pero se adapta al diagnóstico recibido, y que
-% cada rasgo esté en la imagen queda verificado solo en parte.
-% Las dos respuestas se encadenan: como un VLM generativo no decide la clase, el diagnóstico lo pone un clasificador,
-% y como el generador lo transcribe, la fidelidad del reporte queda fijada por ese clasificador.
+% Extensión estimada: 1 página, cuatro párrafos (ficha 7.1).
+% Fuentes: sec:res_clasif_discusion, sec:res_gen_discusion, sec:disc_representacion, sec:disc_texto_imagen,
+% sec:disc_concordancia, sec:disc_limites. PI1 «depende del uso», no «negativa»; la comparación de DermLIP con una
+% cabeza no se sometió a prueba; PI2 sin tono tajante, con la verificación parcial de la descripción.
+
+Las dos preguntas de investigación se respondieron sobre la prueba de \emph{HAM10000} con una partición disjunta por
+lesión, con métricas automáticas y con el cómputo de una sola GPU, y sus respuestas valen dentro de esas condiciones.
+
+La respuesta a la primera pregunta depende de cómo se use el \gls{vlm}. Como clasificador autónomo, ninguno de los
+evaluados alcanza a los supervisados: los generativos de propósito general quedan cerca del azar, y DermLIP sin ajuste,
+entre 0.15 y 0.18 de sensibilidad macro por debajo de los mejores supervisados. Como codificador, en cambio, se
+acerca: con una cabeza entrenada sobre la representación de DermLIP, el F1 macro llega a 0.705, frente a 0.733 de
+Swin-Tiny (Capítulo~\ref{cp:res_clasif}). La especialización en dermatología parece estar, entonces, en la
+representación, pero en ese uso el diagnóstico no lo da el modelo que escribe el reporte, que era la motivación de la
+pregunta.
+
+La respuesta a la segunda pregunta es que el reporte afirma el diagnóstico correcto en la medida en que lo hace el
+clasificador que lo ancla. Sin un diagnóstico, ninguno de los generadores evaluados nombra únicamente la clase
+verdadera en más de uno de cada veinte reportes. Con la cascada, el generador transcribe el diagnóstico que recibe,
+de modo que la consistencia diagnóstica de Mini-VLM, 0.849, coincide con la exactitud de Swin-Tiny, 0.847
+(Capítulo~\ref{cp:res_gen}). El ruteo por concordancia eleva la consistencia a 0.870 y reduce la proporción de
+errores entre los diagnósticos afirmados de 0.153 a 0.085, aunque no detecta los errores que comparten el
+clasificador y el \gls{knn}. La descripción, por su parte, cambia con la imagen, pero que cada rasgo descrito esté en
+la lesión queda verificado solo en parte.
+
+Las dos respuestas se encadenan. Como el generador no decide la clase y transcribe la que recibe, la fidelidad
+diagnóstica del reporte depende del clasificador y de la señal que decide cuánto afirmar, más que del generador
+(Capítulo~\ref{cp:discusion}). Por eso el \emph{pipeline} puede ejecutarse en una GPU de consumo, y por eso, en estas
+condiciones, puede ordenar la atención del especialista, pero no reemplazarla. Por último, las decisiones de
+evaluación movieron las cifras tanto o más que la elección entre arquitecturas: la partición por imagen sobreestima
+la sensibilidad macro en unas 0.07, del orden de la distancia con los mejores resultados de la literatura.

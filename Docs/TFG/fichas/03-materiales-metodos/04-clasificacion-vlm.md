@@ -129,7 +129,7 @@ Nada de versiones anteriores al andamiaje: la sección se escribió desde cero e
 
 ## Lo que va al apéndice
 
-- **Apéndice B (`ap:prompts`, `Chapters/Apendices/B-Prompts.tex`):** `CLASSIFICATION_PROMPT`; O1, O2, C1 y C2 completos; `COT_PROMPT`; los prefijos de chat de LLaVA-Med (`[INST] <image>` ... `[/INST]`) y de Mini-VLM (plantilla de chat con `<|image_1|>`); `CLASS_SYNONYMS` (21 términos: 7 clases por 3 sinónimos); `DEFAULT_TEMPLATES` de DermLIP.
+- **Apéndice B (`ap:prompts`, `Chapters/Apendices/A-Prompts.tex`):** `CLASSIFICATION_PROMPT`; O1, O2, C1 y C2 completos; `COT_PROMPT`; los prefijos de chat de LLaVA-Med (`[INST] <image>` ... `[/INST]`) y de Mini-VLM (plantilla de chat con `<|image_1|>`); `CLASS_SYNONYMS` (21 términos: 7 clases por 3 sinónimos); `DEFAULT_TEMPLATES` de DermLIP.
 - **Apéndice A (`ap:hiperparametros`):** no hay grillas de búsqueda para estas cabezas. Los valores fijos se citan en el cuerpo (P9, P10).
 
 ## Lo que NO va en esta sección (y dónde está)

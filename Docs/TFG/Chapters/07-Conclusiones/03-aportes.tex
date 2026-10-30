@@ -1,10 +1,31 @@
 \section{Aportes del trabajo}
 \label{sec:concl_aportes}
-\pendiente{Se enuncian los aportes, cada uno con remisión al capítulo que lo sustenta: una comparación
-sistemática bajo un mismo protocolo entre clasificadores supervisados, VLMs médicos generales y un modelo
-visión--lenguaje dermatológico; el diagnóstico del colapso de los VLMs generales en clasificación
-dermatológica y la evidencia de que el factor determinante es la especialización de dominio y no la
-modalidad; un ensamble en cascada consciente de la incertidumbre que mejora la fidelidad diagnóstica de los
-reportes, replicado con dos generadores; la auditoría de fuga de información entre particiones de HAM10000 y
-los resultados corregidos con una partición disjunta por lesión; y el análisis de viabilidad sobre hardware
-de consumo.}
+% Extensión estimada: 2/3 de página, una oración de entrada, una lista de seis aportes y una oración de cierre
+% (ficha 7.3). Fuentes: tab:marco_brechas, sec:res_comparacion, sec:res_vlm_controles, sec:res_fuga, sec:met_pipeline,
+% sec:disc_concordancia, tab:res_gen_aportes, sec:res_costo.
+
+Los aportes del trabajo atienden las brechas que identificó la revisión del estado del arte
+(Tabla~\ref{tab:marco_brechas}):
+\begin{itemize}
+    \item \textbf{Una comparación bajo un mismo protocolo.} Clasificadores supervisados, \glspl{vlm} generativos de
+    propósito general y un modelo visión--lenguaje dermatológico se evalúan con la misma partición por lesión, las
+    mismas métricas y pruebas estadísticas pareadas (Capítulo~\ref{cp:res_clasif}).
+    \item \textbf{Un análisis de por qué los \glspl{vlm} generativos no clasifican.} Los controles con una imagen gris
+    y con fotografías clínicas indican que su respuesta depende sobre todo del \emph{prompt}
+    (Sección~\ref{sec:res_vlm_controles}).
+    \item \textbf{La medición del efecto de la partición.} Una partición por imagen sobreestima la sensibilidad macro
+    en unas 0.07 frente a una partición por lesión (Sección~\ref{sec:res_fuga}), una magnitud a tener en cuenta al
+    comparar con trabajos que dividen las imágenes al azar.
+    \item \textbf{Un \emph{pipeline} que decide cuánto afirmar.} La concordancia entre el clasificador y el \gls{knn}
+    decide si se afirma el diagnóstico, se ofrecen dos candidatos o se deriva el caso. Así, el \emph{pipeline} afirma
+    el 80\,\% de las imágenes con un riesgo de 0.085, sin umbrales ajustados sobre la prueba
+    (Sección~\ref{sec:disc_concordancia}).
+    \item \textbf{Una evaluación por componente.} Como cada experimento agrega un componente por vez, los resultados
+    separan lo que aporta cada uno al reporte: la fidelidad diagnóstica proviene del clasificador, la descripción,
+    del generador, y la señal de duda, de la concordancia (Tabla~\ref{tab:res_gen_aportes}). Ninguno de los trabajos
+    revisados hace esa separación.
+    \item \textbf{Un sistema que se ejecuta en una GPU de consumo.} El \emph{pipeline} se ajusta en una GPU de 24~GB
+    y se ejecuta en una de 12~GB (Sección~\ref{sec:res_costo}), mientras que los trabajos revisados usan varias GPU de
+    centro de datos o un modelo consultado por API.
+\end{itemize}
+Ninguno de estos aportes establece la validez clínica de los reportes, que requiere la evaluación de especialistas.
