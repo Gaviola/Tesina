@@ -8,12 +8,11 @@ El diagnóstico de una lesión de piel a partir de una imagen dermatoscópica ex
 reporte que registre lo observado y la conclusión. Los modelos visión--lenguaje (VLM) prometen resolver las dos tareas
 con un mismo modelo, pero no está establecido si clasifican las lesiones tan bien como los clasificadores entrenados
 solo con imágenes, ni si los reportes que generan afirman el diagnóstico correcto y describen la lesión de la imagen.
-Este trabajo estudia ambas preguntas sobre \emph{HAM10000}, con una partición disjunta por lesión, y bajo la
-restricción de usar una sola GPU de consumo.
+Este trabajo estudia ambas preguntas sobre \emph{HAM10000}, con una partición disjunta por lesión y una sola
+GPU de consumo.
 
-En la clasificación se comparan cuatro clasificadores supervisados, dos VLM generativos de propósito general y un
-modelo visión--lenguaje dermatológico, DermLIP. El mejor supervisado, Swin-Tiny, obtiene un F1 macro de
-$0.733 \pm 0.026$ en la prueba. Los VLM generativos quedan cerca del azar, y DermLIP sin ajuste queda entre 0.15 y
+En la clasificación se comparan cuatro clasificadores supervisados, dos VLM generativos y un modelo visión--lenguaje dermatológico, DermLIP. El mejor supervisado, Swin-Tiny, obtiene un F1 macro de
+$0.733 \pm 0.026$ en la prueba. Los VLM generativos colapsan hacia una clase, y DermLIP sin ajuste queda entre 0.15 y
 0.18 de sensibilidad macro por debajo de los mejores supervisados, aunque con una cabeza entrenada sobre su
 representación se acerca a ellos. En melanoma, un umbral fijado en validación lleva la detección de Swin-Tiny de tres a
 cuatro de cada cinco casos. La evaluación muestra, además, que una partición por imagen sobreestima la sensibilidad
@@ -26,8 +25,7 @@ diagnóstica, 0.849, coincide con la exactitud del clasificador, y el ruteo la e
 \emph{pipeline} afirma, el clasificador acierta el 91.5\,\%, aunque los errores que comparten los dos predictores se
 siguen afirmando. El generador, Mini-VLM, ocupa como máximo 8.6~GB y escribe un reporte en unos 16 segundos.
 
-El trabajo establece la fidelidad diagnóstica de los reportes con métricas automáticas, pero no su validez clínica,
-que requiere la evaluación de especialistas, y sus resultados se limitan a la dermatoscopía.
+Los reportes se evalúan con métricas automáticas; su validez clínica requiere la evaluación de especialistas, y los resultados se limitan a la dermatoscopía.
 
 \keywordses{lesiones de piel, dermatoscopía, modelos visión--lenguaje, clasificación diagnóstica, detección
 de melanoma, generación de reportes clínicos, incertidumbre}
@@ -39,11 +37,11 @@ Diagnosing a skin lesion from a dermoscopic image requires not only classifying 
 records the findings and the conclusion. Vision--language models (VLMs) promise to solve both tasks with a single
 model, but it is not established whether they classify lesions as well as classifiers trained on images alone, nor
 whether the reports they generate state the correct diagnosis and describe the lesion in the image. This work studies
-both questions on \emph{HAM10000}, with a lesion-disjoint split, under the constraint of a single consumer GPU.
+both questions on \emph{HAM10000}, with a lesion-disjoint split and a single consumer GPU.
 
-For classification, four supervised classifiers, two general-purpose generative VLMs and a dermatology
+For classification, four supervised classifiers, two generative VLMs and a dermatology
 vision--language model, DermLIP, are compared. The best supervised model, Swin-Tiny, reaches a macro F1 of
-$0.733 \pm 0.026$ on the test set. The generative VLMs stay close to chance, and zero-shot DermLIP falls 0.15 to 0.18
+$0.733 \pm 0.026$ on the test set. The generative VLMs collapse towards a single class, and zero-shot DermLIP falls 0.15 to 0.18
 of macro sensitivity below the best supervised models, although with a head trained on its representation it comes
 close to them. For melanoma, a threshold set on validation raises Swin-Tiny's detection from three to four out of five
 cases. The evaluation also shows that an image-level split overestimates macro sensitivity by about 0.07, and that on
@@ -56,8 +54,7 @@ its diagnostic consistency, 0.849, matches the classifier's accuracy, and routin
 the pipeline asserts, the classifier is correct in 91.5\,\%, although the errors shared by both predictors are still
 asserted. The generator, Mini-VLM, uses at most 8.6~GB and writes a report in about 16 seconds.
 
-This work establishes the diagnostic fidelity of the reports with automatic metrics, but not their clinical validity,
-which requires evaluation by specialists, and its results are limited to dermoscopy.
+The reports are evaluated with automatic metrics; their clinical validity requires evaluation by specialists, and the results are limited to dermoscopy.
 
 \keywordsen{skin lesions, dermoscopy, vision--language models, diagnostic classification, melanoma
 detection, clinical report generation, uncertainty}
