@@ -9,11 +9,11 @@
 \label{sec:res_gen_discusion}
 
 Con respecto a la segunda pregunta de investigación (Sección~\ref{sec:intro_objetivos}), un \gls{vlm} generativo
-ajustado no afirma por sí solo la clase de la imagen: sin un diagnóstico, enumera clases, evita comprometerse o, en el
+ajustado no afirma por sí solo, de manera confiable, la clase de la imagen: sin un diagnóstico, enumera clases, evita comprometerse o, en el
 caso del generador especializado, repite un texto ajeno a las siete clases. Con la cascada, en cambio, el reporte
 afirma el diagnóstico del clasificador, y con Mini-VLM y SkinVL su consistencia diagnóstica coincide con la exactitud
 de Swin-Tiny, en total y en cada clase, mientras que LLaVA-Med queda por debajo. Con el ruteo, la consistencia de
-Mini-VLM sobre la prueba completa pasa de 0.849 a 0.870, una ganancia que proviene de presentar dos candidatos en los
+Mini-VLM sobre la prueba completa pasa de 0.849 a 0.870, una ganancia que puede atribuirse a presentar dos candidatos en los
 casos dudosos. En cuanto a la descripción, la imagen cambia lo que el reporte describe de cada lesión, lo que verifica
 en parte su fidelidad visual, aunque el melanoma afirmado como nevo de la Sección~\ref{sec:res_gen_cualitativos}
 muestra que la descripción también se adapta al diagnóstico recibido.
