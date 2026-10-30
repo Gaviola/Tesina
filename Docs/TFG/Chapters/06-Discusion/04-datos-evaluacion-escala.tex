@@ -47,7 +47,8 @@ fundacionales en cuatro H100 o redactan con un modelo de 70 mil millones de par�
 API~\cite{khan2025ensemble} (Tabla~\ref{tab:marco_generadores} del Capítulo~\ref{cp:marco}). En la clasificación, esa
 diferencia no parece decisiva, porque la distancia con los mejores resultados de la literatura es del orden del efecto
 de la partición, y entre los modelos evaluados el más grande no mejora a Swin-Tiny. En la representación contrastiva, en cambio, sí lo
-es: DermFM-Zero, preentrenado con un millón de pares imagen--texto en cuatro H100, supera a DermLIP en el protocolo de
+es: DermFM-Zero, preentrenado con tres millones de imágenes en cuatro H100 y alineado después con un millón de pares
+imagen--texto, supera a DermLIP en el protocolo de
 sus autores con 0.733 frente a 0.561~\cite{yan2026dermfmzero}. En la generación, por último, el tamaño no ordena la
 fidelidad: LLaVA-Med, con casi el doble de parámetros que Mini-VLM, transcribe peor el diagnóstico, y SkinVL, del mismo
 tamaño que LLaVA-Med, describe la mitad de las entidades clínicas (Sección~\ref{sec:res_gen_comparacion}).

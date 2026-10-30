@@ -43,10 +43,11 @@ esa correspondencia. Los experimentos no permiten separar las dos.
 
 SkinVL muestra que tampoco la especialización basta cuando el modelo es generativo. Ajustado con imágenes y textos
 dermatológicos, sin un diagnóstico escribe casi siempre el mismo texto sobre una infección por hongos
-(Sección~\ref{sec:res_gen_sin_anclaje}), mientras que sus autores le miden una exactitud del 51.3\,\% en
-\emph{HAM10000} con preguntas como las de su ajuste~\cite{zeng2025mmskin}. La especialización de un generador queda
-ligada, entonces, al formato de instrucción con que se ajustó, y la de una representación contrastiva se traslada a
-una tarea nueva con solo una cabeza. La literatura revisada es compatible con esta lectura: los generativos abiertos
+(Sección~\ref{sec:res_gen_sin_anclaje}). Sus propios autores le miden a la variante que usa este trabajo, ajustada solo
+con los libros de \emph{MM-Skin}, una exactitud del 3.5\,\% al clasificar \emph{HAM10000} sin ejemplos de ese conjunto, frente al
+51.3\,\% de la variante que suma conjuntos de diagnóstico reformulados como preguntas~\cite{zeng2025mmskin}. La
+especialización de un generador queda ligada, entonces, a las tareas con que se ajustó, y la de una representación
+contrastiva se traslada a una tarea nueva con solo una cabeza. La literatura revisada es compatible con esta lectura: los generativos abiertos
 obtienen exactitudes bajas también en consultas reales~\cite{jiang2026multimodal}, y por la vía contrastiva
 DermFM-Zero supera a DermLIP en el protocolo de sus autores~\cite{yan2026dermfmzero}. Por lo tanto, la utilidad de un
 \gls{vlm} para clasificar depende de cómo se lo use: como clasificador autónomo, ninguno de los evaluados alcanza a
