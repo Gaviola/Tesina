@@ -1,15 +1,12 @@
 \section{Cumplimiento de los objetivos}
 \label{sec:concl_objetivos}
-% Extensión estimada: 1.5 páginas, una tabla y tres párrafos (ficha 7.2).
+% Extensión estimada: 1 página, una tabla y un párrafo (ficha 7.2).
 % Fuentes: sec:intro_objetivos (OE1--OE3, tab:intro_objetivos_preguntas), balances de los Caps. 4 y 5,
 % sec:disc_limitaciones. El grado de cumplimiento se declara con lo que no se hizo, sin atenuarlo.
 
-El objetivo general era desarrollar y evaluar un sistema, basado en modelos preentrenados y adaptados, capaz de
-asistir en el diagnóstico de lesiones de piel y en la generación de sus reportes, y analizar cuán bien clasifica, si
-el reporte afirma el diagnóstico correcto y si puede ejecutarse con recursos convencionales. El sistema se construyó
-como un \emph{pipeline} de tres componentes, un clasificador, un \gls{knn} sobre la representación de DermLIP y un
-generador, y cada una de esas tres preguntas recibió una respuesta medida. La Tabla~\ref{tab:concl_objetivos} resume,
-para cada objetivo específico, lo que se hizo, el resultado principal y los capítulos en que se presenta.
+El objetivo general se abordó con un \emph{pipeline} de tres componentes, un clasificador, un \gls{knn} sobre la
+representación de DermLIP y un generador. La Tabla~\ref{tab:concl_objetivos} resume, para cada objetivo específico,
+lo que se hizo, el resultado principal y dónde se presenta.
 
 \begin{table}[H]
     \centering
@@ -23,42 +20,30 @@ para cada objetivo específico, lo que se hizo, el resultado principal y los cap
         \toprule
         \textbf{Objetivo} & \textbf{Lo que se hizo} & \textbf{Resultado principal} & \textbf{Capítulos} \\
         \midrule
-        OE1. Clasificadores & Cuatro supervisados, dos \glspl{vlm} generativos y DermLIP, evaluados con un mismo
-            protocolo y con pruebas estadísticas, los supervisados con tres ejecuciones; umbral de melanoma fijado en validación
-            & Swin-Tiny, con F1 macro de $0.733 \pm 0.026$; ningún \gls{vlm} sin una cabeza entrenada alcanza a los
-            supervisados; el umbral detecta cuatro de cada cinco melanomas
+        OE1. Clasificadores & Cuatro supervisados, dos \glspl{vlm} generativos y DermLIP, con un mismo protocolo y
+            pruebas estadísticas; umbral de melanoma fijado en validación
+            & Swin-Tiny, con F1 macro de $0.733 \pm 0.026$; los \glspl{vlm} sin una cabeza entrenada quedan por debajo
+            de los supervisados; el umbral detecta cuatro de cada cinco melanomas
             & \ref{cp:metodos}, \ref{cp:res_clasif} \\
         \filasep
-        OE2. \gls{vlm} para el reporte & Mini-VLM ajustado con LoRA en el codificador visual sobre \emph{SkinCaRe}, comparado con
-            LLaVA-Med y SkinVL, sin diagnóstico, en cascada con el clasificador y con el ruteo por concordancia
-            & El reporte afirma el diagnóstico que recibe; la consistencia diagnóstica es de 0.849 con la cascada y
-            de 0.870 con el ruteo
+        OE2. \gls{vlm} para el reporte & Mini-VLM ajustado con LoRA en el codificador visual sobre \emph{SkinCaRe},
+            comparado con LLaVA-Med y SkinVL, sin diagnóstico, en cascada y con el ruteo por concordancia
+            & El reporte afirma el diagnóstico que recibe; consistencia diagnóstica de 0.849 con la cascada y de 0.870
+            con el ruteo
             & \ref{cp:metodos}, \ref{cp:res_gen} \\
         \filasep
         OE3. Escenarios y costo & Prueba externa en \emph{HIBA}, perturbaciones, calibración, casos dudosos
             separados por el ruteo, métricas del texto y costo de cada componente
-            & Pérdida de cerca del 40\,\% de la sensibilidad macro en \emph{HIBA}; riesgo selectivo de 0.085 entre
-            los afirmados; Mini-VLM entra en 8.6~GB y escribe un reporte en unos 16 segundos
+            & Pérdida de cerca del 40\,\% de la sensibilidad macro en \emph{HIBA}; riesgo selectivo de 0.085;
+            Mini-VLM entra en 8.6~GB y escribe un reporte en unos 16 segundos
             & \ref{cp:res_clasif}, \ref{cp:res_gen}, \ref{cp:discusion} \\
         \bottomrule
     \end{tabularx}
 \end{table}
 
-El primer objetivo se cumplió en los términos en que se planteó. Los clasificadores de las tres familias se
-diseñaron, se implementaron y se evaluaron con la misma partición por lesión y las mismas métricas, y la detección de
-melanoma se analizó por separado, con un umbral elegido en validación y no en la prueba. Esa comparación es la que
-permite responder la primera pregunta de investigación.
-
-El segundo objetivo se cumplió con una modificación que los resultados justifican. El \gls{vlm} ajustado produce el
-reporte e integra la imagen en la descripción, pero no produce por sí mismo un diagnóstico preliminar confiable: sin
-un diagnóstico, no afirma de manera confiable la clase de la imagen (Sección~\ref{sec:res_gen_sin_anclaje}). Por eso,
-en el sistema final el diagnóstico lo aporta el clasificador y el generador lo transcribe en el reporte. El sistema,
-como un todo, produce el diagnóstico preliminar y el reporte, pero el diagnóstico no proviene del \gls{vlm}.
-
-El tercer objetivo se cumplió en parte. Se evaluaron los escenarios que el objetivo nombra: la otra población, con
-\emph{HIBA}, los casos en que el sistema no tiene seguridad, con el ruteo, la calidad del texto, con las métricas
-automáticas, y el costo computacional, en una GPU de consumo. Quedaron sin evaluar, en cambio, dos aspectos. El
-\emph{pipeline} completo no se aplicó a \emph{HIBA}, de modo que la fidelidad del reporte en otra población se infiere
-de la caída del clasificador y no se midió. Además, la utilidad práctica se midió solo por el costo: ningún
-especialista leyó los reportes, y el efecto del sistema sobre el flujo de trabajo clínico, que el objetivo general
-menciona, no se evaluó (Sección~\ref{sec:disc_limitaciones}).
+El primer objetivo se cumplió en los términos en que se planteó. El segundo se cumplió con una modificación: el
+\gls{vlm} ajustado redacta el reporte e integra la imagen en la descripción, pero no produce un diagnóstico
+preliminar confiable (Sección~\ref{sec:res_gen_sin_anclaje}), de modo que en el sistema final el diagnóstico lo aporta
+el clasificador. El tercero se cumplió en parte, porque quedaron dos aspectos sin evaluar: el \emph{pipeline} completo
+no se aplicó a \emph{HIBA}, y ningún especialista leyó los reportes, de modo que la fidelidad del reporte en otra
+población no se midió y la utilidad práctica se midió solo por el costo (Sección~\ref{sec:disc_limitaciones}).
