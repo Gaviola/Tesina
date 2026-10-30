@@ -18,8 +18,16 @@
 \raggedbottom
 
 % \FloatBarrier: las tablas grandes (estado del arte) flotan para no dejar media página vacía, pero no pueden
-% pasar de la subsección en la que se las trae.
-\RequirePackage{placeins}
+% pasar de la subsección en la que se las trae. La opción section pone además una barrera antes de cada sección,
+% para que los flotantes que no van con [H] no pasen a la sección siguiente.
+\RequirePackage[section]{placeins}
+
+% Una página que solo tiene flotantes los ubica arriba, como las demás páginas, y no centrados en vertical.
+\makeatletter
+\setlength{\@fptop}{0pt}
+\setlength{\@fpsep}{12pt plus 1fil}
+\setlength{\@fpbot}{0pt plus 1fil}
+\makeatother
 
 % Paleta de Okabe e Ito, distinguible con las formas habituales de daltonismo. Cada rol del diagrama
 % tiene un color, y además una forma de trazo propia (lleno, grueso, discontinuo): el diagrama sigue

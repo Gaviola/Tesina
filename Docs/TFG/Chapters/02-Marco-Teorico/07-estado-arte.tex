@@ -84,21 +84,7 @@ lenguaje redacta después un reporte a partir de la predicción. En SkinSavvy2, 
 un modelo GPT que genera recomendaciones de cuidado~\cite{kim2025skinsavvy2}. Los dos textos se analizan en la
 Sección~\ref{sec:estado_arte_reportes}.
 
-La línea evolucionó en tres etapas: los desafíos ISIC concentraron el trabajo sobre el desbalance, los estudios
-con clínicos llevaron la evaluación fuera del desafío y los trabajos recientes volvieron a la comparación entre
-arquitecturas.
-
-Quedan cuatro limitaciones. En primer lugar, predominan las redes
-convolucionales, solo \textcite{kim2025skinsavvy2} incluyen un transformer y no hay un protocolo común entre
-trabajos. En segundo lugar, solo \textcite{gessert2020skin}, por lesión, y \textcite{liu2020deep}, por paciente,
-describen particiones que mantienen juntos los casos relacionados, mientras que \textcite{yao2022single}
-seleccionan sobre la prueba y \textcite{khan2025ensemble} parten al azar. En tercer lugar, la evaluación se ha
-realizado principalmente sobre particiones o pruebas de la misma fuente, la validación fuera de ella es temporal o
-de un solo centro, y ningún trabajo se desarrolla ni se valida en población de América Latina. Por último, los
-sistemas de mejor desempeño son ensambles grandes, y solo \textcite{khan2025ensemble} marcan los casos
-discordantes, sin medir el efecto de esa abstención.
-
-\begin{table}[H]
+\begin{table}[!tbp]
     \centering
     \caption{Trabajos de clasificación de lesiones de piel. PCP: médicos de atención primaria; NP: enfermeros
     especializados (\emph{nurse practitioners}).}
@@ -164,6 +150,20 @@ discordantes, sin medir el efecto de esa abstención.
     \end{tabularx}
 \end{table}
 
+La línea evolucionó en tres etapas: los desafíos ISIC concentraron el trabajo sobre el desbalance, los estudios
+con clínicos llevaron la evaluación fuera del desafío y los trabajos recientes volvieron a la comparación entre
+arquitecturas.
+
+Quedan cuatro limitaciones. En primer lugar, predominan las redes
+convolucionales, solo \textcite{kim2025skinsavvy2} incluyen un transformer y no hay un protocolo común entre
+trabajos. En segundo lugar, solo \textcite{gessert2020skin}, por lesión, y \textcite{liu2020deep}, por paciente,
+describen particiones que mantienen juntos los casos relacionados, mientras que \textcite{yao2022single}
+seleccionan sobre la prueba y \textcite{khan2025ensemble} parten al azar. En tercer lugar, la evaluación se ha
+realizado principalmente sobre particiones o pruebas de la misma fuente, la validación fuera de ella es temporal o
+de un solo centro, y ningún trabajo se desarrolla ni se valida en población de América Latina. Por último, los
+sistemas de mejor desempeño son ensambles grandes, y solo \textcite{khan2025ensemble} marcan los casos
+discordantes, sin medir el efecto de esa abstención.
+
 \FloatBarrier
 \subsection{Modelos visión--lenguaje especializados en dermatología}
 \label{sec:estado_arte_vlm}
@@ -220,28 +220,7 @@ razonamiento y diagnóstico. Sus resultados distinguen la evaluación dentro de 
 efecto de la ayuda sobre sus decisiones. SkinGPT-R1 reconoce una latencia que impide ejecutarlo en dispositivos de
 borde, y DermoGPT, una brecha que persiste con la referencia humana.
 
-La línea de evaluación crítica mide el desempeño de estos modelos en la consulta real.
-\textcite{jiang2026multimodal}, publicado solo en arXiv, sin revisión de pares, y de un grupo independiente de los
-anteriores, evalúan sin ajuste cinco modelos, entre ellos LLaVA-Med, SkinGPT-4
-(Sección~\ref{sec:estado_arte_reportes}) y GPT-4.1, en diagnóstico
-diferencial y triaje, sobre tres conjuntos públicos y 5\,811 consultas de un hospital. Con la imagen sola, la
-exactitud de los tres primeros diagnósticos en las consultas reales va de 1.50\,\% a 13.35\,\% en los modelos
-abiertos y llega a 24.65\,\% en GPT-4.1. El texto del médico remitente mejora los resultados, pero los vuelve
-sensibles a los errores de ese texto, y los autores concluyen que no corresponde usar estos modelos sin
-supervisión.
-
-La vía contrastiva avanzó de adaptar CLIP con texto de la literatura a corpus dermatológicos con ontología y a
-preentrenamientos visuales a gran escala, y la generativa, de asistentes biomédicos que no se evaluaron en piel a
-modelos adaptados a ella y a modelos que razonan antes de diagnosticar.
-
-En esta línea se identifican cuatro
-limitaciones. Ningún trabajo combina un clasificador supervisado con un generador ni recupera casos parecidos para
-anclar el texto. La incertidumbre aparece como limitación, o en DermoGPT para ponderar sus predicciones, y no como
-una decisión entre afirmar, ofrecer diferenciales o derivar (Sección~\ref{sec:marco_tres_salidas}). El cómputo va
-de ocho RTX 4090 para ajustar SkinGPT-R1 a cuatro H100 para preentrenar PanDerm o DermFM-Zero. Por último, los
-estudios con clínicos son pocos, y solo PanDerm y DermFM-Zero miden el efecto de la ayuda sobre sus decisiones.
-
-\begin{table}[H]
+\begin{table}[!tbp]
     \centering
     \caption{\glspl{vlm} contrastivos y modelos fundacionales en dermatología. $^\dagger$: sin revisión de pares.}
     \label{tab:marco_sota_vlm}
@@ -288,7 +267,7 @@ estudios con clínicos son pocos, y solo PanDerm y DermFM-Zero miden el efecto d
     \end{tabularx}
 \end{table}
 
-\begin{table}[H]
+\begin{table}[!tbp]
     \centering
     \caption{\glspl{vlm} generativos en dermatología y su evaluación crítica. $^\dagger$: sin revisión de pares. ID: dentro de la distribución; OOD: fuera de ella.}
     \label{tab:marco_sota_vlm_gen}
@@ -334,6 +313,27 @@ estudios con clínicos son pocos, y solo PanDerm y DermFM-Zero miden el efecto d
         \bottomrule
     \end{tabularx}
 \end{table}
+
+La línea de evaluación crítica mide el desempeño de estos modelos en la consulta real.
+\textcite{jiang2026multimodal}, publicado solo en arXiv, sin revisión de pares, y de un grupo independiente de los
+anteriores, evalúan sin ajuste cinco modelos, entre ellos LLaVA-Med, SkinGPT-4
+(Sección~\ref{sec:estado_arte_reportes}) y GPT-4.1, en diagnóstico
+diferencial y triaje, sobre tres conjuntos públicos y 5\,811 consultas de un hospital. Con la imagen sola, la
+exactitud de los tres primeros diagnósticos en las consultas reales va de 1.50\,\% a 13.35\,\% en los modelos
+abiertos y llega a 24.65\,\% en GPT-4.1. El texto del médico remitente mejora los resultados, pero los vuelve
+sensibles a los errores de ese texto, y los autores concluyen que no corresponde usar estos modelos sin
+supervisión.
+
+La vía contrastiva avanzó de adaptar CLIP con texto de la literatura a corpus dermatológicos con ontología y a
+preentrenamientos visuales a gran escala, y la generativa, de asistentes biomédicos que no se evaluaron en piel a
+modelos adaptados a ella y a modelos que razonan antes de diagnosticar.
+
+En esta línea se identifican cuatro
+limitaciones. Ningún trabajo combina un clasificador supervisado con un generador ni recupera casos parecidos para
+anclar el texto. La incertidumbre aparece como limitación, o en DermoGPT para ponderar sus predicciones, y no como
+una decisión entre afirmar, ofrecer diferenciales o derivar (Sección~\ref{sec:marco_tres_salidas}). El cómputo va
+de ocho RTX 4090 para ajustar SkinGPT-R1 a cuatro H100 para preentrenar PanDerm o DermFM-Zero. Por último, los
+estudios con clínicos son pocos, y solo PanDerm y DermFM-Zero miden el efecto de la ayuda sobre sus decisiones.
 
 \FloatBarrier
 \subsection{Generación de reportes dermatológicos}
@@ -393,37 +393,7 @@ melanoma, y un médico revisa 30 reportes. Como la referencia la escribe el prop
 con referencia miden el parecido con GPT-4V. Los autores atribuyen a la estructura de plantilla de los
 pseudorreportes un SacreBLEU inusualmente alto y señalan que las métricas léxicas no bastan.
 
-Dos líneas complementan a los generadores. La primera se ocupa de cómo evaluar el texto.
-\textcite{shen2025dermbench}, presentado en ECCV 2026, parten de que las métricas de similitud textual, según los
-autores, correlacionan poco con la utilidad clínica, y proponen dos evaluadores. DermBench es un juez automático que
-no ve la imagen y compara el texto con una narrativa de referencia redactada por modelos de lenguaje a partir de la
-etiqueta verdadera y corregida por dermatólogos. DermEval es un evaluador sin referencia, ajustado con aprendizaje
-por refuerzo contra los puntajes de médicos. Sobre nueve modelos, el error absoluto medio respecto de los médicos es
-0.363 para DermBench y 0.178 para DermEval. Los puntajes de referencia los asignaron dos dermatólogos coautores, sin
-que se cuantificara el acuerdo entre ellos, y los autores reconocen que las referencias redactadas con modelos pueden
-introducir sesgo.
-
-La segunda línea condiciona la generación con contexto recuperado. MMed-RAG~\cite{xia2025mmedrag} y
-RULE~\cite{xia2024rule}, del mismo grupo, buscan mejorar la factualidad de LLaVA-Med-1.5 con reportes de texto
-recuperados a partir de la imagen, en radiología, oftalmología y, en MMed-RAG, patología. Parten del mismo problema:
-el modelo puede ignorar la imagen, o un contexto equivocado puede degradar respuestas que sin él eran correctas. RULE
-calibra cuántos reportes recuperar con un control estadístico del riesgo, y MMed-RAG corta la lista donde la
-similitud cae de forma brusca; los dos ajustan además el generador con optimización directa de preferencias, para que
-use el contexto solo cuando ayuda. En \emph{IU-Xray}, la exactitud de las preguntas sube de 75.47\,\% a 87.84\,\%
-con RULE y a 89.54\,\% con MMed-RAG, pero en la ablación de RULE el contexto recuperado, agregado sin más, empeora
-\emph{MIMIC-CXR} de 75.79\,\% a 67.35\,\%. Ninguno de los dos recupera imágenes, prevé la abstención, incluye expertos ni
-trata la dermatología.
-
-En esta línea, el texto se evalúa de tres maneras que casi no se combinan (Sección~\ref{sec:marco_eval_texto}). Las
-métricas con referencia miden el parecido con un texto y no la corrección clínica, y las referencias suelen ser
-sintéticas o anotadas por los propios autores. La corrección del diagnóstico (Skin-R1, DermatoLlama) deja fuera la
-descripción. Los expertos son pocos: cinco dermatólogos en SkinGPT-4, dos entre 20 participantes en SkinSavvy2, un
-médico en el trabajo de \citeauthor{chakrabarti2025skin} y dos coautores en DermBench. La recuperación puede mejorar
-la factualidad y también degradarla, y en todos los casos se recuperan textos y no imágenes. Por último, varios
-sistemas dependen de modelos cerrados o consultados por API para redactar o para generar sus datos o referencias, y
-el hardware llega a ocho A100.
-
-\begin{table}[H]
+\begin{table}[!tbp]
     \centering
     \caption{Generadores de texto dermatológico. «Métricas con referencia»: BLEU, ROUGE y BERTScore; «---»: no
     informado.}
@@ -453,7 +423,7 @@ el hardware llega a ocho A100.
     \end{tabularx}
 \end{table}
 
-\begin{table}[H]
+\begin{table}[!tbp]
     \centering
     \caption{Evaluación de narrativas dermatológicas y recuperación de contexto para \glspl{vlm} médicos.}
     \label{tab:marco_sota_reportes}
@@ -488,6 +458,36 @@ el hardware llega a ocho A100.
         \bottomrule
     \end{tabularx}
 \end{table}
+
+Dos líneas complementan a los generadores. La primera se ocupa de cómo evaluar el texto.
+\textcite{shen2025dermbench}, presentado en ECCV 2026, parten de que las métricas de similitud textual, según los
+autores, correlacionan poco con la utilidad clínica, y proponen dos evaluadores. DermBench es un juez automático que
+no ve la imagen y compara el texto con una narrativa de referencia redactada por modelos de lenguaje a partir de la
+etiqueta verdadera y corregida por dermatólogos. DermEval es un evaluador sin referencia, ajustado con aprendizaje
+por refuerzo contra los puntajes de médicos. Sobre nueve modelos, el error absoluto medio respecto de los médicos es
+0.363 para DermBench y 0.178 para DermEval. Los puntajes de referencia los asignaron dos dermatólogos coautores, sin
+que se cuantificara el acuerdo entre ellos, y los autores reconocen que las referencias redactadas con modelos pueden
+introducir sesgo.
+
+La segunda línea condiciona la generación con contexto recuperado. MMed-RAG~\cite{xia2025mmedrag} y
+RULE~\cite{xia2024rule}, del mismo grupo, buscan mejorar la factualidad de LLaVA-Med-1.5 con reportes de texto
+recuperados a partir de la imagen, en radiología, oftalmología y, en MMed-RAG, patología. Parten del mismo problema:
+el modelo puede ignorar la imagen, o un contexto equivocado puede degradar respuestas que sin él eran correctas. RULE
+calibra cuántos reportes recuperar con un control estadístico del riesgo, y MMed-RAG corta la lista donde la
+similitud cae de forma brusca; los dos ajustan además el generador con optimización directa de preferencias, para que
+use el contexto solo cuando ayuda. En \emph{IU-Xray}, la exactitud de las preguntas sube de 75.47\,\% a 87.84\,\%
+con RULE y a 89.54\,\% con MMed-RAG, pero en la ablación de RULE el contexto recuperado, agregado sin más, empeora
+\emph{MIMIC-CXR} de 75.79\,\% a 67.35\,\%. Ninguno de los dos recupera imágenes, prevé la abstención, incluye expertos ni
+trata la dermatología.
+
+En esta línea, el texto se evalúa de tres maneras que casi no se combinan (Sección~\ref{sec:marco_eval_texto}). Las
+métricas con referencia miden el parecido con un texto y no la corrección clínica, y las referencias suelen ser
+sintéticas o anotadas por los propios autores. La corrección del diagnóstico (Skin-R1, DermatoLlama) deja fuera la
+descripción. Los expertos son pocos: cinco dermatólogos en SkinGPT-4, dos entre 20 participantes en SkinSavvy2, un
+médico en el trabajo de \citeauthor{chakrabarti2025skin} y dos coautores en DermBench. La recuperación puede mejorar
+la factualidad y también degradarla, y en todos los casos se recuperan textos y no imágenes. Por último, varios
+sistemas dependen de modelos cerrados o consultados por API para redactar o para generar sus datos o referencias, y
+el hardware llega a ocho A100.
 
 \FloatBarrier
 \subsection{Posicionamiento de la propuesta}
