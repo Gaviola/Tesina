@@ -13,7 +13,7 @@ Lista    1. Evaluación por especialistas y reportes de referencia
          3. Otras señales de confianza (errores compartidos)
          4. Validación externa del pipeline completo
          5. Otros anclajes y generadores; qué parte de la descripción viene de la imagen
-Cierre   La fidelidad depende del clasificador y de la señal de ruteo → hacia ahí apuntan las mejoras
+Cierre   Sin párrafo de cierre (revisión del autor, 29/10: capítulo más al grano)
 ```
 
 Fuentes: `sec:disc_limitaciones`, `sec:disc_concordancia`, `sec:disc_texto_imagen`, `sec:disc_limites`.
