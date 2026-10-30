@@ -9,7 +9,7 @@
 \section{Pipeline completo}
 \label{sec:res_gen_incertidumbre}
 
-La cascada afirma siempre el diagnóstico del clasificador, aunque sea incorrecto, y ni la imagen ni los vecinos lo corrigen en la mayoría de los casos. El último paso del recorrido agrega el ruteo por concordancia de la Sección~\ref{sec:met_ruteo}, que
+En la cascada, el reporte suele afirmar el diagnóstico del clasificador, aunque sea incorrecto, y ni la imagen ni los vecinos lo corrigen en la mayoría de los casos. El último paso del recorrido agrega el ruteo por concordancia de la Sección~\ref{sec:met_ruteo}, que
 completa el \emph{pipeline} de la Figura~\ref{fig:met_pipeline} del Capítulo~\ref{cp:metodos}: según coincidan o no
 Swin-Tiny y el \gls{knn}, cada imagen recibe un reporte afirmativo, un reporte diferencial con dos candidatos o se
 deriva a un especialista, según los tres niveles de la Tabla~\ref{tab:met_niveles} del Capítulo~\ref{cp:metodos}.
