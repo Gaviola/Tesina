@@ -1,51 +1,33 @@
 \section{Conclusiones generales}
 \label{sec:concl_generales}
-% Extensión estimada: 1.5 páginas, cinco párrafos (ficha 7.1).
+% Extensión estimada: 1 página, cuatro párrafos (ficha 7.1).
 % Fuentes: sec:res_clasif_discusion, sec:res_gen_discusion, sec:disc_representacion, sec:disc_texto_imagen,
-% sec:disc_concordancia, sec:disc_limites. Ajustes acordados con el autor en la reestructuración del Cap. 6: PI1
-% «depende del uso», no «negativa»; la comparación de DermLIP con una cabeza es entre dos formas de aprender la
-% representación y no se sometió a prueba; PI2 sin tono tajante, con la verificación parcial de la descripción.
+% sec:disc_concordancia, sec:disc_limites. PI1 «depende del uso», no «negativa»; la comparación de DermLIP con una
+% cabeza no se sometió a prueba; PI2 sin tono tajante, con la verificación parcial de la descripción.
 
-El trabajo partió de dos preguntas: si los \glspl{vlm} clasifican las lesiones de piel tan bien como los clasificadores
-entrenados solo con imágenes, y si los reportes que genera un \gls{vlm} afirman el diagnóstico correcto y describen la
-lesión de la imagen. Las dos se respondieron sobre la prueba de \emph{HAM10000} con una partición disjunta por lesión,
-con métricas automáticas y con el cómputo de una sola GPU, y sus respuestas valen dentro de esas condiciones.
+Las dos preguntas de investigación se respondieron sobre la prueba de \emph{HAM10000} con una partición disjunta por
+lesión, con métricas automáticas y con el cómputo de una sola GPU, y sus respuestas valen dentro de esas condiciones.
 
 La respuesta a la primera pregunta depende de cómo se use el \gls{vlm}. Como clasificador autónomo, ninguno de los
-evaluados alcanza a los supervisados. Los generativos de propósito general quedan cerca del azar, porque su respuesta
-depende sobre todo del \emph{prompt}, y DermLIP sin ajuste queda entre 0.15 y 0.18 de sensibilidad macro por debajo de
-los mejores supervisados, con diferencias que las pruebas estadísticas respaldan
-(Capítulo~\ref{cp:res_clasif}). Como codificador de un modelo especializado, en cambio, se acerca: con una cabeza
-entrenada sobre la representación congelada de DermLIP, el F1 macro llega a 0.705, frente a 0.733 de Swin-Tiny, una
-diferencia que no se sometió a prueba. Esa cercanía indica que la especialización en dermatología está en la
-representación, pero no cumple la motivación de la pregunta, que era obtener el diagnóstico del mismo modelo que
-escribe el reporte (Sección~\ref{sec:disc_representacion}). En el melanoma, la clase de mayor prioridad clínica, la
-diferencia la marca la regla de decisión más que el modelo: el umbral fijado en validación lleva la detección de
-Swin-Tiny de tres a cuatro de cada cinco casos.
+evaluados alcanza a los supervisados: los generativos de propósito general quedan cerca del azar, y DermLIP sin ajuste,
+entre 0.15 y 0.18 de sensibilidad macro por debajo de los mejores supervisados. Como codificador, en cambio, se
+acerca: con una cabeza entrenada sobre la representación de DermLIP, el F1 macro llega a 0.705, frente a 0.733 de
+Swin-Tiny (Capítulo~\ref{cp:res_clasif}). La especialización en dermatología parece estar, entonces, en la
+representación, pero en ese uso el diagnóstico no lo da el modelo que escribe el reporte, que era la motivación de la
+pregunta.
 
 La respuesta a la segunda pregunta es que el reporte afirma el diagnóstico correcto en la medida en que lo hace el
-clasificador que lo ancla. Sin un diagnóstico, ningún generador afirma de manera confiable la clase de la imagen: el
-que más la nombra lo hace enumerando dos clases por reporte, y en ninguno más de uno de cada veinte reportes nombra
-únicamente la clase verdadera. Con la cascada, en cambio, el generador transcribe el diagnóstico que recibe, de modo que la consistencia
-diagnóstica de Mini-VLM, 0.849, coincide con la exactitud de Swin-Tiny, 0.847, y con un diagnóstico equivocado el
-reporte lo afirma en lugar de corregirlo (Capítulo~\ref{cp:res_gen}). El ruteo por concordancia eleva la consistencia
-a 0.870 y, entre los diagnósticos que afirma, reduce la proporción de errores de 0.153 a 0.085
-(Sección~\ref{sec:disc_concordancia}). En cuanto a la descripción, la imagen cambia lo que el reporte describe de cada
-lesión, porque sin ella la cobertura de entidades clínicas de Mini-VLM cae a la mitad, pero la descripción también se
-adapta al diagnóstico recibido, y que cada rasgo descrito esté en la imagen queda verificado solo en parte.
+clasificador que lo ancla. Sin un diagnóstico, ninguno de los generadores evaluados nombra únicamente la clase
+verdadera en más de uno de cada veinte reportes. Con la cascada, el generador transcribe el diagnóstico que recibe,
+de modo que la consistencia diagnóstica de Mini-VLM, 0.849, coincide con la exactitud de Swin-Tiny, 0.847
+(Capítulo~\ref{cp:res_gen}). El ruteo por concordancia eleva la consistencia a 0.870 y reduce la proporción de
+errores entre los diagnósticos afirmados de 0.153 a 0.085, aunque no detecta los errores que comparten el
+clasificador y el \gls{knn}. La descripción, por su parte, cambia con la imagen, pero que cada rasgo descrito esté en
+la lesión queda verificado solo en parte.
 
-Las dos respuestas se encadenan. Como un \gls{vlm} generativo no decide la clase por sí mismo, el diagnóstico lo pone
-un clasificador; y como el generador lo transcribe, la fidelidad diagnóstica del reporte queda fijada por ese
-clasificador y no por el generador (Sección~\ref{sec:disc_texto_imagen}). En consecuencia, el valor del generador
-está en la redacción y en la descripción de cada lesión, y el de la concordancia con el \gls{knn}, en señalar los casos
-en que el diagnóstico es menos confiable. Lo que el sistema no resuelve son los errores que comparten los dos
-predictores, que se afirman con la misma plantilla que un acierto y que incluyen casi uno de cada cuatro melanomas. Por
-eso el \emph{pipeline} puede ordenar la atención del especialista, pero no reemplazarla.
-
-Por último, el trabajo muestra que las decisiones de evaluación pesan tanto como la elección del modelo. La partición
-por imagen sobreestima la sensibilidad macro en unas 0.07, una cifra del orden de la distancia con los mejores
-resultados de la literatura, y la variación entre ejecuciones supera una décima en las clases minoritarias, mientras
-que Swin-Tiny, ConvNeXt-Tiny y ViT-B/16 no se distinguen entre sí (Sección~\ref{sec:disc_limites}). Esa observación,
-junto con el costo medido, hace compatible la restricción de una GPU de consumo con la fidelidad diagnóstica del
-\emph{pipeline}: Mini-VLM ocupa como máximo 8.6~GB y escribe un reporte en unos 16 segundos, y la fidelidad depende de
-un clasificador pequeño.
+Las dos respuestas se encadenan. Como el generador no decide la clase y transcribe la que recibe, la fidelidad
+diagnóstica del reporte depende del clasificador y de la señal que decide cuánto afirmar, más que del generador
+(Capítulo~\ref{cp:discusion}). Por eso el \emph{pipeline} puede ejecutarse en una GPU de consumo, y por eso, en estas
+condiciones, puede ordenar la atención del especialista, pero no reemplazarla. Por último, las decisiones de
+evaluación movieron las cifras tanto o más que la elección entre arquitecturas: la partición por imagen sobreestima
+la sensibilidad macro en unas 0.07, del orden de la distancia con los mejores resultados de la literatura.
