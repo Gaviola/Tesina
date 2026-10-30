@@ -55,7 +55,7 @@ predice con más frecuencia, con la proporción de imágenes que le asigna.
 \end{table}
 
 La mayor sensibilidad macro es la de Mini-VLM con verosimilitud, 0.181, y la menor, la de LLaVA-Med ajustado y con
-\gls{cot}, 0.045. Las otras ocho combinaciones quedan alrededor de 1/7, el nivel del azar. Además, seis de las diez
+\gls{cot}, 0.045. Las otras ocho combinaciones quedan alrededor de 1/7, la sensibilidad macro de una respuesta al azar. Además, seis de las diez
 asignan más del 85\,\% de las imágenes a una sola clase, cualquiera sea la lesión. Este comportamiento se denomina en
 este trabajo \textbf{colapso hacia una clase} (\emph{class collapse}).
 
@@ -64,7 +64,7 @@ alcanza la mayor exactitud de la tabla, pero responde \gls{nv} en casi todas las
 que responde siempre \gls{nv} (Sección~\ref{sec:met_referencias}). En el otro extremo, LLaVA-Med ajustado y con
 \gls{cot} no produce una etiqueta válida en cuatro de cada cinco imágenes, porque sus respuestas ya no terminan en la
 línea de diagnóstico que pide el \emph{prompt}. En ninguno de los dos modelos, por otra parte, el ajuste con los textos
-clínicos de \emph{SkinCaRe} saca a alguna estrategia del nivel del azar.
+clínicos de \emph{SkinCaRe} aleja a alguna estrategia de ese valor.
 
 La Figura~\ref{fig:res_vlm_distribucion} muestra el colapso de manera directa. Cada barra horizontal presenta cómo se
 reparten las 1\,503 imágenes entre las siete clases y las respuestas sin etiqueta: la de arriba, según la clase real,
@@ -205,7 +205,7 @@ parecidos de F1 macro. Como la ventaja se mantiene con cada cabeza, parece deber
 linear probe porque usa embeddings estandarizados en lugar de normalizados.
 
 En síntesis, en la prueba de \emph{HAM10000} los \glspl{vlm} generativos no distinguen las siete clases con ninguna de las estrategias evaluadas, y los controles
-indican que ese comportamiento no se explica por el desbalance y que cambiar la modalidad no lo resuelve. La
+indican que ese comportamiento no parece explicarse por el desbalance y que cambiar la modalidad no lo resolvió en el control con \emph{SkinCAP}. La
 especialización de DermLIP, en cambio, aporta una representación útil, pero solo se acerca a los supervisados con una
 cabeza entrenada sobre \emph{HAM10000}. La sección siguiente compara las tres familias en conjunto y mide si sus
 diferencias exceden la variación muestral.
