@@ -81,8 +81,11 @@ def main():
                 cover[tier] += 1
 
     # CSV solo-diferenciales, compatible con generate_report.py --uncertainty (unc_confident=0 → plantilla
-    # diferencial). Sirve como --only_ids_csv para restringir la generación a esos 334.
-    diff_out = out.with_name("uncertainty_differential.csv")
+    # diferencial). Sirve como --only_ids_csv para restringir la generación a esas imágenes. El nombre sale del de
+    # --output (uncertainty_3tier_les.csv -> uncertainty_differential_les.csv), para no pisar el de otra partición.
+    diff_out = out.with_name(out.name.replace("3tier", "differential"))
+    if diff_out == out:
+        diff_out = out.with_name(f"{out.stem}_differential.csv")
     with out.open("r", encoding="utf-8") as fin, diff_out.open("w", newline="", encoding="utf-8") as fo:
         r = csv.DictReader(fin); w2 = csv.writer(fo)
         w2.writerow(["image_id", "unc_dx", "unc_candidates", "unc_conf", "unc_confident"])
