@@ -30,23 +30,22 @@ no se sometieron a prueba, de modo que solo indican que las dos representaciones
 explicación posible es que alinear imágenes dermatológicas con sus descripciones ordena el espacio de
 \emph{embeddings} según los rasgos que el texto nombra, que son en buena medida los que separan los diagnósticos.
 
-Los generativos, en cambio, sí extraen información de la imagen, pero no la convierten en una clase. Después del
+Los generativos, en cambio, sí extraen información de la imagen, pero, en estos experimentos, no la convierten en una clase. Después del
 ajuste con \emph{SkinCaRe}, la descripción de Mini-VLM cambia con cada lesión, y sin la imagen su cobertura de
 entidades clínicas cae a la mitad (Sección~\ref{sec:res_gen_ablaciones}). Sin un diagnóstico, sin embargo, el mismo
 generador nombra la clase verdadera en menos de un reporte de cada cinco (Sección~\ref{sec:res_gen_sin_anclaje}). Es
-decir, el generador ve lo suficiente para describir, pero no para decidir. Una explicación posible es que el cuello de
+decir, el generador parece ver lo suficiente para describir, pero no para decidir. Una explicación posible es que el cuello de
 botella no está en el codificador visual, cuyo ajuste es justamente el que cambia la descripción, sino en el paso del
 modelo de lenguaje a la clase, que DermLIP resuelve con una comparación entre \emph{embeddings} y una cabeza simple.
 Otra explicación, compatible con la anterior, es que \emph{SkinCaRe} agrupa las enfermedades en categorías distintas
 de las siete de \emph{HAM10000} (Sección~\ref{sec:met_generacion}), de modo que el ajuste nunca le pidió al generador
 esa correspondencia. Los experimentos no permiten separar las dos.
 
-SkinVL muestra que tampoco la especialización basta cuando el modelo es generativo. Ajustado con imágenes y textos
+SkinVL indica que, cuando el modelo es generativo, la especialización tampoco basta. Ajustado con imágenes y textos
 dermatológicos, sin un diagnóstico escribe casi siempre el mismo texto sobre una infección por hongos
 (Sección~\ref{sec:res_gen_sin_anclaje}). Sus propios autores le miden a la variante que usa este trabajo, ajustada solo
 con los libros de \emph{MM-Skin}, una exactitud del 3.5\,\% al clasificar \emph{HAM10000} sin ejemplos de ese conjunto, frente al
-51.3\,\% de la variante que suma conjuntos de diagnóstico reformulados como preguntas~\cite{zeng2025mmskin}. La
-especialización de un generador queda ligada, entonces, a las tareas con que se ajustó, y la de una representación
+51.3\,\% de la variante que suma conjuntos de diagnóstico reformulados como preguntas~\cite{zeng2025mmskin}. La especialización de un generador parece quedar ligada, entonces, a las tareas con que se ajustó, y la de una representación
 contrastiva se traslada a una tarea nueva con solo una cabeza. La literatura revisada es compatible con esta lectura: los generativos abiertos
 obtienen exactitudes bajas también en consultas reales~\cite{jiang2026multimodal}, y por la vía contrastiva
 DermFM-Zero supera a DermLIP en el protocolo de sus autores~\cite{yan2026dermfmzero}. Por lo tanto, la utilidad de un
