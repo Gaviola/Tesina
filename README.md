@@ -3,7 +3,7 @@
 Tesina de grado de Facundo Gaviola. El trabajo compara clasificadores supervisados, modelos visión–lenguaje
 generativos y un modelo visión–lenguaje especializado en dermatología sobre *HAM10000*, y propone un *pipeline* que
 encadena un clasificador, la recuperación de casos parecidos y un generador para escribir el reporte clínico de una
-lesión, en una sola GPU de consumo.
+lesión. La generación del reporte entra en la memoria de una GPU de consumo.
 
 ## Contenido
 
