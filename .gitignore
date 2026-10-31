@@ -15,7 +15,6 @@ Docs/**/*
 !Docs/**/*.cls
 !Docs/**/*.sty
 !Docs/TFG/.latexmkrc
-!Docs/TFG/Bibliography/*.py
 !Docs/**/imagenes/
 !Docs/**/imagenes/**
 # Plantilla UMU (referencia, no forma parte del documento vivo).
@@ -23,8 +22,20 @@ Docs/**/*
 Docs/TFG/Tesis_Universidad_de_Murcia__UMU_/
 # Devoluciones del tutor (transcripciones y PDFs comentados): temporales, no se versionan.
 Docs/TFG/feedback/
-# Tesina de referencia de otro autor: se consulta, no se versiona.
-Docs/tesinamaglione_ejemplo.pdf
+# Tesinas de referencia y PDFs comentados en la raíz de Docs: se consultan, no se versionan.
+Docs/*.pdf
+# Documentos previos a la tesina (propuesta, borradores de marco teórico, estado del arte y
+# experimentación, tablas SOTA): la tesina los reemplaza.
+Docs/Propuesta/
+Docs/estado_del_arte/
+Docs/experimentacion/
+Docs/marco_teorico/
+Docs/tabla_resultados_sota/
+# Herramientas de redacción (fichas, guía, referencias pendientes, chequeos de maquetación):
+# acompañan la escritura, no forman parte del documento.
+Docs/TFG/fichas/
+Docs/TFG/guia_redaccion.md
+Docs/TFG/refs_pendientes.md
 
 # VS Code LaTeX Workshop output folders
 Docs/**/${workspaceFolder}/
@@ -49,8 +60,20 @@ wandb/
 .env
 Codigo/.env
 
-# Jupyter
+# Jupyter: los notebooks son exploratorios
 .ipynb_checkpoints/
+Codigo/notebooks/
+
+# Bitácora de experimentación, notas de trabajo y de los clústeres: solo se versiona la guía de uso.
+Codigo/docs/*
+!Codigo/docs/USAGE.md
+Codigo/*.md
+Codigo/*.csv
+
+# Notas de trabajo en la raíz: solo se versiona el README.
+/*.md
+!/README.md
+/*.pdf
 # Documentos de trabajo temporales de la revisión de los capítulos 1 y 2.
 Docs/TFG/tareas_revision_cap1-2.md
 Docs/TFG/candidatos_estado_arte.md
