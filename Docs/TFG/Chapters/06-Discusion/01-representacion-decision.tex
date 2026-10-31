@@ -6,7 +6,7 @@
 % jiang2026multimodal, yan2026dermfmzero. Reemplaza las antiguas 6.1 (PI1) y 6.2.
 
 Los \glspl{vlm} evaluados ocupan tres niveles en la clasificación de \emph{HAM10000}
-(Sección~\ref{sec:res_comparacion}). Los generativos de propósito general quedan cerca del azar, DermLIP sin ajuste
+(Sección~\ref{sec:res_comparacion}). Los generativos sin especialización en dermatología quedan cerca de 1/7 en sensibilidad macro, DermLIP sin ajuste
 queda entre ellos y los supervisados, y DermLIP con una cabeza entrenada se acerca a los supervisados. La diferencia
 entre esos niveles no es solo de grado, porque cada uno usa el modelo de una manera distinta. Esta sección discute qué
 la explica: qué tiene DermLIP que los generativos no tienen, y qué les falta a estos para convertir lo que ven en un
@@ -16,8 +16,7 @@ Los controles de la Sección~\ref{sec:res_vlm_controles} permiten acotar las exp
 preentrenamiento, las fotografías clínicas de \emph{SkinCAP} deberían mejorar su resultado. No lo mejoran, mientras que
 DermLIP distingue las clases en las dos modalidades. Además, con la imagen reemplazada por una gris, los generativos
 asignan todas las imágenes a una misma clase, y con la imagen real su sensibilidad macro apenas sube, de modo que su
-respuesta depende sobre todo del \emph{prompt}. En estos experimentos, entonces, lo que separa a los modelos que
-distinguen las clases de los que no es la especialización en dermatología, aunque el control no permite excluir que
+respuesta depende sobre todo del \emph{prompt}. En estos experimentos, entonces, lo que separa a los modelos que distinguen las clases de los que no parece ser la especialización en dermatología de la representación, aunque el control no permite excluir que
 la modalidad también influya.
 
 El control de la representación indica dónde está esa especialización. Con las mismas tres cabezas, el
