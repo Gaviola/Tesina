@@ -37,8 +37,7 @@ mayor que el de los generadores de este trabajo con un BERTScore parecido (Secci
 consistencia diagnóstica, a su vez, premia enumerar, y por eso LLaVA-Med obtiene sin anclaje la consistencia más alta
 nombrando dos clases por reporte (Sección~\ref{sec:res_gen_sin_anclaje}). Conviene, entonces, que una métrica de fidelidad se acompañe de una medida de cuánto se compromete el reporte, como la proporción de reportes que nombran solo la clase verdadera.
 
-Frente a estos factores, la escala explica solo una parte de la distancia con el estado del arte. El \emph{pipeline} se
-ajusta en una sola GPU de 24~GB y se ejecuta en una de consumo de 12~GB: Mini-VLM ocupa como máximo 8.6~GB y escribe un
+Frente a estos factores, la escala explica solo una parte de la distancia con el estado del arte. El \emph{pipeline} se ajusta en una sola GPU de 24~GB y su generación entra en una de consumo de 12~GB: Mini-VLM ocupa como máximo 8.6~GB y escribe un
 reporte en unos 16 segundos, y el clasificador y el \gls{knn} agregan un costo mínimo (Secciones~\ref{sec:res_costo_clasificadores}
 y~\ref{sec:res_costo}). Los trabajos revisados, en cambio, ajustan sus generadores en ocho GPU, preentrenan sus modelos
 fundacionales en cuatro H100 o redactan con un modelo de 70 mil millones de parámetros consultado por
