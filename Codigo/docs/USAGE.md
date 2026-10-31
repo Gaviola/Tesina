@@ -184,7 +184,8 @@ python scripts/build_uncertainty_3tier.py \
     --output outputs/uncertainty/uncertainty_3tier_les.csv
 ```
 
-El ruteo asigna a cada imagen el nivel afirmativo, diferencial o de derivación. La generación de los dos primeros
+El ruteo asigna a cada imagen el nivel afirmativo, diferencial o de derivación, y escribe además
+`uncertainty_differential_les.csv`, con solo las imágenes del nivel diferencial. La generación de los dos primeros
 niveles:
 
 ```bash
@@ -204,9 +205,7 @@ python scripts/generate_report.py $COMMON \
     --output_dir outputs/generated_reports/mini_vlm/full_differential_les
 ```
 
-`uncertainty_differential_les.csv` contiene las filas `differential` del ruteo, con las columnas que espera
-`--uncertainty_csv` (`image_id, unc_dx, unc_candidates, unc_conf, unc_confident`). El nivel de derivación no genera
-reporte. Los trabajos de Mendieta que ejecutan estos pasos están en `slurm/mendieta/v4/` y `slurm/mendieta/v5/`.
+El nivel de derivación no genera reporte. Los trabajos de Mendieta que ejecutan estos pasos están en `slurm/mendieta/v4/` y `slurm/mendieta/v5/`.
 `generate_report.py` retoma la generación si el trabajo se corta: saltea los reportes ya escritos.
 
 Otras opciones de `generate_report.py`: `--model skinvl`, `--no_image` (cascada sin imagen), `--rag` con
