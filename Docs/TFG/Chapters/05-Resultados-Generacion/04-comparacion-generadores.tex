@@ -129,8 +129,7 @@ La memoria, en cambio, sí depende del tamaño. Mini-VLM ocupa como máximo 8.6~
 los 12~GB de una GPU de consumo como la RTX 4070, mientras que LLaVA-Med y SkinVL superan esa cifra ya al cargar los
 pesos. La generación agrega poco a la carga, porque cada reporte se escribe de a uno y con un límite de 384 tokens. El ajuste de Mini-VLM tomó
 algo más de nueve horas en la A30, y el de LLaVA-Med, algo menos de siete. Por lo tanto, el pipeline con
-Mini-VLM cumple la restricción de cómputo de la Sección~\ref{sec:met_tareas}: se ajusta en una sola GPU de 24~GB y se
-ejecuta en una de consumo de 12~GB, con un reporte en menos de 20 segundos. Que el ajuste también entre en 12 o 16~GB
+Mini-VLM cumple la restricción de cómputo de la Sección~\ref{sec:met_tareas}: se ajusta en una sola GPU de 24~GB, su generación entra en los 12~GB de una de consumo, y en la A30 escribe un reporte en menos de 20 segundos. Que el ajuste también entre en 12 o 16~GB
 no se comprobó.
 
 Con la fidelidad, la descripción y el costo de cada generador caracterizados, queda ubicar estos resultados frente a
