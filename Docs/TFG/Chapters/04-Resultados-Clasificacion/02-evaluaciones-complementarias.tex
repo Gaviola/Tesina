@@ -19,8 +19,7 @@ Sección~\ref{sec:res_comparacion}.
 \label{sec:res_hiba}
 
 La primera evaluación aplica Swin-Tiny y ConvNeXt-Tiny, sin ningún ajuste, a las 1\,616 imágenes de \emph{HIBA}. La
-Tabla~\ref{tab:res_hiba} presenta la sensibilidad macro de cada modelo en la prueba de \emph{HAM10000} y en
-\emph{HIBA}, en total y separada por modalidad, y su primera fila da la cantidad de imágenes de cada grupo.
+Tabla~\ref{tab:res_hiba} presenta la sensibilidad macro de cada modelo en la prueba de \emph{HAM10000} y en \emph{HIBA}, en total y separada por modalidad.
 
 \begin{table}[H]
     \centering
@@ -68,8 +67,7 @@ un tercio de su sensibilidad, y \gls{bcc}, más de la mitad. Por lo tanto, el de
 \label{sec:res_robustez}
 
 La segunda evaluación conserva la población, pero degrada las imágenes de la prueba con cuatro perturbaciones de
-intensidad creciente. La Figura~\ref{fig:res_robustez} presenta un panel por perturbación, con la sensibilidad macro
-de los dos modelos en cada nivel de intensidad. La Tabla~\ref{tab:res_robustez} resume la caída relativa
+intensidad creciente. La Figura~\ref{fig:res_robustez} presenta la sensibilidad macro de los dos modelos ante cada perturbación. La Tabla~\ref{tab:res_robustez} resume la caída relativa
 (Ecuación~\ref{eq:marco_robustez}) en los niveles 1, 3 y 5. Como esta evaluación usa una sola vista y no el
 \gls{tta}, la sensibilidad sin perturbar es algo menor que la de la Tabla~\ref{tab:res_hiba}.
 
@@ -115,9 +113,7 @@ así que no reemplazan la evaluación en \emph{HIBA}.
 
 Además de acertar la clase, el clasificador entrega probabilidades que fijan el umbral de melanoma y que un clínico
 leería como certeza. La tercera evaluación mide cuánto se puede confiar en ellas. La
-Figura~\ref{fig:res_calibracion} presenta el diagrama de confiabilidad de Swin-Tiny entrenado sin pesos por clase y con
-ellos: el eje horizontal es la confianza media de cada intervalo y el vertical, su exactitud, de modo que un modelo
-calibrado queda sobre la diagonal.
+Figura~\ref{fig:res_calibracion} presenta el diagrama de confiabilidad de Swin-Tiny entrenado sin pesos por clase y con ellos, en el que un modelo calibrado queda sobre la diagonal.
 
 \begin{figure}[H]
     \centering
@@ -130,9 +126,7 @@ Sin pesos por clase, la curva sigue de cerca la diagonal, apenas por encima: el 
 decir, acierta algo más de lo que su confianza indica. Con pesos por clase, en cambio, la curva se aleja de la
 diagonal, porque la confianza media cae a alrededor de 0.4 mientras la exactitud se mantiene cerca de 0.78.
 
-La Tabla~\ref{tab:res_calibracion} cuantifica esa diferencia para los dos modelos. Sus filas son las versiones sin
-calibrar, con los dos ajustes posteriores y con pesos por clase, y sus columnas, el \gls{ece}, el Brier y la
-sensibilidad macro de cada modelo.
+La Tabla~\ref{tab:res_calibracion} la cuantifica para los dos modelos y agrega los ajustes posteriores.
 
 \begin{table}[H]
     \centering
