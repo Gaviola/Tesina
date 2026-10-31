@@ -24,8 +24,7 @@ imágenes al azar. En melanoma, la regla de decisión pesa más que el modelo: e
 detección de tres a cuatro de cada cinco melanomas sin cambiar el \gls{auc} (Sección~\ref{sec:res_melanoma}), mientras
 que los trabajos revisados operan en puntos que van desde la clase más probable hasta una sensibilidad cercana a la
 total. Y la variación entre ejecuciones supera una décima en las clases minoritarias, de modo que un resultado de una
-sola ejecución puede quedar arriba o abajo de otro por azar. Por eso una comparación con la literatura tiene sentido
-solo cuando se conocen la partición, la regla de decisión y la cantidad de ejecuciones, y por eso este trabajo fija el
+sola ejecución puede quedar arriba o abajo de otro por azar. Por eso una comparación con la literatura es interpretable cuando se conocen la partición, la regla de decisión y la cantidad de ejecuciones, y por eso este trabajo fija el
 umbral en validación, a diferencia de un modelo elegido sobre la misma prueba en que se informa, como el de
 \textcite{yao2022single} (Sección~\ref{sec:res_estado_arte}).
 
@@ -36,8 +35,7 @@ prueba tiene que aplicarse a la métrica con que se elige el modelo. En el texto
 el estilo: SkinVL, ajustado con las descripciones de \emph{MM-Skin}, obtiene en ellas un BLEU-4 más de cien veces
 mayor que el de los generadores de este trabajo con un BERTScore parecido (Sección~\ref{sec:res_gen_estado_arte}). La
 consistencia diagnóstica, a su vez, premia enumerar, y por eso LLaVA-Med obtiene sin anclaje la consistencia más alta
-nombrando dos clases por reporte (Sección~\ref{sec:res_gen_sin_anclaje}). Una métrica de fidelidad necesita, entonces,
-una medida de cuánto se compromete el reporte, como la proporción de reportes que nombran solo la clase verdadera.
+nombrando dos clases por reporte (Sección~\ref{sec:res_gen_sin_anclaje}). Conviene, entonces, que una métrica de fidelidad se acompañe de una medida de cuánto se compromete el reporte, como la proporción de reportes que nombran solo la clase verdadera.
 
 Frente a estos factores, la escala explica solo una parte de la distancia con el estado del arte. El \emph{pipeline} se
 ajusta en una sola GPU de 24~GB y se ejecuta en una de consumo de 12~GB: Mini-VLM ocupa como máximo 8.6~GB y escribe un
@@ -46,10 +44,9 @@ y~\ref{sec:res_costo}). Los trabajos revisados, en cambio, ajustan sus generador
 fundacionales en cuatro H100 o redactan con un modelo de 70 mil millones de parámetros consultado por
 API~\cite{khan2025ensemble} (Tabla~\ref{tab:marco_generadores} del Capítulo~\ref{cp:marco}). En la clasificación, esa
 diferencia no parece decisiva, porque la distancia con los mejores resultados de la literatura es del orden del efecto
-de la partición, y entre los modelos evaluados el más grande no mejora a Swin-Tiny. En la representación contrastiva, en cambio, sí lo
-es: DermFM-Zero, preentrenado con tres millones de imágenes en cuatro H100 y alineado después con un millón de pares
+de la partición, y entre los modelos evaluados el más grande no mejora a Swin-Tiny. En la representación contrastiva, en cambio, sí parece serlo: DermFM-Zero, preentrenado con tres millones de imágenes en cuatro H100 y alineado después con un millón de pares
 imagen--texto, supera a DermLIP en el protocolo de
-sus autores con 0.733 frente a 0.561~\cite{yan2026dermfmzero}. En la generación, por último, el tamaño no ordena la
+sus autores con 0.733 frente a 0.561~\cite{yan2026dermfmzero}. Entre los generadores evaluados, por último, el tamaño no ordena la
 fidelidad: LLaVA-Med, con casi el doble de parámetros que Mini-VLM, transcribe peor el diagnóstico, y SkinVL, del mismo
 tamaño que LLaVA-Med, describe la mitad de las entidades clínicas (Sección~\ref{sec:res_gen_comparacion}).
 
