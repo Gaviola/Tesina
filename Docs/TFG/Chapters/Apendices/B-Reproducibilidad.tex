@@ -46,11 +46,11 @@ ejecutan, todos en \texttt{Codigo/scripts/}.
         Preparación de los datos y partición por lesión & \texttt{prepare\_data.py},
             \texttt{make\_lesion\_disjoint\_split.py} \\
         \filasep
-        Clasificadores supervisados & \texttt{sweep\_phase1.py}, \texttt{train\_classifier.py},
-            \texttt{classifier\_ensemble.py}, \texttt{melanoma\_detection.py} \\
+        Clasificadores supervisados & \texttt{toko/submit\_sweep.py}, \texttt{train\_classifier.py},
+            \texttt{lesion\_split\_report.py}, \texttt{classifier\_ensemble.py}, \texttt{melanoma\_detection.py} \\
         \filasep
         \glspl{vlm} en clasificación & \texttt{train\_vlm\_classify.py}, \texttt{eval\_dermlip\_classify.py},
-            \texttt{eval\_dermlip\_linearprobe.py} \\
+            \texttt{eval\_dermlip\_linearprobe.py}, \texttt{dermlip\_split\_eval.py} \\
         \filasep
         Evaluación de la clasificación & \texttt{evaluate\_classify.py}, \texttt{statistical\_tests.py},
             \texttt{leakage\_analysis.py} \\
@@ -60,10 +60,11 @@ ejecutan, todos en \texttt{Codigo/scripts/}.
         \filasep
         Ajuste de los generadores & \texttt{train\_vlm\_stage1.py}, \texttt{train\_vlm\_stage2.py} \\
         \filasep
-        \emph{Pipeline} y generación de reportes & \texttt{build\_rag\_index.py},
-            \texttt{build\_uncertainty\_agreement.py}, \texttt{generate\_report.py} \\
+        \emph{Pipeline} y generación de reportes & \texttt{make\_dx\_csv.py}, \texttt{dermlip\_split\_eval.py},
+            \texttt{build\_uncertainty\_3tier.py}, \texttt{generate\_report.py} \\
         \filasep
-        Evaluación de los reportes & \texttt{evaluate\_reports.py}, \texttt{error\_taxonomy.py} \\
+        Evaluación de los reportes & \texttt{evaluate\_reports.py}, \texttt{ensemble\_bootstrap.py},
+            \texttt{uncertainty\_analysis.py}, \texttt{error\_taxonomy.py} \\
         \filasep
         Costo computacional & \texttt{measure\_cost.py}, \texttt{measure\_vlm\_memory.py} \\
         \bottomrule
