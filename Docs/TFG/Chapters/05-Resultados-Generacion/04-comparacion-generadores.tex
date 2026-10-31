@@ -46,9 +46,7 @@ describe tanto como LLaVA-Med, de modo que es el único de los tres que reúne l
 
 En la configuración principal, el ajuste de Mini-VLM no llega a su modelo de lenguaje
 (Sección~\ref{sec:res_gen_nivel1}). La variante de control de la Sección~\ref{sec:met_generacion}, que también
-ajusta ese modelo, permite saber si esa diferencia cambia los reportes. La Tabla~\ref{tab:res_gen_control} compara
-ambas versiones sobre las mismas imágenes: cada fila es una fuente de diagnóstico, y las columnas dan la cantidad de
-imágenes, la consistencia de cada versión y su diferencia, con el intervalo de confianza. En la cascada con Swin-Tiny
+ajusta ese modelo, permite saber si esa diferencia cambia los reportes. La Tabla~\ref{tab:res_gen_control} compara ambas versiones sobre las mismas imágenes. En la cascada con Swin-Tiny
 y sin anclaje, la variante de control tiene reportes solo para una parte de la prueba.
 
 \begin{table}[H]
@@ -89,11 +87,7 @@ costa de reportes vacíos.
 \label{sec:res_costo}
 
 El costo de los clasificadores, que se mide en milisegundos por imagen (Sección~\ref{sec:res_costo_clasificadores}),
-es una parte mínima del costo del \emph{pipeline}. La Tabla~\ref{tab:res_costo_generadores} presenta el de los
-generadores, con una fila por generador. Las columnas dan los parámetros, la memoria máxima ocupada por los tensores en
-la GPU al cargar el modelo y durante la generación de 20 reportes de la cascada, el tiempo de la segunda etapa del
-ajuste, el tiempo por reporte en la A30 de la Sección~\ref{sec:met_entorno}, con la cascada y el límite de 384 tokens,
-y el tiempo que llevaría generar los reportes de toda la prueba.
+es una parte mínima del costo del \emph{pipeline}. La Tabla~\ref{tab:res_costo_generadores} presenta el de los generadores, medido en la A30 de la Sección~\ref{sec:met_entorno}.
 
 Un reporte de Mini-VLM en la A30 tarda más de mil veces lo que una clasificación de Swin-Tiny en la RTX 4070. Aunque
 las dos mediciones se hicieron en GPU distintas, la diferencia es de tres órdenes de magnitud, de modo que el costo del
@@ -105,7 +99,7 @@ rápido porque escribe una oración, y Mini-VLM tarda menos que LLaVA-Med con re
 
 \begin{table}[H]
     \centering
-    \caption{Costo de los generadores, medido en la A30.}
+    \caption{Costo de los generadores, medido en la A30. Memoria: máximo ocupado por los tensores al cargar el modelo y al generar 20 reportes de la cascada; tiempos con un límite de 384 tokens.}
     \label{tab:res_costo_generadores}
     \small
     \setlength{\tabcolsep}{3pt}
