@@ -7,8 +7,7 @@
 Los aportes del trabajo atienden las brechas que identificó la revisión del estado del arte
 (Tabla~\ref{tab:marco_brechas}):
 \begin{itemize}
-    \item \textbf{Una comparación bajo un mismo protocolo.} Clasificadores supervisados, \glspl{vlm} generativos de
-    propósito general y un modelo visión--lenguaje dermatológico se evalúan con la misma partición por lesión, las
+    \item \textbf{Una comparación bajo un mismo protocolo.} Clasificadores supervisados, \glspl{vlm} generativos sin especialización en dermatología y un modelo visión--lenguaje dermatológico se evalúan con la misma partición por lesión, las
     mismas métricas y pruebas estadísticas pareadas (Capítulo~\ref{cp:res_clasif}).
     \item \textbf{Un análisis de por qué los \glspl{vlm} generativos no clasifican.} Los controles con una imagen gris
     y con fotografías clínicas indican que su respuesta depende sobre todo del \emph{prompt}
@@ -24,8 +23,8 @@ Los aportes del trabajo atienden las brechas que identificó la revisión del es
     separan lo que aporta cada uno al reporte: la fidelidad diagnóstica proviene del clasificador, la descripción,
     del generador, y la señal de duda, de la concordancia (Tabla~\ref{tab:res_gen_aportes}). Ninguno de los trabajos
     revisados hace esa separación.
-    \item \textbf{Un sistema que se ejecuta en una GPU de consumo.} El \emph{pipeline} se ajusta en una GPU de 24~GB
-    y se ejecuta en una de 12~GB (Sección~\ref{sec:res_costo}), mientras que los trabajos revisados usan varias GPU de
-    centro de datos o un modelo consultado por API.
+    \item \textbf{Un sistema que entra en una GPU de consumo.} El \emph{pipeline} se ajusta en una GPU de 24~GB
+    y su generación entra en una de 12~GB (Sección~\ref{sec:res_costo}), mientras que los trabajos revisados usan varias GPU de
+    centro de datos o consultan por API un modelo de gran tamaño.
 \end{itemize}
 Ninguno de estos aportes establece la validez clínica de los reportes, que requiere la evaluación de especialistas.
