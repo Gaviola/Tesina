@@ -26,8 +26,7 @@ alternativa al clasificador.
 \subsection{Consistencia según la fuente del diagnóstico}
 \label{sec:res_gen_fuentes}
 
-La Figura~\ref{fig:res_gen_cascada} presenta una fila por generador, y en cada fila, la consistencia diagnóstica que
-obtiene con cada fuente. La línea discontinua marca la exactitud de Swin-Tiny en la prueba.
+La Figura~\ref{fig:res_gen_cascada} presenta la consistencia de cada generador con cada fuente.
 
 \begin{figure}[!tbp]
     \centering
@@ -98,8 +97,7 @@ más diagnósticos correctos al reporte.
 \label{sec:res_gen_clases}
 
 Si el generador transcribe el diagnóstico, la cascada debería heredar también la sensibilidad de Swin-Tiny en cada clase.
-Para comprobarlo, la Figura~\ref{fig:res_gen_clases} relaciona, para cada clase y cada generador, la sensibilidad de
-Swin-Tiny en esa clase, en el eje horizontal, con la consistencia de la cascada en la misma clase, en el vertical. Un
+Para comprobarlo, la Figura~\ref{fig:res_gen_clases} compara, para cada clase y cada generador, la sensibilidad de Swin-Tiny con la consistencia de la cascada. Un
 punto sobre la diagonal indica que el reporte nombra la clase tantas veces como la acierta el clasificador.
 
 \begin{figure}[!tbp]
