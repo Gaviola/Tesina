@@ -15,7 +15,13 @@ Las secciones anteriores evaluaron cada familia de clasificadores por separado. 
 escala y con las comparaciones estadísticas de la Sección~\ref{sec:met_estadistica}, y después compara el costo de ejecutar
 los clasificadores supervisados.
 
-La Figura~\ref{fig:res_resumen} reúne la sensibilidad macro de todos los clasificadores del capítulo.
+La Figura~\ref{fig:res_resumen} reúne la sensibilidad macro en el conjunto de prueba de todos los clasificadores del
+capítulo, agrupados en tres familias. Cada punto es un modelo o, en los generativos, una estrategia. En los supervisados,
+la barra indica el desvío entre ejecuciones, y la línea punteada marca 1/7, el valor de una respuesta al azar. La figura
+muestra tres niveles separados. Los supervisados obtienen los valores más altos, entre 0.6 y 0.7, con una variación
+pequeña entre ejecuciones. DermLIP va desde algo más de 0.5 sin ajuste hasta el nivel de los supervisados cuando se le
+entrena una cabeza. Los generativos, con cualquiera de sus cinco estrategias, obtienen los valores más bajos, alrededor
+de 1/7.
 
 \begin{figure}[!tbp]
     \centering
@@ -24,10 +30,7 @@ La Figura~\ref{fig:res_resumen} reúne la sensibilidad macro de todos los clasif
     \label{fig:res_resumen}
 \end{figure}
 
-La figura muestra tres niveles separados. Los supervisados obtienen los valores más altos, entre 0.6 y 0.7, con una
-variación pequeña entre ejecuciones. DermLIP va desde algo más de 0.5 sin ajuste hasta el nivel de los supervisados
-cuando se le entrena una cabeza. Los generativos, con cualquiera de sus cinco estrategias, obtienen los valores más
-bajos, alrededor del azar.
+
 
 Para saber si estas diferencias exceden la variación de la muestra, las comparaciones estadísticas abarcan los siete modelos sin ajuste
 sobre \emph{HAM10000}: los cuatro supervisados, DermLIP \emph{zero-shot} y los dos generativos con la estrategia de
@@ -74,7 +77,7 @@ aciertan pocas imágenes, y casi solo de la clase en la que se concentran.
 
 La comparación deja abierta la posición de DermLIP con una cabeza entrenada, que se acerca a los supervisados en
 sensibilidad macro pero no en F1 macro (Tabla~\ref{tab:res_dermlip}). Como esa cabeza se entrena sobre
-\emph{HAM10000}, deja de ser un uso sin ajuste y no resuelve lo que motivaba usar un \gls{vlm}: obtener el diagnóstico
+\emph{HAM10000}, deja de ser un uso sin ajuste y no cubre lo que motivaba usar un \gls{vlm}: obtener el diagnóstico
 del modelo que genera el reporte.
 
 \subsection{Costo computacional de los clasificadores}

@@ -20,8 +20,12 @@ DermLIP, un modelo contrastivo especializado en dermatología.
 \subsection{Modelos generativos y concentración de las predicciones en una clase}
 \label{sec:res_vlm_generativos}
 
-La Tabla~\ref{tab:res_vlm_generativos} reúne las diez combinaciones de los dos \glspl{vlm} generativos con las
-estrategias de la Sección~\ref{sec:met_vlm_estrategias}.
+La Tabla~\ref{tab:res_vlm_generativos} presenta los resultados de los \glspl{vlm} generativos sobre el conjunto de prueba de
+\emph{HAM10000}. La información se organiza en dos grupos, correspondientes a Mini-VLM y LLaVA-Med. Para cada modelo se
+consideran las cinco estrategias de la Sección~\ref{sec:met_vlm_estrategias}: generación, verosimilitud, \gls{cot}, ajuste
+y verosimilitud, y ajuste y \gls{cot}. En cada caso se informan la exactitud, el F1 macro y la sensibilidad macro.
+Además, se incluyen la cantidad de respuestas que no pudieron asociarse con una clase reconocible y la clase predicha con
+mayor frecuencia, junto con la proporción de imágenes asignadas a ella.
 
 \begin{table}[!tbp]
     \centering
@@ -64,7 +68,8 @@ que responde siempre \gls{nv} (Sección~\ref{sec:met_referencias}). En el otro e
 línea de diagnóstico que pide el \emph{prompt}. En ninguno de los dos modelos, por otra parte, el ajuste con los textos
 clínicos de \emph{SkinCaRe} aleja a alguna estrategia de ese valor.
 
-La Figura~\ref{fig:res_vlm_distribucion} muestra esa concentración de manera directa: compara cómo se reparten las imágenes del conjunto de prueba según la clase real y según la predicción de cada combinación.
+La Figura~\ref{fig:res_vlm_distribucion} muestra esa concentración de manera directa. Cada barra reparte las 1\,503 imágenes del conjunto de prueba entre las
+clases: la primera, según la clase real, y las demás, según la clase que predice cada combinación de modelo y estrategia.
 
 \begin{figure}[H]
     \centering
@@ -89,7 +94,10 @@ clases, y la concentración aparece ya sin ningún ajuste. Además, como muestra
 clase en la que se concentran cambia con el modelo y con la estrategia, mientras que un sesgo por la frecuencia de
 \gls{nv} llevaría a todas las combinaciones hacia esa misma clase.
 
-Para las otras dos explicaciones, la Tabla~\ref{tab:res_vlm_controles} presenta los dos controles, la imagen gris y las fotografías clínicas de \emph{SkinCAP}, con la estrategia de verosimilitud y sin ajuste, y a DermLIP como contraste.
+Para las otras dos explicaciones, la Tabla~\ref{tab:res_vlm_controles} presenta los dos controles, con la estrategia de verosimilitud y sin ajuste. Para cada
+modelo informa la cantidad de imágenes, la exactitud, la sensibilidad macro y la clase más predicha en el conjunto de
+prueba de \emph{HAM10000}, con la imagen reemplazada por una gris y en las fotografías clínicas de \emph{SkinCAP}, y agrega
+a DermLIP como contraste.
 
 \begin{table}[H]
     \centering
@@ -134,9 +142,10 @@ los \glspl{vlm} generativos para distinguir las clases, sea cual sea la forma en
 \subsection{DermLIP, un modelo especializado}
 \label{sec:res_vlm_dermlip}
 
-Queda por saber si un \gls{vlm} especializado en dermatología supera esa limitación. DermLIP permite verlo sin generar
-texto, con los cuatro usos de la Sección~\ref{sec:met_dermlip}, y sin ningún ajuste sobre \emph{HAM10000}, que no figura
-entre las fuentes de su preentrenamiento (Sección~\ref{sec:met_datasets}). La Tabla~\ref{tab:res_dermlip} presenta, para
+A continuación se analiza si un \gls{vlm} especializado en dermatología supera esa limitación. DermLIP permite medirlo sin
+generar texto, con los cuatro usos de la Sección~\ref{sec:met_dermlip} (\emph{zero-shot}, \emph{linear probe}, \gls{knn} y
+\gls{svm}), y su representación no se ajusta sobre \emph{HAM10000}, que no figura entre las fuentes de su
+preentrenamiento (Sección~\ref{sec:met_clasif_vlm}). La Tabla~\ref{tab:res_dermlip} presenta, para
 cada uso, la exactitud, el F1 macro, la sensibilidad macro y la sensibilidad de \gls{mel}.
 
 \begin{table}[H]
