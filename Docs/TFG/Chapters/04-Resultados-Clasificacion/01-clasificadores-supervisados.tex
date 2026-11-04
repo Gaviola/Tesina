@@ -15,8 +15,7 @@ Esta sección presenta los resultados de los cuatro clasificadores supervisados 
 Sección~\ref{sec:met_supervisados}, Swin-Tiny, ConvNeXt-Tiny, ViT-B/16 y DenseNet121, sobre las 1\,503 imágenes de
 prueba de la partición disjunta por lesión (Sección~\ref{sec:met_particiones}). En primer lugar se comparan las cuatro
 arquitecturas y su ensamble. A continuación, sobre el modelo que elige la validación, se analizan los errores por clase,
-la detección de melanoma y dos variantes del entrenamiento: las funciones de pérdida para el desbalance y la partición
-con fuga de información.
+la detección de melanoma y una variante del entrenamiento, las funciones de pérdida para el desbalance.
 
 \subsection{Comparación de las cuatro arquitecturas}
 \label{sec:res_sup_arquitecturas}
@@ -219,22 +218,6 @@ tres modelos, pero baja con la pérdida focal en Swin-Tiny y con balanced softma
 estos experimentos ninguna de las funciones mejora a la vez la detección de las clases minoritarias y la precisión de
 esas detecciones, y para melanoma el umbral de validación logra una ganancia de sensibilidad comparable sin cambiar el
 entrenamiento.
-
-\subsection{Efecto de la fuga de información}
-\label{sec:res_fuga}
-
-Todos los resultados anteriores se obtuvieron con la partición por lesión, sin fuga de información entre particiones
-(\emph{data leakage}; Sección~\ref{sec:met_particiones}). Para estimar cuánto cambiarían con la partición original por
-imagen, se evalúa un Swin-Tiny entrenado con ella, con la configuración que eligió su propia validación, sobre tres
-grupos de imágenes de su prueba: la prueba completa, las imágenes cuya lesión no aparece en su entrenamiento ni en su
-validación, y las que comparten lesión con el entrenamiento.
-
-Sobre la prueba completa, la sensibilidad macro de este modelo es de 0.870, y sobre las 894 imágenes sin lesión
-compartida, de 0.804. En las 543 que comparten lesión con el entrenamiento llega a 0.936, y las 66 restantes comparten
-lesión solo con la validación. Como control, DermLIP sin ajuste sobre \emph{HAM10000} no empeora en el grupo sin
-lesión compartida, lo que indica que la diferencia no se explica por una mayor dificultad de ese grupo. En esta prueba, entonces, la
-partición por imagen sobreestima la sensibilidad macro en unas 0.07, una distorsión que se retoma al comparar con
-otros trabajos en la Sección~\ref{sec:res_estado_arte}.
 
 Con estos resultados, Swin-Tiny queda como el clasificador de referencia del trabajo, con un punto de operación para
 melanoma fijado en validación. Todos sus resultados, sin embargo, se midieron sobre la prueba de \emph{HAM10000}, y la

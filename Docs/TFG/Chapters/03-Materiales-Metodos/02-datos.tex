@@ -162,12 +162,8 @@ por clase en ese conjunto cambian mucho con pocos aciertos.
     \end{tabularx}
 \end{table}
 
-Además de corregirla, interesa saber cuánto sobreestimaba la fuga el desempeño de los clasificadores. Para estimarlo,
-el Capítulo~\ref{cp:res_clasif} compara el resultado sobre la prueba completa con el que se obtiene sobre sus 894
-imágenes cuya lesión no aparecía ni en entrenamiento ni en validación de la partición original. Como control se usa
-DermLIP sin ajuste, que no se entrenó con \emph{HAM10000}: si su desempeño también cambia entre ambos conjuntos, el cambio se debe
-a la composición del subconjunto y no a la fuga. A diferencia de \emph{HAM10000}, los demás conjuntos no pasan por esta
-partición, porque cada uno trae su propia división o se usa completo como prueba.
+A diferencia de \emph{HAM10000}, los demás conjuntos no pasan por esta partición, porque cada uno trae su propia
+división o se usa completo como prueba.
 
 \subsection{SkinCaRe: SkinCAP y SkinCoT}
 

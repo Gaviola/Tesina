@@ -8,17 +8,33 @@
 \section{Evaluaciones complementarias del clasificador}
 \label{sec:res_complementarios}
 
-La prueba de \emph{HAM10000} comparte población, equipo de captura y forma de etiquetar con el entrenamiento. Esta
-sección presenta cuatro de las evaluaciones de la Sección~\ref{sec:met_complementarios}, que examinan a Swin-Tiny, en su
-ejecución de referencia (Sección~\ref{sec:met_estadistica}), fuera de esas condiciones: en otra población, con imágenes
-degradadas, en la confianza de sus probabilidades y en la región de la imagen en que se apoya. Las tablas incluyen a
-ConvNeXt-Tiny como contraste. La quinta evaluación, el costo, se presenta junto con la comparación de la
-Sección~\ref{sec:res_comparacion}.
+Esta sección presenta las evaluaciones de la Sección~\ref{sec:met_complementarios} que examinan a Swin-Tiny más allá de
+la comparación entre arquitecturas, en su ejecución de referencia (Sección~\ref{sec:met_estadistica}). Forman dos
+grupos. Las tres primeras estudian cómo cambia el desempeño: según la partición de los datos, en otro conjunto de
+datos y con imágenes degradadas. Las dos últimas analizan otras propiedades del clasificador: la confianza de sus
+probabilidades y la región de la imagen en que se apoya. Las tablas incluyen a ConvNeXt-Tiny como contraste, y el
+costo se presenta junto con la comparación de la Sección~\ref{sec:res_comparacion}.
+
+\subsection{Efecto de la fuga de información}
+\label{sec:res_fuga}
+
+Los resultados de la sección anterior se obtuvieron con la partición por lesión, sin fuga de información entre
+particiones (\emph{data leakage}; Sección~\ref{sec:met_particiones}). La primera evaluación estima cuánto cambiarían
+con la partición original por imagen (Sección~\ref{sec:met_fuga}). Para ello se evalúa un Swin-Tiny entrenado con ella, con la configuración que eligió su propia validación, sobre tres
+grupos de imágenes de su prueba: la prueba completa, las imágenes cuya lesión no aparece en su entrenamiento ni en su
+validación, y las que comparten lesión con el entrenamiento.
+
+Sobre la prueba completa, la sensibilidad macro de este modelo es de 0.870, y sobre las 894 imágenes sin lesión
+compartida, de 0.804. En las 543 que comparten lesión con el entrenamiento llega a 0.936, y las 66 restantes comparten
+lesión solo con la validación. Como control, DermLIP sin ajuste sobre \emph{HAM10000} no empeora en el grupo sin
+lesión compartida, lo que indica que la diferencia no se explica por una mayor dificultad de ese grupo. En esta prueba, entonces, la
+partición por imagen sobreestima la sensibilidad macro en unas 0.07, una distorsión que se retoma al comparar con
+otros trabajos en la Sección~\ref{sec:res_estado_arte}.
 
 \subsection{Generalización a otra población}
 \label{sec:res_hiba}
 
-La primera evaluación aplica Swin-Tiny y ConvNeXt-Tiny, sin ningún ajuste, a las 1\,616 imágenes de \emph{HIBA}. La
+La segunda evaluación aplica Swin-Tiny y ConvNeXt-Tiny, sin ningún ajuste, a las 1\,616 imágenes de \emph{HIBA}. La
 Tabla~\ref{tab:res_hiba} presenta la sensibilidad macro de cada modelo en la prueba de \emph{HAM10000} y en \emph{HIBA}, en total y separada por modalidad.
 
 \begin{table}[H]
@@ -66,7 +82,7 @@ un tercio de su sensibilidad, y \gls{bcc}, más de la mitad. Por lo tanto, el de
 \subsection{Robustez a perturbaciones de la imagen}
 \label{sec:res_robustez}
 
-La segunda evaluación conserva la población, pero degrada las imágenes de la prueba con cuatro perturbaciones de
+La tercera evaluación conserva la población, pero degrada las imágenes de la prueba con cuatro perturbaciones de
 intensidad creciente. La Figura~\ref{fig:res_robustez} presenta la sensibilidad macro de los dos modelos ante cada perturbación. La Tabla~\ref{tab:res_robustez} resume la caída relativa
 (Ecuación~\ref{eq:marco_robustez}) en los niveles 1, 3 y 5. Como esta evaluación usa una sola vista y no el
 \gls{tta}, la sensibilidad sin perturbar es algo menor que la de la Tabla~\ref{tab:res_hiba}.
@@ -112,7 +128,7 @@ así que no reemplazan la evaluación en \emph{HIBA}.
 \label{sec:res_calibracion}
 
 Además de acertar la clase, el clasificador entrega probabilidades que fijan el umbral de melanoma y que un clínico
-leería como certeza. La tercera evaluación mide cuánto se puede confiar en ellas. La
+leería como certeza. La cuarta evaluación mide cuánto se puede confiar en ellas. La
 Figura~\ref{fig:res_calibracion} presenta el diagrama de confiabilidad de Swin-Tiny entrenado sin pesos por clase y con ellos, en el que un modelo calibrado queda sobre la diagonal.
 
 \begin{figure}[H]
@@ -180,7 +196,7 @@ lesión. El primer error sugiere, entonces, una confusión entre lesiones pigmen
 fondo. Como se trata de siete imágenes, la inspección muestra que el modelo puede apoyarse en la lesión, pero no mide
 con qué frecuencia lo hace ni prueba un razonamiento clínico (Sección~\ref{sec:met_interpretabilidad}).
 
-Con estas cuatro evaluaciones, el clasificador queda caracterizado también fuera de las condiciones de su
-entrenamiento: pierde buena parte de su desempeño en otra población, es sensible al ruido de la imagen y entrega
+Con estas cinco evaluaciones, el clasificador queda caracterizado también fuera de las condiciones de su
+entrenamiento: la partición por imagen sobreestima su desempeño, pierde buena parte de él en otra población, es sensible al ruido de la imagen y entrega
 probabilidades bien calibradas cuando se entrena sin pesos. Queda por ver si un \gls{vlm} podría ocupar su lugar, que es
 lo que evalúa la sección siguiente.
