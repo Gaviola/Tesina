@@ -4,30 +4,34 @@
 % función de pérdida; VLM y generadores con decodificación voraz o verosimilitud, deterministas.
 % Revisión del tutor del 26/10/2026 (audio 7): la configuración de los experimentos estaba suelta al final de 3.8;
 % se ordena por etapas, separando imágenes y reportes, y se dice cuántas ejecuciones tiene cada configuración.
+% Revisión del tutor del 03/11/2026: la tabla sigue el orden de los Caps. 4 y 5, distingue experimentos principales y
+% complementarios, y cada grupo dice qué pregunta responde.
 \section{Diseño de los experimentos}
 \label{sec:met_diseno}
 
 Las secciones anteriores describen cada componente, el \emph{pipeline} y la forma de evaluarlos. Los experimentos que
-los ponen a prueba se organizan por etapas, de modo que cada etapa usa lo que produjo la anterior, y se dividen en dos
-partes. La primera parte trabaja con la clasificación de las imágenes y produce el clasificador del
+evalúan su funcionamiento se organizan por etapas, de modo que cada etapa usa lo que produjo la anterior, y se dividen
+en dos partes. La primera parte trabaja con la clasificación de las imágenes y produce el clasificador del
 \emph{pipeline}. La segunda trabaja con los reportes y usa ese clasificador como primer componente del
 \emph{pipeline}, que solo interviene en esta parte.
 
-La clasificación de las imágenes se evalúa en cuatro etapas:
+La primera parte busca responder si un \gls{vlm} clasifica las lesiones tan bien como un clasificador entrenado solo con
+imágenes (PI1), y se desarrolla en cuatro etapas:
 \begin{enumerate}[leftmargin=1.6em]
     \item \textbf{Búsqueda de hiperparámetros.} Swin-Tiny y ConvNeXt-Tiny se entrenan con las 30 configuraciones de
     la Sección~\ref{sec:met_supervisados_ensamble}, y la validación elige una por modelo.
     \item \textbf{Comparación de los clasificadores supervisados.} Los cuatro modelos se entrenan con la configuración
     elegida, se combinan los dos de la búsqueda en el ensamble y se fija en validación el umbral de melanoma.
     \item \textbf{Variantes y evaluaciones complementarias.} Sobre los modelos de la etapa anterior se comparan las
-    funciones de pérdida para el desbalance, se estima el efecto de la fuga de información y se aplican las
-    evaluaciones de la Sección~\ref{sec:met_complementarios}.
-    \item \textbf{Clasificación con \glspl{vlm}.} Mini-VLM, LLaVA-Med y DermLIP clasifican la misma prueba, sin ajuste y
-    con las estrategias y los controles de la Sección~\ref{sec:met_clasif_vlm}, y se comparan con los supervisados.
+    funciones de pérdida para el desbalance y se aplican las evaluaciones de la
+    Sección~\ref{sec:met_complementarios}.
+    \item \textbf{Clasificación con \glspl{vlm}.} Mini-VLM, LLaVA-Med y DermLIP clasifican el mismo conjunto de prueba,
+    sin ajuste y con las estrategias y los controles de la Sección~\ref{sec:met_clasif_vlm}, y se comparan con los
+    supervisados.
 \end{enumerate}
 
-La generación de reportes, por su parte, avanza en tres etapas, que agregan de a uno los componentes del
-\emph{pipeline}:
+La segunda parte busca responder si los reportes afirman el diagnóstico correcto y describen la lesión que muestra la
+imagen (PI2). Avanza en tres etapas, que agregan de a uno los componentes del \emph{pipeline}:
 \begin{enumerate}[leftmargin=1.6em]
     \item \textbf{Generador solo.} Mini-VLM y LLaVA-Med se ajustan sobre \emph{SkinCaRe}
     (Sección~\ref{sec:met_generacion}) y, con SkinVL, generan reportes sin diagnóstico, que se comparan con los textos
@@ -46,108 +50,141 @@ la configuración elegida, de modo que sus resultados se informan como media y d
 generadores, en cambio, se ejecutan una vez por configuración, porque la verosimilitud y la decodificación voraz
 devuelven la misma salida para la misma entrada. Cada generador, por su parte, se ajusta una sola vez.
 
-La Tabla~\ref{tab:met_experimentos} reúne los experimentos con lo que busca cada uno, los datos sobre los que se mide y
-su métrica principal. El Capítulo~\ref{cp:res_clasif} presenta los resultados de la primera parte, la clasificación
-de las imágenes, y el Capítulo~\ref{cp:res_gen}, los de la segunda, la generación de reportes con el
-\emph{pipeline}.
+Los experimentos cumplen, además, dos papeles. Los principales responden directamente las preguntas de investigación, y
+los complementarios analizan causas, variantes y condiciones particulares de esos resultados. La
+Tabla~\ref{tab:met_experimentos} los reúne en el orden en que se presentan en los Capítulos~\ref{cp:res_clasif}
+y~\ref{cp:res_gen}, con lo que busca cada uno, los datos sobre los que se mide y su métrica principal. El
+Capítulo~\ref{cp:res_clasif} presenta los resultados de la primera parte, la clasificación de las imágenes, y el
+Capítulo~\ref{cp:res_gen}, los de la segunda, la generación de reportes con el \emph{pipeline}.
 
 \begingroup
 \small
 \setlength{\tabcolsep}{3pt}
-\begin{longtable}{@{}>{\raggedright\arraybackslash}p{3.5cm}
-    >{\raggedright\arraybackslash\hspace{0pt}}p{4.3cm}
-    >{\raggedright\arraybackslash\hspace{0pt}}p{2.6cm}
-    >{\raggedright\arraybackslash\hspace{0pt}}p{3.5cm}@{}}
-    \caption{Experimentos del trabajo: qué busca cada uno, sobre qué datos se mide y con qué métrica.}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{3.3cm}
+    >{\raggedright\arraybackslash\hspace{0pt}}p{1.9cm}
+    >{\raggedright\arraybackslash\hspace{0pt}}p{3.5cm}
+    >{\raggedright\arraybackslash\hspace{0pt}}p{2.5cm}
+    >{\raggedright\arraybackslash\hspace{0pt}}p{2.7cm}@{}}
+    \caption{Experimentos del trabajo, en el orden de los Capítulos~\ref{cp:res_clasif} y~\ref{cp:res_gen}: papel, qué busca cada uno, sobre qué datos se mide y con qué métrica.}
     \label{tab:met_experimentos}\\
     \toprule
-    \textbf{Experimento} & \textbf{Qué se busca} & \textbf{Datos} & \textbf{Métrica principal} \\
+    \textbf{Experimento} & \textbf{Papel} & \textbf{Qué se busca} & \textbf{Datos} & \textbf{Métrica principal} \\
     \midrule
     \endfirsthead
     \toprule
-    \textbf{Experimento} & \textbf{Qué se busca} & \textbf{Datos} & \textbf{Métrica principal} \\
+    \textbf{Experimento} & \textbf{Papel} & \textbf{Qué se busca} & \textbf{Datos} & \textbf{Métrica principal} \\
     \midrule
     \endhead
     \bottomrule
     \endlastfoot
+    \multicolumn{5}{@{}l}{\textit{Capítulo~\ref{cp:res_clasif}: ¿un \gls{vlm} clasifica tan bien como un clasificador supervisado?}} \\
     Clasificadores supervisados (Sección~\ref{sec:met_supervisados})
+        & Principal
         & Comparar las dos familias de arquitecturas con el mismo procedimiento
-        & Prueba de \emph{HAM10000}
+        & Conjunto de prueba de \emph{HAM10000}
         & Sensibilidad macro; F1 macro \\
     \filasep
-    Funciones de pérdida para el desbalance
-        & Ver si otra función de pérdida mejora las clases minoritarias
-        & Prueba de \emph{HAM10000}
-        & Sensibilidad macro \\
-    \filasep
-    Detección de melanoma
+    Detección de melanoma (Sección~\ref{sec:met_seleccion})
+        & Principal
         & Detectar melanomas con un tope de falsas alarmas
-        & Prueba de \emph{HAM10000}
+        & Conjunto de prueba de \emph{HAM10000}
         & Sensibilidad y especificidad con umbral; AUC \\
     \filasep
-    Fuga de información (Sección~\ref{sec:met_particiones})
-        & Estimar cuánto sobreestimaba la fuga el desempeño
-        & Prueba completa y subconjunto sin lesiones compartidas
+    Funciones de pérdida para el desbalance (Sección~\ref{sec:met_supervisados_ensamble})
+        & Complementario
+        & Ver si otra función de pérdida mejora las clases minoritarias
+        & Conjunto de prueba de \emph{HAM10000}
         & Sensibilidad macro \\
     \filasep
-    Clasificación con \glspl{vlm} (Sección~\ref{sec:met_clasif_vlm})
-        & Saber si un \gls{vlm} clasifica tan bien como un supervisado
-        & Prueba de \emph{HAM10000}; fotografías clínicas de \emph{SkinCAP} como control
-        & Sensibilidad macro; McNemar con Holm \\
-    \filasep
-    Generación con referencia
-        & Medir el parecido del reporte con un texto de referencia
-        & Prueba de \emph{MM-Skin} y de \emph{SkinCoT}
-        & Nivel~1 (BLEU-4, ROUGE-L, METEOR, CIDEr, BERTScore) \\
-    \filasep
-    Ajuste del modelo de lenguaje de Mini-VLM (Sección~\ref{sec:met_generacion})
-        & Ver si ajustar también el modelo de lenguaje cambia el reporte
-        & Prueba de \emph{HAM10000} y de \emph{SkinCoT}
-        & Diferencia pareada de la consistencia diagnóstica; Nivel~1 \\
-    \filasep
-    Cascada con cuatro fuentes (Sección~\ref{sec:met_referencias})
-        & Saber si el reporte afirma el diagnóstico correcto y cuánto aporta el anclaje
-        & Prueba de \emph{HAM10000}
-        & Consistencia diagnóstica \\
-    \filasep
-    Cascada sin imagen y con diagnóstico equivocado (Sección~\ref{sec:met_referencias})
-        & Separar lo que el reporte toma de la imagen de lo que toma del diagnóstico
-        & 400 imágenes de la prueba de \emph{HAM10000}; la prueba completa con SkinVL
-        & Consistencia diagnóstica \\
-    \filasep
-    Recuperación (Sección~\ref{sec:met_recuperacion})
-        & Ver si los casos parecidos mejoran el reporte
-        & Prueba de \emph{HAM10000}
-        & Consistencia diagnóstica \\
-    \filasep
-    Ruteo en tres niveles (Sección~\ref{sec:met_ruteo})
-        & Ver si la concordancia separa aciertos de errores y cuánto aporta el generador
-        & Prueba de \emph{HAM10000}
-        & Consistencia diagnóstica por nivel; proporción de casos en cada nivel \\
+    Fuga de información (Sección~\ref{sec:met_fuga})
+        & Complementario
+        & Estimar cuánto sobreestimaba la fuga el desempeño
+        & Conjunto de prueba completo y subconjunto sin lesiones compartidas
+        & Sensibilidad macro \\
     \filasep
     Generalización (Sección~\ref{sec:met_hiba})
-        & Ver si el desempeño se sostiene en otra población
+        & Complementario
+        & Ver si el desempeño se sostiene en otro conjunto de datos
         & \emph{HIBA}
         & Sensibilidad macro \\
     \filasep
     Robustez (Sección~\ref{sec:met_robustez})
+        & Complementario
         & Medir la caída ante peores condiciones de captura
-        & Prueba de \emph{HAM10000} perturbada
+        & Conjunto de prueba de \emph{HAM10000} perturbado
         & Caída relativa de la sensibilidad macro \\
     \filasep
     Calibración (Sección~\ref{sec:met_calibracion})
+        & Complementario
         & Saber cuánto se puede confiar en la probabilidad
-        & Validación y prueba de \emph{HAM10000}
+        & Conjuntos de validación y de prueba de \emph{HAM10000}
         & ECE; Brier \\
     \filasep
     Interpretabilidad (Sección~\ref{sec:met_interpretabilidad})
+        & Complementario
         & Ver en qué parte de la imagen se apoya el modelo
-        & Siete imágenes de prueba
+        & Imágenes del conjunto de prueba
         & Inspección cualitativa \\
     \filasep
-    Costo computacional (Sección~\ref{sec:met_costo})
-        & Estimar el costo de ejecutar los modelos y el \emph{pipeline}
-        & Prueba de \emph{HAM10000}
-        & Parámetros; tiempo por imagen y por reporte \\
+    Clasificación con \glspl{vlm} (Sección~\ref{sec:met_clasif_vlm})
+        & Principal
+        & Saber si un \gls{vlm} clasifica tan bien como un supervisado
+        & Conjunto de prueba de \emph{HAM10000}; fotografías clínicas de \emph{SkinCAP} como control
+        & Sensibilidad macro; McNemar con Holm \\
+    \filasep
+    Costo de los clasificadores (Sección~\ref{sec:met_costo})
+        & Complementario
+        & Estimar el costo de ejecutar los clasificadores
+        & Conjunto de prueba de \emph{HAM10000}
+        & Parámetros; memoria; tiempo por imagen \\
+    \filasep
+    \multicolumn{5}{@{}l}{\textit{Capítulo~\ref{cp:res_gen}: ¿los reportes afirman el diagnóstico correcto y describen la lesión?}} \\
+    Generación sin diagnóstico (Sección~\ref{sec:met_generacion})
+        & Principal
+        & Medir el parecido con un texto de referencia y si el reporte afirma la clase por sí solo
+        & Conjuntos de prueba de \emph{MM-Skin}, \emph{SkinCoT} y \emph{HAM10000}
+        & Nivel~1 (BLEU-4, ROUGE-L, METEOR, CIDEr, BERTScore); consistencia diagnóstica \\
+    \filasep
+    Cascada con cuatro fuentes (Sección~\ref{sec:met_referencias})
+        & Principal
+        & Saber si el reporte afirma el diagnóstico correcto y cuánto aporta el anclaje
+        & Conjunto de prueba de \emph{HAM10000}
+        & Consistencia diagnóstica \\
+    \filasep
+    Cascada sin imagen y con diagnóstico equivocado (Sección~\ref{sec:met_referencias})
+        & Complementario
+        & Separar lo que el reporte toma de la imagen de lo que toma del diagnóstico
+        & 400 imágenes del conjunto de prueba de \emph{HAM10000}; el conjunto completo con SkinVL
+        & Consistencia diagnóstica; cobertura de entidades \\
+    \filasep
+    Fallas de los reportes (Sección~\ref{sec:met_eval_generacion})
+        & Complementario
+        & Caracterizar de qué manera falla el reporte cuando no nombra la clase verdadera
+        & Conjunto de prueba de \emph{HAM10000}
+        & Proporción de reportes por falla principal \\
+    \filasep
+    Recuperación (Sección~\ref{sec:met_recuperacion})
+        & Complementario
+        & Ver si los casos parecidos mejoran el reporte
+        & Conjunto de prueba de \emph{HAM10000}
+        & Consistencia diagnóstica \\
+    \filasep
+    Ruteo en tres niveles (Sección~\ref{sec:met_ruteo})
+        & Principal
+        & Ver si la concordancia separa aciertos de errores y cuánto aporta el generador
+        & Conjunto de prueba de \emph{HAM10000}
+        & Consistencia diagnóstica por nivel; proporción de casos en cada nivel \\
+    \filasep
+    Ajuste del modelo de lenguaje de Mini-VLM (Sección~\ref{sec:met_generacion})
+        & Complementario
+        & Ver si ajustar también el modelo de lenguaje cambia el reporte
+        & Conjuntos de prueba de \emph{HAM10000} y de \emph{SkinCoT}
+        & Diferencia pareada de la consistencia diagnóstica; Nivel~1 \\
+    \filasep
+    Costo del \emph{pipeline} (Sección~\ref{sec:met_costo})
+        & Complementario
+        & Estimar el costo de ejecutar los generadores y el \emph{pipeline}
+        & Conjunto de prueba de \emph{HAM10000}
+        & Parámetros; memoria; tiempo por reporte \\
 \end{longtable}
 \endgroup
