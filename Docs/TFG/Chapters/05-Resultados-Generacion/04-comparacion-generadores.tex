@@ -34,7 +34,7 @@ entidades clínicas y el tiempo por reporte.
 \end{figure}
 
 En consistencia, Mini-VLM y SkinVL obtienen los valores más altos y no se distinguen, ni con Swin-Tiny ni con el
-\emph{oracle}, porque los dos transcriben el diagnóstico. LLaVA-Med obtiene el más bajo: Mini-VLM lo supera por una décima
+\emph{oracle}, porque los dos transcriben el diagnóstico. LLaVA-Med obtiene el más bajo (0.745, frente a 0.849 de Mini-VLM y 0.846 de SkinVL): Mini-VLM lo supera por una décima
 con Swin-Tiny, 0.104 [0.087, 0.122], y la diferencia crece con el \emph{oracle}, porque en ese caso todas las fallas
 son del generador. Es decir, el generador biomédico más grande es el que menos transcribe el diagnóstico recibido.
 
@@ -92,7 +92,9 @@ costa de reportes vacíos.
 \label{sec:res_costo}
 
 El costo de los clasificadores, que se mide en milisegundos por imagen (Sección~\ref{sec:res_costo_clasificadores}),
-es una parte mínima del costo del \emph{pipeline}. La Tabla~\ref{tab:res_costo_generadores} presenta el de los generadores, medido en la A30 de la Sección~\ref{sec:met_entorno}.
+es una parte mínima del costo del \emph{pipeline}. La Tabla~\ref{tab:res_costo_generadores} presenta el de los generadores, medido en la A30 de la
+Sección~\ref{sec:met_entorno}: para cada uno, los parámetros, la memoria al cargar el modelo y al generar, el tiempo de la
+segunda etapa de ajuste, los segundos por reporte y las horas que lleva generar los reportes del conjunto de prueba.
 
 Un reporte de Mini-VLM en la A30 tarda más de mil veces lo que una clasificación de Swin-Tiny en la RTX 4070. Aunque
 las dos mediciones se hicieron en GPU distintas, la diferencia es de tres órdenes de magnitud, de modo que el costo del
@@ -126,10 +128,13 @@ rápido porque escribe una oración, y Mini-VLM tarda menos que LLaVA-Med con re
 
 La memoria, en cambio, sí depende del tamaño. Mini-VLM ocupa como máximo 8.6~GB durante la generación, por debajo de
 los 12~GB de una GPU de consumo como la RTX 4070, mientras que LLaVA-Med y SkinVL superan esa cifra ya al cargar los
-pesos. La generación agrega poco a la carga, porque cada reporte se escribe de a uno y con un límite de 384 tokens. El ajuste de Mini-VLM tomó
-algo más de nueve horas en la A30, y el de LLaVA-Med, algo menos de siete. Por lo tanto, el pipeline con
-Mini-VLM cumple la restricción de cómputo de la Sección~\ref{sec:met_tareas}: se ajusta en una sola GPU de 24~GB, su generación entra en los 12~GB de una de consumo, y en la A30 escribe un reporte en menos de 20 segundos. Que el ajuste también entre en 12 o 16~GB
-no se comprobó.
+pesos. La generación agrega poco a la carga, porque cada reporte se escribe de a uno y con un límite de 384 tokens. El ajuste de Mini-VLM tomó algo más de nueve horas en la A30, y el de LLaVA-Med, algo menos de siete.
+
+La generación de Mini-VLM se comprobó, además, en la RTX 4070 de 12~GB, con 20 reportes de la cascada y versiones más
+recientes de PyTorch y \texttt{transformers}: ocupó como máximo 8.3~GB, con una mediana de 5.3 segundos por reporte, frente
+a 10.8 segundos en la A30 para esos mismos reportes. Por lo tanto, el \emph{pipeline} con Mini-VLM cumple la restricción de
+cómputo de la Sección~\ref{sec:met_tareas}: se ajusta en una sola GPU de 24~GB, y su generación se ejecuta en una GPU de
+consumo de 12~GB.
 
 Con la fidelidad, la descripción y el costo de cada generador caracterizados, queda ubicar estos resultados frente a
 los de la literatura.

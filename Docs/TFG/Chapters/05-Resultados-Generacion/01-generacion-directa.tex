@@ -9,8 +9,8 @@
 \section{Generación de reportes sin diagnóstico}
 \label{sec:res_gen_directa}
 
-El Capítulo~\ref{cp:res_clasif} mostró que los \glspl{vlm} generativos no distinguen las siete clases cuando se los usa
-como clasificadores. Ajustados con \emph{SkinCaRe} (Sección~\ref{sec:met_generacion}), en cambio, los generadores
+En el Capítulo~\ref{cp:res_clasif}, los \glspl{vlm} generativos usados como clasificadores concentran sus predicciones en una
+clase, con una sensibilidad macro cercana a 1/7. Ajustados con \emph{SkinCaRe} (Sección~\ref{sec:met_generacion}), en cambio, los generadores
 escriben un texto con la forma de un reporte clínico, que tiene dos partes: la descripción de la lesión y el
 diagnóstico en que termina. Esta sección presenta los resultados del generador aislado, sin el clasificador ni la
 recuperación del \emph{pipeline}. Cada generador recibe solo la imagen y la instrucción del entrenamiento, «Describe
@@ -20,10 +20,9 @@ generadores.
 
 Las dos partes del reporte se miden con instrumentos distintos (Sección~\ref{sec:met_eval_generacion}). La
 descripción se compara con un texto de referencia en los conjuntos que lo tienen, el Nivel~1, y el diagnóstico se
-busca en el reporte sobre las imágenes de \emph{HAM10000}, la consistencia diagnóstica del Nivel~2. La consistencia
-verifica, entonces, si el diagnóstico del reporte es correcto, mientras que la fidelidad visual de la descripción, es
-decir, que los rasgos que el reporte enumera estén en la imagen, queda verificada solo en parte, porque su revisión
-completa requiere a un especialista (Capítulo~\ref{cp:discusion}).
+busca en el reporte sobre las imágenes de \emph{HAM10000}, la consistencia diagnóstica del Nivel~2. La consistencia indica, entonces, si el reporte nombra el diagnóstico correcto. La descripción, en cambio, se evalúa de
+forma experimental, por su parecido con textos de referencia y por cómo cambia con la imagen
+(Sección~\ref{sec:res_gen_ablaciones}), una evaluación distinta de comprobar que cada rasgo enumerado esté en la imagen.
 
 \subsection{Comparación con textos de referencia}
 \label{sec:res_gen_nivel1}

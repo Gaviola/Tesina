@@ -26,7 +26,8 @@ alternativa al clasificador.
 \subsection{Consistencia según la fuente del diagnóstico}
 \label{sec:res_gen_fuentes}
 
-La Figura~\ref{fig:res_gen_cascada} presenta la consistencia de cada generador con cada fuente.
+La Figura~\ref{fig:res_gen_cascada} presenta la consistencia diagnóstica de cada generador, con un punto por fuente del
+diagnóstico. La línea discontinua marca la exactitud de Swin-Tiny.
 
 \begin{figure}[!tbp]
     \centering
@@ -94,8 +95,8 @@ siete reportes. Por lo tanto, de las dos fuentes que no conocen la etiqueta, el 
 más diagnósticos correctos al reporte.
 
 Si el generador transcribe el diagnóstico, la cascada debería heredar también la sensibilidad de Swin-Tiny en cada clase.
-Para comprobarlo, la Figura~\ref{fig:res_gen_clases} compara, para cada clase y cada generador, la sensibilidad de Swin-Tiny con la consistencia de la cascada. Un
-punto sobre la diagonal indica que el reporte nombra la clase tantas veces como la acierta el clasificador.
+Para comprobarlo, la Figura~\ref{fig:res_gen_clases} compara, para cada clase y cada generador, la sensibilidad de
+Swin-Tiny (eje horizontal) con la consistencia de la cascada (eje vertical). Un punto sobre la diagonal indica que el reporte nombra la clase tantas veces como la acierta el clasificador.
 
 \begin{figure}[!tbp]
     \centering
@@ -169,8 +170,8 @@ descrito esté en ella (Sección~\ref{sec:met_eval_generacion}).
 La consistencia indica si el reporte nombra la clase verdadera, pero no de qué manera falla cuando no lo hace. Para
 saberlo, cada reporte se asignó a su falla principal con las reglas de la Sección~\ref{sec:met_eval_generacion}, que
 cuentan aparte la expresión de reserva junto a la clase verdadera, como «consistent with nevus», porque el reporte se
-compromete con el diagnóstico. La Figura~\ref{fig:res_gen_errores} presenta una barra por generador y fuente (sin
-anclaje, Swin-Tiny y \emph{oracle}), dividida según la proporción de los reportes que cae en cada falla principal.
+compromete con el diagnóstico. La Figura~\ref{fig:res_gen_errores} presenta una barra por generador y fuente del diagnóstico (sin anclaje, Swin-Tiny y \emph{oracle}). Cada barra se divide
+según la fracción de los reportes que cae en cada categoría, desde el diagnóstico correcto hasta la falta de diagnóstico.
 
 \begin{figure}[H]
     \centering
@@ -197,7 +198,9 @@ menos del 1\,\% con anclaje.
 \label{sec:res_gen_rag}
 
 La cascada depende de un clasificador entrenado, y la recuperación de la Sección~\ref{sec:met_recuperacion} es la
-alternativa que entrega al generador los diagnósticos de los tres casos de entrenamiento más parecidos. La
+alternativa que entrega al generador los diagnósticos de los tres casos de entrenamiento más parecidos. Aquí la
+recuperación se estudia como contexto para el generador, mientras que en la sección siguiente el \gls{knn} interviene
+como mecanismo de concordancia para el ruteo. La
 Tabla~\ref{tab:res_gen_rag} compara, con Mini-VLM, la recuperación sola y sumada a la cascada con la cascada simple y
 con dos líneas base sin generador que escriben solo el diagnóstico: el voto del \gls{knn} y el de Swin-Tiny. Para cada
 condición se informan la consistencia y la proporción de reportes que nombran la clase verdadera y ninguna otra.
