@@ -48,8 +48,7 @@ confianza: la que aporta anclar el reporte a Swin-Tiny frente a no anclarlo, y l
 
 \begin{table}[H]
     \centering
-    \caption{Consistencia diagnóstica de la cascada según la fuente del diagnóstico, con las diferencias y su IC del
-    95\,\% (bootstrap pareado).}
+    \caption{Consistencia diagnóstica de la cascada según la fuente del diagnóstico, con las diferencias y su IC del 95\,\% (bootstrap pareado). En las diferencias, la negrita indica que el IC no incluye el cero.}
     \label{tab:res_gen_cascada}
     \small
     \setlength{\tabcolsep}{2pt}
@@ -58,9 +57,9 @@ confianza: la que aporta anclar el reporte a Swin-Tiny frente a no anclarlo, y l
         \textbf{Generador} & \textbf{\encabezado{Sin\\anclaje}} & \textbf{DermLIP} & \textbf{\encabezado{Swin-\\Tiny}}
             & \textbf{Oracle} & \textbf{\encabezado{Swin-Tiny $-$\\sin anclaje}} & \textbf{\encabezado{Oracle $-$\\Swin-Tiny}} \\
         \midrule
-        Mini-VLM & 0.163 & 0.717 & 0.849 & 0.999 & $+0.686$ [$+0.658$, $+0.712$] & $+0.150$ [$+0.132$, $+0.168$] \\
-        LLaVA-Med & 0.582 & 0.641 & 0.745 & 0.854 & $+0.162$ [$+0.130$, $+0.194$] & $+0.110$ [$+0.094$, $+0.126$] \\
-        SkinVL & 0.001 & 0.716 & 0.846 & 0.999 & $+0.845$ [$+0.827$, $+0.863$] & $+0.153$ [$+0.135$, $+0.171$] \\
+        Mini-VLM & 0.163 & \textbf{0.717} & \textbf{0.849} & \textbf{0.999} & $\mathbf{+0.686}$ [$+0.658$, $+0.712$] & $\mathbf{+0.150}$ [$+0.132$, $+0.168$] \\
+        LLaVA-Med & \textbf{0.582} & 0.641 & 0.745 & 0.854 & $\mathbf{+0.162}$ [$+0.130$, $+0.194$] & $\mathbf{+0.110}$ [$+0.094$, $+0.126$] \\
+        SkinVL & 0.001 & 0.716 & 0.846 & \textbf{0.999} & $\mathbf{+0.845}$ [$+0.827$, $+0.863$] & $\mathbf{+0.153}$ [$+0.135$, $+0.171$] \\
         \bottomrule
     \end{tabularx}
 \end{table}
@@ -128,8 +127,8 @@ variantes se midieron sobre 400 imágenes con Mini-VLM y LLaVA-Med y sobre el co
 
 \begin{table}[H]
     \centering
-    \caption{Cascada con el oracle con la imagen, sin ella y con un diagnóstico equivocado. La consistencia se
-    mide respecto de la clase verdadera.}
+    \caption{Cascada con el oracle con la imagen, sin ella y con un diagnóstico equivocado. La consistencia se mide respecto de la clase verdadera. En negrita, el mejor valor de cada columna.}
+
     \label{tab:res_gen_ablaciones}
     \small
     \setlength{\tabcolsep}{3pt}
@@ -138,12 +137,12 @@ variantes se midieron sobre 400 imágenes con Mini-VLM y LLaVA-Med y sobre el co
         & & \multicolumn{3}{c}{\textbf{Consistencia diagnóstica}} & \textbf{\encabezado{Reportes\\distintos}}
             & \textbf{\encabezado{Cobertura\\de entidades}} \\
         \cmidrule(lr){3-5}
-        \textbf{Generador} & \textbf{Imágenes} & \textbf{\encabezado{Con\\imagen}} & \textbf{\encabezado{Sin\\imagen}}
-            & \textbf{\encabezado{Diagnóstico\\equivocado}} & \textbf{\encabezado{Con / sin\\imagen}}
+        \textbf{Generador} & \textbf{Imágenes} & \textbf{\encabezado{Con\\imagen}}~$\uparrow$ & \textbf{\encabezado{Sin\\imagen}}~$\uparrow$
+            & \textbf{\encabezado{Diagnóstico\\equivocado}}~$\uparrow$ & \textbf{\encabezado{Con / sin\\imagen}}
             & \textbf{\encabezado{Con / sin\\imagen}} \\
         \midrule
-        Mini-VLM & 400 & 1.000 & 1.000 & 0.000 & 395 / 7 & 0.787 / 0.378 \\
-        LLaVA-Med & 400 & 0.863 & 0.893 & 0.020 & 399 / 7 & 0.760 / 0.811 \\
+        Mini-VLM & 400 & \textbf{1.000} & \textbf{1.000} & 0.000 & 395 / 7 & \textbf{0.787} / 0.378 \\
+        LLaVA-Med & 400 & 0.863 & 0.893 & \textbf{0.020} & 399 / 7 & 0.760 / \textbf{0.811} \\
         SkinVL & 1\,503 & 0.999 & 0.967 & 0.000 & 67 / 7 & 0.377 / 0.423 \\
         \bottomrule
     \end{tabularx}
@@ -213,14 +212,14 @@ condición se informan la consistencia y la proporción de reportes que nombran 
     \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X >{\centering\arraybackslash}p{3.0cm}
         >{\centering\arraybackslash}p{3.0cm}@{}}
         \toprule
-        \textbf{Condición} & \textbf{Consistencia diagnóstica} & \textbf{Solo la clase verdadera} \\
+        \textbf{Condición} & \textbf{Consistencia diagnóstica}~$\uparrow$ & \textbf{Solo la clase verdadera}~$\uparrow$ \\
         \midrule
         Sin anclaje & 0.163 & 0.045 \\
         Recuperación sola & 0.669 & 0.500 \\
         Voto del \gls{knn}, sin generador & 0.781 & 0.781 \\
         Cascada con Swin-Tiny & 0.849 & 0.757 \\
-        Swin-Tiny, sin generador & 0.847 & 0.847 \\
-        Cascada con Swin-Tiny y recuperación & 0.862 & 0.792 \\
+        Swin-Tiny, sin generador & 0.847 & \textbf{0.847} \\
+        Cascada con Swin-Tiny y recuperación & \textbf{0.862} & 0.792 \\
         \bottomrule
     \end{tabularx}
 \end{table}

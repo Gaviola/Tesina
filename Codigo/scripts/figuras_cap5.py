@@ -180,21 +180,30 @@ def fig_resumen():
              if d.get("gen_s_por_reporte")}
     seg = {"mini_vlm": costo["Mini-VLM (Phi-3.5-V)"], "llava_med": costo["LLaVA-Med v1.5 (7B)"],
            "skinvl": costo["SkinVL-MM (7B)"]}
-    fig, axs = plt.subplots(1, 3, figsize=(6.4, 1.9), sharey=True)
+    fig, axs = plt.subplots(1, 3, figsize=(6.4, 2.1), sharey=True)
     y = np.arange(len(GEN))[::-1]
+    # Los dos paneles con marca del oracle llevan el valor de la barra por dentro y el del oracle por fuera.
+    texto_barra = {"mini_vlm": "white", "llava_med": "#222222", "skinvl": "white"}
     for i, (g, _) in enumerate(GEN):
         c = cargar(BOOT[g])["consistencia"]
-        axs[0].barh(y[i], c["full_swin_les"], color=COLOR_GEN[g], height=0.6)
-        axs[0].scatter(c["full_oracle"], y[i], marker="|", s=120, color="#222222", zorder=3,
-                       label="oracle" if i == 0 else None)
-        axs[1].barh(y[i], der[g]["full_swin_les"]["cobertura_entidades"], color=COLOR_GEN[g], height=0.6)
+        pares = ((axs[0], c["full_swin_les"], c["full_oracle"]),
+                 (axs[1], der[g]["full_swin_les"]["cobertura_entidades"], der[g]["full_oracle"]["cobertura_entidades"]))
+        for ax, swin, oraculo in pares:
+            ax.barh(y[i], swin, color=COLOR_GEN[g], height=0.6)
+            ax.scatter(oraculo, y[i] + 0.0, marker="|", s=120, color="#222222", zorder=3,
+                       label="Con el oracle" if i == 0 else None)
+            ax.text(swin - 0.02, y[i], f"{swin:.3f}", va="center", ha="right", fontsize=7, color=texto_barra[g])
+            ax.text(max(swin, oraculo) + 0.03, y[i], f"{oraculo:.3f}", va="center", fontsize=7, color="#222222")
         axs[2].barh(y[i], seg[g], color=COLOR_GEN[g], height=0.6)
-        axs[2].text(seg[g] + 0.5, y[i], f"{seg[g]:.1f}", va="center", fontsize=7.5)
+        axs[2].text(seg[g] + 0.5, y[i], f"{seg[g]:.1f}", va="center", fontsize=7)
     axs[0].set_yticks(y, [n for _, n in GEN])
-    axs[0].set_xlim(0, 1)
-    axs[0].set_xlabel("Consistencia (Swin-Tiny)")
-    axs[0].legend(loc="lower center", bbox_to_anchor=(0.5, 1.0), frameon=False, fontsize=7.5, handletextpad=0.2)
-    axs[1].set_xlim(0, 1)
+    axs[0].set_xlim(0, 1.3)
+    axs[0].set_xticks([0, 0.5, 1])
+    axs[0].set_xlabel("Consistencia diagnóstica")
+    h, e = axs[0].get_legend_handles_labels()
+    fig.legend(h, e, loc="upper center", bbox_to_anchor=(0.36, 1.08), frameon=False, fontsize=7.5, handletextpad=0.2)
+    axs[1].set_xlim(0, 1.3)
+    axs[1].set_xticks([0, 0.5, 1])
     axs[1].set_xlabel("Cobertura de entidades")
     axs[2].set_xlim(0, 32)
     axs[2].set_xlabel("Segundos por reporte")

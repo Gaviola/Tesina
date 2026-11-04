@@ -22,14 +22,14 @@ tercero detalla la memoria y los tiempos del \emph{pipeline} completo, y sus res
 La comparación usa la cascada con Swin-Tiny sobre las 1\,503 imágenes de prueba, con la misma plantilla y
 decodificación para los tres generadores.
 La Figura~\ref{fig:res_gen_resumen} reúne lo que separa a los generadores en tres paneles, con una barra por
-generador: la consistencia diagnóstica, con una marca vertical en la que obtiene con el \emph{oracle}, la cobertura de
-entidades clínicas y el tiempo por reporte.
+generador: la consistencia diagnóstica y la cobertura de entidades clínicas, con una marca vertical en el valor que
+obtienen con el \emph{oracle}, y el tiempo por reporte.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{Figures/Capitulos/05-Resultados-Generacion/resumen-generadores.pdf}
     \caption{Consistencia diagnóstica, cobertura de entidades clínicas y tiempo por reporte de los tres generadores
-    en la cascada con Swin-Tiny. La marca vertical es la consistencia con el oracle.}
+    en la cascada con Swin-Tiny. La marca vertical es el valor con el oracle.}
     \label{fig:res_gen_resumen}
 \end{figure}
 
@@ -57,19 +57,18 @@ y sin anclaje, la variante de control tiene reportes solo para una parte del con
 
 \begin{table}[H]
     \centering
-    \caption{Consistencia diagnóstica de la variante de control de Mini-VLM frente a la configuración principal, con
-    IC del 95\,\% (bootstrap pareado).}
+    \caption{Consistencia diagnóstica de la variante de control de Mini-VLM frente a la configuración principal, con IC del 95\,\% (bootstrap pareado). En negrita, el mayor valor de cada fila y las diferencias cuyo IC no incluye el cero.}
     \label{tab:res_gen_control}
     \small
     \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X cccc@{}}
         \toprule
-        \textbf{Fuente del diagnóstico} & \textbf{Imágenes} & \textbf{Control} & \textbf{Principal}
+        \textbf{Fuente del diagnóstico} & \textbf{Imágenes} & \textbf{Control}~$\uparrow$ & \textbf{Principal}~$\uparrow$
             & \textbf{Diferencia} \\
         \midrule
-        Oracle & 1\,503 & 0.967 & 0.999 & $-0.033$ [$-0.042$, $-0.023$] \\
-        Swin-Tiny & 963 & 0.843 & 0.850 & $-0.007$ [$-0.021$, $+0.006$] \\
-        Sin anclaje & 372 & 0.196 & 0.185 & $+0.011$ [$-0.043$, $+0.065$] \\
-        Nivel diferencial & 248 & 0.863 & 0.831 & $+0.032$ [$-0.008$, $+0.077$] \\
+        Oracle & 1\,503 & 0.967 & \textbf{0.999} & $\mathbf{-0.033}$ [$-0.042$, $-0.023$] \\
+        Swin-Tiny & 963 & 0.843 & \textbf{0.850} & $-0.007$ [$-0.021$, $+0.006$] \\
+        Sin anclaje & 372 & \textbf{0.196} & 0.185 & $+0.011$ [$-0.043$, $+0.065$] \\
+        Nivel diferencial & 248 & \textbf{0.863} & 0.831 & $+0.032$ [$-0.008$, $+0.077$] \\
         \bottomrule
     \end{tabularx}
 \end{table}
@@ -112,17 +111,17 @@ rápido porque escribe una oración, y Mini-VLM tarda menos que LLaVA-Med con re
     \small
     \setlength{\tabcolsep}{3pt}
     \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X
-        >{\centering\arraybackslash}p{1.9cm}>{\centering\arraybackslash}p{1.6cm}>{\centering\arraybackslash}p{1.9cm}
-        >{\centering\arraybackslash}p{1.9cm}>{\centering\arraybackslash}p{1.7cm}>{\centering\arraybackslash}p{1.7cm}@{}}
+        >{\centering\arraybackslash}p{2.1cm}>{\centering\arraybackslash}p{1.3cm}>{\centering\arraybackslash}p{2.2cm}
+        >{\centering\arraybackslash}p{1.9cm}>{\centering\arraybackslash}p{1.7cm}>{\centering\arraybackslash}p{2.1cm}@{}}
         \toprule
         & & \multicolumn{2}{c}{\textbf{Memoria (GB)}} & & & \\
         \cmidrule(lr){3-4}
-        \textbf{Generador} & \textbf{Parámetros (millones)} & \textbf{Carga} & \textbf{Generación}
-            & \textbf{Ajuste, segunda etapa (h)} & \textbf{Segundos por reporte} & \textbf{Horas paral conjunto de prueba} \\
+        \textbf{Generador} & \textbf{Parámetros (millones)}~$\downarrow$ & \textbf{Carga}~$\downarrow$ & \textbf{Generación}~$\downarrow$
+            & \textbf{Ajuste, segunda etapa (h)}~$\downarrow$ & \textbf{Segundos por reporte}~$\downarrow$ & \textbf{Horas para el conjunto de prueba}~$\downarrow$ \\
         \midrule
-        Mini-VLM & 4\,153 & 7.7 & 8.6 & 9.3 & 16.4 & 6.8 \\
-        LLaVA-Med & 7\,600 & 14.2 & 14.5 & 6.9 & 26.2 & 10.9 \\
-        SkinVL & 7\,567 & 14.1 & 14.4 & --- & 3.4 & 1.4 \\
+        Mini-VLM & \textbf{4\,153} & \textbf{7.7} & \textbf{8.6} & 9.3 & 16.4 & 6.8 \\
+        LLaVA-Med & 7\,600 & 14.2 & 14.5 & \textbf{6.9} & 26.2 & 10.9 \\
+        SkinVL & 7\,567 & 14.1 & 14.4 & --- & \textbf{3.4} & \textbf{1.4} \\
         \bottomrule
     \end{tabularx}
 \end{table}

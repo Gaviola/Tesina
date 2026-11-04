@@ -15,7 +15,7 @@ parecido con un texto de referencia, la corrección del diagnóstico en el texto
 \begin{table}[htbp]
     \centering
     \caption{Resultados de la literatura (Capítulo~\ref{cp:marco}) frente a los de este trabajo, en escala de 0 a 1.
-    «---»: sin cifra equivalente.}
+    «---»: sin cifra equivalente. En negrita, el mayor valor de la fila cuando la métrica coincide; como los protocolos difieren, la negrita no ordena los trabajos.}
     \label{tab:res_gen_estado_arte}
     \footnotesize
     \setlength{\tabcolsep}{3pt}
@@ -29,18 +29,18 @@ parecido con un texto de referencia, la corrección del diagnóstico en el texto
         \midrule
         \multicolumn{5}{@{}l}{\textit{Parecido con un texto de referencia}} \\
         \textcite{zeng2025mmskin} & LLaVA-Med sin ajuste; conjunto de prueba de \emph{MM-Skin} de los autores, dermatoscopía,
-            preguntas y respuestas & BLEU-4 & 0.089 & 0.001 (LLaVA-Med) \\
-        \textcite{zeng2025mmskin} & LLaVA-Med sin ajuste; mismo conjunto de prueba & BERTScore & 0.666 & 0.674 (LLaVA-Med)\newline 0.713 (Mini-VLM) \\
-        \textcite{zeng2025mmskin} & SkinVL ajustado con \emph{MM-Skin}; mismo conjunto de prueba & BLEU-4 / BERTScore & 0.216 / 0.713
+            preguntas y respuestas & BLEU-4~$\uparrow$ & \textbf{0.089} & 0.001 (LLaVA-Med) \\
+        \textcite{zeng2025mmskin} & LLaVA-Med sin ajuste; mismo conjunto de prueba & BERTScore~$\uparrow$ & 0.666 & 0.674 (LLaVA-Med)\newline \textbf{0.713} (Mini-VLM) \\
+        \textcite{zeng2025mmskin} & SkinVL ajustado con \emph{MM-Skin}; mismo conjunto de prueba & BLEU-4 / BERTScore~$\uparrow$ & 0.216 / 0.713
             & --- \\
         \filasep
         \multicolumn{5}{@{}l}{\textit{Corrección del diagnóstico en el texto}} \\
         \textcite{zhou2024pretrained} & SkinGPT-4; 150 casos reales; cinco dermatólogos
-            & Diagnósticos correctos o pertinentes & 0.806 & 0.849 (consistencia, Mini-VLM con Swin-Tiny) \\
+            & Diagnósticos correctos o pertinentes~$\uparrow$ & 0.806 & 0.849 (consistencia, Mini-VLM con Swin-Tiny) \\
         \filasep
         \multicolumn{5}{@{}l}{\textit{Contexto recuperado}} \\
         \textcite{xia2024rule} & LLaVA-Med-1.5 en \emph{MIMIC-CXR}; reportes recuperados agregados sin ajuste
-            & Cambio de exactitud al agregar el contexto & $-0.084$ & $+0.013$ (consistencia, Mini-VLM con Swin-Tiny) \\
+            & Cambio de exactitud al agregar el contexto~$\uparrow$ & $-0.084$ & $+0.013$ (consistencia, Mini-VLM con Swin-Tiny) \\
         \bottomrule
     \end{tabularx}
 \end{table}

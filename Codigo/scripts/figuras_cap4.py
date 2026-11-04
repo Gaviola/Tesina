@@ -102,7 +102,7 @@ def fig_resumen():
     ax.set_yticklabels([f[0] for f in filas])
     ax.set_xlim(0, 0.8)
     ax.set_ylim(y[-1] - 0.7, y[0] + 1.2)
-    ax.set_xlabel("Sensibilidad macro en la prueba")
+    ax.set_xlabel("Sensibilidad macro en el conjunto de prueba")
     for yy, txt in ((y[0], "Supervisados"), (y[5], "DermLIP (contrastivo)"), (y[9], "Generativos")):
         ax.text(0.27, yy, txt, ha="left", va="center", fontsize=7.5, style="italic", color="#555555")
     limpiar(ax)
@@ -122,6 +122,8 @@ def fig_confusion():
             if cm[i, j]:
                 ax.text(j, i, f"{cmn[i, j]:.2f}" if cmn[i, j] >= 0.005 else "<0.01", ha="center", va="center", fontsize=7.5,
                         color="white" if cmn[i, j] > 0.55 else "#222222")
+            else:
+                ax.text(j, i, "–", ha="center", va="center", fontsize=7.5, color="#777777")
     n = cm.sum(1)
     ax.set_xticks(range(7))
     ax.set_xticklabels(CLASES, fontsize=8)
@@ -160,8 +162,9 @@ def fig_robustez():
     for ax in axs[::2]:
         ax.set_ylabel("Sensibilidad macro")
     axs[1].text(5, AZAR + 0.02, "azar", fontsize=7, color="#555555", ha="right")
-    axs[0].legend(fontsize=7, frameon=False, loc="lower left")
-    fig.tight_layout(h_pad=1.0)
+    h, e = axs[0].get_legend_handles_labels()
+    fig.tight_layout(h_pad=1.0, rect=(0, 0.06, 1, 1))
+    fig.legend(h, e, loc="lower center", ncol=2, frameon=False, fontsize=8)
     fig.savefig(f"{OUT}/robustez-curvas.pdf")
 
 
@@ -249,7 +252,7 @@ def fig_distribucion_vlm():
     ax.set_yticks(y)
     ax.set_yticklabels([f[0] for f in filas], fontsize=8)
     ax.set_xlim(0, 1)
-    ax.set_xlabel("Proporción de las 1 503 imágenes de prueba")
+    ax.set_xlabel("Proporción de las 1 503 imágenes del conjunto de prueba")
     ax.spines[["top", "right", "left"]].set_visible(False)
     ax.tick_params(axis="y", length=0)
     hs = [plt.Rectangle((0, 0), 1, 1, color=COLOR_CLASE.get(c, "#DDDDDD")) for c in CLASES + ["Sin etiqueta"]]

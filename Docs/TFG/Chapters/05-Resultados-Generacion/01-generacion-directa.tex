@@ -38,19 +38,19 @@ evaluados y las cinco métricas del Nivel~1.
 
 \begin{table}[H]
     \centering
-    \caption{Nivel~1 de los generadores sin diagnóstico en los conjuntos de prueba de \emph{SkinCoT} y \emph{MM-Skin}. Pares: imágenes con un reporte no vacío y una referencia.}
+    \caption{Nivel~1 de los generadores sin diagnóstico en los conjuntos de prueba de \emph{SkinCoT} y \emph{MM-Skin}. Pares: imágenes con un reporte no vacío y una referencia. En negrita, el mejor valor dentro de cada conjunto.}
     \label{tab:res_gen_nivel1}
     \small
     \setlength{\tabcolsep}{4pt}
     \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X cccccc@{}}
         \toprule
-        \textbf{Generador y conjunto} & \textbf{Pares} & \textbf{BLEU-4} & \textbf{ROUGE-L} & \textbf{METEOR}
-            & \textbf{CIDEr} & \textbf{BERTScore} \\
+        \textbf{Generador y conjunto} & \textbf{Pares} & \textbf{BLEU-4}~$\uparrow$ & \textbf{ROUGE-L}~$\uparrow$ & \textbf{METEOR}~$\uparrow$
+            & \textbf{CIDEr}~$\uparrow$ & \textbf{BERTScore}~$\uparrow$ \\
         \midrule
-        LLaVA-Med, \emph{SkinCoT} & 426 & 0.102 & 0.191 & 0.329 & 0.054 & 0.797 \\
+        LLaVA-Med, \emph{SkinCoT} & 426 & \textbf{0.102} & \textbf{0.191} & \textbf{0.329} & \textbf{0.054} & \textbf{0.797} \\
         Mini-VLM, \emph{SkinCoT} & 425 & 0.044 & 0.152 & 0.253 & 0.038 & 0.770 \\
-        LLaVA-Med, \emph{MM-Skin} & 1\,022 & 0.001 & 0.040 & 0.094 & 0.010 & 0.674 \\
-        Mini-VLM, \emph{MM-Skin} & 1\,022 & 0.002 & 0.057 & 0.112 & 0.009 & 0.713 \\
+        LLaVA-Med, \emph{MM-Skin} & 1\,022 & 0.001 & 0.040 & 0.094 & \textbf{0.010} & 0.674 \\
+        Mini-VLM, \emph{MM-Skin} & 1\,022 & \textbf{0.002} & \textbf{0.057} & \textbf{0.112} & 0.009 & \textbf{0.713} \\
         \bottomrule
     \end{tabularx}
 \end{table}
@@ -97,12 +97,12 @@ nombra cada reporte en promedio, cuántos reportes distintos escribe el generado
     \setlength{\tabcolsep}{3pt}
     \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X ccccc@{}}
         \toprule
-        \textbf{Generador} & \textbf{\encabezado{Consistencia\\diagnóstica}} & \textbf{\encabezado{Solo la clase\\verdadera}}
+        \textbf{Generador} & \textbf{\encabezado{Consistencia\\diagnóstica}}~$\uparrow$ & \textbf{\encabezado{Solo la clase\\verdadera}}~$\uparrow$
             & \textbf{\encabezado{Clases por\\reporte}} & \textbf{\encabezado{Reportes\\distintos}}
             & \textbf{\encabezado{Palabras\\(mediana)}} \\
         \midrule
         Mini-VLM & 0.163 & 0.045 & 0.81 & 1\,501 & 157 \\
-        LLaVA-Med & 0.582 & 0.047 & 2.17 & 1\,502 & 232 \\
+        LLaVA-Med & \textbf{0.582} & \textbf{0.047} & 2.17 & 1\,502 & 232 \\
         SkinVL & 0.001 & 0.001 & 0.00 & 72 & 25 \\
         \bottomrule
     \end{tabularx}

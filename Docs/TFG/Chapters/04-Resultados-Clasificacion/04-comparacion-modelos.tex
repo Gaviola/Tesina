@@ -44,7 +44,7 @@ diferencia.
 
 \begin{table}[H]
     \centering
-    \caption{Diferencia de sensibilidad macro entre cada supervisado y cada \gls{vlm} sin ajuste (ejecución de referencia), con su IC del 95\,\% (\emph{bootstrap} pareado).}
+    \caption{Diferencia de sensibilidad macro entre cada supervisado y cada \gls{vlm} sin ajuste (ejecución de referencia), con su IC del 95\,\% (\emph{bootstrap} pareado). En negrita, las diferencias cuyo IC no incluye el cero.}
     \label{tab:res_pruebas_vlm}
     \small
     \setlength{\tabcolsep}{4pt}
@@ -52,10 +52,10 @@ diferencia.
         \toprule
         \textbf{Supervisado} & \textbf{DermLIP} & \textbf{Mini-VLM} & \textbf{LLaVA-Med} \\
         \midrule
-        Swin-Tiny & 0.172 [0.116, 0.233] & 0.572 [0.522, 0.622] & 0.560 [0.510, 0.610] \\
-        ConvNeXt-Tiny & 0.150 [0.092, 0.211] & 0.550 [0.501, 0.600] & 0.538 [0.488, 0.590] \\
-        ViT-B/16 & 0.154 [0.105, 0.209] & 0.554 [0.503, 0.606] & 0.542 [0.490, 0.595] \\
-        DenseNet121 & 0.050 [$-$0.016, 0.120] & 0.450 [0.398, 0.508] & 0.438 [0.385, 0.495] \\
+        Swin-Tiny & \textbf{0.172} [0.116, 0.233] & \textbf{0.572} [0.522, 0.622] & \textbf{0.560} [0.510, 0.610] \\
+        ConvNeXt-Tiny & \textbf{0.150} [0.092, 0.211] & \textbf{0.550} [0.501, 0.600] & \textbf{0.538} [0.488, 0.590] \\
+        ViT-B/16 & \textbf{0.154} [0.105, 0.209] & \textbf{0.554} [0.503, 0.606] & \textbf{0.542} [0.490, 0.595] \\
+        DenseNet121 & 0.050 [$-$0.016, 0.120] & \textbf{0.450} [0.398, 0.508] & \textbf{0.438} [0.385, 0.495] \\
         \bottomrule
     \end{tabularx}
 \end{table}
@@ -100,13 +100,13 @@ una imagen por vez y las imágenes por segundo con lotes de 32.
         \toprule
         & & \multicolumn{2}{c}{\textbf{Memoria máxima (GB)}} & & \\
         \cmidrule(lr){3-4}
-        \textbf{Modelo} & \textbf{Parámetros (millones)} & \textbf{Una imagen} & \textbf{Lote de 32}
-            & \textbf{Latencia (ms)} & \textbf{Imágenes por segundo} \\
+        \textbf{Modelo} & \textbf{Parámetros (millones)}~$\downarrow$ & \textbf{Una imagen}~$\downarrow$ & \textbf{Lote de 32}~$\downarrow$
+            & \textbf{Latencia (ms)}~$\downarrow$ & \textbf{Imágenes por segundo}~$\uparrow$ \\
         \midrule
         Swin-Tiny & 27.52 & 0.180 & 0.522 & 11.05 & 1\,353.3 \\
-        ConvNeXt-Tiny & 27.83 & 0.179 & 0.407 & 4.99 & 1\,738.5 \\
+        ConvNeXt-Tiny & 27.83 & 0.179 & 0.407 & \textbf{4.99} & \textbf{1\,738.5} \\
         ViT-B/16 & 85.80 & 0.511 & 0.678 & 5.72 & 903.5 \\
-        DenseNet121 & 6.96 & 0.052 & 0.216 & 19.89 & 1\,700.3 \\
+        DenseNet121 & \textbf{6.96} & \textbf{0.052} & \textbf{0.216} & 19.89 & 1\,700.3 \\
         \bottomrule
     \end{tabularx}
 \end{table}
@@ -114,7 +114,7 @@ una imagen por vez y las imágenes por segundo con lotes de 32.
 ConvNeXt-Tiny es el más rápido, tanto con una imagen por vez como con lotes, y DenseNet121, el más lento con una imagen
 por vez, aunque es el modelo más chico. Es decir, la cantidad de parámetros no ordena el tiempo de inferencia. En
 conjunto, los cuatro modelos clasifican una imagen en 20~ms o menos y ocupan menos de 0.7~GB de memoria de la GPU aun
-con lotes de 32 imágenes. Con esos lotes, Swin-Tiny clasifical conjunto de prueba completo en poco más de un segundo, y con una
+con lotes de 32 imágenes. Con esos lotes, Swin-Tiny clasifica el conjunto de prueba completo en poco más de un segundo, y con una
 imagen por vez, en unos 17 segundos. Estos tiempos corresponden a una sola vista, y el \gls{tta} de la
 Sección~\ref{sec:met_supervisados_receta} duplica las pasadas. Aun así, el costo de los clasificadores queda muy por
 debajo de ese límite.

@@ -81,7 +81,7 @@ de los más difíciles, y por eso el tercer bloque informa también la consisten
 \begin{table}[H]
     \centering
     \caption{Consistencia diagnóstica del pipeline completo frente a la cascada simple y a la línea base sin
-    generador, con IC del 95\,\% (bootstrap pareado).}
+    generador, con IC del 95\,\% (bootstrap pareado). En negrita, el mayor valor de cada bloque y las diferencias cuyo IC no incluye el cero.}
     \label{tab:res_gen_pipeline}
     \small
     \setlength{\tabcolsep}{4pt}
@@ -92,19 +92,19 @@ de los más difíciles, y por eso el tercer bloque informa también la consisten
         \multicolumn{3}{@{}l}{\textit{Casos no derivados (1\,452)}} \\
         Cascada simple & 0.858 & 0.755 \\
         Pipeline completo & 0.901 & 0.744 \\
-        Línea base sin generador & 0.904 & 0.904 \\
-        Pipeline $-$ cascada simple & $+0.043$ [$+0.031$, $+0.055$] & $-0.011$ [$-0.025$, $+0.003$] \\
-        Pipeline $-$ línea base sin generador & $-0.003$ [$-0.008$, $+0.002$] & $-0.160$ [$-0.180$, $-0.140$] \\
+        Línea base sin generador & \textbf{0.904} & \textbf{0.904} \\
+        Pipeline $-$ cascada simple & $\mathbf{+0.043}$ [$+0.031$, $+0.055$] & $-0.011$ [$-0.025$, $+0.003$] \\
+        Pipeline $-$ línea base sin generador & $-0.003$ [$-0.008$, $+0.002$] & $\mathbf{-0.160}$ [$-0.180$, $-0.140$] \\
         \filasep
         \multicolumn{3}{@{}l}{\textit{Nivel diferencial (248)}} \\
         Cascada simple & 0.581 & 0.472 \\
         Reporte diferencial & 0.831 & 0.407 \\
-        Par de candidatos, sin generador & 0.847 & 0.847 \\
+        Par de candidatos, sin generador & \textbf{0.847} & \textbf{0.847} \\
         \filasep
         \multicolumn{3}{@{}l}{\textit{Conjunto de prueba completo, con las derivaciones sin diagnóstico (1\,503)}} \\
         Cascada simple & 0.849 & 0.745 \\
         Pipeline completo & 0.870 & 0.719 \\
-        Línea base sin generador & 0.873 & 0.873 \\
+        Línea base sin generador & \textbf{0.873} & \textbf{0.873} \\
         \bottomrule
     \end{tabularx}
 \end{table}
