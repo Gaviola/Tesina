@@ -1,28 +1,34 @@
 \thispagestyle{plain}
 \chapter*{Resumen}
-% Extensión: unas 250 palabras. Abre con la problemática del Cap. 1 y da los resultados sin cifras, como la tesina de
-% referencia; las cifras están en los Caps. 4 y 5. El abstract repite la misma estructura.
+% Extensión: unas 250 palabras. Revisión del tutor del 03/11/2026: contexto y problema, objetivo, metodología muy
+% breve, resultados generales y conclusiones cortas, sin tono pesimista y sin frases en negativo al inicio de cada idea.
+% Da los resultados sin cifras, como la tesina de referencia. El abstract repite la misma estructura.
 
 El melanoma causa cerca de la mitad de las muertes por cáncer de piel, y su pronóstico depende de que se lo detecte a
-tiempo. Sin embargo, los dermatólogos no alcanzan en muchas regiones, y la lectura de una imagen dermatoscópica varía
-según la formación de quien la interpreta. Cada consulta exige, además, un reporte escrito que registre lo observado y
-la conclusión. Los modelos visión--lenguaje (VLM) prometen asistir en las dos tareas con un mismo modelo, pero no está
-establecido si clasifican las lesiones tan bien como los clasificadores entrenados solo con imágenes, ni si los
-reportes que generan afirman el diagnóstico correcto.
+tiempo. Sin embargo, en muchas regiones hay pocos dermatólogos, y la lectura de una imagen dermatoscópica varía según
+la formación de quien la interpreta. Cada consulta del paciente exige, además, un reporte escrito que registre lo
+observado y la conclusión a la que llega el médico. Los modelos visión--lenguaje (VLM) ofrecen la posibilidad de
+abordar ambas tareas mediante un único modelo. Todavía no está claro, sin embargo, si pueden alcanzar un desempeño de
+clasificación comparable al de los modelos entrenados exclusivamente con imágenes, ni si los reportes que generan
+contienen el diagnóstico correcto de las lesiones analizadas.
 
-Este trabajo estudia ambas preguntas sobre \emph{HAM10000}, con una partición disjunta por lesión y una sola GPU de
-consumo. En la clasificación, ningún VLM alcanza a los clasificadores supervisados sin una cabeza entrenada sobre su
-representación: los generativos colapsan hacia una clase, y el modelo dermatológico DermLIP solo se acerca a ellos
-con esa cabeza. La evaluación muestra, además, que una partición por imagen sobreestima el desempeño y que el
-clasificador pierde buena parte de él en otra población.
+El objetivo de este trabajo es evaluar ambas cuestiones y desarrollar un \emph{pipeline} que integre la clasificación
+y la generación de reportes. Para ello se comparan clasificadores supervisados y VLM sobre \emph{HAM10000}, un conjunto
+público de imágenes dermatoscópicas con siete categorías diagnósticas, con una partición de datos en la que las
+imágenes de una misma lesión no se reparten entre el entrenamiento y la evaluación. Cada experimento se ejecuta en una
+sola GPU, con hasta 24~GB de memoria. El \emph{pipeline} propuesto entrega al generador el diagnóstico de un
+clasificador y decide, según su concordancia con un \emph{k}-vecinos sobre la representación de un modelo dermatológico,
+si afirmarlo, presentar dos candidatos o derivar el caso a un especialista.
 
-Para la generación se propone un \emph{pipeline} que entrega al generador el diagnóstico del mejor clasificador y
-decide, según su concordancia con un \emph{k}-vecinos sobre la representación de DermLIP, si afirmarlo, presentar dos
-candidatos o derivar el caso a un especialista. El reporte transcribe el diagnóstico recibido, de modo que su
-corrección depende del clasificador, y el ruteo concentra los aciertos en los casos que se afirman.
+Los clasificadores supervisados obtienen el mayor desempeño. Los VLM generativos concentran sus predicciones en una
+clase, y el modelo dermatológico DermLIP se acerca a los supervisados con una cabeza entrenada sobre su representación.
+En la generación, el reporte transcribe el diagnóstico recibido, de modo que su corrección sigue a la del clasificador,
+y el ruteo reúne en los casos afirmados una mayor proporción de aciertos.
 
-Los reportes se evalúan con métricas automáticas; su validez clínica requiere la evaluación de especialistas, y los
-resultados se limitan a la dermatoscopía.
+Estos resultados indican que la combinación de un clasificador, una señal de concordancia y un generador permite
+obtener reportes cuyo diagnóstico puede medirse y separar los casos con distinta tasa de acierto. Los reportes se
+evaluaron con métricas automáticas sobre imágenes dermatoscópicas, y el paso siguiente es su evaluación con
+especialistas.
 
 \keywordses{lesiones de piel, dermatoscopía, modelos visión--lenguaje, clasificación diagnóstica, detección
 de melanoma, generación de reportes clínicos, incertidumbre}
@@ -30,27 +36,29 @@ de melanoma, generación de reportes clínicos, incertidumbre}
 \pdfbookmark[1]{Abstract}{abstract}
 \chapter*{Abstract}
 
-Melanoma causes about half of all skin cancer deaths, and its prognosis depends on timely detection. However,
-dermatologists are scarce in many regions, and the reading of a dermoscopic image varies with the training of whoever
-interprets it. Each consultation also requires a written report that records the findings and the conclusion.
-Vision--language models (VLMs) promise to assist with both tasks using a single model, but it is not established
-whether they classify lesions as well as classifiers trained on images alone, nor whether the reports they generate
-state the correct diagnosis.
+Melanoma causes about half of all skin cancer deaths, and its prognosis depends on timely detection. However, there
+are few dermatologists in many regions, and the reading of a dermoscopic image varies with the training of whoever
+interprets it. Each patient consultation also requires a written report that records the findings and the conclusion
+reached by the physician. Vision--language models (VLMs) offer the possibility of addressing both tasks with a single
+model. It is not yet clear, however, whether they can reach a classification performance comparable to that of models
+trained on images alone, nor whether the reports they generate contain the correct diagnosis of the lesions analysed.
 
-This work studies both questions on \emph{HAM10000}, with a lesion-disjoint split and a single consumer GPU. For
-classification, no VLM matches the supervised classifiers without a head trained on its representation: the
-generative models collapse towards a single class, and the dermatology model DermLIP only comes close to them with
-such a head. The evaluation also shows that an image-level split overestimates performance and that the classifier
-loses much of it on another population.
+The objective of this work is to evaluate both questions and to develop a pipeline that integrates classification and
+report generation. To this end, supervised classifiers and VLMs are compared on \emph{HAM10000}, a public set of
+dermoscopic images with seven diagnostic categories, using a data split in which the images of a lesion are not divided
+between training and evaluation. Each experiment runs on a single GPU with up to 24~GB of memory. The proposed pipeline
+passes the diagnosis of a classifier to the generator and decides, according to its agreement with a
+\emph{k}-nearest-neighbours vote on the representation of a dermatology model, whether to assert it, present two
+candidates or refer the case to a specialist.
 
-For report generation, a pipeline is proposed that passes the diagnosis of the best classifier to the generator and
-decides, according to its agreement with a \emph{k}-nearest-neighbours vote on the DermLIP representation, whether to
-assert it, present two candidates or refer the case to a specialist. The report transcribes the diagnosis it
-receives, so its correctness depends on the classifier, and routing concentrates the correct diagnoses in the
-asserted cases.
+Supervised classifiers obtain the highest performance. Generative VLMs concentrate their predictions on one class, and
+the dermatology model DermLIP approaches the supervised classifiers with a head trained on its representation. In
+report generation, the report transcribes the diagnosis it receives, so its correctness follows that of the classifier,
+and routing gathers a higher proportion of correct diagnoses in the asserted cases.
 
-The reports are evaluated with automatic metrics; their clinical validity requires evaluation by specialists, and
-the results are limited to dermoscopy.
+These results indicate that combining a classifier, an agreement signal and a generator yields reports whose diagnosis
+can be measured and separates cases with different accuracy rates. The reports were evaluated with automatic metrics on
+dermoscopic images, and the next step is their evaluation by specialists.
 
 \keywordsen{skin lesions, dermoscopy, vision--language models, diagnostic classification, melanoma
 detection, clinical report generation, uncertainty}

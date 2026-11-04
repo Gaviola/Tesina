@@ -14,21 +14,20 @@ registradas en 2024 equivalen a casi una de cada tres diagnósticos, frente a un
 mundial~\cite{ervik2026cancertoday}. Además, la enfermedad no se presenta igual en todo el país. Según el
 Registro Argentino de Melanoma Cutáneo, en el Noroeste y el Noreste fueron más frecuentes las lesiones de más
 de 2~mm de espesor de Breslow, la medida de profundidad del tumor con la que se estima su
-pronóstico~\cite{loria2020cutaneous}.
+pronóstico~\cite{loria2020cutaneous}. Esa diferencia de espesor importa porque el desenlace del melanoma depende del momento en que se lo diagnostica.
 
-Esa diferencia de espesor importa porque el desenlace del melanoma depende del momento en que se lo
-diagnostica. La supervivencia relativa a cinco años es de 100.0\,\% cuando se lo detecta localizado, baja a
+El melanoma tiene una supervivencia relativa a cinco años de 100.0\,\% cuando se lo detecta localizado, que baja a
 76.0\,\% cuando alcanzó los ganglios regionales y a 34.0\,\% cuando hay metástasis a
 distancia~\cite{nci2026melanoma}. Por lo tanto, la detección temprana es decisiva y depende de que una lesión
 sospechosa sea examinada e interpretada a tiempo por alguien con la capacidad de reconocerla.
 
-Que esa valoración ocurra a tiempo depende, en primer lugar, de la disponibilidad de especialistas. Un
+La valoración temprana puede depender, en primer lugar, de la disponibilidad de especialistas. Un
 relevamiento en 158 países estimó una media de 2.66 dermatólogos por cada 100\,000 habitantes, con 0.37 en los
 países de ingreso bajo y 5.05 en los de ingreso alto~\cite{freeman2026global}. Al mismo tiempo, las lesiones que
 requieren una valoración son frecuentes: en la campaña nacional de prevención de 2022 de la Sociedad Argentina
 de Dermatología, los dermatólogos encontraron lesiones sospechosas en una de cada cuatro de las 3\,635
 personas examinadas en 17 provincias y la Ciudad de Buenos Aires y se registraron 70 lesiones con sospecha de
-melanoma~\cite{sad2023campana}. Donde los especialistas no alcanzan, la primera valoración queda en manos de
+melanoma~\cite{sad2023campana}. Donde hay pocos especialistas, la primera valoración queda en manos de
 médicos no especializados en dermatología, lo que dificulta la detección temprana del melanoma.
 
 Quién realiza esa primera valoración condiciona la interpretación de la lesión. La dermatoscopía, el examen de
@@ -70,10 +69,10 @@ reporte debe reflejar el diagnóstico, las dos tareas están conectadas. Un erro
 texto, y a la vez un buen clasificador no garantiza un buen reporte, porque el texto puede describir mal la
 lesión aunque el diagnóstico sea correcto.
 
-Estas dificultades dejan dos cuestiones abiertas, que motivan el presente trabajo. La primera es si un
-\gls{vlm}, que además de clasificar puede redactar, alcanza en la clasificación de lesiones de piel, y en
-particular del melanoma, un desempeño comparable al de los clasificadores entrenados solo con imágenes. La
-segunda es si los reportes que genera afirman el diagnóstico correcto y describen la lesión que muestra la
+Estas dificultades plantean dos interrogantes que motivan el presente trabajo. El primero consiste en determinar si un
+\gls{vlm}, capaz tanto de clasificar imágenes como de generar descripciones textuales, puede alcanzar un desempeño
+comparable al de los clasificadores entrenados solo con imágenes en la clasificación de lesiones de piel, y en
+particular en la detección de melanoma. El segundo es si los reportes que genera contienen el diagnóstico correcto y describen la lesión que muestra la
 imagen. Para abordarlas, el trabajo estudia en conjunto la clasificación y la generación de reportes, con
 recursos computacionales convencionales (\emph{commodity hardware}): cada modelo se entrena y se ejecuta en una
 sola GPU, sin requerir infraestructura de cómputo de alto rendimiento, como los nodos con varias GPU de un
