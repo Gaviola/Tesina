@@ -116,8 +116,32 @@ por vez, aunque es el modelo más chico. Es decir, la cantidad de parámetros no
 conjunto, los cuatro modelos clasifican una imagen en 20~ms o menos y ocupan menos de 0.7~GB de memoria de la GPU aun
 con lotes de 32 imágenes. Con esos lotes, Swin-Tiny clasifica el conjunto de prueba completo en poco más de un segundo, y con una
 imagen por vez, en unos 17 segundos. Estos tiempos corresponden a una sola vista, y el \gls{tta} de la
-Sección~\ref{sec:met_supervisados_receta} duplica las pasadas. Aun así, el costo de los clasificadores queda muy por
-debajo de ese límite.
+Sección~\ref{sec:met_supervisados_receta} duplica las pasadas. Aun así, el costo de los clasificadores queda muy por debajo de ese límite.
+
+Para dar una idea del costo de obtener estos modelos, la Tabla~\ref{tab:res_tiempos_clasificadores} agrega el tiempo total
+de entrenamiento en la RTX 4080, tomado de los registros de cada trabajo, desde su inicio hasta su final. Estos tiempos son
+orientativos, porque dependen de la configuración y de cuándo se detiene cada entrenamiento. Una ejecución de cualquiera de
+los cuatro modelos tarda menos de 15 minutos, y el barrido más largo, el de Swin-Tiny, unas dos horas y media.
+
+\begin{table}[H]
+    \centering
+    \caption{Tiempo total de entrenamiento de los clasificadores supervisados. «---»: el modelo usa la configuración elegida en el barrido de otro.}
+    \label{tab:res_tiempos_clasificadores}
+    \small
+    \setlength{\tabcolsep}{4pt}
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X
+        >{\centering\arraybackslash}p{2.6cm}>{\centering\arraybackslash}p{3.2cm}>{\centering\arraybackslash}p{2.6cm}@{}}
+        \toprule
+        \textbf{Modelo} & \textbf{GPU} & \textbf{Una ejecución (min)}~$\downarrow$ & \textbf{Barrido (h)}~$\downarrow$ \\
+        \midrule
+        Swin-Tiny & RTX 4080 & 8--13 & 2.46 \\
+        ConvNeXt-Tiny & RTX 4080 & \textbf{4--6} & \textbf{0.85} \\
+        ViT-B/16 & RTX 4080 & 5--7 & --- \\
+        DenseNet121 & RTX 4080 & 5--6 & --- \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
 
 Con el desempeño y el costo de las tres familias caracterizados, queda ubicar estos resultados frente a los de la
 literatura.

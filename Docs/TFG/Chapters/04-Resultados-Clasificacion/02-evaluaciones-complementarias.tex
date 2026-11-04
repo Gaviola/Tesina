@@ -197,9 +197,24 @@ al lado, el mapa de Grad-CAM superpuesto con la clase que predice el modelo.
 En las cinco imágenes que el modelo clasifica bien (\gls{bkl}, \gls{df}, \gls{mel}, \gls{nv} y \gls{akiec}), la
 activación se concentra sobre la lesión. De los dos errores, el \gls{bcc} clasificado como \gls{mel} también activa la
 lesión, mientras que el \gls{vasc} clasificado como \gls{nv} tiene una activación difusa sobre la piel que rodea la
-lesión. En el primer error, la activación sobre la lesión es compatible con una confusión entre lesiones pigmentadas. Como se
-trata de pocos ejemplos, estos mapas son evidencia cualitativa sobre el comportamiento del modelo y no permiten estimar
-con qué frecuencia se apoya en la lesión (Sección~\ref{sec:met_interpretabilidad}).
+lesión. En el primer error, la activación sobre la lesión es compatible con una confusión entre lesiones pigmentadas. 
+
+Para ilustrar con más claridad los casos en que la activación se aleja de la lesión, la
+Figura~\ref{fig:res_gradcam_errores} presenta dos errores seleccionados. Los 229 errores del modelo con una vista se
+ordenaron de menor a mayor proporción de activación en la zona central de la imagen, donde suele estar la lesión, y
+estos dos se eligieron por inspección visual entre los primeros. En el \gls{vasc} clasificado como \gls{nv}, la activación se concentra en la piel a un
+costado de la lesión, y en el \gls{df} clasificado como \gls{nv}, en una franja por encima de ella.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{Figures/Capitulos/04-Resultados-Clasificacion/gradcam-swin-errores.pdf}
+    \caption{Grad-CAM de Swin-Tiny sobre dos errores seleccionados entre los de activación más alejada del centro de la imagen. Por la forma de elegirlos, no representan al conjunto de los errores.}
+    \label{fig:res_gradcam_errores}
+\end{figure}
+
+Como se trata de pocos ejemplos, y en este último caso elegidos a propósito, estos mapas son evidencia cualitativa sobre el
+comportamiento del modelo y no permiten estimar con qué frecuencia se apoya en la lesión
+(Sección~\ref{sec:met_interpretabilidad}).
 
 Con estas cinco evaluaciones, el clasificador queda caracterizado también fuera de las condiciones de su
 entrenamiento: la partición por imagen sobreestima su desempeño, pierde buena parte de él en otro conjunto de datos, es sensible al ruido de la imagen y, en \emph{HAM10000}, entrega probabilidades bien calibradas cuando se entrena sin pesos. Queda por ver si un \gls{vlm} podría ocupar su lugar, que es
