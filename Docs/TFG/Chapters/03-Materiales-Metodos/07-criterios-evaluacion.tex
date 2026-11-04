@@ -14,8 +14,8 @@
 \label{sec:met_protocolo}
 
 Con los componentes y el \emph{pipeline} definidos, falta establecer cómo se evalúan. La evaluación sigue tres reglas
-generales. En primer lugar, toda decisión sobre un modelo, como su configuración o un umbral, se toma en validación,
-y el conjunto de prueba se usa para informar el resultado. En segundo lugar, cada resultado se lee frente a referencias de
+generales. En primer lugar, toda decisión sobre un modelo, como su configuración o un umbral, se toma con el conjunto de validación, y el conjunto
+de prueba, que no interviene en esas decisiones, se usa solo para informar el resultado final. En segundo lugar, cada resultado se lee frente a referencias de
 comparación que dicen cuánto vale. Finalmente, una diferencia entre dos modelos se afirma solo si la sostiene una
 comparación estadística. Dentro de ese marco, la clasificación y la generación de texto no se miden igual, así que cada
 tarea justifica sus métricas por separado.
@@ -23,10 +23,7 @@ tarea justifica sus métricas por separado.
 \subsection{Métricas de clasificación}
 \label{sec:met_seleccion}
 
-Las métricas de clasificación tienen que reflejar que las confusiones no cuestan lo mismo. Confundir \gls{mel} con
-\gls{nv} retrasa la extirpación de una lesión cuya letalidad depende del estadio en que se diagnostica, mientras que
-confundir \gls{nv} con \gls{mel} lleva a extirpar sin necesidad una lesión benigna, y las confusiones entre clases
-benignas tienen menos consecuencias~\cite{tschandl2018ham10000,nci2026melanoma}. Como además \gls{nv} reúne dos tercios
+Las métricas de clasificación tienen que reflejar que los errores entre clases no cuestan lo mismo. Clasificar \gls{mel} como \gls{nv} retrasa la extirpación de una lesión cuya letalidad depende del estadio en que se diagnostica, mientras que clasificar \gls{nv} como \gls{mel} lleva a extirpar sin necesidad una lesión benigna, y los errores entre clases benignas tienen menos consecuencias~\cite{tschandl2018ham10000,nci2026melanoma}. Como además \gls{nv} reúne dos tercios
 de \emph{HAM10000}, un buen resultado global puede esconder un mal desempeño en las clases que más importan. Por lo
 tanto, las métricas tienen que evaluar cada clase por separado y darles a todas el mismo peso.
 

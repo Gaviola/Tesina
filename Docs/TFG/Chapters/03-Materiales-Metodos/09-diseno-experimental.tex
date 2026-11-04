@@ -30,8 +30,7 @@ imágenes (PI1), y se desarrolla en cuatro etapas:
     supervisados.
 \end{enumerate}
 
-La segunda parte busca responder si los reportes afirman el diagnóstico correcto y describen la lesión que muestra la
-imagen (PI2). Avanza en tres etapas, que agregan de a uno los componentes del \emph{pipeline}:
+La segunda parte busca responder si los reportes contienen el diagnóstico correcto y describen la lesión que muestra la imagen (PI2). Avanza en tres etapas, que agregan de a uno los componentes del \emph{pipeline}:
 \begin{enumerate}[leftmargin=1.6em]
     \item \textbf{Generador solo.} Mini-VLM y LLaVA-Med se ajustan sobre \emph{SkinCaRe}
     (Sección~\ref{sec:met_generacion}) y, con SkinVL, generan reportes sin diagnóstico, que se comparan con los textos
@@ -138,7 +137,7 @@ Capítulo~\ref{cp:res_gen}, los de la segunda, la generación de reportes con el
         & Conjunto de prueba de \emph{HAM10000}
         & Parámetros; memoria; tiempo por imagen \\
     \filasep
-    \multicolumn{5}{@{}l}{\textit{Capítulo~\ref{cp:res_gen}: ¿los reportes afirman el diagnóstico correcto y describen la lesión?}} \\
+    \multicolumn{5}{@{}l}{\textit{Capítulo~\ref{cp:res_gen}: ¿los reportes contienen el diagnóstico correcto y describen la lesión?}} \\
     Generación sin diagnóstico (Sección~\ref{sec:met_generacion})
         & Principal
         & Medir el parecido con un texto de referencia y si el reporte afirma la clase por sí solo

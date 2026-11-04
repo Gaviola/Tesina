@@ -30,14 +30,15 @@ de lenguaje, de unos 7\,000 millones de parámetros, se entrenó con figuras y l
 este modo, la comparación entre ambos pone frente a frente un modelo biomédico y uno de propósito general.
 
 Por último, para aislar el efecto de generar texto se usa DermLIP~\cite{yan2025derm1miccv}, un \gls{vlm} contrastivo
-al estilo de \gls{clip}, preentrenado sobre los pares dermatológicos de \emph{Derm1M} (Sección~\ref{sec:met_datasets}).
+al estilo de \gls{clip}, preentrenado por sus autores sobre \emph{Derm1M}, un conjunto de más de un millón de pares imagen--texto entre cuyas fuentes declaradas no figura
+\emph{HAM10000}~\cite{yan2025derm1miccv}.
 A diferencia de los anteriores, no genera texto: su codificador de imagen, un ViT-B/16, produce un \emph{embedding} de
 512 dimensiones, y la clase se obtiene directamente de esa representación. La Figura~\ref{fig:met_vlms} muestra cómo
 se usan los tres modelos en este trabajo.
 
 \input{Figures/Capitulos/03-Materiales-Metodos/vlms}
 
-\subsection{Cómo se obtiene una clase}
+\subsection{Obtención de la clase}
 \label{sec:met_vlm_estrategias}
 
 Mini-VLM y LLaVA-Med responden con texto, y ninguno devuelve siempre una etiqueta válida cuando se le pide un
@@ -61,7 +62,7 @@ Apéndice~\ref{ap:prompts}.
   razonamiento.
   \item \textbf{Ajuste fino con \gls{lora}.} Se repiten la verosimilitud y el \gls{cot} con los modelos ya ajustados
   para generar reportes sobre los textos clínicos de \emph{SkinCaRe}~\cite{shen2025skincare}
-  (Sección~\ref{sec:met_generacion}). Ese ajuste no usa \emph{HAM10000}, así que muestra si el ajuste con textos
+  (Sección~\ref{sec:met_generacion}). El ajuste con \emph{SkinCaRe} no usa \emph{HAM10000}, así que muestra si el ajuste con textos
   clínicos cambia la clasificación sin que el modelo haya visto las siete categorías.
 \end{enumerate}
 

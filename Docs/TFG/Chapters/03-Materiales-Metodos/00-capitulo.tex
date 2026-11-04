@@ -25,15 +25,18 @@
 % Revisión del tutor del 21/10/2026: orden componentes → integración → evaluación → entorno. La introducción presenta
 % primero la lógica metodológica y después, en pocas oraciones, la organización; el pipeline se describe en 3.1.
 
-Este capítulo describe el diseño metodológico con que se responden las preguntas de investigación. El razonamiento
-avanza en tres pasos. Primero se fija el problema y se eligen los componentes que pueden abordar cada parte de él por
-separado: clasificadores supervisados, modelos visión--lenguaje y generadores de reportes. Después, esos componentes
-se integran en un \emph{pipeline} que busca compensar las limitaciones que cada uno tiene por sí solo. Por último, se
-definen los criterios y los procedimientos con que se evalúan tanto los componentes como el \emph{pipeline}.
+Este capítulo presenta la metodología propuesta para abordar las preguntas de investigación. En primer lugar, se
+describe el problema y se presentan los modelos seleccionados para abordar sus diferentes aspectos: clasificadores
+supervisados, modelos visión--lenguaje y generadores de reportes. A continuación, se explica cómo estos modelos se
+combinan en un \emph{pipeline} que busca aprovechar sus fortalezas y reducir las limitaciones que presentan al
+utilizarse de manera individual. Finalmente, se describen los procedimientos experimentales y los criterios de
+evaluación utilizados para analizar tanto el desempeño de cada modelo como el funcionamiento del \emph{pipeline}
+completo.
 
-La organización del capítulo sigue ese orden. La Sección~\ref{sec:met_tareas} define las tareas y el flujo de
-trabajo, y la Sección~\ref{sec:met_datasets} presenta los conjuntos de datos. Las Secciones~\ref{sec:met_supervisados}
-a~\ref{sec:met_generacion} describen los componentes, y la Sección~\ref{sec:met_pipeline} los integra. La evaluación
+La organización del capítulo sigue ese orden, a partir de la Sección~\ref{sec:met_tareas}, que define las tareas y el
+flujo de trabajo. La Sección~\ref{sec:met_datasets} presenta los conjuntos de datos. Las
+Secciones~\ref{sec:met_supervisados} a~\ref{sec:met_generacion} describen los modelos que componen la propuesta, y la
+Sección~\ref{sec:met_pipeline} los integra. La evaluación
 ocupa las Secciones~\ref{sec:met_protocolo} y~\ref{sec:met_complementarios}. Por último, la
 Sección~\ref{sec:met_diseno} ordena los experimentos por etapas, y la Sección~\ref{sec:met_entorno} reúne el entorno
 experimental.

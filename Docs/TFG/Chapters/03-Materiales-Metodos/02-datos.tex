@@ -10,33 +10,33 @@
 \section{Conjuntos de datos}
 \label{sec:met_datasets}
 
-El trabajo usa cinco conjuntos de datos de dermatología, que se diferencian por la modalidad de sus imágenes y por
-el tipo de anotación que acompaña a cada una. \emph{HAM10000} reúne imágenes dermatoscópicas con un diagnóstico
+El trabajo usa cuatro conjuntos de datos de dermatología, que se diferencian por la modalidad de sus imágenes, es
+decir, la técnica con que se capturan, como la dermatoscopía o la fotografía clínica, y por el tipo de anotación que
+acompaña a cada una. \emph{HAM10000} reúne imágenes dermatoscópicas con un diagnóstico
 confirmado y sin texto. \emph{SkinCaRe} y \emph{MM-Skin}, en cambio, asocian cada imagen a un texto clínico escrito
-por dermatólogos, por un modelo de lenguaje o tomado de libros de dermatología. \emph{HIBA} aporta imágenes
-dermatoscópicas y clínicas de un hospital argentino, y \emph{Derm1M} es un corpus de más de un millón de pares
-imagen--texto. La Tabla~\ref{tab:met_conjuntos} resume, para cada uno, la modalidad, el tamaño, el uso en el trabajo y
-el origen del texto de referencia.
+por dermatólogos, por un modelo de lenguaje o tomado de libros de dermatología. \emph{HIBA}, por último, aporta imágenes dermatoscópicas y clínicas de un hospital argentino. La
+Tabla~\ref{tab:met_conjuntos} resume, para cada uno, la modalidad, la cantidad de imágenes, el uso en el trabajo y el
+origen del texto de referencia.
 
-Cada conjunto cumple un papel distinto en la experimentación, según sirva para entrenar, para evaluar o solo de forma
-indirecta. \emph{HAM10000} es el único etiquetado con las siete categorías de la tarea, de modo que con él se entrenan
+A partir de estas diferencias, cada conjunto cumple un papel distinto en la experimentación, según sirva para entrenar
+o para evaluar. \emph{HAM10000} es el único etiquetado con las siete categorías de la tarea, de modo que con él se entrenan
 los clasificadores, se eligen sus configuraciones en validación y se evalúan en el conjunto de prueba todos los modelos de
 clasificación y el \emph{pipeline}. Por esa razón es el conjunto central del trabajo, y sus propiedades, que se
 analizan a continuación, determinan cómo se parte y con qué métricas se evalúa. \emph{SkinCaRe}, en cambio, se usa
 para entrenar a los generadores de reportes, y \emph{MM-Skin}, para evaluarlos contra un texto de referencia.
-\emph{HIBA} se usa solo como evaluación externa, para comprobar si los clasificadores mantienen su desempeño en otro conjunto de datos. Por último, \emph{Derm1M} no se usa de forma directa: es el conjunto con el que sus autores preentrenaron
-DermLIP, uno de los modelos de la Sección~\ref{sec:met_clasif_vlm}.
+\emph{HIBA} se usa solo como evaluación externa, para comprobar si los clasificadores mantienen su desempeño en otro
+conjunto de datos.
 
 \begin{table}[H]
     \centering
     \small
-    \caption{Conjuntos de datos: modalidad, tamaño, uso en el trabajo y origen del texto de referencia.}
+    \caption{Conjuntos de datos: modalidad, cantidad de imágenes, uso en el trabajo y origen del texto de referencia.}
     \label{tab:met_conjuntos}
     \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{1.8cm}
         >{\raggedright\arraybackslash}p{2.5cm} >{\raggedright\arraybackslash}p{2.2cm}
         >{\raggedright\arraybackslash\hspace{0pt}}p{2.4cm} >{\raggedright\arraybackslash\hspace{0pt}}X@{}}
         \toprule
-        \textbf{Conjunto} & \textbf{Modalidad} & \textbf{Tamaño} & \textbf{Uso} & \textbf{Origen del texto de referencia} \\
+        \textbf{Conjunto} & \textbf{Modalidad} & \textbf{Cantidad} & \textbf{Uso} & \textbf{Origen del texto de referencia} \\
         \midrule
         \emph{HAM10000} & Dermatoscópica & 10\,015 imágenes; 7\,470 lesiones
             & Clasificación (entrenamiento, validación y prueba)
@@ -59,10 +59,7 @@ DermLIP, uno de los modelos de la Sección~\ref{sec:met_clasif_vlm}.
             & 1\,616 imágenes; 1\,246 lesiones
             & Evaluación externa de los clasificadores (solo prueba)
             & Diagnóstico de dermatólogos del hospital, con histopatología en las lesiones extirpadas \\
-        \filasep
-        \emph{Derm1M} & Dermatoscópica y clínica & 1\,029\,761 pares imagen--texto
-            & Preentrenamiento de DermLIP por sus autores (no se usa de forma directa)
-            & Fuentes web, educativas y bases públicas; texto procesado con un \gls{llm} \\
+        
         \bottomrule
     \end{tabularx}
 \end{table}
@@ -75,11 +72,11 @@ Queensland~\cite{tschandl2018ham10000}, que según sus metadatos corresponden a 
 más fina disponible. Tres de sus propiedades condicionan cómo se entrena y se evalúa un clasificador: cómo se reparten
 las clases, cuántas imágenes tiene cada lesión y con qué respaldo se asignó cada etiqueta.
 
-En primer lugar, la distribución de las clases es muy desigual (Figura~\ref{fig:met_ham_dist}). \gls{nv} reúne dos tercios de las
+En primer lugar, la distribución de las clases es muy desigual, como se observa en la Figura~\ref{fig:met_ham_dist}. \gls{nv} reúne dos tercios de las
 imágenes, mientras que \gls{df} y \gls{vasc} no llegan al 1.5\,\% cada una. Un clasificador que respondiera siempre NV
 acertaría dos de cada tres imágenes sin reconocer ninguna otra clase, de modo que la exactitud global no sirve para
-distinguir entre modelos. Esta es la razón por la que el trabajo usa métricas que dan a todas las clases el mismo peso
-(Sección~\ref{sec:met_protocolo}).
+distinguir entre modelos. Por esta razón, el trabajo propone trabajar con métricas que buscan dar a todas las clases el mismo peso, y de esta
+forma evitar que la clase mayoritaria domine la evaluación (Sección~\ref{sec:met_protocolo}).
 
 \begin{figure}[H]
     \centering
@@ -88,11 +85,11 @@ distinguir entre modelos. Esta es la razón por la que el trabajo usa métricas 
     \label{fig:met_ham_dist}
 \end{figure}
 
-La segunda propiedad afecta a la partición. Una misma lesión puede tener hasta seis imágenes, y las 1\,956 lesiones
-con más de una reúnen el 45\,\% del conjunto (Figura~\ref{fig:met_ham_lesiones}). Una situación a evitar es que
+La segunda propiedad de \emph{HAM10000} es la cantidad de imágenes por lesión, que afecta a la partición. Una misma
+lesión puede tener hasta seis imágenes, y las 1\,956 lesiones con más de una imagen reúnen el 45\,\% del conjunto, como
+muestra la Figura~\ref{fig:met_ham_lesiones}. Una situación a evitar es que
 imágenes de una misma lesión caigan en entrenamiento y en el conjunto de prueba, ya que el modelo puede reconocer la lesión en lugar
-de generalizar a lesiones nuevas, y el conjunto de prueba deja de medir lo que dice medir. Por eso la partición tiene que agrupar
-las imágenes de cada lesión.
+de generalizar a lesiones nuevas, y el conjunto de prueba deja de medir lo que dice medir. Por eso la partición de los datos tiene que agrupar las imágenes de cada lesión.
 
 \begin{figure}[H]
     \centering
@@ -117,7 +114,10 @@ una imagen de cada clase.
 \subsection{Partición disjunta por lesión}
 \label{sec:met_particiones}
 
-La forma habitual de partir un conjunto es asignar cada imagen al azar a una partición, manteniendo en cada una la
+Para entrenar y evaluar un modelo de aprendizaje profundo, las imágenes se reparten en tres particiones, con usos
+distintos (Sección~\ref{sec:marco_regularizacion}). El conjunto de entrenamiento ajusta los parámetros del modelo, el de
+validación elige su configuración y el de prueba estima el desempeño sobre imágenes que no intervinieron en esas
+decisiones. La forma habitual de partir un conjunto es asignar cada imagen al azar a una partición, manteniendo en cada una la
 proporción de las clases. Con ese procedimiento, una partición frecuente destina el 70\,\% de las imágenes a
 entrenamiento, el 15\,\% a validación y el 15\,\% a prueba. La partición original de \emph{HAM10000}, con la que
 comenzó este trabajo, sigue ese reparto. Sin embargo, como la asignación se hace imagen por imagen, dos
@@ -133,12 +133,12 @@ dos clases malignas, que son las que más importan, son las más afectadas.
 
 Para eliminar la fuga, la partición nueva conserva completo el conjunto de prueba original, de modo que los resultados de los
 \glspl{vlm} y del \emph{pipeline}, medidos sobre ella, siguen siendo comparables. Del entrenamiento y la validación
-originales se descartan las 776 imágenes cuya lesión aparece en el conjunto de prueba, y las restantes se reparten con
-\texttt{StratifiedGroupKFold} de scikit-learn, con la lesión como grupo y el diagnóstico como estrato.
+originales se descartan las 776 imágenes cuya lesión aparece en el conjunto de prueba, y las restantes se reparten con \texttt{StratifiedGroupKFold} de scikit-learn\footnote{\url{https://scikit-learn.org}}, con la lesión como grupo y el diagnóstico como estrato.
 Con este procedimiento se obtienen 6\,447 imágenes de entrenamiento y 1\,289 de validación, sin lesiones compartidas entre particiones
-(Tabla~\ref{tab:met_tamanos}). El costo es que el entrenamiento tiene un 8\,\% menos de imágenes que el de la partición
-original (6\,447 frente a 7\,010). Además, en validación DF y VASC quedan con menos de 20 imágenes, así que sus métricas
-por clase en ese conjunto cambian mucho con pocos aciertos.
+(Tabla~\ref{tab:met_tamanos}). El costo es que el conjunto de entrenamiento de los modelos tiene un 8\,\% menos de imágenes que el de la partición
+original (6\,447 frente a 7\,010). Además, en el conjunto de validación, con el que se elige la configuración de cada
+modelo, DF y VASC quedan con menos de 20 imágenes, así que sus métricas por clase en ese conjunto cambian mucho con
+pocos aciertos.
 
 \begin{table}[H]
     \centering
@@ -195,7 +195,7 @@ forma; la traducción es propia.
     dermatológicas.»
 \end{quote}
 
-\subsection{MM-Skin, HIBA y Derm1M}
+\subsection{MM-Skin y HIBA}
 
 A diferencia de \emph{SkinCaRe}, que se usa para entrenar, \emph{MM-Skin} es el conjunto con que se evalúa la
 generación contra un texto de referencia. Sus textos son descripciones de quince libros de texto de dermatología,
@@ -213,11 +213,7 @@ Para usarlo con los clasificadores, sus diagnósticos se llevan a las siete cate
 mapeo, el carcinoma escamoso pasa a AKIEC, una aproximación que agrega ruido a la comparación y que se retoma en la
 Sección~\ref{sec:met_complementarios}.
 
-Por último, \emph{Derm1M} es el corpus de 1\,029\,761 pares imagen--texto con el que se preentrenó DermLIP~\cite{yan2025derm1miccv}.
-Sus imágenes provienen de videos, artículos científicos, foros médicos, conjuntos públicos y material educativo, y sus
-textos se limpiaron y resumieron con un \gls{llm}. Entre las fuentes declaradas no figura \emph{HAM10000}, aunque no
-puede descartarse que alguna publicación reproduzca imágenes de ese conjunto. El trabajo usa los pesos publicados de
-DermLIP sin reentrenarlo, así que \emph{Derm1M} no se usa para entrenar ni para evaluar.
+
 
 Las características de estos conjuntos orientan la elección de los modelos que se presentan a continuación. Con unas
 6\,400 imágenes etiquetadas para siete clases, entrenar un clasificador desde cero no es viable, y por eso los

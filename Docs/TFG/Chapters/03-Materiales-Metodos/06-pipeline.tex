@@ -15,14 +15,11 @@
 \section{Pipeline propuesto}
 \label{sec:met_pipeline}
 
-Las secciones anteriores dejan disponibles tres componentes, cada uno con una capacidad distinta. Los clasificadores
-supervisados asignan a la imagen una de las siete clases, con una probabilidad para cada una, pero no generan texto.
-Los generadores, en cambio, redactan un reporte con la forma de un texto clínico, aunque el diagnóstico que afirman
-depende solo de lo que ellos mismos reconocen en la imagen. Por último, el \gls{knn} sobre los \emph{embeddings} de
-DermLIP recupera los casos de entrenamiento más parecidos a la imagen, cada uno con su diagnóstico confirmado
-(Sección~\ref{sec:met_clasif_vlm}).
 
-Ninguno de los tres resuelve por sí solo la tarea completa, y cada uno tiene una limitación conocida. Según la revisión
+
+Ninguna de las tres aproximaciones anteriores (la clasificación supervisada, la clasificación con \glspl{vlm} y la
+generación de reportes con \glspl{vlm}) aborda por sí sola el problema completo de la Sección~\ref{sec:met_tareas},
+clasificar la lesión, indicar si se trata de un melanoma y redactar su reporte, y cada una tiene una limitación conocida. Según la revisión
 del Capítulo~\ref{cp:marco}, los \glspl{vlm} médicos de propósito general obtienen en piel exactitudes menores que las
 de los modelos adaptados a ella (Sección~\ref{sec:estado_arte_posicion}), y al redactar pueden evitar comprometerse
 con un diagnóstico y recurrir a reservas (\emph{hedging}; Sección~\ref{sec:marco_rep_fallas}). El clasificador, a su
@@ -31,6 +28,13 @@ vez, entrega siempre una clase, y su probabilidad tiende a ser mayor que su frec
 limitaciones, la propuesta de este trabajo es un \emph{pipeline} que integra los tres componentes para que cada uno
 compense una debilidad de los otros: el clasificador fija el diagnóstico, la recuperación aporta una segunda opinión
 y el generador redacta el reporte.
+
+Para esa integración, las secciones anteriores dejan disponibles tres componentes, cada uno con una capacidad distinta.
+Los clasificadores supervisados asignan a la imagen una de las siete clases, con una probabilidad para cada una, pero
+no generan texto. Los generadores, en cambio, redactan un reporte con la forma de un texto clínico, aunque el
+diagnóstico que afirman depende solo de lo que ellos mismos reconocen en la imagen. Por último, el \gls{knn} sobre los
+\emph{embeddings} de DermLIP recupera los casos de entrenamiento más parecidos a la imagen, cada uno con su diagnóstico
+confirmado (Sección~\ref{sec:met_clasif_vlm}).
 
 La Figura~\ref{fig:met_pipeline} muestra la arquitectura general. La imagen entra en paralelo a dos predictores. El
 primero es Swin-Tiny, el clasificador del \emph{pipeline}: de los dos modelos sobre los que se hizo la búsqueda de

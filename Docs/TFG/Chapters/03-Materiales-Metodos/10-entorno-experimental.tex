@@ -3,17 +3,20 @@
 % Codigo/requirements.txt y src/models/{classifiers,dermlip,mini_vlm}.py (bibliotecas); scripts/measure_cost.py
 % (costo de los clasificadores en la RTX 4070, lotes de 32); Apéndice E (ap:reproducibilidad).
 % Revisión del tutor del 21/10/2026: sección nueva que reúne el hardware, las semillas y las bibliotecas, antes
-% dispersos en 3.1, 3.3, 3.6 y 3.8. Sin versiones de CUDA ni herramientas internas (regla R1 del autor).
+% dispersos en 3.1, 3.3, 3.6 y 3.8. Revisión del tutor del 03/11/2026: versiones de las bibliotecas y herramientas de trabajo; se
+% explica bf16. Versiones: pip list en TOKO y Mendieta (03/11/2026) y equipo personal.
 \section{Entorno experimental y recursos computacionales}
 \label{sec:met_entorno}
 
 Los experimentos se ejecutaron en tres GPU, todas dentro de la restricción de la Sección~\ref{sec:met_tareas}. Los
 clasificadores supervisados se entrenaron en una RTX 4080 de 16~GB, en el clúster TOKO de la Universidad Nacional de
 Cuyo. El ajuste de los \glspl{vlm} y la generación de los reportes se ejecutaron en una A30 de 24~GB, en el clúster
-Mendieta de la Universidad Nacional de Córdoba. La A30 es una GPU de centro de datos, pero tiene la misma memoria que
-una de consumo de gama alta, que es lo que fija la restricción. Por último, una RTX 4070 de 12~GB, en un equipo personal, se usó para
-calcular las métricas de generación y para medir el costo de los clasificadores. Las tres GPU tienen arquitectura Ampere
-o posterior, lo que permite entrenar en precisión \emph{bfloat16} (bf16) en todos los casos.
+Mendieta de la Universidad Nacional de Córdoba. La A30 es una GPU de centro de datos, pero tiene la misma memoria que una de consumo de gama alta, que es lo que fija
+la restricción. Por último, una RTX 4070 de 12~GB, en un equipo personal, se usó para calcular las métricas de
+generación, para medir el costo de los clasificadores y para comprobar la generación de Mini-VLM en una GPU de consumo. Las tres GPU tienen arquitectura Ampere
+o posterior, lo que permite entrenar en precisión \emph{bfloat16} (bf16) en todos los casos. Este formato de punto flotante usa
+16 bits en lugar de los 32 habituales, de modo que reduce a la mitad la memoria de los parámetros y conserva su rango de
+valores, a cambio de una menor resolución numérica\footnote{\url{https://pytorch.org/docs/stable/amp.html}}.
 
 En cuanto a la medición del costo (Sección~\ref{sec:met_costo}), el tiempo de inferencia, la cantidad de imágenes por
 segundo y la memoria máxima de los clasificadores se midieron en la RTX 4070, con una imagen y con lotes de 32, en la
@@ -21,7 +24,10 @@ misma precisión bf16 con que se evalúan. El tiempo por reporte de los
 generadores, en cambio, se tomó de las ejecuciones de la generación en la A30. Como las dos mediciones se hicieron en
 GPU distintas, la comparación entre clasificadores y generadores es solo de orden de magnitud.
 
-El código usa PyTorch y torchvision para los clasificadores supervisados, las bibliotecas \texttt{transformers} y
-\texttt{peft} de Hugging Face para los \glspl{vlm} generativos y LoRA, \texttt{open\_clip} para DermLIP y scikit-learn
-para las cabezas clásicas, la partición y las métricas. El Apéndice~\ref{ap:reproducibilidad} reúne lo necesario
-para repetir cada experimento, incluidas las semillas de cada ejecución.
+El código está escrito en Python 3.10. Los clasificadores supervisados usan PyTorch 2.1.2 y torchvision 0.16.2, y los
+\glspl{vlm} generativos, PyTorch 2.5.1 y torchvision 0.20.1, junto con las bibliotecas \texttt{transformers} 4.43.4 y
+\texttt{peft} 0.18.1 de Hugging Face para el ajuste con LoRA. DermLIP se ejecuta con \texttt{open\_clip} 3.3.0, y
+scikit-learn 1.7.2 se usa para las cabezas clásicas, la partición y las métricas. El código y el documento se
+versionaron con git 2.45, y se editaron en Visual Studio Code. El documento se escribió en \LaTeX{} y se compiló con
+XeLaTeX (MiK\TeX{} 25.4), Biber 2.21 y latexmk 4.87. El Apéndice~\ref{ap:reproducibilidad} reúne lo necesario para
+repetir cada experimento, incluidas las semillas de cada ejecución.
