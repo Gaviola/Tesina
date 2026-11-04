@@ -9,16 +9,15 @@
 
 Con respecto a la primera pregunta de investigación (Sección~\ref{sec:intro_objetivos}), en el conjunto de prueba de
 \emph{HAM10000} ningún \gls{vlm} sin una cabeza entrenada sobre ese conjunto alcanza a los clasificadores supervisados.
-Los \glspl{vlm} generativos sin especialización en dermatología quedan cerca de 1/7 en sensibilidad macro y concentran sus predicciones en una clase, un comportamiento que el desbalance no parece explicar y que el cambio de modalidad no resolvió. DermLIP sin ajuste queda entre ambas familias, y con
-una cabeza entrenada se acerca a los supervisados. Según McNemar, los supervisados aciertan imágenes distintas de las
-que aciertan los tres \glspl{vlm} sin ajuste, y según el \emph{bootstrap}, su sensibilidad macro es mayor en todos los
-pares salvo DenseNet121 frente a DermLIP.
+Los \glspl{vlm} generativos sin especialización en dermatología quedan cerca de 1/7 en sensibilidad macro y concentran sus predicciones en una clase, un comportamiento que el desbalance no parece explicar y que se repite en el control con \emph{SkinCAP}. DermLIP sin ajuste queda entre ambas familias, y con
+una cabeza entrenada se acerca a los supervisados. 
 
-Entre los supervisados, Swin-Tiny, ConvNeXt-Tiny y ViT-B/16 no se distinguen, y la sensibilidad de las clases
+En los supervisados, no se encontraron diferencias respaldadas entre Swin-Tiny, ConvNeXt-Tiny y ViT-B/16, y la sensibilidad de las clases
 minoritarias y del melanoma varía en más de una décima entre ejecuciones. El umbral fijado en validación lleva la
 detección de melanoma de tres a cuatro de cada cinco casos, y la partición por imagen sobreestima la sensibilidad
 macro en unas 0.07. Fuera de \emph{HAM10000}, Swin-Tiny pierde cerca del 40\,\% de su sensibilidad macro en
-\emph{HIBA}, aunque sus probabilidades están bien calibradas cuando se entrena sin pesos por clase. Swin-Tiny queda,
+\emph{HIBA}. Sus probabilidades, medidas en \emph{HAM10000}, están bien calibradas cuando se entrena sin pesos por
+clase, un resultado que no necesariamente se traslada a \emph{HIBA}. Swin-Tiny queda,
 entonces, como el clasificador del \emph{pipeline}, y el Capítulo~\ref{cp:res_gen} evalúa si, con su diagnóstico, el
 reporte generado afirma la clase correcta. El Capítulo~\ref{cp:discusion} interpreta estos hallazgos junto con los de
 la generación.

@@ -77,7 +77,8 @@ Swin-Tiny, con una barra para el conjunto de prueba de \emph{HAM10000} y otra pa
 La caída alcanza a todas las clases salvo \gls{nv}, que se sostiene. La más afectada es \gls{akiec}, aunque en ella
 influye el mapeo de diagnósticos de la Sección~\ref{sec:met_hiba}: 158 de sus 221 imágenes en \emph{HIBA} son
 carcinomas escamosos, un ruido que no puede separarse del cambio de conjunto de datos. Sin embargo, también \gls{mel} pierde
-un tercio de su sensibilidad, y \gls{bcc}, más de la mitad. Por lo tanto, el desempeño medido en \emph{HAM10000} se traslada solo en parte a este conjunto de datos, aun dentro de la misma modalidad.
+un tercio de su sensibilidad, y \gls{bcc}, más de la mitad. Por lo tanto, el desempeño medido en \emph{HAM10000} se mantiene solo en parte en \emph{HIBA}, aun dentro de la misma modalidad. Estos resultados corresponden a ese conjunto
+de datos, y otros conjuntos externos pueden comportarse de otra manera.
 
 \subsection{Robustez a perturbaciones de la imagen}
 \label{sec:res_robustez}
@@ -123,9 +124,8 @@ El ruido gaussiano es la perturbación más dañina para los dos modelos: con un
 quinto de la sensibilidad macro, y en los niveles más altos los lleva cerca de 1/7. En su nivel más leve, en cambio, las demás degradaciones reducen la
 sensibilidad macro en un 11\,\% o menos, y la compresión, en particular, solo pesa cuando la calidad es muy baja. La diferencia más clara entre los dos
 modelos está en el desenfoque y la reducción de resolución intensos, en los que ConvNeXt-Tiny cae menos que Swin-Tiny: en el nivel~5 de resolución, su caída relativa es de 0.374 frente a
-0.644, y en el de desenfoque, de 0.599 frente a 0.713. Estas
-perturbaciones reproducen solo una parte de la variación real entre equipos (Sección~\ref{sec:marco_eval_robustez}),
-así que no reemplazan la evaluación en \emph{HIBA}.
+0.644, y en el de desenfoque, de 0.599 frente a 0.713. Estas cuatro perturbaciones artificiales reproducen solo una parte de las degradaciones posibles en imágenes clínicas
+(Sección~\ref{sec:marco_eval_robustez}), así que complementan la evaluación en \emph{HIBA}.
 
 \subsection{Calibración}
 \label{sec:res_calibracion}
@@ -176,8 +176,9 @@ Sin pesos, los dos modelos parten de un \gls{ece} de 0.040, y con pesos por clas
 diez veces. Los dos ajustes posteriores, en cambio, lo reducen. El \emph{temperature scaling} lo baja sin que cambie
 ninguna predicción, con una temperatura menor que uno, como corresponde a un modelo subconfiado. En Swin-Tiny, el \emph{vector
 scaling} obtiene el menor \gls{ece}, pero ajusta un parámetro por clase, cambia predicciones y reduce la sensibilidad
-macro. En consecuencia, las probabilidades del modelo sin pesos pueden usarse casi sin corrección, y las del modelo
-con pesos no deberían leerse como certezas.
+macro. En consecuencia, en \emph{HAM10000} las probabilidades del modelo sin pesos requieren poca corrección, y las del modelo
+con pesos se alejan de su frecuencia de acierto. Esta calibración corresponde a \emph{HAM10000} y no necesariamente se
+mantiene en otros conjuntos de datos.
 
 \subsection{Interpretabilidad}
 \label{sec:res_interpretabilidad}
@@ -196,11 +197,10 @@ al lado, el mapa de Grad-CAM superpuesto con la clase que predice el modelo.
 En las cinco imágenes que el modelo clasifica bien (\gls{bkl}, \gls{df}, \gls{mel}, \gls{nv} y \gls{akiec}), la
 activación se concentra sobre la lesión. De los dos errores, el \gls{bcc} clasificado como \gls{mel} también activa la
 lesión, mientras que el \gls{vasc} clasificado como \gls{nv} tiene una activación difusa sobre la piel que rodea la
-lesión. El primer error sugiere, entonces, una confusión entre lesiones pigmentadas y no una decisión tomada sobre el
-fondo. Como se trata de siete imágenes, la inspección muestra que el modelo puede apoyarse en la lesión, pero no mide
-con qué frecuencia lo hace ni respalda un razonamiento clínico (Sección~\ref{sec:met_interpretabilidad}).
+lesión. En el primer error, la activación sobre la lesión es compatible con una confusión entre lesiones pigmentadas. Como se
+trata de pocos ejemplos, estos mapas son evidencia cualitativa sobre el comportamiento del modelo y no permiten estimar
+con qué frecuencia se apoya en la lesión (Sección~\ref{sec:met_interpretabilidad}).
 
 Con estas cinco evaluaciones, el clasificador queda caracterizado también fuera de las condiciones de su
-entrenamiento: la partición por imagen sobreestima su desempeño, pierde buena parte de él en otro conjunto de datos, es sensible al ruido de la imagen y entrega
-probabilidades bien calibradas cuando se entrena sin pesos. Queda por ver si un \gls{vlm} podría ocupar su lugar, que es
+entrenamiento: la partición por imagen sobreestima su desempeño, pierde buena parte de él en otro conjunto de datos, es sensible al ruido de la imagen y, en \emph{HAM10000}, entrega probabilidades bien calibradas cuando se entrena sin pesos. Queda por ver si un \gls{vlm} podría ocupar su lugar, que es
 lo que evalúa la sección siguiente.

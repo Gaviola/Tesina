@@ -84,19 +84,19 @@ el valor $p$ de McNemar, con el umbral que le corresponde en la corrección de H
     \end{tabularx}
 \end{table}
 
-Según el \emph{bootstrap} pareado, Swin-Tiny, ConvNeXt-Tiny y ViT-B/16 no se distinguen entre sí, porque todos sus
-intervalos incluyen el cero. DenseNet121, en cambio, queda alrededor de una décima por debajo de cada uno en F1 macro
+Según el \emph{bootstrap} pareado, no se encontraron diferencias estadísticamente respaldadas entre Swin-Tiny,
+ConvNeXt-Tiny y ViT-B/16, porque todos sus intervalos incluyen el cero, lo que no implica que su desempeño sea equivalente. DenseNet121, en cambio, queda alrededor de una décima por debajo de cada uno en F1 macro
 y en sensibilidad macro, con intervalos que no incluyen el cero. McNemar, que compara las imágenes que acierta cada
-modelo, no distingue ningún par después de la corrección de Holm, tampoco los de DenseNet121. Las dos comparaciones no se
+modelo, no encuentra diferencias respaldadas en ningún par después de la corrección de Holm, tampoco en los de DenseNet121. Las dos comparaciones no se
 contradicen, porque responden preguntas distintas. Una explicación posible es que DenseNet121 acierta casi tantas
 imágenes como los demás, pero falla más en las clases minoritarias, que pesan poco en el total de aciertos y mucho en
 las métricas macro.
 
 La última fila de la Tabla~\ref{tab:res_supervisados} corresponde al ensamble de Swin-Tiny y ConvNeXt-Tiny por voto
 suave (\emph{soft voting}; Sección~\ref{sec:met_supervisados_ensamble}). Su media apenas supera la de Swin-Tiny, pero
-su desvío es mucho menor: con cualquiera de las tres ejecuciones, el ensamble da casi el mismo resultado. Este
-comportamiento es coherente con que las tres mejores arquitecturas no se distingan, ya que combinar dos de ellas
-estabiliza el resultado más de lo que lo mejora. Como la mejora media no se comparó estadísticamente, el resto del capítulo
+su desvío es mucho menor: entre las ejecuciones, el ensamble obtiene valores muy similares. Este comportamiento es coherente con que no se hayan
+encontrado diferencias respaldadas entre las tres arquitecturas, ya que combinar dos de ellas reduce la variación entre
+ejecuciones más de lo que aumenta la media. Como la mejora media no se comparó estadísticamente, el resto del capítulo
 toma como referencia a Swin-Tiny, el de mayor F1 macro medio en validación, que es el criterio de selección de la Sección~\ref{sec:met_seleccion}.
 
 \subsection{Errores por clase de Swin-Tiny}
