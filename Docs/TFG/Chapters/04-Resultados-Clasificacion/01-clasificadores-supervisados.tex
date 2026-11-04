@@ -120,6 +120,19 @@ altos, ya que una quinta parte de los melanomas se clasifica como nevo. Además,
 \gls{akiec} y \gls{bkl}, se confunden entre sí, y una parte de los \gls{bcc} y de los \gls{vasc} se clasifica como
 \gls{mel}.
 
+Para ver estas diferencias sobre imágenes concretas, la Figura~\ref{fig:res_ejemplos_supervisados} presenta una imagen de
+cada clase con la predicción de los cuatro modelos en su ejecución de referencia. En cada clase se tomó la primera imagen
+del conjunto de prueba en la que al menos un modelo acierta y otro falla. Estos ejemplos no representan el desempeño
+global, pero muestran que los modelos no fallan todos en las mismas imágenes: ninguno acierta en las siete, y DenseNet121,
+por ejemplo, falla en cuatro.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Figures/Capitulos/04-Resultados-Clasificacion/ejemplos-supervisados.pdf}
+    \caption{Predicción de los cuatro supervisados en una imagen de cada clase, la primera en la que al menos un modelo acierta y otro falla. Sobre cada imagen, la clase verdadera. Imágenes de \emph{HAM10000}~\cite{tschandl2018ham10000}, licencia CC BY-NC 4.0.}
+    \label{fig:res_ejemplos_supervisados}
+\end{figure}
+
 La matriz corresponde a una sola ejecución. Para ver cuánto cambian estos resultados entre ejecuciones, la Figura~\ref{fig:res_recall_semillas} presenta la
 sensibilidad de cada clase (eje vertical) para los cuatro modelos, con un punto por ejecución y una raya en la media.
 

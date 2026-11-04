@@ -80,6 +80,18 @@ carcinomas escamosos, un ruido que no puede separarse del cambio de conjunto de 
 un tercio de su sensibilidad, y \gls{bcc}, más de la mitad. Por lo tanto, el desempeño medido en \emph{HAM10000} se mantiene solo en parte en \emph{HIBA}, aun dentro de la misma modalidad. Estos resultados corresponden a ese conjunto
 de datos, y otros conjuntos externos pueden comportarse de otra manera.
 
+Como en el conjunto de prueba, la Figura~\ref{fig:res_ejemplos_hiba} presenta una imagen de cada clase en la que los dos
+modelos difieren, la primera de \emph{HIBA} que cumple esa condición. Seis de las siete son dermatoscópicas y la de
+\gls{vasc} es clínica. Como la selección exige que uno de los modelos acierte, estos ejemplos no ilustran la magnitud de la
+caída, sino que cada modelo falla en imágenes distintas: Swin-Tiny, en tres, y ConvNeXt-Tiny, en cuatro.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Figures/Capitulos/04-Resultados-Clasificacion/ejemplos-hiba.pdf}
+    \caption{Predicción de Swin-Tiny y ConvNeXt-Tiny en una imagen de cada clase, la primera de \emph{HIBA} en la que difieren. Sobre cada imagen, la clase verdadera, con el mapeo de la Sección~\ref{sec:met_hiba}. Imágenes de \emph{HIBA}~\cite{riccilara2023dataset}, licencia CC BY.}
+    \label{fig:res_ejemplos_hiba}
+\end{figure}
+
 \subsection{Robustez a perturbaciones de la imagen}
 \label{sec:res_robustez}
 
