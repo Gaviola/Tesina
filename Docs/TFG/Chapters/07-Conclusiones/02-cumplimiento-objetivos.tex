@@ -21,7 +21,7 @@ lo que se hizo, el resultado principal y dónde se presenta.
         \textbf{Objetivo} & \textbf{Lo que se hizo} & \textbf{Resultado principal} & \textbf{Capítulos} \\
         \midrule
         OE1. Clasificadores & Cuatro supervisados, dos \glspl{vlm} generativos y DermLIP, con un mismo protocolo y
-            pruebas estadísticas; umbral de melanoma fijado en validación
+            comparaciones estadísticas; umbral de melanoma fijado en validación
             & Swin-Tiny, con F1 macro de $0.733 \pm 0.026$; los \glspl{vlm} sin una cabeza entrenada quedan por debajo
             de los supervisados; el umbral detecta cuatro de cada cinco melanomas
             & \ref{cp:metodos}, \ref{cp:res_clasif} \\
@@ -32,7 +32,7 @@ lo que se hizo, el resultado principal y dónde se presenta.
             con el ruteo
             & \ref{cp:metodos}, \ref{cp:res_gen} \\
         \filasep
-        OE3. Escenarios y costo & Prueba externa en \emph{HIBA}, perturbaciones, calibración, casos dudosos
+        OE3. Escenarios y costo & Evaluación externa en \emph{HIBA}, perturbaciones, calibración, casos dudosos
             separados por el ruteo, métricas del texto y costo de cada componente
             & Pérdida de cerca del 40\,\% de la sensibilidad macro en \emph{HIBA}; riesgo selectivo de 0.085;
             Mini-VLM entra en 8.6~GB y escribe un reporte en unos 16 segundos
@@ -45,5 +45,4 @@ El primer objetivo se cumplió en los términos en que se planteó. El segundo s
 \gls{vlm} ajustado redacta el reporte e integra la imagen en la descripción, pero no produce un diagnóstico
 preliminar confiable (Sección~\ref{sec:res_gen_sin_anclaje}), de modo que en el sistema final el diagnóstico lo aporta
 el clasificador. El tercero se cumplió en parte, porque quedaron dos aspectos sin evaluar: el \emph{pipeline} completo
-no se aplicó a \emph{HIBA}, y ningún especialista leyó los reportes, de modo que la fidelidad del reporte en otra
-población no se midió y la utilidad práctica se midió solo por el costo (Sección~\ref{sec:disc_limitaciones}).
+no se aplicó a \emph{HIBA}, y ningún especialista leyó los reportes, de modo que la fidelidad del reporte en otro conjunto de datos no se midió y la utilidad práctica se midió solo por el costo (Sección~\ref{sec:disc_limitaciones}).

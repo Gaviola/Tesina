@@ -8,7 +8,7 @@ Los aportes del trabajo atienden las brechas que identificó la revisión del es
 (Tabla~\ref{tab:marco_brechas}):
 \begin{itemize}
     \item \textbf{Una comparación bajo un mismo protocolo.} Clasificadores supervisados, \glspl{vlm} generativos sin especialización en dermatología y un modelo visión--lenguaje dermatológico se evalúan con la misma partición por lesión, las
-    mismas métricas y pruebas estadísticas pareadas (Capítulo~\ref{cp:res_clasif}).
+    mismas métricas y comparaciones estadísticas pareadas (Capítulo~\ref{cp:res_clasif}).
     \item \textbf{Un análisis de por qué los \glspl{vlm} generativos no clasifican.} Los controles con una imagen gris
     y con fotografías clínicas indican que su respuesta depende sobre todo del \emph{prompt}
     (Sección~\ref{sec:res_vlm_controles}).
@@ -17,7 +17,7 @@ Los aportes del trabajo atienden las brechas que identificó la revisión del es
     comparar con trabajos que dividen las imágenes al azar.
     \item \textbf{Un \emph{pipeline} que decide cuánto afirmar.} La concordancia entre el clasificador y el \gls{knn}
     decide si se afirma el diagnóstico, se ofrecen dos candidatos o se deriva el caso. Así, el \emph{pipeline} afirma
-    el 80\,\% de las imágenes con un riesgo de 0.085, sin umbrales ajustados sobre la prueba
+    el 80\,\% de las imágenes con un riesgo de 0.085, sin umbrales ajustados sobre el conjunto de prueba
     (Sección~\ref{sec:disc_concordancia}).
     \item \textbf{Una evaluación por componente.} Como cada experimento agrega un componente por vez, los resultados
     separan lo que aporta cada uno al reporte: la fidelidad diagnóstica proviene del clasificador, la descripción,

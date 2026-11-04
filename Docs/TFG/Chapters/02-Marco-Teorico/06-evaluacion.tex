@@ -339,7 +339,7 @@ los dos modelos y registra la diferencia entre ellos. Si el intervalo de percent
 contiene el cero, la diferencia no se explica por la composición del test. Sirve para cualquier métrica
 agregada, como el F1 macro, el AUC o la consistencia diagnóstica.
 
-La \textbf{prueba de McNemar} compara los aciertos de dos clasificadores sobre las mismas
+La \textbf{test de McNemar} compara los aciertos de dos clasificadores sobre las mismas
 imágenes~\cite{mcnemar1947note}. Solo usa los casos discordantes: $b$, los que el primero acierta y el segundo
 falla, y $c$, los del caso inverso. Si los dos modelos fueran equivalentes, cada caso discordante tendría la misma
 probabilidad de caer de un lado o del otro, y $b$ seguiría una distribución binomial con $b+c$ ensayos y
@@ -350,10 +350,10 @@ se separen al menos tanto como en lo observado,
     \label{eq:marco_mcnemar}
 \end{equation}
 
-Cada prueba a nivel $\alpha$ tiene una probabilidad $\alpha$ de declarar una diferencia que no existe. Al comparar
-muchos pares de modelos, la probabilidad de que al menos una de las pruebas lo haga crece con el número de pruebas
+Cada test a nivel $\alpha$ tiene una probabilidad $\alpha$ de declarar una diferencia que no existe. Al comparar
+muchos pares de modelos, la probabilidad de que al menos uno de los tests lo haga crece con el número de tests
 $m$. La \textbf{corrección de Holm} controla esa probabilidad para el conjunto de las $m$
-pruebas~\cite{holm1979simple}. Ordena los valores $p$ de menor a mayor, $p_{(1)} \le \dots \le p_{(m)}$, y compara
+tests~\cite{holm1979simple}. Ordena los valores $p$ de menor a mayor, $p_{(1)} \le \dots \le p_{(m)}$, y compara
 cada uno con un umbral que se relaja paso a paso,
 \begin{equation}
     p_{(k)} \le \frac{\alpha}{m - k + 1}, \qquad k = 1, \dots, m.

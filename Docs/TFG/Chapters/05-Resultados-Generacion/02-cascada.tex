@@ -82,7 +82,7 @@ límite de tokens corta un bloque de razonamiento. Estas omisiones se concentran
 son fallas del generador y no del clasificador (Sección~\ref{sec:res_gen_errores}).
 
 La misma relación aparece cuando la fuente es DermLIP sin ajuste, el \gls{vlm} de la Sección~\ref{sec:res_vlm}, que
-acierta en 0.716 de las imágenes de la prueba. Mini-VLM y SkinVL nombran el diagnóstico de DermLIP en todos los
+acierta en 0.716 de las imágenes del conjunto de prueba. Mini-VLM y SkinVL nombran el diagnóstico de DermLIP en todos los
 reportes salvo uno y dos, respectivamente, y su consistencia coincide con esa exactitud. Por lo tanto, el generador
 transcribe el diagnóstico de igual modo cuando proviene de un clasificador ajustado y cuando proviene de un modelo
 sin ajuste, y la fidelidad del reporte es la de la fuente.
@@ -123,7 +123,7 @@ Para responderlo, la cascada con el \emph{oracle} se repitió en las dos variant
 Sección~\ref{sec:met_referencias}: con la imagen reemplazada por una gris neutra y con un diagnóstico equivocado, como
 \gls{mel} por \gls{nv}. La Tabla~\ref{tab:res_gen_ablaciones} presenta, para cada generador, la consistencia en las
 tres condiciones y, con y sin la imagen, la cantidad de reportes distintos y la cobertura de entidades clínicas. Las
-variantes se midieron sobre 400 imágenes con Mini-VLM y LLaVA-Med y sobre la prueba completa con SkinVL.
+variantes se midieron sobre 400 imágenes con Mini-VLM y LLaVA-Med y sobre el conjunto de prueba completo con SkinVL.
 
 \begin{table}[H]
     \centering

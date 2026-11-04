@@ -20,12 +20,11 @@ el origen del texto de referencia.
 
 Cada conjunto cumple un papel distinto en la experimentación, según sirva para entrenar, para evaluar o solo de forma
 indirecta. \emph{HAM10000} es el único etiquetado con las siete categorías de la tarea, de modo que con él se entrenan
-los clasificadores, se eligen sus configuraciones en validación y se evalúan en prueba todos los modelos de
+los clasificadores, se eligen sus configuraciones en validación y se evalúan en el conjunto de prueba todos los modelos de
 clasificación y el \emph{pipeline}. Por esa razón es el conjunto central del trabajo, y sus propiedades, que se
 analizan a continuación, determinan cómo se parte y con qué métricas se evalúa. \emph{SkinCaRe}, en cambio, se usa
 para entrenar a los generadores de reportes, y \emph{MM-Skin}, para evaluarlos contra un texto de referencia.
-\emph{HIBA} se usa solo como prueba externa, para comprobar si los clasificadores mantienen su desempeño en otra
-población. Por último, \emph{Derm1M} no se usa de forma directa: es el conjunto con el que sus autores preentrenaron
+\emph{HIBA} se usa solo como evaluación externa, para comprobar si los clasificadores mantienen su desempeño en otro conjunto de datos. Por último, \emph{Derm1M} no se usa de forma directa: es el conjunto con el que sus autores preentrenaron
 DermLIP, uno de los modelos de la Sección~\ref{sec:met_clasif_vlm}.
 
 \begin{table}[H]
@@ -48,7 +47,7 @@ DermLIP, uno de los modelos de la Sección~\ref{sec:met_clasif_vlm}.
             & Descripciones de cuatro dermatólogos, escritas en chino y traducidas al inglés \\
         \filasep
         \emph{SkinCoT} (\emph{SkinCaRe}) & Clínica (fotografía) & 3\,041 imágenes
-            & Entrenamiento de los generadores; su prueba, evaluación con referencia
+            & Entrenamiento de los generadores; su conjunto de prueba, evaluación con referencia
             & Razonamiento escrito por un modelo de lenguaje con la etiqueta a la vista y revisado por dermatólogos \\
         \filasep
         \emph{MM-Skin} & Clínica, dermatoscópica y patológica
@@ -91,8 +90,8 @@ distinguir entre modelos. Esta es la razón por la que el trabajo usa métricas 
 
 La segunda propiedad afecta a la partición. Una misma lesión puede tener hasta seis imágenes, y las 1\,956 lesiones
 con más de una reúnen el 45\,\% del conjunto (Figura~\ref{fig:met_ham_lesiones}). Una situación a evitar es que
-imágenes de una misma lesión caigan en entrenamiento y en prueba, ya que el modelo puede reconocer la lesión en lugar
-de generalizar a lesiones nuevas, y la prueba deja de medir lo que dice medir. Por eso la partición tiene que agrupar
+imágenes de una misma lesión caigan en entrenamiento y en el conjunto de prueba, ya que el modelo puede reconocer la lesión en lugar
+de generalizar a lesiones nuevas, y el conjunto de prueba deja de medir lo que dice medir. Por eso la partición tiene que agrupar
 las imágenes de cada lesión.
 
 \begin{figure}[H]
@@ -128,13 +127,13 @@ imágenes de prueba tienen otra imagen de su misma lesión en entrenamiento, y e
 
 Esta coincidencia es una fuga de información entre particiones (\emph{data leakage};
 Sección~\ref{sec:marco_regularizacion}): el modelo pudo ver en el entrenamiento la misma lesión que se le pide
-clasificar, de modo que la prueba ya no mide el desempeño sobre lesiones nuevas. Además, la fuga no afecta a todas las
+clasificar, de modo que el conjunto de prueba ya no mide el desempeño sobre lesiones nuevas. Además, la fuga no afecta a todas las
 clases por igual. En NV alcanza al 27\,\% de las imágenes de prueba, mientras que en BCC llega al 70\,\%, así que las
 dos clases malignas, que son las que más importan, son las más afectadas.
 
-Para eliminar la fuga, la partición nueva conserva completa la prueba original, de modo que los resultados de los
+Para eliminar la fuga, la partición nueva conserva completo el conjunto de prueba original, de modo que los resultados de los
 \glspl{vlm} y del \emph{pipeline}, medidos sobre ella, siguen siendo comparables. Del entrenamiento y la validación
-originales se descartan las 776 imágenes cuya lesión aparece en la prueba, y las restantes se reparten con
+originales se descartan las 776 imágenes cuya lesión aparece en el conjunto de prueba, y las restantes se reparten con
 \texttt{StratifiedGroupKFold} de scikit-learn, con la lesión como grupo y el diagnóstico como estrato.
 Con este procedimiento se obtienen 6\,447 imágenes de entrenamiento y 1\,289 de validación, sin lesiones compartidas entre particiones
 (Tabla~\ref{tab:met_tamanos}). El costo es que el entrenamiento tiene un 8\,\% menos de imágenes que el de la partición
@@ -163,7 +162,7 @@ por clase en ese conjunto cambian mucho con pocos aciertos.
 \end{table}
 
 A diferencia de \emph{HAM10000}, los demás conjuntos no pasan por esta partición, porque cada uno trae su propia
-división o se usa completo como prueba.
+división o se usa completo como conjunto de prueba.
 
 \subsection{SkinCaRe: SkinCAP y SkinCoT}
 
@@ -208,8 +207,7 @@ con \emph{MM-Skin}; las otras dos suman conjuntos públicos de diagnóstico que 
 de \emph{HIBA}~\cite{zeng2025mmskin}.
 
 Por otra parte, \emph{HIBA} reúne 1\,616 imágenes de 623 pacientes de un hospital de Buenos Aires, con licencia CC
-BY~\cite{riccilara2023dataset}. Es el único conjunto de otra población y se usa completo como prueba externa, de modo que
-ningún modelo se entrena con él (Sección~\ref{sec:marco_generalizacion}). Además, cuatro de cada cinco imágenes son
+BY~\cite{riccilara2023dataset}. Se usa completo como evaluación externa, de modo que ningún modelo se entrena con él (Sección~\ref{sec:marco_generalizacion}). Además, cuatro de cada cinco imágenes son
 dermatoscópicas y el resto clínicas, y el melanoma tiene más peso que en \emph{HAM10000} (16\,\% frente a 11\,\%).
 Para usarlo con los clasificadores, sus diagnósticos se llevan a las siete categorías de \emph{HAM10000}. En ese
 mapeo, el carcinoma escamoso pasa a AKIEC, una aproximación que agrega ruido a la comparación y que se retoma en la

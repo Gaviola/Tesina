@@ -28,13 +28,13 @@ Además de esa distancia entre lo medido y la validez clínica, las conclusiones
     interpretabilidad usan una sola vista, y el costo se midió en dos GPU distintas. Cada tabla declara su protocolo,
     pero los valores absolutos de tablas distintas no siempre son comparables. Además, las variantes de la cascada sin
     imagen y con un diagnóstico equivocado usan un subconjunto de 400 imágenes con Mini-VLM y LLaVA-Med
-    (Sección~\ref{sec:met_referencias}), de modo que sus intervalos son más amplios que los de la prueba completa.
-    \item \textbf{Validez de la conclusión estadística.} Las pruebas usan como unidad la imagen de prueba y se
+    (Sección~\ref{sec:met_referencias}), de modo que sus intervalos son más amplios que los del conjunto de prueba completo.
+    \item \textbf{Validez de la conclusión estadística.} Las comparaciones estadísticas usan como unidad la imagen de prueba y se
     calculan sobre la ejecución de referencia de cada modelo (Sección~\ref{sec:met_estadistica}). Miden, por lo
     tanto, la variación debida a la muestra de imágenes, pero no la variación entre entrenamientos, que en las clases
     minoritarias y en el melanoma supera una décima, y que con tres ejecuciones solo se estima de manera gruesa. Las
     clases con pocas imágenes, como \gls{df} con 17, dan intervalos amplios, y algunas diferencias, como la del
-    ensamble frente a Swin-Tiny o la de DermLIP con una cabeza frente a los supervisados, no se sometieron a prueba.
+    ensamble frente a Swin-Tiny o la de DermLIP con una cabeza frente a los supervisados, no se compararon estadísticamente.
     \item \textbf{Validez de constructo.} La consistencia diagnóstica no juzga el reporte, el Nivel~1 mide sobre todo
     el estilo, y la cobertura de entidades cuenta términos clínicos sin verificar que correspondan a la imagen. En el
     nivel diferencial, además, la consistencia se parece a acertar entre las dos primeras opciones y no equivale a una
@@ -42,7 +42,7 @@ Además de esa distancia entre lo medido y la validez clínica, las conclusiones
     \item \textbf{Validez externa.} La evaluación principal usa un solo conjunto, y en \emph{HIBA} Swin-Tiny pierde
     cerca del 40\,\% de su sensibilidad macro, también en las imágenes dermatoscópicas, con un mapeo de diagnósticos
     que agrega ruido en \gls{akiec} (Sección~\ref{sec:res_hiba}). Como la fidelidad diagnóstica del reporte coincide
-    con la exactitud del clasificador, es esperable que también caiga en otra población, aunque no se midió. Las
+    con la exactitud del clasificador, es esperable que también caiga en otro conjunto de datos, aunque no se midió. Las
     comparaciones con la literatura, por su parte, ubican el orden de magnitud de los resultados, pero no permiten
     ordenar los modelos.
 \end{itemize}
@@ -65,7 +65,7 @@ Varias decisiones del diseño, además, quedaron sin evaluar:
     (Sección~\ref{sec:disc_concordancia}).
     \item \textbf{La plantilla diferencial.} Con LLaVA-Med, la plantilla del nivel diferencial induce un razonamiento
     que el límite de tokens deja sin cerrar (Sección~\ref{sec:res_gen_pipeline}). La plantilla \emph{noreasoning}, a
-    su vez, se eligió en un piloto que incluía 17 imágenes de la prueba (Sección~\ref{sec:met_pipeline}).
+    su vez, se eligió en un piloto que incluía 17 imágenes del conjunto de prueba (Sección~\ref{sec:met_pipeline}).
     \item \textbf{Otros anclajes y generadores.} La relación entre la exactitud de la fuente y la fidelidad del reporte
     se caracteriza con tres fuentes, DermLIP sin ajuste, Swin-Tiny y el \emph{oracle}, y no con un barrido de
     clasificadores. Tampoco se evaluaron como generadores los modelos que razonan antes de diagnosticar, como
@@ -76,10 +76,9 @@ Varias decisiones del diseño, además, quedaron sin evaluar:
 \end{itemize}
 
 Por último, no todos los resultados tienen el mismo respaldo. Las decisiones de selección se tomaron en validación: el
-modelo, por la media de tres ejecuciones, y el umbral de melanoma, con una especificidad mínima fijada de antemano. La
-prueba por lesión y \emph{HIBA} aportan, entonces, una evaluación independiente de esas decisiones, y el ruteo no
-ajusta ningún umbral sobre la prueba. En cambio, las explicaciones que este capítulo propone, como la jerarquía entre
+modelo, por la media de tres ejecuciones, y el umbral de melanoma, con una especificidad mínima fijada de antemano. El conjunto de prueba de la partición por lesión y \emph{HIBA} aportan, entonces, una evaluación independiente de esas decisiones, y el ruteo no
+ajusta ningún umbral sobre el conjunto de prueba. En cambio, las explicaciones que este capítulo propone, como la jerarquía entre
 el texto y la imagen o el origen de los errores compartidos, y los análisis que se hicieron después de ver los
-resultados, como la clasificación de las fallas de los reportes o los ejemplos, describen la prueba sin haberse
+resultados, como la clasificación de las fallas de los reportes o los ejemplos, describen el conjunto de prueba sin haberse
 confirmado en otros datos, y quedan como exploratorios. Con estas limitaciones delimitadas, el
 Capítulo~\ref{cp:conclusiones} responde las preguntas de investigación y reúne las conclusiones del trabajo.

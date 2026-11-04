@@ -52,7 +52,7 @@ describe tanto como LLaVA-Med, de modo que es el único de los tres que reúne l
 En la configuración principal, el ajuste de Mini-VLM no llega a su modelo de lenguaje
 (Sección~\ref{sec:res_gen_nivel1}). La variante de control de la Sección~\ref{sec:met_generacion}, que también
 ajusta ese modelo, permite saber si esa diferencia cambia los reportes. La Tabla~\ref{tab:res_gen_control} compara ambas versiones sobre las mismas imágenes. En la cascada con Swin-Tiny
-y sin anclaje, la variante de control tiene reportes solo para una parte de la prueba.
+y sin anclaje, la variante de control tiene reportes solo para una parte del conjunto de prueba.
 
 \begin{table}[H]
     \centering
@@ -115,7 +115,7 @@ rápido porque escribe una oración, y Mini-VLM tarda menos que LLaVA-Med con re
         & & \multicolumn{2}{c}{\textbf{Memoria (GB)}} & & & \\
         \cmidrule(lr){3-4}
         \textbf{Generador} & \textbf{Parámetros (millones)} & \textbf{Carga} & \textbf{Generación}
-            & \textbf{Ajuste, segunda etapa (h)} & \textbf{Segundos por reporte} & \textbf{Horas para la prueba} \\
+            & \textbf{Ajuste, segunda etapa (h)} & \textbf{Segundos por reporte} & \textbf{Horas paral conjunto de prueba} \\
         \midrule
         Mini-VLM & 4\,153 & 7.7 & 8.6 & 9.3 & 16.4 & 6.8 \\
         LLaVA-Med & 7\,600 & 14.2 & 14.5 & 6.9 & 26.2 & 10.9 \\

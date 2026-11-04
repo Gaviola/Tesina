@@ -22,7 +22,7 @@ Sección~\ref{sec:met_referencias}.
 \subsection{Concordancia entre el clasificador y el kNN}
 \label{sec:res_gen_concordancia}
 
-El ruteo asigna ocho de cada diez imágenes de la prueba al nivel afirmativo, una de cada seis al diferencial y una
+El ruteo asigna ocho de cada diez imágenes del conjunto de prueba al nivel afirmativo, una de cada seis al diferencial y una
 de cada treinta a la derivación. Para ver si esos niveles reúnen casos de dificultad distinta, la
 Figura~\ref{fig:res_gen_ruteo} presenta el acierto en cada nivel (a) y el nivel asignado a las imágenes de cada clase (b).
 
@@ -47,7 +47,7 @@ del clasificador, y eso es lo que justifica usarlo como segunda opinión.
 La concordancia, sin embargo, no detecta los errores que comparten ambos predictores. De los 230 casos en que
 Swin-Tiny se equivoca, 102 caen en el nivel afirmativo, porque el \gls{knn} vota la misma clase errónea. Es decir,
 cuatro de cada nueve errores del clasificador se afirman con la misma plantilla que un acierto, la limitación que
-anticipaba la Sección~\ref{sec:met_ruteo}. El caso más relevante es el melanoma: 38 de los 167 melanomas de la prueba
+anticipaba la Sección~\ref{sec:met_ruteo}. El caso más relevante es el melanoma: 38 de los 167 melanomas del conjunto de prueba
 se afirman como otra clase, 31 de ellos como \gls{nv}, de modo que casi uno de cada cuatro melanomas recibe un
 reporte definitivo con un diagnóstico benigno.
 
@@ -71,8 +71,7 @@ Con el ruteo, los casos afirmativos reciben el reporte de la cascada y los difer
 candidatos. La Tabla~\ref{tab:res_gen_pipeline} compara la consistencia de esos reportes, para Mini-VLM y LLaVA-Med
 (columnas), en tres bloques de filas. El primero reúne los 1\,452 casos no derivados, con la cascada simple, el
 \emph{pipeline}, la línea base sin generador, que escribe el diagnóstico afirmado o el par de candidatos, y las
-diferencias pareadas con su intervalo de confianza. El segundo se limita al nivel diferencial, y el tercero vuelve a la
-prueba completa, con cada derivación contada como un caso sin diagnóstico.
+diferencias pareadas con su intervalo de confianza. El segundo se limita al nivel diferencial, y el tercero vuelve al conjunto de prueba completo, con cada derivación contada como un caso sin diagnóstico.
 
 Esta consistencia no equivale a una exactitud, por dos razones. Primero, en el nivel diferencial un reporte que nombra
 dos candidatos cuenta como consistente si uno de ellos es el verdadero, de modo que el criterio se parece a acertar
@@ -102,7 +101,7 @@ de los más difíciles, y por eso el tercer bloque informa también la consisten
         Reporte diferencial & 0.831 & 0.407 \\
         Par de candidatos, sin generador & 0.847 & 0.847 \\
         \filasep
-        \multicolumn{3}{@{}l}{\textit{Prueba completa, con las derivaciones sin diagnóstico (1\,503)}} \\
+        \multicolumn{3}{@{}l}{\textit{Conjunto de prueba completo, con las derivaciones sin diagnóstico (1\,503)}} \\
         Cascada simple & 0.849 & 0.745 \\
         Pipeline completo & 0.870 & 0.719 \\
         Línea base sin generador & 0.873 & 0.873 \\
@@ -114,11 +113,11 @@ La línea base sin generador obtiene la consistencia más alta en los tres bloqu
 la más baja. Con Mini-VLM, el \emph{pipeline} mejora la consistencia de la cascada simple, y la mejora se concentra en
 el nivel diferencial, donde el reporte nombra la clase verdadera en cuatro de cada cinco casos, frente a seis de cada
 diez de la cascada. Sin embargo, el \emph{pipeline} no supera a la línea base sin generador. La ganancia puede atribuirse, por lo tanto, a presentar dos candidatos cuando los predictores discrepan, una decisión del ruteo, y el generador la
-conserva sin agregarle fidelidad. Sobre la prueba completa, con las derivaciones contadas como casos sin diagnóstico,
+conserva sin agregarle fidelidad. Sobre el conjunto de prueba completo, con las derivaciones contadas como casos sin diagnóstico,
 la mejora es menor, de 0.849 a 0.870. Esta lectura coincide con la de la cascada: el diagnóstico sale de los
 predictores, y el generador lo redacta.
 
-Con LLaVA-Med, en cambio, el \emph{pipeline} no mejora la cascada simple, y sobre la prueba completa queda por debajo de
+Con LLaVA-Med, en cambio, el \emph{pipeline} no mejora la cascada simple, y sobre el conjunto de prueba completo queda por debajo de
 ella. Sus reportes diferenciales nombran la clase verdadera en cuatro de cada diez casos, la mitad que el par de
 candidatos que reciben. En 144 de los 248, el generador abre un bloque de razonamiento que el límite de tokens deja sin
 cerrar, y los candidatos quedan dentro de él. Como la evaluación mide solo el reporte

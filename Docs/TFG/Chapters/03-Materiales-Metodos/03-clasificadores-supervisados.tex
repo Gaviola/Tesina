@@ -72,7 +72,7 @@ En concreto, se toma un recorte aleatorio de entre el 70\,\% y el 100\,\% del á
 con probabilidad 0.5, se aplican dos transformaciones de RandAugment~\cite{cubuk2020randaugment} con una magnitud $M$
 que se elige por búsqueda, y se borra un rectángulo al azar con probabilidad 0.25~\cite{zhong2020random}.
 
-En validación y en prueba, en cambio, no hay aumento. La imagen se redimensiona a $256 \times 256$ y se recorta el
+En validación y en el conjunto de prueba, en cambio, no hay aumento. La imagen se redimensiona a $256 \times 256$ y se recorta el
 centro de $224 \times 224$. Las probabilidades finales de ambas particiones se obtienen con \gls{tta}
 (Sección~\ref{sec:marco_regularizacion}), que promedia las de la imagen y su reflejo horizontal, mientras que la
 validación de cada época usa una sola vista.
@@ -171,7 +171,7 @@ cada combinación una sola vez.
 
 Por último, los dos modelos de la búsqueda, Swin-Tiny y ConvNeXt-Tiny, también se combinan por voto suave
 (\emph{soft voting}; Sección~\ref{sec:marco_senales_confianza}), que promedia sus probabilidades. Solo se combinan esos
-dos porque son los que eligió la validación, y elegir otra combinación exigiría consultar la prueba. Para la detección
+dos porque son los que eligió la validación, y elegir otra combinación exigiría consultar el conjunto de prueba. Para la detección
 de melanoma, el puntaje es la probabilidad de melanoma de cada modelo o del ensamble, con el umbral que fija la
 Sección~\ref{sec:met_seleccion}.
 

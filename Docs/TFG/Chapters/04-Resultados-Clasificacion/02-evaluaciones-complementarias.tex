@@ -21,25 +21,25 @@ costo se presenta junto con la comparación de la Sección~\ref{sec:res_comparac
 Los resultados de la sección anterior se obtuvieron con la partición por lesión, sin fuga de información entre
 particiones (\emph{data leakage}; Sección~\ref{sec:met_particiones}). La primera evaluación estima cuánto cambiarían
 con la partición original por imagen (Sección~\ref{sec:met_fuga}). Para ello se evalúa un Swin-Tiny entrenado con ella, con la configuración que eligió su propia validación, sobre tres
-grupos de imágenes de su prueba: la prueba completa, las imágenes cuya lesión no aparece en su entrenamiento ni en su
+grupos de imágenes de su conjunto de prueba: el conjunto de prueba completo, las imágenes cuya lesión no aparece en su entrenamiento ni en su
 validación, y las que comparten lesión con el entrenamiento.
 
-Sobre la prueba completa, la sensibilidad macro de este modelo es de 0.870, y sobre las 894 imágenes sin lesión
+Sobre el conjunto de prueba completo, la sensibilidad macro de este modelo es de 0.870, y sobre las 894 imágenes sin lesión
 compartida, de 0.804. En las 543 que comparten lesión con el entrenamiento llega a 0.936, y las 66 restantes comparten
 lesión solo con la validación. Como control, DermLIP sin ajuste sobre \emph{HAM10000} no empeora en el grupo sin
-lesión compartida, lo que indica que la diferencia no se explica por una mayor dificultad de ese grupo. En esta prueba, entonces, la
+lesión compartida, lo que indica que la diferencia no se explica por una mayor dificultad de ese grupo. En este conjunto de prueba, entonces, la
 partición por imagen sobreestima la sensibilidad macro en unas 0.07, una distorsión que se retoma al comparar con
 otros trabajos en la Sección~\ref{sec:res_estado_arte}.
 
-\subsection{Generalización a otra población}
+\subsection{Generalización a otro conjunto de datos}
 \label{sec:res_hiba}
 
 La segunda evaluación aplica Swin-Tiny y ConvNeXt-Tiny, sin ningún ajuste, a las 1\,616 imágenes de \emph{HIBA}. La
-Tabla~\ref{tab:res_hiba} presenta la sensibilidad macro de cada modelo en la prueba de \emph{HAM10000} y en \emph{HIBA}, en total y separada por modalidad.
+Tabla~\ref{tab:res_hiba} presenta la sensibilidad macro de cada modelo en el conjunto de prueba de \emph{HAM10000} y en \emph{HIBA}, en total y separada por modalidad.
 
 \begin{table}[H]
     \centering
-    \caption{Sensibilidad macro en la prueba de \emph{HAM10000} y en \emph{HIBA}, por modalidad.}
+    \caption{Sensibilidad macro en el conjunto de prueba de \emph{HAM10000} y en \emph{HIBA}, por modalidad.}
     \label{tab:res_hiba}
     \small
     \setlength{\tabcolsep}{4pt}
@@ -65,24 +65,24 @@ fotografías clínicas, una explicación posible es que se trata de una modalida
 entrenamiento.
 
 Para ver qué clases explican la caída, la Figura~\ref{fig:res_hiba_clases} presenta la sensibilidad de cada clase de
-Swin-Tiny en las dos poblaciones.
+Swin-Tiny en los dos conjuntos de datos.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.85\textwidth]{Figures/Capitulos/04-Resultados-Clasificacion/hiba-por-clase-swin.pdf}
-    \caption{Sensibilidad por clase de Swin-Tiny en la prueba de \emph{HAM10000} y en \emph{HIBA}.}
+    \caption{Sensibilidad por clase de Swin-Tiny en el conjunto de prueba de \emph{HAM10000} y en \emph{HIBA}.}
     \label{fig:res_hiba_clases}
 \end{figure}
 
 La caída alcanza a todas las clases salvo \gls{nv}, que se sostiene. La más afectada es \gls{akiec}, aunque en ella
 influye el mapeo de diagnósticos de la Sección~\ref{sec:met_hiba}: 158 de sus 221 imágenes en \emph{HIBA} son
-carcinomas escamosos, un ruido que no puede separarse del cambio de población. Sin embargo, también \gls{mel} pierde
-un tercio de su sensibilidad, y \gls{bcc}, más de la mitad. Por lo tanto, el desempeño medido en \emph{HAM10000} se traslada solo en parte a esta población, aun dentro de la misma modalidad.
+carcinomas escamosos, un ruido que no puede separarse del cambio de conjunto de datos. Sin embargo, también \gls{mel} pierde
+un tercio de su sensibilidad, y \gls{bcc}, más de la mitad. Por lo tanto, el desempeño medido en \emph{HAM10000} se traslada solo en parte a este conjunto de datos, aun dentro de la misma modalidad.
 
 \subsection{Robustez a perturbaciones de la imagen}
 \label{sec:res_robustez}
 
-La tercera evaluación conserva la población, pero degrada las imágenes de la prueba con cuatro perturbaciones de
+La tercera evaluación conserva el conjunto de datos, pero degrada las imágenes del conjunto de prueba con cuatro perturbaciones de
 intensidad creciente. La Figura~\ref{fig:res_robustez} presenta la sensibilidad macro de los dos modelos ante cada perturbación. La Tabla~\ref{tab:res_robustez} resume la caída relativa
 (Ecuación~\ref{eq:marco_robustez}) en los niveles 1, 3 y 5. Como esta evaluación usa una sola vista y no el
 \gls{tta}, la sensibilidad sin perturbar es algo menor que la de la Tabla~\ref{tab:res_hiba}.
@@ -146,7 +146,7 @@ La Tabla~\ref{tab:res_calibracion} la cuantifica para los dos modelos y agrega l
 
 \begin{table}[H]
     \centering
-    \caption{Calibración en la prueba de \emph{HAM10000} (ejecución de referencia). La fila con pesos por clase es la mejor configuración del barrido con pesos, distinta de la entropía cruzada ponderada de la Tabla~\ref{tab:res_desbalance}, que usa hiperparámetros fijos.}
+    \caption{Calibración en el conjunto de prueba de \emph{HAM10000} (ejecución de referencia). La fila con pesos por clase es la mejor configuración del barrido con pesos, distinta de la entropía cruzada ponderada de la Tabla~\ref{tab:res_desbalance}, que usa hiperparámetros fijos.}
     \label{tab:res_calibracion}
     \small
     \setlength{\tabcolsep}{4pt}
@@ -194,9 +194,9 @@ activación se concentra sobre la lesión. De los dos errores, el \gls{bcc} clas
 lesión, mientras que el \gls{vasc} clasificado como \gls{nv} tiene una activación difusa sobre la piel que rodea la
 lesión. El primer error sugiere, entonces, una confusión entre lesiones pigmentadas y no una decisión tomada sobre el
 fondo. Como se trata de siete imágenes, la inspección muestra que el modelo puede apoyarse en la lesión, pero no mide
-con qué frecuencia lo hace ni prueba un razonamiento clínico (Sección~\ref{sec:met_interpretabilidad}).
+con qué frecuencia lo hace ni respalda un razonamiento clínico (Sección~\ref{sec:met_interpretabilidad}).
 
 Con estas cinco evaluaciones, el clasificador queda caracterizado también fuera de las condiciones de su
-entrenamiento: la partición por imagen sobreestima su desempeño, pierde buena parte de él en otra población, es sensible al ruido de la imagen y entrega
+entrenamiento: la partición por imagen sobreestima su desempeño, pierde buena parte de él en otro conjunto de datos, es sensible al ruido de la imagen y entrega
 probabilidades bien calibradas cuando se entrena sin pesos. Queda por ver si un \gls{vlm} podría ocupar su lugar, que es
 lo que evalúa la sección siguiente.

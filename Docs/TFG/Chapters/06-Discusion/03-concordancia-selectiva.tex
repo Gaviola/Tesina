@@ -12,10 +12,10 @@ El ruteo por concordancia es, en los términos de la Sección~\ref{sec:marco_pre
 Swin-Tiny propone el diagnóstico, y la concordancia con el \gls{knn} decide si se afirma. Leído así, sus resultados
 (Sección~\ref{sec:res_gen_concordancia}) se resumen en dos cifras. El \emph{pipeline} afirma el diagnóstico en el
 80\,\% de las imágenes de prueba, que es su cobertura, y entre ellas el clasificador se equivoca en el 8.5\,\%, que es
-su riesgo selectivo, frente al 15.3\,\% de error sobre la prueba completa. Es decir, renunciar a afirmar una de cada
+su riesgo selectivo, frente al 15.3\,\% de error sobre el conjunto de prueba completo. Es decir, renunciar a afirmar una de cada
 cinco imágenes reduce a algo más de la mitad la proporción de diagnósticos afirmados erróneos. Además, a diferencia de
-un umbral sobre la probabilidad, la regla no tiene ningún parámetro ajustado sobre la prueba, de modo que esa
-reducción no está sobreestimada por un umbral elegido en la prueba.
+un umbral sobre la probabilidad, la regla no tiene ningún parámetro ajustado sobre el conjunto de prueba, de modo que esa
+reducción no está sobreestimada por un umbral elegido en el conjunto de prueba.
 
 Que la concordancia funcione depende de que los dos predictores se equivoquen en imágenes distintas. La
 Sección~\ref{sec:marco_concordancia} lo planteaba como una hipótesis: un clasificador que ajusta fronteras entre las
@@ -40,7 +40,7 @@ intervienen en el ruteo, y no se evaluó si detectan una parte de esos errores.
 
 Los errores compartidos se concentran, además, donde el costo clínico es mayor. El \emph{pipeline} se eligió y se
 evaluó por la consistencia diagnóstica, que con la cascada coincide con la exactitud del clasificador y está dominada,
-por lo tanto, por los nevos, que son dos tercios de la prueba. En el melanoma, la prioridad clínica es la
+por lo tanto, por los nevos, que son dos tercios del conjunto de prueba. En el melanoma, la prioridad clínica es la
 sensibilidad, y ahí el \emph{pipeline} queda más débil: casi uno de cada cuatro melanomas se afirma como otra clase, la
 mayoría como nevo (Sección~\ref{sec:res_gen_concordancia}). El ruteo mitiga parte del problema, porque cuando un
 melanoma pasa al nivel diferencial el par de candidatos casi siempre lo incluye, pero no puede mitigar los melanomas

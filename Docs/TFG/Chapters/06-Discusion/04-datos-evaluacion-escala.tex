@@ -12,7 +12,7 @@ procedimiento (Sección~\ref{sec:res_sup_arquitecturas}), ViT-B/16 no supera a S
 configuración elegida para este último, y
 el ensamble de los dos mejores apenas mejora la media de cada uno, aunque reduce su variación entre ejecuciones
 (Tabla~\ref{tab:res_supervisados}). Una explicación posible es que, con unas 6\,400 imágenes de entrenamiento y clases
-minoritarias de pocas decenas de imágenes en la prueba, el límite lo ponen los datos y no la capacidad del modelo. Es
+minoritarias de pocas decenas de imágenes en el conjunto de prueba, el límite lo ponen los datos y no la capacidad del modelo. Es
 compatible con esa explicación que las clases minoritarias sean también las que más varían entre ejecuciones
 (Sección~\ref{sec:res_sup_clases}), porque con pocos ejemplos el resultado depende más de qué imágenes ve cada
 entrenamiento y en qué orden.
@@ -25,13 +25,12 @@ detección de tres a cuatro de cada cinco melanomas sin cambiar el \gls{auc} (Se
 que los trabajos revisados operan en puntos que van desde la clase más probable hasta una sensibilidad cercana a la
 total. Y la variación entre ejecuciones supera una décima en las clases minoritarias, de modo que un resultado de una
 sola ejecución puede quedar arriba o abajo de otro por azar. Por eso una comparación con la literatura es interpretable cuando se conocen la partición, la regla de decisión y la cantidad de ejecuciones, y por eso este trabajo fija el
-umbral en validación, a diferencia de un modelo elegido sobre la misma prueba en que se informa, como el de
+umbral en validación, a diferencia de un modelo elegido sobre el mismo conjunto de prueba en que se informa, como el de
 \textcite{yao2022single} (Sección~\ref{sec:res_estado_arte}).
 
 Lo mismo ocurre al elegir qué se mide. McNemar y el \emph{bootstrap} pareado responden preguntas distintas, si un
 modelo acierta más imágenes que otro o si su sensibilidad macro es mayor, y por eso DenseNet121 acierta más imágenes
-que DermLIP sin superarlo en sensibilidad macro (Sección~\ref{sec:res_comparacion}): con clases desbalanceadas, la
-prueba tiene que aplicarse a la métrica con que se elige el modelo. En el texto, las métricas con referencia premian
+que DermLIP sin superarlo en sensibilidad macro (Sección~\ref{sec:res_comparacion}): con clases desbalanceadas, el conjunto de prueba tiene que aplicarse a la métrica con que se elige el modelo. En el texto, las métricas con referencia premian
 el estilo: SkinVL, ajustado con las descripciones de \emph{MM-Skin}, obtiene en ellas un BLEU-4 más de cien veces
 mayor que el de los generadores de este trabajo con un BERTScore parecido (Sección~\ref{sec:res_gen_estado_arte}). La
 consistencia diagnóstica, a su vez, premia enumerar, y por eso LLaVA-Med obtiene sin anclaje la consistencia más alta

@@ -24,7 +24,7 @@ Tabla~\ref{tab:marco_sota_clasificacion} resume los trabajos.
 En 2017, una \gls{cnn} alcanzó un desempeño comparable al de dermatólogos certificados en dos distinciones entre
 lesiones malignas y benignas, carcinoma queratinocítico contra queratosis seborreica y melanoma contra
 nevo~\cite{esteva2017dermatologistlevel}.
-En 2019, los clasificadores del desafío ISIC 2018, entrenados con \emph{HAM10000}, obtuvieron en su prueba un
+En 2019, los clasificadores del desafío ISIC 2018, entrenados con \emph{HAM10000}, obtuvieron en su conjunto de prueba un
 promedio de aciertos mayor que el de 511 participantes humanos, y los tres mejores superaron también a los expertos
 con más de diez años de experiencia~\cite{tschandl2019comparison}. Esos dos hitos plantearon la tarea como una
 comparación con el especialista, y buena parte de los trabajos posteriores se midió dentro de los desafíos.
@@ -38,11 +38,10 @@ usan la sensibilidad macro como métrica principal, y \citeauthor{yao2022single}
 favorecer una clase: en ISIC 2018, subir el coeficiente del melanoma eleva su sensibilidad de 0.772 a 0.871 a costa
 de la sensibilidad macro.
 
-La limitación es común a ambos, porque evalúan sobre la prueba del desafío. En el trabajo
+La limitación es común a ambos, porque evalúan sobre el conjunto de conjunto de prueba del desafío. En el trabajo
 de \citeauthor{gessert2020skin}, la sensibilidad macro sin metadatos baja de 72.5\,\% en validación cruzada a
-63.6\,\% en la prueba oficial, una brecha que atribuyen en parte a una clase desconocida que solo aparece en ella.
-\citeauthor{yao2022single} no describen una partición de validación, de modo que la selección se hace sobre la
-prueba de ISIC 2018.
+63.6\,\% en el conjunto de prueba oficial, una brecha que atribuyen en parte a una clase desconocida que solo aparece en ella.
+\citeauthor{yao2022single} no describen una partición de validación, de modo que la selección se hace sobre el conjunto de prueba de ISIC 2018.
 
 Otros dos trabajos llevaron la evaluación fuera del desafío y la compararon con clínicos. \textcite{liu2020deep}
 extendieron la tarea de la lesión aislada a las 26 condiciones de piel más frecuentes en atención primaria, con un
@@ -108,7 +107,7 @@ Sección~\ref{sec:estado_arte_reportes}.
         \textcite{gessert2020skin} & 2020 & Ensamble de CNN con metadatos
             & ISIC 2019; 5 particiones por lesión
             & Sensibilidad macro, AUC
-            & Sin metadatos: 72.5\,\% en validación cruzada, 63.6\,\% en prueba
+            & Sin metadatos: 72.5\,\% en validación cruzada, 63.6\,\% en el conjunto de prueba
             & No \\
         \filasep
         \textcite{yao2022single} & 2022 & RegNetY única con pérdida propia
@@ -158,8 +157,8 @@ Quedan cuatro limitaciones. En primer lugar, predominan las redes
 convolucionales, solo \textcite{kim2025skinsavvy2} incluyen un transformer y no hay un protocolo común entre
 trabajos. En segundo lugar, solo \textcite{gessert2020skin}, por lesión, y \textcite{liu2020deep}, por paciente,
 describen particiones que mantienen juntos los casos relacionados, mientras que \textcite{yao2022single}
-seleccionan sobre la prueba y \textcite{khan2025ensemble} parten al azar. En tercer lugar, la evaluación se ha
-realizado principalmente sobre particiones o pruebas de la misma fuente, la validación fuera de ella es temporal o
+seleccionan sobre el conjunto de prueba y \textcite{khan2025ensemble} parten al azar. En tercer lugar, la evaluación se ha
+realizado principalmente sobre particiones o conjuntos de prueba de la misma fuente, la validación fuera de ella es temporal o
 de un solo centro, y ningún trabajo se desarrolla ni se valida en población de América Latina. Por último, los
 sistemas de mejor desempeño son ensambles grandes, y solo \textcite{khan2025ensemble} marcan los casos
 discordantes, sin medir el efecto de esa abstención.
@@ -494,7 +493,7 @@ el hardware llega a ocho A100.
 \label{sec:estado_arte_posicion}
 
 La revisión de las tres líneas permite identificar limitaciones que aún no han sido abordadas de manera conjunta.
-La evaluación de los clasificadores de lesiones se ha realizado principalmente sobre la prueba de un desafío, un
+La evaluación de los clasificadores de lesiones se ha realizado principalmente sobre el conjunto de prueba de un desafío, un
 solo centro o una partición temporal, y los de mejor desempeño son ensambles grandes. Entre los \glspl{vlm}, los
 contrastivos especializados clasifican y recuperan casos pero no generan texto, los generativos requieren un
 cómputo elevado y los \glspl{vlm} médicos de propósito general obtienen en piel exactitudes menores que las de los
@@ -532,7 +531,7 @@ protocolo de evaluación se describen en el Capítulo~\ref{cp:metodos}.
         \textbf{Brecha} & \textbf{Evidencia en la revisión} & \textbf{Decisión del trabajo} \\
         \midrule
         Sin comparación bajo un mismo protocolo
-            & Clasificadores casi solo convolucionales, validados sobre pruebas de desafíos o en un centro
+            & Clasificadores casi solo convolucionales, validados sobre conjuntos de prueba de desafíos o en un centro
               (Sección~\ref{sec:estado_arte_diagnostico}); \glspl{vlm} medidos entre sí o con clínicos
               (Sección~\ref{sec:estado_arte_vlm})
             & Comparar clasificadores supervisados y modelos médicos generales y dermatológicos con un mismo

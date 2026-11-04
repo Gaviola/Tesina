@@ -15,9 +15,9 @@
 
 Con los componentes y el \emph{pipeline} definidos, falta establecer cómo se evalúan. La evaluación sigue tres reglas
 generales. En primer lugar, toda decisión sobre un modelo, como su configuración o un umbral, se toma en validación,
-y la prueba se usa para informar el resultado. En segundo lugar, cada resultado se lee frente a referencias de
+y el conjunto de prueba se usa para informar el resultado. En segundo lugar, cada resultado se lee frente a referencias de
 comparación que dicen cuánto vale. Finalmente, una diferencia entre dos modelos se afirma solo si la sostiene una
-prueba estadística. Dentro de ese marco, la clasificación y la generación de texto no se miden igual, así que cada
+comparación estadística. Dentro de ese marco, la clasificación y la generación de texto no se miden igual, así que cada
 tarea justifica sus métricas por separado.
 
 \subsection{Métricas de clasificación}
@@ -54,13 +54,13 @@ Una misma configuración tampoco da siempre el mismo resultado, porque las métr
 de pocas imágenes. Por eso, el resultado de cada clasificador supervisado, entrenado tres veces
 (Sección~\ref{sec:met_supervisados_ensamble}), se informa como media $\pm$ desvío estándar muestral de esas tres
 ejecuciones. Con tres ejecuciones, sin embargo, el desvío es una estimación gruesa, así que las comparaciones entre
-modelos no se apoyan en él, sino en las pruebas estadísticas de la Sección~\ref{sec:met_estadistica}, que se calculan
+modelos no se apoyan en él, sino en las comparaciones estadísticas de la Sección~\ref{sec:met_estadistica}, que se calculan
 sobre las 1\,503 imágenes de prueba.
 
 La detección de melanoma (T2) necesita un criterio propio, porque si se toma como melanoma la clase de mayor
 probabilidad, el costo de perder un melanoma no interviene en la decisión. Por eso el umbral sobre la probabilidad de
 melanoma se fija en validación como el de mayor sensibilidad entre los que mantienen una especificidad de al menos
-0.850, y se aplica sin cambios a la prueba. Así se prioriza no perder melanomas, con un tope a las falsas alarmas: en
+0.850, y se aplica sin cambios al conjunto de prueba. Así se prioriza no perder melanomas, con un tope a las falsas alarmas: en
 validación, a lo sumo el 15\,\% de los casos sin melanoma se señala como sospechoso. El \gls{auc}
 (Ecuación~\ref{eq:marco_auc}), que no depende del umbral, se informa como resumen de la discriminación.
 
@@ -89,7 +89,7 @@ esos textos (Tabla~\ref{tab:met_conjuntos}). En \emph{MM-Skin} mide el parecido 
 texto, y en \emph{SkinCoT}, el parecido con un razonamiento que un modelo de lenguaje escribió conociendo el
 diagnóstico.
 
-El Nivel~2, en cambio, no necesita referencia y se aplica a la prueba de \emph{HAM10000}, con las dos métricas sin
+El Nivel~2, en cambio, no necesita referencia y se aplica al conjunto de prueba de \emph{HAM10000}, con las dos métricas sin
 referencia de la Sección~\ref{sec:marco_eval_texto}. La cobertura de entidades clínicas (\emph{clinical entity
 recall}) se informa como complemento, porque mide cuánto contenido clínico describe el texto y no si es pertinente. La
 consistencia diagnóstica (\emph{diagnostic consistency}, Ecuación~\ref{eq:marco_fd}) es la métrica principal de
@@ -121,15 +121,15 @@ de clasificación y de generación en el trabajo.
         \toprule
         \textbf{Métrica} & \textbf{Papel en el trabajo} & \textbf{Se define en} \\
         \midrule
-        Sensibilidad macro & Resultado principal de clasificación en la prueba & Sección~\ref{sec:marco_eval_clasif} \\
+        Sensibilidad macro & Resultado principal de clasificación en el conjunto de prueba & Sección~\ref{sec:marco_eval_clasif} \\
         \filasep
-        F1 macro & Elige la configuración de cada modelo (validación); se informa en la prueba & Ecuación~\ref{eq:marco_f1} \\
+        F1 macro & Elige la configuración de cada modelo (validación); se informa en el conjunto de prueba & Ecuación~\ref{eq:marco_f1} \\
         \filasep
         F1 ponderado & Elige la época dentro de cada entrenamiento (validación) & Ecuación~\ref{eq:marco_f1} \\
         \filasep
         Exactitud & Se informa & Sección~\ref{sec:marco_eval_clasif} \\
         \filasep
-        Sensibilidad y especificidad de melanoma & Umbral fijado en validación (especificidad de al menos 0.850); resultado en la prueba & Sección~\ref{sec:marco_eval_clasif} \\
+        Sensibilidad y especificidad de melanoma & Umbral fijado en validación (especificidad de al menos 0.850); resultado en el conjunto de prueba & Sección~\ref{sec:marco_eval_clasif} \\
         \filasep
         AUC de melanoma & Se informa & Sección~\ref{sec:marco_eval_clasif} \\
         \filasep
@@ -150,7 +150,7 @@ de clasificación y de generación en el trabajo.
 Un valor de una métrica no dice por sí solo si un modelo es bueno, y por eso cada resultado se lee frente a una
 referencia. En la clasificación se usan tres. En primer lugar, el azar fija el piso de cualquier clasificador de
 siete clases, una sensibilidad macro de 1/7. En segundo lugar, el clasificador trivial que responde siempre NV muestra
-lo que se obtiene del desbalance sin mirar la imagen: en la prueba alcanza una exactitud de 0.669 y un F1 ponderado de
+lo que se obtiene del desbalance sin mirar la imagen: en el conjunto de prueba alcanza una exactitud de 0.669 y un F1 ponderado de
 0.537, pero una sensibilidad macro de 0.143 y un F1 macro de 0.115. Por eso la exactitud y el F1 ponderado, que
 favorecen a NV, se informan pero no son el resultado principal. Finalmente, los clasificadores supervisados de la
 Sección~\ref{sec:met_supervisados} son la línea base de los \glspl{vlm}, y la primera pregunta de investigación se
@@ -176,8 +176,7 @@ Además, dos variantes de la cascada con el \emph{oracle} separan lo que el gene
 del diagnóstico. En la primera, la imagen se reemplaza por una gris neutra, como en el control de la
 Sección~\ref{sec:met_clasif_vlm}. En la segunda, el diagnóstico es equivocado: cada clase se cambia por otra con la
 que se suele confundir, como \gls{mel} por \gls{nv}. Mini-VLM y LLaVA-Med se evalúan en las dos sobre un subconjunto
-fijo de 400 imágenes de la prueba, por el tiempo que lleva cada reporte, y SkinVL, que escribe más rápido, sobre la
-prueba completa.
+fijo de 400 imágenes del conjunto de prueba, por el tiempo que lleva cada reporte, y SkinVL, que escribe más rápido, sobre el conjunto de prueba completo.
 
 Por último, el ruteo tiene su propia línea base, que aísla el aporte del generador. La línea base sin generador usa el
 mismo ruteo y el mismo clasificador, pero no genera texto: el nivel afirmativo devuelve el diagnóstico del
@@ -188,10 +187,10 @@ clasificador, el diferencial devuelve el par de candidatos y el nivel de derivac
 \subsection{Comparación estadística}
 \label{sec:met_estadistica}
 
-Una vez calculadas las métricas, que un modelo obtenga en la prueba un valor de una métrica más alto que otro, o
+Una vez calculadas las métricas, que un modelo obtenga en el conjunto de prueba un valor de una métrica más alto que otro, o
 viceversa, no alcanza para afirmar que uno sea mejor que el otro (Sección~\ref{sec:marco_eval_estadistica}). Por
-ello, cada comparación usa el \emph{bootstrap} o la prueba de McNemar exacta, según lo que se pregunta. Todos los
-\emph{bootstrap} usan 2\,000 remuestreos de las imágenes de prueba. La unidad de las pruebas es la imagen de prueba
+ello, cada comparación usa el \emph{bootstrap} o el test de McNemar exacta, según lo que se pregunta. Todos los
+\emph{bootstrap} usan 2\,000 remuestreos de las imágenes de prueba. La unidad de las comparaciones es la imagen de prueba
 y no la ejecución, de modo que se calculan sobre una de las tres ejecuciones de cada clasificador, la
 \textbf{ejecución de referencia}, que es también la que usan el \emph{pipeline} y las evaluaciones complementarias. La
 variación entre ejecuciones se informa aparte como desvío.
@@ -199,28 +198,27 @@ variación entre ejecuciones se informa aparte como desvío.
 Como se comparan siete clasificadores (los cuatro supervisados, DermLIP sin ajuste y los dos \glspl{vlm} generativos
 sin ajuste, Sección~\ref{sec:met_clasif_vlm}), que forman 21 pares, los valores p de McNemar se corrigen con el método
 de Holm (Ecuación~\ref{eq:marco_holm}). La sensibilidad de cada clase, en cambio, se compara de forma descriptiva,
-contando en cuántas de las siete clases mejora cada modelo, porque con siete valores ninguna prueba de rangos podría
+contando en cuántas de las siete clases mejora cada modelo, porque con siete valores ningún test de rangos podría
 alcanzar el umbral que Holm exige para 21 comparaciones. Además, el \emph{bootstrap} remuestrea imágenes y no
-lesiones, así que trata como independientes las imágenes de una misma lesión. En la prueba hay 1\,503 imágenes de
-1\,429 lesiones, y remuestrear por lesión casi no cambia los intervalos. La Tabla~\ref{tab:met_pruebas} indica qué
-prueba se aplica a cada comparación.
+lesiones, así que trata como independientes las imágenes de una misma lesión. En el conjunto de prueba hay 1\,503 imágenes de
+1\,429 lesiones, y remuestrear por lesión casi no cambia los intervalos. La Tabla~\ref{tab:met_pruebas} indica qué test se aplica a cada comparación.
 
 \begingroup
 \small
 \setlength{\tabcolsep}{3pt}
 \begin{table}[!tbp]
     \centering
-    \caption{Pruebas estadísticas según la comparación.}
+    \caption{Comparaciones estadísticas según la comparación.}
     \label{tab:met_pruebas}
     \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{3.4cm}
         >{\raggedright\arraybackslash\hspace{0pt}}X
         >{\raggedright\arraybackslash\hspace{0pt}}X
         >{\raggedright\arraybackslash\hspace{0pt}}p{2.6cm}@{}}
         \toprule
-        \textbf{Comparación} & \textbf{Pregunta que responde} & \textbf{Prueba} & \textbf{Criterio} \\
+        \textbf{Comparación} & \textbf{Pregunta que responde} & \textbf{Test} & \textbf{Criterio} \\
         \midrule
         Métrica agregada de un modelo
-            & ¿Cuánto varía por la composición de la prueba?
+            & ¿Cuánto varía por la composición del conjunto de prueba?
             & Intervalo percentil de \emph{bootstrap}
             & IC del 95\,\% \\
         \filasep
@@ -248,5 +246,5 @@ prueba se aplica a cada comparación.
 \end{table}
 \endgroup
 
-Estos criterios se aplican a los resultados sobre la prueba de \emph{HAM10000}, que reproduce las condiciones en que
+Estos criterios se aplican a los resultados sobre el conjunto de prueba de \emph{HAM10000}, que reproduce las condiciones en que
 se entrenaron los modelos. Las evaluaciones complementarias de la sección siguiente cambian esas condiciones.

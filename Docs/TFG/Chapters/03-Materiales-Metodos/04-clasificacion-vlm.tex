@@ -113,7 +113,7 @@ de uso general. Con este propósito, la clasificación por verosimilitud, sin aj
 clínicas de \emph{SkinCAP} (Sección~\ref{sec:met_datasets}) cuyo diagnóstico corresponde a una de las siete clases. La
 correspondencia agrupa las variantes de cada diagnóstico, como las formas del melanoma, y descarta los diagnósticos
 sin una clase equivalente, lo que deja 624 imágenes. Como los modelos no se ajustan, se usan todas, sin partición.
-Si los modelos clasifican mejor las fotografías clínicas que la prueba de \emph{HAM10000}, la dificultad está en la
+Si los modelos clasifican mejor las fotografías clínicas que el conjunto de prueba de \emph{HAM10000}, la dificultad está en la
 modalidad y no en la tarea. Como contraste, DermLIP sin ajuste clasifica las mismas imágenes, lo que muestra si un
 modelo especializado distingue las siete clases en esa modalidad.
 
@@ -127,7 +127,7 @@ entre las dos representaciones es la misma con cada cabeza, el efecto es de la r
 En cuanto a los datos, todas las cabezas, sobre DermLIP y sobre Swin, se ajustan sobre el entrenamiento de la
 partición por lesión (Sección~\ref{sec:met_particiones}). El modo zero-shot de DermLIP y los \glspl{vlm} generativos,
 en cambio, no se ajustan con \emph{HAM10000}, así que no dependen de la partición. Salvo el control con fotografías clínicas, todos se
-evalúan, entonces, sobre la misma prueba que los clasificadores supervisados.
+evalúan, entonces, sobre el mismo conjunto de prueba que los clasificadores supervisados.
 
 Hasta aquí, los \glspl{vlm} generativos se usan como clasificadores. Sin embargo, su ventaja respecto de los
 clasificadores supervisados es que pueden generar texto, y esa capacidad es la que se aprovecha en la generación de
