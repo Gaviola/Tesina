@@ -51,8 +51,16 @@ a las 1\,503 imágenes de prueba se les aplican cuatro perturbaciones, con cinco
 compresión JPEG (calidad de 70 a 5), ruido gaussiano (desvío de 8 a 64 sobre la escala de 0 a 255), desenfoque
 gaussiano (radio de 1 a 6 píxeles) y reducción de la resolución (de 0.75 a 0.15 del tamaño original, y vuelta al
 tamaño original). La métrica es la caída relativa de la sensibilidad macro frente a la imagen sin perturbar
-(Ecuación~\ref{eq:marco_robustez}). A diferencia de la evaluación principal, esta evaluación usa una sola vista de la
+(Ecuación~\ref{eq:marco_robustez}). La Figura~\ref{fig:met_perturbaciones} muestra cómo queda una misma imagen con cada perturbación en los niveles 1, 3 y
+5, es decir, qué degradaciones se evalúan. A diferencia de la evaluación principal, esta evaluación usa una sola vista de la
 imagen, sin \gls{tta}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.72\textwidth]{Figures/Capitulos/03-Materiales-Metodos/perturbaciones-ejemplo.pdf}
+    \caption{Una imagen del conjunto de prueba con cada perturbación de la evaluación de robustez, en los niveles 1, 3 y 5.}
+    \label{fig:met_perturbaciones}
+\end{figure}
 
 \subsection{Calibración}
 \label{sec:met_calibracion}
@@ -69,9 +77,9 @@ confianza del modelo, se comparan dos versiones de la misma configuración, entr
 \label{sec:met_interpretabilidad}
 
 La quinta evaluación examina en qué parte de la imagen se apoya el modelo. Para ello se aplica Grad-CAM
-(Sección~\ref{sec:marco_eval_gradcam}) a Swin-Tiny, sobre la última etapa de la red y para la clase predicha, en siete
-imágenes de prueba, una por clase, con una sola vista. Es una inspección cualitativa, que muestra si la activación cae
-sobre la lesión, pero no mide el acierto ni respalda un razonamiento clínico.
+(Sección~\ref{sec:marco_eval_gradcam}) a Swin-Tiny, sobre la última etapa de la red y para la clase predicha, en siete imágenes de prueba, una por clase, con una sola vista, y en dos errores seleccionados entre los de activación
+más alejada del centro de la imagen. Es una inspección cualitativa, que muestra si la activación cae sobre la lesión,
+pero no mide el acierto ni respalda un razonamiento clínico.
 
 \subsection{Costo computacional}
 \label{sec:met_costo}
