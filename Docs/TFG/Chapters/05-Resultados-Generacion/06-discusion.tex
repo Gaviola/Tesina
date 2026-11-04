@@ -14,8 +14,7 @@ caso del generador especializado, repite un texto ajeno a las siete clases. Con 
 afirma el diagnóstico del clasificador, y con Mini-VLM y SkinVL su consistencia diagnóstica coincide con la exactitud
 de Swin-Tiny, en total y en cada clase, mientras que LLaVA-Med queda por debajo. Con el ruteo, la consistencia de
 Mini-VLM sobre el conjunto de prueba completo pasa de 0.849 a 0.870, una ganancia que puede atribuirse a presentar dos candidatos en los
-casos dudosos. En cuanto a la descripción, la imagen cambia lo que el reporte describe de cada lesión, lo que verifica
-en parte su fidelidad visual, aunque el melanoma afirmado como nevo de la Sección~\ref{sec:res_gen_pipeline}
+casos dudosos. En cuanto a la descripción, la imagen cambia lo que el reporte describe de cada lesión, y el melanoma afirmado como nevo de la Sección~\ref{sec:res_gen_pipeline}
 muestra que la descripción también se adapta al diagnóstico recibido.
 
 Como cada sección agregó un componente del \emph{pipeline} por vez, los resultados permiten además separar lo que
@@ -52,7 +51,6 @@ tiene, la de los casos en que su diagnóstico es menos confiable.
     \end{tabularx}
 \end{table}
 
-Lo que el \emph{pipeline} no resuelve son los errores que comparten los dos predictores, que se afirman con la misma
-plantilla que un acierto (Sección~\ref{sec:res_gen_concordancia}). El Capítulo~\ref{cp:discusion} interpreta estos
+Los errores que comparten los dos predictores siguen afirmándose con la misma plantilla que un acierto (Sección~\ref{sec:res_gen_concordancia}). El Capítulo~\ref{cp:discusion} interpreta estos
 hallazgos junto con los de la clasificación y discute las decisiones de diseño que respaldan y las limitaciones
 del trabajo.

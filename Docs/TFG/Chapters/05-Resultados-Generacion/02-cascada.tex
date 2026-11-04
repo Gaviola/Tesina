@@ -160,9 +160,8 @@ por generador, mientras que con ella casi cada reporte de Mini-VLM y de LLaVA-Me
 entidades clínicas de Mini-VLM cae a la mitad sin la imagen, de modo que su descripción se apoya en ella. En
 LLaVA-Med, en cambio, la cobertura no baja, posiblemente porque sin la imagen el generador escribe una descripción
 genérica de la clase, con tantos términos clínicos como la de una lesión concreta. Por lo tanto, el clasificador
-aporta el diagnóstico, y la imagen aporta la variación de la descripción entre lesiones. Este resultado verifica en
-parte la fidelidad visual de la descripción, porque muestra que el generador usa la imagen, aunque no que cada rasgo
-descrito esté en ella (Sección~\ref{sec:met_eval_generacion}).
+aporta el diagnóstico, y la imagen aporta la variación de la descripción entre lesiones. Este resultado muestra que el generador usa la imagen. Que la use no significa, por sí solo, que la descripción sea
+correcta, porque esa comprobación requiere comparar cada rasgo con la imagen (Sección~\ref{sec:met_eval_generacion}).
 
 \subsection{Fallas de los reportes}
 \label{sec:res_gen_errores}
@@ -171,7 +170,8 @@ La consistencia indica si el reporte nombra la clase verdadera, pero no de qué 
 saberlo, cada reporte se asignó a su falla principal con las reglas de la Sección~\ref{sec:met_eval_generacion}, que
 cuentan aparte la expresión de reserva junto a la clase verdadera, como «consistent with nevus», porque el reporte se
 compromete con el diagnóstico. La Figura~\ref{fig:res_gen_errores} presenta una barra por generador y fuente del diagnóstico (sin anclaje, Swin-Tiny y \emph{oracle}). Cada barra se divide
-según la fracción de los reportes que cae en cada categoría, desde el diagnóstico correcto hasta la falta de diagnóstico.
+según la fracción de los reportes que cae en cada categoría, desde el diagnóstico correcto hasta la falta de diagnóstico. Estas categorías se refieren al diagnóstico que nombra el
+reporte y a su forma, de acuerdo con esas reglas, y no abarcan todas las posibles fallas clínicas de un reporte.
 
 \begin{figure}[H]
     \centering

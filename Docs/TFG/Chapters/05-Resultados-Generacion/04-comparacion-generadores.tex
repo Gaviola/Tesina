@@ -43,8 +43,9 @@ mediana de 17 palabras, frente a 62 de Mini-VLM y 86 de LLaVA-Med, y cubren la m
 Además, con Swin-Tiny escribe solo 59 reportes distintos para las 1\,503 imágenes, de modo que su texto depende del
 diagnóstico y casi nada de la imagen. Por lo tanto, en estos experimentos la especialización en dermatología no mejora
 la fidelidad del reporte, que ya fija el clasificador, y reduce la descripción, que es lo que el generador agrega en la
-cascada. Mini-VLM, en cambio, iguala la fidelidad de SkinVL y
-describe tanto como LLaVA-Med, de modo que es el único de los tres que reúne las dos condiciones.
+cascada. Mini-VLM, en cambio, iguala la consistencia de SkinVL y cubre tantas entidades clínicas como LLaVA-Med, de modo que es
+el único de los tres que reúne las dos condiciones. Una mayor cobertura indica que el texto nombra más entidades, no
+necesariamente que la descripción sea más correcta.
 
 \subsection{Ajuste del modelo de lenguaje de Mini-VLM}
 \label{sec:res_gen_control_mini}
