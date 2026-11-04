@@ -8,14 +8,19 @@
 % control: level1_test/skincot_test_mini_v2/level1_pareado_mini_v2_v3_llava_v2.json (n = 349).
 % Figura: scripts/figuras_cap5.py (resumen-generadores).
 % El label del costo es sec:res_costo (lo cita el Capítulo 6).
-\section{Comparación entre los generadores y costo}
+\section{Comparación de generadores, variantes de ajuste y costo computacional}
 \label{sec:res_gen_comparacion}
 
 Las secciones anteriores siguieron sobre todo a Mini-VLM, la configuración principal, y mencionaron a los otros
-generadores donde se comportan distinto. Esta sección compara los tres generadores en una misma escala, con la cascada
-con Swin-Tiny sobre las 1\,503 imágenes de prueba y la misma plantilla y decodificación para los tres. A continuación
-se presentan la variante de control de Mini-VLM y, por último, el costo computacional del \emph{pipeline} completo.
+generadores donde se comportan distinto. Esta sección reúne tres análisis. El primero compara los tres generadores en
+una misma escala. El segundo es un experimento complementario, que evalúa una variante del ajuste de Mini-VLM. El
+tercero detalla la memoria y los tiempos del \emph{pipeline} completo, y sus restricciones de hardware.
 
+\subsection{Comparación entre los generadores}
+\label{sec:res_gen_entre_generadores}
+
+La comparación usa la cascada con Swin-Tiny sobre las 1\,503 imágenes de prueba, con la misma plantilla y
+decodificación para los tres generadores.
 La Figura~\ref{fig:res_gen_resumen} reúne lo que separa a los generadores en tres paneles, con una barra por
 generador: la consistencia diagnóstica, con una marca vertical en la que obtiene con el \emph{oracle}, la cobertura de
 entidades clínicas y el tiempo por reporte.

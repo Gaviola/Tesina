@@ -19,8 +19,8 @@ con los tres generadores sobre las 1\,503 imágenes de prueba. Cada generador re
 la del \emph{pipeline}, DermLIP sin ajuste y el \emph{oracle}, y la generación sin anclaje de la sección anterior sirve
 de punto de partida. La consistencia se mide siempre respecto de la clase verdadera.
 
-En primer lugar se comparan esas fuentes. Después, con Swin-Tiny como fuente, se analizan la consistencia por clase,
-el aporte de la imagen y las fallas de los reportes, y por último se evalúa la recuperación de casos parecidos como
+En primer lugar se comparan esas fuentes, en total y por clase. Después, con Swin-Tiny como fuente, se analizan el
+aporte de la imagen y las fallas de los reportes, y por último se evalúa la recuperación de casos parecidos como
 alternativa al clasificador.
 
 \subsection{Consistencia según la fuente del diagnóstico}
@@ -92,9 +92,6 @@ DermLIP en 0.132 [0.107, 0.158] de consistencia, y la diferencia es similar con 
 además, apenas mejora con DermLIP frente a no anclar, porque sigue omitiendo el diagnóstico recibido en uno de cada
 siete reportes. Por lo tanto, de las dos fuentes que no conocen la etiqueta, el clasificador ajustado es la que lleva
 más diagnósticos correctos al reporte.
-
-\subsection{Consistencia por clase}
-\label{sec:res_gen_clases}
 
 Si el generador transcribe el diagnóstico, la cascada debería heredar también la sensibilidad de Swin-Tiny en cada clase.
 Para comprobarlo, la Figura~\ref{fig:res_gen_clases} compara, para cada clase y cada generador, la sensibilidad de Swin-Tiny con la consistencia de la cascada. Un
