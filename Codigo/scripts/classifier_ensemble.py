@@ -7,7 +7,7 @@ reporta también F1 macro, el criterio de selección del barrido.
 Dos juegos de modelos (``--preset``):
   - ``v3``: los modern_v3 de la partición aleatoria (con fuga entre particiones). Resultado original.
   - ``les``: los ganadores del split disjunto por lesión (Swin t06, ConvNeXt t02; DenseNet y ViT solo
-    existen con la receta legacy). Swin y ConvNeXt tienen semillas 42/43/44: el par Swin+ConvNeXt se
+    existen con la receta legacy). Swin y ConvNeXt tienen semillas 42 a 51: el par Swin+ConvNeXt se
     evalúa también por semilla (media ± sd).
 
 100% local, no requiere GPU ni cluster.
@@ -75,7 +75,7 @@ def _load(path, ref_ids=None):
 def _seed_pairs(y_true_ref, ref_ids):
     """Swin+ConvNeXt por semilla (42 = corrida base) para el preset les."""
     per_seed = {}
-    for seed in (42, 43, 44):
+        for seed in range(42, 52):
         probs = {}
         for name, tmpl in LES_SEEDS.items():
             path = PRESETS["les"][name] if seed == 42 else tmpl.format(seed=seed)
@@ -159,7 +159,7 @@ def main():
           f"vs mejor individual {best_indiv['combo']} ({best_indiv['sens_macro']:.3f}) "
           f"-> Δ={best['sens_macro']-best_indiv['sens_macro']:+.3f}")
     if seeds:
-        print("\nSwin+ConvNeXt por semilla (media ± sd sobre 42/43/44):")
+        print("\nSwin+ConvNeXt por semilla (media ± sd sobre las semillas 42 a 51):")
         for combo, m in seeds["resumen"].items():
             print(f"  {combo:<14} " + "  ".join(
                 f"{k} {v['mean']:.3f}±{v['sd']:.3f}" for k, v in m.items()))

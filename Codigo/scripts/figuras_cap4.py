@@ -62,7 +62,7 @@ def fig_resumen():
     """Sensibilidad macro de todos los clasificadores, con la línea del azar."""
     ms = cargar("densenet_vit_moderna_report.json")["media_std"]
     ens = cargar("classifier_ensemble_les/ensemble_seeds.json")["por_semilla"]
-    ens_v = [ens[s]["swin+convnext"]["sens_macro"] for s in ("42", "43", "44")]
+    ens_v = [ens[str(s)]["swin+convnext"]["sens_macro"] for s in range(42, 52)]
     dl = cargar("dermlip/dermlip_split_eval.json")["lesion"]
 
     filas = []  # (etiqueta, valores, desvío, color)
@@ -262,13 +262,13 @@ def fig_distribucion_vlm():
     fig.savefig(f"{OUT}/distribucion-vlm-generativos.pdf")
 
 
-SEMILLAS = ("", "_s43", "_s44")
+SEMILLAS = ("",) + tuple(f"_s{s}" for s in range(43, 52))  # 42 es la corrida base
 RUNS = {"Swin-Tiny": ("swin_tiny_sweep_t06", AZUL, "o"), "ConvNeXt-Tiny": ("convnext_tiny_sweep_t02", NARANJA, "s"),
         "ViT-B/16": ("vit_sweep_t06", VERDE, "^"), "DenseNet121": ("densenet_sweep_t02", PURPURA, "D")}
 
 
 def fig_recall_semillas():
-    """Sensibilidad por clase de cada semilla (puntos) y su media (raya); con tres semillas, una caja no aporta."""
+    """Sensibilidad por clase de cada semilla (puntos) y su media (raya), con el rango entre semillas."""
     n = cargar("swin_tiny_sweep_t06_les_cwnone_predictions.json")["y_true"]
     n = np.bincount(n, minlength=7)
     fig, ax = plt.subplots(figsize=(6.2, 3.1))
@@ -281,7 +281,7 @@ def fig_recall_semillas():
             x = k + dx
             ax.plot([x, x], [v[:, k].min(), v[:, k].max()], lw=1, color=c, alpha=0.6)
             ax.plot([x - 0.06, x + 0.06], [v[:, k].mean()] * 2, lw=2, color=c)
-            ax.plot([x] * 3, v[:, k], mk, ms=3.2, color=c, mec="white", mew=0.4, alpha=0.9,
+            ax.plot([x] * len(v), v[:, k], mk, ms=3.2, color=c, mec="white", mew=0.4, alpha=0.9,
                     label=m if k == 0 else None)
     for k in range(6):
         ax.axvline(k + 0.5, lw=0.4, color="#e6e6e6")
@@ -307,11 +307,11 @@ def fig_melanoma_semillas():
     for ax, met, tit in zip(axs, ("sens", "spec"), ("Sensibilidad", "Especificidad")):
         for i, clave in enumerate(modelos):
             for op, et, c, dx in reglas:
-                v = np.array([ps[s][clave]["melanoma"][op][met] for s in ("42", "43", "44")])
+                v = np.array([ps[s][clave]["melanoma"][op][met] for s in map(str, range(42, 52))])
                 x = i + dx
                 ax.plot([x, x], [v.min(), v.max()], lw=1, color=c, alpha=0.6)
                 ax.plot([x - 0.07, x + 0.07], [v.mean()] * 2, lw=2, color=c)
-                ax.plot([x] * 3, v, "o", ms=3.5, color=c, mec="white", mew=0.4, label=et if i == 0 else None)
+                ax.plot([x] * len(v), v, "o", ms=3.5, color=c, mec="white", mew=0.4, label=et if i == 0 else None)
         ax.set_title(tit, fontsize=8.5)
         ax.set_xticks(range(3))
         ax.set_xticklabels(list(modelos.values()), fontsize=7.5)

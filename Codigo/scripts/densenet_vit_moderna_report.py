@@ -2,7 +2,7 @@
 
 Plan: docs/ideas/densenet_vit_moderna_plan_20261012.md (TOKO jobs 99007–99012).
 
-1. Media ± desvío de 3 semillas (42/43/44) en test y en validación para los cuatro modelos con la receta moderna, con las mismas
+1. Media ± desvío de 10 semillas (42 a 51) en test y en validación para los cuatro modelos con la receta moderna, con las mismas
    métricas que lesion_split_report.py (acc, F1 ponderado, F1 macro, sens. macro, recall MEL, AUC macro).
 2. Receta anterior (legacy, semilla 42, vista única) frente a la moderna (semilla 42 y media) por modelo.
 3. Corrección de Holm sobre los 21 pares de McNemar de statistical_tests_les_v2.json (que ya usa las corridas
@@ -43,6 +43,9 @@ def holm(ps: dict, alpha: float = 0.05) -> dict:
     return out
 
 
+SEMILLAS = tuple(range(42, 52))  # plan supervisados_diez_ejecuciones_plan_20261103
+
+
 def run_metrics(run: str, split: str = "") -> dict:
     yt, pt, prt, _ = load(RES / f"{run}_{split}predictions.json")
     return cls_metrics(yt, pt, prt)
@@ -53,15 +56,15 @@ def main():
 
     print(f"{'modelo':14s} " + " ".join(f"{k:>15s}" for k in KEYS))
     for name, base in RUNS.items():
-        rows = {s: run_metrics(base if s == 42 else f"{base}_s{s}") for s in (42, 43, 44)}
+        rows = {s: run_metrics(base if s == 42 else f"{base}_s{s}") for s in SEMILLAS}
         report["semillas"][name] = rows
         ms = mean_std(list(rows.values()))
         report["media_std"][name] = ms
         print(f"{name:14s} " + " ".join(f"{ms[k]['mean']:.3f} ± {ms[k]['std']:.3f}" for k in KEYS))
-        val = [run_metrics(base if s == 42 else f"{base}_s{s}", "val_") for s in (42, 43, 44)]
+        val = [run_metrics(base if s == 42 else f"{base}_s{s}", "val_") for s in SEMILLAS]
         report["val_media_std"][name] = mean_std(val)
 
-    print("\nValidación (media ± sd, 3 semillas)")
+    print(f"\nValidación (media ± sd, {len(SEMILLAS)} semillas)")
     for name, ms in report["val_media_std"].items():
         print(f"{name:14s} " + " ".join(f"{ms[k]['mean']:.3f} ± {ms[k]['std']:.3f}" for k in KEYS))
 
