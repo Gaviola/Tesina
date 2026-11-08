@@ -26,7 +26,7 @@ el F1 ponderado, el F1 macro y la sensibilidad macro en el conjunto de prueba.
 
 \begin{table}[H]
     \centering
-    \caption{Clasificadores supervisados en validación y en el conjunto de prueba, media $\pm$ desvío de tres ejecuciones.}
+    \caption{Clasificadores supervisados en validación y en el conjunto de prueba, media $\pm$ desvío de diez ejecuciones.}
     \label{tab:res_supervisados}
     \small
     \setlength{\tabcolsep}{4pt}
@@ -39,19 +39,18 @@ el F1 ponderado, el F1 macro y la sensibilidad macro en el conjunto de prueba.
         \textbf{Modelo} & \textbf{F1 macro}~$\uparrow$ & \textbf{Exactitud}~$\uparrow$ & \textbf{F1 ponderado}~$\uparrow$ & \textbf{F1 macro}~$\uparrow$
             & \textbf{Sensibilidad macro}~$\uparrow$ \\
         \midrule
-        Swin-Tiny & \textbf{0.781 $\pm$ 0.018} & 0.846 $\pm$ 0.002 & 0.846 $\pm$ 0.004 & 0.733 $\pm$ 0.026 & 0.692 $\pm$ 0.025 \\
-        ConvNeXt-Tiny & 0.740 $\pm$ 0.027 & 0.843 $\pm$ 0.005 & 0.840 $\pm$ 0.005 & 0.727 $\pm$ 0.007 & 0.691 $\pm$ 0.009 \\
-        ViT-B/16 & 0.740 $\pm$ 0.008 & 0.836 $\pm$ 0.003 & 0.836 $\pm$ 0.004 & 0.707 $\pm$ 0.025 & 0.681 $\pm$ 0.025 \\
-        DenseNet121 & 0.710 $\pm$ 0.011 & 0.822 $\pm$ 0.005 & 0.815 $\pm$ 0.004 & 0.655 $\pm$ 0.017 & 0.610 $\pm$ 0.020 \\
+        Swin-Tiny & \textbf{0.756 $\pm$ 0.024} & 0.846 $\pm$ 0.011 & 0.844 $\pm$ 0.009 & 0.719 $\pm$ 0.030 & 0.690 $\pm$ 0.024 \\
+        ConvNeXt-Tiny & 0.738 $\pm$ 0.016 & 0.846 $\pm$ 0.004 & 0.842 $\pm$ 0.004 & 0.723 $\pm$ 0.010 & 0.687 $\pm$ 0.013 \\
+        ViT-B/16 & 0.734 $\pm$ 0.012 & 0.836 $\pm$ 0.006 & 0.833 $\pm$ 0.007 & 0.710 $\pm$ 0.023 & 0.685 $\pm$ 0.028 \\
+        DenseNet121 & 0.714 $\pm$ 0.014 & 0.823 $\pm$ 0.006 & 0.817 $\pm$ 0.005 & 0.659 $\pm$ 0.013 & 0.619 $\pm$ 0.015 \\
         \midrule
-        Ensamble & --- & \textbf{0.855 $\pm$ 0.003} & \textbf{0.853 $\pm$ 0.005} & \textbf{0.747 $\pm$ 0.005} & \textbf{0.706 $\pm$ 0.002} \\
+        Ensamble & --- & \textbf{0.855 $\pm$ 0.008} & \textbf{0.852 $\pm$ 0.007} & \textbf{0.744 $\pm$ 0.020} & \textbf{0.706 $\pm$ 0.020} \\
         \bottomrule
     \end{tabularx}
 \end{table}
 
-En la tabla se observa que, en validación, Swin-Tiny obtiene el mayor F1 macro medio de los cuatro modelos, con 0.781
-frente a 0.740 de ConvNeXt-Tiny y de ViT-B/16 y 0.710 de DenseNet121. En el conjunto de prueba, Swin-Tiny, ConvNeXt-Tiny y ViT-B/16 obtienen valores muy cercanos en todas las métricas, con
-sensibilidades macro de entre 0.681 y 0.692. DenseNet121 obtiene los valores más bajos, sobre todo en las dos métricas
+En la tabla se observa que, en validación, Swin-Tiny obtiene el mayor F1 macro medio de los cuatro modelos, con 0.756 frente a 0.738 de ConvNeXt-Tiny, 0.734 de ViT-B/16 y 0.714 de DenseNet121. La ventaja de Swin-Tiny sobre ConvNeXt-Tiny, de 0.018, es menor que su desvío entre ejecuciones. En el conjunto de prueba, Swin-Tiny, ConvNeXt-Tiny y ViT-B/16 obtienen valores muy cercanos en todas las métricas, con
+sensibilidades macro de entre 0.685 y 0.690. DenseNet121 obtiene los valores más bajos, sobre todo en las dos métricas
 macro. En los cuatro modelos, además, la exactitud supera a la sensibilidad macro en más de 0.15. Esta diferencia
 indica que el acierto global se apoya en \gls{nv}, que reúne dos tercios del conjunto de prueba, y que las demás clases se
 reconocen peor. La referencia de la Sección~\ref{sec:met_referencias} muestra el mismo efecto en su forma extrema: el
@@ -94,10 +93,7 @@ imágenes como los demás, pero falla más en las clases minoritarias, que pesan
 las métricas macro.
 
 La última fila de la Tabla~\ref{tab:res_supervisados} corresponde al ensamble de Swin-Tiny y ConvNeXt-Tiny por voto
-suave (\emph{soft voting}; Sección~\ref{sec:met_supervisados_ensamble}). Su media apenas supera la de Swin-Tiny, pero
-su desvío es mucho menor: entre las ejecuciones, el ensamble obtiene valores muy similares. Este comportamiento es coherente con que no se hayan
-encontrado diferencias respaldadas entre las tres arquitecturas, ya que combinar dos de ellas reduce la variación entre
-ejecuciones más de lo que aumenta la media. Como la mejora media no se comparó estadísticamente, el resto del capítulo
+suave (\emph{soft voting}; Sección~\ref{sec:met_supervisados_ensamble}). Su media supera a la de Swin-Tiny en 0.025 de F1 macro y en 0.016 de sensibilidad macro, y su desvío queda entre los de Swin-Tiny y ConvNeXt-Tiny. Como la mejora media no se comparó estadísticamente, el resto del capítulo
 toma como referencia a Swin-Tiny, el de mayor F1 macro medio en validación, que es el criterio de selección de la Sección~\ref{sec:met_seleccion}.
 
 \subsection{Errores por clase de Swin-Tiny}
@@ -139,14 +135,13 @@ sensibilidad de cada clase (eje vertical) para los cuatro modelos, con un punto 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.92\textwidth]{Figures/Capitulos/04-Resultados-Clasificacion/recall-clase-semillas.pdf}
-    \caption{Sensibilidad por clase en el conjunto de prueba en cada una de las tres ejecuciones (puntos) y su media (raya). Entre paréntesis, las imágenes de cada clase.}
+    \caption{Sensibilidad por clase en el conjunto de prueba en cada una de las diez ejecuciones (puntos) y su media (raya). Entre paréntesis, las imágenes de cada clase.}
     \label{fig:res_recall_semillas}
 \end{figure}
 
 La variación es mayor en las clases con pocas imágenes. En \gls{df}, con 17 imágenes, una sola imagen mueve la
-sensibilidad en casi 0.06, y la de \gls{mel} varía en más de una décima entre las tres ejecuciones de Swin-Tiny. La
-figura muestra, además, que Swin-Tiny supera a DenseNet121 en cinco de las siete clases, pero a ConvNeXt-Tiny y a
-ViT-B/16 solo en tres. Esta distribución es coherente con que las comparaciones estadísticas no separen a las tres mejores
+sensibilidad en casi 0.06, y la de \gls{mel} varía en más de una décima entre las diez ejecuciones de Swin-Tiny. La
+figura muestra, además, que Swin-Tiny supera a DenseNet121 en seis de las siete clases, pero a ConvNeXt-Tiny solo en tres y a ViT-B/16 en cuatro. Esta distribución es coherente con que las comparaciones estadísticas no separen a las tres mejores
 arquitecturas.
 
 \subsection{Detección de melanoma}
@@ -154,8 +149,7 @@ arquitecturas.
 
 La detección de melanoma se evalúa en Swin-Tiny, ConvNeXt-Tiny y su ensamble, que son los modelos de la búsqueda de
 hiperparámetros, con las dos reglas de decisión de la Sección~\ref{sec:met_seleccion}: tomar como melanoma la clase más
-probable o usar el umbral fijado en validación. El \gls{auc} de melanoma, que no depende de la regla, es de 0.921 en
-Swin-Tiny, con un desvío de 0.005 entre ejecuciones. Aunque la sensibilidad de \gls{mel} varía entre ejecuciones, las tres ordenan los casos de manera similar. Por lo tanto, lo que cambia entre ellas es posiblemente cuántos melanomas
+probable o usar el umbral fijado en validación. El \gls{auc} de melanoma, que no depende de la regla, es de 0.920 en Swin-Tiny, con un desvío de 0.004 entre ejecuciones. Aunque la sensibilidad de \gls{mel} varía entre ejecuciones, todas ordenan los casos de manera similar. Por lo tanto, lo que cambia entre ellas es posiblemente cuántos melanomas
 superan el corte implícito en elegir la clase más probable, y fijar ese corte en validación debería estabilizar
 también la decisión.
 
@@ -171,7 +165,7 @@ punteada del panel derecho marca la especificidad mínima exigida en validación
 \end{figure}
 
 Con el umbral de validación, Swin-Tiny pasa de detectar unos tres de cada cinco melanomas a detectar cuatro de cada
-cinco, y el desvío entre ejecuciones se reduce a la mitad. A cambio, la especificidad baja de alrededor de 0.95 a
+cinco, y el desvío entre ejecuciones se reduce a menos de la mitad. A cambio, la especificidad baja de alrededor de 0.95 a
 alrededor de 0.86, cerca del mínimo de 0.85 que se exigió en validación, de modo que el umbral conserva su efecto al
 pasar de una partición a la otra. ConvNeXt-Tiny y el ensamble siguen el mismo patrón, y el ensamble obtiene la mayor
 sensibilidad, aunque la diferencia con Swin-Tiny no se comparó estadísticamente.
@@ -187,8 +181,7 @@ falsos positivos con la sensibilidad para todos los umbrales posibles, y marca s
 \end{figure}
 
 El umbral desplaza la decisión a lo largo de la misma curva, hacia la zona de mayor sensibilidad, sin cambiar el
-modelo: en esa ejecución detecta 13 melanomas más a cambio de unas 80 falsas alarmas adicionales. Los umbrales de las
-nueve ejecuciones, además, quedan muy por debajo de 0.5. Una explicación posible es que \gls{mel} reúne solo el
+modelo: en esa ejecución detecta 13 melanomas más a cambio de unas 80 falsas alarmas adicionales. Los umbrales de las treinta ejecuciones, además, quedan muy por debajo de 0.5. Una explicación posible es que \gls{mel} reúne solo el
 11\,\% del conjunto de prueba, y en muchos melanomas la probabilidad de esa clase no llega a ser la mayor, aunque supere la que
 el modelo asigna a casi todas las lesiones sin melanoma.
 

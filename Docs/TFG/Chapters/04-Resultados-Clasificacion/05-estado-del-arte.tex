@@ -26,17 +26,15 @@ detección de melanoma y los \glspl{vlm} sin ajuste.
             & \textbf{Este trabajo} \\
         \midrule
         \multicolumn{5}{@{}l}{\textit{Clasificación en siete clases (Swin-Tiny)}} \\
-        \textcite{aboulmira2024skinhealthmate} & \emph{HAM10000}; partición no informada & F1 macro~$\uparrow$ & \textbf{0.81} & 0.733 \\
+        \textcite{aboulmira2024skinhealthmate} & \emph{HAM10000}; partición no informada & F1 macro~$\uparrow$ & \textbf{0.81} & 0.719 \\
         \textcite{kim2025skinsavvy2} & \emph{HAM10000} ampliado; partición al azar por imagen & Sensibilidad macro~$\uparrow$
-            & \textbf{0.780} & 0.692 \\
-        \textcite{gessert2020skin} & \emph{ISIC 2019}, otras clases; conjunto de prueba del desafío; validación por lesión & Sensibilidad macro~$\uparrow$ & 0.636
-            & \textbf{0.692} \\
+            & \textbf{0.780} & 0.690 \\
+        \textcite{gessert2020skin} & \emph{ISIC 2019}, otras clases; conjunto de prueba del desafío; validación por lesión & Sensibilidad macro~$\uparrow$ & 0.636 & \textbf{0.690} \\
         \filasep
         \multicolumn{5}{@{}l}{\textit{Detección de melanoma (Swin-Tiny)}} \\
-        \textcite{aboulmira2024skinhealthmate} & Clase más probable & Sensibilidad~$\uparrow$ & 0.49 & \textbf{0.623} \\
-        \textcite{yao2022single} & \emph{ISIC 2018}; modelo elegido sobre el conjunto de prueba & Sensibilidad~$\uparrow$ & \textbf{0.819} & 0.796 \\
-        \textcite{marchetti2023prospective} & Lesiones biopsiadas; umbral de alta sensibilidad & AUC~$\uparrow$ & 0.857
-            & \textbf{0.921} \\
+        \textcite{aboulmira2024skinhealthmate} & Clase más probable & Sensibilidad~$\uparrow$ & 0.49 & \textbf{0.585} \\
+        \textcite{yao2022single} & \emph{ISIC 2018}; modelo elegido sobre el conjunto de prueba & Sensibilidad~$\uparrow$ & 0.819 & \textbf{0.821} \\
+        \textcite{marchetti2023prospective} & Lesiones biopsiadas; umbral de alta sensibilidad & AUC~$\uparrow$ & 0.857 & \textbf{0.920} \\
         \filasep
         \multicolumn{5}{@{}l}{\textit{\glspl{vlm} sin ajuste}} \\
         \textcite{yan2025derm1miccv} & DermLIP en \emph{HAM10000} & Exactitud~$\uparrow$ & 0.682 & \textbf{0.716} \\
@@ -59,8 +57,7 @@ en el entrenamiento, pero sí muestra que una parte puede deberse a ella.
 
 En la detección de melanoma, la tabla muestra que la sensibilidad depende tanto de la regla de decisión como del
 modelo. Con la clase más probable, Swin-Tiny detecta más melanomas que el ensamble de
-\textcite{aboulmira2024skinhealthmate}, que usa la misma regla. El trabajo de \textcite{yao2022single} obtiene una
-sensibilidad algo mayor que la de Swin-Tiny con el umbral de validación, pero elige su modelo sobre el mismo conjunto de prueba
+\textcite{aboulmira2024skinhealthmate}, que usa la misma regla. El trabajo de \textcite{yao2022single} obtiene una sensibilidad similar a la de Swin-Tiny con el umbral de validación, pero elige su modelo sobre el mismo conjunto de prueba
 en que lo informa. En el otro extremo, \textcite{marchetti2023prospective} operan con una sensibilidad cercana a la
 total a cambio de una especificidad baja, sobre lesiones que ya habían sido biopsiadas. Como cada trabajo usa otros datos y otro punto de operación, la comparación no ordena los modelos, pero justifica que este trabajo fije el
 umbral en validación y lo informe junto con la sensibilidad.
