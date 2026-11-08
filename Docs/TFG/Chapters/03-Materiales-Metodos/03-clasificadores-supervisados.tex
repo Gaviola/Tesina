@@ -25,7 +25,7 @@ Las dos familias de arquitecturas de visión, las convolucionales y las basadas 
 clasificación dermatológica revisados evalúan casi solo redes convolucionales y no comparan las dos familias con un
 protocolo común (Sección~\ref{sec:estado_arte_diagnostico}). El trabajo compara las dos familias con el mismo procedimiento, y de cada una toma dos de los modelos
 presentados en el Capítulo~\ref{cp:marco}: DenseNet121 y ConvNeXt-Tiny entre las convolucionales, y ViT-B/16 y
-Swin-Tiny entre las basadas en transformers. Las variantes Tiny, con unos 27.5 millones de parámetros, tienen un tercio de los de ViT-B/16. La Tabla~\ref{tab:met_modelos_sup} resume, para cada modelo, su familia, sus pesos
+Swin-Tiny entre las basadas en transformers. Las variantes Tiny, con cerca de 28 millones de parámetros, tienen un tercio de los de ViT-B/16. La Tabla~\ref{tab:met_modelos_sup} resume, para cada modelo, su familia, sus pesos
 iniciales, la cabeza que recibe, su cantidad de parámetros y el tamaño de lote.
 
 
@@ -73,7 +73,7 @@ cambiar su clase, ya que una misma lesión puede fotografiarse con otro encuadre
 En concreto, se toma un recorte aleatorio de entre el 70\,\% y el 100\,\% del área, se voltea la imagen horizontalmente
 con probabilidad 0.5, se aplican dos transformaciones de RandAugment~\cite{cubuk2020randaugment} con una magnitud $M$ que se elige por búsqueda de hiperparámetros (Sección~\ref{sec:met_supervisados_ensamble}), y se borra un rectángulo al azar con probabilidad 0.25~\cite{zhong2020random}.
 
-En las etapas de validación y de prueba, en cambio, no se aplican aumentos. La imagen se redimensiona a $256 \times 256$ y se recorta el
+En validación y en el conjunto de prueba, en cambio, no se aplican aumentos. La imagen se redimensiona a $256 \times 256$ y se recorta el
 centro de $224 \times 224$. Las probabilidades finales de ambas particiones se obtienen con \gls{tta}
 (Sección~\ref{sec:marco_regularizacion}), que promedia las de la imagen y su reflejo horizontal, mientras que la
 validación de cada época usa una sola vista.
@@ -116,7 +116,7 @@ Sección~\ref{sec:met_seleccion} justifica ese criterio. La Tabla~\ref{tab:met_r
         \filasep
         Inferencia & \gls{tta} con la imagen y su reflejo horizontal \\
         \filasep
-        Precisión numérica & \emph{bfloat16} (bf16) \\
+        Formato numérico & \emph{bfloat16} (bf16) \\
         \bottomrule
     \end{tabularx}
 \end{table}

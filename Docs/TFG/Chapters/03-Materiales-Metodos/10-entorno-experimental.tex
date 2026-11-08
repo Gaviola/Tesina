@@ -14,13 +14,13 @@ Cuyo. El ajuste de los \glspl{vlm} y la generación de los reportes se ejecutaro
 Mendieta de la Universidad Nacional de Córdoba. La A30 es una GPU de centro de datos, pero tiene la misma memoria que una de consumo de gama alta, que es lo que fija
 la restricción. Por último, una RTX 4070 de 12~GB, en un equipo personal, se usó para calcular las métricas de
 generación, para medir el costo de los clasificadores y para comprobar la generación de Mini-VLM en una GPU de consumo. Las tres GPU tienen arquitectura Ampere
-o posterior, lo que permite entrenar en precisión \emph{bfloat16} (bf16) en todos los casos. Este formato de punto flotante usa
+o posterior, lo que permite entrenar en formato \emph{bfloat16} (bf16) en todos los casos. Este formato de punto flotante usa
 16 bits en lugar de los 32 habituales, de modo que reduce a la mitad la memoria de los parámetros y conserva su rango de
 valores, a cambio de una menor resolución numérica\footnote{\url{https://pytorch.org/docs/stable/amp.html}}.
 
 En cuanto a la medición del costo (Sección~\ref{sec:met_costo}), el tiempo de inferencia, la cantidad de imágenes por
 segundo y la memoria máxima de los clasificadores se midieron en la RTX 4070, con una imagen y con lotes de 32, en la
-misma precisión bf16 con que se evalúan. El tiempo por reporte de los
+mismo formato bf16 con que se evalúan. El tiempo por reporte de los
 generadores, en cambio, se tomó de las ejecuciones de la generación en la A30. Como las dos mediciones se hicieron en
 GPU distintas, la comparación entre clasificadores y generadores es solo de orden de magnitud.
 
@@ -31,3 +31,7 @@ scikit-learn 1.7.2 se usa para las cabezas clásicas, la partición y las métri
 versionaron con git 2.45, y se editaron en Visual Studio Code. El documento se escribió en \LaTeX{} y se compiló con
 XeLaTeX (MiK\TeX{} 25.4), Biber 2.21 y latexmk 4.87. El Apéndice~\ref{ap:reproducibilidad} reúne lo necesario para
 repetir cada experimento, incluidas las semillas de cada ejecución.
+
+Durante el trabajo se utilizaron herramientas de inteligencia artificial generativa como asistencia: Claude (Anthropic)
+para el desarrollo del código, la búsqueda bibliográfica y revisión del texto, y Gemini (Google) para el
+parafraseo y la formulación de frases.

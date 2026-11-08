@@ -21,8 +21,7 @@ origen del texto de referencia.
 A partir de estas diferencias, cada conjunto cumple un papel distinto en la experimentación, según sirva para entrenar
 o para evaluar. \emph{HAM10000} es el único etiquetado con las siete categorías de la tarea, de modo que con él se entrenan
 los clasificadores, se eligen sus configuraciones en validación y se evalúan en el conjunto de prueba todos los modelos de
-clasificación y el \emph{pipeline}. Por esa razón es el conjunto central del trabajo, y sus propiedades, que se
-analizan a continuación, determinan cómo se parte y con qué métricas se evalúa. \emph{SkinCaRe}, en cambio, se usa
+clasificación y el \emph{pipeline}. Por esa razón es el conjunto central del trabajo. Su desbalance entre clases y las varias imágenes que tiene por lesión, que se analizan a continuación, justifican cómo se parte y con qué métricas se evalúa. \emph{SkinCaRe}, en cambio, se usa
 para entrenar a los generadores de reportes, y \emph{MM-Skin}, para evaluarlos contra un texto de referencia.
 \emph{HIBA} se usa solo como evaluación externa, para comprobar si los clasificadores mantienen su desempeño en otro
 conjunto de datos.
@@ -119,8 +118,7 @@ distintos (Sección~\ref{sec:marco_regularizacion}). El conjunto de entrenamient
 validación elige su configuración y el de prueba estima el desempeño sobre imágenes que no intervinieron en esas
 decisiones. La forma habitual de partir un conjunto es asignar cada imagen al azar a una partición, manteniendo en cada una la
 proporción de las clases. Con ese procedimiento, una partición frecuente destina el 70\,\% de las imágenes a
-entrenamiento, el 15\,\% a validación y el 15\,\% a prueba. La partición original de \emph{HAM10000}, con la que
-comenzó este trabajo, sigue ese reparto. Sin embargo, como la asignación se hace imagen por imagen, dos
+entrenamiento, el 15\,\% a validación y el 15\,\% a prueba. La partición original de \emph{HAM10000} sigue ese reparto. Sin embargo, como la asignación se hace imagen por imagen, dos
 imágenes de una misma lesión pueden quedar en particiones distintas. En la partición original, 36 de cada 100
 imágenes de prueba tienen otra imagen de su misma lesión en entrenamiento, y entre los melanomas la proporción es de
 63 de cada 100.
@@ -131,8 +129,7 @@ clasificar, de modo que el conjunto de prueba ya no mide el desempeño sobre les
 clases por igual. En NV alcanza al 27\,\% de las imágenes de prueba, mientras que en BCC llega al 70\,\%, así que las
 dos clases malignas, que son las que más importan, son las más afectadas.
 
-Para eliminar la fuga, la partición nueva conserva completo el conjunto de prueba original, de modo que los resultados de los
-\glspl{vlm} y del \emph{pipeline}, medidos sobre ella, siguen siendo comparables. Del entrenamiento y la validación
+Para eliminar la fuga, la partición nueva conserva completo el conjunto de prueba original, de modo que los \glspl{vlm} y el \emph{pipeline}, que no dependen de la partición, se evalúan sobre las mismas 1\,503 imágenes de prueba. Del entrenamiento y la validación
 originales se descartan las 776 imágenes cuya lesión aparece en el conjunto de prueba, y las restantes se reparten con \texttt{StratifiedGroupKFold} de scikit-learn\footnote{\url{https://scikit-learn.org}}, con la lesión como grupo y el diagnóstico como estrato.
 Con este procedimiento se obtienen 6\,447 imágenes de entrenamiento y 1\,289 de validación, sin lesiones compartidas entre particiones
 (Tabla~\ref{tab:met_tamanos}). El costo es que el conjunto de entrenamiento de los modelos tiene un 8\,\% menos de imágenes que el de la partición
@@ -216,7 +213,7 @@ Sección~\ref{sec:met_complementarios}.
 
 
 Las características de estos conjuntos orientan la elección de los modelos que se presentan a continuación. Con unas
-6\,400 imágenes etiquetadas para siete clases, entrenar un clasificador desde cero no es viable, y por eso los
+6\,400 imágenes etiquetadas para siete clases, entrenar un clasificador desde cero resulta poco adecuado, y por eso los
 clasificadores supervisados parten de pesos preentrenados. Por la misma razón, la clasificación con \glspl{vlm} incluye
 a DermLIP, que llega preentrenado sobre imágenes de dermatología. Por otra parte, como los textos clínicos disponibles
 no usan las siete categorías de \emph{HAM10000}, los generadores aprenden a redactar con \emph{SkinCaRe} y reciben el

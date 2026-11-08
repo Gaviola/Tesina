@@ -16,12 +16,8 @@ mediante esta propuesta se define de la siguiente manera:
     diagnóstico, con modelos que puedan entrenarse y ejecutarse en una GPU de consumo.}
 \end{quote}
 
-Las siete categorías son las del conjunto de imágenes dermatoscópicas con diagnóstico confirmado con el que se
-entrenan y evalúan los clasificadores, \emph{HAM10000}~\cite{tschandl2018ham10000}; este y los demás conjuntos de datos
-del trabajo se describen en la Sección~\ref{sec:met_datasets}. Las categorías son \gls{mel}, \gls{nv}, \gls{bcc}, \gls{akiec}, \gls{bkl}, \gls{df} y
-\gls{vasc}, y no tienen la misma gravedad: NV, BKL, DF y VASC son benignas, AKIEC reúne lesiones premalignas y
-carcinomas in situ, y MEL y BCC son malignas. Por eso no todos los errores de clasificación cuestan lo mismo, y esa diferencia decide
-con qué métricas se evalúa a los modelos (Sección~\ref{sec:met_protocolo}).
+Las siete categorías, \gls{mel}, \gls{nv}, \gls{bcc}, \gls{akiec}, \gls{bkl}, \gls{df} y \gls{vasc}, son las del conjunto de imágenes dermatoscópicas con diagnóstico confirmado con el que se entrenan y evalúan los clasificadores, \emph{HAM10000}~\cite{tschandl2018ham10000}, que se describe junto con los demás conjuntos de datos en la Sección~\ref{sec:met_datasets}. No tienen la misma gravedad: NV, BKL, DF y VASC son benignas, AKIEC reúne lesiones premalignas y
+carcinomas in situ, y MEL y BCC son malignas. Por eso no todos los errores de clasificación cuestan lo mismo, y esa diferencia obliga a elegir métricas que pesen igual a cada clase (Sección~\ref{sec:met_protocolo}).
 
 La definición anterior reúne tres tareas, que se distinguen por lo que devuelven:
 \begin{itemize}

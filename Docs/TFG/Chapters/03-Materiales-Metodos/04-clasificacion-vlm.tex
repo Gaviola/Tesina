@@ -22,7 +22,7 @@ Como \gls{vlm} generativo de propósito general se usa Mini-VLM, el nombre que e
 Phi-3.5-vision-instruct~\cite{abdin2024phi3}. Se eligió por dos motivos: sus pesos son abiertos y su tamaño, de unos
 4\,150 millones de parámetros, permite ajustarlo con \gls{lora} en una GPU de consumo. Sigue el esquema de los
 \glspl{vlm} generativos de la Sección~\ref{sec:marco_vlm_generativos}, con un codificador de imagen \gls{clip}
-ViT-L/14 a 336 píxeles, una proyección de tipo MLP y un \gls{llm} de solo decodificador, Phi-3.5-mini.
+ViT-L/14 a 336 píxeles, una proyección de tipo \gls{mlp} y un \gls{llm} de solo decodificador, Phi-3.5-mini.
 
 Para contrastar con un modelo entrenado con datos biomédicos se usa LLaVA-Med~\cite{li2023llavamed}, en su versión 1.5
 con Mistral-7B~\cite{jiang2023mistral}. Comparte el esquema de Mini-VLM y el mismo tipo de codificador, pero su modelo
@@ -106,7 +106,7 @@ Los valores de $C$ y de $k$ son fijos y no se buscaron en validación.
 El procedimiento agrega tres controles a las estrategias anteriores. El primero comprueba si el puntaje de verosimilitud
 depende de la imagen. Para ello, el mismo cálculo se repite con cada imagen reemplazada por una gris neutra de
 $224 \times 224$ píxeles, con el valor 128 en cada canal. Si el modelo sigue dando la misma distribución de puntajes,
-es el prompt, y no la imagen, lo que guía la respuesta.
+la respuesta depende más del prompt que de la imagen.
 
 El segundo control comprueba si el desempeño de los \glspl{vlm} generativos depende de la modalidad de la imagen, ya
 que la dermatoscopía requiere un equipo específico y la fotografía clínica, en cambio, se parece más a las imágenes
@@ -114,8 +114,7 @@ de uso general. Con este propósito, la clasificación por verosimilitud, sin aj
 clínicas de \emph{SkinCAP} (Sección~\ref{sec:met_datasets}) cuyo diagnóstico corresponde a una de las siete clases. La
 correspondencia agrupa las variantes de cada diagnóstico, como las formas del melanoma, y descarta los diagnósticos
 sin una clase equivalente, lo que deja 624 imágenes. Como los modelos no se ajustan, se usan todas, sin partición.
-Si los modelos clasifican mejor las fotografías clínicas que el conjunto de prueba de \emph{HAM10000}, la dificultad está en la
-modalidad y no en la tarea. Como contraste, DermLIP sin ajuste clasifica las mismas imágenes, lo que muestra si un
+Si los modelos clasifican mejor las fotografías clínicas que el conjunto de prueba de \emph{HAM10000}, la dificultad se asocia más a la modalidad que a la tarea. Como contraste, DermLIP sin ajuste clasifica las mismas imágenes, lo que muestra si un
 modelo especializado distingue las siete clases en esa modalidad.
 
 El tercer control separa el efecto de la representación del de la cabeza, que con cuatro cabezas sobre el mismo
@@ -123,7 +122,7 @@ El tercer control separa el efecto de la representación del de la cabeza, que c
 logística y un \emph{random forest} de 300 árboles, todas con pesos balanceados y sobre \emph{embeddings}
 estandarizados) se ajustan con el mismo procedimiento sobre el \emph{embedding} de DermLIP y sobre el de Swin
 congelado, preentrenado en \emph{ImageNet}~\cite{liu2021swin}, sin ajuste sobre \emph{HAM10000}. Así, si la diferencia
-entre las dos representaciones es la misma con cada cabeza, el efecto es de la representación.
+entre las dos representaciones es la misma con cada cabeza, el efecto se atribuye a la representación.
 
 En cuanto a los datos, todas las cabezas, sobre DermLIP y sobre Swin, se ajustan sobre el entrenamiento de la
 partición por lesión (Sección~\ref{sec:met_particiones}). El modo zero-shot de DermLIP y los \glspl{vlm} generativos,
