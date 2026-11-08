@@ -11,7 +11,7 @@ instalación del entorno, la descarga de los conjuntos de datos y los comandos d
 \section{Organización del repositorio}
 \label{sec:ap_repositorio}
 
-El código vive en la carpeta \texttt{Codigo/}, organizada en cinco partes:
+El código vive en la carpeta \texttt{Codigo/}, cuyas partes principales son:
 \begin{itemize}
     \item \textbf{\texttt{src/}}, el paquete con la carga de los datos, los modelos, el entrenamiento y las métricas
     de evaluación, que usan todos los \emph{scripts}.
@@ -74,7 +74,7 @@ ejecutan, todos en \texttt{Codigo/scripts/}.
 \section{Semillas}
 \label{sec:ap_semillas}
 
-Todos los entrenamientos, la partición por lesión y la generación de los reportes fijan la semilla 42. Esa es también
+La partición por lesión, los ajustes de los generadores y la generación de los reportes fijan la semilla 42. Esa es también
 la semilla de la ejecución de referencia de cada clasificador supervisado (Sección~\ref{sec:met_estadistica}), y las
 otras nueve ejecuciones (Sección~\ref{sec:met_supervisados_ensamble}) usan las semillas 43 a 51. Como la generación usa
 decodificación voraz, la semilla no cambia los reportes, y se fija solo para que el entorno sea el mismo en todas las
