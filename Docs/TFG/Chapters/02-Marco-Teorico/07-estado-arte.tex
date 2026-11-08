@@ -38,7 +38,7 @@ usan la sensibilidad macro como métrica principal, y \citeauthor{yao2022single}
 favorecer una clase: en ISIC 2018, subir el coeficiente del melanoma eleva su sensibilidad de 0.772 a 0.871 a costa
 de la sensibilidad macro.
 
-La limitación es común a ambos, porque evalúan sobre el conjunto de conjunto de prueba del desafío. En el trabajo
+La limitación es común a ambos, porque evalúan sobre el conjunto de prueba del desafío. En el trabajo
 de \citeauthor{gessert2020skin}, la sensibilidad macro sin metadatos baja de 72.5\,\% en validación cruzada a
 63.6\,\% en el conjunto de prueba oficial, una brecha que atribuyen en parte a una clase desconocida que solo aparece en ella.
 \citeauthor{yao2022single} no describen una partición de validación, de modo que la selección se hace sobre el conjunto de prueba de ISIC 2018.
@@ -159,7 +159,7 @@ trabajos. En segundo lugar, solo \textcite{gessert2020skin}, por lesión, y \tex
 describen particiones que mantienen juntos los casos relacionados, mientras que \textcite{yao2022single}
 seleccionan sobre el conjunto de prueba y \textcite{khan2025ensemble} parten al azar. En tercer lugar, la evaluación se ha
 realizado principalmente sobre particiones o conjuntos de prueba de la misma fuente, la validación fuera de ella es temporal o
-de un solo centro, y ningún trabajo se desarrolla ni se valida en población de América Latina. Por último, los
+de un solo centro, y ninguno de los trabajos revisados declara desarrollarse ni validarse en población de América Latina. Por último, los
 sistemas de mejor desempeño son ensambles grandes, y solo \textcite{khan2025ensemble} marcan los casos
 discordantes, sin medir el efecto de esa abstención.
 
@@ -203,9 +203,8 @@ LLaVA de 7\,000 millones de parámetros con figuras de PubMed Central y con conv
 evalúa en preguntas visuales de radiología y patología. Med-Flamingo, PeFoMed y LLaVA-Tri tampoco se evalúan en
 piel~\cite{moor2023medflamingo,he2025pefomed,xie2025medtrinity25m}. SkinVL~\cite{zeng2025mmskin} adapta LLaVA-Med a
 la dermatología entrenando solo la proyección visual y adaptadores LoRA, con imágenes de libros de texto y nueve
-conjuntos públicos de diagnóstico reformulados como preguntas, y en zero-shot es el único de los modelos
-comparados que supera el 50\,\% de exactitud en \emph{HAM10000}. La variante SkinVL-MM, que es la que usa este
-trabajo, se entrena solo con el corpus de libros. Ni LLaVA-Med ni SkinVL se evaluaron con expertos.
+conjuntos públicos de diagnóstico reformulados como preguntas, y en zero-shot su variante completa es la única de los modelos
+comparados que supera el 50\,\% de exactitud en \emph{HAM10000}. La variante SkinVL-MM se entrena solo con el corpus de libros. Ni LLaVA-Med ni SkinVL se evaluaron con expertos.
 
 Los trabajos más recientes de esta vía buscan que el modelo razone antes de diagnosticar, y los dos están
 publicados solo en arXiv, sin revisión de pares. SkinGPT-R1~\cite{shen2025skingptr1} mantiene congelado
@@ -289,7 +288,7 @@ borde, y DermoGPT, una brecha que persiste con la referencia humana.
         \textcite{zeng2025mmskin} & 2025 & LLaVA-Med de 7B con LoRA
             & 171\,600 imágenes de libros y nueve conjuntos públicos (variante completa)
             & BLEU-4, BERTScore, exactitud
-            & Zero-shot \emph{Patch16} 82.34\,\% contra 68.55\,\% (LLaVA-Med)
+            & Zero-shot \emph{Patch16} 82.34\,\% en la variante completa, contra 68.55\,\% de LLaVA-Med
             & Ninguno \\
         \filasep
         \textcite{shen2025skingptr1}$^\dagger$ & 2025 & Vision-R1-7B congelado con adaptadores
@@ -328,7 +327,7 @@ preentrenamientos visuales a gran escala, y la generativa, de asistentes bioméd
 modelos adaptados a ella y a modelos que razonan antes de diagnosticar.
 
 En esta línea se identifican cuatro
-limitaciones. Ningún trabajo combina un clasificador supervisado con un generador ni recupera casos parecidos para
+limitaciones. Ninguno de estos modelos combina un clasificador supervisado con un generador ni recupera casos parecidos para
 anclar el texto. La incertidumbre aparece como limitación, o en DermoGPT para ponderar sus predicciones, y no como
 una decisión entre afirmar, ofrecer diferenciales o derivar (Sección~\ref{sec:marco_tres_salidas}). El cómputo va
 de ocho RTX 4090 para ajustar SkinGPT-R1 a cuatro H100 para preentrenar PanDerm o DermFM-Zero. Por último, los

@@ -152,7 +152,7 @@ siguientes:
     \item \textbf{Aumento de datos} (\emph{data augmentation}). Aplica a cada imagen, cada vez que se usa en el
     entrenamiento, una transformación aleatoria que conserva su clase, como una rotación, un recorte o un
     cambio de brillo, de modo que la red ve más variedad que la que contiene el conjunto de entrenamiento.
-    RandAugment es un método de aumento que sortea, para cada imagen, $N$ transformaciones de una lista fija y
+    El recorte aleatorio reescalado al tamaño original se conoce como \emph{random resized crop}. RandAugment es un método de aumento que sortea, para cada imagen, $N$ transformaciones de una lista fija y
     las aplica con una misma intensidad $M$~\cite{cubuk2020randaugment}, y el borrado aleatorio (\emph{random
     erasing}) cubre un rectángulo elegido al azar para simular oclusiones~\cite{zhong2020random}. Cuando el
     color es uno de los rasgos que distinguen a las clases, como en dermatoscopía~\cite{kittler2016standardization},

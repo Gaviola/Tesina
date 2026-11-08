@@ -10,7 +10,7 @@ Antes, sin embargo, conviene establecer qué puede afirmar una métrica calculad
 \subsection{Sesgo y generalización}
 \label{sec:marco_generalizacion}
 
-Una métrica calculada sobre el test estima el desempeño del modelo en la distribución de la que proviene ese test,
+Una métrica calculada sobre el conjunto de prueba estima el desempeño del modelo en la distribución de la que proviene ese conjunto,
 que suele ser la misma fuente que la del entrenamiento. En uso real, las imágenes llegan de otros equipos, centros y
 pacientes, y el cambio de distribución de la Sección~\ref{sec:marco_regularizacion} reduce el desempeño de forma
 sustancial en problemas de todo tipo, aun con los métodos diseñados para mitigarlo. Ese cambio toma dos formas: el
@@ -29,32 +29,31 @@ compresión de la imagen varían entre equipos y centros. Un modelo que se apoya
 alteran, como la textura fina o el color exacto, puede perder desempeño ante imágenes de contenido clínico
 idéntico. Esa pérdida se estima de dos maneras. La \textbf{validación externa} (\emph{external validation}) mide
 el modelo en un conjunto de otra fuente, que no intervino en el entrenamiento. Cuando no se dispone de otro
-conjunto, se degradan las imágenes del test de manera controlada (Sección~\ref{sec:marco_eval_robustez}).
+conjunto, se degradan las imágenes del conjunto de prueba de manera controlada (Sección~\ref{sec:marco_eval_robustez}).
 
 El tono de piel es el ejemplo más estudiado de cambio de subpoblación. Cuando las pieles claras están mucho más
-representadas que las oscuras en el entrenamiento, el modelo clasifica mejor los fototipos parecidos a los que
-vio~\cite{groh2021neural}. Evaluados sobre imágenes con fototipos diversos, modelos dermatológicos del estado del
+representadas que las oscuras en el entrenamiento, el modelo clasifica mejor los fototipos parecidos a los que vio~\cite{groh2021neural}. Los fototipos ordenan el tono de la piel de I, muy clara, a VI, muy oscura. Evaluados sobre imágenes con fototipos diversos, modelos dermatológicos del estado del
 arte rindieron peor que en sus conjuntos de origen, sobre todo en pieles oscuras y en enfermedades poco
 comunes~\cite{daneshjou2022disparities}. Una diferencia sistemática de desempeño entre grupos de pacientes es un
 \textbf{sesgo} del modelo, y una métrica agregada puede ocultarla cuando el grupo afectado es una fracción pequeña
-del test. Por eso la métrica se calcula también por grupo, como el fototipo o la modalidad, en una
+del conjunto de prueba. Por eso la métrica se calcula también por grupo, como el fototipo o la modalidad, en una
 \textbf{evaluación desagregada} (\emph{disaggregated evaluation}).
 
-Un tercer problema no aparece en ninguna métrica calculada sobre el test. La
+Un tercer problema no aparece en ninguna métrica calculada sobre el conjunto de prueba. La
 Sección~\ref{sec:marco_regularizacion} mencionó que una red puede aprender una regla o una marca de tinta que
 aparece junto a ciertas lesiones. Si en un conjunto esas marcas, las etiquetas adhesivas o los bordes oscuros del
 dermatoscopio acompañan con más frecuencia a los melanomas, el modelo puede predecir melanoma cuando los ve y
 acertar sin mirar la lesión. A estos rasgos, que acompañan a una clase sin formar parte de ella, se los llama
 \textbf{rasgos espurios} (\emph{spurious features}), y su efecto se documentó en conjuntos públicos de dermatoscopía~\cite{yan2023towards}.
 Los propios modelos contrastivos médicos permiten buscarlos en un conjunto antes de entrenar sobre
-él~\cite{kim2024transparent}. Como el rasgo está también en el test, el modelo acierta ahí por la misma razón
+él~\cite{kim2024transparent}. Como el rasgo está también en el conjunto de prueba, el modelo acierta ahí por la misma razón
 equivocada, y para advertirlo hace falta ver en qué parte de la imagen se apoya
 (Sección~\ref{sec:marco_eval_gradcam}).
 
-Una métrica sobre el test describe, entonces, el desempeño en una fuente y en una mezcla de grupos, y no dice en
+Una métrica sobre el conjunto de prueba describe, entonces, el desempeño en una fuente y en una mezcla de grupos, y no dice en
 qué se apoya el modelo. Las subsecciones que siguen presentan primero las métricas de cada tipo de salida y después
 las propiedades que se evalúan en cualquiera de ellas, entre las que están la robustez y la interpretabilidad, que
-estiman lo que la métrica sobre el test no muestra.
+estiman lo que la métrica sobre el conjunto de prueba no muestra.
 
 \subsection{Evaluación de la clasificación}
 \label{sec:marco_eval_clasif}
@@ -88,7 +87,7 @@ que se derivan de ella son las siguientes.
         \text{sensibilidad macro} = \frac{1}{C}\sum_{c=1}^{C} R_c.
         \label{eq:marco_acc_bal}
     \end{equation}
-    En el caso binario se la llama exactitud balanceada~\cite{brodersen2010balanced,sokolova2009systematic}.
+    Con dos clases se la llama exactitud balanceada~\cite{brodersen2010balanced,sokolova2009systematic}, y los trabajos revisados usan el mismo nombre para el promedio de la sensibilidad sobre más de dos clases.
 
     \item \textbf{Precisión} (\emph{precision}) \textbf{y F1.} La sensibilidad no dice cuántas de las predicciones
     de una clase son correctas. Esa es la precisión de la clase $c$, $P_c$, que se lee por columna. El F1 las
@@ -103,8 +102,7 @@ que se derivan de ella son las siguientes.
     clase más frecuente, y el F1 macro da a las $C$ clases el mismo peso.
 
     \item \textbf{Sensibilidad y especificidad} (\emph{specificity}) \textbf{de una clase.} Cuando interesa una
-    sola condición, la salida
-    multiclase se colapsa en una binaria: la clase de interés, o un grupo de clases como las malignas, frente a
+    sola condición, la salida multiclase se reduce a una binaria: la clase de interés, o un grupo de clases como las malignas, frente a
     las demás, con la probabilidad de la clase o la suma de las del grupo como puntaje. A esa tarea derivada se
     la llama detección, y se evalúa con la sensibilidad $R_c$ y con la especificidad, la fracción de las imágenes
     de las otras clases que el modelo no predice como $c$,
@@ -256,15 +254,12 @@ que el texto afirma.
     Sección~\ref{sec:marco_rep_ejes}: la fracción de los textos que nombran la categoría real de la imagen o un
     sinónimo reconocido,
     \begin{equation}
-        \mathrm{FD} = \frac{1}{n}\sum_{i=1}^{n} \mathbf{1}\bigl[\mathrm{dx}(g_i) = y_i\bigr],
+        \mathrm{FD} = \frac{1}{n}\sum_{i=1}^{n} \mathbf{1}\bigl[y_i \in \mathrm{dx}(g_i)\bigr],
         \label{eq:marco_fd}
     \end{equation}
-    donde $g_i$ es el texto generado para la imagen $i$, $y_i$ su categoría real y $\mathrm{dx}(\cdot)$ extrae la
-    categoría que el texto nombra.
+    donde $g_i$ es el texto generado para la imagen $i$, $y_i$ su categoría real y $\mathrm{dx}(\cdot)$ devuelve las categorías que el texto nombra.
 
-    \item \textbf{Cobertura de entidades clínicas.} Se apoya en una lista cerrada de términos del
-    vocabulario estandarizado de la Sección~\ref{sec:marco_rep_tarea}, agrupados en categorías como color, patrón
-    o estructura. Es la proporción de esas categorías que el texto menciona,
+    \item \textbf{Cobertura de entidades clínicas.} Se apoya en una lista cerrada de términos dermatológicos agrupados en categorías, como los criterios ABCDE, los tipos de lesión o los rasgos clínicos. Es la proporción de esas categorías que el texto menciona,
     \begin{equation}
         \mathrm{cob}(g) = \frac{\bigl|\{k : \exists\, e \in V_k,\ e \text{ aparece en } g\}\bigr|}{K},
         \label{eq:marco_cobertura_ent}
@@ -311,7 +306,7 @@ el vector de probabilidades y la codificación de la clase real,
 \end{equation}
 donde $p_{ic}$ es la probabilidad que el modelo asigna a la clase $c$ en la imagen $i$, e $y_{ic}$ vale 1 si
 $c$ es la clase real de esa imagen y 0 si no~\cite{brier1950verification}. La entropía cruzada de la
-Ecuación~\ref{eq:marco_entropia}, promediada sobre el test, se usa con el mismo fin y se llama
+Ecuación~\ref{eq:marco_entropia}, promediada sobre el conjunto de prueba, se usa con el mismo fin y se llama
 \textbf{log-pérdida} (\emph{log loss}). A diferencia del Brier, castiga sin límite asignar una probabilidad cercana a cero a la clase
 real. Ninguna de las dos mide solo la calibración, porque bajan tanto cuando las probabilidades se acercan a las
 frecuencias reales como cuando el modelo concentra más probabilidad en la clase correcta.
@@ -326,20 +321,20 @@ con ello la exactitud~\cite{guo2017calibration}.
 \subsection{Inferencia estadística}
 \label{sec:marco_eval_estadistica}
 
-Todas las métricas anteriores se calculan sobre el test, que es una muestra de las imágenes posibles. Cuando dos
+Todas las métricas anteriores se calculan sobre el conjunto de prueba, que es una muestra de las imágenes posibles. Cuando dos
 modelos difieren en una o dos centésimas de F1 macro, esa diferencia puede deberse a la composición de imágenes en
-el conjunto de test y no a los modelos. Para afirmar que un modelo es mejor que otro hace falta estimar cuánto
+el conjunto de prueba y no a los modelos. Para afirmar que un modelo es mejor que otro hace falta estimar cuánto
 variaría la diferencia de una muestra a otra.
 
 El \textbf{\emph{bootstrap}} estima esa variación con los datos disponibles. Se construyen muchas muestras del
-mismo tamaño que el test tomando imágenes al azar con reposición, se calcula la métrica en cada una, y la
+mismo tamaño que el conjunto de prueba tomando imágenes al azar con reposición, se calcula la métrica en cada una, y la
 dispersión de los valores obtenidos aproxima la que tendría la métrica entre muestras
 independientes~\cite{efron1979bootstrap}. En la versión pareada, cada remuestreo toma las mismas imágenes para
 los dos modelos y registra la diferencia entre ellos. Si el intervalo de percentiles de esas diferencias no
-contiene el cero, la diferencia no se explica por la composición del test. Sirve para cualquier métrica
+contiene el cero, la diferencia no se explica por la composición del conjunto de prueba. Sirve para cualquier métrica
 agregada, como el F1 macro, el AUC o la consistencia diagnóstica.
 
-La \textbf{test de McNemar} compara los aciertos de dos clasificadores sobre las mismas
+El \textbf{test de McNemar} compara los aciertos de dos clasificadores sobre las mismas
 imágenes~\cite{mcnemar1947note}. Solo usa los casos discordantes: $b$, los que el primero acierta y el segundo
 falla, y $c$, los del caso inverso. Si los dos modelos fueran equivalentes, cada caso discordante tendría la misma
 probabilidad de caer de un lado o del otro, y $b$ seguiría una distribución binomial con $b+c$ ensayos y
@@ -352,8 +347,7 @@ se separen al menos tanto como en lo observado,
 
 Cada test a nivel $\alpha$ tiene una probabilidad $\alpha$ de declarar una diferencia que no existe. Al comparar
 muchos pares de modelos, la probabilidad de que al menos uno de los tests lo haga crece con el número de tests
-$m$. La \textbf{corrección de Holm} controla esa probabilidad para el conjunto de las $m$
-tests~\cite{holm1979simple}. Ordena los valores $p$ de menor a mayor, $p_{(1)} \le \dots \le p_{(m)}$, y compara
+$m$. La \textbf{corrección de Holm} controla esa probabilidad para el conjunto de los $m$ tests~\cite{holm1979simple}. Ordena los valores $p$ de menor a mayor, $p_{(1)} \le \dots \le p_{(m)}$, y compara
 cada uno con un umbral que se relaja paso a paso,
 \begin{equation}
     p_{(k)} \le \frac{\alpha}{m - k + 1}, \qquad k = 1, \dots, m.
@@ -370,8 +364,8 @@ hipótesis que Bonferroni con el mismo control.
 La robustez es cuánto cambia una métrica cuando la entrada se perturba de una manera que no altera su contenido
 clínico, como la compresión, el ruido, el desenfoque o la reducción de resolución. Permite estimar el efecto de la
 variación de adquisición de la Sección~\ref{sec:marco_generalizacion} sin otro conjunto de datos, degradando las
-imágenes del test de maneras controladas y con severidad creciente~\cite{hendrycks2019benchmarking}. Sea $v$ el
-valor de una métrica sobre el test original y $\tilde{v}$ su valor sobre el test perturbado con una severidad
+imágenes del conjunto de prueba de maneras controladas y con severidad creciente~\cite{hendrycks2019benchmarking}. Sea $v$ el
+valor de una métrica sobre el conjunto de prueba original y $\tilde{v}$ su valor sobre el conjunto de prueba perturbado con una severidad
 dada. La caída relativa
 \begin{equation}
     \Delta^{\text{rel}} = \frac{v - \tilde{v}}{v}
