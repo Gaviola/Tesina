@@ -112,8 +112,7 @@ clase real recibe esa predicción, y por eso la diagonal coincide con la sensibi
 
 La diagonal muestra que \gls{nv} se reconoce casi siempre. Fuera de ella, los errores de las demás clases se
 concentran en tres columnas: \gls{nv}, \gls{mel} y \gls{bkl}. El valor de la matriz con mayor costo clínico, el de \gls{mel} clasificado como \gls{nv}, es también uno de los más
-altos, ya que una quinta parte de los melanomas se clasifica como nevo. Además, las dos clases queratósicas,
-\gls{akiec} y \gls{bkl}, se confunden entre sí, y una parte de los \gls{bcc} y de los \gls{vasc} se clasifica como
+altos, ya que una quinta parte de los melanomas se clasifica como nevo. Además, una parte de los \gls{akiec} se clasifica como \gls{bkl}, y una parte de los \gls{bcc} y de los \gls{vasc} se clasifica como
 \gls{mel}.
 
 Para ver estas diferencias sobre imágenes concretas, la Figura~\ref{fig:res_ejemplos_supervisados} presenta una imagen de
@@ -167,8 +166,7 @@ punteada del panel derecho marca la especificidad mínima exigida en validación
 Con el umbral de validación, Swin-Tiny pasa de detectar unos tres de cada cinco melanomas a detectar cuatro de cada
 cinco, y el desvío entre ejecuciones se reduce a menos de la mitad. A cambio, la especificidad baja de alrededor de 0.95 a
 alrededor de 0.86, cerca del mínimo de 0.85 que se exigió en validación, de modo que el umbral conserva su efecto al
-pasar de una partición a la otra. ConvNeXt-Tiny y el ensamble siguen el mismo patrón, y el ensamble obtiene la mayor
-sensibilidad, aunque la diferencia con Swin-Tiny no se comparó estadísticamente.
+pasar de una partición a la otra. ConvNeXt-Tiny y el ensamble siguen el mismo patrón, y con el umbral el ensamble obtiene la mayor sensibilidad, aunque la diferencia con Swin-Tiny no se comparó estadísticamente.
 
 La Figura~\ref{fig:res_roc_melanoma} muestra el mismo cambio sobre la curva ROC de Swin-Tiny, que relaciona la tasa de
 falsos positivos con la sensibilidad para todos los umbrales posibles, y marca sobre ella la decisión de cada regla.
@@ -229,8 +227,7 @@ pensadas para el desbalance obtienen una sensibilidad macro mayor. Es decir, con
 más imágenes a las clases minoritarias y aciertan algunas más, a cambio de falsas alarmas sobre las demás. La
 sensibilidad de \gls{mel}, en cambio, no mejora de manera consistente: sube con la entropía cruzada ponderada en los
 tres modelos, pero baja con la pérdida focal en Swin-Tiny y con balanced softmax en ConvNeXt-Tiny. Por lo tanto, en
-estos experimentos ninguna de las funciones mejora a la vez la detección de las clases minoritarias y la precisión de
-esas detecciones, y para melanoma el umbral de validación logra una ganancia de sensibilidad comparable. Es decir, el umbral cambia la
+estos experimentos ninguna de las funciones mejora a la vez la sensibilidad macro y el F1 macro, y para melanoma el umbral de validación logra una ganancia de sensibilidad comparable. Es decir, el umbral cambia la
 decisión de un modelo ya entrenado, mientras que estas funciones cambian el entrenamiento y afectan a todas las clases.
 
 Con estos resultados, Swin-Tiny queda como el clasificador de referencia del trabajo, con un punto de operación para

@@ -27,7 +27,7 @@ validación, y las que comparten lesión con el entrenamiento.
 Sobre el conjunto de prueba completo, la sensibilidad macro de este modelo es de 0.870, y sobre las 894 imágenes sin lesión
 compartida, de 0.804. En las 543 que comparten lesión con el entrenamiento llega a 0.936, y las 66 restantes comparten
 lesión solo con la validación. Como control, DermLIP sin ajuste sobre \emph{HAM10000} no empeora en el grupo sin
-lesión compartida, lo que indica que la diferencia no se explica por una mayor dificultad de ese grupo. En este conjunto de prueba, entonces, la
+lesión compartida, lo que sugiere que la diferencia no se explica por una mayor dificultad de ese grupo. En este conjunto de prueba, entonces, la
 partición por imagen sobreestima la sensibilidad macro en unas 0.07, una distorsión que se retoma al comparar con
 otros trabajos en la Sección~\ref{sec:res_estado_arte}.
 
@@ -132,8 +132,7 @@ Tabla~\ref{tab:res_robustez} resume la caída relativa (Ecuación~\ref{eq:marco_
     \end{tabularx}
 \end{table}
 
-El ruido gaussiano es la perturbación más dañina para los dos modelos: con un desvío de 8 sobre 255 ya quita casi un
-quinto de la sensibilidad macro, y en los niveles más altos los lleva cerca de 1/7. En su nivel más leve, en cambio, las demás degradaciones reducen la
+El ruido gaussiano es la perturbación más dañina para los dos modelos: con un desvío de 8 sobre 255 ya quita 0.184 de la sensibilidad macro de Swin-Tiny y 0.244 de la de ConvNeXt-Tiny, en términos relativos, y en los niveles más altos los lleva cerca de 1/7. En su nivel más leve, en cambio, las demás degradaciones reducen la
 sensibilidad macro en un 11\,\% o menos, y la compresión, en particular, solo pesa cuando la calidad es muy baja. La diferencia más clara entre los dos
 modelos está en el desenfoque y la reducción de resolución intensos, en los que ConvNeXt-Tiny cae menos que Swin-Tiny: en el nivel~5 de resolución, su caída relativa es de 0.374 frente a
 0.644, y en el de desenfoque, de 0.599 frente a 0.713. Estas cuatro perturbaciones artificiales reproducen solo una parte de las degradaciones posibles en imágenes clínicas

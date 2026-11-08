@@ -17,11 +17,7 @@ los clasificadores supervisados.
 
 La Figura~\ref{fig:res_resumen} reúne la sensibilidad macro en el conjunto de prueba de todos los clasificadores del
 capítulo, agrupados en tres familias. Cada punto es un modelo o, en los generativos, una estrategia. En los supervisados,
-la barra indica el desvío entre ejecuciones, y la línea punteada marca 1/7, el valor de una respuesta al azar. La figura
-muestra tres niveles separados. Los supervisados obtienen los valores más altos, entre 0.6 y 0.7, con una variación
-pequeña entre ejecuciones. DermLIP va desde algo más de 0.5 sin ajuste hasta el nivel de los supervisados cuando se le
-entrena una cabeza. Los generativos, con cualquiera de sus cinco estrategias, obtienen los valores más bajos, alrededor
-de 1/7.
+la barra indica el desvío entre ejecuciones, y la línea punteada marca 1/7, el valor de una respuesta al azar. Los supervisados obtienen valores de entre 0.62 y 0.71, con una variación pequeña entre ejecuciones. DermLIP va desde 0.544 sin ajuste hasta 0.729 con un \emph{linear probe}, por encima de los supervisados. Los generativos obtienen los valores más bajos, entre 0.045 y 0.181, la mayoría alrededor de 1/7.
 
 \begin{figure}[!tbp]
     \centering
@@ -60,22 +56,18 @@ diferencia.
     \end{tabularx}
 \end{table}
 
-Swin-Tiny, ConvNeXt-Tiny y ViT-B/16 superan a DermLIP sin ajuste por entre 0.15 y 0.18 de sensibilidad macro, y a los
+Según el \emph{bootstrap} pareado, Swin-Tiny, ConvNeXt-Tiny y ViT-B/16 superan a DermLIP sin ajuste por entre 0.15 y 0.17 de sensibilidad macro, y a los
 generativos, por alrededor de 0.5, todos con intervalos que no incluyen el cero. La única diferencia cuyo intervalo
-incluye el cero es la de DenseNet121 frente a DermLIP. En este par, las dos comparaciones dan resultados distintos: según
-McNemar, DenseNet121 acierta más imágenes, 250 en las que DermLIP falla frente a 85 en el sentido contrario, pero según
-el \emph{bootstrap}, su sensibilidad macro no se distingue de la de DermLIP. Una explicación posible, como en la
+incluye el cero es la de DenseNet121 frente a DermLIP. En este par, las dos comparaciones difieren. Según McNemar, DenseNet121 acierta más imágenes, 250 en las que DermLIP falla frente a 85 en el sentido contrario. Según el \emph{bootstrap} pareado, su sensibilidad macro no se distingue de la de DermLIP. Una explicación posible, como en la
 comparación entre supervisados, es que la ventaja de DenseNet121 está en las clases mayoritarias, que pesan mucho en
 el total de aciertos y poco en las métricas macro.
 
 Entre los generativos, el intervalo de \emph{bootstrap} de la sensibilidad macro de Mini-VLM incluye 1/7, de modo que
 no se distingue del azar. El de LLaVA-Med queda apenas por encima, aunque su exactitud y su F1 macro siguen siendo los
-de un modelo que concentra sus predicciones en una clase (Sección~\ref{sec:res_vlm}). Entre ellos, McNemar indica que no aciertan las mismas imágenes,
-pero el \emph{bootstrap} no distingue su diferencia de sensibilidad macro de cero. Posiblemente se debe a que los dos
+de un modelo que concentra sus predicciones en una clase (Sección~\ref{sec:res_vlm}). Según McNemar, no aciertan las mismas imágenes. Según el \emph{bootstrap} pareado, su diferencia de sensibilidad macro no se distingue de cero. Posiblemente se debe a que los dos
 aciertan pocas imágenes, y casi solo de la clase en la que se concentran.
 
-La comparación deja abierta la posición de DermLIP con una cabeza entrenada, que se acerca a los supervisados en
-sensibilidad macro pero no en F1 macro (Tabla~\ref{tab:res_dermlip}). Como esa cabeza se entrena sobre
+La comparación deja abierta la posición de DermLIP con una cabeza entrenada. Con el \emph{linear probe}, su sensibilidad macro (0.729) supera a la de los cuatro supervisados (de 0.619 a 0.690), pero su F1 macro (0.618) queda por debajo de todos ellos (de 0.659 a 0.723). Con la \gls{svm}, su F1 macro (0.705) queda cerca del de ViT-B/16 (0.710) y por debajo de los de Swin-Tiny (0.719) y ConvNeXt-Tiny (0.723) (Tabla~\ref{tab:res_dermlip}). Como esa cabeza se entrena sobre
 \emph{HAM10000}, deja de ser un uso sin ajuste y no cubre lo que motivaba usar un \gls{vlm}: obtener el diagnóstico
 del modelo que genera el reporte.
 
@@ -84,7 +76,7 @@ del modelo que genera el reporte.
 
 Además del desempeño, la restricción de una GPU de consumo de la Sección~\ref{sec:met_tareas} exige que el
 clasificador sea barato de ejecutar. La Tabla~\ref{tab:res_costo_clasificadores} presenta el costo de los cuatro
-supervisados en la RTX 4070 de la Sección~\ref{sec:met_entorno}, con la misma precisión bf16 que la evaluación: para
+supervisados en la RTX 4070 de la Sección~\ref{sec:met_entorno}, con el mismo formato bf16 que la evaluación: para
 cada modelo, la cantidad de parámetros, la memoria máxima de la GPU con una imagen y con lotes de 32, la latencia con
 una imagen por vez y las imágenes por segundo con lotes de 32.
 
@@ -116,7 +108,7 @@ por vez, aunque es el modelo más chico. Es decir, la cantidad de parámetros no
 conjunto, los cuatro modelos clasifican una imagen en 20~ms o menos y ocupan menos de 0.7~GB de memoria de la GPU aun
 con lotes de 32 imágenes. Con esos lotes, Swin-Tiny clasifica el conjunto de prueba completo en poco más de un segundo, y con una
 imagen por vez, en unos 17 segundos. Estos tiempos corresponden a una sola vista, y el \gls{tta} de la
-Sección~\ref{sec:met_supervisados_receta} duplica las pasadas. Aun así, el costo de los clasificadores queda muy por debajo de ese límite.
+Sección~\ref{sec:met_supervisados_receta} duplica las pasadas. Aun así, el costo de los clasificadores queda muy por debajo de la restricción de una GPU de consumo.
 
 Para dar una idea del costo de obtener estos modelos, la Tabla~\ref{tab:res_tiempos_clasificadores} agrega el tiempo total
 de entrenamiento en la RTX 4080, tomado de los registros de cada trabajo, desde su inicio hasta su final. Estos tiempos son
@@ -134,10 +126,10 @@ los cuatro modelos tarda menos de 15 minutos, y el barrido más largo, el de Swi
         \toprule
         \textbf{Modelo} & \textbf{GPU} & \textbf{Una ejecución (min)}~$\downarrow$ & \textbf{Barrido (h)}~$\downarrow$ \\
         \midrule
-        Swin-Tiny & RTX 4080 & 8--13 & 2.46 \\
-        ConvNeXt-Tiny & RTX 4080 & \textbf{4--6} & \textbf{0.85} \\
-        ViT-B/16 & RTX 4080 & 5--7 & --- \\
-        DenseNet121 & RTX 4080 & 5--6 & --- \\
+        Swin-Tiny & RTX 4080 & 6--13 & 2.46 \\
+        ConvNeXt-Tiny & RTX 4080 & \textbf{3--6} & \textbf{0.85} \\
+        ViT-B/16 & RTX 4080 & 4--11 & --- \\
+        DenseNet121 & RTX 4080 & 5--7 & --- \\
         \bottomrule
     \end{tabularx}
 \end{table}

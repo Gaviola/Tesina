@@ -65,8 +65,7 @@ Esta concentración explica también los valores que, a primera vista, parecen m
 alcanza la mayor exactitud de la tabla, pero responde \gls{nv} en casi todas las imágenes, igual que el clasificador
 que responde siempre \gls{nv} (Sección~\ref{sec:met_referencias}). En el otro extremo, LLaVA-Med ajustado y con
 \gls{cot} no produce una etiqueta válida en cuatro de cada cinco imágenes, porque sus respuestas ya no terminan en la
-línea de diagnóstico que pide el \emph{prompt}. En ninguno de los dos modelos, por otra parte, el ajuste con los textos
-clínicos de \emph{SkinCaRe} aleja a alguna estrategia de ese valor.
+línea de diagnóstico que pide el \emph{prompt}. Salvo en ese caso, el ajuste con los textos clínicos de \emph{SkinCaRe} no aleja a ninguna estrategia de ese valor en ninguno de los dos modelos.
 
 La Figura~\ref{fig:res_vlm_distribucion} muestra esa concentración de manera directa. Cada barra reparte las 1\,503 imágenes del conjunto de prueba entre las
 clases: la primera, según la clase real, y las demás, según la clase que predice cada combinación de modelo y estrategia.
@@ -133,7 +132,7 @@ exactamente 1/7. Con la imagen real, las predicciones se reparten algo más, per
 Estos resultados son compatibles con que el prompt fije una respuesta por defecto que la imagen desplaza muy poco.
 
 En las 624 fotografías clínicas de \emph{SkinCAP}, una modalidad más parecida a las imágenes de uso general, los dos
-generativos no mejoran su resultado en \emph{HAM10000} y vuelven a concentrar sus predicciones. DermLIP sin ajuste, en cambio, obtiene
+generativos no mejoran su sensibilidad macro de \emph{HAM10000} y vuelven a concentrar sus predicciones. DermLIP sin ajuste, en cambio, obtiene
 en ellas una sensibilidad macro algo menor que en la dermatoscopía, pero muy por encima de la de los generativos. Es
 decir, las fotografías permiten distinguir las clases, y cambiar la modalidad no corrige la concentración, aunque este
 control no permite excluir del todo que la modalidad influya. Una explicación posible es que la dificultad esté en la capacidad de los \glspl{vlm} generativos para distinguir las
@@ -169,7 +168,7 @@ cada uso, la exactitud, el F1 macro, la sensibilidad macro y la sensibilidad de 
     \end{tabularx}
 \end{table}
 
-El uso \emph{zero-shot} obtiene los valores más bajos de la tabla, pero aun sin ajuste alcanza una sensibilidad macro de
+El uso \emph{zero-shot} obtiene los valores más bajos de la tabla en exactitud, F1 macro y sensibilidad macro, pero aun sin ajuste alcanza una sensibilidad macro de
 0.544, tres veces la del mejor \gls{vlm} generativo. Con una cabeza entrenada sobre \emph{HAM10000}, que ya no es un uso sin ajuste, DermLIP se acerca a los supervisados: la \gls{svm} obtiene la mayor exactitud y el mayor F1 macro de los cuatro usos, y el
 \emph{linear probe}, la mayor sensibilidad macro, algo mayor que la de Swin-Tiny, aunque con un F1 macro bastante
 menor. Esta divergencia es la que anticipa la Sección~\ref{sec:met_seleccion}: con pesos balanceados, la regresión
