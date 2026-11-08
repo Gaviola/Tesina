@@ -43,8 +43,7 @@ La segunda parte busca responder si los reportes contienen el diagnóstico corre
 \end{enumerate}
 
 El número de ejecuciones depende de si el resultado varía al repetirlo. Cada configuración de la búsqueda y cada
-función de pérdida se entrenan una vez, mientras que los cuatro clasificadores supervisados se entrenan tres veces con
-la configuración elegida, de modo que sus resultados se informan como media y desvío de las tres ejecuciones
+función de pérdida se entrenan una vez, mientras que los cuatro clasificadores supervisados se entrenan diez veces con la configuración elegida, de modo que sus resultados se informan como media y desvío de las diez ejecuciones
 (Sección~\ref{sec:met_seleccion}). Los \glspl{vlm} sin ajuste, las cabezas sobre los \emph{embeddings} y los
 generadores, en cambio, se ejecutan una vez por configuración, porque la verosimilitud y la decodificación voraz
 devuelven la misma salida para la misma entrada. Cada generador, por su parte, se ajusta una sola vez.

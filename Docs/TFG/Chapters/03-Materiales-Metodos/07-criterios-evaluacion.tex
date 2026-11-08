@@ -48,9 +48,8 @@ aplican en las demás decisiones: la configuración se elige por F1 macro, el re
 macro y el melanoma tiene su propio umbral.
 
 Una misma configuración tampoco da siempre el mismo resultado, porque las métricas de las clases minoritarias dependen
-de pocas imágenes. Por eso, el resultado de cada clasificador supervisado, entrenado tres veces
-(Sección~\ref{sec:met_supervisados_ensamble}), se informa como media $\pm$ desvío estándar muestral de esas tres
-ejecuciones. Con tres ejecuciones, sin embargo, el desvío es una estimación gruesa, así que las comparaciones entre
+de pocas imágenes. Por eso, el resultado de cada clasificador supervisado, entrenado diez veces
+(Sección~\ref{sec:met_supervisados_ensamble}), se informa como media $\pm$ desvío estándar muestral de esas diez ejecuciones. El desvío describe esa variación, pero las comparaciones entre
 modelos no se apoyan en él, sino en las comparaciones estadísticas de la Sección~\ref{sec:met_estadistica}, que se calculan
 sobre las 1\,503 imágenes de prueba.
 
@@ -188,7 +187,7 @@ Una vez calculadas las métricas, que un modelo obtenga en el conjunto de prueba
 viceversa, no alcanza para afirmar que uno sea mejor que el otro (Sección~\ref{sec:marco_eval_estadistica}). Por
 ello, cada comparación usa el \emph{bootstrap} o el test de McNemar exacta, según lo que se pregunta. Todos los
 \emph{bootstrap} usan 2\,000 remuestreos de las imágenes de prueba. La unidad de las comparaciones es la imagen de prueba
-y no la ejecución, de modo que se calculan sobre una de las tres ejecuciones de cada clasificador, la
+y no la ejecución, de modo que se calculan sobre una de las diez ejecuciones de cada clasificador, la
 \textbf{ejecución de referencia}, que es también la que usan el \emph{pipeline} y las evaluaciones complementarias. La
 variación entre ejecuciones se informa aparte como desvío.
 
