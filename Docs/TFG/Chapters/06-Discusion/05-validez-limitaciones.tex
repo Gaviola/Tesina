@@ -25,18 +25,17 @@ Además de esa distancia entre lo medido y la validez clínica, conviene tener e
 \begin{itemize}
     \item \textbf{Validez interna.} No todos los experimentos usan el mismo protocolo de inferencia. Los resultados
     principales de clasificación promedian dos vistas de cada imagen con \gls{tta}, mientras que la robustez y la
-    interpretabilidad usan una sola vista, y el costo se midió en dos GPU distintas. Cada tabla declara su protocolo,
+    interpretabilidad usan una sola vista, y el costo se midió en tres GPU distintas. Cada tabla declara su protocolo,
     pero los valores absolutos de tablas distintas no siempre son comparables. Además, las variantes de la cascada sin
     imagen y con un diagnóstico equivocado usan un subconjunto de 400 imágenes con Mini-VLM y LLaVA-Med
     (Sección~\ref{sec:met_referencias}), de modo que sus intervalos son más amplios que los del conjunto de prueba completo.
     \item \textbf{Validez de la conclusión estadística.} Las comparaciones estadísticas usan como unidad la imagen de prueba y se
     calculan sobre la ejecución de referencia de cada modelo (Sección~\ref{sec:met_estadistica}). Miden, por lo
-    tanto, la variación debida a la muestra de imágenes, pero no la variación entre entrenamientos, que en las clases
-    minoritarias y en el melanoma supera una décima, y que se informa aparte como desvío entre las diez ejecuciones. La ejecución de referencia, fijada de antemano, queda por encima de la media de las diez, de modo que la cascada se mide con un clasificador algo mejor que el promedio. Las
+    tanto, la variación debida a la muestra de imágenes, pero no la variación entre entrenamientos, cuyo rango supera una décima en las clases minoritarias y en el melanoma, y que se informa aparte como desvío entre las diez ejecuciones. La ejecución de referencia, fijada de antemano, queda por encima de la media de las diez, de modo que la cascada se mide con un clasificador algo mejor que el promedio: en melanoma, su sensibilidad es 0.701, frente a 0.585 de media. Las
     clases con pocas imágenes, como \gls{df} con 17, dan intervalos amplios, y algunas diferencias, como la del
     ensamble frente a Swin-Tiny o la de DermLIP con una cabeza frente a los supervisados, no se compararon estadísticamente.
     \item \textbf{Validez de constructo.} La consistencia diagnóstica no juzga el reporte, el Nivel~1 mide sobre todo
-    el estilo, y la cobertura de entidades cuenta términos clínicos sin verificar que correspondan a la imagen. En el
+    el estilo, y la cobertura de entidades cuenta términos clínicos sin comprobar que correspondan a la imagen. En el
     nivel diferencial, además, la consistencia se parece a acertar entre las dos primeras opciones y no equivale a una
     exactitud.
     \item \textbf{Validez externa.} La evaluación principal usa un solo conjunto, y en \emph{HIBA} Swin-Tiny pierde
@@ -51,8 +50,7 @@ A estos aspectos se suman las limitaciones de alcance del trabajo. La principal 
 Ningún dermatólogo leyó los reportes, y no existe para las imágenes de \emph{HAM10000} un conjunto de reportes
 redactados por especialistas con el que compararlos. Por eso el trabajo mide la fidelidad diagnóstica de los reportes, pero no su validez clínica. Tampoco se pronuncia sobre la fotografía clínica ni sobre la histopatología, donde lo medido no puede trasladarse sin volver a medirlo.
 
-Por último, no todos los resultados tienen el mismo respaldo. Las decisiones de selección se tomaron en validación: el modelo, por la media de las ejecuciones, y el umbral de melanoma, con una especificidad mínima fijada de antemano. El conjunto de prueba de la partición por lesión y \emph{HIBA} aportan, entonces, una evaluación independiente de esas decisiones, y el ruteo no
-ajusta ningún umbral sobre el conjunto de prueba. En cambio, las explicaciones que este capítulo propone, como la jerarquía entre las fuentes del reporte o el origen de los errores compartidos, y los análisis que se hicieron después de ver los
+Por último, no todos los resultados tienen el mismo respaldo. Las decisiones de selección se tomaron en validación: el modelo, por la media de las ejecuciones, y el umbral de melanoma, con una especificidad mínima fijada de antemano. El conjunto de prueba de la partición por lesión y \emph{HIBA} aportan, entonces, una evaluación independiente de esas decisiones, y el ruteo no ajusta ningún umbral sobre el conjunto de prueba. La única excepción es la instrucción \emph{noreasoning}, que se eligió en un piloto sobre 100 imágenes, de las cuales 17 pertenecen al conjunto de prueba (Sección~\ref{sec:met_pipeline}), sin fijar ningún umbral sobre él. En cambio, las explicaciones que este capítulo propone, como la jerarquía entre las fuentes del reporte o el origen de los errores compartidos, y los análisis que se hicieron después de ver los
 resultados, como la clasificación de las fallas de los reportes o los ejemplos, describen el conjunto de prueba sin haberse
 confirmado en otros datos, y quedan como exploratorios. Con estas limitaciones delimitadas, el
 Capítulo~\ref{cp:conclusiones} responde las preguntas de investigación y reúne las conclusiones del trabajo.

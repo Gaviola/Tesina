@@ -14,7 +14,7 @@ imagen desplaza muy poco
 (Sección~\ref{sec:res_gen_sin_anclaje}). En la cascada, el diagnóstico afirmado no cambia al quitar la imagen y, con un
 diagnóstico equivocado, el reporte lo afirma en lugar de corregirlo (Sección~\ref{sec:res_gen_ablaciones}). Por
 último, cuando recibe a la vez el diagnóstico del clasificador y el de los vecinos, el generador sigue al clasificador
-aunque los vecinos acierten: en las 72 imágenes en que eso ocurre, recupera la clase verdadera en una de cada seis
+aunque los vecinos acierten: en las 72 imágenes en que el clasificador se equivoca y los vecinos aciertan, recupera la clase verdadera en una de cada seis
 (Sección~\ref{sec:res_gen_rag}). Los resultados muestran, entonces, una fuerte influencia del diagnóstico escrito en la instrucción, mayor que la del
 contexto recuperado, y sugieren una jerarquía entre las fuentes del reporte cuya importancia relativa completa queda
 como hipótesis.
@@ -34,10 +34,10 @@ y separarlas requeriría un generador que clasifique bien sin anclaje, que ningu
 Cualquiera sea su origen, esa influencia condiciona el diseño del \emph{pipeline}. Como el generador transcribe el
 diagnóstico, la fidelidad diagnóstica del reporte mejora con el clasificador más que con el generador: cambiar la
 fuente de DermLIP sin ajuste a Swin-Tiny agrega 0.132 de consistencia con el mismo generador
-(Sección~\ref{sec:res_gen_fuentes}), mientras que ninguno de los tres generadores la lleva por encima de la exactitud de la fuente.
+(Sección~\ref{sec:res_gen_fuentes}), mientras que ninguno de los tres generadores eleva la consistencia más de unas milésimas por encima de la exactitud de la fuente.
 El generador, en cambio, sí puede restar fidelidad. LLaVA-Med omite el diagnóstico recibido en uno de cada siete
 reportes aun con el \emph{oracle}, y en el nivel diferencial deja los candidatos dentro de un razonamiento sin cerrar
-(Secciones~\ref{sec:res_gen_comparacion} y~\ref{sec:res_gen_pipeline}), de modo que su elección se decide por lo que
+(Secciones~\ref{sec:res_gen_fuentes} y~\ref{sec:res_gen_pipeline}), de modo que su elección se decide por lo que
 no pierde, y no por lo que agrega. Por eso el \emph{pipeline} usa Mini-VLM, que transcribe como SkinVL, describe tanto
 como LLaVA-Med y entra en una GPU de consumo. Para la evaluación, la consecuencia es que un sistema que integra un
 clasificador y un generador debe medirse por componente, porque evaluado como un todo puede atribuirle al generador
@@ -48,7 +48,7 @@ En estos experimentos, esa misma influencia impide que el generador funcione com
 imagen, cada generador escribe un único texto por clase, una especie de descripción prototípica del diagnóstico que
 recibe; con ella, la descripción varía entre lesiones (Sección~\ref{sec:res_gen_ablaciones}). Una lectura posible es
 que el reporte parte de ese prototipo y la imagen lo modifica, pero sin contradecirlo, como en el melanoma afirmado
-como nevo y descrito con una pigmentación homogénea «sin rasgos atípicos» (Sección~\ref{sec:res_gen_pipeline}).
+como nevo y descrito con una pigmentación homogénea «with no visible melanocytic infiltration or atypical features» (Sección~\ref{sec:res_gen_pipeline}).
 Qué parte de la descripción proviene del prototipo y qué parte de la imagen no se midió. Lo que sí se sigue de los
 resultados es que la verosimilitud de un reporte no indica si su diagnóstico es correcto, porque un error del
 clasificador llega al reporte acompañado de rasgos que lo justifican. En este diseño, la señal de cuándo desconfiar tiene que venir,

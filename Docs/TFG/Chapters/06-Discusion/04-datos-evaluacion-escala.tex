@@ -6,11 +6,7 @@
 % sec:res_costo_clasificadores, sec:res_costo, sec:res_gen_comparacion, tab:marco_generadores, sec:estado_arte_vlm;
 % kim2025skinsavvy2, yao2022single, khan2025ensemble, yan2026dermfmzero. Reemplaza las antiguas 6.5 y 6.6.
 
-Si el reporte hereda el desempeño del clasificador, la pregunta siguiente es qué limita ese desempeño. Entre los
-supervisados, el modelo parece pesar poco. Entre Swin-Tiny, ConvNeXt-Tiny y ViT-B/16 no se encontraron diferencias respaldadas con el mismo procedimiento (Sección~\ref{sec:res_sup_arquitecturas}), ViT-B/16 no supera a Swin-Tiny con el triple de parámetros, aunque usa la
-configuración elegida para este último, y
-el ensamble de los dos mejores apenas mejora la media de cada uno
-(Tabla~\ref{tab:res_supervisados}). Una explicación posible es que, con unas 6\,400 imágenes de entrenamiento y clases
+Si el reporte hereda el desempeño del clasificador, la pregunta siguiente es qué limita ese desempeño. Entre los tres mejores supervisados, el modelo parece pesar poco. Según el \emph{bootstrap} pareado, Swin-Tiny, ConvNeXt-Tiny y ViT-B/16 no presentan diferencias respaldadas (Sección~\ref{sec:res_sup_arquitecturas}). Además, ViT-B/16 no supera a Swin-Tiny con el triple de parámetros, aunque usa la configuración elegida para este último, y el ensamble de los dos mejores supera la media de cada uno en unas 0.02 de F1 macro, una diferencia del orden del desvío entre ejecuciones (Tabla~\ref{tab:res_supervisados}). Una explicación posible es que, con unas 6\,400 imágenes de entrenamiento y clases
 minoritarias de pocas decenas de imágenes en el conjunto de prueba, el límite lo ponen los datos y no la capacidad del modelo. Es
 compatible con esa explicación que las clases minoritarias sean también las que más varían entre ejecuciones
 (Sección~\ref{sec:res_sup_clases}), porque con pocos ejemplos el resultado depende más de qué imágenes ve cada
@@ -22,21 +18,18 @@ una cifra del mismo orden que la distancia entre Swin-Tiny y el trabajo de \text
 imágenes al azar. En melanoma, la regla de decisión pesa más que el modelo: el umbral fijado en validación lleva la
 detección de tres a cuatro de cada cinco melanomas sin cambiar el \gls{auc} (Sección~\ref{sec:res_melanoma}), mientras
 que los trabajos revisados operan en puntos que van desde la clase más probable hasta una sensibilidad cercana a la
-total. Y la variación entre ejecuciones supera una décima en las clases minoritarias, de modo que un resultado de una
-sola ejecución puede quedar arriba o abajo de otro por azar. Por eso una comparación con la literatura es interpretable cuando se conocen la partición, la regla de decisión y la cantidad de ejecuciones, y por eso este trabajo fija el
+total. Y el rango de la sensibilidad entre ejecuciones supera una décima en las clases minoritarias, de modo que un resultado de una
+sola ejecución puede quedar arriba o abajo de otro por la variación entre entrenamientos. Por eso una comparación con la literatura es interpretable cuando se conocen la partición, la regla de decisión y la cantidad de ejecuciones, y por eso este trabajo fija el
 umbral en validación, a diferencia de un modelo elegido sobre el mismo conjunto de prueba en que se informa, como el de
 \textcite{yao2022single} (Sección~\ref{sec:res_estado_arte}).
 
-Lo mismo ocurre al elegir qué se mide. McNemar y el \emph{bootstrap} pareado responden preguntas distintas, si un
-modelo acierta más imágenes que otro o si su sensibilidad macro es mayor, y por eso DenseNet121 acierta más imágenes
-que DermLIP sin superarlo en sensibilidad macro (Sección~\ref{sec:res_comparacion}): con clases desbalanceadas, la comparación estadística tiene que aplicarse a la métrica con que se elige el modelo. En el texto, las métricas con referencia premian
-el estilo: SkinVL, ajustado con las descripciones de \emph{MM-Skin}, obtiene en ellas un BLEU-4 más de cien veces
+Lo mismo ocurre al elegir qué se mide. McNemar compara las imágenes que acierta cada modelo, y el \emph{bootstrap} pareado compara su sensibilidad macro. Por eso, según McNemar, DenseNet121 acierta más imágenes que DermLIP, 250 frente a 85 discordantes. Según el \emph{bootstrap}, en cambio, su sensibilidad macro no se distingue de la de DermLIP (Sección~\ref{sec:res_comparacion}). Con clases desbalanceadas, la comparación tiene que aplicarse a una métrica macro y no al total de aciertos. En el texto, las métricas con referencia premian
+el estilo: SkinVL, ajustado con las descripciones de \emph{MM-Skin}, obtiene en ellas, en su propio conjunto de prueba y en una comparación no directa, un BLEU-4 más de cien veces
 mayor que el de los generadores de este trabajo con un BERTScore parecido (Sección~\ref{sec:res_gen_estado_arte}). La
 consistencia diagnóstica, a su vez, premia enumerar, y por eso LLaVA-Med obtiene sin anclaje la consistencia más alta
 nombrando dos clases por reporte (Sección~\ref{sec:res_gen_sin_anclaje}). Conviene, entonces, que una métrica de fidelidad se acompañe de una medida de cuánto se compromete el reporte, como la proporción de reportes que nombran solo la clase verdadera.
 
-Frente a estos factores, la escala explica solo una parte de la distancia con el estado del arte. El \emph{pipeline} se ajusta en una sola GPU de 24~GB y su generación entra en una de consumo de 12~GB: Mini-VLM ocupa como máximo 8.6~GB y escribe un
-reporte en unos 16 segundos, y el clasificador y el \gls{knn} agregan un costo mínimo (Secciones~\ref{sec:res_costo_clasificadores}
+Frente a estos factores, la escala explica solo una parte de la distancia con el estado del arte. El \emph{pipeline} se ajusta en una sola GPU de 24~GB y su generación entra en una de consumo de 12~GB: Mini-VLM ocupa como máximo 8.6~GB en la A30 y 8.3~GB en la RTX 4070, y en la A30 escribe un reporte en unos 16 segundos, y el clasificador y el \gls{knn} agregan un costo mínimo (Secciones~\ref{sec:res_costo_clasificadores}
 y~\ref{sec:res_costo}). Los trabajos revisados, en cambio, ajustan sus generadores en ocho GPU, preentrenan sus modelos
 fundacionales en cuatro H100 o redactan con un modelo de 70 mil millones de parámetros consultado por
 API~\cite{khan2025ensemble} (Tabla~\ref{tab:marco_generadores} del Capítulo~\ref{cp:marco}). En la clasificación, esa

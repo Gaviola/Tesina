@@ -25,7 +25,7 @@ tener sesgos distintos. Los resultados la respaldan solo en parte. Los predictor
 (Sección~\ref{sec:res_gen_rag}). Esos desacuerdos son los que el ruteo aprovecha, y por eso en el nivel diferencial el
 par de candidatos contiene la clase verdadera en el 84.7\,\% de los casos.
 
-Sus errores, sin embargo, coinciden mucho más de lo que coincidirían por azar. Los dos predictores se equivocan a la
+Sus errores, sin embargo, coinciden mucho más de lo que coincidirían si fueran independientes. Los dos predictores se equivocan a la
 vez en 158 imágenes, y en 102 de ellas eligen la misma clase errónea. Si sus errores fueran independientes, con una
 tasa de error de 0.153 para Swin-Tiny y de 0.219 para el \gls{knn}, se equivocarían a la vez en unas 50 imágenes, de
 modo que la coincidencia observada es unas tres veces mayor. Una explicación posible es que los dos predictores
