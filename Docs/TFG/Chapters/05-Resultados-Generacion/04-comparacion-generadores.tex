@@ -98,8 +98,7 @@ segunda etapa de ajuste, los segundos por reporte y las horas que lleva generar 
 Un reporte de Mini-VLM en la A30 tarda más de mil veces lo que una clasificación de Swin-Tiny en la RTX 4070. Aunque
 las dos mediciones se hicieron en GPU distintas, la diferencia es de tres órdenes de magnitud, de modo que el costo del
 pipeline lo fija el generador. El \gls{knn} tampoco cambia esa cuenta, porque requiere una pasada del
-codificador de DermLIP, un ViT-B/16, la misma arquitectura que la fila de ese nombre de la
-Tabla~\ref{tab:res_costo_clasificadores}, y una búsqueda entre 6\,447 embeddings. Entre los generadores, el
+codificador de DermLIP, un ViT-B/16 como el de la Tabla~\ref{tab:res_costo_clasificadores}, y una búsqueda entre 6\,447 embeddings. Entre los generadores, el
 tiempo por reporte depende más de lo que escriben que de su tamaño: SkinVL, del mismo tamaño que LLaVA-Med, es el más
 rápido porque escribe una oración, y Mini-VLM tarda menos que LLaVA-Med con reportes más breves.
 
