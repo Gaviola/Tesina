@@ -10,8 +10,8 @@ conectarlo con la imagen. La primera de esas piezas es el modelo de lenguaje.
 
 Un \textbf{modelo de lenguaje} asigna a cada token del vocabulario la probabilidad de continuar un texto dado.
 Por ejemplo, después de «La lesión presenta una red de pigmento», una continuación como «atípica» recibe más
-probabilidad que una palabra sin relación con la frase, como «ventana». Con esas probabilidades, el modelo también evalúa un texto completo: la probabilidad
-de una secuencia es el producto de las probabilidades de cada token dados los anteriores,
+probabilidad que una palabra sin relación, como «ventana». Con esas probabilidades, el modelo también evalúa un texto completo: la probabilidad
+de una secuencia es el producto de las de cada token dados los anteriores,
 \begin{equation}
     p(x_1, \dots, x_n) = \prod_{t=1}^{n} p(x_t \mid x_1, \dots, x_{t-1}),
     \label{eq:marco_lm}
