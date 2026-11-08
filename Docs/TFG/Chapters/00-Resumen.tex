@@ -27,8 +27,7 @@ y el ruteo reúne en los casos afirmados una mayor proporción de aciertos.
 
 Estos resultados indican que la combinación de un clasificador, una señal de concordancia y un generador permite
 obtener reportes cuyo diagnóstico puede medirse y separar los casos con distinta tasa de acierto. Los reportes se
-evaluaron con métricas automáticas sobre imágenes dermatoscópicas, y el paso siguiente es su evaluación con
-especialistas.
+evaluaron con métricas automáticas sobre imágenes dermatoscópicas, y falta evaluarlos con especialistas.
 
 \keywordses{lesiones de piel, dermatoscopía, modelos visión--lenguaje, clasificación diagnóstica, detección
 de melanoma, generación de reportes clínicos, incertidumbre}
@@ -41,7 +40,7 @@ are few dermatologists in many regions, and the reading of a dermoscopic image v
 interprets it. Each patient consultation also requires a written report that records the findings and the conclusion
 reached by the physician. Vision--language models (VLMs) offer the possibility of addressing both tasks with a single
 model. It is not yet clear, however, whether they can reach a classification performance comparable to that of models
-trained on images alone, nor whether the reports they generate contain the correct diagnosis of the lesions analysed.
+trained on images alone, nor whether the reports they generate contain the correct diagnosis.
 
 The objective of this work is to evaluate both questions and to develop a pipeline that integrates classification and
 report generation. To this end, supervised classifiers and VLMs are compared on \emph{HAM10000}, a public set of
