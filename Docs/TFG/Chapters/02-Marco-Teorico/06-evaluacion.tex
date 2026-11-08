@@ -237,8 +237,7 @@ $n$-gramas, secuencias de $n$ palabras consecutivas, y la quinta compara signifi
         P_{\mathrm{BERT}} = \frac{1}{|g|}\sum_{g_j \in g}\,\max_{r_i \in r}\, \mathbf{r}_i^{\top}\mathbf{g}_j,
         \label{eq:marco_bertscore}
     \end{equation}
-    donde los \emph{embeddings} $\mathbf{r}_i$ y $\mathbf{g}_j$ están normalizados, y el puntaje final
-    $F_{\mathrm{BERT}}$ es la media armónica de los dos.
+    con $\mathbf{r}_i$ y $\mathbf{g}_j$ normalizados, y el puntaje final $F_{\mathrm{BERT}}$ es su media armónica.
 \end{itemize}
 
 Las métricas con referencia suponen que la referencia es la descripción correcta de la imagen, y en dermatología
