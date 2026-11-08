@@ -3,15 +3,14 @@
 
 El cáncer de piel es uno de los tipos de cáncer más frecuentes del mundo. Según la última estimación de
 GLOBOCAN, publicada en 2026, durante el año 2024 se diagnosticaron 337\,969 casos nuevos de melanoma y
-1\,138\,314 de cáncer de piel no melanoma, que agrupa a aquellos tumores malignos de la piel distintos del melanoma
-sin contar el carcinoma basocelular, que la estimación excluye~\cite{sung2026global}. En la Argentina, la misma
+1\,138\,314 de cáncer de piel no melanoma, que agrupa a los tumores malignos de la piel distintos del melanoma, salvo el carcinoma basocelular, que la estimación excluye~\cite{sung2026global}. En la Argentina, la misma
 estimación registra 1\,602 casos nuevos de melanoma en ese mismo año~\cite{ervik2026cancertoday}.
 
 Sin embargo, no todos los cánceres de piel tienen la misma gravedad. El melanoma representa menos de la cuarta
 parte de los diagnósticos, pero causa cerca de la mitad de las muertes por cáncer de piel~\cite{sung2026global}.
 En la Argentina, la relación entre muertes y diagnósticos es más desfavorable: las 571 muertes por melanoma
-registradas en 2024 equivalen a casi una de cada tres diagnósticos, frente a una de cada seis en el total
-mundial~\cite{ervik2026cancertoday}. Además, la enfermedad no se presenta igual en todo el país. Según el
+registradas en 2024 equivalen a más de una muerte por cada tres diagnósticos, frente a una por cada seis en el total
+mundial~\cite{ervik2026cancertoday,sung2026global}. Además, la enfermedad no se presenta igual en todo el país. Según el
 Registro Argentino de Melanoma Cutáneo, en el Noroeste y el Noreste fueron más frecuentes las lesiones de más
 de 2~mm de espesor de Breslow, la medida de profundidad del tumor con la que se estima su
 pronóstico~\cite{loria2020cutaneous}. Esa diferencia de espesor importa porque el desenlace del melanoma depende del momento en que se lo diagnostica.
@@ -27,8 +26,7 @@ países de ingreso bajo y 5.05 en los de ingreso alto~\cite{freeman2026global}. 
 requieren una valoración son frecuentes: en la campaña nacional de prevención de 2022 de la Sociedad Argentina
 de Dermatología, los dermatólogos encontraron lesiones sospechosas en una de cada cuatro de las 3\,635
 personas examinadas en 17 provincias y la Ciudad de Buenos Aires y se registraron 70 lesiones con sospecha de
-melanoma~\cite{sad2023campana}. Donde hay pocos especialistas, la primera valoración queda en manos de
-médicos no especializados en dermatología, lo que dificulta la detección temprana del melanoma.
+melanoma~\cite{sad2023campana}. Donde hay pocos especialistas, la primera valoración puede quedar en manos de médicos no especializados en dermatología, con menos formación para reconocer un melanoma temprano.
 
 Quién realiza esa primera valoración condiciona la interpretación de la lesión. La dermatoscopía, el examen de
 la lesión con aumento e iluminación controlada, mejora el diagnóstico, pero sobre todo en manos de usuarios con
@@ -39,8 +37,7 @@ la valoración depende en buena medida de la formación de quien la realiza.
 Cada consulta exige, además de diagnosticar, un reporte escrito que registre lo observado y la conclusión.
 Redactarlo es una tarea distinta de la interpretación de la lesión, y también consume tiempo: en atención
 primaria, los médicos dedican 5.9 horas de una jornada de 11.4 a la historia clínica electrónica, y casi la
-mitad de ese tiempo a tareas administrativas y de registro~\cite{arndt2017tethered}. Así, los tiempos de
-atención se alargan en dos tareas: la interpretación de la lesión y la redacción de su reporte.
+mitad de ese tiempo a tareas administrativas y de registro~\cite{arndt2017tethered}. Así, la atención enfrenta dos demandas: interpretar la lesión y redactar su reporte.
 
 Para asistir en esas dos tareas, se han ido diseñando e implementando diversas herramientas computacionales de
 apoyo al diagnóstico. Los primeros métodos analizaban la imagen de la lesión para asignarle una categoría
@@ -73,7 +70,7 @@ Estas dificultades plantean dos interrogantes que motivan el presente trabajo. E
 \gls{vlm}, capaz tanto de clasificar imágenes como de generar descripciones textuales, puede alcanzar un desempeño
 comparable al de los clasificadores entrenados solo con imágenes en la clasificación de lesiones de piel, y en
 particular en la detección de melanoma. El segundo es si los reportes que genera contienen el diagnóstico correcto y describen la lesión que muestra la
-imagen. Para abordarlas, el trabajo estudia en conjunto la clasificación y la generación de reportes, con
+imagen. Para abordarlos, el trabajo estudia en conjunto la clasificación y la generación de reportes, con
 recursos computacionales convencionales (\emph{commodity hardware}): cada modelo se entrena y se ejecuta en una
 sola GPU, sin requerir infraestructura de cómputo de alto rendimiento, como los nodos con varias GPU de un
 centro de datos.
