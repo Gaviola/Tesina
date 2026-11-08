@@ -75,7 +75,7 @@ def _load(path, ref_ids=None):
 def _seed_pairs(y_true_ref, ref_ids):
     """Swin+ConvNeXt por semilla (42 = corrida base) para el preset les."""
     per_seed = {}
-        for seed in range(42, 52):
+    for seed in range(42, 52):
         probs = {}
         for name, tmpl in LES_SEEDS.items():
             path = PRESETS["les"][name] if seed == 42 else tmpl.format(seed=seed)

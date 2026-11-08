@@ -105,7 +105,7 @@ def main():
                           "test_media_std": mean_std([v["test"] for v in seeds.values()]),
                           "val_media_std": mean_std([v["val"] for v in seeds.values()]),
                           "files": {k: (v["val_file"], v["test_file"]) for k, v in seeds.items()}}
-                assert winners[model]["seeds"] == list(range(42, 52)), (model, winners[model]["seeds"])
+        assert winners[model]["seeds"] == list(range(42, 52)), (model, winners[model]["seeds"])
         ms = winners[model]["test_media_std"]
 
         print(f"GANADOR {model}: {best} (cw={b['cw']}), semillas={winners[model]['seeds']} -> test "
