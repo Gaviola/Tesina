@@ -20,7 +20,7 @@ muestra que la descripción también se adapta al diagnóstico recibido.
 Como cada sección agregó un componente del \emph{pipeline} por vez, los resultados permiten además separar lo que
 aporta cada uno al reporte final. La Tabla~\ref{tab:res_gen_aportes} lo resume. El clasificador aporta el diagnóstico, el generador aporta la
 redacción y la descripción de cada lesión, y la concordancia con el \gls{knn} aporta la señal que el clasificador no
-tiene, la de los casos en que su diagnóstico es menos confiable.
+tiene, la de los casos en que su diagnóstico acierta con menor frecuencia.
 
 \begin{table}[!tbp]
     \centering
@@ -34,7 +34,7 @@ tiene, la de los casos en que su diagnóstico es menos confiable.
         \toprule
         \textbf{Componente} & \textbf{Qué aporta} & \textbf{Qué no aporta} & \textbf{Secciones} \\
         \midrule
-        Swin-Tiny & El diagnóstico: la consistencia de la cascada es su exactitud, en total y por clase & Una señal
+        Swin-Tiny & El diagnóstico: con Mini-VLM y SkinVL, la consistencia de la cascada es su exactitud, en total y por clase & Una señal
             de cuándo duda; sus errores llegan al reporte & \ref{sec:res_gen_fuentes} \\
         \filasep
         Generador & La redacción y la descripción de cada lesión, que varía con la imagen & Fidelidad diagnóstica:

@@ -39,8 +39,7 @@ diagnóstico. La línea discontinua marca la exactitud de Swin-Tiny.
 
 En los tres generadores, el \emph{oracle} da la consistencia más alta y la generación sin anclaje, la más baja. Con el
 diagnóstico verdadero, Mini-VLM y SkinVL lo nombran en todos los reportes salvo uno, mientras que LLaVA-Med lo omite en
-uno de cada siete. Con el diagnóstico de Swin-Tiny, Mini-VLM y SkinVL alcanzan una consistencia igual a la exactitud
-del clasificador, 0.847, y LLaVA-Med queda una décima por debajo.
+uno de cada siete. Con el diagnóstico de Swin-Tiny, Mini-VLM y SkinVL alcanzan una consistencia de 0.849 y 0.846, prácticamente igual a la exactitud del clasificador, 0.847, y LLaVA-Med queda una décima por debajo.
 
 La Tabla~\ref{tab:res_gen_cascada} da los mismos valores junto con dos diferencias pareadas y su intervalo de
 confianza: la que aporta anclar el reporte a Swin-Tiny frente a no anclarlo, y la que separa a Swin-Tiny del
@@ -48,7 +47,7 @@ confianza: la que aporta anclar el reporte a Swin-Tiny frente a no anclarlo, y l
 
 \begin{table}[H]
     \centering
-    \caption{Consistencia diagnóstica de la cascada según la fuente del diagnóstico, con las diferencias y su IC del 95\,\% (bootstrap pareado). En las diferencias, la negrita indica que el IC no incluye el cero.}
+    \caption{Consistencia diagnóstica de la cascada según la fuente del diagnóstico, con las diferencias y su IC del 95\,\% (bootstrap pareado). En negrita, el mejor valor de cada columna y las diferencias cuyo IC no incluye el cero.}
     \label{tab:res_gen_cascada}
     \small
     \setlength{\tabcolsep}{2pt}
@@ -78,7 +77,7 @@ la distancia al \emph{oracle} refleja sobre todo sus errores y no los del genera
 LLaVA-Med es la excepción, porque no siempre transcribe el diagnóstico. Aun con el \emph{oracle}, uno de cada siete
 reportes no nombra la clase recibida. La mayoría describe la lesión y termina sin enunciar ningún diagnóstico, a pesar
 de que la instrucción lo pide, y el resto son textos demasiado breves, entre ellos los que quedan vacíos cuando el
-límite de tokens corta un bloque de razonamiento. Estas omisiones se concentran en \gls{nv}, \gls{bkl} y \gls{akiec}, y
+límite de tokens corta un bloque de razonamiento. Estas omisiones se concentran en \gls{nv}, \gls{bkl} y \gls{mel}, y
 son fallas del generador y no del clasificador (Sección~\ref{sec:res_gen_errores}).
 
 La misma relación aparece cuando la fuente es DermLIP sin ajuste, el \gls{vlm} de la Sección~\ref{sec:res_vlm}, que
@@ -87,9 +86,8 @@ reportes salvo uno y dos, respectivamente, y su consistencia coincide con esa ex
 transcribe el diagnóstico de igual modo cuando proviene de un clasificador ajustado y cuando proviene de un modelo
 sin ajuste, y la fidelidad del reporte es la de la fuente.
 
-Lo que cambia con la fuente es cuántos errores se transcriben. Con Mini-VLM, la cascada con Swin-Tiny supera a la de
-DermLIP en 0.132 [0.107, 0.158] de consistencia, y la diferencia es similar con los otros dos generadores. LLaVA-Med,
-además, apenas mejora con DermLIP frente a no anclar, porque sigue omitiendo el diagnóstico recibido en uno de cada
+Lo que cambia con la fuente es cuántos errores se transcriben. Con Mini-VLM, según el \emph{bootstrap} pareado, la cascada con Swin-Tiny supera a la de DermLIP en 0.132 [0.107, 0.158] de consistencia, y la diferencia es similar con los otros dos generadores. LLaVA-Med,
+además, mejora poco con DermLIP frente a no anclar, +0.059 [0.024, 0.093], porque sigue omitiendo el diagnóstico recibido en uno de cada
 siete reportes. Por lo tanto, de las dos fuentes que no conocen la etiqueta, el clasificador ajustado es la que lleva
 más diagnósticos correctos al reporte.
 
@@ -181,8 +179,7 @@ reporte y a su forma, de acuerdo con esas reglas, y no abarcan todas las posible
 
 Sin anclaje, cada generador tiene un patrón de fallas distinto. Dos de cada tres reportes de LLaVA-Med son
 contradicciones, porque enumeran varias clases, y Mini-VLM reparte sus fallas entre el \emph{hedging} y el diagnóstico
-incorrecto, que juntos reúnen casi dos tercios de sus reportes. SkinVL, por su parte, no nombra ninguna clase en casi
-ningún reporte. Estas distribuciones explican las consistencias de la Tabla~\ref{tab:res_gen_sin_anclaje}: la de
+incorrecto, que juntos reúnen casi dos tercios de sus reportes. SkinVL, por su parte, no nombra ninguna clase en casi todos sus reportes. Estas distribuciones explican las consistencias de la Tabla~\ref{tab:res_gen_sin_anclaje}: la de
 LLaVA-Med proviene de enumerar y no de afirmar el diagnóstico.
 
 Con el anclaje, el \emph{hedging} desaparece en los tres generadores, y el diagnóstico incorrecto queda reducido a los
@@ -231,8 +228,7 @@ decir, el generador aprovecha peor la información de los vecinos que una regla 
 coinciden, nombra varias clases o una distinta, y por eso solo la mitad de sus reportes nombra únicamente la clase
 verdadera.
 
-Sumar la recuperación a la cascada, por su parte, aporta poco. La consistencia sube 0.013 [0.007, 0.019], pero la
-ganancia viene de que el reporte agrega la clase de los vecinos cuando difiere de la del clasificador, de modo que
+Sumar la recuperación a la cascada, por su parte, aporta poco. La consistencia sube 0.013 [0.007, 0.019], pero posiblemente la ganancia viene de que el reporte agrega la clase de los vecinos cuando difiere de la del clasificador, de modo que
 nombra más candidatos: escribir solo el diagnóstico de Swin-Tiny da reportes más exclusivos. Tampoco un vecino
 equivocado degrada el reporte. En las 171 imágenes en que Swin-Tiny acierta y el voto del \gls{knn} no, la cascada con
 recuperación nombra la clase verdadera en todos los reportes, igual que sin ella, y en las 72 en que ocurre lo
@@ -241,4 +237,4 @@ clasificador también cuando recibe otra evidencia.
 
 En síntesis, la cascada lleva al reporte la exactitud del clasificador junto con sus errores, y ni la imagen ni los
 casos recuperados corrigen la mayoría de esos errores. La sección siguiente evalúa si la concordancia entre el clasificador y el
-\gls{knn} permite reconocer los casos en que el diagnóstico es menos confiable.
+\gls{knn} permite reconocer los casos en que el diagnóstico acierta con menor frecuencia.

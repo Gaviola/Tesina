@@ -60,8 +60,7 @@ Sección~\ref{sec:met_seleccion}.
 La derivación, por último, deja fuera del \emph{pipeline} 51 casos en los que el clasificador acierta tan poco como en
 el nivel diferencial. Esta decisión tiene un costo: en esos casos, con la cascada simple, Mini-VLM habría escrito 20
 reportes con un diagnóstico incorrecto y dos con una contradicción, mientras que el clasificador acierta 29 de los 51
-diagnósticos, que la derivación también descarta. Por eso la derivación evita errores a costa de dejar sin reporte un
-número parecido de aciertos, y su utilidad depende de cuánto cueste en la práctica un error frente a una consulta con el
+diagnósticos, que la derivación también descarta. Por eso la derivación evita errores y deja sin reporte 29 diagnósticos correctos, y su utilidad depende de cuánto cueste en la práctica un error frente a una consulta con el
 especialista.
 
 \subsection{Reportes del pipeline completo}
@@ -140,7 +139,7 @@ El segundo es un caso diferencial: el clasificador predice melanoma, dos de los 
 discute los dos candidatos y recomienda una biopsia. El texto incluye, sin embargo, una oración que repite la
 instrucción recibida («The final clinical report should include…»), un defecto de redacción que las métricas
 automáticas no detectan. El tercero es un error compartido: el clasificador y los tres vecinos coinciden en nevo para
-un melanoma, y el reporte afirma el nevo y describe una pigmentación homogénea «sin rasgos atípicos». Es decir, la
+un melanoma, y el reporte afirma el nevo y describe una pigmentación homogénea «with no visible melanocytic infiltration or atypical features». Es decir, la
 descripción acompaña al diagnóstico recibido, y un error del clasificador llega al reporte con rasgos que lo hacen
 verosímil.
 

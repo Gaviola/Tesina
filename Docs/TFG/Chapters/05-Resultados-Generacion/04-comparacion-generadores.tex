@@ -33,13 +33,12 @@ obtienen con el \emph{oracle}, y el tiempo por reporte.
     \label{fig:res_gen_resumen}
 \end{figure}
 
-En consistencia, Mini-VLM y SkinVL obtienen los valores más altos y no se distinguen, ni con Swin-Tiny ni con el
-\emph{oracle}, porque los dos transcriben el diagnóstico. LLaVA-Med obtiene el más bajo (0.745, frente a 0.849 de Mini-VLM y 0.846 de SkinVL): Mini-VLM lo supera por una décima
+En consistencia, Mini-VLM y SkinVL obtienen los valores más altos y el \emph{bootstrap} pareado no muestra diferencia entre ellos, ni con Swin-Tiny ni con el \emph{oracle}, porque los dos transcriben el diagnóstico. LLaVA-Med obtiene el más bajo, 0.745, frente a 0.849 de Mini-VLM y 0.846 de SkinVL. Según la misma prueba, Mini-VLM lo supera por una décima
 con Swin-Tiny, 0.104 [0.087, 0.122], y la diferencia crece con el \emph{oracle}, porque en ese caso todas las fallas
-son del generador. Es decir, el generador biomédico más grande es el que menos transcribe el diagnóstico recibido.
+son del generador. Es decir, LLaVA-Med es el generador que menos transcribe el diagnóstico recibido, aunque SkinVL tiene casi el mismo tamaño.
 
-La cobertura de entidades, en cambio, separa a SkinVL de los otros dos, con el valor más bajo. Sus reportes tienen una
-mediana de 17 palabras, frente a 62 de Mini-VLM y 86 de LLaVA-Med, y cubren la mitad de las entidades clínicas.
+La cobertura de entidades, en cambio, separa a SkinVL de los otros dos, con el valor más bajo: 0.379, frente a 0.796 de Mini-VLM y 0.758 de LLaVA-Med. Sus reportes tienen una
+mediana de 17 palabras, frente a 62 de Mini-VLM y 86 de LLaVA-Med, y cubren cerca de la mitad de las entidades clínicas que los de esos dos modelos.
 Además, con Swin-Tiny escribe solo 59 reportes distintos para las 1\,503 imágenes, de modo que su texto depende del
 diagnóstico y casi nada de la imagen. Por lo tanto, en estos experimentos la especialización en dermatología no mejora
 la fidelidad del reporte, que ya fija el clasificador, y reduce la descripción, que es lo que el generador agrega en la
@@ -74,7 +73,7 @@ y sin anclaje, la variante de control tiene reportes solo para una parte del con
 \end{table}
 
 La única diferencia cuyo intervalo excluye el cero es la del \emph{oracle}, en la que la variante de control queda por
-debajo. Ajustar el modelo de lenguaje no cambia la cascada con Swin-Tiny ni el nivel diferencial, y en la generación
+debajo. Ajustar el modelo de lenguaje no produce una diferencia significativa en la cascada con Swin-Tiny ni en el nivel diferencial, y en la generación
 sin anclaje tampoco mejora la consistencia. Lo que sí cambia es el formato: la variante de control aprende la estructura de
 \emph{SkinCoT} y abre bloques de razonamiento en uno de cada cuatro reportes de \emph{HAM10000}. Con el oracle,
 esa estructura le cuesta tres centésimas de consistencia, porque en parte de los reportes el límite de 384 tokens llega
