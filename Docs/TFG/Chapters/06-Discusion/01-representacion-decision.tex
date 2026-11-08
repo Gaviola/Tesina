@@ -23,7 +23,7 @@ El control de la representación indica dónde está esa especialización. Con l
 \emph{embedding} de DermLIP supera al de Swin preentrenado en \emph{ImageNet} por entre 0.15 y 0.35 de sensibilidad
 macro (Tabla~\ref{tab:res_dermlip_swin}). Más llamativo es que esa representación, congelada y sin haber visto
 \emph{HAM10000}, quede cerca de un clasificador ajustado de punta a punta sobre ese conjunto: con una \gls{svm}, su F1
-macro es de 0.705, frente a 0.733 de Swin-Tiny, y con regresión logística su sensibilidad macro supera a la de
+macro es de 0.705, frente a 0.719 de Swin-Tiny, y con regresión logística su sensibilidad macro supera a la de
 Swin-Tiny, aunque con un F1 macro menor (Tablas~\ref{tab:res_dermlip} y~\ref{tab:res_supervisados}). Esas diferencias
 no se compararon estadísticamente, de modo que solo indican que las dos representaciones quedan en un mismo rango. Una
 explicación posible es que alinear imágenes dermatológicas con sus descripciones ordena el espacio de

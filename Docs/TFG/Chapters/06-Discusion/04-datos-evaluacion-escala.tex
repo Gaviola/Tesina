@@ -9,7 +9,7 @@
 Si el reporte hereda el desempeño del clasificador, la pregunta siguiente es qué limita ese desempeño. Entre los
 supervisados, el modelo parece pesar poco. Entre Swin-Tiny, ConvNeXt-Tiny y ViT-B/16 no se encontraron diferencias respaldadas con el mismo procedimiento (Sección~\ref{sec:res_sup_arquitecturas}), ViT-B/16 no supera a Swin-Tiny con el triple de parámetros, aunque usa la
 configuración elegida para este último, y
-el ensamble de los dos mejores apenas mejora la media de cada uno, aunque reduce su variación entre ejecuciones
+el ensamble de los dos mejores apenas mejora la media de cada uno
 (Tabla~\ref{tab:res_supervisados}). Una explicación posible es que, con unas 6\,400 imágenes de entrenamiento y clases
 minoritarias de pocas decenas de imágenes en el conjunto de prueba, el límite lo ponen los datos y no la capacidad del modelo. Es
 compatible con esa explicación que las clases minoritarias sean también las que más varían entre ejecuciones

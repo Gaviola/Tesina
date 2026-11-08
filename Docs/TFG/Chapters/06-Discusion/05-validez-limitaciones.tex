@@ -32,7 +32,7 @@ Además de esa distancia entre lo medido y la validez clínica, conviene tener e
     \item \textbf{Validez de la conclusión estadística.} Las comparaciones estadísticas usan como unidad la imagen de prueba y se
     calculan sobre la ejecución de referencia de cada modelo (Sección~\ref{sec:met_estadistica}). Miden, por lo
     tanto, la variación debida a la muestra de imágenes, pero no la variación entre entrenamientos, que en las clases
-    minoritarias y en el melanoma supera una décima, y que con tres ejecuciones solo se estima de manera gruesa. Las
+    minoritarias y en el melanoma supera una décima, y que se informa aparte como desvío entre las diez ejecuciones. La ejecución de referencia, fijada de antemano, queda por encima de la media de las diez, de modo que la cascada se mide con un clasificador algo mejor que el promedio. Las
     clases con pocas imágenes, como \gls{df} con 17, dan intervalos amplios, y algunas diferencias, como la del
     ensamble frente a Swin-Tiny o la de DermLIP con una cabeza frente a los supervisados, no se compararon estadísticamente.
     \item \textbf{Validez de constructo.} La consistencia diagnóstica no juzga el reporte, el Nivel~1 mide sobre todo
@@ -51,8 +51,7 @@ A estos aspectos se suman las limitaciones de alcance del trabajo. La principal 
 Ningún dermatólogo leyó los reportes, y no existe para las imágenes de \emph{HAM10000} un conjunto de reportes
 redactados por especialistas con el que compararlos. Por eso el trabajo mide la fidelidad diagnóstica de los reportes, pero no su validez clínica. Tampoco se pronuncia sobre la fotografía clínica ni sobre la histopatología, donde lo medido no puede trasladarse sin volver a medirlo.
 
-Por último, no todos los resultados tienen el mismo respaldo. Las decisiones de selección se tomaron en validación: el
-modelo, por la media de tres ejecuciones, y el umbral de melanoma, con una especificidad mínima fijada de antemano. El conjunto de prueba de la partición por lesión y \emph{HIBA} aportan, entonces, una evaluación independiente de esas decisiones, y el ruteo no
+Por último, no todos los resultados tienen el mismo respaldo. Las decisiones de selección se tomaron en validación: el modelo, por la media de las ejecuciones, y el umbral de melanoma, con una especificidad mínima fijada de antemano. El conjunto de prueba de la partición por lesión y \emph{HIBA} aportan, entonces, una evaluación independiente de esas decisiones, y el ruteo no
 ajusta ningún umbral sobre el conjunto de prueba. En cambio, las explicaciones que este capítulo propone, como la jerarquía entre las fuentes del reporte o el origen de los errores compartidos, y los análisis que se hicieron después de ver los
 resultados, como la clasificación de las fallas de los reportes o los ejemplos, describen el conjunto de prueba sin haberse
 confirmado en otros datos, y quedan como exploratorios. Con estas limitaciones delimitadas, el
