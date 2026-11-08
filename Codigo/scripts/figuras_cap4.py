@@ -319,7 +319,7 @@ def fig_melanoma_semillas():
         ax.spines[["top", "right"]].set_visible(False)
         ax.grid(axis="y", lw=0.4, color="#e6e6e6")
         ax.set_axisbelow(True)
-    axs[0].set_ylim(0.45, 0.9)
+    axs[0].set_ylim(0.4, 0.9)
     axs[1].set_ylim(0.82, 0.98)
     axs[1].axhline(0.85, lw=0.8, ls=":", color=GRIS)
     axs[1].text(-0.45, 0.846, "mínimo exigido en validación", fontsize=6.5, color="#555555", va="top")
