@@ -13,8 +13,7 @@ Los aportes del trabajo atienden las brechas que identificó la revisión del es
     clasificadores.} Los controles con una imagen gris y con fotografías clínicas son compatibles con que su respuesta
     dependa sobre todo del \emph{prompt}
     (Sección~\ref{sec:res_vlm_controles}).
-    \item \textbf{La medición del efecto de la partición.} Una partición por imagen sobreestima la sensibilidad macro
-    en unas 0.07 frente a una partición por lesión (Sección~\ref{sec:res_fuga}), una magnitud a tener en cuenta al
+    \item \textbf{La medición del efecto de la partición.} Una partición por imagen sobreestima, en este conjunto de prueba, la sensibilidad macro en unas 0.07 frente a una partición por lesión (Sección~\ref{sec:res_fuga}), una magnitud a tener en cuenta al
     comparar con trabajos que dividen las imágenes al azar.
     \item \textbf{Un \emph{pipeline} que decide cuánto afirmar.} La concordancia entre el clasificador y el \gls{knn}
     decide si se afirma el diagnóstico, se ofrecen dos candidatos o se deriva el caso. Así, el \emph{pipeline} afirma
@@ -24,9 +23,6 @@ Los aportes del trabajo atienden las brechas que identificó la revisión del es
     separan lo que aporta cada uno al reporte: la fidelidad diagnóstica proviene del clasificador, la descripción,
     del generador, y la señal de duda, de la concordancia (Tabla~\ref{tab:res_gen_aportes}). Ninguno de los trabajos
     revisados hace esa separación.
-    \item \textbf{Un \emph{pipeline} con inferencia compatible con una GPU de consumo.} El ajuste se realizó en una sola GPU A30 de
-    24~GB, y la generación de Mini-VLM se ejecutó en una RTX 4070 de 12~GB (Sección~\ref{sec:res_costo}), mientras que los trabajos revisados usan varias GPU de
-    centro de datos o consultan por API un modelo de gran tamaño.
+    \item \textbf{Un \emph{pipeline} con inferencia compatible con una GPU de consumo.} El ajuste de Mini-VLM se realizó en una sola GPU A30 de 24~GB, y su generación se comprobó en una RTX 4070 de 12~GB con 20 reportes (Sección~\ref{sec:res_costo}). No se comprobó el ajuste completo del modelo en esa configuración. Los trabajos revisados, en cambio, usan varias GPU de gama alta o consultan por API un modelo de gran tamaño.
 \end{itemize}
-Estos aportes se apoyan en métricas automáticas, y el paso siguiente para establecer la validez clínica de los reportes
-es su evaluación por especialistas.
+Estos aportes se apoyan en métricas automáticas, y la validez clínica de los reportes requiere la evaluación por especialistas.

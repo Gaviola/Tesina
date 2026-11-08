@@ -22,7 +22,7 @@ lo que se hizo, el resultado principal y dónde se presenta.
         \midrule
         OE1. Clasificadores & Cuatro supervisados, dos \glspl{vlm} generativos y DermLIP, con un mismo protocolo y
             comparaciones estadísticas; umbral de melanoma fijado en validación
-            & Swin-Tiny, con F1 macro de $0.719 \pm 0.030$; los \glspl{vlm} sin una cabeza entrenada quedan por debajo
+            & Swin-Tiny, elegido por F1 macro en validación, con F1 macro de $0.719 \pm 0.030$ y sin diferencias respaldadas con ConvNeXt-Tiny ni ViT-B/16; los \glspl{vlm} sin una cabeza entrenada quedan por debajo
             de los supervisados; el umbral detecta cuatro de cada cinco melanomas
             & \ref{cp:metodos}, \ref{cp:res_clasif} \\
         \filasep
@@ -35,7 +35,7 @@ lo que se hizo, el resultado principal y dónde se presenta.
         OE3. Escenarios y costo & Evaluación externa en \emph{HIBA}, perturbaciones, calibración, casos dudosos
             separados por el ruteo, métricas del texto y costo de cada componente
             & Pérdida de cerca del 40\,\% de la sensibilidad macro en \emph{HIBA}; riesgo selectivo de 0.085;
-            Mini-VLM entra en 8.6~GB y escribe un reporte en unos 16 segundos
+            en la A30, Mini-VLM ocupa como máximo 8.6~GB y escribe un reporte en unos 16 segundos
             & \ref{cp:res_clasif}, \ref{cp:res_gen}, \ref{cp:discusion} \\
         \bottomrule
     \end{tabularx}
@@ -45,5 +45,4 @@ El primer objetivo se cumplió en los términos en que se planteó. El segundo s
 \gls{vlm} ajustado redacta el reporte e integra la imagen en la descripción, pero no produce un diagnóstico
 preliminar confiable (Sección~\ref{sec:res_gen_sin_anclaje}), de modo que en el sistema final el diagnóstico lo aporta
 el clasificador. El tercero se cumplió sobre los clasificadores, con la evaluación en \emph{HIBA}, las perturbaciones y la calibración, y
-sobre el \emph{pipeline}, con la separación de los casos dudosos y el costo de cada componente en \emph{HAM10000}. Su
-evaluación en otros conjuntos de datos y por especialistas queda como trabajo futuro (Sección~\ref{sec:concl_futuro}).
+sobre el \emph{pipeline}, con la separación de los casos dudosos y el costo de cada componente en \emph{HAM10000}. La evaluación del \emph{pipeline} en otros conjuntos de datos y por especialistas queda como trabajo futuro (Sección~\ref{sec:concl_futuro}).
