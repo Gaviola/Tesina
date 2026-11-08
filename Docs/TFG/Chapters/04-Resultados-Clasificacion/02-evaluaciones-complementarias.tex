@@ -188,8 +188,7 @@ diez veces. Los dos ajustes posteriores, en cambio, lo reducen. El \emph{tempera
 ninguna predicción, con una temperatura menor que uno, como corresponde a un modelo subconfiado. En Swin-Tiny, el \emph{vector
 scaling} obtiene el menor \gls{ece}, pero ajusta un parámetro por clase, cambia predicciones y reduce la sensibilidad
 macro. En consecuencia, en \emph{HAM10000} las probabilidades del modelo sin pesos requieren poca corrección, y las del modelo
-con pesos se alejan de su frecuencia de acierto. Esta calibración corresponde a \emph{HAM10000} y no necesariamente se
-mantiene en otros conjuntos de datos.
+con pesos se alejan de su frecuencia de acierto. Este resultado puede no mantenerse en otros conjuntos de datos.
 
 \subsection{Interpretabilidad}
 \label{sec:res_interpretabilidad}
@@ -208,7 +207,7 @@ al lado, el mapa de Grad-CAM superpuesto con la clase que predice el modelo.
 En las cinco imágenes que el modelo clasifica bien (\gls{bkl}, \gls{df}, \gls{mel}, \gls{nv} y \gls{akiec}), la
 activación se concentra sobre la lesión. De los dos errores, el \gls{bcc} clasificado como \gls{mel} también activa la
 lesión, mientras que el \gls{vasc} clasificado como \gls{nv} tiene una activación difusa sobre la piel que rodea la
-lesión. En el primer error, la activación sobre la lesión es compatible con una confusión entre lesiones pigmentadas. 
+lesión. En el primero de esos errores, la activación que recae sobre la lesión es compatible con una confusión entre dos tipos de lesiones pigmentadas. 
 
 Para ilustrar con más claridad los casos en que la activación se aleja de la lesión, la
 Figura~\ref{fig:res_gradcam_errores} presenta dos errores seleccionados. Los 229 errores del modelo con una vista se
