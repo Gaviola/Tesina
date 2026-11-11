@@ -28,8 +28,7 @@ parecidos~\cite{jing2018automatic,chen2020generating}. Con los \glspl{vlm} gener
 Sección~\ref{sec:marco_vlm_generativos}, la tarea pasó a resolverse con un único modelo que recibe la imagen y
 una instrucción~\cite{hartsock2024vision}.
 
-En todos los casos, el entrenamiento requiere pares de imagen y texto clínico, y esos mismos textos sirven
-después de referencia para comparar los reportes generados. En dermatología, estos pares son escasos y
+En los enfoques supervisados revisados, el entrenamiento utiliza pares de imágenes y textos clínicos, que también pueden servir como referencias para evaluar los reportes generados. En dermatología, estos pares son escasos y
 recientes, y su texto tiene orígenes distintos: según el conjunto, lo redactaron dermatólogos, se tomó de libros
 de la especialidad o lo generó un modelo y lo revisaron especialistas~\cite{shen2025skincare,zeng2025mmskin,yan2025derm1miccv}.
 Ese origen condiciona lo que mide la comparación, porque un texto generado por un modelo, aun revisado, no es el
@@ -39,15 +38,12 @@ reporte que un dermatólogo habría escrito al examinar la lesión.
 \label{sec:marco_rep_ejes}
 
 Cada parte del reporte da lugar a un requisito para el texto generado. El primero es describir lo que se ve.
-La \textbf{calidad descriptiva} es la correspondencia entre lo que el texto describe y lo que la imagen
-muestra, y el vocabulario estandarizado permite medirla, porque fija los términos con que una descripción
-nombra cada hallazgo (Sección~\ref{sec:marco_eval_texto}).
+La \textbf{calidad descriptiva} se refiere a la correspondencia entre los hallazgos mencionados en el reporte y los rasgos presentes en la imagen. El vocabulario dermatológico estandarizado facilita la identificación y cuantificación de términos clínicos, aunque esta información, por sí sola, no permite comprobar la fidelidad visual de la descripción (Sección~\ref{sec:marco_eval_texto}).
 
 El segundo requisito es nombrar el diagnóstico correcto. La \textbf{fidelidad diagnóstica} es la coincidencia
 entre el diagnóstico que nombra el texto y el real, y es independiente de la calidad descriptiva. Un texto
 puede describir correctamente una red de pigmento atípica y cerrar en un nevo cuando la lesión es un melanoma,
-y otro puede nombrar el melanoma correcto apoyándose en un velo azul-blanquecino que la imagen no tiene. Un
-reporte es correcto solo si cumple las dos condiciones (Figura~\ref{fig:intro_dos_tareas}).
+y otro puede nombrar el melanoma correcto apoyándose en un velo azul-blanquecino que la imagen no tiene. En el marco de esta evaluación, un reporte debe cumplir ambas condiciones para considerarse correcto desde el punto de vista diagnóstico y descriptivo (Figura~\ref{fig:intro_dos_tareas}).
 
 \input{Figures/Capitulos/02-Marco-Teorico/planteo-problema}
 
@@ -79,8 +75,7 @@ la descripción, pero el diagnóstico le llega como dato. Anclar así el texto e
 \emph{grounding} (anclaje), y es el aprendizaje en contexto de la Sección~\ref{sec:marco_llm_grandes}, porque el
 generador no cambia sus pesos~\cite{brown2020language}.
 
-La generación condicionada separa los requisitos: la fidelidad diagnóstica pasa a depender de la evidencia, y
-la calidad descriptiva sigue a cargo del generador. Su costo es que el reporte hereda los errores de la
+La generación condicionada permite distribuir las responsabilidades entre componentes: la evidencia externa orienta la impresión diagnóstica, mientras que el generador produce la descripción y redacta el reporte. No obstante, la fidelidad de ambas partes depende de cómo el generador utilice la información recibida. Su costo es que el reporte hereda los errores de la
 evidencia, porque un generador que recibe un diagnóstico equivocado lo afirma con la misma fluidez que uno
 correcto. En las dos estrategias, además, la instrucción forma parte de la configuración, ya que puede pedir
 que el modelo exponga su razonamiento antes de concluir o que entregue solo el reporte. Un razonamiento
@@ -100,11 +95,10 @@ modelos ajustados al dominio son más propensos a alucinar que los de propósito
 mejor en las tareas médicas estándar~\cite{gu2024medvh}. En medicina, la alucinación es especialmente costosa,
 porque un hallazgo inventado se redacta igual que uno real y puede cambiar una conducta clínica.
 
-La falla contraria se llama aquí \emph{hedging}. El modelo redacta descripciones genéricas, compatibles con
+Otra dificultad en la generación de reportes es el uso indiscriminado de expresiones de reserva o incertidumbre, denominado aquí \emph{hedging}. El modelo redacta descripciones genéricas, compatibles con
 casi cualquier lesión, y evita comprometer un diagnóstico, por ejemplo enumerando varias categorías posibles
 sin inclinarse por ninguna. Ese texto no contiene errores visibles, pero tampoco informa nada sobre la lesión
-concreta. Expresar incertidumbre no es en sí una falla. Se convierte en \emph{hedging} cuando es
-indiscriminada, es decir, cuando no depende de cuán incierto sea el caso. Se ha argumentado que los esquemas de
+concreta. Expresar incertidumbre no es en sí una falla. Lo problemático es usar la incertidumbre sin relación con la evidencia disponible. Se ha argumentado que los esquemas de
 evaluación que premian acertar y no penalizan adivinar incentivan la alucinación en lugar de la expresión de
 incertidumbre~\cite{kalai2025hallucinate}. Ofrecer diferenciales cuando la regla de decisión lo indica
 (Sección~\ref{sec:marco_tres_salidas}) es, en cambio, lo opuesto al \emph{hedging}.

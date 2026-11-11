@@ -16,7 +16,7 @@
         \node[figsalida, text width=34mm] (cat) at (114, 14)
             {Categoría diagnóstica\\[2pt]{\footnotesize se evalúa con la\\fidelidad diagnóstica}};
         \node[figsalida, text width=34mm] (txt) at (114, -14)
-            {Reporte clínico\\[2pt]{\footnotesize se evalúa con la\\calidad descriptiva}};
+            {Descripción de la lesión\\[2pt]{\footnotesize se evalúa con la\\calidad descriptiva}};
 
         \draw[figflecha] (img.east) -- ++(6, 0) |- (t1.west);
         \draw[figflecha] (img.east) -- ++(6, 0) |- (t2.west);
@@ -29,6 +29,6 @@
         \end{scope}
 
     \end{tikzpicture}
-    \caption{Las dos condiciones de un reporte clínico correcto y la métrica de cada una.}
+    \caption{Los dos requisitos de un reporte clínico correcto: la categoría diagnóstica que nombra se evalúa por su fidelidad diagnóstica, y la descripción de la lesión, por su calidad descriptiva.}
     \label{fig:intro_dos_tareas}
 \end{figure}
