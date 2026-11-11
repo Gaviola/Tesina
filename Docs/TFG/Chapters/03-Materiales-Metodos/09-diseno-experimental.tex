@@ -30,7 +30,7 @@ imágenes (PI1), y se desarrolla en cuatro etapas:
     supervisados.
 \end{enumerate}
 
-La segunda parte busca responder si los reportes contienen el diagnóstico correcto y describen la lesión que muestra la imagen (PI2). Avanza en tres etapas, que agregan de a uno los componentes del \emph{pipeline}:
+La segunda parte evalúa la corrección del diagnóstico mencionado y determinados aspectos de la descripción mediante métricas automáticas, dentro de las limitaciones del protocolo adoptado (PI2). Avanza en tres etapas, que agregan de a uno los componentes del \emph{pipeline}:
 \begin{enumerate}[leftmargin=1.6em]
     \item \textbf{Generador solo.} Mini-VLM y LLaVA-Med se ajustan sobre \emph{SkinCaRe}
     (Sección~\ref{sec:met_generacion}) y, con SkinVL, generan reportes sin diagnóstico, que se comparan con los textos
@@ -44,12 +44,9 @@ La segunda parte busca responder si los reportes contienen el diagnóstico corre
 
 El número de ejecuciones depende de si el resultado varía al repetirlo. Cada configuración de la búsqueda y cada
 función de pérdida se entrenan una vez, mientras que los cuatro clasificadores supervisados se entrenan diez veces con la configuración elegida, de modo que sus resultados se informan como media y desvío de las diez ejecuciones
-(Sección~\ref{sec:met_seleccion}). Los \glspl{vlm} sin ajuste, las cabezas sobre los \emph{embeddings} y los
-generadores, en cambio, se ejecutan una vez por configuración, porque la verosimilitud y la decodificación voraz
-devuelven la misma salida para la misma entrada. Cada generador, por su parte, se ajusta una sola vez.
+(Sección~\ref{sec:met_seleccion}). Los modelos utilizados sin ajuste se evalúan una vez por configuración, dado que los procedimientos de inferencia empleados no incorporan muestreo aleatorio. Por restricciones de cómputo, las cabezas entrenables y los generadores ajustados se evalúan a partir de una única ejecución de entrenamiento por configuración. En consecuencia, sus resultados no permiten estimar la variabilidad asociada al proceso de ajuste.
 
-Los experimentos cumplen, además, dos papeles. Los principales responden directamente las preguntas de investigación, y
-los complementarios analizan causas, variantes y condiciones particulares de esos resultados. La
+Los experimentos cumplen, además, dos papeles. Los experimentos principales proporcionan la evidencia central para responder las preguntas de investigación, mientras que los complementarios examinan variantes, condiciones particulares y posibles explicaciones de los resultados obtenidos. La
 Tabla~\ref{tab:met_experimentos} los reúne en el orden en que se presentan en los Capítulos~\ref{cp:res_clasif}
 y~\ref{cp:res_gen}, con lo que busca cada uno, los datos sobre los que se mide y su métrica principal. El
 Capítulo~\ref{cp:res_clasif} presenta los resultados de la primera parte, la clasificación de las imágenes, y el
@@ -136,7 +133,7 @@ Capítulo~\ref{cp:res_gen}, los de la segunda, la generación de reportes con el
         & Conjunto de prueba de \emph{HAM10000}
         & Parámetros; memoria; tiempo por imagen \\
     \filasep
-    \multicolumn{5}{@{}l}{\textit{Capítulo~\ref{cp:res_gen}: ¿los reportes contienen el diagnóstico correcto y describen la lesión?}} \\
+    \multicolumn{5}{@{}l}{\textit{Capítulo~\ref{cp:res_gen}: ¿los reportes contienen el diagnóstico correcto y en qué medida describen la lesión?}} \\
     Generación sin diagnóstico (Sección~\ref{sec:met_generacion})
         & Principal
         & Medir el parecido con un texto de referencia y si el reporte afirma la clase por sí solo
