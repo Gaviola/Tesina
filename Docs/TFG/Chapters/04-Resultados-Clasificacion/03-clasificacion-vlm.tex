@@ -57,7 +57,7 @@ mayor frecuencia, junto con la proporción de imágenes asignadas a ella.
 \end{table}
 
 La mayor sensibilidad macro es la de Mini-VLM con verosimilitud, 0.181, y la menor, la de LLaVA-Med ajustado y con
-\gls{cot}, 0.045. Las otras ocho combinaciones quedan alrededor de 1/7, la sensibilidad macro de una respuesta al azar. Además, seis de las diez
+\gls{cot}, 0.045. Las otras ocho combinaciones presentan valores cercanos a 1/7, que constituye una referencia de desempeño para un problema de siete clases. Sin embargo, esos valores también pueden aparecer cuando las predicciones se concentran sistemáticamente en una única categoría. Además, seis de las diez
 asignan más del 85\,\% de las imágenes a una sola clase, cualquiera sea la lesión. Este comportamiento se denomina en
 este trabajo \textbf{concentración de las predicciones en una clase}.
 
@@ -87,9 +87,7 @@ Esta concentración puede tener al menos tres explicaciones: el desbalance de \e
 más que la imagen, o la modalidad dermatoscópica. Los controles de la Sección~\ref{sec:met_vlm_procedimiento} permiten
 examinar las dos últimas, y la primera se examina con los resultados anteriores.
 
-Lo observado no parece explicarse por el desbalance, en el que \gls{nv} reúne dos tercios de las imágenes. Los
-\glspl{vlm} generativos no se ajustaron con \emph{HAM10000}, de modo que no pudieron aprender su distribución de
-clases, y la concentración aparece ya sin ningún ajuste. Además, como muestra la Figura~\ref{fig:res_vlm_distribucion}, la
+La concentración observada no parece responder directamente al desbalance específico de \emph{HAM10000}, dado que los modelos generativos no fueron ajustados con ese conjunto. Sin embargo, no puede descartarse la influencia de distribuciones de clases o sesgos adquiridos durante su preentrenamiento. Además, como muestra la Figura~\ref{fig:res_vlm_distribucion}, la
 clase en la que se concentran cambia con el modelo y con la estrategia, mientras que un sesgo por la frecuencia de
 \gls{nv} llevaría a todas las combinaciones hacia esa misma clase.
 
@@ -135,8 +133,7 @@ En las 624 fotografías clínicas de \emph{SkinCAP}, una modalidad más parecida
 generativos no mejoran su sensibilidad macro de \emph{HAM10000} y vuelven a concentrar sus predicciones. DermLIP sin ajuste, en cambio, obtiene
 en ellas una sensibilidad macro algo menor que en la dermatoscopía, pero muy por encima de la de los generativos. Es
 decir, las fotografías permiten distinguir las clases, y cambiar la modalidad no corrige la concentración, aunque este
-control no permite excluir del todo que la modalidad influya. Una explicación posible es que la dificultad esté en la capacidad de los \glspl{vlm} generativos para distinguir las
-clases. Los controles permiten explorar estas explicaciones, pero no establecer de manera definitiva la causa.
+control no permite excluir del todo que la modalidad influya. Una posible explicación es que los modelos generativos no logren transformar adecuadamente la información visual disponible en una decisión entre las siete categorías, mediante las estrategias de clasificación evaluadas. Los controles permiten explorar estas explicaciones, pero no establecer de manera definitiva la causa.
 
 \subsection{DermLIP, un modelo especializado}
 \label{sec:res_vlm_dermlip}
@@ -201,7 +198,7 @@ de cada combinación.
 \end{table}
 
 DermLIP supera a Swin congelado con las tres cabezas, por entre 0.15 y 0.35 de sensibilidad macro y por márgenes
-parecidos de F1 macro. Como la ventaja se mantiene con cada cabeza, parece deberse a la representación aprendida sobre imágenes dermatológicas más que a la cabeza. La regresión logística de este control da valores distintos de los del
+parecidos de F1 macro. La ventaja de DermLIP se mantiene con las tres cabezas evaluadas, lo que sugiere que las diferencias entre representaciones desempeñan un papel relevante. No obstante, el experimento no permite aislar qué aspectos específicos de las arquitecturas o de sus procedimientos de preentrenamiento explican esa ventaja. La regresión logística de este control da valores distintos de los del
 linear probe porque usa embeddings estandarizados en lugar de normalizados.
 
 En síntesis, en el conjunto de prueba de \emph{HAM10000} los \glspl{vlm} generativos quedan cerca de 1/7 de sensibilidad macro con las estrategias evaluadas, un comportamiento
