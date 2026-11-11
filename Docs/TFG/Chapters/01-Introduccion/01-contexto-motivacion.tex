@@ -34,8 +34,8 @@ experiencia~\cite{dinnes2018dermoscopy}. Además, la lectura de una misma imagen
 entre observadores según su nivel de formación~\cite{tschandl2019comparison}. En consecuencia, el resultado de
 la valoración depende en buena medida de la formación de quien la realiza.
 
-Cada consulta exige, además de diagnosticar, un reporte escrito que registre lo observado y la conclusión.
-Redactarlo es una tarea distinta de la interpretación de la lesión, y también consume tiempo: en atención
+La evaluación de una lesión cutánea también requiere documentar los hallazgos observados y la impresión diagnóstica.
+Redactar ese registro es una tarea distinta de la interpretación de la lesión, y también consume tiempo: en atención
 primaria, los médicos dedican 5.9 horas de una jornada de 11.4 a la historia clínica electrónica, y casi la
 mitad de ese tiempo a tareas administrativas y de registro~\cite{arndt2017tethered}. Así, la atención enfrenta dos demandas: interpretar la lesión y redactar su reporte.
 
@@ -44,8 +44,8 @@ apoyo al diagnóstico. Los primeros métodos analizaban la imagen de la lesión 
 diagnóstica~\cite{codella2019skin,tschandl2019comparison}, y los más recientes pueden, además, producir un texto
 sobre ella~\cite{zhou2023skingpt4}. Con el aprendizaje profundo, las
 \glspl{cnn} y, más tarde, los \glspl{vit} aprendieron a clasificar imágenes de lesiones a partir de ejemplos
-etiquetados, y en 2017 una \gls{cnn} alcanzó un desempeño comparable al de
-dermatólogos~\cite{esteva2017dermatologistlevel}. Con la difusión de los modelos de lenguaje surgieron después
+etiquetados, y en 2017 un estudio mostró que una \gls{cnn} podía alcanzar un desempeño comparable al de
+dermatólogos en determinadas tareas de clasificación de lesiones cutáneas y bajo las condiciones experimentales evaluadas~\cite{esteva2017dermatologistlevel}. Con la difusión de los modelos de lenguaje surgieron después
 los \glspl{vlm}, que procesan imagen y texto a la vez y pueden tanto asignar una categoría a una imagen como
 redactar un texto sobre ella~\cite{radford2021learning,liu2023visual}, con adaptaciones recientes al dominio
 médico~\cite{li2023llavamed}. De este modo, las dos tareas, clasificar la lesión y redactar su reporte, pueden
@@ -62,15 +62,12 @@ propio~\cite{riccilara2023dataset}.
 
 En la generación de texto aparece una dificultad adicional: un reporte puede ser fluido y aun así afirmar un
 diagnóstico equivocado o describir hallazgos que la imagen no muestra~\cite{bai2024hallucination}. Como el
-reporte debe reflejar el diagnóstico, las dos tareas están conectadas. Un error de clasificación se traslada al
-texto, y a la vez un buen clasificador no garantiza un buen reporte, porque el texto puede describir mal la
-lesión aunque el diagnóstico sea correcto.
+reporte debe reflejar el diagnóstico, las dos tareas están conectadas. Cuando la generación del reporte se condiciona mediante el diagnóstico proporcionado por un clasificador, sus errores pueden propagarse al texto. Sin embargo, incluso cuando el diagnóstico es correcto, el generador puede describir de manera incorrecta los rasgos de la lesión. Por ello, la calidad del reporte debe evaluarse más allá del acierto diagnóstico.
 
 Estas dificultades plantean dos interrogantes que motivan el presente trabajo. El primero consiste en determinar si un
 \gls{vlm}, capaz tanto de clasificar imágenes como de generar descripciones textuales, puede alcanzar un desempeño
 comparable al de los clasificadores entrenados solo con imágenes en la clasificación de lesiones de piel, y en
-particular en la detección de melanoma. El segundo es si los reportes que genera contienen el diagnóstico correcto y describen la lesión que muestra la
-imagen. Para abordarlos, el trabajo estudia en conjunto la clasificación y la generación de reportes, con
+particular en la detección de melanoma. El segundo interrogante consiste en determinar si los reportes generados contienen el diagnóstico correcto y en qué medida sus descripciones reflejan la información visual de las lesiones, considerando las posibilidades y limitaciones de las métricas automáticas utilizadas. Para abordarlos, el trabajo estudia en conjunto la clasificación y la generación de reportes, con
 recursos computacionales convencionales (\emph{commodity hardware}): cada modelo se entrena y se ejecuta en una
 sola GPU, sin requerir infraestructura de cómputo de alto rendimiento, como los nodos con varias GPU de un
 centro de datos.
