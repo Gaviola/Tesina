@@ -9,9 +9,7 @@
 \label{sec:met_clasif_vlm}
 
 La primera pregunta de investigación es si un \gls{vlm} clasifica las lesiones tan bien como los clasificadores
-supervisados de la sección anterior. Si un \gls{vlm} rinde menos, hay dos explicaciones posibles: que le falte
-especialización en dermatología o que generar texto sea una mala forma de clasificar. Para distinguirlas, la
-comparación incluye modelos que combinan esos dos factores de manera distinta. Con este propósito se eligen dos
+supervisados de la sección anterior. Una diferencia de desempeño podría estar asociada, entre otros factores, al grado de especialización dermatológica y al mecanismo utilizado para obtener la predicción. Para explorar el posible efecto de estos factores, se comparan modelos con diferentes grados de especialización y mecanismos de clasificación. Con este propósito se eligen dos
 \glspl{vlm} generativos sin especialización en dermatología, uno de propósito general y otro biomédico, y un
 \gls{vlm} contrastivo que sí está especializado (Sección~\ref{sec:marco_vlm}).
 
@@ -29,8 +27,7 @@ con Mistral-7B~\cite{jiang2023mistral}. Comparte el esquema de Mini-VLM y el mis
 de lenguaje, de unos 7\,000 millones de parámetros, se entrenó con figuras y leyendas de la literatura biomédica. De
 este modo, la comparación entre ambos pone frente a frente un modelo biomédico y uno de propósito general.
 
-Por último, para aislar el efecto de generar texto se usa DermLIP~\cite{yan2025derm1miccv}, un \gls{vlm} contrastivo
-al estilo de \gls{clip}, preentrenado por sus autores sobre \emph{Derm1M}, un conjunto de más de un millón de pares imagen--texto entre cuyas fuentes declaradas no figura
+Por último, se incorpora DermLIP~\cite{yan2025derm1miccv} como representante de los \glspl{vlm} contrastivos especializados en dermatología. Su evaluación permite contrastar este enfoque con el de los modelos generativos, aunque las diferencias de arquitectura y preentrenamiento impiden atribuir el resultado exclusivamente al mecanismo de generación. DermLIP es un modelo al estilo de \gls{clip}, preentrenado por sus autores sobre \emph{Derm1M}, un conjunto de más de un millón de pares imagen--texto entre cuyas fuentes declaradas no figura
 \emph{HAM10000}~\cite{yan2025derm1miccv}.
 A diferencia de los anteriores, no genera texto: su codificador de imagen, un ViT-B/16, produce un \emph{embedding} de
 512 dimensiones, y la clase se obtiene directamente de esa representación. La Figura~\ref{fig:met_vlms} muestra cómo
@@ -105,8 +102,7 @@ Los valores de $C$ y de $k$ son fijos y no se buscaron en validación.
 
 El procedimiento agrega tres controles a las estrategias anteriores. El primero comprueba si el puntaje de verosimilitud
 depende de la imagen. Para ello, el mismo cálculo se repite con cada imagen reemplazada por una gris neutra de
-$224 \times 224$ píxeles, con el valor 128 en cada canal. Si el modelo sigue dando la misma distribución de puntajes,
-la respuesta depende más del prompt que de la imagen.
+$224 \times 224$ píxeles, con el valor 128 en cada canal. Si las predicciones cambian poco al reemplazar la imagen por una entrada neutra, esto constituiría evidencia de una influencia limitada de la información visual sobre la decisión, bajo las condiciones evaluadas.
 
 El segundo control comprueba si el desempeño de los \glspl{vlm} generativos depende de la modalidad de la imagen, ya
 que la dermatoscopía requiere un equipo específico y la fotografía clínica, en cambio, se parece más a las imágenes
@@ -114,15 +110,14 @@ de uso general. Con este propósito, la clasificación por verosimilitud, sin aj
 clínicas de \emph{SkinCAP} (Sección~\ref{sec:met_datasets}) cuyo diagnóstico corresponde a una de las siete clases. La
 correspondencia agrupa las variantes de cada diagnóstico, como las formas del melanoma, y descarta los diagnósticos
 sin una clase equivalente, lo que deja 624 imágenes. Como los modelos no se ajustan, se usan todas, sin partición.
-Si los modelos clasifican mejor las fotografías clínicas que el conjunto de prueba de \emph{HAM10000}, la dificultad se asocia más a la modalidad que a la tarea. Como contraste, DermLIP sin ajuste clasifica las mismas imágenes, lo que muestra si un
+Un mejor desempeño sobre fotografías clínicas sería compatible con la hipótesis de que la modalidad de imagen influye en la clasificación. Sin embargo, las diferencias entre conjuntos de datos impedirían atribuir el cambio exclusivamente a ese factor. Como contraste, DermLIP sin ajuste clasifica las mismas imágenes, lo que muestra si un
 modelo especializado distingue las siete clases en esa modalidad.
 
 El tercer control separa el efecto de la representación del de la cabeza, que con cuatro cabezas sobre el mismo
 \emph{embedding} quedan mezclados. Con este propósito, tres cabezas clásicas (SVM con núcleo RBF y $C = 10$, regresión
 logística y un \emph{random forest} de 300 árboles, todas con pesos balanceados y sobre \emph{embeddings}
 estandarizados) se ajustan con el mismo procedimiento sobre el \emph{embedding} de DermLIP y sobre el de Swin
-congelado, preentrenado en \emph{ImageNet}~\cite{liu2021swin}, sin ajuste sobre \emph{HAM10000}. Así, si la diferencia
-entre las dos representaciones es la misma con cada cabeza, el efecto se atribuye a la representación.
+congelado, preentrenado en \emph{ImageNet}~\cite{liu2021swin}, sin ajuste sobre \emph{HAM10000}. Si la ventaja de uno de los \emph{embeddings} se mantiene con diferentes cabezas de clasificación, los resultados proporcionarían evidencia de que la representación contribuye a la diferencia de desempeño, aunque no permitirían identificar de manera aislada qué características de su preentrenamiento la explican.
 
 En cuanto a los datos, todas las cabezas, sobre DermLIP y sobre Swin, se ajustan sobre el entrenamiento de la
 partición por lesión (Sección~\ref{sec:met_particiones}). El modo zero-shot de DermLIP y los \glspl{vlm} generativos,
