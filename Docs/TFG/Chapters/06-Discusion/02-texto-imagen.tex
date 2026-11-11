@@ -6,43 +6,37 @@
 % (instrucción de ajuste sin diagnóstico; LoRA de Mini-VLM solo en el codificador visual); rohrbach2018object,
 % bai2024hallucination. Reemplaza la antigua 6.3 y la parte de PI2 de la antigua 6.1.
 
-Los Capítulos~\ref{cp:res_clasif} y~\ref{cp:res_gen} midieron a los generativos en tareas distintas, pero en las dos
-aparece un mismo patrón: cuando el texto de la entrada y la imagen apuntan a respuestas distintas, el generador sigue
-al texto. En la clasificación, los controles son compatibles con que el \emph{prompt} fije una respuesta por defecto que la
+Los Capítulos~\ref{cp:res_clasif} y~\ref{cp:res_gen} evaluaron a los generativos en tareas distintas, pero en las dos
+aparece un mismo patrón: en las condiciones evaluadas, cuando el texto de la entrada y la imagen apuntan a respuestas distintas, el generador tiende a seguir al texto. En la clasificación, los controles son compatibles con que el \emph{prompt} fije una respuesta por defecto que la
 imagen desplaza muy poco
-(Sección~\ref{sec:res_vlm_controles}). En la generación sin diagnóstico, SkinVL repite un texto ajeno a la imagen
-(Sección~\ref{sec:res_gen_sin_anclaje}). En la cascada, el diagnóstico afirmado no cambia al quitar la imagen y, con un
+(Sección~\ref{sec:res_vlm_controles}).
+
+En la generación de reportes, el patrón aparece en tres situaciones. Sin un diagnóstico en la instrucción, SkinVL repite en siete de cada diez reportes un mismo texto ajeno a la imagen (Sección~\ref{sec:res_gen_sin_anclaje}). En la cascada, el diagnóstico afirmado no cambia al quitar la imagen y, con un
 diagnóstico equivocado, el reporte lo afirma en lugar de corregirlo (Sección~\ref{sec:res_gen_ablaciones}). Por
 último, cuando recibe a la vez el diagnóstico del clasificador y el de los vecinos, el generador sigue al clasificador
 aunque los vecinos acierten: en las 72 imágenes en que el clasificador se equivoca y los vecinos aciertan, recupera la clase verdadera en una de cada seis
-(Sección~\ref{sec:res_gen_rag}). Los resultados muestran, entonces, una fuerte influencia del diagnóstico escrito en la instrucción, mayor que la del
-contexto recuperado, y sugieren una jerarquía entre las fuentes del reporte cuya importancia relativa completa queda
-como hipótesis.
+(Sección~\ref{sec:res_gen_rag}).
 
-El origen de esa influencia no parece estar en el ajuste de este trabajo. La instrucción de entrenamiento, «Describe this
-skin lesion.», no incluye ningún diagnóstico (Sección~\ref{sec:met_generacion}), de modo que el ajuste no le enseñó a
-copiar uno. Además, en Mini-VLM el ajuste no llega al modelo de lenguaje, y SkinVL, que no se ajustó en este trabajo,
+En conjunto, estos resultados muestran que, bajo las condiciones evaluadas, los generadores tienden a conservar el diagnóstico proporcionado en la instrucción, incluso cuando este no coincide con la categoría verdadera. Esta tendencia sugiere una fuerte influencia de la información textual sobre la impresión diagnóstica generada, aunque no permite determinar de manera concluyente el peso relativo de cada modalidad. Además, el diagnóstico de la instrucción pesa más que el contexto recuperado, lo que sugiere una jerarquía entre las fuentes del reporte.
+
+El origen de esa influencia no parece estar en el ajuste de este trabajo. La instrucción utilizada durante el ajuste, «Describe this skin lesion.», no proporciona explícitamente un diagnóstico que el modelo deba reproducir (Sección~\ref{sec:met_generacion}). Además, en Mini-VLM el ajuste no llega al modelo de lenguaje, y SkinVL, que no se ajustó en este trabajo,
 transcribe el diagnóstico del mismo modo. Una explicación posible es que la tendencia proviene del modelo de lenguaje
 de base, que en su ajuste original aprendió a seguir lo que la instrucción afirma, y que la imagen no alcanza a
 contradecir. Es una forma del peso de los patrones del lenguaje que la literatura señala como causa de las
 alucinaciones~\cite{rohrbach2018object,bai2024hallucination}, aunque aquí no produce un hallazgo inventado, sino
 la adopción de un diagnóstico ajeno. La explicación alternativa es que ceder sea lo esperable en un generador que no
-distingue las clases por sí mismo (Sección~\ref{sec:disc_representacion}): si la imagen casi no le informa la clase,
-el diagnóstico recibido es la mejor evidencia que tiene. Las dos explicaciones predicen lo mismo en estos experimentos,
+distingue las clases por sí mismo (Sección~\ref{sec:disc_representacion}): si el modelo no logra obtener de la imagen información suficiente para distinguir las categorías, puede tender a utilizar el diagnóstico proporcionado en la instrucción como principal referencia para redactar la conclusión. Las dos explicaciones predicen lo mismo en estos experimentos,
 y separarlas requeriría un generador que clasifique bien sin anclaje, que ninguno de los evaluados es.
 
-Cualquiera sea su origen, esa influencia condiciona el diseño del \emph{pipeline}. Como el generador transcribe el
+Cualquiera sea su origen, esa influencia condiciona cómo debe evaluarse un sistema que integra un clasificador y un generador. Como el generador transcribe el
 diagnóstico, la fidelidad diagnóstica del reporte mejora con el clasificador más que con el generador: cambiar la
 fuente de DermLIP sin ajuste a Swin-Tiny agrega 0.132 de consistencia con el mismo generador
-(Sección~\ref{sec:res_gen_fuentes}), mientras que ninguno de los tres generadores eleva la consistencia más de unas milésimas por encima de la exactitud de la fuente.
-El generador, en cambio, sí puede restar fidelidad. LLaVA-Med omite el diagnóstico recibido en uno de cada siete
+(Sección~\ref{sec:res_gen_fuentes}), mientras que ninguno de los tres generadores eleva la consistencia más de unas milésimas por encima de la exactitud de la fuente. Evaluado como un todo, el sistema puede atribuirle al generador una fidelidad que proviene del clasificador, y por eso debe medirse por componente. En los trabajos incluidos en la revisión no se identificó una evaluación que distinguiera, mediante comparaciones equivalentes, la contribución del clasificador y del generador a la consistencia diagnóstica del reporte final (Sección~\ref{sec:res_gen_estado_arte}). La Tabla~\ref{tab:res_gen_aportes} resume esa separación para este trabajo.
+
+En consecuencia, la selección del generador prioriza su capacidad para conservar el diagnóstico recibido y evitar errores adicionales, dado que su contribución principal al sistema es la producción del contenido textual. LLaVA-Med omite el diagnóstico recibido en uno de cada siete
 reportes aun con el \emph{oracle}, y en el nivel diferencial deja los candidatos dentro de un razonamiento sin cerrar
-(Secciones~\ref{sec:res_gen_fuentes} y~\ref{sec:res_gen_pipeline}), de modo que su elección se decide por lo que
-no pierde, y no por lo que agrega. Por eso el \emph{pipeline} usa Mini-VLM, que transcribe como SkinVL, describe tanto
-como LLaVA-Med y entra en una GPU de consumo. Para la evaluación, la consecuencia es que un sistema que integra un
-clasificador y un generador debe medirse por componente, porque evaluado como un todo puede atribuirle al generador
-una fidelidad que proviene del clasificador. Ninguno de los trabajos revisados hace esa separación
-(Sección~\ref{sec:res_gen_estado_arte}), y la Tabla~\ref{tab:res_gen_aportes} la resume para este trabajo.
+(Secciones~\ref{sec:res_gen_fuentes} y~\ref{sec:res_gen_pipeline}). Por eso el \emph{pipeline} usa Mini-VLM, que conserva el diagnóstico como SkinVL, describe tanto
+como LLaVA-Med y entra en una GPU de consumo.
 
 En estos experimentos, esa misma influencia impide que el generador funcione como una segunda opinión, y además alcanza a la descripción. Sin la
 imagen, cada generador escribe un único texto por clase, una descripción prototípica del diagnóstico que
