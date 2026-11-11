@@ -8,7 +8,7 @@
 \label{sec:met_tareas}
 
 La propuesta de este trabajo se basa en integrar un clasificador, una recuperación de casos parecidos y un generador
-de reportes (Sección~\ref{sec:estado_arte_posicion}). A partir de la revisión realizada, el problema que busca abordar esta propuesta se define así:
+de reportes (Sección~\ref{sec:estado_arte_posicion}). A partir de estos antecedentes, el problema abordado en este trabajo se define de la siguiente manera:
 \begin{quote}
     \emph{a partir de una imagen dermatoscópica de una lesión de piel, se busca clasificarla en una de siete categorías
     diagnósticas, indicar si se trata de un melanoma y redactar un reporte que describa la lesión y afirme el
@@ -16,7 +16,7 @@ de reportes (Sección~\ref{sec:estado_arte_posicion}). A partir de la revisión 
 \end{quote}
 
 Las siete categorías, \gls{mel}, \gls{nv}, \gls{bcc}, \gls{akiec}, \gls{bkl}, \gls{df} y \gls{vasc}, son las del conjunto de imágenes dermatoscópicas con diagnóstico confirmado con el que se entrenan y evalúan los clasificadores, \emph{HAM10000}~\cite{tschandl2018ham10000}, que se describe junto con los demás conjuntos de datos en la Sección~\ref{sec:met_datasets}. No tienen la misma gravedad: NV, BKL, DF y VASC son benignas, AKIEC reúne lesiones premalignas y
-carcinomas in situ, y MEL y BCC son malignas. Por eso no todos los errores de clasificación cuestan lo mismo, y esa diferencia obliga a elegir métricas que pesen igual a cada clase (Sección~\ref{sec:met_protocolo}).
+carcinomas in situ, y MEL y BCC son malignas. Dado el desbalance entre categorías y la distinta relevancia clínica de los errores, se utilizan métricas macro para evitar que las clases mayoritarias dominen la evaluación (Sección~\ref{sec:met_protocolo}).
 
 La definición anterior reúne tres tareas, que se distinguen por lo que devuelven:
 \begin{itemize}
@@ -27,13 +27,10 @@ La definición anterior reúne tres tareas, que se distinguen por lo que devuelv
     \item \textbf{Generación del reporte (T3).} Recibe la imagen y el diagnóstico que propone el clasificador, y
     devuelve un texto con sus dos partes, la descripción de la lesión y la impresión diagnóstica.
 \end{itemize}
-Las dos primeras responden la primera pregunta de investigación, sobre si un \gls{vlm} clasifica tan bien como un
-clasificador entrenado solo con imágenes, mientras que la tercera responde la segunda, sobre si el reporte afirma el
-diagnóstico correcto (Sección~\ref{sec:intro_objetivos}).
+Las dos primeras tareas permiten abordar experimentalmente PI1, mientras que la tercera proporciona la base para evaluar PI2 (Sección~\ref{sec:intro_objetivos}).
 
 Con respecto a T3, el reporte se limita a dos de las partes de un reporte dermatológico: la descripción de lo que se
-ve y la impresión diagnóstica. Son las que los conjuntos de pares imagen--texto del área anotan junto a cada
-imagen~\cite{shen2025skincare}, y por lo tanto las que un modelo puede aprender de ellos. En cambio, el diagnóstico
+ve y la impresión diagnóstica. Estas dos partes se encuentran representadas en los textos de los conjuntos de datos utilizados~\cite{shen2025skincare}, por lo que constituyen los componentes del reporte que se busca aprender mediante el ajuste de los modelos generativos. En cambio, el diagnóstico
 diferencial completo y la recomendación de manejo quedan fuera del alcance, como también las imágenes de
 histopatología.
 
