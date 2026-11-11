@@ -27,9 +27,7 @@ validación, y las que comparten lesión con el entrenamiento.
 Sobre el conjunto de prueba completo, la sensibilidad macro de este modelo es de 0.870, y sobre las 894 imágenes sin lesión
 compartida, de 0.804. En las 543 que comparten lesión con el entrenamiento llega a 0.936, y las 66 restantes comparten
 lesión solo con la validación. Como control, DermLIP sin ajuste sobre \emph{HAM10000} no empeora en el grupo sin
-lesión compartida, lo que sugiere que la diferencia no se explica por una mayor dificultad de ese grupo. En este conjunto de prueba, entonces, la
-partición por imagen sobreestima la sensibilidad macro en unas 0.07, una distorsión que se retoma al comparar con
-otros trabajos en la Sección~\ref{sec:res_estado_arte}.
+lesión compartida, lo que sugiere que la diferencia no se explica por una mayor dificultad de ese grupo. En la partición y el experimento analizados, la sensibilidad macro sobre el conjunto de prueba completo supera en aproximadamente 0.07 a la obtenida sobre las imágenes de lesiones no compartidas. Esta diferencia es compatible con una sobreestimación asociada a la fuga de información, aunque su magnitud puede depender de la composición de los subconjuntos. Se retoma al comparar con otros trabajos en la Sección~\ref{sec:res_estado_arte}.
 
 \subsection{Generalización a otro conjunto de datos}
 \label{sec:res_hiba}
@@ -59,7 +57,7 @@ Tabla~\ref{tab:res_hiba} presenta la sensibilidad macro de cada modelo en el con
     \end{tabularx}
 \end{table}
 
-En \emph{HIBA}, la sensibilidad macro de Swin-Tiny cae de 0.716 a 0.424, y la de ConvNeXt-Tiny cae de manera parecida.
+En \emph{HIBA}, la sensibilidad macro de Swin-Tiny disminuye de 0.716 a 0.424, y ConvNeXt-Tiny presenta una reducción similar. Estos resultados muestran un menor desempeño sobre el conjunto externo, aunque la diferencia no puede atribuirse exclusivamente a un cambio de distribución visual, dado que también intervienen diferencias en las categorías y modalidades evaluadas.
 La caída es mayor en las fotografías clínicas, pero aparece también en las imágenes dermatoscópicas. En las
 fotografías clínicas, una explicación posible es que se trata de una modalidad que el modelo no vio en el
 entrenamiento.
@@ -226,6 +224,5 @@ Como se trata de pocos ejemplos, y en este último caso elegidos a propósito, e
 comportamiento del modelo y no permiten estimar con qué frecuencia se apoya en la lesión
 (Sección~\ref{sec:met_interpretabilidad}).
 
-Con estas cinco evaluaciones, el clasificador queda caracterizado también fuera de las condiciones de su
-entrenamiento: la partición por imagen sobreestima su desempeño, pierde buena parte de él en otro conjunto de datos, es sensible al ruido de la imagen y, en \emph{HAM10000}, entrega probabilidades bien calibradas cuando se entrena sin pesos. Queda por ver si un \gls{vlm} podría ocupar su lugar, que es
+Estas evaluaciones complementarias aportan evidencia sobre el comportamiento del clasificador ante determinadas condiciones distintas de las utilizadas durante el entrenamiento, incluyendo cambios de conjunto de datos y perturbaciones sintéticas: la partición por imagen sobreestima su desempeño, pierde buena parte de él en otro conjunto de datos, es sensible al ruido de la imagen y, en \emph{HAM10000}, presenta valores favorables de calibración global cuando se entrena sin pesos. Queda por ver si un \gls{vlm} podría ocupar su lugar, que es
 lo que evalúa la sección siguiente.
