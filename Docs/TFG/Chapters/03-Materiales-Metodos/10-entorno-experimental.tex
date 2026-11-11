@@ -8,7 +8,7 @@
 \section{Entorno experimental y recursos computacionales}
 \label{sec:met_entorno}
 
-Los experimentos se ejecutaron en tres GPU, todas dentro de la restricción de la Sección~\ref{sec:met_tareas}. Los
+Los experimentos se ejecutaron en tres GPU diferentes, utilizando una sola GPU por entrenamiento o inferencia y respetando el límite de 24~GB de memoria establecido en la Sección~\ref{sec:met_tareas}. Los
 clasificadores supervisados se entrenaron en una RTX 4080 de 16~GB, en el clúster TOKO de la Universidad Nacional de
 Cuyo. El ajuste de los \glspl{vlm} y la generación de los reportes se ejecutaron en una A30 de 24~GB, en el clúster
 Mendieta de la Universidad Nacional de Córdoba. La A30 es una GPU de centro de datos, pero tiene la misma memoria que una de consumo de gama alta, que es lo que fija
