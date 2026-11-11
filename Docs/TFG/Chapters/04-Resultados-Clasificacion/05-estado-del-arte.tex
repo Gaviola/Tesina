@@ -49,8 +49,7 @@ detección de melanoma y los \glspl{vlm} sin ajuste.
 
 En la clasificación de siete clases, los resultados de Swin-Tiny quedan por debajo de los dos trabajos que usan
 \emph{HAM10000}, pero ninguno de ellos divide las imágenes por lesión: uno no informa cómo las divide, y el otro amplía
-el conjunto con imágenes externas y lo divide al azar por imagen. La Sección~\ref{sec:res_fuga} mostró que, en este conjunto de prueba, una partición por imagen sobreestima la sensibilidad macro en unas 0.07, una cifra del mismo orden que la
-distancia con el segundo trabajo. Por el contrario, el único trabajo que mantiene juntas las imágenes de una lesión
+el conjunto con imágenes externas y lo divide al azar por imagen. La magnitud observada en el análisis de fuga de información de la Sección~\ref{sec:res_fuga}, de unas 0.07, es comparable a la diferencia de sensibilidad macro informada respecto del segundo trabajo. Sin embargo, dado que los protocolos experimentales no son equivalentes, no puede establecerse cuánto de esa diferencia se debe a la partición de los datos. Por el contrario, el único trabajo que mantiene juntas las imágenes de una lesión
 informa una sensibilidad macro algo menor que la de Swin-Tiny, aunque sobre otro conjunto y con otras clases. La
 comparación no permite atribuir toda la distancia a la partición, porque los trabajos difieren también en los datos y
 en el entrenamiento, pero sí muestra que una parte puede deberse a ella.
@@ -67,8 +66,7 @@ sin ajuste en \emph{HAM10000} con una exactitud del 5.5\,\%, dentro del rango qu
 SkinVL ajustada también con conjuntos de diagnóstico supera el 50\,\%. Del mismo modo, \textcite{jiang2026multimodal} informan exactitudes de entre el 1.5\,\% y el 13.4\,\% con los modelos abiertos en
 consultas reales, entre ellos LLaVA-Med. Por lo tanto, la concentración de los generativos sin especialización en dermatología no es propia de este trabajo. También DermLIP sin ajuste, con las plantillas y los nombres de clase de sus autores, obtiene en
 \emph{HAM10000} una exactitud cercana a la que ellos informan, sobre otra partición de prueba. DermFM-Zero, evaluado
-por sus autores junto con DermLIP, lo supera a su vez, lo que sugiere que la especialización en dermatología sigue
-mejorando por la vía contrastiva.
+por sus autores junto con DermLIP, lo supera a su vez, lo que muestra que los modelos contrastivos especializados pueden alcanzar desempeños superiores bajo determinados protocolos, aunque las diferencias de escala y entrenamiento impiden atribuir esa ventaja a un único factor.
 
 En conjunto, la comparación ubica a Swin-Tiny en el orden de magnitud de la literatura. Como los protocolos, las
 particiones y los conjuntos de datos no son equivalentes, las diferencias no pueden atribuirse solo a la arquitectura o
