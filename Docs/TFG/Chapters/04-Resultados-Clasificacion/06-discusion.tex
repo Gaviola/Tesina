@@ -15,8 +15,7 @@ una cabeza entrenada se acerca a los supervisados.
 En los supervisados, no se encontraron diferencias respaldadas entre Swin-Tiny, ConvNeXt-Tiny y ViT-B/16, y la sensibilidad de las clases
 minoritarias y del melanoma varía en más de una décima entre ejecuciones. El umbral fijado en validación lleva la
 detección de melanoma de tres a cuatro de cada cinco casos, y la partición por imagen sobreestima la sensibilidad
-macro en unas 0.07. Fuera de \emph{HAM10000}, Swin-Tiny pasa de 0.716 a 0.424 de sensibilidad macro en \emph{HIBA}. Sus probabilidades, medidas en \emph{HAM10000}, están bien calibradas cuando se entrena sin pesos por
-clase, un resultado que no necesariamente se traslada a \emph{HIBA}. Swin-Tiny queda,
+macro en unas 0.07. Fuera de \emph{HAM10000}, Swin-Tiny pasa de 0.716 a 0.424 de sensibilidad macro en \emph{HIBA}. En \emph{HAM10000}, el clasificador entrenado sin pesos por clase presenta valores favorables de calibración global según las métricas utilizadas. Este resultado no garantiza que la calibración se mantenga en todas las categorías ni en conjuntos externos. Swin-Tiny queda,
 entonces, como el clasificador del \emph{pipeline}, y el Capítulo~\ref{cp:res_gen} evalúa si, con su diagnóstico, el
 reporte generado afirma la clase correcta. El Capítulo~\ref{cp:discusion} interpreta estos hallazgos junto con los de
 la generación.
