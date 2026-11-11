@@ -62,8 +62,7 @@ incluye el cero es la de DenseNet121 frente a DermLIP. En este par, las dos comp
 comparación entre supervisados, es que la ventaja de DenseNet121 está en las clases mayoritarias, que pesan mucho en
 el total de aciertos y poco en las métricas macro.
 
-Entre los generativos, el intervalo de \emph{bootstrap} de la sensibilidad macro de Mini-VLM incluye 1/7, de modo que
-no se distingue del azar. El de LLaVA-Med queda apenas por encima, aunque su exactitud y su F1 macro siguen siendo los
+Entre los generativos, el intervalo de confianza de la sensibilidad macro de Mini-VLM incluye el valor de referencia de 1/7, por lo que, con esta evaluación, no se obtiene evidencia estadística suficiente para afirmar que su sensibilidad macro sea superior a ese valor. El de LLaVA-Med queda apenas por encima, aunque su exactitud y su F1 macro siguen siendo los
 de un modelo que concentra sus predicciones en una clase (Sección~\ref{sec:res_vlm}). Según McNemar, no aciertan las mismas imágenes. Según el \emph{bootstrap} pareado, su diferencia de sensibilidad macro no se distingue de cero. Posiblemente se debe a que los dos
 aciertan pocas imágenes, y casi solo de la clase en la que se concentran.
 
@@ -74,8 +73,7 @@ del modelo que genera el reporte.
 \subsection{Costo computacional de los clasificadores}
 \label{sec:res_costo_clasificadores}
 
-Además del desempeño, la restricción de una GPU de consumo de la Sección~\ref{sec:met_tareas} exige que el
-clasificador sea barato de ejecutar. La Tabla~\ref{tab:res_costo_clasificadores} presenta el costo de los cuatro
+Además del desempeño, la restricción de una GPU de consumo de la Sección~\ref{sec:met_tareas} requiere que el clasificador presente un costo computacional compatible con las restricciones de memoria y tiempo de inferencia establecidas. La Tabla~\ref{tab:res_costo_clasificadores} presenta el costo de los cuatro
 supervisados en la RTX 4070 de la Sección~\ref{sec:met_entorno}, con el mismo formato bf16 que la evaluación: para
 cada modelo, la cantidad de parámetros, la memoria máxima de la GPU con una imagen y con lotes de 32, la latencia con
 una imagen por vez y las imágenes por segundo con lotes de 32.
