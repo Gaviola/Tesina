@@ -88,9 +88,7 @@ Según el \emph{bootstrap} pareado, no se encontraron diferencias estadísticame
 ConvNeXt-Tiny y ViT-B/16, porque todos sus intervalos incluyen el cero, lo que no implica que su desempeño sea equivalente. DenseNet121, en cambio, queda alrededor de una décima por debajo de cada uno en F1 macro
 y en sensibilidad macro, con intervalos que no incluyen el cero. McNemar, que compara las imágenes que acierta cada
 modelo, no encuentra diferencias respaldadas en ningún par después de la corrección de Holm, tampoco en los de DenseNet121. Las dos comparaciones no se
-contradicen, porque responden preguntas distintas. Una explicación posible es que DenseNet121 acierta casi tantas
-imágenes como los demás, pero falla más en las clases minoritarias, que pesan poco en el total de aciertos y mucho en
-las métricas macro.
+contradicen, porque responden preguntas distintas. Una posible explicación de esta diferencia es que los errores de DenseNet121 se distribuyan de manera menos favorable entre las clases minoritarias. Esto afectaría las métricas macro en mayor medida que el recuento global de aciertos, dado el desbalance del conjunto de datos (Figura~\ref{fig:res_recall_semillas}).
 
 La última fila de la Tabla~\ref{tab:res_supervisados} corresponde al ensamble de Swin-Tiny y ConvNeXt-Tiny por voto
 suave (\emph{soft voting}; Sección~\ref{sec:met_supervisados_ensamble}). Su media supera a la de Swin-Tiny en 0.025 de F1 macro y en 0.016 de sensibilidad macro, y su desvío queda entre los de Swin-Tiny y ConvNeXt-Tiny. Como la mejora media no se comparó estadísticamente, el resto del capítulo
@@ -111,8 +109,7 @@ clase real recibe esa predicción, y por eso la diagonal coincide con la sensibi
 \end{figure}
 
 La diagonal muestra que \gls{nv} se reconoce casi siempre. Fuera de ella, los errores de las demás clases se
-concentran en tres columnas: \gls{nv}, \gls{mel} y \gls{bkl}. El valor de la matriz con mayor costo clínico, el de \gls{mel} clasificado como \gls{nv}, es también uno de los más
-altos, ya que una quinta parte de los melanomas se clasifica como nevo. Además, una parte de los \gls{akiec} se clasifica como \gls{bkl}, y una parte de los \gls{bcc} y de los \gls{vasc} se clasifica como
+concentran en tres columnas: \gls{nv}, \gls{mel} y \gls{bkl}. Uno de los errores de mayor relevancia clínica es la clasificación de un melanoma como nevo melanocítico. En la matriz de confusión, este error alcanza aproximadamente una quinta parte de los casos de melanoma. Además, una parte de los \gls{akiec} se clasifica como \gls{bkl}, y una parte de los \gls{bcc} y de los \gls{vasc} se clasifica como
 \gls{mel}.
 
 Para ver estas diferencias sobre imágenes concretas, la Figura~\ref{fig:res_ejemplos_supervisados} presenta una imagen de
@@ -148,7 +145,7 @@ arquitecturas.
 
 La detección de melanoma se evalúa en Swin-Tiny, ConvNeXt-Tiny y su ensamble, que son los modelos de la búsqueda de
 hiperparámetros, con las dos reglas de decisión de la Sección~\ref{sec:met_seleccion}: tomar como melanoma la clase más
-probable o usar el umbral fijado en validación. El \gls{auc} de melanoma, que no depende de la regla, es de 0.920 en Swin-Tiny, con un desvío de 0.004 entre ejecuciones. Aunque la sensibilidad de \gls{mel} varía entre ejecuciones, todas ordenan los casos de manera similar. Por lo tanto, lo que cambia entre ellas es posiblemente cuántos melanomas
+probable o usar el umbral fijado en validación. El \gls{auc} de melanoma, que no depende de la regla, es de 0.920 en Swin-Tiny, con un desvío de 0.004 entre ejecuciones. Aunque la sensibilidad de \gls{mel} varía entre ejecuciones, sus valores de \gls{auc} son similares, lo que indica una capacidad de discriminación global relativamente estable. Por lo tanto, lo que cambia entre ellas es posiblemente cuántos melanomas
 superan el corte implícito en elegir la clase más probable, y fijar ese corte en validación debería estabilizar
 también la decisión.
 
@@ -179,9 +176,7 @@ falsos positivos con la sensibilidad para todos los umbrales posibles, y marca s
 \end{figure}
 
 El umbral desplaza la decisión a lo largo de la misma curva, hacia la zona de mayor sensibilidad, sin cambiar el
-modelo: en esa ejecución detecta 13 melanomas más a cambio de unas 80 falsas alarmas adicionales. Los umbrales de las treinta ejecuciones, además, quedan muy por debajo de 0.5. Una explicación posible es que \gls{mel} reúne solo el
-11\,\% del conjunto de prueba, y en muchos melanomas la probabilidad de esa clase no llega a ser la mayor, aunque supere la que
-el modelo asigna a casi todas las lesiones sin melanoma.
+modelo: en esa ejecución detecta 13 melanomas más a cambio de unas 80 falsas alarmas adicionales. Los umbrales de las treinta ejecuciones, además, quedan muy por debajo de 0.5. Una explicación posible es que el desbalance de las clases durante el entrenamiento influya sobre las probabilidades estimadas. En algunos casos, la probabilidad asignada a melanoma puede superar el umbral específico sin llegar a ser la mayor entre las siete categorías.
 
 \subsection{Funciones de pérdida para el desbalance de clases}
 \label{sec:res_desbalance}
