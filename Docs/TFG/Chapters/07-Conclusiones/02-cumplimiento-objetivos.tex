@@ -41,8 +41,5 @@ lo que se hizo, el resultado principal y dónde se presenta.
     \end{tabularx}
 \end{table}
 
-El primer objetivo se cumplió en los términos en que se planteó. El segundo se cumplió con una modificación: el
-\gls{vlm} ajustado redacta el reporte e integra la imagen en la descripción, pero no produce un diagnóstico
-preliminar confiable (Sección~\ref{sec:res_gen_sin_anclaje}), de modo que en el sistema final el diagnóstico lo aporta
-el clasificador. El tercero se cumplió sobre los clasificadores, con la evaluación en \emph{HIBA}, las perturbaciones y la calibración, y
+El primer objetivo se cumplió en los términos en que se planteó. El segundo objetivo requirió modificar el enfoque inicialmente planteado. Los resultados mostraron que los \glspl{vlm} generativos evaluados no alcanzaron un desempeño adecuado para establecer de manera autónoma el diagnóstico de las lesiones (Sección~\ref{sec:res_gen_sin_anclaje}). Esta limitación motivó la incorporación de un clasificador supervisado como fuente diagnóstica, mientras que el \gls{vlm} conservó la responsabilidad de redactar el reporte. Por lo tanto, el objetivo se cumplió parcialmente respecto de su formulación original, pero dio lugar a una arquitectura integrada cuya utilidad fue evaluada experimentalmente. El tercero se cumplió sobre los clasificadores, con la evaluación en \emph{HIBA}, las perturbaciones y la calibración, y
 sobre el \emph{pipeline}, con la separación de los casos dudosos y el costo de cada componente en \emph{HAM10000}. La evaluación del \emph{pipeline} en otros conjuntos de datos y por especialistas queda como trabajo futuro (Sección~\ref{sec:concl_futuro}).
