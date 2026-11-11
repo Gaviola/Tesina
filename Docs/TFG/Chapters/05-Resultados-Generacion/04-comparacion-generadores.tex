@@ -40,9 +40,7 @@ son del generador. Es decir, LLaVA-Med es el generador que menos transcribe el d
 La cobertura de entidades, en cambio, separa a SkinVL de los otros dos, con el valor más bajo: 0.379, frente a 0.796 de Mini-VLM y 0.758 de LLaVA-Med. Sus reportes tienen una
 mediana de 17 palabras, frente a 62 de Mini-VLM y 86 de LLaVA-Med, y cubren cerca de la mitad de las entidades clínicas que los de esos dos modelos.
 Además, con Swin-Tiny escribe solo 59 reportes distintos para las 1\,503 imágenes, de modo que su texto depende del
-diagnóstico y casi nada de la imagen. Por lo tanto, en estos experimentos la especialización en dermatología no mejora
-la fidelidad del reporte, que ya fija el clasificador, y reduce la descripción, que es lo que el generador agrega en la
-cascada. Mini-VLM, en cambio, iguala la consistencia de SkinVL y cubre tantas entidades clínicas como LLaVA-Med, de modo que es
+diagnóstico y casi nada de la imagen. En las condiciones evaluadas, SkinVL no mejora la consistencia diagnóstica respecto de los otros generadores y produce reportes más breves, con menor cobertura de entidades clínicas. Sin embargo, estas diferencias no pueden atribuirse exclusivamente a su especialización dermatológica. Mini-VLM, en cambio, iguala la consistencia de SkinVL y cubre tantas entidades clínicas como LLaVA-Med, de modo que es
 el único de los tres que reúne las dos condiciones. Una mayor cobertura indica que el texto nombra más entidades, no
 necesariamente que la descripción sea más correcta.
 
@@ -73,8 +71,7 @@ y sin anclaje, la variante de control tiene reportes solo para una parte del con
 \end{table}
 
 La única diferencia cuyo intervalo excluye el cero es la del \emph{oracle}, en la que la variante de control queda por
-debajo. Ajustar el modelo de lenguaje no produce una diferencia significativa en la cascada con Swin-Tiny ni en el nivel diferencial, y en la generación
-sin anclaje tampoco mejora la consistencia. Lo que sí cambia es el formato: la variante de control aprende la estructura de
+debajo. En las comparaciones realizadas no se obtuvo evidencia estadística suficiente para afirmar que la variante con ajuste del modelo de lenguaje mejore la consistencia diagnóstica en la cascada con Swin-Tiny, en el nivel diferencial ni en la generación sin anclaje. Esta conclusión debe interpretarse dentro de las condiciones y el número de entrenamientos evaluados. Lo que sí cambia es el formato: la variante de control aprende la estructura de
 \emph{SkinCoT} y abre bloques de razonamiento en uno de cada cuatro reportes de \emph{HAM10000}. Con el oracle,
 esa estructura le cuesta tres centésimas de consistencia, porque en parte de los reportes el límite de 384 tokens llega
 antes de que el diagnóstico salga del razonamiento.
@@ -98,9 +95,7 @@ segunda etapa de ajuste, los segundos por reporte y las horas que lleva generar 
 Un reporte de Mini-VLM en la A30 tarda más de mil veces lo que una clasificación de Swin-Tiny en la RTX 4070. Aunque
 las dos mediciones se hicieron en GPU distintas, la diferencia es de tres órdenes de magnitud, de modo que el costo del
 pipeline lo fija el generador. El \gls{knn} tampoco cambia esa cuenta, porque requiere una pasada del
-codificador de DermLIP, un ViT-B/16 como el de la Tabla~\ref{tab:res_costo_clasificadores}, y una búsqueda entre 6\,447 embeddings. Entre los generadores, el
-tiempo por reporte depende más de lo que escriben que de su tamaño: SkinVL, del mismo tamaño que LLaVA-Med, es el más
-rápido porque escribe una oración, y Mini-VLM tarda menos que LLaVA-Med con reportes más breves.
+codificador de DermLIP, un ViT-B/16 como el de la Tabla~\ref{tab:res_costo_clasificadores}, y una búsqueda entre 6\,447 embeddings. En los generadores evaluados, el tiempo por reporte parece estar fuertemente asociado a la longitud del texto producido: SkinVL, del mismo tamaño que LLaVA-Med, es el más rápido porque escribe una oración, y Mini-VLM tarda menos que LLaVA-Med con reportes más breves. No obstante, las diferencias entre modelos y configuraciones impiden aislar completamente la contribución de ese factor respecto del tamaño de cada arquitectura.
 
 \begin{table}[H]
     \centering
