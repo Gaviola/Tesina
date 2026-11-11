@@ -228,8 +228,7 @@ $n$-gramas, secuencias de $n$ palabras consecutivas, y la quinta compara signifi
     \end{equation}
 
     \item \textbf{BERTScore.} Compara los \emph{embeddings} contextuales de los tokens, obtenidos con un modelo
-    de solo codificador como BERT (Sección~\ref{sec:marco_llm_grandes}), en lugar de las palabras, de modo que una
-    paráfrasis correcta no se penaliza. Cada token de un texto se empareja con el más parecido del otro por
+    de solo codificador como BERT (Sección~\ref{sec:marco_llm_grandes}), en lugar de las palabras, lo que permite reconocer similitudes semánticas entre expresiones diferentes y reduce algunas de las limitaciones de las métricas basadas exclusivamente en coincidencias léxicas. Cada token de un texto se empareja con el más parecido del otro por
     similitud coseno~\cite{zhang2020bertscore},
     \begin{equation}
         R_{\mathrm{BERT}} = \frac{1}{|r|}\sum_{r_i \in r}\,\max_{g_j \in g}\, \mathbf{r}_i^{\top}\mathbf{g}_j,
@@ -245,8 +244,7 @@ ese supuesto no está garantizado. Cuando varios dermatólogos marcan por separa
 dermatoscópicos, la concordancia es en su mayoría de pobre a regular, y moderada solo en unos pocos
 criterios~\cite{carrera2016validity}. A eso se suma que la referencia de un conjunto puede no haberla escrito un
 dermatólogo (Sección~\ref{sec:marco_rep_tarea}). Una descripción generada puede, por lo tanto, diferir de la
-referencia sin estar equivocada. Las métricas diagnósticas y descriptivas evitan ese supuesto porque comprueban lo
-que el texto afirma.
+referencia sin estar equivocada. Las métricas diagnósticas y descriptivas no requieren un reporte de referencia, pero evalúan aspectos diferentes. La consistencia diagnóstica comprueba si el texto menciona la categoría verdadera, mientras que la cobertura de entidades clínicas cuantifica los conceptos dermatológicos presentes en el reporte, sin verificar su correspondencia con la imagen. La consistencia diagnóstica funciona, en este sentido, como una métrica de clasificación aplicada al texto: se extrae el diagnóstico que nombra el reporte y se compara con la clase real.
 
 \begin{itemize}
     \item \textbf{Consistencia diagnóstica.} Mide la fidelidad diagnóstica de la
