@@ -11,11 +11,10 @@ ejemplo es un par formado por una entrada y la salida esperada, llamada etiqueta
 lesiones de piel, por ejemplo, la entrada es la imagen de una lesión y la etiqueta, su diagnóstico, y el modelo
 aprende a predecir el diagnóstico de imágenes nuevas.
 
-Lo que distingue a los distintos métodos de aprendizaje automático es cómo describen cada ejemplo. Durante
-décadas, esa descripción, formada por un conjunto de características, la diseñaba un especialista: medidas de
+Una diferencia importante entre los enfoques tradicionales y el aprendizaje profundo es la forma en que se obtienen las representaciones de los datos. Durante
+décadas, esas representaciones, formadas por un conjunto de características, las diseñaba un especialista: medidas de
 color o de textura para una imagen, o recuentos de palabras para un texto. El modelo solo aprendía a decidir a
-partir de ellas. El aprendizaje profundo (\emph{deep learning}) aprende también las características,
-directamente de los píxeles o de las palabras. Para ello encadena muchas transformaciones simples, de modo que
+partir de ellas. El aprendizaje profundo (\emph{deep learning}) permite aprender representaciones a partir de los datos de entrada, reduciendo la necesidad de definir manualmente las características utilizadas. Para ello encadena muchas transformaciones simples, de modo que
 las primeras capturan rasgos elementales y las últimas, conceptos más abstractos. En una imagen, por ejemplo, se
 pasa de bordes a contornos y de contornos a partes de objetos. Este enfoque se impuso a partir de la década de
 2010 en el reconocimiento de imágenes y de voz y en el procesamiento del lenguaje, cuando hubo suficientes datos
@@ -61,8 +60,7 @@ función \emph{softmax}, que produce valores entre cero y uno que suman uno,
     p_c = \frac{\exp(z_c)}{\sum_{j=1}^{C} \exp(z_j)}, \qquad c = 1, \dots, C.
     \label{eq:marco_softmax}
 \end{equation}
-La clase predicha es la de mayor probabilidad, y esa probabilidad suele leerse como la confianza del modelo en
-su predicción, una lectura que solo es válida si el modelo está calibrado
+La clase predicha corresponde a la de mayor probabilidad estimada. Aunque este valor suele utilizarse como indicador de confianza, su interpretación requiere considerar la calibración del modelo
 (Sección~\ref{sec:marco_senales_confianza}).
 
 Para que esas probabilidades sean útiles, los parámetros de la red tienen que ajustarse a los datos, y para eso
