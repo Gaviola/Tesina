@@ -71,8 +71,7 @@ probabilística, el modelo tiene que estar \textbf{calibrado}, es decir, sus pro
 con sus frecuencias de acierto. Por ejemplo, si un modelo calibrado predice melanoma con probabilidad 0.9 en cien
 imágenes, alrededor de noventa de ellas son melanomas. En la notación de \textcite{guo2017calibration}, con
 $\hat{Y}$ la clase predicha y $\hat{P}$ su probabilidad, la condición es $P(\hat{Y} = Y \mid \hat{P} = p) = p$.
-Con un modelo calibrado, un umbral de 0.9 acepta predicciones con al menos 0.9 de probabilidad de ser
-correctas; sin calibración, el umbral no tiene esa lectura. \textcite{guo2017calibration} observaron que las
+En un modelo adecuadamente calibrado, las predicciones cuya confianza supera 0.9 deberían presentar, en conjunto, una frecuencia de acierto acorde con las probabilidades estimadas. Esta interpretación es estadística y no garantiza la corrección de una predicción individual. \textcite{guo2017calibration} observaron que las
 redes neuronales modernas tienden a ser sobreconfiadas, es decir, a asignar a sus predicciones probabilidades
 mayores que su frecuencia de acierto, y que las más profundas y anchas suelen estar peor calibradas que las
 pequeñas aunque clasifiquen mejor. Las métricas de calibración y las formas de corregirla se presentan en la
