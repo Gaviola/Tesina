@@ -28,9 +28,7 @@ elegidos en la Sección~\ref{sec:met_supervisados}, en su ejecución de referenc
 La primera evaluación estima cuánto sobreestimaba el desempeño de los clasificadores la fuga de información que la
 partición por lesión elimina (Sección~\ref{sec:met_particiones}). Para estimarlo, se compara el resultado de un
 Swin-Tiny entrenado con la partición original sobre su conjunto de prueba completo con el que obtiene sobre las 894
-imágenes cuya lesión no aparecía ni en entrenamiento ni en validación. Como control se usa DermLIP sin ajuste, que no
-se entrenó con \emph{HAM10000}: si su desempeño también cambia entre ambos grupos, el cambio se atribuye a la composición
-del subconjunto y no a la fuga.
+imágenes cuya lesión no aparecía ni en entrenamiento ni en validación. DermLIP sin ajuste, que no se entrenó con \emph{HAM10000}, se utiliza como control adicional para explorar si las diferencias entre subconjuntos podrían estar asociadas a su composición, independientemente de la fuga de información. Sin embargo, este control no permite aislar completamente ambas fuentes de variación.
 
 \subsection{Generalización a otro conjunto de datos}
 \label{sec:met_hiba}
@@ -45,7 +43,7 @@ escamoso a AKIEC, y no al cambio de conjunto de datos. Esa fuente de ruido no pu
 \subsection{Robustez a perturbaciones de la imagen}
 \label{sec:met_robustez}
 
-La tercera evaluación mide qué ocurre si empeoran las condiciones de captura sin cambiar de conjunto. Con este
+La tercera evaluación analiza la sensibilidad de los clasificadores ante degradaciones sintéticas de la calidad de imagen, manteniendo las etiquetas originales. Estas perturbaciones permiten estudiar la estabilidad del desempeño, aunque no reproducen necesariamente todas las condiciones reales de adquisición. Con este
 propósito, y siguiendo el esquema de los bancos de prueba de corrupciones de imagen~\cite{hendrycks2019benchmarking},
 a las 1\,503 imágenes de prueba se les aplican cuatro perturbaciones, con cinco niveles de intensidad cada una:
 compresión JPEG (calidad de 70 a 5), ruido gaussiano (desvío de 8 a 64 sobre la escala de 0 a 255), desenfoque
@@ -64,8 +62,7 @@ imagen, sin \gls{tta}.
 \subsection{Calibración}
 \label{sec:met_calibracion}
 
-La cuarta evaluación busca saber cuánto se puede confiar en la probabilidad que da el modelo, que fija el umbral de
-melanoma y que un clínico leería como certeza. Para ello se miden el ECE y el Brier
+La cuarta evaluación busca saber cuánto se puede confiar en las probabilidades estimadas por el modelo, utilizadas para establecer el umbral de detección de melanoma y que podrían interpretarse como indicadores de confianza diagnóstica. Para ello se miden el ECE y el Brier
 (Sección~\ref{sec:marco_eval_calib}) sin calibrar y con dos ajustes posteriores, \emph{temperature scaling} y
 \emph{vector scaling}, que se ajustan en validación y se evalúan en el conjunto de prueba. Como el modelo guarda las
 probabilidades promediadas con \gls{tta} y no sus salidas previas a la softmax, ambos ajustes se aplican sobre el
@@ -87,7 +84,7 @@ La última evaluación estima el costo computacional de ejecutar los modelos y e
 restricción de la Sección~\ref{sec:met_tareas}. Para los clasificadores se miden los parámetros, la memoria máxima en
 la GPU, el tiempo por imagen y las imágenes procesadas por segundo. Para los generadores, en cambio, se mide la memoria máxima al generar y se toma el tiempo por reporte de las ejecuciones
 de la generación, que comparten instrucción, decodificación y límite de tokens,
-de modo que la diferencia refleja el modelo y la longitud de lo que escribe. No es una medición controlada, sino una
+de modo que las diferencias observadas pueden atribuirse principalmente al modelo y a la longitud de las respuestas, aunque también pueden intervenir factores de ejecución. No es una medición controlada, sino una
 estimación del orden de magnitud, que permite comparar el \emph{pipeline} con el cómputo que usan los trabajos
 revisados (Tabla~\ref{tab:marco_brechas}). Sus condiciones se detallan en
 la Sección~\ref{sec:met_entorno}.
