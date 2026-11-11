@@ -12,12 +12,7 @@ entre esos niveles no es solo de grado, porque cada uno usa el modelo de una man
 la explica: qué tiene DermLIP que los generativos no tienen, y qué les falta a estos para convertir lo que ven en un
 diagnóstico.
 
-Los controles de la Sección~\ref{sec:res_vlm_controles} permiten acotar las explicaciones posibles. Si la dificultad de los generativos fuera la modalidad, es decir, que la dermatoscopía casi no aparezca en su
-preentrenamiento, las fotografías clínicas de \emph{SkinCAP} deberían mejorar su resultado. No lo mejoran, mientras que
-DermLIP distingue las clases en las dos modalidades. Además, con la imagen reemplazada por una gris, los generativos
-asignan todas las imágenes a una misma clase, y con la imagen real su sensibilidad macro apenas sube, de modo que su
-respuesta depende sobre todo del \emph{prompt}. En estos experimentos, entonces, lo que separa a los modelos que distinguen las clases de los que no parece ser la especialización en dermatología de la representación, aunque el control no permite excluir que
-la modalidad también influya.
+Los controles de la Sección~\ref{sec:res_vlm_controles} permiten acotar las explicaciones posibles. Una de las hipótesis examinadas es que el bajo desempeño de los modelos generativos esté relacionado con la modalidad dermatoscópica, posiblemente menos representada durante su preentrenamiento. Para explorar esta posibilidad, se evalúa su comportamiento sobre fotografías clínicas de \emph{SkinCAP}, una modalidad más cercana a las imágenes de uso general. Las fotografías no mejoran su resultado, mientras que DermLIP distingue las clases en las dos modalidades. Además, con la imagen reemplazada por una gris, los generativos asignan todas las imágenes a una misma clase. La escasa variación de la sensibilidad macro al sustituir la imagen neutra por la imagen real sugiere que, bajo las instrucciones y estrategias evaluadas, la información visual tiene una influencia limitada sobre la decisión final del modelo. En conjunto, los resultados sugieren que las representaciones especializadas en dermatología podrían contribuir al mejor desempeño de clasificación. No obstante, las diferencias entre los modelos evaluados impiden establecer que esta sea la única causa de la ventaja observada.
 
 El control de la representación indica dónde está esa especialización. Con las mismas tres cabezas, el
 \emph{embedding} de DermLIP supera al de Swin preentrenado en \emph{ImageNet} por entre 0.15 y 0.35 de sensibilidad
@@ -25,17 +20,13 @@ macro (Tabla~\ref{tab:res_dermlip_swin}). Más llamativo es que esa representaci
 \emph{HAM10000}, quede cerca de un clasificador ajustado de punta a punta sobre ese conjunto: con una \gls{svm}, su F1
 macro es de 0.705, frente a 0.719 de Swin-Tiny, y con un \emph{linear probe} su sensibilidad macro supera a la de
 Swin-Tiny, aunque con un F1 macro menor (Tablas~\ref{tab:res_dermlip} y~\ref{tab:res_supervisados}). Esas diferencias
-no se compararon estadísticamente, de modo que solo indican que las dos representaciones quedan en un mismo rango. Una
-explicación posible es que alinear imágenes dermatológicas con sus descripciones ordena el espacio de
-\emph{embeddings} según los rasgos que el texto nombra, que son en buena medida los que separan los diagnósticos.
+no se compararon estadísticamente, de modo que solo indican que las dos representaciones quedan en un mismo rango. Una hipótesis compatible con estos resultados es que el entrenamiento contrastivo con pares de imágenes y descripciones dermatológicas favorezca representaciones que distingan características relevantes para la clasificación. Sin embargo, comprobar este mecanismo requeriría un análisis específico de la estructura del espacio de \emph{embeddings} y de su relación con los rasgos clínicos.
 
-Mini-VLM, en cambio, extrae información de la imagen, pero, en estos experimentos, no la convierten en una clase. Después del
+Mini-VLM, en cambio, extrae información de la imagen, pero, en estos experimentos, no la convierte en una clase. Después del
 ajuste con \emph{SkinCaRe}, la descripción de Mini-VLM cambia con cada lesión, y sin la imagen su cobertura de
 entidades clínicas cae a la mitad (Sección~\ref{sec:res_gen_ablaciones}). Sin un diagnóstico, sin embargo, el mismo
 generador nombra la clase verdadera en menos de un reporte de cada cinco (Sección~\ref{sec:res_gen_sin_anclaje}). Es decir, la descripción del generador cambia con la imagen, mientras que, sin un diagnóstico, el reporte rara vez
-nombra la clase verdadera. Una explicación posible es que el cuello de
-botella no está en el codificador visual, cuyo ajuste es justamente el que cambia la descripción, sino en el paso del
-modelo de lenguaje a la clase, que DermLIP resuelve con una comparación entre \emph{embeddings} y una cabeza simple.
+nombra la clase verdadera. Una posible explicación es que las dificultades de clasificación no dependan exclusivamente de la representación visual, sino también de cómo el modelo generativo transforma esa información en una decisión entre categorías. Los resultados disponibles no permiten separar de manera concluyente ambas posibilidades.
 Otra explicación, compatible con la anterior, es que \emph{SkinCaRe} agrupa las enfermedades en categorías distintas
 de las siete de \emph{HAM10000} (Sección~\ref{sec:met_generacion}), de modo que el ajuste nunca le pidió al generador
 esa correspondencia. Los experimentos no permiten separar las dos.
