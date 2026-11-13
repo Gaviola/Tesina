@@ -22,12 +22,9 @@ generación de reportes con \glspl{vlm}) aborda por sí sola el problema complet
 clasificar la lesión, indicar si se trata de un melanoma y redactar su reporte, y cada una tiene una limitación conocida. Según la revisión
 del Capítulo~\ref{cp:marco}, los \glspl{vlm} médicos de propósito general obtienen en piel exactitudes menores que las
 de los modelos adaptados a ella (Sección~\ref{sec:estado_arte_posicion}), y al redactar pueden evitar comprometerse
-con un diagnóstico y recurrir a reservas (\emph{hedging}; Sección~\ref{sec:marco_rep_fallas}). El clasificador, a su
-vez, entrega siempre una clase, y su probabilidad tiende a ser mayor que su frecuencia real de acierto
-(Sección~\ref{sec:marco_senales_confianza}), de modo que por sí sola no indica cuándo duda. A partir de estas
+con un diagnóstico y recurrir a reservas (\emph{hedging}; Sección~\ref{sec:marco_rep_fallas}). El clasificador, a su vez, entrega una predicción y una distribución de probabilidades, pero estas no siempre reflejan de manera fiable el riesgo de error de cada caso (Sección~\ref{sec:marco_senales_confianza}). Por ese motivo, se incorpora una señal complementaria basada en la concordancia con otro predictor. A partir de estas
 limitaciones, la propuesta de este trabajo es un \emph{pipeline} que integra los tres componentes para que cada uno
-compense una debilidad de los otros: el clasificador fija el diagnóstico, la recuperación aporta una segunda opinión
-y el generador redacta el reporte.
+compense una debilidad de los otros: el clasificador aporta la predicción principal, el \gls{knn} proporciona una predicción complementaria obtenida mediante recuperación de casos similares y el generador redacta el reporte a partir de la información recibida.
 
 Para esa integración, las secciones anteriores dejan disponibles tres componentes, cada uno con una capacidad distinta.
 Los clasificadores supervisados asignan a la imagen una de las siete clases, con una probabilidad para cada una, pero
@@ -46,9 +43,7 @@ depende de la concordancia.
 
 \input{Figures/Capitulos/03-Materiales-Metodos/pipeline}
 
-En el reporte final, cada componente aporta una parte distinta. El generador recibe siempre la imagen, además de la
-instrucción que arma el ruteo, de modo que la descripción de la lesión (su morfología, sus colores y sus estructuras
-dermatoscópicas) sale de lo que el generador reconoce en ella. El diagnóstico, en cambio, no lo elige el generador,
+En el reporte final, cada componente aporta una parte distinta. El generador produce la descripción de la lesión a partir de la imagen, aunque la correspondencia entre los rasgos descritos y los realmente presentes debe evaluarse. El diagnóstico, en cambio, no lo elige el generador,
 sino que le llega en la instrucción: el del clasificador cuando el caso se afirma, o el par de candidatos cuando se
 presenta un diferencial. Por su parte, el \gls{knn} no aporta texto al reporte, sino que interviene en la decisión de
 emitirlo. Con este reparto, el generador se usa para la redacción del texto clínico, para la que se ajustó en la
@@ -80,8 +75,7 @@ Apéndice~\ref{ap:prompts}.
 La variante se eligió en un piloto sobre 100 imágenes de \emph{HAM10000}, hecho con LLaVA-Med y con el diagnóstico
 verdadero inyectado. Con instrucciones menos restrictivas, el generador escribía el razonamiento antes que el reporte y el
 diagnóstico quedaba sobre todo en el razonamiento. En cambio, \emph{noreasoning} fue la variante cuyo reporte, sin
-los bloques de razonamiento, nombraba el diagnóstico en más casos. De esas 100 imágenes, 17 pertenecen al conjunto de prueba,
-así que la elección de la instrucción no es del todo ajena a ella, aunque no fija ningún umbral sobre el conjunto de prueba.
+los bloques de razonamiento, nombraba el diagnóstico en más casos. De esas 100 imágenes, 17 pertenecen al conjunto de prueba. Esta superposición introduce una limitación de independencia en la evaluación de las variantes que utilizan la plantilla seleccionada, dado que parte de los datos finales intervino en una decisión de configuración del sistema.
 
 \subsection{Grounding por recuperación}
 \label{sec:met_recuperacion}
@@ -130,8 +124,7 @@ Los tres niveles son alternativas excluyentes, cada una con su acción:
     \emph{noreasoning}.
     \item \textbf{Diferencial} ($a = 0$ y $\kappa > 1/3$): reporte que enuncia el par $\{\hat{c}(x), v(x)\}$, con la
     plantilla diferencial.
-    \item \textbf{Derivación} ($a = 0$ y $\kappa = 1/3$, es decir, los tres vecinos de clases distintas): no se genera
-    reporte y el caso se deriva a un especialista.
+    \item \textbf{Derivación} ($a = 0$ y $\kappa = 1/3$, es decir, los tres vecinos de clases distintas): el sistema se abstiene de generar un reporte y señala el caso como candidato para evaluación por un especialista.
 \end{enumerate}
 Los tres niveles cubren todos los casos (Figura~\ref{fig:met_ruteo}).
 

@@ -55,7 +55,7 @@ evaluados y las cinco métricas del Nivel~1.
     \end{tabularx}
 \end{table}
 
-El parecido depende sobre todo del conjunto. Los valores más altos de las cinco métricas se obtienen en
+Los valores de similitud presentan diferencias importantes entre los conjuntos evaluados, lo que sugiere una influencia de las características de sus textos de referencia y de las distribuciones de datos. Los valores más altos de las cinco métricas se obtienen en
 \emph{SkinCoT}, cuyos textos se usaron para ajustar a los generadores, y allí LLaVA-Med comparte con la referencia
 frases enteras y obtiene un BERTScore cercano a 0.80. En \emph{MM-Skin}, en cambio, las métricas de solapamiento de
 palabras caen casi a cero con los dos generadores, y solo el BERTScore, que compara el significado y no las palabras,
@@ -63,8 +63,7 @@ conserva un valor intermedio.
 
 Una explicación posible de esa diferencia es el estilo de las referencias, más que la calidad de los reportes. Los
 textos de \emph{SkinCoT} tienen la estructura que los generadores aprendieron, mientras que los de \emph{MM-Skin}
-siguen el vocabulario y la organización de un libro de texto, y ningún generador se ajustó con ellos. Por eso un
-BLEU-4 cercano a cero indica sobre todo que el reporte no reproduce las frases del libro, y no necesariamente que describa mal la lesión.
+siguen el vocabulario y la organización de un libro de texto, y ningún generador se ajustó con ellos. Un BLEU-4 cercano a cero indica un escaso solapamiento de secuencias de palabras con la referencia. Este resultado puede estar influido por diferencias de estilo o contenido y no permite determinar, por sí solo, si la lesión fue descrita correctamente.
 
 Entre los generadores, Mini-VLM queda por debajo de LLaVA-Med en las cinco métricas de \emph{SkinCoT}, con un
 BERTScore de 0.770 frente a 0.797. La diferencia es coherente con lo que se ajustó en cada uno
@@ -75,8 +74,7 @@ original. Es decir, el ajuste cambia lo que Mini-VLM ve en la imagen, pero posib
 En \emph{MM-Skin}, cuyas descripciones no usó ningún generador, el orden se invierte. Sobre los mismos pares,
 Mini-VLM supera a LLaVA-Med en BERTScore por 0.039 [0.038, 0.041] (\emph{bootstrap} pareado), y también en ROUGE-L y
 METEOR. Por lo tanto, el generador que más se acerca a las frases de \emph{SkinCoT} no es el que más se acerca al
-significado de una descripción de otro estilo, y el Nivel~1 mide sobre todo cuánto se ajustó la redacción a la de
-cada referencia. Por esa razón, como establece la Sección~\ref{sec:met_eval_generacion}, sus cifras se informan pero
+significado de una descripción de otro estilo. Los resultados indican que las métricas del Nivel~1 son sensibles a las características de las referencias, tanto en su formulación léxica como en su contenido semántico, por lo que sus valores no constituyen una medida directa de la fidelidad clínica de los reportes. Por esa razón, como establece la Sección~\ref{sec:met_eval_generacion}, sus cifras se informan pero
 no eligen ningún modelo.
 
 \subsection{Consistencia diagnóstica sin anclaje}
@@ -119,9 +117,7 @@ reportes caen en cada una.
 SkinVL obtiene la consistencia más baja y falla de otra manera, porque repite con frecuencia el mismo texto. Entre los
 1\,503 reportes hay solo 72 distintos, y siete de cada diez son la misma frase: «This skin lesion appears as a raised,
 red, and scaly patch on the skin. It is likely caused by a fungal infection called tinea corporis.». La tiña corporal
-(\emph{tinea corporis}), una infección de la piel causada por hongos, no pertenece a las siete clases. Una explicación
-posible es que el generador especializado en dermatología, sin un diagnóstico que lo oriente, responde con un texto
-que no depende de la imagen dermatoscópica que recibe. Es decir, en este caso la especialización no asegura un
+(\emph{tinea corporis}), una infección de la piel causada por hongos, no pertenece a las siete clases. La repetición de un mismo reporte en una proporción elevada de las imágenes sugiere que, bajo esta configuración, SkinVL utiliza de manera limitada las diferencias visuales entre lesiones para generar el texto. Es decir, en este caso la especialización no asegura un
 reporte útil fuera de las imágenes y del formato de instrucción con que se ajustó el modelo.
 
 Los bloques de razonamiento, por su parte, casi no aparecen en estos reportes. Mini-VLM no abre ninguno, posiblemente

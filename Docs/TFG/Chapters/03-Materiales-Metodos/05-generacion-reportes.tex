@@ -22,9 +22,7 @@
 Un reporte, tal como lo define la tarea T3 (Sección~\ref{sec:met_tareas}), describe la lesión y termina en una
 impresión diagnóstica. Para redactarlo, un modelo necesita reconocer en la imagen los rasgos que describe y escribir
 con el vocabulario y la estructura de un texto clínico. Ninguno de los componentes presentados hasta aquí cumple por sí
-solo ambas condiciones. Los clasificadores supervisados no generan texto, y los \glspl{vlm} generativos, aunque sí lo
-generan, no producen la forma de un reporte clínico a partir de una instrucción. Por ello, los \glspl{vlm} generativos
-se ajustan con textos clínicos antes de usarlos como generadores.
+solo ambas condiciones. Los clasificadores supervisados no generan texto. Aunque los \glspl{vlm} generativos pueden producir texto a partir de instrucciones, no están necesariamente adaptados al vocabulario y a la estructura de los reportes dermatológicos considerados en este trabajo. Por ello, se realiza un ajuste con ejemplos de textos clínicos antes de usarlos como generadores.
 
 \subsection{Generadores}
 
@@ -33,8 +31,7 @@ Como generadores se usan Mini-VLM y LLaVA-Med, los mismos modelos que se evalúa
 modelos. El ajuste es lo que cambia su salida de una etiqueta a un texto. Sin embargo, ninguno de los dos está
 especializado en dermatología, y por eso se agrega un tercer generador que sí lo está.
 
-El tercer generador permite saber si la especialización en dermatología cambia lo que escribe un modelo. Para ello se
-usa SkinVL, que \textcite{zeng2025mmskin} presentan junto con \emph{MM-Skin}. SkinVL parte de LLaVA-Med v1.5 con
+La incorporación de SkinVL permite comparar las respuestas de los generadores ajustados en este trabajo con las de un modelo previamente especializado en dermatología, sin asumir que las diferencias observadas se deban únicamente a esa especialización. Se usa SkinVL, que \textcite{zeng2025mmskin} presentan junto con \emph{MM-Skin}. SkinVL parte de LLaVA-Med v1.5 con
 Mistral-7B y ajusta con \gls{lora} (rango 128) el modelo de lenguaje y la proyección visual, con el codificador visual
 congelado, en una sola etapa de instrucciones. Se usa la variante SkinVL-MM, ajustada solo con \emph{MM-Skin}, con sus
 pesos publicados (\texttt{zwq803/SkinVL-MM}). Como esos pesos no incluyen el codificador visual, se combinaron con los
@@ -62,8 +59,7 @@ Los dos generadores, sin embargo, no reciben el adaptador en los mismos componen
 \texttt{q\_proj} y \texttt{v\_proj} están en el codificador visual y en el modelo de lenguaje, y se entrenan
 33\,554\,432 parámetros. En cambio, el modelo de lenguaje de Mini-VLM reúne las tres proyecciones de la atención en un
 único módulo, \texttt{qkv\_proj}, de modo que el adaptador queda solo en el codificador visual, con 6\,291\,456
-parámetros, y el modelo de lenguaje no se ajusta. En Mini-VLM, por lo tanto, la segunda etapa adapta lo que el
-generador extrae de la imagen, pero no su manera de redactar. En ambos casos se entrena menos del 1\,\% de los
+parámetros, y el modelo de lenguaje no se ajusta. En Mini-VLM, la segunda etapa modifica los componentes visuales, mientras que los parámetros del modelo de lenguaje permanecen congelados. Por lo tanto, el ajuste influye directamente sobre la representación visual, aunque sus efectos también pueden reflejarse en el texto generado. En ambos casos se entrena menos del 1\,\% de los
 parámetros del modelo. La Figura~\ref{fig:met_ajuste} resume qué se entrena en cada etapa.
 
 \input{Figures/Capitulos/03-Materiales-Metodos/ajuste}
@@ -89,8 +85,7 @@ de modo que su salida contiene a la vez el razonamiento y el reporte. Por eso la
 solo el reporte en todos los generadores (Sección~\ref{sec:met_eval_generacion}).
 
 Sin diagnóstico, la generación usa la misma instrucción del entrenamiento, y las variantes del \emph{pipeline} la
-reemplazan por sus propias plantillas (Sección~\ref{sec:met_pipeline}). En todos los casos se usa decodificación voraz
-(Sección~\ref{sec:marco_llm_grandes}), que hace la generación reproducible. Cada imagen se procesa por separado, con
+reemplazan por sus propias plantillas (Sección~\ref{sec:met_pipeline}). En todos los casos se utiliza decodificación voraz (Sección~\ref{sec:marco_llm_grandes}) para eliminar la aleatoriedad asociada al muestreo de tokens y favorecer la reproducibilidad de las salidas bajo una misma configuración de inferencia. Cada imagen se procesa por separado, con
 un máximo de 384 tokens nuevos. Ese límite alcanza para que casi todos los reportes con diagnóstico inyectado terminen,
 pero corta la mayoría de los que LLaVA-Med escribe sin diagnóstico. Además, si el corte llega mientras el generador
 todavía razona, el reporte queda vacío, y la Sección~\ref{sec:met_eval_generacion} fija cómo se cuentan esos casos.

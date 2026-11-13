@@ -35,8 +35,7 @@ clase verdadera. El panel (b) reparte las imágenes de cada clase entre los tres
     \label{fig:res_gen_ruteo}
 \end{figure}
 
-Swin-Tiny acierta el 91.5\,\% de los casos afirmativos y poco más de la mitad de los otros dos niveles. La concordancia permite, por lo tanto, identificar grupos de casos con distintas tasas de acierto, como suponía el
-diseño del ruteo (Sección~\ref{sec:met_ruteo}), aunque una predicción concordante puede seguir siendo incorrecta.
+Swin-Tiny acierta el 91.5\,\% de los casos afirmativos y poco más de la mitad de los otros dos niveles. En el conjunto de prueba, la concordancia permite separar grupos de imágenes con distintas frecuencias de acierto del clasificador, como suponía el diseño del ruteo (Sección~\ref{sec:met_ruteo}). Este resultado respalda su utilidad como señal de selección, aunque no implica que proporcione una estimación calibrada de confianza para cada caso.
 
 En el nivel diferencial, presentar los dos candidatos cubre muchos más casos que el diagnóstico del clasificador
 solo. El par formado por la clase de Swin-Tiny y el voto del \gls{knn} contiene la clase verdadera en el 84.7\,\% de
@@ -109,9 +108,7 @@ de los más difíciles, y por eso el tercer bloque informa también la consisten
 \end{table}
 
 La línea base sin generador obtiene la consistencia más alta en los tres bloques, y LLaVA-Med en el \emph{pipeline},
-la más baja. Con Mini-VLM, el \emph{pipeline} mejora la consistencia de la cascada simple, y la mejora se concentra en
-el nivel diferencial, donde el reporte nombra la clase verdadera en cuatro de cada cinco casos, frente a seis de cada
-diez de la cascada. Sin embargo, el \emph{pipeline} no supera a la línea base sin generador. La ganancia puede atribuirse, por lo tanto, a presentar dos candidatos cuando los predictores discrepan, una decisión del ruteo, y el generador la
+la más baja. Con Mini-VLM, el \emph{pipeline} obtiene una mayor consistencia diagnóstica que la cascada simple según la métrica utilizada. Esta mejora se concentra en el nivel diferencial, donde el reporte nombra la clase verdadera en cuatro de cada cinco casos, frente a seis de cada diez de la cascada. En ese nivel se consideran consistentes los reportes que incluyen la clase verdadera entre dos candidatos, por lo que la mejora no equivale directamente a un aumento de la exactitud diagnóstica. Sin embargo, el \emph{pipeline} no supera a la línea base sin generador. La ganancia puede atribuirse, por lo tanto, a presentar dos candidatos cuando los predictores discrepan, una decisión del ruteo, y el generador la
 conserva sin agregarle fidelidad. Sobre el conjunto de prueba completo, con las derivaciones contadas como casos sin diagnóstico,
 la mejora es menor, de 0.849 a 0.870. Esta lectura coincide con la de la cascada: el diagnóstico sale de los
 predictores, y el generador lo redacta.
@@ -124,16 +121,14 @@ cerrar, y los candidatos quedan dentro de él. Como la evaluación mide solo el 
 diferencial, que pide discutir dos candidatos, induce a LLaVA-Med a razonar, mientras que la plantilla
 \emph{noreasoning} del nivel afirmativo lo evita en general.
 
-Los reportes con un diagnóstico incorrecto también disminuyen. Entre los casos no derivados, bajan del 13.6\,\% al 9.0\,\% con Mini-VLM y del 9.4\,\% al 7.1\,\% con LLaVA-Med, si en el nivel diferencial se cuenta como
-correcto el reporte que incluye la clase verdadera entre los dos candidatos. Por ese criterio, esta reducción no equivale
-directamente a una disminución de errores clínicamente graves. El precio es un formato menos estable, ya que
+Según el criterio de consistencia diagnóstica utilizado, disminuye también la proporción de reportes que no mencionan la clase verdadera. Entre los casos no derivados, bajan del 13.6\,\% al 9.0\,\% con Mini-VLM y del 9.4\,\% al 7.1\,\% con LLaVA-Med, si en el nivel diferencial se cuenta como
+correcto el reporte que incluye la clase verdadera entre los dos candidatos. Esta reducción refleja en parte la presentación de diagnósticos alternativos y no debe interpretarse directamente como una disminución equivalente del riesgo clínico. El precio es un formato menos estable, ya que
 los reportes diferenciales de Mini-VLM nombran en promedio más de dos clases y la repetición sube de 7 a 48 reportes.
 
 Las métricas anteriores no muestran cómo se lee un reporte. Para completarlas con un análisis cualitativo, la
 Figura~\ref{fig:res_gen_ejemplos} reúne tres reportes de
 Mini-VLM en el \emph{pipeline}, uno por situación, citados en inglés. En el primero, el clasificador y los vecinos coinciden en
-melanoma, y el reporte afirma el diagnóstico y lo acompaña con rasgos compatibles con él, como los bordes irregulares
-y la asimetría.
+melanoma, y el reporte afirma el diagnóstico de melanoma y menciona características habitualmente asociadas con esa categoría, como bordes irregulares y asimetría.
 
 El segundo es un caso diferencial: el clasificador predice melanoma, dos de los tres vecinos son nevos, y el reporte
 discute los dos candidatos y recomienda una biopsia. El texto incluye, sin embargo, una oración que repite la

@@ -16,6 +16,9 @@
 % caras) el hueco que deja se repartía entre los párrafos y aparecían espacios en blanco en medio del texto;
 % \raggedbottom lo deja al pie de la página.
 \raggedbottom
+% Sin líneas huérfanas ni viudas: con \raggedbottom, la línea pasa entera a la página siguiente.
+\widowpenalty=10000
+\clubpenalty=10000
 
 % \FloatBarrier: las tablas grandes (estado del arte) flotan para no dejar media página vacía, pero no pueden
 % pasar de la subsección en la que se las trae. La opción section pone además una barrera antes de cada sección,
