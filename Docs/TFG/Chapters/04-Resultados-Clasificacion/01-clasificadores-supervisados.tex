@@ -146,8 +146,7 @@ arquitecturas.
 La detección de melanoma se evalúa en Swin-Tiny, ConvNeXt-Tiny y su ensamble, que son los modelos de la búsqueda de
 hiperparámetros, con las dos reglas de decisión de la Sección~\ref{sec:met_seleccion}: tomar como melanoma la clase más
 probable o usar el umbral fijado en validación. El \gls{auc} de melanoma, que no depende de la regla, es de 0.920 en Swin-Tiny, con un desvío de 0.004 entre ejecuciones. Aunque la sensibilidad de \gls{mel} varía entre ejecuciones, sus valores de \gls{auc} son similares, lo que indica una capacidad de discriminación global relativamente estable. Por lo tanto, lo que cambia entre ellas es posiblemente cuántos melanomas
-superan el corte implícito en elegir la clase más probable, y fijar ese corte en validación debería estabilizar
-también la decisión.
+superan el corte implícito en elegir la clase más probable. Los resultados siguientes permiten comprobar si el umbral elegido en validación reduce la variabilidad de la sensibilidad entre ejecuciones.
 
 Para comparar las dos reglas, la Figura~\ref{fig:res_melanoma_semillas} presenta la sensibilidad (izquierda) y la
 especificidad (derecha) de melanoma en los tres modelos, con un punto por ejecución y una raya en la media. La línea
@@ -176,7 +175,7 @@ falsos positivos con la sensibilidad para todos los umbrales posibles, y marca s
 \end{figure}
 
 El umbral desplaza la decisión a lo largo de la misma curva, hacia la zona de mayor sensibilidad, sin cambiar el
-modelo: en esa ejecución detecta 13 melanomas más a cambio de unas 80 falsas alarmas adicionales. Los umbrales de las treinta ejecuciones, además, quedan muy por debajo de 0.5. Una explicación posible es que el desbalance de las clases durante el entrenamiento influya sobre las probabilidades estimadas. En algunos casos, la probabilidad asignada a melanoma puede superar el umbral específico sin llegar a ser la mayor entre las siete categorías.
+modelo: en esa ejecución detecta 13 melanomas más a cambio de unas 80 falsas alarmas adicionales. Los umbrales de las treinta ejecuciones, además, quedan muy por debajo de 0.5. El desbalance de las clases durante el entrenamiento podría ser uno de los factores, pero este experimento no permite aislarlo de otras causas de la distribución de los puntajes. En algunos casos, la probabilidad asignada a melanoma puede superar el umbral específico sin llegar a ser la mayor entre las siete categorías.
 
 \subsection{Funciones de pérdida para el desbalance de clases}
 \label{sec:res_desbalance}
