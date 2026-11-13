@@ -35,7 +35,7 @@ clase verdadera. El panel (b) reparte las imágenes de cada clase entre los tres
     \label{fig:res_gen_ruteo}
 \end{figure}
 
-Swin-Tiny acierta el 91.5\,\% de los casos afirmativos y poco más de la mitad de los otros dos niveles. En el conjunto de prueba, la concordancia permite separar grupos de imágenes con distintas frecuencias de acierto del clasificador, como suponía el diseño del ruteo (Sección~\ref{sec:met_ruteo}). Este resultado respalda su utilidad como señal de selección, aunque no implica que proporcione una estimación calibrada de confianza para cada caso.
+Swin-Tiny acierta el 91.5\,\% de los casos afirmativos y poco más de la mitad de los otros dos niveles. En este conjunto de prueba, la concordancia discrimina subconjuntos con diferentes tasas de error, como suponía el diseño del ruteo (Sección~\ref{sec:met_ruteo}), y su transferencia a otros conjuntos debe evaluarse aparte. Tampoco proporciona una estimación calibrada de confianza para cada caso.
 
 En el nivel diferencial, presentar los dos candidatos cubre muchos más casos que el diagnóstico del clasificador
 solo. El par formado por la clase de Swin-Tiny y el voto del \gls{knn} contiene la clase verdadera en el 84.7\,\% de
@@ -121,9 +121,9 @@ cerrar, y los candidatos quedan dentro de él. Como la evaluación mide solo el 
 diferencial, que pide discutir dos candidatos, induce a LLaVA-Med a razonar, mientras que la plantilla
 \emph{noreasoning} del nivel afirmativo lo evita en general.
 
-Según el criterio de consistencia diagnóstica utilizado, disminuye también la proporción de reportes que no mencionan la clase verdadera. Entre los casos no derivados, bajan del 13.6\,\% al 9.0\,\% con Mini-VLM y del 9.4\,\% al 7.1\,\% con LLaVA-Med, si en el nivel diferencial se cuenta como
+Según la clasificación de fallas de la Sección~\ref{sec:res_gen_errores}, disminuye también la proporción de reportes con un diagnóstico incorrecto, es decir, que nombran otra clase y no la verdadera. Entre los 1\,452 casos no derivados, bajan del 13.6\,\% al 9.0\,\% con Mini-VLM y del 9.4\,\% al 7.1\,\% con LLaVA-Med, si en el nivel diferencial se cuenta como
 correcto el reporte que incluye la clase verdadera entre los dos candidatos. Esta reducción refleja en parte la presentación de diagnósticos alternativos y no debe interpretarse directamente como una disminución equivalente del riesgo clínico. El precio es un formato menos estable, ya que
-los reportes diferenciales de Mini-VLM nombran en promedio más de dos clases y la repetición sube de 7 a 48 reportes.
+los reportes diferenciales de Mini-VLM nombran en promedio más de dos clases y los reportes con repeticiones internas pasan de 7 a 48 de los 1\,452 casos no derivados.
 
 Las métricas anteriores no muestran cómo se lee un reporte. Para completarlas con un análisis cualitativo, la
 Figura~\ref{fig:res_gen_ejemplos} reúne tres reportes de
