@@ -19,7 +19,7 @@ o posterior, lo que permite entrenar en formato \emph{bfloat16} (bf16) en todos 
 valores, a cambio de una menor resolución numérica\footnote{\url{https://pytorch.org/docs/stable/amp.html}}.
 
 En cuanto a la medición del costo (Sección~\ref{sec:met_costo}), el tiempo de inferencia, la cantidad de imágenes por
-segundo y la memoria máxima de los clasificadores se midieron en la RTX 4070, con una imagen y con lotes de 32, en la
+segundo y la memoria máxima de los clasificadores se midieron en la RTX 4070, con una imagen y con lotes de 32, en el
 mismo formato bf16 con que se evalúan. El tiempo por reporte de los
 generadores, en cambio, se tomó de las ejecuciones de la generación en la A30. Como las dos mediciones se hicieron en
 GPU distintas, la comparación entre clasificadores y generadores es solo de orden de magnitud.

@@ -75,7 +75,7 @@ Apéndice~\ref{ap:prompts}.
 La variante se eligió en un piloto sobre 100 imágenes de \emph{HAM10000}, hecho con LLaVA-Med y con el diagnóstico
 verdadero inyectado. Con instrucciones menos restrictivas, el generador escribía el razonamiento antes que el reporte y el
 diagnóstico quedaba sobre todo en el razonamiento. En cambio, \emph{noreasoning} fue la variante cuyo reporte, sin
-los bloques de razonamiento, nombraba el diagnóstico en más casos. De esas 100 imágenes, 17 pertenecen al conjunto de prueba. Esta superposición introduce una limitación de independencia en la evaluación de las variantes que utilizan la plantilla seleccionada, dado que parte de los datos finales intervino en una decisión de configuración del sistema.
+los bloques de razonamiento, nombraba el diagnóstico en más casos. De esas 100 imágenes, 17 pertenecen al conjunto de prueba. Esta superposición introduce una limitación de independencia en la evaluación de las variantes que utilizan la plantilla seleccionada, dado que parte de los datos finales intervino en una decisión de configuración del sistema. Esas variantes son la cascada con sus ablaciones, el nivel afirmativo del \emph{pipeline} y la comparación de generadores del Capítulo~\ref{cp:res_gen}. No dependen de esa plantilla, en cambio, la clasificación del Capítulo~\ref{cp:res_clasif}, la generación sin diagnóstico, el \emph{grounding} por recuperación ni el nivel diferencial, que usan otras plantillas. Las 17 imágenes representan alrededor del 1\,\% de las 1\,503 de prueba.
 
 \subsection{Grounding por recuperación}
 \label{sec:met_recuperacion}
