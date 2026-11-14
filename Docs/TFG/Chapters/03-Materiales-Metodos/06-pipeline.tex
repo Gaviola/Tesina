@@ -75,7 +75,7 @@ Apéndice~\ref{ap:prompts}.
 La variante se eligió en un piloto sobre 100 imágenes de \emph{HAM10000}, hecho con LLaVA-Med y con el diagnóstico
 verdadero inyectado. Con instrucciones menos restrictivas, el generador escribía el razonamiento antes que el reporte y el
 diagnóstico quedaba sobre todo en el razonamiento. En cambio, \emph{noreasoning} fue la variante cuyo reporte, sin
-los bloques de razonamiento, nombraba el diagnóstico en más casos. De esas 100 imágenes, 17 pertenecen al conjunto de prueba. Esta superposición introduce una limitación de independencia en la evaluación de las variantes que utilizan la plantilla seleccionada, dado que parte de los datos finales intervino en una decisión de configuración del sistema.
+los bloques de razonamiento, nombraba el diagnóstico en más casos. De esas 100 imágenes, 17 pertenecen al conjunto de prueba. Esta superposición introduce una limitación de independencia en la evaluación de las variantes que utilizan la plantilla seleccionada, dado que parte de los datos finales intervino en una decisión de configuración del sistema. Esas variantes son la cascada con sus ablaciones, el nivel afirmativo del \emph{pipeline} y la comparación de generadores del Capítulo~\ref{cp:res_gen}. No dependen de esa plantilla, en cambio, la clasificación del Capítulo~\ref{cp:res_clasif}, la generación sin diagnóstico, el \emph{grounding} por recuperación ni el nivel diferencial, que usan otras plantillas. Las 17 imágenes representan alrededor del 1\,\% de las 1\,503 de prueba.
 
 \subsection{Grounding por recuperación}
 \label{sec:met_recuperacion}
@@ -105,7 +105,7 @@ se evalúa en el Capítulo~\ref{cp:res_gen}.
 
 Para formalizar la señal, sea $\hat{c}(x)$ la clase de mayor probabilidad del clasificador y $v(x)$ el voto del
 \gls{knn}, es decir, la clase más frecuente entre los $k = 3$ vecinos (Ecuación~\ref{eq:marco_knn}). Cuando los tres
-vecinos son de clases distintas, el voto es el del vecino más cercano. La concordancia es entonces
+vecinos son de clases distintas, el voto es el del vecino más cercano. El umbral de melanoma de la Sección~\ref{sec:met_seleccion} se evalúa sobre el clasificador, pero no se incorpora al ruteo: $\hat{c}(x)$ es siempre la clase de mayor probabilidad. La concordancia es entonces
 $a(x) = \mathbf{1}[\hat{c}(x) = v(x)]$ (Ecuación~\ref{eq:marco_concordancia}), y el consenso $\kappa(x)$ es la
 proporción de vecinos que pertenecen a la clase más votada (Ecuación~\ref{eq:marco_consenso}), que con tres vecinos
 vale $1/3$, $2/3$ o $1$. A partir de ambos, la regla que asigna cada caso a un nivel es

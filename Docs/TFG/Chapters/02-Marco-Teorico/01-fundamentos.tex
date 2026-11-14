@@ -224,8 +224,7 @@ parámetros, como los modelos de lenguaje, incluso el ajuste fino requiere más 
 de consumo, y se recurre a métodos que entrenan solo una pequeña cantidad de parámetros adicionales
 (Sección~\ref{sec:marco_llm_lora}).
 
-Entre la extracción de características y el ajuste fino completo hay estrategias que adaptan el \emph{backbone}
-sin deformar lo que aprendió. La primera es el ajuste en dos etapas: primero se entrena solo la cabeza, con el
+Entre la extracción de características y el ajuste fino completo hay estrategias que buscan reducir modificaciones bruscas de las representaciones preentrenadas. La primera es el ajuste en dos etapas: primero se entrena solo la cabeza, con el
 \emph{backbone} congelado, y después la red completa. Si el ajuste fino empieza con una cabeza inicializada al
 azar, los gradientes que llegan al \emph{backbone} mientras la cabeza todavía aprende deforman las
 características preentrenadas. Con la cabeza ya entrenada, en cambio, la secuencia rinde más que cada una de sus

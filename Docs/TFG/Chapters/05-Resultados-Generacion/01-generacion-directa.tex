@@ -58,8 +58,7 @@ evaluados y las cinco métricas del Nivel~1.
 Los valores de similitud presentan diferencias importantes entre los conjuntos evaluados, lo que sugiere una influencia de las características de sus textos de referencia y de las distribuciones de datos. Los valores más altos de las cinco métricas se obtienen en
 \emph{SkinCoT}, cuyos textos se usaron para ajustar a los generadores, y allí LLaVA-Med comparte con la referencia
 frases enteras y obtiene un BERTScore cercano a 0.80. En \emph{MM-Skin}, en cambio, las métricas de solapamiento de
-palabras caen casi a cero con los dos generadores, y solo el BERTScore, que compara el significado y no las palabras,
-conserva un valor intermedio.
+palabras caen casi a cero con los dos generadores, y solo el BERTScore conserva un valor intermedio. El BERTScore incorpora similitud contextual entre representaciones textuales, sin verificar por sí mismo la fidelidad clínica.
 
 Una explicación posible de esa diferencia es el estilo de las referencias, más que la calidad de los reportes. Los
 textos de \emph{SkinCoT} tienen la estructura que los generadores aprendieron, mientras que los de \emph{MM-Skin}
@@ -69,7 +68,7 @@ Entre los generadores, Mini-VLM queda por debajo de LLaVA-Med en las cinco métr
 BERTScore de 0.770 frente a 0.797. La diferencia es coherente con lo que se ajustó en cada uno
 (Sección~\ref{sec:met_generacion}). En LLaVA-Med, \gls{lora} adapta también el modelo de lenguaje, que aprende las
 frases de \emph{SkinCoT}. En Mini-VLM, en cambio, el adaptador no llega al modelo de lenguaje, que queda como el
-original. Es decir, el ajuste cambia lo que Mini-VLM ve en la imagen, pero posiblemente no su manera de redactar.
+original. Es decir, el ajuste modifica la representación visual que procesa Mini-VLM, con efectos que podrían observarse en el texto, aunque posiblemente no en su manera de redactar.
 
 En \emph{MM-Skin}, cuyas descripciones no usó ningún generador, el orden se invierte. Sobre los mismos pares,
 Mini-VLM supera a LLaVA-Med en BERTScore por 0.039 [0.038, 0.041] (\emph{bootstrap} pareado), y también en ROUGE-L y

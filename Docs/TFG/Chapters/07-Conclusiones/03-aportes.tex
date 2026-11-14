@@ -12,8 +12,11 @@ Más allá del cumplimiento de los objetivos planteados, la experimentación per
     clasificadores.} Los controles con una imagen gris y con fotografías clínicas son compatibles con que su respuesta
     dependa sobre todo del \emph{prompt}
     (Sección~\ref{sec:res_vlm_controles}).
-    \item \textbf{La medición del efecto de la partición.} Una partición por imagen sobreestima, en este conjunto de prueba, la sensibilidad macro en unas 0.07 frente a una partición por lesión (Sección~\ref{sec:res_fuga}), una magnitud a tener en cuenta al
+    \item \textbf{La medición del efecto de la partición.} El contraste entre una partición por imagen y una por lesión mostró una diferencia cercana a 0.07 en la sensibilidad macro, compatible con un efecto de fuga de información (Sección~\ref{sec:res_fuga}), una magnitud a tener en cuenta al
     comparar con trabajos que dividen las imágenes al azar.
+    \item \textbf{Una arquitectura de diagnóstico externo y generación condicionada.} La limitación de los \glspl{vlm}
+    generativos para diagnosticar de manera autónoma motivó separar el diagnóstico, a cargo de un clasificador
+    supervisado, de la redacción del reporte, condicionada por ese diagnóstico (Sección~\ref{sec:res_gen_sin_anclaje}).
     \item \textbf{Un \emph{pipeline} que decide cuánto afirmar.} La concordancia entre el clasificador y el \gls{knn}
     decide si se afirma el diagnóstico, se ofrecen dos candidatos o el caso se señala para evaluación por un especialista. Así, el \emph{pipeline} afirma
     el 80\,\% de las imágenes con un riesgo de 0.085, sin umbrales ajustados sobre el conjunto de prueba
@@ -21,4 +24,3 @@ Más allá del cumplimiento de los objetivos planteados, la experimentación per
     \item \textbf{Una evaluación por componente.} Como cada experimento agrega un componente por vez, la evaluación por componentes permitió identificar que la consistencia diagnóstica depende principalmente de la fuente de clasificación, que el generador produce descripciones condicionadas tanto por la imagen como por el diagnóstico recibido y que la concordancia entre predictores aporta una señal útil para seleccionar el tipo de reporte (Tabla~\ref{tab:res_gen_aportes}). En los trabajos incluidos en la revisión no se identificó una evaluación equivalente que permitiera analizar separadamente la contribución de estos componentes a la consistencia diagnóstica del reporte final.
     \item \textbf{Evaluación de la factibilidad de inferencia del \emph{pipeline} en una GPU de consumo.} El ajuste de Mini-VLM se realizó en una sola GPU A30 de 24~GB, y su generación se comprobó en una RTX 4070 de 12~GB con 20 reportes (Sección~\ref{sec:res_costo}). No se comprobó el ajuste completo del modelo en esa configuración. Los trabajos revisados, en cambio, usan varias GPU de gama alta o consultan por API un modelo de gran tamaño.
 \end{itemize}
-Estos aportes se apoyan en métricas automáticas, y la validez clínica de los reportes requiere la evaluación por especialistas.
